@@ -20,7 +20,7 @@ public class BSLLSPLauncher {
     Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, in, out);
 
     LanguageClient client = launcher.getRemoteProxy();
-    ((LanguageClientAware)server).connect(client);
+    ((LanguageClientAware) server).connect(client);
 
     launcher.startListening();
   }

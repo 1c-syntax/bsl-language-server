@@ -16,14 +16,6 @@ dependencies {
     compile group: 'org.eclipse.lsp4j', name: 'org.eclipse.lsp4j', version: '0.4.1'
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: "file://C://Users//user/.m2/repository/")
-        }
-    }
-}
-
 jar {
     manifest {
         attributes 'Main-Class': 'org.bslplugin.lsp.server.BSLLSPLauncher'
