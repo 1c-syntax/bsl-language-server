@@ -1,4 +1,4 @@
-package org.bslplugin.lsp.server;
+package org.github._1c_syntax.intellij.bsl.lsp.server;
 
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;

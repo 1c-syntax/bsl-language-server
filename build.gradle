@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 
-group 'org.bslplugin'
+group 'org.github._1c_syntax.intellij.bsl'
 version '1.0'
 
 apply plugin: 'java'
@@ -20,7 +20,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.bslplugin.lsp.server.BSLLSPLauncher'
+        attributes 'Main-Class': 'org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher'
     }
     from (configurations.compile.collect { entry -> zipTree(entry) }) {
         exclude 'META-INF/MANIFEST.MF'
