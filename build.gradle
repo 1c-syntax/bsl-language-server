@@ -1,5 +1,6 @@
 plugins {
     id 'maven'
+    id "com.github.hierynomus.license"
 }
 
 repositories {
@@ -40,4 +41,12 @@ test {
     reports {
         html.enabled = true
     }
+}
+
+license {
+    header = rootProject.file("license/HEADER.txt")
+    ext.year = Calendar.getInstance().get(Calendar.YEAR)
+    ext.name = 'Alexey Sosnoviy <labotamy@yandex.ru>, Nikita Gryzlov <nixel2007@gmail.com>'
+    ext.project = "BSL Language Server"
+    strictCheck = true
 }
