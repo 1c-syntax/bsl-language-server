@@ -21,6 +21,9 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server;
 
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -39,21 +42,39 @@ import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.github._1c_syntax.intellij.bsl.lsp.server.hover.HoverProvider;
+import org.github._1c_syntax.parser.BSLLexer;
+import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.parser.BSLParser.FileContext;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLTextDocumentService implements TextDocumentService {
+
+  private final Map<String, FileContext> documents = Collections.synchronizedMap(new HashMap<>());
+
+  private BSLLexer lexer;
+  private BSLParser parser;
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -69,7 +90,9 @@ public class BSLTextDocumentService implements TextDocumentService {
 
   @Override
   public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
-    return null;
+    FileContext fileContext = documents.get(position.getTextDocument().getUri());
+    Optional<Hover> hover = HoverProvider.getHover(position, fileContext);
+    return CompletableFuture.completedFuture(hover.orElse(null));
   }
 
   @Override
@@ -134,21 +157,47 @@ public class BSLTextDocumentService implements TextDocumentService {
 
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
+    TextDocumentItem textDocumentItem = params.getTextDocument();
+    FileContext fileTree = getFileTree(textDocumentItem.getText());
 
+    documents.put(textDocumentItem.getUri(), fileTree);
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
+    // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
+    TextDocumentIdentifier textDocumentItem = params.getTextDocument();
+    FileContext fileTree = getFileTree(params.getContentChanges().get(0).getText());
 
+    documents.put(textDocumentItem.getUri(), fileTree);
   }
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-
+    this.documents.remove(params.getTextDocument().getUri());
   }
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
 
+  }
+
+  private FileContext getFileTree(String textDocumentContent) {
+    CharStream input = CharStreams.fromString(textDocumentContent);
+    if (lexer == null) {
+      lexer = new BSLLexer(input);
+    } else {
+      lexer.setInputStream(input);
+    }
+
+    CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+    if (parser == null) {
+      parser = new BSLParser(tokens);
+    } else {
+      parser.setInputStream(tokens);
+    }
+
+    return parser.file();
   }
 }

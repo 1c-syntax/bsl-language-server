@@ -51,6 +51,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
     capabilities.setCompletionProvider(new CompletionOptions(false, Lists.newArrayList(".")));
+    capabilities.setHoverProvider(Boolean.TRUE);
 
     InitializeResult result = new InitializeResult(capabilities);
 
