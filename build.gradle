@@ -1,6 +1,5 @@
 plugins {
     id 'maven'
-    id "com.github.hierynomus.license"
 }
 
 repositories {
@@ -11,6 +10,7 @@ group 'org.github._1c_syntax.intellij.bsl'
 version '1.0'
 
 apply plugin: 'java'
+apply plugin: 'com.github.hierynomus.license'
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
