@@ -20,6 +20,8 @@ dependencies {
     testRuntime('org.junit.jupiter:junit-jupiter-engine:5.2.0')
 }
 
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
 jar {
     manifest {
         attributes 'Main-Class': 'org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher'
