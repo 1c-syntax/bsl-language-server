@@ -42,20 +42,20 @@ import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.DiagnosticProvider;
 import org.github._1c_syntax.intellij.bsl.lsp.server.hover.HoverProvider;
 import org.github._1c_syntax.parser.BSLLexer;
 import org.github._1c_syntax.parser.BSLParser;
@@ -69,12 +69,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class BSLTextDocumentService implements TextDocumentService {
+public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
-  private final Map<String, FileContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private final Map<String, FileInfo> documents = Collections.synchronizedMap(new HashMap<>());
 
   private BSLLexer lexer;
   private BSLParser parser;
+  private LanguageClient client;
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -90,7 +91,8 @@ public class BSLTextDocumentService implements TextDocumentService {
 
   @Override
   public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
-    FileContext fileContext = documents.get(position.getTextDocument().getUri());
+    FileInfo fileInfo = documents.get(position.getTextDocument().getUri());
+    FileContext fileContext = fileInfo.getTree();
     Optional<Hover> hover = HoverProvider.getHover(position, fileContext);
     return CompletableFuture.completedFuture(hover.orElse(null));
   }
@@ -158,18 +160,20 @@ public class BSLTextDocumentService implements TextDocumentService {
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem textDocumentItem = params.getTextDocument();
-    FileContext fileTree = getFileTree(textDocumentItem.getText());
+    FileInfo fileInfo = getFileInfo(textDocumentItem.getText());
 
-    documents.put(textDocumentItem.getUri(), fileTree);
+    documents.put(textDocumentItem.getUri(), fileInfo);
+    validate(textDocumentItem.getUri(), fileInfo);
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
     // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
     TextDocumentIdentifier textDocumentItem = params.getTextDocument();
-    FileContext fileTree = getFileTree(params.getContentChanges().get(0).getText());
+    FileInfo fileInfo = getFileInfo(params.getContentChanges().get(0).getText());
 
-    documents.put(textDocumentItem.getUri(), fileTree);
+    documents.put(textDocumentItem.getUri(), fileInfo);
+    validate(textDocumentItem.getUri(), fileInfo);
   }
 
   @Override
@@ -182,7 +186,12 @@ public class BSLTextDocumentService implements TextDocumentService {
 
   }
 
-  private FileContext getFileTree(String textDocumentContent) {
+  @Override
+  public void connect(LanguageClient client) {
+    this.client = client;
+  }
+
+  private FileInfo getFileInfo(String textDocumentContent) {
     CharStream input = CharStreams.fromString(textDocumentContent);
     if (lexer == null) {
       lexer = new BSLLexer(input);
@@ -198,6 +207,12 @@ public class BSLTextDocumentService implements TextDocumentService {
       parser.setInputStream(tokens);
     }
 
-    return parser.file();
+    FileInfo fileInfo = new FileInfo(parser.file(), tokens.getTokens());
+    return fileInfo;
   }
+
+  private void validate(String uri, FileInfo fileInfo) {
+    DiagnosticProvider.computeAndPublishDiagnostics(client, uri, fileInfo);
+  }
+
 }
