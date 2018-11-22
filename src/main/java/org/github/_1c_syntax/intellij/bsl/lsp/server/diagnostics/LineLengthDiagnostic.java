@@ -20,7 +20,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   public LineLengthDiagnostic() {
   }
 
-  public Collection<Diagnostic> getDiagnostics() {
+  public List<Diagnostic> getDiagnostics() {
     List<Token> tokens = fileInfo.getTokens();
     List<Diagnostic> diagnostics = new ArrayList<>();
 
