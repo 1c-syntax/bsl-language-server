@@ -14,6 +14,7 @@ public class DiagnosticProvider {
   public static final String SOURCE = "bsl-language-server";
 
   private static List<BSLDiagnostic> diagnosticClasses = Arrays.asList(
+    new FunctionShouldHaveReturnDiagnostic(),
     new LineLengthDiagnostic()
   );
 
