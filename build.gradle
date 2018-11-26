@@ -52,4 +52,5 @@ license {
     ext.name = 'Alexey Sosnoviy <labotamy@yandex.ru>, Nikita Gryzlov <nixel2007@gmail.com>'
     ext.project = "BSL Language Server"
     strictCheck = true
+    mapping "java", "SLASHSTAR_STYLE"
 }
