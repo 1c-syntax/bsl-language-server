@@ -31,7 +31,7 @@ public class FileInfo {
   private final BSLParser.FileContext tree;
   private final List<Token> tokens;
 
-  FileInfo(BSLParser.FileContext tree, List<Token> tokens) {
+  public FileInfo(BSLParser.FileContext tree, List<Token> tokens) {
     this.tree = tree;
     this.tokens = new ArrayList<>(tokens);
   }
