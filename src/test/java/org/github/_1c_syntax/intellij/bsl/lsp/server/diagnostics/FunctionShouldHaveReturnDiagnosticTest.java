@@ -1,4 +1,4 @@
-/**
+/*
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018
