@@ -25,8 +25,13 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.intellij.bsl.lsp.server.FileInfo;
 
 import java.util.List;
+import java.util.ResourceBundle;
 
 public interface BSLDiagnostic {
   List<Diagnostic> getDiagnostics();
   void setFileInfo(FileInfo fileInfo);
+
+  default String getDiagnosticMessage() {
+    return ResourceBundle.getBundle(getClass().getName()).getString("diagnosticMessage");
+  }
 }

@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.EscapeUnicode;
+
 plugins {
     id 'maven'
 }
@@ -49,6 +51,14 @@ test {
 
     reports {
         html.enabled = true
+    }
+}
+
+// native2ascii gradle replacement
+tasks.withType(ProcessResources).each { task ->
+    task.from(task.getSource()) {
+        include '**/*.properties'
+        filter(EscapeUnicode)
     }
 }
 
