@@ -69,4 +69,7 @@ license {
     ext.project = "BSL Language Server"
     strictCheck = true
     mapping "java", "SLASHSTAR_STYLE"
+    exclude '**/*.properties'
+    exclude '**/*.xml'
+    exclude '**/*.bsl'
 }
