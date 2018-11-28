@@ -14,8 +14,8 @@ apply plugin: 'com.github.hierynomus.license'
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1'
-    implementation project(":bslparser")
+    compile 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1'
+    compile project(":bslparser")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation 'commons-io:commons-io:2.6'
