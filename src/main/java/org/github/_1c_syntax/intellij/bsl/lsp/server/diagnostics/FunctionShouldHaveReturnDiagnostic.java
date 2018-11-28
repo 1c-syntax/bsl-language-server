@@ -59,7 +59,7 @@ public class FunctionShouldHaveReturnDiagnostic extends BSLParserBaseVisitor<Par
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
       Diagnostic diagnostic = new Diagnostic(
         RangeHelper.newRange(subName.getStart(), subName.getStop()),
-        "Фукция не содержит Возврат",
+        "Функция не содержит Возврат",
         DiagnosticSeverity.Error,
         DiagnosticProvider.SOURCE
       );
