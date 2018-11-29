@@ -42,7 +42,7 @@ public class FunctionShouldHaveReturnDiagnostic extends BSLParserBaseVisitor<Par
   @Override
   public List<Diagnostic> getDiagnostics() {
     this.visitFile(fileInfo.getTree());
-    return diagnostics;
+    return new ArrayList<>(diagnostics);
   }
 
   @Override

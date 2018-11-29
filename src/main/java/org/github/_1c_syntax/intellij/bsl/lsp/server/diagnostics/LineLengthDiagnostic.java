@@ -28,7 +28,6 @@ import org.github._1c_syntax.intellij.bsl.lsp.server.FileInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +36,6 @@ import java.util.Optional;
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private FileInfo fileInfo;
-
-  public LineLengthDiagnostic() {
-  }
 
   public List<Diagnostic> getDiagnostics() {
     List<Token> tokens = fileInfo.getTokens();
