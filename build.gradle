@@ -2,6 +2,7 @@ import org.apache.tools.ant.filters.EscapeUnicode;
 
 plugins {
     id 'maven'
+    id 'jacoco'
 }
 
 repositories {
@@ -51,6 +52,16 @@ test {
 
     reports {
         html.enabled = true
+    }
+
+    jacoco {
+        append = false
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
     }
 }
 
