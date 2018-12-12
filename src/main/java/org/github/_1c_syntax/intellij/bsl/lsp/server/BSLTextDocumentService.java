@@ -71,7 +71,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
-  private final Map<String, FileInfo> documents = Collections.synchronizedMap(new HashMap<>());
+  private final Map<String, FileContext> documents = Collections.synchronizedMap(new HashMap<>());
 
   private BSLLexer lexer;
   private BSLParser parser;
@@ -91,9 +91,8 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
-    FileInfo fileInfo = documents.get(position.getTextDocument().getUri());
-    FileContext fileContext = fileInfo.getTree();
-    Optional<Hover> hover = HoverProvider.getHover(position, fileContext);
+    FileContext fileTree = documents.get(position.getTextDocument().getUri());
+    Optional<Hover> hover = HoverProvider.getHover(position, fileTree);
     return CompletableFuture.completedFuture(hover.orElse(null));
   }
 
@@ -160,20 +159,20 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem textDocumentItem = params.getTextDocument();
-    FileInfo fileInfo = getFileInfo(textDocumentItem.getText());
+    FileContext fileTree = getFileContext(textDocumentItem.getText());
 
-    documents.put(textDocumentItem.getUri(), fileInfo);
-    validate(textDocumentItem.getUri(), fileInfo);
+    documents.put(textDocumentItem.getUri(), fileTree);
+    validate(textDocumentItem.getUri(), fileTree);
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
     // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
     TextDocumentIdentifier textDocumentItem = params.getTextDocument();
-    FileInfo fileInfo = getFileInfo(params.getContentChanges().get(0).getText());
+    FileContext fileTree = getFileContext(params.getContentChanges().get(0).getText());
 
-    documents.put(textDocumentItem.getUri(), fileInfo);
-    validate(textDocumentItem.getUri(), fileInfo);
+    documents.put(textDocumentItem.getUri(), fileTree);
+    validate(textDocumentItem.getUri(), fileTree);
   }
 
   @Override
@@ -191,7 +190,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     this.client = client;
   }
 
-  private FileInfo getFileInfo(String textDocumentContent) {
+  private FileContext getFileContext(String textDocumentContent) {
     CharStream input = CharStreams.fromString(textDocumentContent);
     if (lexer == null) {
       lexer = new BSLLexer(input);
@@ -207,12 +206,11 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       parser.setInputStream(tokens);
     }
 
-    FileInfo fileInfo = new FileInfo(parser.file(), tokens.getTokens());
-    return fileInfo;
+    return parser.file();
   }
 
-  private void validate(String uri, FileInfo fileInfo) {
-    DiagnosticProvider.computeAndPublishDiagnostics(client, uri, fileInfo);
+  private void validate(String uri, FileContext fileTree) {
+    DiagnosticProvider.computeAndPublishDiagnostics(client, uri, fileTree);
   }
 
 }

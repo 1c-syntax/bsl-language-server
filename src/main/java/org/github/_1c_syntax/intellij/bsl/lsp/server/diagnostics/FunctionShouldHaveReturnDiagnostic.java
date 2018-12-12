@@ -25,7 +25,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.intellij.bsl.lsp.server.FileInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
 import org.github._1c_syntax.parser.BSLLexer;
 import org.github._1c_syntax.parser.BSLParser;
@@ -36,19 +35,13 @@ import java.util.Collection;
 import java.util.List;
 
 public class FunctionShouldHaveReturnDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
-  private FileInfo fileInfo;
   private List<Diagnostic> diagnostics = new ArrayList<>();
 
   @Override
-  public List<Diagnostic> getDiagnostics() {
-    this.visitFile(fileInfo.getTree());
-    return new ArrayList<>(diagnostics);
-  }
-
-  @Override
-  public void setFileInfo(FileInfo fileInfo) {
-    this.fileInfo = fileInfo;
+  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
     diagnostics.clear();
+    this.visitFile(fileTree);
+    return new ArrayList<>(diagnostics);
   }
 
   @Override

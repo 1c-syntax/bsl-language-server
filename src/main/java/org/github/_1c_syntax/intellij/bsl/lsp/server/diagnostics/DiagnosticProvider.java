@@ -24,11 +24,11 @@ package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.github._1c_syntax.intellij.bsl.lsp.server.FileInfo;
+import org.github._1c_syntax.parser.BSLParser;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DiagnosticProvider {
 
@@ -39,16 +39,11 @@ public class DiagnosticProvider {
     new LineLengthDiagnostic()
   );
 
-  public static void computeAndPublishDiagnostics(LanguageClient client, String uri, FileInfo fileInfo) {
+  public static void computeAndPublishDiagnostics(LanguageClient client, String uri, BSLParser.FileContext fileTree) {
 
-    List<Diagnostic> diagnostics = new ArrayList<>();
-    diagnosticClasses.parallelStream()
-      .flatMap(diagnostic -> {
-        diagnostic.setFileInfo(fileInfo);
-        return diagnostic.getDiagnostics().stream();
-      }).forEach(
-      diagnostics::add
-    );
+    List<Diagnostic> diagnostics = diagnosticClasses.parallelStream()
+      .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
+      .collect(Collectors.toList());
 
     client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
   }

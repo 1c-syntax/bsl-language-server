@@ -22,14 +22,13 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.intellij.bsl.lsp.server.FileInfo;
+import org.github._1c_syntax.parser.BSLParser;
 
 import java.util.List;
 import java.util.ResourceBundle;
 
 public interface BSLDiagnostic {
-  List<Diagnostic> getDiagnostics();
-  void setFileInfo(FileInfo fileInfo);
+  List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree);
 
   default String getDiagnosticMessage() {
     return ResourceBundle.getBundle(getClass().getName()).getString("diagnosticMessage");

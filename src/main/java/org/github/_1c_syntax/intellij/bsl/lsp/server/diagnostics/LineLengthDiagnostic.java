@@ -24,8 +24,8 @@ package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.intellij.bsl.lsp.server.FileInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
+import org.github._1c_syntax.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,10 +35,10 @@ import java.util.Optional;
 
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
-  private FileInfo fileInfo;
+  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
 
-  public List<Diagnostic> getDiagnostics() {
-    List<Token> tokens = fileInfo.getTokens();
+    List<Token> tokens = fileTree.getTokens();
+
     List<Diagnostic> diagnostics = new ArrayList<>();
 
     Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
@@ -63,11 +63,6 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     });
 
     return diagnostics;
-  }
-
-  @Override
-  public void setFileInfo(FileInfo fileInfo) {
-    this.fileInfo = fileInfo;
   }
 
 }
