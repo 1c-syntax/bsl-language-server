@@ -32,16 +32,20 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.github._1c_syntax.intellij.bsl.lsp.server.settings.LanguageServerSettings;
 
 import java.util.concurrent.CompletableFuture;
 
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
+  private final LanguageServerSettings settings;
   private LanguageClient client;
   private BSLTextDocumentService textDocumentService;
   private WorkspaceService workspaceService;
 
-  public BSLLanguageServer() {
+  public BSLLanguageServer(LanguageServerSettings settings) {
+    this.settings = settings;
+
     textDocumentService = new BSLTextDocumentService();
     workspaceService = new BSLWorkspaceService();
   }
