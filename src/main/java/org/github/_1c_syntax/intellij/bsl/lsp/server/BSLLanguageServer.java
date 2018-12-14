@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.github._1c_syntax.intellij.bsl.lsp.server.settings.LanguageServerSettings;
 
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
@@ -45,6 +46,9 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   public BSLLanguageServer(LanguageServerSettings settings) {
     this.settings = settings;
+
+    Locale currentLocale = Locale.forLanguageTag(settings.getDiagnosticLanguage().getLanguageCode());
+    Locale.setDefault(currentLocale);
 
     textDocumentService = new BSLTextDocumentService();
     workspaceService = new BSLWorkspaceService();
