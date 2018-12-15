@@ -35,6 +35,8 @@ import java.util.Optional;
 
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
+  private int MAX_LINE_LENGTH = 120;
+
   public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
 
     List<Token> tokens = fileTree.getTokens();
@@ -44,14 +46,14 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
     tokens.forEach((Token token) -> {
         List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine(), new ArrayList<>());
-        tokenList.add(token.getCharPositionInLine());
+        tokenList.add(token.getCharPositionInLine() + token.getText().length());
         tokensInOneLine.put(token.getLine() - 1, tokenList);
       });
 
     tokensInOneLine.forEach((key, value) -> {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
       Integer maxCharPosition = max.orElse(0);
-      if (maxCharPosition > 120) {
+      if (maxCharPosition > MAX_LINE_LENGTH) {
         Diagnostic diagnostic = new Diagnostic(
           RangeHelper.newRange(key, 0, key, maxCharPosition),
           "Превышена длина строки",
