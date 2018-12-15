@@ -56,7 +56,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
       if (maxCharPosition > MAX_LINE_LENGTH) {
         Diagnostic diagnostic = new Diagnostic(
           RangeHelper.newRange(key, 0, key, maxCharPosition),
-          "Превышена длина строки",
+          getDiagnosticMessage(),
           DiagnosticSeverity.Error,
           DiagnosticProvider.SOURCE
         );
