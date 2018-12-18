@@ -37,17 +37,17 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.jar {
+tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher"
     }
-    from(Callable {
-        configurations.compile.map { zipTree(it) }
-    }) {
-        exclude("META-INF/MANIFEST.MF")
-        exclude("META-INF/*.SF")
-        exclude("META-INF/*.DSA")
-        exclude("META-INF/*.RSA")
+    configurations["compile"].forEach {
+        from(zipTree(it.absoluteFile)) {
+            exclude("META-INF/MANIFEST.MF")
+            exclude("META-INF/*.SF")
+            exclude("META-INF/*.DSA")
+            exclude("META-INF/*.RSA")
+        }
     }
 }
 
