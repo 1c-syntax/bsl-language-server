@@ -51,7 +51,7 @@ public class FunctionShouldHaveReturnDiagnostic extends BSLParserBaseVisitor<Par
     if (tokens.isEmpty()) {
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
       Diagnostic diagnostic = new Diagnostic(
-        RangeHelper.newRange(subName.getStart(), subName.getStop()),
+        RangeHelper.newRange(subName),
         getDiagnosticMessage(),
         DiagnosticSeverity.Error,
         DiagnosticProvider.SOURCE

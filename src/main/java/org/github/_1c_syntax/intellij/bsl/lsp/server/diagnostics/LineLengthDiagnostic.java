@@ -35,7 +35,7 @@ import java.util.Optional;
 
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
-  private int MAX_LINE_LENGTH = 120;
+  private static final int MAX_LINE_LENGTH = 120;
 
   public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
 
