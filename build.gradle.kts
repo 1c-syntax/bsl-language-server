@@ -22,6 +22,10 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     compile("commons-cli:commons-cli:1.4")
 
+    compile("commons-io", "commons-io", "2.6")
+
+    compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.4")
+
     compile(project(":bslparser"))
 
     // https://mvnrepository.com/artifact/commons-io/commons-io

@@ -33,13 +33,15 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.DiagnosticProvider;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.AnalysisInfo;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.ReportersAggregator;
 import org.github._1c_syntax.intellij.bsl.lsp.server.settings.LanguageServerSettings;
 import org.github._1c_syntax.parser.BSLLexer;
 import org.github._1c_syntax.parser.BSLParser;
@@ -52,6 +54,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -112,8 +115,16 @@ public class BSLLSPLauncher {
       "Source directory"
     );
 
+    Option reporter = new Option(
+      "r",
+      "reporter",
+      true,
+      "Reporter key"
+    );
+
     options.addOption(analyze);
     options.addOption(srcDir);
+    options.addOption(reporter);
 
     options.addOption(diagnosticLanguageOption);
     options.addOption(help);
@@ -121,19 +132,22 @@ public class BSLLSPLauncher {
 
   private static void processAnalyze(CommandLine cmd) {
     String srcDirOption = cmd.getOptionValue("srcDir", "");
+    String[] reporters = cmd.getOptionValues("reporter");
+
     Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
-    List<Pair<Path, List<Diagnostic>>> diagnostics = files.parallelStream()
+    List<FileInfo> diagnostics = files.parallelStream()
       .map(File::toPath)
       .map(path -> new Pair<>(path, prepareParser(path)))
       .map(pair -> new Pair<>(pair.getKey(), pair.getValue().file()))
-      .map(pair -> new Pair<>(pair.getKey(), DiagnosticProvider.computeDiagnostics(pair.getValue())))
+      .map(pair -> new FileInfo(pair.getKey(), DiagnosticProvider.computeDiagnostics(pair.getValue())))
       .collect(Collectors.toList());
 
-    System.out.println(srcDir);
-    diagnostics.forEach(diagnostic -> System.out.println(diagnostic.toString()));
+    AnalysisInfo analysisInfo = new AnalysisInfo(new Date(), diagnostics);
+    ReportersAggregator aggregator = new ReportersAggregator(reporters);
+    aggregator.report(analysisInfo);
 
   }
 
