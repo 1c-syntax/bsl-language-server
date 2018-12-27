@@ -40,11 +40,15 @@ public class DiagnosticProvider {
   );
 
   public static void computeAndPublishDiagnostics(LanguageClient client, String uri, BSLParser.FileContext fileTree) {
-
-    List<Diagnostic> diagnostics = diagnosticClasses.parallelStream()
-      .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
-      .collect(Collectors.toList());
+    List<Diagnostic> diagnostics = computeDiagnostics(fileTree);
 
     client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
   }
+
+  public static List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {
+    return diagnosticClasses.parallelStream()
+        .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
+        .collect(Collectors.toList());
+  }
+
 }
