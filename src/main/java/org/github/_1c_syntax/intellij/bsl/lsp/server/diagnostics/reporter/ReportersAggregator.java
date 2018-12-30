@@ -54,6 +54,7 @@ public class ReportersAggregator {
     Map<String, Class> map = new HashMap<>();
     map.put("console",  ConsoleReporter.class);
     map.put("json", JsonReporter.class);
+    map.put("tslint", TSLintReporter.class);
 
     return map;
   }
