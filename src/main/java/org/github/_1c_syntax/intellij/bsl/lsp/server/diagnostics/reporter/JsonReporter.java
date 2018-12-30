@@ -41,7 +41,7 @@ public class JsonReporter implements DiagnosticReporter {
     mapper.setDateFormat(df);
 
     try {
-      mapper.writeValue(new File("./out.json"), analysisInfo);
+      mapper.writeValue(new File("./bsl-json.json"), analysisInfo);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
