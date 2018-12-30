@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server;
 
-import javafx.util.Pair;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -140,9 +139,7 @@ public class BSLLSPLauncher {
 
     List<FileInfo> diagnostics = files.parallelStream()
       .map(File::toPath)
-      .map(path -> new Pair<>(path, prepareParser(path)))
-      .map(pair -> new Pair<>(pair.getKey(), pair.getValue().file()))
-      .map(pair -> new FileInfo(pair.getKey(), DiagnosticProvider.computeDiagnostics(pair.getValue())))
+      .map(BSLLSPLauncher::getFileContextFromPath)
       .collect(Collectors.toList());
 
     AnalysisInfo analysisInfo = new AnalysisInfo(new Date(), diagnostics);
@@ -193,5 +190,11 @@ public class BSLLSPLauncher {
     BSLLexer lexer = new BSLLexer(input);
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     return new BSLParser(tokenStream);
+  }
+
+  private static FileInfo getFileContextFromPath(Path path) {
+    BSLParser parser = prepareParser(path);
+    BSLParser.FileContext file = parser.file();
+    return new FileInfo(path, DiagnosticProvider.computeDiagnostics(file));
   }
 }
