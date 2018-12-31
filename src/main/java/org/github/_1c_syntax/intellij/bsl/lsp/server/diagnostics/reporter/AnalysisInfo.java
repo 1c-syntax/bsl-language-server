@@ -27,8 +27,13 @@ import java.util.Date;
 import java.util.List;
 
 public class AnalysisInfo {
+
   private Date date;
   private List<FileInfo> fileinfos;
+
+  public AnalysisInfo() {
+    // for DTO
+  }
 
   public AnalysisInfo(Date date, List<FileInfo> fileinfos) {
     this.date = date;
@@ -42,4 +47,13 @@ public class AnalysisInfo {
   public List<FileInfo> getFileinfos() {
     return fileinfos;
   }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public void setFileinfos(List<FileInfo> fileinfos) {
+    this.fileinfos = fileinfos;
+  }
+
 }
