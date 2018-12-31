@@ -102,6 +102,7 @@ sonarqube {
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.organization", "1c-syntax")
         property("sonar.projectKey", "1c-syntax_bsl-language-server")
+        property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
     }
 }
