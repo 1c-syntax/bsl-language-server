@@ -60,6 +60,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
           DiagnosticSeverity.Error,
           DiagnosticProvider.SOURCE
         );
+        diagnostic.setCode(LineLengthDiagnostic.class.getSimpleName());
         diagnostics.add(diagnostic);
       }
     });

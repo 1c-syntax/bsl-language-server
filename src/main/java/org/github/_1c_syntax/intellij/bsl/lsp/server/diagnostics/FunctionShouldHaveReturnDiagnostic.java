@@ -56,6 +56,7 @@ public class FunctionShouldHaveReturnDiagnostic extends BSLParserBaseVisitor<Par
         DiagnosticSeverity.Error,
         DiagnosticProvider.SOURCE
       );
+      diagnostic.setCode(FunctionShouldHaveReturnDiagnostic.class.getSimpleName());
       diagnostics.add(diagnostic);
     }
     return ctx;
