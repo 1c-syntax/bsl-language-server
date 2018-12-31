@@ -31,6 +31,10 @@ public class FileInfo {
   private Path path;
   private Diagnostic[] diagnostics;
 
+  public FileInfo() {
+    // for DTO
+  }
+
   public FileInfo(Path path, List<Diagnostic> diagnostics) {
     this.path = path;
     this.diagnostics = diagnostics.toArray(new Diagnostic[]{});
@@ -42,6 +46,14 @@ public class FileInfo {
 
   public Diagnostic[] getDiagnostics() {
     return diagnostics;
+  }
+
+  public void setPath(Path path) {
+    this.path = path;
+  }
+
+  public void setDiagnostics(Diagnostic[] diagnostics) {
+    this.diagnostics = diagnostics;
   }
 
   @Override
