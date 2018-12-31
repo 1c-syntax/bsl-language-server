@@ -1,3 +1,4 @@
+import java.net.URI
 import java.util.Calendar
 import org.apache.tools.ant.filters.EscapeUnicode
 
@@ -5,14 +6,16 @@ plugins {
     java
     maven
     jacoco
-    id("com.github.hierynomus.license")
+    id("com.github.hierynomus.license") version "0.14.0"
+    id("org.sonarqube") version "2.6.2"
 }
 
 repositories {
     mavenCentral()
+    maven { url = URI("https://jitpack.io") }
 }
 
-group = "org.github._1c_syntax.intellij.bsl"
+group = "org.github._1c_syntax"
 version = "1.0"
 
 dependencies {
@@ -26,7 +29,7 @@ dependencies {
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.4")
 
-    compile(project(":bslparser"))
+    compile("com.github.1c-syntax", "bsl-parser", "0.1.0")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation("commons-io:commons-io:2.6")
@@ -65,10 +68,6 @@ tasks.test {
     reports {
         html.setEnabled(true)
     }
-
-//    jacoco {
-//        append = false
-//    }
 }
 
 tasks.jacocoTestReport {
@@ -95,4 +94,14 @@ license {
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.bsl")
+}
+
+sonarqube {
+    properties {
+        property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.organization", "1c-syntax")
+        property("sonar.projectKey", "1c-syntax_bsl-language-server")
+        property("sonar.exclusions", "**/gen/**/*.*")
+    }
 }
