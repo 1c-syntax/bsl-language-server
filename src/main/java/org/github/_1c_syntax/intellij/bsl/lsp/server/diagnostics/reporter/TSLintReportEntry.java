@@ -21,24 +21,20 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 import java.util.EnumMap;
 import java.util.Map;
 
-@ToString
-@EqualsAndHashCode
 class TSLintReportEntry {
-  @Getter private Position endPosition;
+  @Getter private EntryPosition endPosition;
   @Getter private String failure;
   @Getter private String name;
   @Getter private String ruleName;
   @Getter private String ruleSeverity;
-  @Getter private Position startPosition;
+  @Getter private EntryPosition startPosition;
 
   private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
 
@@ -51,27 +47,24 @@ class TSLintReportEntry {
 
 
   TSLintReportEntry(String fileName, Diagnostic diagnostic) {
-    endPosition = new Position(diagnostic.getRange().getStart());
+    endPosition = new EntryPosition(diagnostic.getRange().getEnd());
     failure = diagnostic.getMessage();
     name = fileName;
     ruleName = diagnostic.getCode();
     ruleSeverity = severityMap.get(diagnostic.getSeverity());
-    startPosition = new Position(diagnostic.getRange().getEnd());
+    startPosition = new EntryPosition(diagnostic.getRange().getStart());
   }
 
-  @ToString
-  @EqualsAndHashCode
-  static class Position {
+  static class EntryPosition {
     @Getter private final int character;
     @Getter private final int line;
     @Getter private final int position;
 
-    Position(org.eclipse.lsp4j.Position position) {
+    EntryPosition(org.eclipse.lsp4j.Position position) {
       line = position.getLine();
       character = position.getCharacter();
       this.position = position.getCharacter();
     }
-
   }
 
 }
