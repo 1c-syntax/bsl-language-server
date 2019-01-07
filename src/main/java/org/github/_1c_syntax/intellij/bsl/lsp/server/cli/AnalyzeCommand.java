@@ -45,48 +45,48 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class AnalyzeCommand implements Command {
-    private CommandLine cmd;
+  private CommandLine cmd;
 
-    public AnalyzeCommand(CommandLine cmd) {
-        this.cmd = cmd;
+  public AnalyzeCommand(CommandLine cmd) {
+    this.cmd = cmd;
+  }
+
+  @Override
+  public int execute() {
+    String srcDirOption = cmd.getOptionValue("srcDir", "");
+    String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
+
+    Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
+
+    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+
+    List<FileInfo> diagnostics = files.parallelStream()
+      .map(File::toPath)
+      .map(AnalyzeCommand::getFileContextFromPath)
+      .collect(Collectors.toList());
+
+    AnalysisInfo analysisInfo = new AnalysisInfo(new Date(), diagnostics);
+    ReportersAggregator aggregator = new ReportersAggregator(reporters);
+    aggregator.report(analysisInfo);
+    return 0;
+  }
+
+  private static FileInfo getFileContextFromPath(Path path) {
+    BSLParser parser = prepareParser(path);
+    BSLParser.FileContext file = parser.file();
+    return new FileInfo(path, DiagnosticProvider.computeDiagnostics(file));
+  }
+
+
+  private static BSLParser prepareParser(Path path) {
+    CharStream input;
+    try {
+      input = CharStreams.fromPath(path, Charset.forName("UTF-8"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-
-    @Override
-    public int execute() {
-        String srcDirOption = cmd.getOptionValue("srcDir", "");
-        String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
-
-        Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
-
-        Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
-
-        List<FileInfo> diagnostics = files.parallelStream()
-                .map(File::toPath)
-                .map(AnalyzeCommand::getFileContextFromPath)
-                .collect(Collectors.toList());
-
-        AnalysisInfo analysisInfo = new AnalysisInfo(new Date(), diagnostics);
-        ReportersAggregator aggregator = new ReportersAggregator(reporters);
-        aggregator.report(analysisInfo);
-        return 0;
-    }
-
-    private static FileInfo getFileContextFromPath(Path path) {
-        BSLParser parser = prepareParser(path);
-        BSLParser.FileContext file = parser.file();
-        return new FileInfo(path, DiagnosticProvider.computeDiagnostics(file));
-    }
-
-
-    private static BSLParser prepareParser(Path path) {
-        CharStream input;
-        try {
-            input = CharStreams.fromPath(path, Charset.forName("UTF-8"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        BSLLexer lexer = new BSLLexer(input);
-        CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-        return new BSLParser(tokenStream);
-    }
+    BSLLexer lexer = new BSLLexer(input);
+    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    return new BSLParser(tokenStream);
+  }
 }

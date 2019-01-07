@@ -11,14 +11,14 @@ import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.creat
 
 class LanguageServerStartCommandTest {
 
-    @Test
-    void testExecute() throws ParseException {
-        Options options = createOptions();
-        DefaultParser parser = new DefaultParser();
-        CommandLine commandLine = parser.parse(options, new String[]{"-d", "en"});
-        Command command = new LanguageServerStartCommand(commandLine);
+  @Test
+  void testExecute() throws ParseException {
+    Options options = createOptions();
+    DefaultParser parser = new DefaultParser();
+    CommandLine commandLine = parser.parse(options, new String[]{"-d", "en"});
+    Command command = new LanguageServerStartCommand(commandLine);
 
-        int result = command.execute();
-        assertThat(result).isEqualTo(0);
-    }
+    int result = command.execute();
+    assertThat(result).isEqualTo(0);
+  }
 }

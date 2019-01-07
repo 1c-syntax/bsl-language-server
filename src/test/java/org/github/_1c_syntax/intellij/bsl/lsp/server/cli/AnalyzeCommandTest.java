@@ -11,18 +11,18 @@ import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.creat
 
 class AnalyzeCommandTest {
 
-    @Test
-    void testExecute() throws ParseException {
-        Options options = createOptions();
+  @Test
+  void testExecute() throws ParseException {
+    Options options = createOptions();
 
-        DefaultParser parser = new DefaultParser();
-        CommandLine commandLine = parser.parse(options, new String[]{"-s", "/tmp"});
+    DefaultParser parser = new DefaultParser();
+    CommandLine commandLine = parser.parse(options, new String[]{"-s", "/tmp"});
 
-        Command command = new AnalyzeCommand(commandLine);
+    Command command = new AnalyzeCommand(commandLine);
 
-        int result = command.execute();
+    int result = command.execute();
 
-        assertThat(result).isEqualTo(0);
-    }
+    assertThat(result).isEqualTo(0);
+  }
 
 }

@@ -34,27 +34,27 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class LanguageServerStartCommand implements Command {
-    private CommandLine cmd;
+  private CommandLine cmd;
 
-    public LanguageServerStartCommand(CommandLine cmd) {
-        this.cmd = cmd;
-    }
+  public LanguageServerStartCommand(CommandLine cmd) {
+    this.cmd = cmd;
+  }
 
-    @Override
-    public int execute() {
-        String diagnosticLanguage = cmd.getOptionValue("diagnosticLanguage", "en");
-        LanguageServerSettings settings = new LanguageServerSettings(diagnosticLanguage);
+  @Override
+  public int execute() {
+    String diagnosticLanguage = cmd.getOptionValue("diagnosticLanguage", "en");
+    LanguageServerSettings settings = new LanguageServerSettings(diagnosticLanguage);
 
-        LanguageServer server = new BSLLanguageServer(settings);
-        InputStream in = System.in;
-        OutputStream out = System.out;
+    LanguageServer server = new BSLLanguageServer(settings);
+    InputStream in = System.in;
+    OutputStream out = System.out;
 
-        Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, in, out);
+    Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, in, out);
 
-        LanguageClient client = launcher.getRemoteProxy();
-        ((LanguageClientAware) server).connect(client);
+    LanguageClient client = launcher.getRemoteProxy();
+    ((LanguageClientAware) server).connect(client);
 
-        launcher.startListening();
-        return 0;
-    }
+    launcher.startListening();
+    return 0;
+  }
 }

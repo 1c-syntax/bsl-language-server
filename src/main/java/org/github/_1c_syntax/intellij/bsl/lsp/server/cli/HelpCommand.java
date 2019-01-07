@@ -28,17 +28,17 @@ import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.APP_N
 
 public class HelpCommand implements Command {
 
-    private final Options options;
+  private final Options options;
 
-    public HelpCommand(Options options) {
-        this.options = options;
-    }
+  public HelpCommand(Options options) {
+    this.options = options;
+  }
 
-    @Override
-    public int execute() {
-        HelpFormatter formatter = new HelpFormatter();
+  @Override
+  public int execute() {
+    HelpFormatter formatter = new HelpFormatter();
 
-        formatter.printHelp(APP_NAME, options, true);
-        return 0;
-    }
+    formatter.printHelp(APP_NAME, options, true);
+    return 0;
+  }
 }

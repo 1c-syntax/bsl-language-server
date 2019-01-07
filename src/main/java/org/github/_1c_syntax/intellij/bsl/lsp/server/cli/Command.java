@@ -22,5 +22,5 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.cli;
 
 public interface Command {
-    int execute();
+  int execute();
 }

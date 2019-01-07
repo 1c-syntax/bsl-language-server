@@ -29,10 +29,10 @@ import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.creat
 
 class ParseExceptionCommandTest {
 
-    @Test
-    void testExecute() {
-        Command command = new ParseExceptionCommand(createOptions(), new ParseException(""));
-        int result = command.execute();
-        assertThat(result).isEqualTo(1);
-    }
+  @Test
+  void testExecute() {
+    Command command = new ParseExceptionCommand(createOptions(), new ParseException(""));
+    int result = command.execute();
+    assertThat(result).isEqualTo(1);
+  }
 }

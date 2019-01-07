@@ -28,11 +28,11 @@ import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.creat
 
 class HelpCommandTest {
 
-    @Test
-    void testExecute() {
-        Command command = new HelpCommand(createOptions());
-        int result = command.execute();
+  @Test
+  void testExecute() {
+    Command command = new HelpCommand(createOptions());
+    int result = command.execute();
 
-        assertThat(result).isEqualTo(0);
-    }
+    assertThat(result).isEqualTo(0);
+  }
 }

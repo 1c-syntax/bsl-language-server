@@ -29,21 +29,21 @@ import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.APP_N
 
 public class ParseExceptionCommand implements Command {
 
-    private final Options options;
-    private final ParseException e;
+  private final Options options;
+  private final ParseException e;
 
-    public ParseExceptionCommand(Options options, ParseException e) {
-        this.options = options;
-        this.e = e;
-    }
+  public ParseExceptionCommand(Options options, ParseException e) {
+    this.options = options;
+    this.e = e;
+  }
 
-    @Override
-    public int execute() {
-        HelpFormatter formatter = new HelpFormatter();
+  @Override
+  public int execute() {
+    HelpFormatter formatter = new HelpFormatter();
 
-        System.out.println(e.getMessage());
-        formatter.printHelp(APP_NAME, options, true);
+    System.out.println(e.getMessage());
+    formatter.printHelp(APP_NAME, options, true);
 
-        return 1;
-    }
+    return 1;
+  }
 }
