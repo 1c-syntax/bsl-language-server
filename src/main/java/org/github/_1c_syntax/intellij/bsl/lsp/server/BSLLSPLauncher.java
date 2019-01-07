@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -58,7 +59,8 @@ public class BSLLSPLauncher {
     System.exit(result);
   }
 
-  private static Options createOptions() {
+  @VisibleForTesting
+  public static Options createOptions() {
     Options createdOptions = new Options();
 
     Option diagnosticLanguageOption = new Option(

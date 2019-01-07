@@ -21,17 +21,17 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.cli;
 
-import org.apache.commons.cli.Options;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.createOptions;
 
 class HelpCommandTest {
 
     @Test
     void testExecute() {
-        HelpCommand helpCommand = new HelpCommand(new Options());
-        int result = helpCommand.execute();
+        Command command = new HelpCommand(createOptions());
+        int result = command.execute();
 
         assertThat(result).isEqualTo(0);
     }

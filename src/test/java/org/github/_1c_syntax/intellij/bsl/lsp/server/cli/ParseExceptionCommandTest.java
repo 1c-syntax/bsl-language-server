@@ -21,17 +21,17 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.cli;
 
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher.createOptions;
 
 class ParseExceptionCommandTest {
 
     @Test
     void testExecute() {
-        Command command = new ParseExceptionCommand(new Options(), new ParseException(""));
+        Command command = new ParseExceptionCommand(createOptions(), new ParseException(""));
         int result = command.execute();
         assertThat(result).isEqualTo(1);
     }
