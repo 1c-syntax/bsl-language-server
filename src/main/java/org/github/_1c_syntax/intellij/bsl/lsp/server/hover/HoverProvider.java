@@ -34,7 +34,11 @@ import org.github._1c_syntax.parser.BSLParserBaseVisitor;
 
 import java.util.Optional;
 
-public class HoverProvider {
+public final class HoverProvider {
+
+  private HoverProvider() {
+    // only statics
+  }
 
   public static Optional<Hover> getHover(TextDocumentPositionParams position, FileContext fileContext) {
 
@@ -61,7 +65,7 @@ public class HoverProvider {
 
   }
 
-  private static class SubNameFinder extends BSLParserBaseVisitor<ParseTree> {
+  private static final class SubNameFinder extends BSLParserBaseVisitor<ParseTree> {
 
     private Token subName;
     private final Position position;

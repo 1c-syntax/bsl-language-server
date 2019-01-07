@@ -39,11 +39,11 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
-
+    // no-op
   }
 
   @Override
   public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
-
+    // no-op
   }
 }

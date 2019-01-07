@@ -24,11 +24,11 @@ package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 import lombok.Data;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 public class AnalysisInfo {
-  private final Date date;
+  private final LocalDateTime date;
   private final List<FileInfo> fileinfos;
 }

@@ -35,11 +35,11 @@ import org.github._1c_syntax.parser.BSLParser;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -65,7 +65,7 @@ public class AnalyzeCommand implements Command {
       .map(AnalyzeCommand::getFileContextFromPath)
       .collect(Collectors.toList());
 
-    AnalysisInfo analysisInfo = new AnalysisInfo(new Date(), diagnostics);
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), diagnostics);
     ReportersAggregator aggregator = new ReportersAggregator(reporters);
     aggregator.report(analysisInfo);
     return 0;
@@ -81,7 +81,7 @@ public class AnalyzeCommand implements Command {
   private static BSLParser prepareParser(Path path) {
     CharStream input;
     try {
-      input = CharStreams.fromPath(path, Charset.forName("UTF-8"));
+      input = CharStreams.fromPath(path, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

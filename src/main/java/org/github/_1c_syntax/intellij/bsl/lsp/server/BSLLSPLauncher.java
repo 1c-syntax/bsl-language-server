@@ -28,7 +28,11 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.github._1c_syntax.intellij.bsl.lsp.server.cli.*;
+import org.github._1c_syntax.intellij.bsl.lsp.server.cli.AnalyzeCommand;
+import org.github._1c_syntax.intellij.bsl.lsp.server.cli.Command;
+import org.github._1c_syntax.intellij.bsl.lsp.server.cli.HelpCommand;
+import org.github._1c_syntax.intellij.bsl.lsp.server.cli.LanguageServerStartCommand;
+import org.github._1c_syntax.intellij.bsl.lsp.server.cli.ParseExceptionCommand;
 
 public class BSLLSPLauncher {
 

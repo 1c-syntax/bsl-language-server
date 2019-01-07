@@ -77,6 +77,10 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private BSLParser parser;
   private LanguageClient client;
 
+  public BSLTextDocumentService() {
+    // no-op
+  }
+
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
     List<CompletionItem> completionItems = new ArrayList<>();
@@ -182,7 +186,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-
+    // no-op
   }
 
   @Override

@@ -50,7 +50,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
         tokensInOneLine.put(token.getLine() - 1, tokenList);
       });
 
-    tokensInOneLine.forEach((key, value) -> {
+    tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
       Integer maxCharPosition = max.orElse(0);
       if (maxCharPosition > MAX_LINE_LENGTH) {

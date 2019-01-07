@@ -26,7 +26,12 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.parser.BSLParserRuleContext;
 
-public class RangeHelper {
+public final class RangeHelper {
+
+  private RangeHelper() {
+    // Utility class
+  }
+
   public static Range newRange(int startLine, int startChar, int endLine, int endChar) {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
   }

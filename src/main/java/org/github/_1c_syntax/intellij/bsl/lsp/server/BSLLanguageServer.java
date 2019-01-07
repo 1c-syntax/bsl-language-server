@@ -40,7 +40,6 @@ import java.util.concurrent.CompletableFuture;
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   private final LanguageServerSettings settings;
-  private LanguageClient client;
   private BSLTextDocumentService textDocumentService;
   private WorkspaceService workspaceService;
 
@@ -88,7 +87,6 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   @Override
   public void connect(LanguageClient client) {
-    this.client = client;
     textDocumentService.connect(client);
   }
 }

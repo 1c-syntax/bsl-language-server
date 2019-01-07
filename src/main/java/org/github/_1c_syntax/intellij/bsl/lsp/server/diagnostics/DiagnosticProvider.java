@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DiagnosticProvider {
+public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
 
@@ -38,6 +38,10 @@ public class DiagnosticProvider {
     new FunctionShouldHaveReturnDiagnostic(),
     new LineLengthDiagnostic()
   );
+
+  private DiagnosticProvider() {
+    // only statics
+  }
 
   public static void computeAndPublishDiagnostics(LanguageClient client, String uri, BSLParser.FileContext fileTree) {
     List<Diagnostic> diagnostics = computeDiagnostics(fileTree);
