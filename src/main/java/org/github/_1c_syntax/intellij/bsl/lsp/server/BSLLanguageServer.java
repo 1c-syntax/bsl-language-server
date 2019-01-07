@@ -42,6 +42,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   private final LanguageServerSettings settings;
   private BSLTextDocumentService textDocumentService;
   private WorkspaceService workspaceService;
+  private boolean shutdownWasCalled;
 
   public BSLLanguageServer(LanguageServerSettings settings) {
     this.settings = settings;
@@ -67,12 +68,14 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   @Override
   public CompletableFuture<Object> shutdown() {
+    shutdownWasCalled = true;
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
 
   @Override
   public void exit() {
-
+    int status = shutdownWasCalled ? 0 : 1;
+    System.exit(status);
   }
 
   @Override
