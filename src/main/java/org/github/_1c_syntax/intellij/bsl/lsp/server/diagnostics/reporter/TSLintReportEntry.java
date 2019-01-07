@@ -21,21 +21,26 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
+@ToString
+@EqualsAndHashCode
 class TSLintReportEntry {
-  private Position endPosition;
-  private String failure;
-  private String name;
-  private String ruleName;
-  private String ruleSeverity;
-  private Position startPosition;
+  @Getter private Position endPosition;
+  @Getter private String failure;
+  @Getter private String name;
+  @Getter private String ruleName;
+  @Getter private String ruleSeverity;
+  @Getter private Position startPosition;
 
-  private static Map<DiagnosticSeverity, String> severityMap = new HashMap<>();
+  private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
 
   static {
     severityMap.put(DiagnosticSeverity.Error, "error");
@@ -43,6 +48,7 @@ class TSLintReportEntry {
     severityMap.put(DiagnosticSeverity.Information, "warn");
     severityMap.put(DiagnosticSeverity.Warning, "warn");
   }
+
 
   TSLintReportEntry(String fileName, Diagnostic diagnostic) {
     endPosition = new Position(diagnostic.getRange().getStart());
@@ -53,51 +59,17 @@ class TSLintReportEntry {
     startPosition = new Position(diagnostic.getRange().getEnd());
   }
 
-  public Position getEndPosition() {
-    return endPosition;
-  }
-
-  public String getFailure() {
-    return failure;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getRuleName() {
-    return ruleName;
-  }
-
-  public String getRuleSeverity() {
-    return ruleSeverity;
-  }
-
-  public Position getStartPosition() {
-    return startPosition;
-  }
-
+  @ToString
+  @EqualsAndHashCode
   static class Position {
-    private int character;
-    private int line;
-    private int position;
+    @Getter private final int character;
+    @Getter private final int line;
+    @Getter private final int position;
 
     Position(org.eclipse.lsp4j.Position position) {
       line = position.getLine();
       character = position.getCharacter();
       this.position = position.getCharacter();
-    }
-
-    public int getCharacter() {
-      return character;
-    }
-
-    public int getLine() {
-      return line;
-    }
-
-    public int getPosition() {
-      return position;
     }
 
   }
