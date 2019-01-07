@@ -26,10 +26,6 @@ import java.util.Locale;
 public class LanguageServerSettings {
   private DiagnosticLanguage diagnosticLanguage;
 
-  public LanguageServerSettings(DiagnosticLanguage diagnosticLanguage) {
-    this.diagnosticLanguage = diagnosticLanguage;
-  }
-
   public LanguageServerSettings(String diagnosticLanguage) {
     this.diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguage.toUpperCase(Locale.ENGLISH));
   }
