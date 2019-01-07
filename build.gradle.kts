@@ -8,6 +8,7 @@ plugins {
     jacoco
     id("com.github.hierynomus.license") version "0.14.0"
     id("org.sonarqube") version "2.6.2"
+    id("io.franzbecker.gradle-lombok") version "1.14"
 }
 
 repositories {
@@ -38,6 +39,10 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+
+    // https://github.com/franzbecker/gradle-lombok/issues/56
+    annotationProcessor("org.projectlombok", "lombok", lombok.version)
+    implementation("org.projectlombok", "lombok", lombok.version)
 }
 
 tasks.withType<JavaCompile> {
@@ -105,4 +110,9 @@ sonarqube {
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
     }
+}
+
+lombok {
+    version = "1.18.4"
+    sha256 = "39f3922deb679b1852af519eb227157ef2dd0a21eec3542c8ce1b45f2df39742"
 }

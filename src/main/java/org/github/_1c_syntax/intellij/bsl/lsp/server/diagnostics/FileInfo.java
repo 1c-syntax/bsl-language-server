@@ -21,47 +21,14 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 
+import lombok.Data;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 
+@Data
 public class FileInfo {
-  private Path path;
-  private Diagnostic[] diagnostics;
-
-  public FileInfo() {
-    // for DTO
-  }
-
-  public FileInfo(Path path, List<Diagnostic> diagnostics) {
-    this.path = path;
-    this.diagnostics = diagnostics.toArray(new Diagnostic[]{});
-  }
-
-  public Path getPath() {
-    return path;
-  }
-
-  public Diagnostic[] getDiagnostics() {
-    return diagnostics;
-  }
-
-  public void setPath(Path path) {
-    this.path = path;
-  }
-
-  public void setDiagnostics(Diagnostic[] diagnostics) {
-    this.diagnostics = diagnostics;
-  }
-
-  @Override
-  public String toString() {
-    return "FileInfo{" +
-      "path=" + path +
-      ", diagnostics=" + Arrays.asList(diagnostics) +
-      '}';
-  }
-
+  private final Path path;
+  private final List<Diagnostic> diagnostics;
 }

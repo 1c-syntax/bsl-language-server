@@ -21,39 +21,14 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
+import lombok.Data;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 
 import java.util.Date;
 import java.util.List;
 
+@Data
 public class AnalysisInfo {
-
-  private Date date;
-  private List<FileInfo> fileinfos;
-
-  public AnalysisInfo() {
-    // for DTO
-  }
-
-  public AnalysisInfo(Date date, List<FileInfo> fileinfos) {
-    this.date = date;
-    this.fileinfos = fileinfos;
-  }
-
-  public Date getDate() {
-    return date;
-  }
-
-  public List<FileInfo> getFileinfos() {
-    return fileinfos;
-  }
-
-  public void setDate(Date date) {
-    this.date = date;
-  }
-
-  public void setFileinfos(List<FileInfo> fileinfos) {
-    this.fileinfos = fileinfos;
-  }
-
+  private final Date date;
+  private final List<FileInfo> fileinfos;
 }
