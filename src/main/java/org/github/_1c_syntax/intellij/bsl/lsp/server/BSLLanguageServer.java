@@ -69,6 +69,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   @Override
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
+    textDocumentService.reset();
     return CompletableFuture.completedFuture(Boolean.TRUE);
   }
 

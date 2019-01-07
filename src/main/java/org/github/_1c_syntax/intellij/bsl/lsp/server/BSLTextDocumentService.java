@@ -194,6 +194,10 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     this.client = client;
   }
 
+  public void reset() {
+    documents.clear();
+  }
+
   private FileContext getFileContext(String textDocumentContent) {
     CharStream input = CharStreams.fromString(textDocumentContent);
     if (lexer == null) {
