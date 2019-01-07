@@ -35,10 +35,13 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation("commons-io:commons-io:2.6")
 
+    // TODO: Drop
     testImplementation("org.hamcrest:hamcrest-library:1.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+
+    testCompile("org.assertj:assertj-core:3.11.1")
 
     // https://github.com/franzbecker/gradle-lombok/issues/56
     annotationProcessor("org.projectlombok", "lombok", lombok.version)

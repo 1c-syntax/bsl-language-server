@@ -21,70 +21,46 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
-import org.eclipse.lsp4j.services.LanguageServer;
-import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.DiagnosticProvider;
-import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
-import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.AnalysisInfo;
-import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.ReportersAggregator;
-import org.github._1c_syntax.intellij.bsl.lsp.server.settings.LanguageServerSettings;
-import org.github._1c_syntax.parser.BSLLexer;
-import org.github._1c_syntax.parser.BSLParser;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.github._1c_syntax.intellij.bsl.lsp.server.cli.*;
 
 public class BSLLSPLauncher {
 
-  private static Options options = new Options();
+  public static final String APP_NAME = "BSL language server";
 
-  static {
-    setOptions();
-  }
+  private static Options options = createOptions();
 
   public static void main(String[] args) {
     CommandLineParser parser = new DefaultParser();
 
+    Command command;
     try {
       CommandLine cmd = parser.parse(options, args);
 
       if (cmd.hasOption("help")) {
-        processHelp();
+        command = new HelpCommand(options);
       } else if (cmd.hasOption("analyze")) {
-        processAnalyze(cmd);
+        command = new AnalyzeCommand(cmd);
       } else {
-        processLanguageServerStart(cmd);
+        command = new LanguageServerStartCommand(cmd);
       }
 
     } catch (ParseException e) {
-      processParseException(e);
+      command = new ParseExceptionCommand(options, e);
     }
+
+    int result = command.execute();
+    System.exit(result);
   }
 
-  private static void setOptions() {
+  private static Options createOptions() {
+    Options createdOptions = new Options();
+
     Option diagnosticLanguageOption = new Option(
       "d",
       "diagnosticLanguage",
@@ -121,80 +97,14 @@ public class BSLLSPLauncher {
       "Reporter key"
     );
 
-    options.addOption(analyze);
-    options.addOption(srcDir);
-    options.addOption(reporter);
+    createdOptions.addOption(analyze);
+    createdOptions.addOption(srcDir);
+    createdOptions.addOption(reporter);
 
-    options.addOption(diagnosticLanguageOption);
-    options.addOption(help);
+    createdOptions.addOption(diagnosticLanguageOption);
+    createdOptions.addOption(help);
+
+    return createdOptions;
   }
 
-  private static void processAnalyze(CommandLine cmd) {
-    String srcDirOption = cmd.getOptionValue("srcDir", "");
-    String[] reporters = cmd.getOptionValues("reporter");
-
-    Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
-
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
-
-    List<FileInfo> diagnostics = files.parallelStream()
-      .map(File::toPath)
-      .map(BSLLSPLauncher::getFileContextFromPath)
-      .collect(Collectors.toList());
-
-    AnalysisInfo analysisInfo = new AnalysisInfo(new Date(), diagnostics);
-    ReportersAggregator aggregator = new ReportersAggregator(reporters);
-    aggregator.report(analysisInfo);
-
-  }
-
-  private static void processLanguageServerStart(CommandLine cmd) {
-    String diagnosticLanguage = cmd.getOptionValue("diagnosticLanguage", "en");
-    LanguageServerSettings settings = new LanguageServerSettings(diagnosticLanguage);
-
-    LanguageServer server = new BSLLanguageServer(settings);
-    InputStream in = System.in;
-    OutputStream out = System.out;
-
-    Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, in, out);
-
-    LanguageClient client = launcher.getRemoteProxy();
-    ((LanguageClientAware) server).connect(client);
-
-    launcher.startListening();
-  }
-
-  private static void processParseException(ParseException e) {
-    HelpFormatter formatter = new HelpFormatter();
-
-    System.out.println(e.getMessage());
-    formatter.printHelp("BSL language server", options, true);
-
-    System.exit(1);
-  }
-
-  private static void processHelp() {
-    HelpFormatter formatter = new HelpFormatter();
-
-    formatter.printHelp("BSL language server", options, true);
-    System.exit(0);
-  }
-
-  private static BSLParser prepareParser(Path path) {
-    CharStream input;
-    try {
-      input = CharStreams.fromPath(path, Charset.forName("UTF-8"));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    BSLLexer lexer = new BSLLexer(input);
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-    return new BSLParser(tokenStream);
-  }
-
-  private static FileInfo getFileContextFromPath(Path path) {
-    BSLParser parser = prepareParser(path);
-    BSLParser.FileContext file = parser.file();
-    return new FileInfo(path, DiagnosticProvider.computeDiagnostics(file));
-  }
 }
