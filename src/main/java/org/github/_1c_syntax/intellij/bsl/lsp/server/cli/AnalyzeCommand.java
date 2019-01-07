@@ -26,7 +26,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
-import org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.DiagnosticProvider;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.AnalysisInfo;
@@ -42,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class AnalyzeCommand implements Command {
@@ -54,7 +54,7 @@ public class AnalyzeCommand implements Command {
     @Override
     public int execute() {
         String srcDirOption = cmd.getOptionValue("srcDir", "");
-        String[] reporters = cmd.getOptionValues("reporter");
+        String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
 
         Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
 
