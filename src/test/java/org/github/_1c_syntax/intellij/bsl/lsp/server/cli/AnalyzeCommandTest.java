@@ -37,7 +37,7 @@ class AnalyzeCommandTest {
     Options options = createOptions();
 
     DefaultParser parser = new DefaultParser();
-    CommandLine commandLine = parser.parse(options, new String[]{"-s", "/tmp"});
+    CommandLine commandLine = parser.parse(options, new String[]{"-s", "./src/test/resources/cli"});
 
     Command command = new AnalyzeCommand(commandLine);
 
