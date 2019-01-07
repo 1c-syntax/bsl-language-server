@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ReportersAggregator {
-  List<DiagnosticReporter> reporters = new ArrayList<>();
+  private List<DiagnosticReporter> reporters = new ArrayList<>();
 
   public ReportersAggregator(String... reporterKeys) {
     Map<String, Class> reporterMap = reporterMap();
