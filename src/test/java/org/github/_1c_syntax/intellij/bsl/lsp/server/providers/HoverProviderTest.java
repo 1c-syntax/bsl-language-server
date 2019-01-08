@@ -60,7 +60,7 @@ class HoverProviderTest {
 
     Hover hover = optionalHover.get();
 
-    assertThat(hover.getContents().getRight().getValue()).isEqualTo("�?мяПроцедуры");
+    assertThat(hover.getContents().getRight().getValue()).isEqualTo("ИмяПроцедуры");
     assertThat(hover.getRange().getStart()).isEqualTo(new Position(0, 10));
     assertThat(hover.getRange().getEnd()).isEqualTo(new Position(0, 22));
 
