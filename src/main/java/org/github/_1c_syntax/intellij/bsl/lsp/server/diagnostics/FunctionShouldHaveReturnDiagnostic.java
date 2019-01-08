@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
 import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
 import org.github._1c_syntax.parser.BSLLexer;
 import org.github._1c_syntax.parser.BSLParser;

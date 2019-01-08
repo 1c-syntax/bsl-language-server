@@ -19,11 +19,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
+package org.github._1c_syntax.intellij.bsl.lsp.server.providers;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FunctionShouldHaveReturnDiagnostic;
+import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.LineLengthDiagnostic;
 import org.github._1c_syntax.parser.BSLParser;
 
 import java.util.Arrays;

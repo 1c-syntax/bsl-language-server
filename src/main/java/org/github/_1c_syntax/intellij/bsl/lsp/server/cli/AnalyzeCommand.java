@@ -26,7 +26,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
-import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.DiagnosticProvider;
+import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.AnalysisInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.ReportersAggregator;
