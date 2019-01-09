@@ -24,33 +24,7 @@ package org.github._1c_syntax.intellij.bsl.lsp.server;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.CodeLensParams;
-import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionList;
-import org.eclipse.lsp4j.CompletionParams;
-import org.eclipse.lsp4j.DidChangeTextDocumentParams;
-import org.eclipse.lsp4j.DidCloseTextDocumentParams;
-import org.eclipse.lsp4j.DidOpenTextDocumentParams;
-import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.DocumentFormattingParams;
-import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
-import org.eclipse.lsp4j.DocumentRangeFormattingParams;
-import org.eclipse.lsp4j.DocumentSymbolParams;
-import org.eclipse.lsp4j.Hover;
-import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.ReferenceParams;
-import org.eclipse.lsp4j.RenameParams;
-import org.eclipse.lsp4j.SignatureHelp;
-import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.TextDocumentItem;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
-import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -61,6 +35,7 @@ import org.github._1c_syntax.parser.BSLLexer;
 import org.github._1c_syntax.parser.BSLParser;
 import org.github._1c_syntax.parser.BSLParser.FileContext;
 
+import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,8 +48,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   private final Map<String, FileContext> documents = Collections.synchronizedMap(new HashMap<>());
 
-  private BSLLexer lexer;
-  private BSLParser parser;
+  private BSLLexer lexer = new BSLLexer(null);
+  private BSLParser parser = new BSLParser(null);
+  @CheckForNull
   private LanguageClient client;
 
   public BSLTextDocumentService() {
@@ -200,24 +176,18 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   private FileContext getFileContext(String textDocumentContent) {
     CharStream input = CharStreams.fromString(textDocumentContent);
-    if (lexer == null) {
-      lexer = new BSLLexer(input);
-    } else {
-      lexer.setInputStream(input);
-    }
+    lexer.setInputStream(input);
 
     CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-    if (parser == null) {
-      parser = new BSLParser(tokens);
-    } else {
-      parser.setInputStream(tokens);
-    }
+    parser.setInputStream(tokens);
 
     return parser.file();
   }
 
   private void validate(String uri, FileContext fileTree) {
+    if (client == null) {
+      return;
+    }
     DiagnosticProvider.computeAndPublishDiagnostics(client, uri, fileTree);
   }
 

@@ -30,6 +30,9 @@ dependencies {
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.4")
 
+    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
+    compile("com.google.code.findbugs", "jsr305", "3.0.2")
+
     compile("com.github.1c-syntax", "bsl-parser", "0.2.0")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
