@@ -21,10 +21,15 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -134,20 +139,32 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void didOpen() {
+  void didOpen() throws IOException {
     DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
+    params.setTextDocument(getTextDocumentItem());
     textDocumentService.didOpen(params);
   }
 
   @Test
-  void didChange() {
+  void didChange() throws IOException {
     DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
+
+    params.setTextDocument(new VersionedTextDocumentIdentifier());
+
+    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+    TextDocumentContentChangeEvent changeEvent = new TextDocumentContentChangeEvent(fileContent);
+
+    List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();
+    contentChanges.add(changeEvent);
+    params.setContentChanges(contentChanges);
+
     textDocumentService.didChange(params);
   }
 
   @Test
   void didClose() {
     DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
+    params.setTextDocument(getTextDocumentIdentifier());
     textDocumentService.didClose(params);
   }
 
@@ -165,4 +182,26 @@ class BSLTextDocumentServiceTest {
   void reset() {
     textDocumentService.reset();
   }
+
+  private File getTestFile() {
+    return new File("./src/test/resources/BSLTextDocumentServiceTest.bsl");
+  }
+
+  private TextDocumentItem getTextDocumentItem() throws IOException {
+    File file = getTestFile();
+    String uri = file.toURI().toString();
+
+    String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+
+    return new TextDocumentItem(uri, "bsl", 1, fileContent);
+  }
+
+
+  private TextDocumentIdentifier getTextDocumentIdentifier() {
+    File file = getTestFile();
+    String uri = file.toURI().toString();
+
+    return new TextDocumentIdentifier(uri);
+  }
+
 }
