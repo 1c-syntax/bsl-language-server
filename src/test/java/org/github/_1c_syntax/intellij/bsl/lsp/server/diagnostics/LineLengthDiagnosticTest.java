@@ -28,9 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnostic>{
 
@@ -42,8 +40,8 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
   void test() throws IOException {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics, hasSize(2));
-    assertThat(diagnostics.get(0).getRange(), equalTo(RangeHelper.newRange(4, 0, 4, 121)));
-    assertThat(diagnostics.get(1).getRange(), equalTo(RangeHelper.newRange(5, 0, 5, 122)));
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 121));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(5, 0, 5, 122));
   }
 }

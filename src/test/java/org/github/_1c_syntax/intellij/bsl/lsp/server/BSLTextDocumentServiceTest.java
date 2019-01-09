@@ -47,7 +47,7 @@ class BSLTextDocumentServiceTest {
     Either<List<CompletionItem>, CompletionList> listCompletionListEither = completion.get();
     List<CompletionItem> completionItems = listCompletionListEither.getLeft();
 
-    assertThat(completionItems.stream()).allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()));
+    assertThat(completionItems).allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()));
 
   }
 

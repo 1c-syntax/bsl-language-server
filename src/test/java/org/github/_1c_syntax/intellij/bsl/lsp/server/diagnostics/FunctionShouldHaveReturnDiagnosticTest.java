@@ -28,9 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class FunctionShouldHaveReturnDiagnosticTest extends AbstractDiagnosticTest<FunctionShouldHaveReturnDiagnostic>{
 
@@ -42,7 +40,7 @@ class FunctionShouldHaveReturnDiagnosticTest extends AbstractDiagnosticTest<Func
   void test() throws IOException {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics, hasSize(1));
-    assertThat(diagnostics.get(0).getRange(), equalTo(RangeHelper.newRange(0, 8, 0, 26)));
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 8, 0, 26));
   }
 }
