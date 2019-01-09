@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 class BSLTextDocumentServiceTest {
 
@@ -48,13 +49,12 @@ class BSLTextDocumentServiceTest {
     List<CompletionItem> completionItems = listCompletionListEither.getLeft();
 
     assertThat(completionItems).allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()));
-
   }
 
   @Test
   void resolveCompletionItem() {
-    CompletableFuture<CompletionItem> completionItem = textDocumentService.resolveCompletionItem(null);
-    assertThat(completionItem).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.resolveCompletionItem(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
@@ -63,90 +63,92 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void signatureHelp() {
-    CompletableFuture<SignatureHelp> signatureHelp = textDocumentService.signatureHelp(null);
-    assertThat(signatureHelp).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.signatureHelp(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void definition() {
-    CompletableFuture<List<? extends Location>> definition = textDocumentService.definition(null);
-    assertThat(definition).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.definition(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void references() {
-    CompletableFuture<List<? extends Location>> references = textDocumentService.references(null);
-    assertThat(references).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.references(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void documentHighlight() {
-    CompletableFuture<List<? extends DocumentHighlight>> documentHighlight = textDocumentService.documentHighlight(null);
-    assertThat(documentHighlight).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.documentHighlight(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void documentSymbol() {
-    CompletableFuture<List<? extends SymbolInformation>> documentSymbol = textDocumentService.documentSymbol(null);
-    assertThat(documentSymbol).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.documentSymbol(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void codeAction() {
-    CompletableFuture<List<? extends Command>> commands = textDocumentService.codeAction(null);
-    assertThat(commands).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.codeAction(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void codeLens() {
-    CompletableFuture<List<? extends CodeLens>> codeLens = textDocumentService.codeLens(null);
-    assertThat(codeLens).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.codeLens(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void resolveCodeLens() {
-    CompletableFuture<CodeLens> codeLens = textDocumentService.resolveCodeLens(null);
-    assertThat(codeLens).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.resolveCodeLens(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void formatting() {
-    CompletableFuture<List<? extends TextEdit>> formatting = textDocumentService.formatting(null);
-    assertThat(formatting).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.formatting(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void rangeFormatting() {
-    CompletableFuture<List<? extends TextEdit>> rangeFormatting = textDocumentService.rangeFormatting(null);
-    assertThat(rangeFormatting).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.rangeFormatting(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void onTypeFormatting() {
-    CompletableFuture<List<? extends TextEdit>> result = textDocumentService.onTypeFormatting(null);
-    assertThat(result).isNull();
+    Throwable thrown = catchThrowable(() -> textDocumentService.onTypeFormatting(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void rename() {
-    CompletableFuture<WorkspaceEdit> result = textDocumentService.rename(null);
-    assertThat(result).isNull();
-
+    Throwable thrown = catchThrowable(() -> textDocumentService.rename(null));
+    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void didOpen() {
-    textDocumentService.didOpen(null);
+    DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
+    textDocumentService.didOpen(params);
   }
 
   @Test
   void didChange() {
-    textDocumentService.didChange(null);
+    DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
+    textDocumentService.didChange(params);
   }
 
   @Test
   void didClose() {
-    textDocumentService.didClose(null);
+    DidCloseTextDocumentParams params = new DidCloseTextDocumentParams();
+    textDocumentService.didClose(params);
   }
 
   @Test

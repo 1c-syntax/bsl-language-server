@@ -90,7 +90,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -102,62 +102,62 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams position) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams position) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-    return null;
+    throw new UnsupportedOperationException();
   }
 
   @Override
