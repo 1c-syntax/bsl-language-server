@@ -63,7 +63,39 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void hover() {
+  void hoverEmpty() throws IOException, ExecutionException, InterruptedException {
+    // given
+    doOpen();
+
+    TextDocumentPositionParams params = new TextDocumentPositionParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setPosition(new Position(0, 0));
+
+    // when
+    CompletableFuture<Hover> hover = textDocumentService.hover(params);
+
+    // then
+    Hover hoverValue = hover.get();
+    assertThat(hoverValue).isNull();
+  }
+
+  @Test
+  void hoverSubName() throws IOException, ExecutionException, InterruptedException {
+    // given
+    doOpen();
+
+    TextDocumentPositionParams params = new TextDocumentPositionParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setPosition(new Position(0, 20));
+
+    // when
+    CompletableFuture<Hover> hover = textDocumentService.hover(params);
+
+    // then
+    Hover hoverValue = hover.get();
+    assertThat(hoverValue.getContents().getRight().getValue()).isEqualTo("ИмяПроцедуры");
+    assertThat(hoverValue.getRange().getStart()).isEqualTo(new Position(0, 10));
+    assertThat(hoverValue.getRange().getEnd()).isEqualTo(new Position(0, 22));
   }
 
   @Test
@@ -140,9 +172,7 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void didOpen() throws IOException {
-    DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
-    params.setTextDocument(getTextDocumentItem());
-    textDocumentService.didOpen(params);
+    doOpen();
   }
 
   @Test
@@ -196,7 +226,6 @@ class BSLTextDocumentServiceTest {
     return new TextDocumentItem(uri, "bsl", 1, fileContent);
   }
 
-
   private TextDocumentIdentifier getTextDocumentIdentifier() {
     File file = getTestFile();
     String uri = file.toURI().toString();
@@ -204,4 +233,9 @@ class BSLTextDocumentServiceTest {
     return new TextDocumentIdentifier(uri);
   }
 
+  private void doOpen() throws IOException {
+    DidOpenTextDocumentParams params = new DidOpenTextDocumentParams();
+    params.setTextDocument(getTextDocumentItem());
+    textDocumentService.didOpen(params);
+  }
 }
