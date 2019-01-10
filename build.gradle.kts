@@ -30,13 +30,13 @@ dependencies {
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.4")
 
+    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
+    compile("com.google.code.findbugs", "jsr305", "3.0.2")
+
     compile("com.github.1c-syntax", "bsl-parser", "0.2.0")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation("commons-io:commons-io:2.6")
-
-    // TODO: Drop
-    testImplementation("org.hamcrest:hamcrest-library:1.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.2.0")
