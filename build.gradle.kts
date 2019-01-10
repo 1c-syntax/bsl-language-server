@@ -43,6 +43,8 @@ dependencies {
 
     testCompile("org.assertj:assertj-core:3.11.1")
 
+    testImplementation("com.ginsberg:junit5-system-exit:1.0.0")
+
     // https://github.com/franzbecker/gradle-lombok/issues/56
     annotationProcessor("org.projectlombok", "lombok", lombok.version)
     implementation("org.projectlombok", "lombok", lombok.version)
