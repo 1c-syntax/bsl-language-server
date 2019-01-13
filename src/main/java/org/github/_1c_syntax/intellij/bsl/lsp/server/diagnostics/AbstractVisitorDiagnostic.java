@@ -22,22 +22,26 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
-import org.github._1c_syntax.parser.BSLLexer;
+import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.parser.BSLParserBaseVisitor;
+import org.github._1c_syntax.parser.BSLParserRuleContext;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
+public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
+  protected List<Diagnostic> diagnostics = new ArrayList<>();
 
   @Override
-  public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-    Collection<ParseTree> tokens = Trees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
-    if (tokens.isEmpty()) {
-      BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
-      addDiagnostic(subName);
-    }
-    return ctx;
+  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+    diagnostics.clear();
+    this.visitFile(fileTree);
+    return new ArrayList<>(diagnostics);
+  }
+
+  protected void addDiagnostic(BSLParserRuleContext node) {
+    diagnostics.add(BSLDiagnostic.createDiagnostic(this, node));
   }
 
 }

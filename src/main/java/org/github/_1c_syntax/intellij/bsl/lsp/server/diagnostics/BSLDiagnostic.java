@@ -22,15 +22,47 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
+import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
 import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.parser.BSLParserRuleContext;
 
 import java.util.List;
 import java.util.ResourceBundle;
 
 public interface BSLDiagnostic {
+
+  default DiagnosticSeverity getSeverity() {
+    return DiagnosticSeverity.Error;
+  }
+
+  default String getCode() {
+    return getClass().getSimpleName();
+  }
+
   List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree);
 
   default String getDiagnosticMessage() {
     return ResourceBundle.getBundle(getClass().getName()).getString("diagnosticMessage");
+  }
+
+  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
+    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node));
+  }
+
+  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, int startLine, int startChar, int endLine, int endChar) {
+    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(startLine, startChar, endLine, endChar));
+  }
+
+  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, Range range) {
+    return new Diagnostic(
+      range,
+      bslDiagnostic.getDiagnosticMessage(),
+      bslDiagnostic.getSeverity(),
+      DiagnosticProvider.SOURCE,
+      bslDiagnostic.getCode()
+    );
   }
 }

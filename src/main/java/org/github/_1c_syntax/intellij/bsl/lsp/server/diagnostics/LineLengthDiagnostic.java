@@ -24,8 +24,6 @@ package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
-import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
 import org.github._1c_syntax.parser.BSLParser;
 
 import java.util.ArrayList;
@@ -38,6 +36,12 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
 
+  @Override
+  public DiagnosticSeverity getSeverity() {
+    return DiagnosticSeverity.Information;
+  }
+
+  @Override
   public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
 
     List<Token> tokens = fileTree.getTokens();
@@ -55,14 +59,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
       Integer maxCharPosition = max.orElse(0);
       if (maxCharPosition > MAX_LINE_LENGTH) {
-        Diagnostic diagnostic = new Diagnostic(
-          RangeHelper.newRange(key, 0, key, maxCharPosition),
-          getDiagnosticMessage(),
-          DiagnosticSeverity.Error,
-          DiagnosticProvider.SOURCE
-        );
-        diagnostic.setCode(LineLengthDiagnostic.class.getSimpleName());
-        diagnostics.add(diagnostic);
+        diagnostics.add(BSLDiagnostic.createDiagnostic(this, key, 0, key, maxCharPosition));
       }
     });
 
