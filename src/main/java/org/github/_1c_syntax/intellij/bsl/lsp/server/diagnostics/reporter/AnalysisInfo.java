@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 
@@ -29,6 +30,9 @@ import java.util.List;
 
 @Data
 public class AnalysisInfo {
+  @JsonFormat(
+    shape = JsonFormat.Shape.STRING,
+    pattern = "yyyy-MM-dd HH:mm:ss")
   private final LocalDateTime date;
   private final List<FileInfo> fileinfos;
 }
