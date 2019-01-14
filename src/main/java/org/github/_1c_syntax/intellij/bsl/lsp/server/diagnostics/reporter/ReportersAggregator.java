@@ -52,9 +52,9 @@ public class ReportersAggregator {
 
   private static Map<String, Class> reporterMap() {
     Map<String, Class> map = new HashMap<>();
-    map.put("console",  ConsoleReporter.class);
-    map.put("json", JsonReporter.class);
-    map.put("tslint", TSLintReporter.class);
+    map.put(ConsoleReporter.KEY,  ConsoleReporter.class);
+    map.put(JsonReporter.KEY, JsonReporter.class);
+    map.put(TSLintReporter.KEY, TSLintReporter.class);
 
     return map;
   }

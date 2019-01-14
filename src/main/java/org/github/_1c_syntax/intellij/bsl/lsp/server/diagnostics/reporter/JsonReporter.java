@@ -29,10 +29,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 public class JsonReporter implements DiagnosticReporter {
-  @Override
-  public String getKey() {
-    return "json";
-  }
+
+  static final String KEY = "json";
 
   @Override
   public void report(AnalysisInfo analysisInfo) {

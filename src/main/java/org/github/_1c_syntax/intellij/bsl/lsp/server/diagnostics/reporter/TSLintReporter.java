@@ -31,10 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TSLintReporter implements DiagnosticReporter {
-  @Override
-  public String getKey() {
-    return "tslint";
-  }
+
+  static final String KEY = "tslint";
 
   @Override
   public void report(AnalysisInfo analysisInfo) {

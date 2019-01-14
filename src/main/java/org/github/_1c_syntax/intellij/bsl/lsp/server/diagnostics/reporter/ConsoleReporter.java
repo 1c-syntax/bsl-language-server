@@ -22,10 +22,8 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
 public class ConsoleReporter implements DiagnosticReporter {
-  @Override
-  public String getKey() {
-    return "console";
-  }
+
+  static final String KEY = "console";
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
