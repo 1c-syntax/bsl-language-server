@@ -22,6 +22,10 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 
@@ -33,6 +37,8 @@ public class AnalysisInfo {
   @JsonFormat(
     shape = JsonFormat.Shape.STRING,
     pattern = "yyyy-MM-dd HH:mm:ss")
+  @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+  @JsonSerialize(using = LocalDateTimeSerializer.class)
   private final LocalDateTime date;
   private final List<FileInfo> fileinfos;
 }

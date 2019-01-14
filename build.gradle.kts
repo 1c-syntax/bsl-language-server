@@ -29,6 +29,7 @@ dependencies {
     compile("commons-io", "commons-io", "2.6")
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.4")
+    compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.8")
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile("com.google.code.findbugs", "jsr305", "3.0.2")

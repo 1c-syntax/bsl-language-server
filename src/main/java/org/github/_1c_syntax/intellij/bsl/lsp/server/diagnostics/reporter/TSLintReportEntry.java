@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -29,12 +30,18 @@ import java.util.EnumMap;
 import java.util.Map;
 
 class TSLintReportEntry {
-  @Getter private EntryPosition endPosition;
-  @Getter private String failure;
-  @Getter private String name;
-  @Getter private String ruleName;
-  @Getter private String ruleSeverity;
-  @Getter private EntryPosition startPosition;
+  @Getter
+  private final EntryPosition startPosition;
+  @Getter
+  private final EntryPosition endPosition;
+  @Getter
+  private final String failure;
+  @Getter
+  private final String name;
+  @Getter
+  private final String ruleName;
+  @Getter
+  private final String ruleSeverity;
 
   private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
 
@@ -55,15 +62,44 @@ class TSLintReportEntry {
     startPosition = new EntryPosition(diagnostic.getRange().getStart());
   }
 
+  public TSLintReportEntry(
+    @JsonProperty("startPosition") EntryPosition startPosition,
+    @JsonProperty("endPosition") EntryPosition endPosition,
+    @JsonProperty("failure") String failure,
+    @JsonProperty("name") String name,
+    @JsonProperty("ruleName") String ruleName,
+    @JsonProperty("rileSeverity") String ruleSeverity
+  ) {
+    this.startPosition = startPosition;
+    this.endPosition = endPosition;
+    this.failure = failure;
+    this.name = name;
+    this.ruleName = ruleName;
+    this.ruleSeverity = ruleSeverity;
+  }
+
   static class EntryPosition {
-    @Getter private final int character;
-    @Getter private final int line;
-    @Getter private final int position;
+    @Getter
+    private final int character;
+    @Getter
+    private final int line;
+    @Getter
+    private final int position;
 
     EntryPosition(org.eclipse.lsp4j.Position position) {
       line = position.getLine();
       character = position.getCharacter();
       this.position = position.getCharacter();
+    }
+
+    public EntryPosition(
+      @JsonProperty("character") int character,
+      @JsonProperty("line") int line,
+      @JsonProperty("position") int position
+    ) {
+      this.character = character;
+      this.line = line;
+      this.position = position;
     }
   }
 
