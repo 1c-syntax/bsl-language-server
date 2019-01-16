@@ -26,6 +26,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
 import org.github._1c_syntax.intellij.bsl.lsp.server.utils.RangeHelper;
+import org.github._1c_syntax.intellij.bsl.lsp.server.utils.UTF8Control;
 import org.github._1c_syntax.parser.BSLParser;
 import org.github._1c_syntax.parser.BSLParserRuleContext;
 
@@ -45,7 +46,7 @@ public interface BSLDiagnostic {
   List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree);
 
   default String getDiagnosticMessage() {
-    return ResourceBundle.getBundle(getClass().getName()).getString("diagnosticMessage");
+    return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString("diagnosticMessage");
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
