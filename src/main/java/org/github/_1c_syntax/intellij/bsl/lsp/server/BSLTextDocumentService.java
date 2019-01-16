@@ -97,12 +97,12 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<List<? extends SymbolInformation>> documentSymbol(DocumentSymbolParams params) {
+  public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public CompletableFuture<List<? extends Command>> codeAction(CodeActionParams params) {
+  public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
     throw new UnsupportedOperationException();
   }
 

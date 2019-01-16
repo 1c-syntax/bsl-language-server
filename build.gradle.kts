@@ -22,7 +22,7 @@ version = gitVersionCalculator.calculateVersion("v")
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    compile("org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1")
+    compile("org.eclipse.lsp4j:org.eclipse.lsp4j:0.6.0")
 
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     compile("commons-cli:commons-cli:1.4")
