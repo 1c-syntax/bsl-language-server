@@ -49,17 +49,31 @@ public interface BSLDiagnostic {
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
-    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node));
+    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
   }
 
-  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, int startLine, int startChar, int endLine, int endChar) {
-    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(startLine, startChar, endLine, endChar));
+  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, String diagnosticMessage, BSLParserRuleContext node) {
+    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), diagnosticMessage);
   }
 
-  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, Range range) {
+  static Diagnostic createDiagnostic(
+    BSLDiagnostic bslDiagnostic,
+    int startLine,
+    int startChar,
+    int endLine,
+    int endChar
+  ) {
+    return createDiagnostic(
+      bslDiagnostic,
+      RangeHelper.newRange(startLine, startChar, endLine, endChar),
+      bslDiagnostic.getDiagnosticMessage()
+    );
+  }
+
+  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, Range range, String diagnosticMessage) {
     return new Diagnostic(
       range,
-      bslDiagnostic.getDiagnosticMessage(),
+      diagnosticMessage,
       bslDiagnostic.getSeverity(),
       DiagnosticProvider.SOURCE,
       bslDiagnostic.getCode()

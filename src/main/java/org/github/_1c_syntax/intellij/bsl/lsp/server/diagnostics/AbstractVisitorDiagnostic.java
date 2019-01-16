@@ -44,4 +44,8 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
     diagnostics.add(BSLDiagnostic.createDiagnostic(this, node));
   }
 
+  protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
+    diagnostics.add(BSLDiagnostic.createDiagnostic(this, diagnosticMessage, node));
+  }
+
 }
