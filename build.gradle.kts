@@ -90,7 +90,7 @@ tasks.jacocoTestReport {
 
 // native2ascii gradle replacement
 tasks.withType<ProcessResources>().forEach { task ->
-    task.from(task.getSource()) {
+    task.from(task.source) {
         include("**/*.properties")
         filter<EscapeUnicode>()
     }
