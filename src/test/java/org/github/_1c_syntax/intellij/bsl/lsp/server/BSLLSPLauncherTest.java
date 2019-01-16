@@ -105,17 +105,12 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testWithoutParameters() {
     // given
     String[] args = new String[]{};
 
     // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+    BSLLSPLauncher.main(args);
 
     // then
     // main-method should runs without exceptions

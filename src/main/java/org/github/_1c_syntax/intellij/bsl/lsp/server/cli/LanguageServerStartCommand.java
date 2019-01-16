@@ -55,6 +55,6 @@ public class LanguageServerStartCommand implements Command {
     ((LanguageClientAware) server).connect(client);
 
     launcher.startListening();
-    return 0;
+    return -1;
   }
 }

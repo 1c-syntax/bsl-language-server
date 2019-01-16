@@ -22,5 +22,10 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.cli;
 
 public interface Command {
+
+  /**
+   * Execute given command.
+   * @return Result code. 0 - if success, >0 in case of error, <0 in case of pending multithreaded task.
+   */
   int execute();
 }

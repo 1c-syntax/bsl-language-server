@@ -60,7 +60,9 @@ public class BSLLSPLauncher {
     }
 
     int result = command.execute();
-    System.exit(result);
+    if (result >= 0) {
+      System.exit(result);
+    }
   }
 
   @VisibleForTesting

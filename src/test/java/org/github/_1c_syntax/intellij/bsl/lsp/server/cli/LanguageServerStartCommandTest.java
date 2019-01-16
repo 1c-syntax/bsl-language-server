@@ -40,6 +40,6 @@ class LanguageServerStartCommandTest {
     Command command = new LanguageServerStartCommand(commandLine);
 
     int result = command.execute();
-    assertThat(result).isEqualTo(0);
+    assertThat(result).isEqualTo(-1);
   }
 }
