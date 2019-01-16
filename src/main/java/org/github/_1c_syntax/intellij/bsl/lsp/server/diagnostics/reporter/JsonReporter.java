@@ -28,7 +28,7 @@ import java.io.IOException;
 
 public class JsonReporter implements DiagnosticReporter {
 
-  static final String KEY = "json";
+  public static final String KEY = "json";
 
   @Override
   public void report(AnalysisInfo analysisInfo) {

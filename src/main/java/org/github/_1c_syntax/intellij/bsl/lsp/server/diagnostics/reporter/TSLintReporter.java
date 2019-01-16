@@ -32,7 +32,7 @@ import java.util.List;
 
 public class TSLintReporter implements DiagnosticReporter {
 
-  static final String KEY = "tslint";
+  public static final String KEY = "tslint";
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
