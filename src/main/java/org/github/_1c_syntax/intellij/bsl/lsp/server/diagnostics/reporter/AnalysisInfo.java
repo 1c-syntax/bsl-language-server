@@ -35,8 +35,8 @@ import java.util.List;
 @Data
 public class AnalysisInfo {
   @JsonFormat(
-    shape = JsonFormat.Shape.STRING,
-    pattern = "yyyy-MM-dd HH:mm:ss")
+    pattern = "yyyy-MM-dd HH:mm:ss",
+    shape = JsonFormat.Shape.STRING)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   private final LocalDateTime date;
