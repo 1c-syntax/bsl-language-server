@@ -22,6 +22,7 @@
 package org.github._1c_syntax.intellij.bsl.lsp.server.cli;
 
 import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarStyle;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -62,7 +63,7 @@ public class AnalyzeCommand implements Command {
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
     List<FileInfo> diagnostics;
-    try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size())) {
+    try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
       diagnostics = files.parallelStream()
         .peek(file -> pb.step())
         .map(File::toPath)
