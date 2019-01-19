@@ -35,6 +35,8 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile("com.google.code.findbugs", "jsr305", "3.0.2")
 
+    compile("me.tongfei", "progressbar", "0.7.2")
+
     compile("com.github.1c-syntax", "bsl-parser", "a9e7175b76")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io

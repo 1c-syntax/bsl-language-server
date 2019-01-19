@@ -21,15 +21,16 @@
  */
 package org.github._1c_syntax.intellij.bsl.lsp.server.cli;
 
+import me.tongfei.progressbar.ProgressBar;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
-import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.FileInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.AnalysisInfo;
 import org.github._1c_syntax.intellij.bsl.lsp.server.diagnostics.reporter.ReportersAggregator;
+import org.github._1c_syntax.intellij.bsl.lsp.server.providers.DiagnosticProvider;
 import org.github._1c_syntax.parser.BSLLexer;
 import org.github._1c_syntax.parser.BSLParser;
 
@@ -60,10 +61,14 @@ public class AnalyzeCommand implements Command {
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
-    List<FileInfo> diagnostics = files.parallelStream()
-      .map(File::toPath)
-      .map(AnalyzeCommand::getFileContextFromPath)
-      .collect(Collectors.toList());
+    List<FileInfo> diagnostics;
+    try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size())) {
+      diagnostics = files.parallelStream()
+        .peek(file -> pb.step())
+        .map(File::toPath)
+        .map(AnalyzeCommand::getFileContextFromPath)
+        .collect(Collectors.toList());
+    }
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), diagnostics);
     ReportersAggregator aggregator = new ReportersAggregator(reporters);
