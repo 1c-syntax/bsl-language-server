@@ -35,14 +35,6 @@ public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
 
-  private static List<BSLDiagnostic> diagnosticClasses = Arrays.asList(
-    new FunctionShouldHaveReturnDiagnostic(),
-    new LineLengthDiagnostic(),
-    new MethodSizeDiagnostic(),
-    new SemicolonPresenceDiagnostic(),
-    new UnknownPreprocessorSymbolDiagnostic()
-  );
-
   private DiagnosticProvider() {
     // only statics
   }
@@ -54,9 +46,18 @@ public final class DiagnosticProvider {
   }
 
   public static List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {
-    return diagnosticClasses.parallelStream()
+    return getDiagnosticClasses().parallelStream()
         .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
         .collect(Collectors.toList());
   }
 
+  private static List<BSLDiagnostic> getDiagnosticClasses() {
+    return Arrays.asList(
+      new FunctionShouldHaveReturnDiagnostic(),
+      new LineLengthDiagnostic(),
+      new MethodSizeDiagnostic(),
+      new SemicolonPresenceDiagnostic(),
+      new UnknownPreprocessorSymbolDiagnostic()
+    );
+  }
 }

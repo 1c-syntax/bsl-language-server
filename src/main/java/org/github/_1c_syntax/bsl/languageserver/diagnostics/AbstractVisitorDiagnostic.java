@@ -28,11 +28,10 @@ import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
-  protected List<Diagnostic> diagnostics = Collections.synchronizedList(new ArrayList<>());
+  protected List<Diagnostic> diagnostics = new ArrayList<>();
 
   @Override
   public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
@@ -41,11 +40,11 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
     return new ArrayList<>(diagnostics);
   }
 
-  protected synchronized void addDiagnostic(BSLParserRuleContext node) {
+  protected void addDiagnostic(BSLParserRuleContext node) {
     diagnostics.add(BSLDiagnostic.createDiagnostic(this, node));
   }
 
-  protected synchronized void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
+  protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
     diagnostics.add(BSLDiagnostic.createDiagnostic(this, diagnosticMessage, node));
   }
 
