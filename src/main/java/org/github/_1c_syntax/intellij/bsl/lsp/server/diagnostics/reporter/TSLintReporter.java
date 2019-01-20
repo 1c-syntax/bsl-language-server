@@ -46,7 +46,9 @@ public class TSLintReporter implements DiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      mapper.writeValue(new File("./bsl-tslint.json"), tsLintReport);
+      File reportFile = new File("./bsl-tslint.json");
+      mapper.writeValue(reportFile, tsLintReport);
+      System.out.println("TSLint report saved to " + reportFile.getAbsolutePath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

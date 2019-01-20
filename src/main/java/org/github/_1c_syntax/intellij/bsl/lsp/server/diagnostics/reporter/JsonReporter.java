@@ -35,7 +35,9 @@ public class JsonReporter implements DiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      mapper.writeValue(new File("./bsl-json.json"), analysisInfo);
+      File reportFile = new File("./bsl-json.json");
+      mapper.writeValue(reportFile, analysisInfo);
+      System.out.println("JSON report saved to " + reportFile.getAbsolutePath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
