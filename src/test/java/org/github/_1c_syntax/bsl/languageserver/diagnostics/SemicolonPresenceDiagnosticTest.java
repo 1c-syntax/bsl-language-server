@@ -40,8 +40,8 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 0, 4, 0));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 2, 3, 6));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 0, 4, 9));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 2, 3, 7));
 
   }
 }
