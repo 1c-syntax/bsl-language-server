@@ -24,7 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.utils;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.github._1c_syntax.parser.BSLParserRuleContext;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 public final class RangeHelper {
 

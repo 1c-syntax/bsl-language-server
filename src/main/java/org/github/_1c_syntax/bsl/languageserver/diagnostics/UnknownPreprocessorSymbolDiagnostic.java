@@ -22,7 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnostic {
 

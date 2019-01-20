@@ -37,7 +37,7 @@ dependencies {
 
     compile("me.tongfei", "progressbar", "0.7.2")
 
-    compile("com.github.1c-syntax", "bsl-parser", "62bc0bf08b")
+    compile("com.github.1c-syntax", "bsl-parser", "48c3c90f64")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation("commons-io:commons-io:2.6")

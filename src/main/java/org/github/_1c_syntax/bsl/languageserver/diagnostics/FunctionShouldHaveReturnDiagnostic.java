@@ -23,8 +23,8 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
-import org.github._1c_syntax.parser.BSLLexer;
-import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.Collection;
 

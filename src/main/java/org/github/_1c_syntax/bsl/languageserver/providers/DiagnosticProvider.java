@@ -25,7 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.*;
-import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.Arrays;
 import java.util.List;

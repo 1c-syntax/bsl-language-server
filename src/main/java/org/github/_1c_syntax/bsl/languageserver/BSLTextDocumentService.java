@@ -31,9 +31,9 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
-import org.github._1c_syntax.parser.BSLLexer;
-import org.github._1c_syntax.parser.BSLParser;
-import org.github._1c_syntax.parser.BSLParser.FileContext;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
+import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParser.FileContext;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;

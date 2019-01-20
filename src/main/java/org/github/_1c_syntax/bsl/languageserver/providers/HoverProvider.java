@@ -28,9 +28,9 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
-import org.github._1c_syntax.parser.BSLParser.FileContext;
-import org.github._1c_syntax.parser.BSLParser.SubNameContext;
-import org.github._1c_syntax.parser.BSLParserBaseVisitor;
+import org.github._1c_syntax.bsl.parser.BSLParser.FileContext;
+import org.github._1c_syntax.bsl.parser.BSLParser.SubNameContext;
+import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
 import java.util.Optional;
 

@@ -23,9 +23,9 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.parser.BSLParser;
-import org.github._1c_syntax.parser.BSLParserBaseVisitor;
-import org.github._1c_syntax.parser.BSLParserRuleContext;
+import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Collections;

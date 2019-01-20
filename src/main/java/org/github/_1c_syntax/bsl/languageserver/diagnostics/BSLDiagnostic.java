@@ -27,8 +27,8 @@ import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.parser.BSLParser;
-import org.github._1c_syntax.parser.BSLParserRuleContext;
+import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.List;
 import java.util.ResourceBundle;

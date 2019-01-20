@@ -23,21 +23,16 @@ package org.github._1c_syntax.bsl.languageserver.cli;
 
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import org.github._1c_syntax.parser.BSLLexer;
-import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLExtendedParser;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -66,8 +61,7 @@ public class AnalyzeCommand implements Command {
     try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
       diagnostics = files.parallelStream()
         .peek(file -> pb.step())
-        .map(File::toPath)
-        .map(AnalyzeCommand::getFileContextFromPath)
+        .map(AnalyzeCommand::getFileContextFromFile)
         .collect(Collectors.toList());
     }
 
@@ -77,22 +71,12 @@ public class AnalyzeCommand implements Command {
     return 0;
   }
 
-  private static FileInfo getFileContextFromPath(Path path) {
-    BSLParser parser = prepareParser(path);
-    BSLParser.FileContext file = parser.file();
-    return new FileInfo(path, DiagnosticProvider.computeDiagnostics(file));
+  private static FileInfo getFileContextFromFile(File file) {
+    BSLExtendedParser parser = new BSLExtendedParser();
+    BSLParser.FileContext fileContext = parser.parseFile(file);
+
+    return new FileInfo(file.toPath(), DiagnosticProvider.computeDiagnostics(fileContext));
   }
 
 
-  private static BSLParser prepareParser(Path path) {
-    CharStream input;
-    try {
-      input = CharStreams.fromPath(path, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    BSLLexer lexer = new BSLLexer(input);
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-    return new BSLParser(tokenStream);
-  }
 }

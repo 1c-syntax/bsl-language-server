@@ -24,8 +24,8 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
-import org.github._1c_syntax.parser.BSLExtendedParser;
-import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLExtendedParser;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

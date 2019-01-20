@@ -25,8 +25,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.parser.BSLLexer;
-import org.github._1c_syntax.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
