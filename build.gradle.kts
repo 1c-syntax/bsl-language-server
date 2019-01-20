@@ -90,6 +90,10 @@ tasks.jacocoTestReport {
     }
 }
 
+tasks.processResources {
+    filteringCharset = "UTF-8"
+}
+
 // native2ascii gradle replacement
 tasks.withType<ProcessResources>().forEach { task ->
     task.from(task.source) {
