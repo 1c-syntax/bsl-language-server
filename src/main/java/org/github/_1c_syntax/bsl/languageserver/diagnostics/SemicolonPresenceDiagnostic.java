@@ -34,7 +34,8 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-    if (ctx.SEMICOLON() == null) {
+
+    if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
       addDiagnostic(ctx);
     }
     return super.visitStatement(ctx);
