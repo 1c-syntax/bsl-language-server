@@ -25,7 +25,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +36,7 @@ class FunctionShouldHaveReturnDiagnosticTest extends AbstractDiagnosticTest<Func
   }
 
   @Test
-  void test() throws IOException {
+  void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);

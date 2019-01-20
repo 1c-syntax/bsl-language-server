@@ -50,12 +50,17 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     return diagnostic;
   }
 
-  List<Diagnostic> getDiagnostics() throws IOException {
-    String textDocumentContent = IOUtils.resourceToString(
-      "diagnostics/" + diagnostic.getClass().getSimpleName() + ".bsl",
-      Charset.forName("UTF-8"),
-      this.getClass().getClassLoader()
-    );
+  List<Diagnostic> getDiagnostics() {
+    String textDocumentContent;
+    try {
+      textDocumentContent = IOUtils.resourceToString(
+        "diagnostics/" + diagnostic.getClass().getSimpleName() + ".bsl",
+        Charset.forName("UTF-8"),
+        this.getClass().getClassLoader()
+      );
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     BSLLexer lexer = new BSLLexer(CharStreams.fromString(textDocumentContent));
 
     CommonTokenStream tokens = new CommonTokenStream(lexer);
