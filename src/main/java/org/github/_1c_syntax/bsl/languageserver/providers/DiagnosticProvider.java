@@ -24,10 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.FunctionShouldHaveReturnDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.*;
 import org.github._1c_syntax.parser.BSLParser;
 
 import java.util.Arrays;
@@ -41,7 +38,8 @@ public final class DiagnosticProvider {
   private static List<BSLDiagnostic> diagnosticClasses = Arrays.asList(
     new FunctionShouldHaveReturnDiagnostic(),
     new LineLengthDiagnostic(),
-    new MethodSizeDiagnostic()
+    new MethodSizeDiagnostic(),
+    new SemicolonPresenceDiagnostic()
   );
 
   private DiagnosticProvider() {
