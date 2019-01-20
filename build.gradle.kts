@@ -60,7 +60,7 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "org.github._1c_syntax.intellij.bsl.lsp.server.BSLLSPLauncher"
+        attributes["Main-Class"] = "org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
     }
     configurations["compile"].forEach {
         from(zipTree(it.absoluteFile)) {
