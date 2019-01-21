@@ -40,7 +40,11 @@ public interface BSLDiagnostic {
   }
 
   default String getCode() {
-    return getClass().getSimpleName();
+    String simpleName = getClass().getSimpleName();
+    if (simpleName.endsWith("Diagnostic")) {
+      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
+    }
+    return simpleName;
   }
 
   List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree);
