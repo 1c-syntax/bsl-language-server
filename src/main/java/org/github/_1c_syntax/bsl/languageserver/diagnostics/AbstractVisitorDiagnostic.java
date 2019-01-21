@@ -48,4 +48,8 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
     diagnostics.add(BSLDiagnostic.createDiagnostic(this, diagnosticMessage, node));
   }
 
+  protected void addDiagnostic(int startLine, int startChar, int endLine, int endChar) {
+    diagnostics.add(BSLDiagnostic.createDiagnostic(this, startLine, startChar, endLine, endChar));
+  }
+
 }
