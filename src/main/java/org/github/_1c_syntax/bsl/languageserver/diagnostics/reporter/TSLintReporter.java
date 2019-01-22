@@ -24,6 +24,8 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,8 @@ import java.util.List;
 public class TSLintReporter implements DiagnosticReporter {
 
   public static final String KEY = "tslint";
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(TSLintReporter.class.getSimpleName());
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
@@ -48,7 +52,7 @@ public class TSLintReporter implements DiagnosticReporter {
     try {
       File reportFile = new File("./bsl-tslint.json");
       mapper.writeValue(reportFile, tsLintReport);
-      System.out.println("TSLint report saved to " + reportFile.getAbsolutePath());
+      LOGGER.info("TSLint report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

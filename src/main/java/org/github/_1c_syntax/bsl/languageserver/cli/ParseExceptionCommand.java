@@ -24,10 +24,14 @@ package org.github._1c_syntax.bsl.languageserver.cli;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
 
 public class ParseExceptionCommand implements Command {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ParseExceptionCommand.class.getSimpleName());
 
   private final Options options;
   private final ParseException e;
@@ -41,7 +45,7 @@ public class ParseExceptionCommand implements Command {
   public int execute() {
     HelpFormatter formatter = new HelpFormatter();
 
-    System.out.println(e.getMessage());
+    LOGGER.error(e.getMessage());
     formatter.printHelp(APP_NAME, options, true);
 
     return 1;

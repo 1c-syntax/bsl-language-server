@@ -22,6 +22,8 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +32,8 @@ public class JsonReporter implements DiagnosticReporter {
 
   public static final String KEY = "json";
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(JsonReporter.class.getSimpleName());
+
   @Override
   public void report(AnalysisInfo analysisInfo) {
     ObjectMapper mapper = new ObjectMapper();
@@ -37,7 +41,7 @@ public class JsonReporter implements DiagnosticReporter {
     try {
       File reportFile = new File("./bsl-json.json");
       mapper.writeValue(reportFile, analysisInfo);
-      System.out.println("JSON report saved to " + reportFile.getAbsolutePath());
+      LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

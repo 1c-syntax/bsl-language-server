@@ -38,6 +38,9 @@ dependencies {
 
     compile("me.tongfei", "progressbar", "0.7.2")
 
+    compile("org.slf4j", "slf4j-api", "1.8.0-beta2")
+    compile("org.slf4j", "slf4j-simple", "1.8.0-beta2")
+
     compile("com.github.1c-syntax", "bsl-parser", "48c3c90f64")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
