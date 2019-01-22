@@ -57,6 +57,7 @@ public final class DiagnosticProvider {
       new FunctionShouldHaveReturnDiagnostic(),
       new LineLengthDiagnostic(),
       new MethodSizeDiagnostic(),
+      new OneStatementPerLineDiagnostic(),
       new SemicolonPresenceDiagnostic(),
       new UnknownPreprocessorSymbolDiagnostic()
     );
