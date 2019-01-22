@@ -6,8 +6,8 @@ plugins {
     java
     maven
     jacoco
-    id("com.github.hierynomus.license") version "0.14.0"
-    id("org.sonarqube") version "2.6.2"
+    id("com.github.hierynomus.license") version "0.15.0"
+    id("org.sonarqube") version "2.7"
     id("io.franzbecker.gradle-lombok") version "1.14"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
     id("com.github.ben-manes.versions") version "0.20.0"
@@ -30,7 +30,7 @@ dependencies {
 
     compile("commons-io", "commons-io", "2.6")
 
-    compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.4")
+    compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.8")
     compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.8")
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
