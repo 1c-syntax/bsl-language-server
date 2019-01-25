@@ -12,4 +12,4 @@
 * [Ограничение на размер метода](diagnostics/MethodSize.md)
 * [Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
-* [Неизвестный символ препроцессора](diagnostics/UnknownPreprocessor.md)
+* [Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
