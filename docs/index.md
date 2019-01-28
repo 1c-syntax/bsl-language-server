@@ -13,7 +13,7 @@
 Запуск jar-файлов осуществляется через `java -jar path/to/file.jar`.
 
 ```sh
-java -jar bsl-language-server.jar" --help
+java -jar bsl-language-server.jar --help
 usage: BSL language server [-a] [-d <arg>] [-h] [-r <arg>] [-s <arg>]
  -a,--analyze                    Run analysis and get diagnostic info
  -d,--diagnosticLanguage <arg>   Language of diagnostic messages. Possible
