@@ -1,7 +1,6 @@
-
-import org.apache.tools.ant.filters.EscapeUnicode
 import java.net.URI
-import java.util.*
+import java.util.Calendar
+import org.apache.tools.ant.filters.EscapeUnicode
 
 plugins {
     java
