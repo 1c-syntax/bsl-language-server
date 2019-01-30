@@ -13,3 +13,12 @@
 Процедура ПроцедураСВозвратом()
     Возврат;
 КонецПроцедуры
+
+Function F()
+
+    For Each A In B Do
+
+    EndDo;
+
+    Return B;
+EndFunction
