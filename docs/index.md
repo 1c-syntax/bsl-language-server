@@ -54,6 +54,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 ### Список реализованных репортеров
 
 * [json](reporters/json.md) - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
+* [junit](reporters/junit.md);
 * [tslint](reporters/tslint.md);
 * [console](reporters/console.md).
 
