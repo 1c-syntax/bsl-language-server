@@ -27,7 +27,11 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.dataformat.xml.annotation.*;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlCData;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 import lombok.Data;
 import lombok.Getter;
 import org.eclipse.lsp4j.Diagnostic;
@@ -37,6 +41,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "testsuites")
 class JUnitTestSuites {
@@ -70,6 +76,7 @@ class JUnitTestSuites {
 
   @Data
   static class JUnitTestSuite {
+
     @JacksonXmlProperty(isAttribute = true)
     private final String name;
 
@@ -81,7 +88,11 @@ class JUnitTestSuites {
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
-      diagnostics.forEach(diagnostic -> testcase.add(new JUnitTestCase(diagnostic, this.name))
+      Map<String, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
+        .collect(Collectors.groupingBy(Diagnostic::getCode, Collectors.toList()));
+
+      groupedDiagnostics.forEach((code, diagnosticsList) ->
+        testcase.add(new JUnitTestCase(diagnosticsList, code, name))
       );
     }
 
@@ -96,6 +107,7 @@ class JUnitTestSuites {
 
   @Data
   static class JUnitTestCase {
+
     @JacksonXmlProperty(isAttribute = true)
     private final String name;
 
@@ -105,21 +117,23 @@ class JUnitTestSuites {
     @JacksonXmlElementWrapper(useWrapping = false)
     private final List<JUnitFailure> failure;
 
-    public JUnitTestCase(Diagnostic diagnostic, String classname) {
-      this.name = diagnostic.getCode();
+    public JUnitTestCase(List<Diagnostic> diagnostics, String name, String classname) {
+      this.name = name;
       this.classname = classname;
       this.failure = new ArrayList<>();
 
-      String type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
-      String message = diagnostic.getMessage();
-      String value = String.format(
-        "line: %d, column: %d, text: %s",
-        diagnostic.getRange().getStart().getLine() + 1,
-        diagnostic.getRange().getStart().getCharacter(),
-        diagnostic.getMessage()
-      );
+      diagnostics.forEach(diagnostic -> {
+        String type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
+        String message = diagnostic.getMessage();
+        String value = String.format(
+          "line: %d, column: %d, text: %s",
+          diagnostic.getRange().getStart().getLine() + 1,
+          diagnostic.getRange().getStart().getCharacter(),
+          diagnostic.getMessage()
+        );
 
-      this.failure.add(new JUnitFailure(type, message, value));
+        this.failure.add(new JUnitFailure(type, message, value));
+      });
     }
 
     public JUnitTestCase(
@@ -136,6 +150,7 @@ class JUnitTestSuites {
   @Data
   @JsonDeserialize(using = JUnitFailureDeserializer.class)
   static class JUnitFailure {
+
     @JacksonXmlProperty(isAttribute = true)
     private final String type;
 
@@ -158,7 +173,6 @@ class JUnitTestSuites {
       String value = node.get("").asText("");
 
       return new JUnitFailure(type, message, value);
-
     }
   }
 
