@@ -39,10 +39,10 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 9, 12, 4));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(18, 14, 21, 4));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(25, 24, 27, 8));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(33, 11, 35, 0));
+
   }
 }
