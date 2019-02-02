@@ -59,7 +59,8 @@ public final class DiagnosticProvider {
       new MethodSizeDiagnostic(),
       new OneStatementPerLineDiagnostic(),
       new SemicolonPresenceDiagnostic(),
-      new UnknownPreprocessorSymbolDiagnostic()
+      new UnknownPreprocessorSymbolDiagnostic(),
+      new NestedTernaryOperatorDiagnostic()
     );
   }
 }
