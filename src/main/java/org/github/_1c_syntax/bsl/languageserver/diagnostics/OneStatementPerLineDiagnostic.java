@@ -40,6 +40,10 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitStatement(ctx);
     }
 
+    if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
+      return super.visitStatement(ctx);
+    }
+
     if (ctx.getStart().getLine() == previousLineNumber) {
       addDiagnostic(ctx);
     }
