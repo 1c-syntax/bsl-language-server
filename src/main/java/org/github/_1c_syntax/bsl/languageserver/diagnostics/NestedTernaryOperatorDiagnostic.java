@@ -33,7 +33,7 @@ public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
+    return DiagnosticSeverity.Warning;
   }
 
   @Override
