@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     tokens.forEach((Token token) -> {
         List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine(), new ArrayList<>());
         tokenList.add(token.getCharPositionInLine() + token.getText().length());
-        if (!token.getText().startsWith("|")) {
+        if (token.getType() != BSLLexer.STRINGPART) {
           tokensInOneLine.put(token.getLine() - 1, tokenList);
         }
       });
