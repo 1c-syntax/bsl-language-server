@@ -21,35 +21,27 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.junit.jupiter.api.Test;
 
-public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
-  private int previousLineNumber;
+import java.util.List;
 
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
+import static org.assertj.core.api.Assertions.assertThat;
+
+class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatementDiagnostic> {
+
+  EmptyStatementDiagnosticTest() {
+    super(EmptyStatementDiagnostic.class);
   }
 
-  @Override
-  public ParseTree visitStatement(BSLParser.StatementContext ctx) {
+  @Test
+  void test() {
+    List<Diagnostic> diagnostics = getDiagnostics();
 
-    if (ctx.preprocessor()!= null){
-      return super.visitStatement(ctx);
-    }
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 18, 1, 19));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(2, 8, 2, 9));
 
-    if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-      return super.visitStatement(ctx);
-    }
-
-    if (ctx.getStart().getLine() == previousLineNumber) {
-      addDiagnostic(ctx);
-    }
-    previousLineNumber = ctx.getStart().getLine();
-
-    return super.visitStatement(ctx);
   }
-
 }

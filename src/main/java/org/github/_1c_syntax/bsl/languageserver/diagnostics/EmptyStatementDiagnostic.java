@@ -19,14 +19,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
-  private int previousLineNumber;
+
+public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
@@ -36,20 +38,12 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (ctx.preprocessor()!= null){
-      return super.visitStatement(ctx);
-    }
-
     if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-      return super.visitStatement(ctx);
-    }
 
-    if (ctx.getStart().getLine() == previousLineNumber) {
       addDiagnostic(ctx);
+
     }
-    previousLineNumber = ctx.getStart().getLine();
 
     return super.visitStatement(ctx);
   }
-
 }

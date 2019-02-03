@@ -64,6 +64,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 ### Список реализованных диагностик
 
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
+* [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
 * [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
