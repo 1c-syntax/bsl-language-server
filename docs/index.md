@@ -72,3 +72,4 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
+* [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
