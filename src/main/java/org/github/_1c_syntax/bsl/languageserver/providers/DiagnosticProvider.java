@@ -57,10 +57,10 @@ public final class DiagnosticProvider {
       new FunctionShouldHaveReturnDiagnostic(),
       new LineLengthDiagnostic(),
       new MethodSizeDiagnostic(),
+      new NestedTernaryOperatorDiagnostic(),
       new OneStatementPerLineDiagnostic(),
       new SemicolonPresenceDiagnostic(),
-      new UnknownPreprocessorSymbolDiagnostic(),
-      new NestedTernaryOperatorDiagnostic()
+      new UnknownPreprocessorSymbolDiagnostic()
     );
   }
 }
