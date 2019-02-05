@@ -56,6 +56,7 @@ public final class DiagnosticProvider {
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
       new FunctionShouldHaveReturnDiagnostic(),
+      new IfElseIfEndsWithElseDiagnostic(),
       new LineLengthDiagnostic(),
       new MethodSizeDiagnostic(),
       new NestedTernaryOperatorDiagnostic(),
