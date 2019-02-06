@@ -39,6 +39,6 @@ class IfElseIfEndsWithElseDiagnosticTest extends AbstractDiagnosticTest<IfElseIf
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(14, 0, 20, 9));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(20, 0, 20, 9));
   }
 }
