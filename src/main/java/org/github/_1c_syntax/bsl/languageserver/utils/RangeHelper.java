@@ -44,7 +44,12 @@ public final class RangeHelper {
     int startLine = startToken.getLine() - 1;
     int startChar = startToken.getCharPositionInLine();
     int endLine = endToken.getLine() - 1;
-    int endChar = endToken.getCharPositionInLine() + endToken.getText().length();
+    int endChar;
+    if (endToken.getType() == Token.EOF) {
+      endChar = 0;
+    } else {
+      endChar = endToken.getCharPositionInLine() + endToken.getText().length();
+    }
 
     return newRange(startLine, startChar, endLine, endChar);
   }

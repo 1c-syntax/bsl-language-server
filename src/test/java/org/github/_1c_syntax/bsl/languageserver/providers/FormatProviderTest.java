@@ -52,7 +52,7 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    assertThat(textEdit.getNewText()).isEqualTo("    Если Истина Тогда\r\n        Возврат;\r\n    КонецЕсли;");
+    assertThat(textEdit.getNewText()).isEqualTo("    Если Истина Тогда\n        Возврат;\n    КонецЕсли;\n");
   }
 
   private File getTestFile() {

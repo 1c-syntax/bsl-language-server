@@ -119,7 +119,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-    throw new UnsupportedOperationException();
+    FileContext fileTree = documents.get(params.getTextDocument().getUri());
+    List<TextEdit> edits = FormatProvider.getFormatting(params, fileTree);
+    return CompletableFuture.completedFuture(edits);
   }
 
   @Override
