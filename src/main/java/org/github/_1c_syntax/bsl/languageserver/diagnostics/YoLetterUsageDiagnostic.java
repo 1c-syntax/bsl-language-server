@@ -33,25 +33,18 @@ public class YoLetterUsageDiagnostic implements BSLDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
+    return DiagnosticSeverity.Hint;
   }
 
   @Override
   public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
 
-    ListTokenSource tokenSource = new ListTokenSource(fileTree.getTokens());
-
-    CommonTokenStream commonTokenStream = new CommonTokenStream(tokenSource);
-    commonTokenStream.fill();
-
-    List<Token> allIdentifiers = commonTokenStream.getTokens(
-                                 0,
-                                 commonTokenStream.getNumberOfOnChannelTokens()-1,
-                                 BSLParser.IDENTIFIER);
-
-    List<Token> wrongIdentifiers = allIdentifiers.parallelStream()
-                                  .filter((Token t)-> t.getText().toUpperCase().contains("Ё"))
-                                  .collect(Collectors.toList());
+    List<Token> wrongIdentifiers = fileTree.getTokens()
+                                  .parallelStream()
+                                  .filter((Token t) ->
+                                    t.getType() == BSLParser.IDENTIFIER &&
+                                    t.getText().toUpperCase().contains("Ё"))
+                                  .collect((Collectors.toList()));
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
