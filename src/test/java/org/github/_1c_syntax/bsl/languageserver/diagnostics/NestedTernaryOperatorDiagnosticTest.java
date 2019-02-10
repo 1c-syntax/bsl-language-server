@@ -40,7 +40,7 @@ class NestedTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<NestedT
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 0, 9, 14));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 13, 8, 14));
 
   }
 }
