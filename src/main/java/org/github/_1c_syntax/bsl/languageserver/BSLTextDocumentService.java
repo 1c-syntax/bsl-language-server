@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import org.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -123,7 +124,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-    throw new UnsupportedOperationException();
+    FileContext fileTree = documents.get(params.getTextDocument().getUri());
+    List<TextEdit> edits = FormatProvider.getRangeFormatting(params, fileTree);
+    return CompletableFuture.completedFuture(edits);
   }
 
   @Override

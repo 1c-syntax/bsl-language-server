@@ -30,6 +30,7 @@ dependencies {
     compile("commons-cli", "commons-cli", "1.4")
     // https://mvnrepository.com/artifact/commons-io/commons-io
     compile("commons-io", "commons-io", "2.6")
+    compile("org.apache.commons", "commons-lang3", "3.8.1")
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.8")
     compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.8")
