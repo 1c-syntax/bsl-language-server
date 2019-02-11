@@ -23,18 +23,50 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class FormatProvider {
+public final class FormatProvider {
+
+  private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
+    BSLLexer.LPAREN,
+    BSLLexer.PROCEDURE_KEYWORD,
+    BSLLexer.FUNCTION_KEYWORD,
+    BSLLexer.IF_KEYWORD,
+    BSLLexer.ELSIF_KEYWORD,
+    BSLLexer.ELSE_KEYWORD,
+    BSLLexer.FOR_KEYWORD,
+    BSLLexer.WHILE_KEYWORD,
+    BSLLexer.TRY_KEYWORD,
+    BSLLexer.EXCEPT_KEYWORD
+  ));
+
+  private static final Set<Integer> decrementIndentTokens = new HashSet<>(Arrays.asList(
+    BSLLexer.RPAREN,
+    BSLLexer.ELSIF_KEYWORD,
+    BSLLexer.ELSE_KEYWORD,
+    BSLLexer.ENDPROCEDURE_KEYWORD,
+    BSLLexer.ENDFUNCTION_KEYWORD,
+    BSLLexer.ENDIF_KEYWORD,
+    BSLLexer.ENDDO_KEYWORD,
+    BSLLexer.ENDTRY_KEYWORD
+  ));
 
   private FormatProvider() {
     // only statics
@@ -45,7 +77,7 @@ public class FormatProvider {
     return getTextEdits(tokens, RangeHelper.newRange(fileTree), 0, params.getOptions());
   }
 
-  public static List<TextEdit> getRangeFormatting(DocumentRangeFormattingParams params, BSLParser.FileContext fileTree) {
+  public static List<TextEdit> getRangeFormatting(DocumentRangeFormattingParams params, BSLParserRuleContext fileTree) {
     Position start = params.getRange().getStart();
     Position end = params.getRange().getEnd();
     int startLine = start.getLine() + 1;
@@ -54,18 +86,25 @@ public class FormatProvider {
     int endCharacter = end.getCharacter();
 
     List<Token> tokens = fileTree.getTokens().stream()
-      .filter(token -> {
+      .filter((Token token) -> {
         int tokenLine = token.getLine();
         int tokenCharacter = token.getCharPositionInLine();
-        return (tokenLine >= startLine
-          && tokenLine < endLine)
-          || (tokenLine == endLine
-          && tokenCharacter >= startCharacter
-          && tokenCharacter < endCharacter);
+        return inLineRange(startLine, endLine, tokenLine)
+          || (tokenLine == endLine && betweenStartAndStopCharacters(startCharacter, endCharacter, tokenCharacter));
       })
       .collect(Collectors.toList());
 
     return getTextEdits(tokens, params.getRange(), startCharacter, params.getOptions());
+  }
+
+  private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
+    return tokenCharacter >= startCharacter
+      && tokenCharacter < endCharacter;
+  }
+
+  private static boolean inLineRange(int startLine, int endLine, int tokenLine) {
+    return tokenLine >= startLine
+      && tokenLine < endLine;
   }
 
   private static List<TextEdit> getTextEdits(
@@ -74,11 +113,12 @@ public class FormatProvider {
     int startCharacter,
     FormattingOptions options
   ) {
-    List<TextEdit> edits = new ArrayList<>();
 
     if (tokens.isEmpty()) {
-      return edits;
+      return Collections.emptyList();
     }
+
+    List<TextEdit> edits = new ArrayList<>();
 
     int tabSize = options.getTabSize();
     boolean insertSpaces = options.isInsertSpaces();
@@ -102,12 +142,12 @@ public class FormatProvider {
       if (token.equals(firstToken)) {
         newTextBuilder.append(StringUtils.repeat(indentation, currentIndentLevel));
       } else if (needNewLine) {
-        // TODO: CRLF/LF ?
         String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append(StringUtils.repeat("\n" + currentIndentation, token.getLine() - lastLine));
       } else if (needAddSpace(token.getType(), previousTokenType)) {
         newTextBuilder.append(' ');
       }
+
       newTextBuilder.append(token.getText());
 
       if (needIncrementIndent(token.getType())) {
@@ -155,35 +195,12 @@ public class FormatProvider {
     }
   }
 
-
   private static boolean needIncrementIndent(int tokenType) {
-    Set<Integer> incrementsIndent = new HashSet<>();
-    incrementsIndent.add(BSLLexer.LPAREN);
-    incrementsIndent.add(BSLLexer.PROCEDURE_KEYWORD);
-    incrementsIndent.add(BSLLexer.FUNCTION_KEYWORD);
-    incrementsIndent.add(BSLLexer.IF_KEYWORD);
-    incrementsIndent.add(BSLLexer.ELSIF_KEYWORD);
-    incrementsIndent.add(BSLLexer.ELSE_KEYWORD);
-    incrementsIndent.add(BSLLexer.FOR_KEYWORD);
-    incrementsIndent.add(BSLLexer.WHILE_KEYWORD);
-    incrementsIndent.add(BSLLexer.TRY_KEYWORD);
-    incrementsIndent.add(BSLLexer.EXCEPT_KEYWORD);
-
-    return incrementsIndent.contains(tokenType);
+    return incrementIndentTokens.contains(tokenType);
   }
 
   private static boolean needDecrementIndent(int tokenType) {
-    Set<Integer> decrementsIndent = new HashSet<>();
-    decrementsIndent.add(BSLLexer.RPAREN);
-    decrementsIndent.add(BSLLexer.ELSIF_KEYWORD);
-    decrementsIndent.add(BSLLexer.ELSE_KEYWORD);
-    decrementsIndent.add(BSLLexer.ENDPROCEDURE_KEYWORD);
-    decrementsIndent.add(BSLLexer.ENDFUNCTION_KEYWORD);
-    decrementsIndent.add(BSLLexer.ENDIF_KEYWORD);
-    decrementsIndent.add(BSLLexer.ENDDO_KEYWORD);
-    decrementsIndent.add(BSLLexer.ENDTRY_KEYWORD);
-
-    return decrementsIndent.contains(tokenType);
+    return decrementIndentTokens.contains(tokenType);
   }
 
 }
