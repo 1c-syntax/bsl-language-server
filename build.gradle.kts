@@ -42,7 +42,7 @@ dependencies {
     compile("org.slf4j", "slf4j-api", "1.8.0-beta2")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta2")
 
-    compile("com.github.1c-syntax", "bsl-parser", "59200c28d5450a99ffcb8f2f203317b3c3c37e9a")
+    compile("com.github.1c-syntax", "bsl-parser", "v0.4.0")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation("commons-io:commons-io:2.6")
