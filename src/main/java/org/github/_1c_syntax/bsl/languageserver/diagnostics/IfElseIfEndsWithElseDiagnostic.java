@@ -24,11 +24,12 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.Collection;
 
-public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
+public class IfElseIfEndsWithElseDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
@@ -36,15 +37,15 @@ public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
-    if (nestedTernaryOperators.size() > 1) {
-      nestedTernaryOperators.stream()
-        .skip(1)
-        .forEach(parseTree -> addDiagnostic((BSLParser.TernaryOperatorContext) parseTree));
+  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+
+    if (ctx.getToken(BSLLexer.ELSIF_KEYWORD, 0) != null && ctx.getToken(BSLLexer.ELSE_KEYWORD, 0) == null) {
+      addDiagnostic(ctx.getStop());
     }
-    
-    return super.visitTernaryOperator(ctx);
+
+    return super.visitIfStatement(ctx);
   }
 
 }
+
+

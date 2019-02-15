@@ -21,30 +21,43 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
+import org.antlr.v4.runtime.*;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import java.util.Collection;
-
-public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
+public class YoLetterUsageDiagnostic implements BSLDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+    return DiagnosticSeverity.Hint;
   }
 
   @Override
-  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
-    if (nestedTernaryOperators.size() > 1) {
-      nestedTernaryOperators.stream()
-        .skip(1)
-        .forEach(parseTree -> addDiagnostic((BSLParser.TernaryOperatorContext) parseTree));
-    }
-    
-    return super.visitTernaryOperator(ctx);
-  }
+  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
 
+    List<Token> wrongIdentifiers = fileTree.getTokens()
+                                  .parallelStream()
+                                  .filter((Token t) ->
+                                    t.getType() == BSLParser.IDENTIFIER &&
+                                    t.getText().toUpperCase().contains("Ё"))
+                                  .collect((Collectors.toList()));
+
+    List<Diagnostic> diagnostics = new ArrayList<>();
+
+    for(Token token : wrongIdentifiers) {
+         diagnostics.add(BSLDiagnostic.createDiagnostic(
+           this,
+           token.getLine()-1,
+           token.getCharPositionInLine(),
+           token.getLine()-1,
+           token.getCharPositionInLine() + token.getText().length()-1));
+    }
+
+    return diagnostics;
+
+  }
 }

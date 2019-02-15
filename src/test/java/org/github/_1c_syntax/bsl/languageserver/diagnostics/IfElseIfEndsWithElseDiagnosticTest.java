@@ -21,30 +21,24 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
+import java.util.List;
 
-public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
+import static org.assertj.core.api.Assertions.assertThat;
 
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+class IfElseIfEndsWithElseDiagnosticTest extends AbstractDiagnosticTest<IfElseIfEndsWithElseDiagnostic> {
+
+  IfElseIfEndsWithElseDiagnosticTest() {
+    super(IfElseIfEndsWithElseDiagnostic.class);
   }
 
-  @Override
-  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
-    if (nestedTernaryOperators.size() > 1) {
-      nestedTernaryOperators.stream()
-        .skip(1)
-        .forEach(parseTree -> addDiagnostic((BSLParser.TernaryOperatorContext) parseTree));
-    }
-    
-    return super.visitTernaryOperator(ctx);
+  @Test
+  void test() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(20, 0, 20, 9));
   }
-
 }

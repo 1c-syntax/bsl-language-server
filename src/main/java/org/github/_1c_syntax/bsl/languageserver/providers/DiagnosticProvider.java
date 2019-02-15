@@ -56,12 +56,14 @@ public final class DiagnosticProvider {
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
       new FunctionShouldHaveReturnDiagnostic(),
+      new IfElseIfEndsWithElseDiagnostic(),
       new LineLengthDiagnostic(),
       new MethodSizeDiagnostic(),
       new NestedTernaryOperatorDiagnostic(),
       new OneStatementPerLineDiagnostic(),
       new SemicolonPresenceDiagnostic(),
-      new UnknownPreprocessorSymbolDiagnostic()
+      new UnknownPreprocessorSymbolDiagnostic(),
+      new YoLetterUsageDiagnostic()
     );
   }
 }

@@ -29,18 +29,21 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class NestedTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<NestedTernaryOperatorDiagnostic> {
+class YoLetterUsageDiagnosticTest extends AbstractDiagnosticTest<YoLetterUsageDiagnostic> {
 
-  NestedTernaryOperatorDiagnosticTest() {
-    super(NestedTernaryOperatorDiagnostic.class);
+  YoLetterUsageDiagnosticTest() {
+    super(YoLetterUsageDiagnostic.class);
   }
 
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 13, 8, 14));
-
+    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 6, 0, 10));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(2, 10, 2, 19));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(2, 21, 2, 24));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(3, 13, 3, 16));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(5, 39, 5, 42));
   }
 }
