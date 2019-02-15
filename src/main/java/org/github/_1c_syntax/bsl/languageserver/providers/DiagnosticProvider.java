@@ -60,6 +60,7 @@ public final class DiagnosticProvider {
       new LineLengthDiagnostic(),
       new MethodSizeDiagnostic(),
       new NestedTernaryOperatorDiagnostic(),
+      new NumberOfParamsDiagnostic(),
       new OneStatementPerLineDiagnostic(),
       new SemicolonPresenceDiagnostic(),
       new UnknownPreprocessorSymbolDiagnostic(),
