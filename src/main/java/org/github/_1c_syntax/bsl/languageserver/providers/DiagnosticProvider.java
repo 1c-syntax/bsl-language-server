@@ -61,6 +61,7 @@ public final class DiagnosticProvider {
       new MethodSizeDiagnostic(),
       new NestedTernaryOperatorDiagnostic(),
       new OneStatementPerLineDiagnostic(),
+      new SelfAssignDiagnostic(),
       new SemicolonPresenceDiagnostic(),
       new UnknownPreprocessorSymbolDiagnostic(),
       new YoLetterUsageDiagnostic()
