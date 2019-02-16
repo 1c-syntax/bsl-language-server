@@ -22,7 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -53,18 +53,18 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     int lineOfstop = ctx.getStop().getLine();
 
     List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
-      .filter(node -> node instanceof TerminalNodeImpl)
-      .filter(node -> ((TerminalNodeImpl) node).symbol.getLine() == lineOfstop)
+      .filter(node -> node instanceof TerminalNode)
+      .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfstop)
       .collect(Collectors.toList());
 
-    TerminalNodeImpl first = (TerminalNodeImpl) list.get(0);
-    TerminalNodeImpl last = (TerminalNodeImpl) list.get(list.size() - 1);
+    TerminalNode first = (TerminalNode) list.get(0);
+    TerminalNode last = (TerminalNode) list.get(list.size() - 1);
 
     addDiagnostic(
-      first.symbol.getLine() - 1,
-      first.symbol.getCharPositionInLine(),
-      last.symbol.getLine() - 1,
-      last.symbol.getCharPositionInLine() + last.getText().length()
+      first.getSymbol().getLine() - 1,
+      first.getSymbol().getCharPositionInLine(),
+      last.getSymbol().getLine() - 1,
+      last.getSymbol().getCharPositionInLine() + last.getText().length()
     );
 
     return super.visitCodeBlock(ctx);
