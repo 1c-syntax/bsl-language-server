@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class CanonicalSpellingKeywordsDiagnostic extends AbstractVisitorDiagnostic {
+public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
 
   private static  Map<Integer, List<String>> canonicalKeywords = getPreset();
 
@@ -315,7 +315,7 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractVisitorDiagnost
   }
 
   private String getDiagnosticMessage(Token token) {
-    String diagnosticMessage = super.getDiagnosticMessage();
+    String diagnosticMessage = getDiagnosticMessage();
     return String.format(diagnosticMessage, token.getText());
   }
 
