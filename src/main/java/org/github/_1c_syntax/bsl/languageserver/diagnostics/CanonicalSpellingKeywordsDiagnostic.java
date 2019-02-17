@@ -33,43 +33,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
+public class CanonicalSpellingKeywordsDiagnostic extends AbstractVisitorDiagnostic {
 
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+  private static  Map<Integer, List<String>> canonicalKeywords = getPreset();
+
+  private static Map<Integer, List<String>> getPreset() {
+    // Здесь возможно будет получить набор канонических слов из параметров.
+    // Если входных параметров не задано, то используются значения по умолчанию.
+    Map<Integer, List<String>> result = new HashMap<>();
+    if (true)
+      result = getDefaultPreset();
+    return result;
   }
 
-  @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
-
-    Map<Integer, List<String>> canonicalKeywords = getPreset();
-
-    List<Token> keywords = fileTree.getTokens()
-      .parallelStream()
-      .filter((Token t) ->
-        canonicalKeywords.get(t.getType()) != null &&
-          canonicalKeywords.get(t.getType()).contains(t.getText()) == false)
-      .collect(Collectors.toList());
-
-    List<Diagnostic> diagnostics = new ArrayList<>();
-
-    for (Token token : keywords) {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
-          RangeHelper.newRange(
-            token.getLine() - 1,
-            token.getCharPositionInLine(),
-            token.getLine() - 1,
-            token.getCharPositionInLine() + token.getText().length() - 1),
-          getDiagnosticMessage(token)));
-    }
-
-    return diagnostics;
-
-  }
-
-  private Map<Integer, List<String>> getDefaultPreset(){
+  private static Map<Integer, List<String>> getDefaultPreset(){
 
     Map<Integer, List<String>> result = new HashMap<>();
 
@@ -305,17 +282,41 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
     return result;
   }
 
+  @Override
+  public DiagnosticSeverity getSeverity() {
+    return DiagnosticSeverity.Warning;
+  }
+
+  @Override
+  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+
+    List<Token> keywords = fileTree.getTokens()
+      .parallelStream()
+      .filter((Token t) ->
+        canonicalKeywords.get(t.getType()) != null &&
+          canonicalKeywords.get(t.getType()).contains(t.getText()) == false)
+      .collect(Collectors.toList());
+
+    List<Diagnostic> diagnostics = new ArrayList<>();
+
+    for (Token token : keywords) {
+        diagnostics.add(BSLDiagnostic.createDiagnostic(
+          this,
+          RangeHelper.newRange(
+            token.getLine() - 1,
+            token.getCharPositionInLine(),
+            token.getLine() - 1,
+            token.getCharPositionInLine() + token.getText().length() - 1),
+          getDiagnosticMessage(token)));
+    }
+
+    return diagnostics;
+
+  }
+
   private String getDiagnosticMessage(Token token) {
-    String diagnosticMessage = BSLDiagnostic.super.getDiagnosticMessage();
+    String diagnosticMessage = super.getDiagnosticMessage();
     return String.format(diagnosticMessage, token.getText());
   }
 
-  private Map<Integer, List<String>> getPreset() {
-    // Здесь возможно будет получить набор канонических слов из параметров.
-    // Если входных параметров не задано, то используются значения по умолчанию.
-    Map<Integer, List<String>> result = new HashMap<>();
-    if (true)
-      result = getDefaultPreset();
-    return result;
-  }
 }
