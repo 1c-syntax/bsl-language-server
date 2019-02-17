@@ -27,7 +27,10 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
