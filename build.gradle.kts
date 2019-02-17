@@ -1,6 +1,7 @@
-import java.net.URI
-import java.util.Calendar
+
 import org.apache.tools.ant.filters.EscapeUnicode
+import java.net.URI
+import java.util.*
 
 plugins {
     java
@@ -66,6 +67,7 @@ tasks.withType<JavaCompile> {
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Implementation-Version"] = archiveVersion.get()
     }
     configurations["compile"].forEach {
         from(zipTree(it.absoluteFile)) {
