@@ -64,6 +64,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 
 ### Список реализованных диагностик
 
+* [CanonicalSpellingKeywords - Пустой блок кода](diagnostics/CanonicalSpellingKeywords.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
