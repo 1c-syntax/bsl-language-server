@@ -39,9 +39,9 @@ class CancelDiagnosticTest extends AbstractDiagnosticTest<CancelDiagnostic>{
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(7, 8, 7, 21));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(14, 4, 14, 25));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(30, 4, 30, 25));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(14, 4, 14, 27));
+//    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(30, 4, 30, 25));
   }
 }

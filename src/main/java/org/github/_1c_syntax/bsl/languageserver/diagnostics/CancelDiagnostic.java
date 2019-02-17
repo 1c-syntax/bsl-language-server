@@ -24,18 +24,23 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CancelDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final Pattern cancelPattern = Pattern.compile("отказ|cancel");
+
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+    return DiagnosticSeverity.Error;
   }
 
   @Override
@@ -43,28 +48,31 @@ public class CancelDiagnostic extends AbstractVisitorDiagnostic {
 
     Collection<ParseTree> params = Trees.findAllRuleNodes(ctx, BSLParser.RULE_param);
 
-    boolean inParams = params.stream().filter(node ->
-      ((BSLParser.ParamContext) node).IDENTIFIER().getText().equalsIgnoreCase("Отказ")
-    ).count() == 1;
+    boolean inParams = params.stream().anyMatch(
+      node -> cancelPattern.matcher(((BSLParser.ParamContext) node).IDENTIFIER()
+      .getText()
+      .toLowerCase(Locale.getDefault()))
+      .matches());
 
-    int skip = 0;
-    if (!inParams) {
-      skip = 1;
+    // ToDO обрабатывать не только в параметрах
+    if(!inParams){
+      return super.visitSub(ctx);
     }
 
+    int skip = 0;
     Collection<ParseTree> assigns = Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment);
 
-    List<ParseTree> tree = assigns.stream().filter(node ->
-      ((BSLParser.AssignmentContext) node).complexIdentifier().getText().equalsIgnoreCase("Отказ")
+    List<ParseTree> tree = assigns.stream()
+      .filter(
+        node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).complexIdentifier()
+        .getText()
+        .toLowerCase(Locale.getDefault()))
+        .matches()
     ).collect(Collectors.toList());
-
 
     tree.stream().skip(skip).forEach(
       (ParseTree ident) -> {
-
-        boolean validAsign = ((BSLParser.AssignmentContext) ident).expression().getText().equalsIgnoreCase("Истина");
-
-        if (!validAsign) {
+        if (!rightPartIsValid((BSLParser.AssignmentContext) ident)) {
           addDiagnostic((BSLParserRuleContext) ident.getParent());
         }
 
@@ -72,6 +80,11 @@ public class CancelDiagnostic extends AbstractVisitorDiagnostic {
     );
 
     return super.visitSub(ctx);
+  }
+
+  private static boolean rightPartIsValid(BSLParser.AssignmentContext ident) {
+
+    return ident.expression().getStop().getType() == BSLLexer.TRUE;
   }
 
 }
