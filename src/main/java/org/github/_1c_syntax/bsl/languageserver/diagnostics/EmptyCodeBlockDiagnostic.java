@@ -21,10 +21,15 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Tree;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -41,16 +46,26 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitCodeBlock(ctx);
     }
 
-    if (ctx.getChildCount() == 0) {
-      Token ctxStop = ctx.getStop();
-      Token ctxStart = ctx.getStart();
-      addDiagnostic(
-        ctxStop.getLine() - 1,
-        ctxStop.getCharPositionInLine() + ctxStop.getText().length(),
-        ctxStart.getLine() - 1,
-        ctxStart.getCharPositionInLine()
-      );
+    if (ctx.getChildCount() > 0) {
+      return super.visitCodeBlock(ctx);
     }
+
+    int lineOfstop = ctx.getStop().getLine();
+
+    List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
+      .filter(node -> node instanceof TerminalNode)
+      .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfstop)
+      .collect(Collectors.toList());
+
+    TerminalNode first = (TerminalNode) list.get(0);
+    TerminalNode last = (TerminalNode) list.get(list.size() - 1);
+
+    addDiagnostic(
+      first.getSymbol().getLine() - 1,
+      first.getSymbol().getCharPositionInLine(),
+      last.getSymbol().getLine() - 1,
+      last.getSymbol().getCharPositionInLine() + last.getText().length()
+    );
 
     return super.visitCodeBlock(ctx);
   }
