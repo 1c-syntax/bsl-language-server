@@ -279,12 +279,179 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
     undefinedKeywordSpelling.add("Undefined");
     result.put(BSLParser.UNDEFINED, undefinedKeywordSpelling);
 
+    // PREPROC_REGION
+    List<String> regionKeywordSpelling = new ArrayList<>();
+    regionKeywordSpelling.add("Область");
+    regionKeywordSpelling.add("Region");
+    result.put(BSLParser.PREPROC_REGION, regionKeywordSpelling);
+
+    // PREPROC_END_REGION
+    List<String> endRegionKeywordSpelling = new ArrayList<>();
+    endRegionKeywordSpelling.add("КонецОбласти");
+    endRegionKeywordSpelling.add("EndRegion");
+    result.put(BSLParser.PREPROC_END_REGION, endRegionKeywordSpelling);
+
+    // PREPROC_IF_KEYWORD
+    List<String> preprocIfKeywordSpelling = new ArrayList<>();
+    preprocIfKeywordSpelling.add("Если");
+    preprocIfKeywordSpelling.add("If");
+    result.put(BSLParser.PREPROC_IF_KEYWORD, preprocIfKeywordSpelling);
+
+    // PREPROC_THEN_KEYWORD
+    List<String> preprocThenKeywordSpelling = new ArrayList<>();
+    preprocThenKeywordSpelling.add("Тогда");
+    preprocThenKeywordSpelling.add("Then");
+    result.put(BSLParser.PREPROC_THEN_KEYWORD, preprocThenKeywordSpelling);
+
+    // PREPROC_ELSIF_KEYWORD
+    List<String> preprocElsIfKeywordSpelling = new ArrayList<>();
+    preprocElsIfKeywordSpelling.add("ИначеЕсли");
+    preprocElsIfKeywordSpelling.add("ElsIf");
+    result.put(BSLParser.PREPROC_ELSIF_KEYWORD, preprocElsIfKeywordSpelling);
+
+    // PREPROC_ELSE_KEYWORD
+    List<String> preprocElseKeywordSpelling = new ArrayList<>();
+    preprocElseKeywordSpelling.add("Иначе");
+    preprocElseKeywordSpelling.add("Else");
+    result.put(BSLParser.PREPROC_ELSE_KEYWORD, preprocElseKeywordSpelling);
+
+    // PREPROC_ENDIF_KEYWORD
+    List<String> preprocEndIfKeywordSpelling = new ArrayList<>();
+    preprocEndIfKeywordSpelling.add("КонецЕсли");
+    preprocEndIfKeywordSpelling.add("EndIf");
+    result.put(BSLParser.PREPROC_ENDIF_KEYWORD, preprocEndIfKeywordSpelling);
+
+    // PREPROC_OR_KEYWORD
+    List<String> preprocOrKeywordSpelling = new ArrayList<>();
+    preprocOrKeywordSpelling.add("Или");
+    preprocOrKeywordSpelling.add("ИЛИ");
+    preprocOrKeywordSpelling.add("Or");
+    preprocOrKeywordSpelling.add("OR");
+    result.put(BSLParser.PREPROC_OR_KEYWORD, preprocOrKeywordSpelling);
+
+    // PREPROC_AND_KEYWORD
+    List<String> preprocAndKeywordSpelling = new ArrayList<>();
+    preprocAndKeywordSpelling.add("И");
+    preprocAndKeywordSpelling.add("And");
+    preprocAndKeywordSpelling.add("AND");
+    result.put(BSLParser.PREPROC_AND_KEYWORD, preprocAndKeywordSpelling);
+
+    // PREPROC_NOT_KEYWORD
+    List<String> preprocNotKeywordSpelling = new ArrayList<>();
+    preprocNotKeywordSpelling.add("Не");
+    preprocNotKeywordSpelling.add("НЕ");
+    preprocNotKeywordSpelling.add("Not");
+    preprocNotKeywordSpelling.add("NOT");
+    result.put(BSLParser.PREPROC_NOT_KEYWORD, preprocNotKeywordSpelling);
+
+    // PREPROC_SERVER_SYMBOL
+    List<String> preprocServerKeywordSpelling = new ArrayList<>();
+    preprocServerKeywordSpelling.add("Сервер");
+    preprocServerKeywordSpelling.add("Server");
+    result.put(BSLParser.PREPROC_SERVER_SYMBOL, preprocServerKeywordSpelling);
+
+    // PREPROC_CLIENT_SYMBOL
+    List<String> preprocClientKeywordSpelling = new ArrayList<>();
+    preprocClientKeywordSpelling.add("Клиент");
+    preprocClientKeywordSpelling.add("Client");
+    result.put(BSLParser.PREPROC_CLIENT_SYMBOL, preprocClientKeywordSpelling);
+
+    // PREPROC_MOBILEAPPCLIENT_SYMBOL
+    List<String> preprocMobileAppClientKeywordSpelling = new ArrayList<>();
+    preprocMobileAppClientKeywordSpelling.add("МобильноеПриложениеКлиент");
+    preprocMobileAppClientKeywordSpelling.add("MobileAppClient");
+    result.put(BSLParser.PREPROC_MOBILEAPPCLIENT_SYMBOL, preprocMobileAppClientKeywordSpelling);
+
+    // PREPROC_MOBILEAPPSERVER_SYMBOL
+    List<String> preprocMobileAppServerKeywordSpelling = new ArrayList<>();
+    preprocMobileAppServerKeywordSpelling.add("МобильноеПриложениеСервер");
+    preprocMobileAppServerKeywordSpelling.add("MobileAppServer");
+    result.put(BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL, preprocMobileAppServerKeywordSpelling);
+
+    // PREPROC_MOBILECLIENT_SYMBOL
+    List<String> preprocMobileClientKeywordSpelling = new ArrayList<>();
+    preprocMobileClientKeywordSpelling.add("МобильныйКлиент");
+    preprocMobileClientKeywordSpelling.add("MobileClient");
+    result.put(BSLParser.PREPROC_MOBILECLIENT_SYMBOL, preprocMobileClientKeywordSpelling);
+
+    // PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL
+    List<String> preprocThickClientOrdinaryKeywordSpelling = new ArrayList<>();
+    preprocThickClientOrdinaryKeywordSpelling.add("ТолстыйКлиентОбычноеПриложение");
+    preprocThickClientOrdinaryKeywordSpelling.add("ThickClientOrdinaryApplication");
+    result.put(BSLParser.PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL, preprocThickClientOrdinaryKeywordSpelling);
+
+    // PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL
+    List<String> preprocThickClientManagedKeywordSpelling = new ArrayList<>();
+    preprocThickClientManagedKeywordSpelling.add("ТолстыйКлиентУправляемоеПриложение");
+    preprocThickClientManagedKeywordSpelling.add("ThickClientManagedApplication");
+    result.put(BSLParser.PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL, preprocThickClientManagedKeywordSpelling);
+
+    // PREPROC_EXTERNALCONNECTION_SYMBOL
+    List<String> preprocExternalConnKeywordSpelling = new ArrayList<>();
+    preprocExternalConnKeywordSpelling.add("ВнешнееСоединение");
+    preprocExternalConnKeywordSpelling.add("ExternalConnection");
+    result.put(BSLParser.PREPROC_EXTERNALCONNECTION_SYMBOL, preprocExternalConnKeywordSpelling);
+
+    // PREPROC_THINCLIENT_SYMBOL
+    List<String> preprocThinClientKeywordSpelling = new ArrayList<>();
+    preprocThinClientKeywordSpelling.add("ТонкийКлиент");
+    preprocThinClientKeywordSpelling.add("ThinClient");
+    result.put(BSLParser.PREPROC_THINCLIENT_SYMBOL, preprocThinClientKeywordSpelling);
+
+    // PREPROC_WEBCLIENT_SYMBOL
+    List<String> preprocWebClientKeywordSpelling = new ArrayList<>();
+    preprocWebClientKeywordSpelling.add("ВебКлиент");
+    preprocWebClientKeywordSpelling.add("WebClient");
+    result.put(BSLParser.PREPROC_WEBCLIENT_SYMBOL, preprocWebClientKeywordSpelling);
+
+    // PREPROC_ATCLIENT_SYMBOL
+    List<String> preprocAtClientKeywordSpelling = new ArrayList<>();
+    preprocAtClientKeywordSpelling.add("НаКлиенте");
+    preprocAtClientKeywordSpelling.add("AtClient");
+    result.put(BSLParser.PREPROC_ATCLIENT_SYMBOL, preprocAtClientKeywordSpelling);
+
+    // PREPROC_ATSERVER_SYMBOL
+    List<String> preprocAtServerKeywordSpelling = new ArrayList<>();
+    preprocAtServerKeywordSpelling.add("НаСервере");
+    preprocAtServerKeywordSpelling.add("AtServer");
+    result.put(BSLParser.PREPROC_ATSERVER_SYMBOL, preprocAtServerKeywordSpelling);
+
+    // ANNOTATION_ATCLIENT_SYMBOL
+    List<String> annotAtClientKeywordSpelling = new ArrayList<>();
+    annotAtClientKeywordSpelling.add("НаКлиенте");
+    annotAtClientKeywordSpelling.add("AtClient");
+    result.put(BSLParser.ANNOTATION_ATCLIENT_SYMBOL, annotAtClientKeywordSpelling);
+
+    // ANNOTATION_ATSERVER_SYMBOL_SYMBOL
+    List<String> annotAtServerKeywordSpelling = new ArrayList<>();
+    annotAtServerKeywordSpelling.add("НаСервере");
+    annotAtServerKeywordSpelling.add("AtServer");
+    result.put(BSLParser.ANNOTATION_ATSERVER_SYMBOL, annotAtServerKeywordSpelling);
+
+    // ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+    List<String> annotAtServerNoContextKeywordSpelling = new ArrayList<>();
+    annotAtServerNoContextKeywordSpelling.add("НаСервереБезКонтекста");
+    annotAtServerNoContextKeywordSpelling.add("AtServerNoContext");
+    result.put(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL, annotAtServerNoContextKeywordSpelling);
+
+    // ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
+    List<String> annotAtClientServerNoContextKeywordSpelling = new ArrayList<>();
+    annotAtClientServerNoContextKeywordSpelling.add("НаКлиентеНаСервереБезКонтекста");
+    annotAtClientServerNoContextKeywordSpelling.add("AtClientAtServerNoContext");
+    result.put(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL, annotAtClientServerNoContextKeywordSpelling);
+
+    // ANNOTATION_ATCLIENTATSERVER_SYMBOL
+    List<String> annotAtClientServerKeywordSpelling = new ArrayList<>();
+    annotAtClientServerKeywordSpelling.add("НаКлиентеНаСервере");
+    annotAtClientServerKeywordSpelling.add("AtClientAtServer");
+    result.put(BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL, annotAtClientServerKeywordSpelling);
+
     return result;
   }
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+    return DiagnosticSeverity.Information;
   }
 
   @Override

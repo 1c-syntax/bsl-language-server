@@ -140,22 +140,98 @@
     
 // Корректное выражение
 Процедура Тест(Знач Параметр) Экспорт
+    ДобавитьОбработчик Параметр.Action, Тест2;
+    УдалитьОбработчик Параметр.Action, Тест2;
 КонецПроцедуры
     
-    // Корректное выражение
+// Корректное выражение
 Функция Тест2()
     Возврат Истина;
 КонецФункции
     
 // Выражение с ошибками
 ПРОЦЕДУРА Тест3(ЗнаЧ Параметр) ЭКспорт
+    ДОБавитьОбработчик Параметр.Action, Тест2;
+    УДАлитьОбработчик Параметр.Action, Тест2;
 КонецПРоцедуры
     
 // Выражение с ошибками
 ФункцИЯ Тест4()
     ВозВРат Истина;
 КонецФункцИИ
-        
+
+// Корректное выражение
+#Если Сервер Или Клиент Или МобильноеПриложениеКлиент Или МобильноеПриложениеСервер Или МобильныйКлиент Тогда
+#ИначеЕсли ТолстыйКлиентОбычноеПриложение Или ТолстыйКлиентУправляемоеПриложение И ВнешнееСоединение Тогда
+#ИначеЕсли ТонкийКлиент И ВебКлиент И Не НаКлиенте И Не НаСервере Тогда
+#Иначе
+#КонецЕсли
+
+// Выражение с ошибками
+#ЕСЛИ СеРвер ИЛи КлИЕнт Или МобильнОЕПриложениеКлиент Или МобильноеПриложениеСЕРВЕР Или МобильныйКЛИент ТОГДА
+#ИначеЕСЛИ ТолстыйКЛИЕНТОбычноеПриложение Или ТолстыйКЛИЕНТУправляемоеПриложение И ВнешнееСоЕДИНение Тогда
+#ИначеЕсли ТонкийКЛИЕНТ И ВЕБКлиент И нЕ НАКлиенте И Не НаСеРВере Тогда
+#ИнАЧе
+#КонецЕСЛИ
+
+// Корректное выражение
+&НаСервере
+Процедура Тест()
+КонецПроцедуры
+
+// Выражение с ошибками
+&НАСервере
+Процедура Тест()
+КонецПроцедуры
+
+// Корректное выражение
+&НаКлиенте
+Процедура Тест()
+КонецПроцедуры
+
+// Выражение с ошибками
+&НАКлиенте
+Процедура Тест()
+КонецПроцедуры
+
+// Корректное выражение
+&НаСервереБезКонтекста
+Процедура Тест()
+КонецПроцедуры
+
+// Выражение с ошибками
+&НАСервереБезКонтекста
+Процедура Тест()
+КонецПроцедуры
+
+// Корректное выражение
+&НаКлиентеНаСервереБезКонтекста
+Процедура Тест()
+КонецПроцедуры
+
+// Выражение с ошибками
+&НАКлиентеНаСервереБезКонтекста
+Процедура Тест()
+КонецПроцедуры
+
+// Корректное выражение
+&НаКлиентеНаСервере
+Процедура Тест()
+КонецПроцедуры
+
+// Выражение с ошибками
+&НАКлиентеНаСервере
+Процедура Тест()
+КонецПроцедуры
+
+// Корректное выражение
+#Область НоваяОбласть
+#КонецОбласти
+
+// Выражение с ошибками
+#ОБЛАСТЬ НоваяОбласть
+#КонецОбластИ
+
 Procedure CheckCanonicalKeyword()
 
     #Region VarDefinition
@@ -297,6 +373,8 @@ EndProcedure
 
 // Correct
 Procedure Test5(Val Param) Export
+    AddHandler Param.Action, Test6;
+    RemoveHandler Param.Action, Test6;
 EndProcedure
 
 // Correct
@@ -306,10 +384,85 @@ EndFunction
 
 // Warning
 PROCEDURE Test7(VaL Param) ExPort
+    ADDHandler Param.Action, Test6;
+    REMoveHandler Param.Action, Test6;
 EndPROCedure
 
 // Warning
 FUNCtion Test8()
     RETUrn True;
 EnDFunction
+
+// Correct
+#If Server OR Client Or MobileAppClient OR MobileAppServer OR MobileClient Then
+#ElsIf ThickClientOrdinaryApplication OR ThickClientManagedApplication And ExternalConnection Then
+#ElsIf ThinClient AND WebClient And NOT AtClient And Not AtServer Then
+#Else
+#EndIf
+
+// Warning
+#if ServeR oR CLient Or MOBileAppClient OR MOBileAppServer OR MOBileClient THen
+#ELSIf THickClientOrdinaryApplication OR THickClientManagedApplication ANd EXTernalConnection Then
+#ElsIf ThiNClient AND WEBClient And NoT ATClient And Not ATServer Then
+#ElSe
+#EndIF
+
+// Correct
+&AtServer
+Procedure Test()
+EndProcedure
+
+// Warning
+&ATServer
+Procedure Test()
+EndProcedure
+
+// Correct
+&AtClient
+Procedure Test()
+EndProcedure
+
+// Warning
+&ATClient
+Procedure Test()
+EndProcedure
+
+// Correct
+&AtServerNoContext
+Procedure Test()
+EndProcedure
+
+// Warning
+&AtServerNOContext
+Procedure Test()
+EndProcedure
+
+// Correct
+&AtClientAtServerNoContext
+Procedure Test()
+EndProcedure
+
+// Warning
+&AtClientAtServerNOContext
+Procedure Test()
+EndProcedure
+
+// Correct
+&AtClientAtServer
+Procedure Test()
+EndProcedure
+
+// Warning
+&AtClientATServer
+Procedure Test()
+EndProcedure
+
+// Correct
+#Region newRegion
+#EndRegion
+
+// Warning
+#RegioN newRegion
+#EndRegioN
+
     
