@@ -21,7 +21,10 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
@@ -29,7 +32,7 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
+    return DiagnosticSeverity.Warning;
   }
 
   @Override
@@ -37,15 +40,23 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
     BSLParser.ExpressionContext expression = ctx.expression();
 
-    if (expression == null){
+    if (expression == null) {
       return super.visitAssignment(ctx);
     }
 
-    if (ctx.complexIdentifier().getText().equalsIgnoreCase(expression.getText())){
+    if (ctx.complexIdentifier().getText().equalsIgnoreCase(expression.getText())
+      && getDescendantsCount(ctx.complexIdentifier()) == getDescendantsCount(expression)) {
       addDiagnostic(ctx);
     }
 
     return super.visitAssignment(ctx);
+  }
+
+  private static int getDescendantsCount(ParserRuleContext tree) {
+
+    return ((int) Trees.getDescendants(tree).stream()
+      .filter(node -> (node instanceof TerminalNode)).count());
+
   }
 
 }
