@@ -64,6 +64,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 
 ### Список реализованных диагностик
 
+* [CanonicalSpellingKeywords - Каноническое написание ключевых слов](diagnostics/CanonicalSpellingKeywords.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
@@ -73,6 +74,6 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
-* [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssignDiagnostic.md)
+* [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
 * [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsageDiagnostic.md)
