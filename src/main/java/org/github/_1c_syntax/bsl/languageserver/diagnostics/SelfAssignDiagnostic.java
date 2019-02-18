@@ -28,8 +28,6 @@ import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.stream.Collectors;
-
 public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
@@ -47,19 +45,17 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     if (ctx.complexIdentifier().getText().equalsIgnoreCase(expression.getText())
-      && getDescebdatnsCount(ctx.complexIdentifier()) == getDescebdatnsCount(expression)) {
+      && getDescendantsCount(ctx.complexIdentifier()) == getDescendantsCount(expression)) {
       addDiagnostic(ctx);
     }
 
     return super.visitAssignment(ctx);
   }
 
-  private static int getDescebdatnsCount(ParserRuleContext tree) {
+  private static int getDescendantsCount(ParserRuleContext tree) {
 
-    return Trees.getDescendants(tree).stream()
-      .filter(node -> (node instanceof TerminalNode))
-      .collect(Collectors.toList())
-      .size();
+    return ((int) Trees.getDescendants(tree).stream()
+      .filter(node -> (node instanceof TerminalNode)).count());
 
   }
 
