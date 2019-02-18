@@ -21,36 +21,53 @@
  */
 package org.github._1c_syntax.bsl.languageserver;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.DidChangeTextDocumentParams;
+import org.eclipse.lsp4j.DidCloseTextDocumentParams;
+import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentFormattingParams;
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
-import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.BSLParser.FileContext;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
-  private final Map<String, FileContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private final ServerContext context = new ServerContext();
 
-  private BSLLexer lexer = new BSLLexer(null);
-  private BSLParser parser = new BSLParser(null);
   @CheckForNull
   private LanguageClient client;
 
@@ -72,8 +89,11 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
-    FileContext fileTree = documents.get(position.getTextDocument().getUri());
-    Optional<Hover> hover = HoverProvider.getHover(position, fileTree);
+    DocumentContext documentContext = context.getDocument(position.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    Optional<Hover> hover = HoverProvider.getHover(position, documentContext);
     return CompletableFuture.completedFuture(hover.orElse(null));
   }
 
@@ -98,7 +118,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(DocumentSymbolParams params) {
+  public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
+    DocumentSymbolParams params
+  ) {
     throw new UnsupportedOperationException();
   }
 
@@ -119,15 +141,23 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-    FileContext fileTree = documents.get(params.getTextDocument().getUri());
-    List<TextEdit> edits = FormatProvider.getFormatting(params, fileTree);
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    List<TextEdit> edits = FormatProvider.getFormatting(params, documentContext);
     return CompletableFuture.completedFuture(edits);
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-    FileContext fileTree = documents.get(params.getTextDocument().getUri());
-    List<TextEdit> edits = FormatProvider.getRangeFormatting(params, fileTree);
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    List<TextEdit> edits = FormatProvider.getRangeFormatting(params, documentContext);
     return CompletableFuture.completedFuture(edits);
   }
 
@@ -143,26 +173,24 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
-    TextDocumentItem textDocumentItem = params.getTextDocument();
-    FileContext fileTree = getFileContext(textDocumentItem.getText());
-
-    documents.put(textDocumentItem.getUri(), fileTree);
-    validate(textDocumentItem.getUri(), fileTree);
+    DocumentContext documentContext = context.addDocument(params.getTextDocument());
+    validate(documentContext);
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
     // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
-    TextDocumentIdentifier textDocumentItem = params.getTextDocument();
-    FileContext fileTree = getFileContext(params.getContentChanges().get(0).getText());
+    DocumentContext documentContext = context.addDocument(
+      params.getTextDocument().getUri(),
+      params.getContentChanges().get(0).getText()
+    );
 
-    documents.put(textDocumentItem.getUri(), fileTree);
-    validate(textDocumentItem.getUri(), fileTree);
+    validate(documentContext);
   }
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-    this.documents.remove(params.getTextDocument().getUri());
+    // no-op
   }
 
   @Override
@@ -176,24 +204,14 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   public void reset() {
-    documents.clear();
+    context.clear();
   }
 
-  private FileContext getFileContext(String textDocumentContent) {
-    CharStream input = CharStreams.fromString(textDocumentContent);
-    lexer.setInputStream(input);
-
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
-    parser.setInputStream(tokens);
-
-    return parser.file();
-  }
-
-  private void validate(String uri, FileContext fileTree) {
+  private void validate(DocumentContext documentContext) {
     if (client == null) {
       return;
     }
-    DiagnosticProvider.computeAndPublishDiagnostics(client, uri, fileTree);
+    DiagnosticProvider.computeAndPublishDiagnostics(client, documentContext);
   }
 
 }

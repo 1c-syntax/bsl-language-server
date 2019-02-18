@@ -22,10 +22,13 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.DocumentRangeFormattingParams;
+import org.eclipse.lsp4j.FormattingOptions;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.TextDocumentItem;
+import org.eclipse.lsp4j.TextEdit;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLExtendedParser;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -37,22 +40,27 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 
 class FormatProviderTest {
 
-  private BSLExtendedParser parser = new BSLExtendedParser();
-
   @Test
-  void testFormat() {
+  void testFormat() throws IOException {
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
-    params.setRange(RangeHelper.newRange(1, 0, 4, 0));
+    params.setRange(RangeHelper.newRange(2, 0, 6, 0));
     params.setOptions(new FormattingOptions(4, true));
 
-    BSLParser.FileContext fileContext = parser.parseFile(getTestFile());
-    List<TextEdit> textEdits = FormatProvider.getRangeFormatting(params, fileContext);
+    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
+
+    List<TextEdit> textEdits = FormatProvider.getRangeFormatting(params, documentContext);
 
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    assertThat(textEdit.getNewText()).isEqualTo("    Если Истина Тогда\n        Возврат;\n    КонецЕсли;\n");
+    assertThat(textEdit.getNewText()).isEqualTo(
+      "    Если Истина Тогда\n" +
+      "        // Комментарий\n" +
+      "        Возврат;\n" +
+      "    КонецЕсли;\n"
+    );
   }
 
   private File getTestFile() {

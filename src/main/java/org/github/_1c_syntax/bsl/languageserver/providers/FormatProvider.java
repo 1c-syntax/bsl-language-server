@@ -29,10 +29,9 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
-import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,12 +71,17 @@ public final class FormatProvider {
     // only statics
   }
 
-  public static List<TextEdit> getFormatting(DocumentFormattingParams params, BSLParser.FileContext fileTree) {
-    List<Token> tokens = fileTree.getTokens();
-    return getTextEdits(tokens, RangeHelper.newRange(fileTree), 0, params.getOptions());
+  public static List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
+    return getTextEdits(
+      filtredTokens(documentContext.getTokens()),
+      RangeHelper.newRange(documentContext.getAst()), 0, params.getOptions()
+    );
   }
 
-  public static List<TextEdit> getRangeFormatting(DocumentRangeFormattingParams params, BSLParserRuleContext fileTree) {
+  public static List<TextEdit> getRangeFormatting(
+    DocumentRangeFormattingParams params,
+    DocumentContext documentContext
+  ) {
     Position start = params.getRange().getStart();
     Position end = params.getRange().getEnd();
     int startLine = start.getLine() + 1;
@@ -85,7 +89,7 @@ public final class FormatProvider {
     int endLine = end.getLine() + 1;
     int endCharacter = end.getCharacter();
 
-    List<Token> tokens = fileTree.getTokens().stream()
+    List<Token> tokens = filtredTokens(documentContext.getTokens()).stream()
       .filter((Token token) -> {
         int tokenLine = token.getLine();
         int tokenCharacter = token.getCharPositionInLine();
@@ -163,6 +167,14 @@ public final class FormatProvider {
     edits.add(edit);
 
     return edits;
+  }
+
+  private static List<Token> filtredTokens(List<Token> tokens) {
+    return tokens.stream()
+      .filter(token -> token.getChannel() == Token.DEFAULT_CHANNEL
+        || token.getType() == BSLLexer.LINE_COMMENT
+        || token.getType() == BSLLexer.PREPROC_LINE_COMMENT)
+      .collect(Collectors.toList());
   }
 
   private static boolean needAddSpace(int type, int previousTokenType) {
