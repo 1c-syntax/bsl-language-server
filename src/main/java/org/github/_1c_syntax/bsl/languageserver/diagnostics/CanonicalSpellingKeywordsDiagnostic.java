@@ -473,7 +473,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
             token.getLine() - 1,
             token.getCharPositionInLine(),
             token.getLine() - 1,
-            token.getCharPositionInLine() + token.getText().length() - 1),
+            token.getCharPositionInLine() + token.getText().length()),
           getDiagnosticMessage(token)));
     }
 
