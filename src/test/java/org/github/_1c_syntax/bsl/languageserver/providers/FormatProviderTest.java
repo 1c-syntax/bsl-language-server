@@ -44,7 +44,7 @@ class FormatProviderTest {
   void testFormat() throws IOException {
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
-    params.setRange(RangeHelper.newRange(2, 0, 6, 0));
+    params.setRange(RangeHelper.newRange(2, 0, 13, 0));
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
@@ -57,10 +57,19 @@ class FormatProviderTest {
     TextEdit textEdit = textEdits.get(0);
     assertThat(textEdit.getNewText()).isEqualTo(
       "    Если Истина Тогда\n" +
+      "        \n" +
       "        // Комментарий\n" +
       "        Возврат;\n" +
-      "    КонецЕсли;\n"
+      "    КонецЕсли;\n" +
+      "    \n" +
+      "    Пока Истина Цикл\n" +
+      "        \n" +
+      "    КонецЦикла;\n" +
+      "    \n" +
+      "КонецПроцедуры\n"
     );
+
+    // TODO: A = (Б) -> A =(Б) ?
   }
 
   private File getTestFile() {

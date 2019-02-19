@@ -28,7 +28,10 @@ import org.antlr.v4.runtime.Token;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.antlr.v4.runtime.Token.EOF;
 
 public class DocumentContext {
 
@@ -67,7 +70,12 @@ public class DocumentContext {
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     tokenStream.fill();
 
-    tokens = tokenStream.getTokens();
+    tokens = new ArrayList<>(tokenStream.getTokens());
+
+    Token lastToken = tokens.get(tokens.size() - 1);
+    if (lastToken.getType() == EOF) {
+      tokens.remove(tokens.size() - 1);
+    }
 
     BSLParser parser = new BSLParser(tokenStream);
     ast = parser.file();

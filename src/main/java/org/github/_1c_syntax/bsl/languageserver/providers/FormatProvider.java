@@ -64,6 +64,7 @@ public final class FormatProvider {
     BSLLexer.ENDFUNCTION_KEYWORD,
     BSLLexer.ENDIF_KEYWORD,
     BSLLexer.ENDDO_KEYWORD,
+    BSLLexer.EXCEPT_KEYWORD,
     BSLLexer.ENDTRY_KEYWORD
   ));
 
@@ -73,7 +74,7 @@ public final class FormatProvider {
 
   public static List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     return getTextEdits(
-      filtredTokens(documentContext.getTokens()),
+      documentContext.getTokens(),
       RangeHelper.newRange(documentContext.getAst()), 0, params.getOptions()
     );
   }
@@ -89,7 +90,7 @@ public final class FormatProvider {
     int endLine = end.getLine() + 1;
     int endCharacter = end.getCharacter();
 
-    List<Token> tokens = filtredTokens(documentContext.getTokens()).stream()
+    List<Token> tokens = documentContext.getTokens().stream()
       .filter((Token token) -> {
         int tokenLine = token.getLine();
         int tokenCharacter = token.getCharPositionInLine();
@@ -129,25 +130,34 @@ public final class FormatProvider {
 
     StringBuilder newTextBuilder = new StringBuilder();
 
-    Token firstToken = tokens.get(0);
+    List<Token> filteredTokens = filteredTokens(tokens);
+    Token firstToken = filteredTokens.get(0);
     String indentation = insertSpaces ? StringUtils.repeat(' ', tabSize) : "\t";
 
     int currentIndentLevel = (firstToken.getCharPositionInLine() - startCharacter) / indentation.length();
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
-    for (Token token : tokens) {
+    for (Token token : filteredTokens) {
       boolean needNewLine = token.getLine() != lastLine;
+
+      // Add indentation before token lines
+      if (needNewLine) {
+        String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
+        newTextBuilder.append(StringUtils.repeat("\n" + currentIndentation, token.getLine() - lastLine - 1));
+      }
 
       if (needDecrementIndent(token.getType())) {
         currentIndentLevel--;
       }
 
+      // Add indentation on token line
       if (token.equals(firstToken)) {
         newTextBuilder.append(StringUtils.repeat(indentation, currentIndentLevel));
       } else if (needNewLine) {
         String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
-        newTextBuilder.append(StringUtils.repeat("\n" + currentIndentation, token.getLine() - lastLine));
+        newTextBuilder.append("\n");
+        newTextBuilder.append(currentIndentation);
       } else if (needAddSpace(token.getType(), previousTokenType)) {
         newTextBuilder.append(' ');
       }
@@ -157,11 +167,20 @@ public final class FormatProvider {
       if (needIncrementIndent(token.getType())) {
         currentIndentLevel++;
       }
+
       lastLine = token.getLine();
       previousTokenType = token.getType();
     }
 
-    newTextBuilder.append("\n");
+    Token lastToken = tokens.get(tokens.size() - 1);
+    if (lastToken.getText().endsWith("\n") || lastToken.getText().endsWith("\r")) {
+      newTextBuilder.append("\n");
+
+      if (range.getEnd().getCharacter() != 0) {
+        String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
+        newTextBuilder.append(currentIndentation);
+      }
+    }
 
     TextEdit edit = new TextEdit(range, newTextBuilder.toString());
     edits.add(edit);
@@ -169,7 +188,7 @@ public final class FormatProvider {
     return edits;
   }
 
-  private static List<Token> filtredTokens(List<Token> tokens) {
+  private static List<Token> filteredTokens(List<Token> tokens) {
     return tokens.stream()
       .filter(token -> token.getChannel() == Token.DEFAULT_CHANNEL
         || token.getType() == BSLLexer.LINE_COMMENT
