@@ -469,11 +469,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
     for (Token token : keywords) {
         diagnostics.add(BSLDiagnostic.createDiagnostic(
           this,
-          RangeHelper.newRange(
-            token.getLine() - 1,
-            token.getCharPositionInLine(),
-            token.getLine() - 1,
-            token.getCharPositionInLine() + token.getText().length() - 1),
+          RangeHelper.newRange(token),
           getDiagnosticMessage(token)));
     }
 
