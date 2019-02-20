@@ -48,4 +48,13 @@ public final class RangeHelper {
 
     return newRange(startLine, startChar, endLine, endChar);
   }
+
+  public static Range newRange(Token token) {
+    int startLine = token.getLine() - 1;
+    int startChar = token.getCharPositionInLine();
+    int endLine = token.getLine() - 1;
+    int endChar = token.getCharPositionInLine() + token.getText().length();
+
+    return newRange(startLine, startChar, endLine, endChar);
+  }
 }
