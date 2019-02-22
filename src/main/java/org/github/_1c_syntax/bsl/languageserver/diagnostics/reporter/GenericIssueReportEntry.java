@@ -21,13 +21,13 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
-//import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-
-import javax.xml.soap.Text;
+import java.util.EnumMap;
+import java.util.Map;
 
 public class GenericIssueReportEntry {
   @Getter
@@ -43,12 +43,33 @@ public class GenericIssueReportEntry {
   @Getter
   private final PrimaryLocation primaryLocation;
 
+  private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
+
+  static {
+    severityMap.put(DiagnosticSeverity.Error, "CRITICAL");
+    severityMap.put(DiagnosticSeverity.Hint, "INFO");
+    severityMap.put(DiagnosticSeverity.Information, "INFO");
+    severityMap.put(DiagnosticSeverity.Warning, "INFO");
+  }
+
+  private static Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
+
+  static {
+    typeMap.put(DiagnosticSeverity.Error, "BUG");
+    typeMap.put(DiagnosticSeverity.Hint, "CODE_SMELL");
+    typeMap.put(DiagnosticSeverity.Information, "CODE_SMELL");
+    typeMap.put(DiagnosticSeverity.Warning, "CODE_SMELL");
+  }
+
   public GenericIssueReportEntry(String fileName, Diagnostic diagnostic)
   {
+
+    DiagnosticSeverity localSeverity = diagnostic.getSeverity();
+
     engineId = diagnostic.getSource();
     ruleId = diagnostic.getCode();
-    severity = "CRITICAL";
-    type = "BUG";
+    severity = severityMap.get(localSeverity);
+    type = typeMap.get(localSeverity);
     primaryLocation = new PrimaryLocation(fileName, diagnostic);
     effortMinutes = 0;
 
@@ -112,16 +133,16 @@ public class GenericIssueReportEntry {
 
       startLine = startPosition.getLine() + lag;
       endLine = endPosition.getLine() + lag;
-      startColumn = startPosition.getCharacter() + lag;
+      //startColumn = startPosition.getCharacter() + lag;
       endColumn = endPosition.getCharacter(); // пока без лага
 
-//      // костыль для проверки. Там есть startColumn = endColumn
-//      localstartColumn = startPosition.getCharacter() + lag;
-//      if (localstartColumn == endColumn)
-//      {
-//        localstartColumn = endColumn - 1;
-//      }
-//      startColumn = localstartColumn;
+      // TODO: костыль для проверки. Есть пример, где  startColumn = endColumn
+      localstartColumn = startPosition.getCharacter() + lag;
+      if (localstartColumn == endColumn)
+      {
+        localstartColumn = endColumn - 1;
+      }
+      startColumn = localstartColumn;
 
     }
 
