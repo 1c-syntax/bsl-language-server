@@ -71,8 +71,7 @@ public class GenericIssueReport {
 
   public GenericIssueReport(
     @JsonProperty("issues") List<GenericIssueEntry> issues
-  )
-  {
+  ) {
     this.issues = issues;
   }
 
@@ -110,8 +109,7 @@ public class GenericIssueReport {
       @JsonProperty("type") String type,
       @JsonProperty("primaryLocation") PrimaryLocation primaryLocation,
       @JsonProperty("effortMinutes") int effortMinutes
-      )
-    {
+    ) {
       this.engineId = engineId;
       this.ruleId = ruleId;
       this.severity = severity;
@@ -120,8 +118,7 @@ public class GenericIssueReport {
       this.effortMinutes = effortMinutes;
     }
 
-    public GenericIssueEntry(String fileName, Diagnostic diagnostic)
-    {
+    public GenericIssueEntry(String fileName, Diagnostic diagnostic) {
       DiagnosticSeverity localSeverity = diagnostic.getSeverity();
 
       engineId = diagnostic.getSource();
@@ -179,8 +176,7 @@ public class GenericIssueReport {
       @JsonProperty("endLine") int endLine,
       @JsonProperty("startColumn") int startColumn,
       @JsonProperty("endColumn") int endColumn
-    )
-    {
+    ) {
       this.startLine = startLine;
       this.endLine = endLine;
       this.startColumn = startColumn;
