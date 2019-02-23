@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class JsonReporter implements DiagnosticReporter {
+public class JsonReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "json";
 
@@ -39,7 +39,7 @@ public class JsonReporter implements DiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      File reportFile = new File("./bsl-json.json");
+      File reportFile = new File(reportDirPath + "./bsl-json.json");
       mapper.writeValue(reportFile, analysisInfo);
       LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

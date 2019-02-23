@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class GenericIssueReporter implements DiagnosticReporter {
+public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "generic";
 
@@ -39,7 +39,7 @@ public class GenericIssueReporter implements DiagnosticReporter {
     GenericIssueReport report = new GenericIssueReport(analysisInfo);
     ObjectMapper mapper = new ObjectMapper();
     try {
-      File reportFile = new File("./bsl-generic-json.json");
+      File reportFile = new File( reportDirPath + "./bsl-generic-json.json");
       mapper.writeValue(reportFile, report);
       LOGGER.info("Generic issue report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

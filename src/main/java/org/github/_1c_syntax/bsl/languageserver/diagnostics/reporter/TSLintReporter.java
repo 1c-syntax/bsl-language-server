@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TSLintReporter implements DiagnosticReporter {
+public class TSLintReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "tslint";
 
@@ -50,7 +50,7 @@ public class TSLintReporter implements DiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      File reportFile = new File("./bsl-tslint.json");
+      File reportFile = new File(reportDirPath + "./bsl-tslint.json");
       mapper.writeValue(reportFile, tsLintReport);
       LOGGER.info("TSLint report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

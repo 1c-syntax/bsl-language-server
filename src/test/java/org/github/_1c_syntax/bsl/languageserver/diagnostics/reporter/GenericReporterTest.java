@@ -67,7 +67,7 @@ class GenericReporterTest {
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
-    DiagnosticReporter reporter = new GenericIssueReporter();
+    AbstractDiagnosticReporter reporter = new GenericIssueReporter();
 
     // when
     reporter.report(analysisInfo);
@@ -76,6 +76,14 @@ class GenericReporterTest {
     ObjectMapper mapper = new ObjectMapper();
     GenericIssueReport report = mapper.readValue(file, GenericIssueReport.class);
     assertThat(report).isNotNull();
+
+    reporter.setReportDir(new File("").toPath());
+    reporter.report(analysisInfo);
+
+    mapper = new ObjectMapper();
+    report = mapper.readValue(file, GenericIssueReport.class);
+    assertThat(report).isNotNull();
+
 
   }
 

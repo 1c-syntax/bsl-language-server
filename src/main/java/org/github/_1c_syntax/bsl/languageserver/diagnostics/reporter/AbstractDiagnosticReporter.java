@@ -21,6 +21,23 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
-public interface DiagnosticReporter {
-  void report(AnalysisInfo analysisInfo);
+import java.nio.file.Path;
+
+public abstract class AbstractDiagnosticReporter {
+  protected Path reportDir;
+  protected String reportDirPath = "";
+
+  void report(AnalysisInfo analysisInfo){}
+
+  protected void setReportDir(Path reportDir){
+    this.reportDir = reportDir;
+    this.setPathDir();
+  }
+
+  protected void setPathDir(){
+    if (reportDir != null){
+      reportDirPath = reportDir.toFile().toString();
+    }
+  }
+
 }

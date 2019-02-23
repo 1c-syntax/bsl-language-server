@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
-public class JUnitReporter implements DiagnosticReporter {
+public class JUnitReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "junit";
 
@@ -45,7 +45,7 @@ public class JUnitReporter implements DiagnosticReporter {
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
     try {
-      File reportFile = new File("./bsl-junit.xml");
+      File reportFile = new File(reportDirPath + "./bsl-junit.xml");
       mapper.writeValue(reportFile, jUnitReport);
       LOGGER.info("JUnit report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

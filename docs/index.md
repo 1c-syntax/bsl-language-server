@@ -21,6 +21,7 @@ usage: BSL language server [-a] [-d <arg>] [-h] [-r <arg>] [-s <arg>]
  -h,--help                       Show help.
  -r,--reporter <arg>             Reporter key
  -s,--srcDir <arg>               Source directory
+ -rd,--reportDir <arg>           Report directory
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP](https://microsoft.github.io/language-server-protocol/). Для взаимодействия используются stdin и stdout.
