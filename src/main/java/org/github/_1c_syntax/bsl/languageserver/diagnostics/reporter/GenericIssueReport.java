@@ -22,8 +22,8 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
 import lombok.Getter;
+import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
@@ -87,19 +87,14 @@ public class GenericIssueReport {
     issues = listGenericIssueEntry;
   }
 
-  @Data
+  @Value
   static class GenericIssueEntry {
-    @Getter
+
     private final String engineId;
-    @Getter
     private final String ruleId;
-    @Getter
     private final String severity;
-    @Getter
     private final String type;
-    @Getter
     private final PrimaryLocation primaryLocation;
-    @Getter
     private final int effortMinutes;
 
     public GenericIssueEntry(
@@ -131,14 +126,11 @@ public class GenericIssueReport {
     }
   }
 
-  @Data
+  @Value
   static class PrimaryLocation {
 
-    @Getter
     private final String message;
-    @Getter
     private final String filePath;
-    @Getter
     private final TextRange textRange;
 
     public PrimaryLocation(
@@ -159,16 +151,12 @@ public class GenericIssueReport {
 
   }
 
-  @Data
+  @Value
   static class TextRange {
 
-    @Getter
     private final int startLine;
-    @Getter
     private final int endLine;
-    @Getter
     private final int startColumn;
-    @Getter
     private final int endColumn;
 
     public TextRange(
