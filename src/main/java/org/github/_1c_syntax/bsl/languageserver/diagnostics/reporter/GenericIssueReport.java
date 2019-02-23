@@ -187,26 +187,16 @@ public class GenericIssueReport {
       this.endColumn = endColumn;
     }
 
-    public TextRange(Range range)
-    {
-
-      int localstartColumn, lag = 1;
+    public TextRange(Range range) {
 
       Position startPosition = range.getStart();
       Position endPosition = range.getEnd();
 
-      startLine = startPosition.getLine() + lag;
-      endLine = endPosition.getLine() + lag;
-      //startColumn = startPosition.getCharacter() + lag; // потому что не с нуля
-      endColumn = endPosition.getCharacter(); // пока без лага
+      startLine = startPosition.getLine() + 1;
+      startColumn = startPosition.getCharacter();
 
-      // TODO: костыль для проверки. Есть пример, где  startColumn = endColumn
-      localstartColumn = startPosition.getCharacter() + lag; // потому что не с нуля
-      if (localstartColumn == endColumn)
-      {
-        localstartColumn = endColumn - 1;
-      }
-      startColumn = localstartColumn;
+      endLine = endPosition.getLine() + 1;
+      endColumn = endPosition.getCharacter(); // пока без лага
 
     }
 
