@@ -37,24 +37,36 @@ import java.util.Map;
 
 public class GenericIssueReport {
 
+  private static final String RULETYPE_BUG = "BUG";
+  private static final String RULETYPE_CODE_SMELL = "CODE_SMELL";
+  private static final String SEVERITY_INFO = "INFO";
+  private static final String SEVERITY_CRITICAL = "CRITICAL";
+  private static final String SEVERITY_MAJOR = "MAJOR";
+  private static final String SEVERITY_MINOR = "MINOR";
+
+
   @Getter
   @JsonProperty("issues")
   private final List<GenericIssueEntry> issues;
 
   private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
+
   static {
-    severityMap.put(DiagnosticSeverity.Error, "CRITICAL");
-    severityMap.put(DiagnosticSeverity.Hint, "INFO");
-    severityMap.put(DiagnosticSeverity.Information, "INFO");
-    severityMap.put(DiagnosticSeverity.Warning, "INFO");
+
+    severityMap.put(DiagnosticSeverity.Error, SEVERITY_CRITICAL);
+    severityMap.put(DiagnosticSeverity.Hint, SEVERITY_INFO);
+    severityMap.put(DiagnosticSeverity.Information, SEVERITY_MINOR);
+    severityMap.put(DiagnosticSeverity.Warning, SEVERITY_MAJOR);
+
   }
 
   private static Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
+
   static {
-    typeMap.put(DiagnosticSeverity.Error, "BUG");
-    typeMap.put(DiagnosticSeverity.Hint, "CODE_SMELL");
-    typeMap.put(DiagnosticSeverity.Information, "CODE_SMELL");
-    typeMap.put(DiagnosticSeverity.Warning, "CODE_SMELL");
+    typeMap.put(DiagnosticSeverity.Error, RULETYPE_BUG);
+    typeMap.put(DiagnosticSeverity.Hint, RULETYPE_CODE_SMELL);
+    typeMap.put(DiagnosticSeverity.Information, RULETYPE_CODE_SMELL);
+    typeMap.put(DiagnosticSeverity.Warning, RULETYPE_CODE_SMELL);
   }
 
   public GenericIssueReport(
