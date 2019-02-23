@@ -19,16 +19,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Tree;
-import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-import java.util.*;
-import java.util.stream.Collectors;
+
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
@@ -37,24 +36,17 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+    return DiagnosticSeverity.Error;
   }
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
 
-    List<Tree> allExpressions = Trees.getChildren(ctx)
-      .stream()
-      .filter(node -> node instanceof BSLParser.ExpressionContext)
-      .collect(Collectors.toList());
-
     Set<String> set = new HashSet<>();
 
-    for (Tree expression : allExpressions) {
-      if (!set.add(((BSLParser.ExpressionContext) expression).getText().toLowerCase())) {
-        addDiagnostic((BSLParser.ExpressionContext) expression);
-      }
-    }
+    ctx.expression().stream()
+      .filter(expression -> !set.add(expression.getText().toLowerCase(Locale.ENGLISH)))
+      .forEach(this::addDiagnostic);
 
     return super.visitIfStatement(ctx);
   }
