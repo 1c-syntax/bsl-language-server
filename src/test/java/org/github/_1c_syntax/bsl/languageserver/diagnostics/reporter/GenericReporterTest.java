@@ -21,9 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -40,7 +38,7 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class GenericReporterTest {
+class GenericReporterTest {
 
   private File file = new File("./bsl-generic-json.json");
 
@@ -69,7 +67,7 @@ public class GenericReporterTest {
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
-    GenericIssueReporter reporter = new GenericIssueReporter();
+    DiagnosticReporter reporter = new GenericIssueReporter();
 
     // when
     reporter.report(analysisInfo);
