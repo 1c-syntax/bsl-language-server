@@ -64,6 +64,7 @@ public final class DiagnosticProvider {
       new NumberOfOptionalParamsDiagnostic(),
       new NumberOfParamsDiagnostic(),
       new OneStatementPerLineDiagnostic(),
+      new OrderOfParamsDiagnostic(),
       new SelfAssignDiagnostic(),
       new SemicolonPresenceDiagnostic(),
       new UnknownPreprocessorSymbolDiagnostic(),
