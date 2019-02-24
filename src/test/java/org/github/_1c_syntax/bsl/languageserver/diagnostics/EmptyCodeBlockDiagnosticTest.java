@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -39,10 +39,13 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 9, 12, 4));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(18, 14, 21, 4));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(25, 24, 27, 8));
+    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 9));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(18, 4, 18, 14));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(25, 8, 25, 24));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(38, 0, 38, 16));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(39, 0, 39, 21));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(40, 4, 40, 9));
 
   }
 }

@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;

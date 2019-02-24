@@ -1,6 +1,7 @@
-import java.net.URI
-import java.util.Calendar
+
 import org.apache.tools.ant.filters.EscapeUnicode
+import java.net.URI
+import java.util.*
 
 plugins {
     java
@@ -42,7 +43,7 @@ dependencies {
     compile("org.slf4j", "slf4j-api", "1.8.0-beta2")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta2")
 
-    compile("com.github.1c-syntax", "bsl-parser", "v0.4.0")
+    compile("com.github.1c-syntax", "bsl-parser", "v0.6.1")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation("commons-io:commons-io:2.6")
@@ -66,6 +67,7 @@ tasks.withType<JavaCompile> {
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Implementation-Version"] = archiveVersion.get()
     }
     configurations["compile"].forEach {
         from(zipTree(it.absoluteFile)) {

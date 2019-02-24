@@ -21,43 +21,42 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.*;
-import org.eclipse.lsp4j.Diagnostic;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class YoLetterUsageDiagnostic implements BSLDiagnostic {
+public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Hint;
+    return DiagnosticSeverity.Warning;
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+  public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
 
-    List<Token> wrongIdentifiers = fileTree.getTokens()
-                                  .parallelStream()
-                                  .filter((Token t) ->
-                                    t.getType() == BSLParser.IDENTIFIER &&
-                                    t.getText().toUpperCase().contains("Ё"))
-                                  .collect((Collectors.toList()));
+    BSLParser.ExpressionContext expression = ctx.expression();
 
-    List<Diagnostic> diagnostics = new ArrayList<>();
-
-    for(Token token : wrongIdentifiers) {
-         diagnostics.add(BSLDiagnostic.createDiagnostic(
-           this,
-           RangeHelper.newRange(token),
-           getDiagnosticMessage()));
+    if (expression == null) {
+      return super.visitAssignment(ctx);
     }
 
-    return diagnostics;
+    if (ctx.complexIdentifier().getText().equalsIgnoreCase(expression.getText())
+      && getDescendantsCount(ctx.complexIdentifier()) == getDescendantsCount(expression)) {
+      addDiagnostic(ctx);
+    }
+
+    return super.visitAssignment(ctx);
+  }
+
+  private static int getDescendantsCount(ParserRuleContext tree) {
+
+    return ((int) Trees.getDescendants(tree).stream()
+      .filter(node -> (node instanceof TerminalNode)).count());
 
   }
+
 }

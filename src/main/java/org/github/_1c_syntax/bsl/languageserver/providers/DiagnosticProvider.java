@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -53,6 +53,7 @@ public final class DiagnosticProvider {
 
   private static List<BSLDiagnostic> getDiagnosticClasses() {
     return Arrays.asList(
+      new CanonicalSpellingKeywordsDiagnostic(),
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
       new FunctionShouldHaveReturnDiagnostic(),
@@ -62,6 +63,7 @@ public final class DiagnosticProvider {
       new NestedTernaryOperatorDiagnostic(),
       new NumberOfParamsDiagnostic(),
       new OneStatementPerLineDiagnostic(),
+      new SelfAssignDiagnostic(),
       new SemicolonPresenceDiagnostic(),
       new UnknownPreprocessorSymbolDiagnostic(),
       new YoLetterUsageDiagnostic()

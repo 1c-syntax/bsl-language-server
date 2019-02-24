@@ -19,20 +19,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.cli;
+package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.apache.commons.cli.ParseException;
+import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.createOptions;
+import java.util.List;
 
-class ParseExceptionCommandTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+class SelfAssignDiagnosticTest extends AbstractDiagnosticTest<SelfAssignDiagnostic> {
+
+  SelfAssignDiagnosticTest() {
+    super(SelfAssignDiagnostic.class);
+  }
 
   @Test
-  void testExecute() {
-    Command command = new ParseExceptionCommand(createOptions(), new ParseException(""));
-    int result = command.execute();
-    assertThat(result).isEqualTo(1);
+  void test() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 5));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(7, 0, 7, 33));
   }
 }
