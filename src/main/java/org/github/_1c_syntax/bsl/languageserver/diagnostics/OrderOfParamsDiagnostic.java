@@ -28,8 +28,6 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private boolean wasOptional;
-  private boolean onlyOne;
 
   @Override
   public DiagnosticSeverity getSeverity() {
@@ -39,8 +37,10 @@ public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    ctx.param().forEach((BSLParser.ParamContext param) -> {
+    boolean wasOptional = false;
+    boolean onlyOne = false;
 
+    for (BSLParser.ParamContext param : ctx.param()) {
       boolean itsOptional = param.defaultValue() != null;
 
       if (itsOptional) {
@@ -51,9 +51,7 @@ public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
         addDiagnostic(ctx);
         onlyOne = true;
       }
-
-    });
-
+    }
 
     return ctx;
   }
