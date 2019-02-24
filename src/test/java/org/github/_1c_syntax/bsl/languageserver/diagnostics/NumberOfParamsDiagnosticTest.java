@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -39,15 +39,9 @@ class NumberOfParamsDiagnosticTest extends AbstractDiagnosticTest<NumberOfParams
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(1);
 
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(14, 29, 14, 77));
-    assertThat(diagnostics.get(0).getMessage()).isEqualTo(getDiagnosticMessage("MaxParamsMessage"));
 
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(18, 45, 18, 101));
-    assertThat(diagnostics.get(1).getMessage()).isEqualTo(getDiagnosticMessage("MaxOptionalParamsMessage"));
-
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(22, 52, 22, 96));
-    assertThat(diagnostics.get(2).getMessage()).isEqualTo(getDiagnosticMessage("MoveOptionalParams"));
   }
 }

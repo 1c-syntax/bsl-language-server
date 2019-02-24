@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -22,20 +22,14 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-
-import java.util.List;
 
 
 public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_PARAMS_COUNT = 7;
-  private static final int MAX_OPTIONAL_PARAMS_COUNT = 3;
-  private int optionalCount;
-  private int paramsCount;
-  private boolean onePerline;
+
 
   @Override
   public DiagnosticSeverity getSeverity() {
@@ -45,35 +39,11 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    optionalCount = 0;
-    paramsCount = 0;
-
-    List<ParseTree> params = Trees.findAllNodes(ctx, BSLParser.RULE_param, false);
-
-    for (ParseTree param : params) {
-      boolean itsOptional = ((BSLParser.ParamContext) param).defaultValue() != null;
-      if (itsOptional) {
-        optionalCount++;
-      } else {
-        paramsCount++;
-      }
-
-      if (!itsOptional && optionalCount > 0 && !onePerline) {
-        onePerline = true;
-        addDiagnostic(ctx, getDiagnosticMessage("MoveOptionalParams"));
-      }
-
+    if (ctx.param().size() > MAX_PARAMS_COUNT) {
+      addDiagnostic(ctx);
     }
 
-    if (paramsCount > MAX_PARAMS_COUNT) {
-      addDiagnostic(ctx, getDiagnosticMessage("MaxParamsMessage"));
-    }
-
-    if (optionalCount > MAX_OPTIONAL_PARAMS_COUNT) {
-      addDiagnostic(ctx, getDiagnosticMessage("MaxOptionalParamsMessage"));
-    }
-
-    return super.visitParamList(ctx);
+    return ctx;
   }
 
 }

@@ -73,7 +73,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)* 
-](diagnostics/NumberOfParams.md)
+* [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
