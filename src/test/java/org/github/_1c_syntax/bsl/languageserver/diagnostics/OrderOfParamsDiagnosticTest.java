@@ -41,7 +41,7 @@ class OrderOfParamsDiagnosticTest extends AbstractDiagnosticTest<OrderOfParamsDi
 
     assertThat(diagnostics).hasSize(1);
 
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(14, 52, 14, 103));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(14, 52, 14, 102));
 
   }
 }
