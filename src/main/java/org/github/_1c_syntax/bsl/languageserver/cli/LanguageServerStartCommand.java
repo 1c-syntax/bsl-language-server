@@ -29,12 +29,20 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 public class LanguageServerStartCommand implements Command {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerStartCommand.class.getSimpleName());
 
   private CommandLine cmd;
 
@@ -51,15 +59,40 @@ public class LanguageServerStartCommand implements Command {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
     LanguageServer server = new BSLLanguageServer(configuration);
 
-    InputStream in = System.in;
-    OutputStream out = System.out;
-
-    Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(server, in, out);
+    Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
 
     LanguageClient client = launcher.getRemoteProxy();
     ((LanguageClientAware) server).connect(client);
 
     launcher.startListening();
     return -1;
+  }
+
+  private Launcher<LanguageClient> getLanguageClientLauncher(
+    LanguageServer server,
+    LanguageServerConfiguration configuration
+  ) {
+    InputStream in = System.in;
+    OutputStream out = System.out;
+
+    Launcher<LanguageClient> launcher;
+
+    File logFile = configuration.getTraceLog();
+    if (logFile == null) {
+      launcher = LSPLauncher.createServerLauncher(server, in, out);
+    } else if (logFile.isDirectory()) {
+      LOGGER.error("Trace log setting must lead to file, not directory! {}", logFile.getAbsolutePath());
+      launcher = LSPLauncher.createServerLauncher(server, in, out);
+    } else {
+      try {
+        PrintWriter printWriter = new PrintWriter(logFile, StandardCharsets.UTF_8.name());
+        launcher = LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
+
+      } catch (FileNotFoundException | UnsupportedEncodingException e) {
+        LOGGER.error("Can't create LSP trace file", e);
+        launcher = LSPLauncher.createServerLauncher(server, in, out);
+      }
+    }
+    return launcher;
   }
 }
