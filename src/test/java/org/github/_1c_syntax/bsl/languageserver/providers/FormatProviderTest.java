@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
@@ -35,44 +36,77 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
 class FormatProviderTest {
 
   @Test
-  void testFormat() throws IOException {
+  void testRangeFormat() throws IOException {
+    // given
+    int startLine = 2;
+    int endLine = 14;
+
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
-    params.setRange(RangeHelper.newRange(2, 0, 14, 0));
+    params.setRange(RangeHelper.newRange(startLine, 0, endLine, 0));
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(getFormatedTestFile(), StandardCharsets.UTF_8);
+    String[] strings = formattedFileContent.split("\n");
+    StringJoiner joiner = new StringJoiner("\n");
+    for (int i = 0; i < strings.length; i++) {
+      if (i < startLine || i > endLine) {
+        continue;
+      }
+      joiner.add(strings[i]);
+    }
+
+    formattedFileContent = joiner.toString() + "\n";
+
     DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
 
+    // when
     List<TextEdit> textEdits = FormatProvider.getRangeFormatting(params, documentContext);
 
+    // then
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    assertThat(textEdit.getNewText()).isEqualTo(
-      "    Если Истина Тогда\n" +
-      "        \n" +
-      "        // Комментарий\n" +
-      "        Возврат;\n" +
-      "    КонецЕсли;\n" +
-      "    А = (А ИЛИ А);\n" +
-      "    \n" +
-      "    Пока Истина Цикл\n" +
-      "        \n" +
-      "    КонецЦикла;\n" +
-      "    \n" +
-      "КонецПроцедуры\n"
-    );
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
+  }
+
+  @Test
+  void testFormat() throws IOException {
+    // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(4, true));
+
+    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(getFormatedTestFile(), StandardCharsets.UTF_8);
+
+    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
+
+    // when
+    List<TextEdit> textEdits = FormatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.get(0);
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
+
   }
 
   private File getTestFile() {
     return new File("./src/test/resources/providers/format.bsl");
+  }
+
+  private File getFormatedTestFile() {
+    return new File("./src/test/resources/providers/format_formatted.bsl");
   }
 
   private TextDocumentItem getTextDocumentItem() throws IOException {

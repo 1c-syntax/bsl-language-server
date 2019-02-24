@@ -1,0 +1,2 @@
+[src/test/resources/providers/format_formatted.bsl]
+trim_trailing_whitespace = false
