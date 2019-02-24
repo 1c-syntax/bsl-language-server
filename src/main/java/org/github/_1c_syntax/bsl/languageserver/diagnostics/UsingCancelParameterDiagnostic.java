@@ -79,7 +79,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
       }
     );
 
-    return super.visitSub(ctx);
+    return ctx;
   }
 
   private static boolean rightPartIsValid(BSLParser.AssignmentContext ident) {
