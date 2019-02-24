@@ -1,6 +1,7 @@
-import java.net.URI
-import java.util.Calendar
+
 import org.apache.tools.ant.filters.EscapeUnicode
+import java.net.URI
+import java.util.*
 
 plugins {
     java
@@ -8,7 +9,7 @@ plugins {
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.7"
-    id("io.franzbecker.gradle-lombok") version "1.14"
+    id("io.franzbecker.gradle-lombok") version "2.1"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
     id("com.github.ben-manes.versions") version "0.20.0"
 }
@@ -23,11 +24,11 @@ version = gitVersionCalculator.calculateVersion("v")
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    compile("org.eclipse.lsp4j:org.eclipse.lsp4j:0.6.0")
+    compile("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.6.0")
 
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
-    compile("commons-cli:commons-cli:1.4")
-
+    compile("commons-cli", "commons-cli", "1.4")
+    // https://mvnrepository.com/artifact/commons-io/commons-io
     compile("commons-io", "commons-io", "2.6")
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.8")
@@ -39,24 +40,17 @@ dependencies {
 
     compile("me.tongfei", "progressbar", "0.7.2")
 
-    compile("org.slf4j", "slf4j-api", "1.8.0-beta2")
-    compile("org.slf4j", "slf4j-simple", "1.8.0-beta2")
+    compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
+    compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    compile("com.github.1c-syntax", "bsl-parser", "v0.4.0")
+    compile("com.github.1c-syntax", "bsl-parser", "0.6.1")
 
-    // https://mvnrepository.com/artifact/commons-io/commons-io
-    testImplementation("commons-io:commons-io:2.6")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.4.0")
+    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.4.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.2.0")
+    testCompile("org.assertj", "assertj-core", "3.12.0")
 
-    testCompile("org.assertj:assertj-core:3.11.1")
-
-    testImplementation("com.ginsberg:junit5-system-exit:1.0.0")
-
-    // https://github.com/franzbecker/gradle-lombok/issues/56
-    annotationProcessor("org.projectlombok", "lombok", lombok.version)
-    implementation("org.projectlombok", "lombok", lombok.version)
+    testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }
 
 tasks.withType<JavaCompile> {
@@ -66,6 +60,7 @@ tasks.withType<JavaCompile> {
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Implementation-Version"] = archiveVersion.get()
     }
     configurations["compile"].forEach {
         from(zipTree(it.absoluteFile)) {
@@ -131,6 +126,6 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.4"
-    sha256 = "39f3922deb679b1852af519eb227157ef2dd0a21eec3542c8ce1b45f2df39742"
+    version = "1.18.6"
+    sha256 = "6373d9ade79efdc028cd48d40a9af9ac6a090dbcfaec55b438ec49556a4e92fb"
 }

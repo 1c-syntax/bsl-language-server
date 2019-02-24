@@ -64,16 +64,18 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 
 ### Список реализованных диагностик
 
+* [CanonicalSpellingKeywords - Каноническое написание ключевых слов](diagnostics/CanonicalSpellingKeywords.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
+* [IfElseDuplicatedConditionDiagnostic - Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseDuplicatedCondition.md)
 * [IfElseIfEndsWithElse - Использование синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseIfEndsWithElse.md)
 * [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
-* [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssignDiagnostic.md)
+* [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
 * [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
-* [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsageDiagnostic.md)
+* [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsage.md)

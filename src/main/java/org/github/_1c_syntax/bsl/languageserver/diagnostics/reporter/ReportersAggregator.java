@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -56,6 +56,7 @@ public class ReportersAggregator {
     map.put(JsonReporter.KEY, JsonReporter.class);
     map.put(JUnitReporter.KEY, JUnitReporter.class);
     map.put(TSLintReporter.KEY, TSLintReporter.class);
+    map.put(GenericIssueReporter.KEY, GenericIssueReporter.class);
 
     return map;
   }
