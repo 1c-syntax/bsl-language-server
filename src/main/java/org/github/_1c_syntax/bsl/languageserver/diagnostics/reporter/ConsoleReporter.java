@@ -24,11 +24,21 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+
 public class ConsoleReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "console";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleReporter.class.getSimpleName());
+
+  public ConsoleReporter(){
+    super();
+  }
+
+  public ConsoleReporter(Path reportDir){
+    super(reportDir);
+  }
 
   @Override
   public void report(AnalysisInfo analysisInfo) {

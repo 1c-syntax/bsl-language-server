@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
@@ -33,13 +34,21 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GenericIssueReporter.class.getSimpleName());
 
+  public GenericIssueReporter(){
+    super();
+  }
+
+  public GenericIssueReporter(Path reportDir){
+    super(reportDir);
+  }
+
   @Override
   public void report(AnalysisInfo analysisInfo) {
 
     GenericIssueReport report = new GenericIssueReport(analysisInfo);
     ObjectMapper mapper = new ObjectMapper();
     try {
-      File reportFile = new File( reportDirPath + "./bsl-generic-json.json");
+      File reportFile = new File( reportDir.toFile(), "bsl-generic-json.json");
       mapper.writeValue(reportFile, report);
       LOGGER.info("Generic issue report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

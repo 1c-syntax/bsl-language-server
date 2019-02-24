@@ -77,14 +77,6 @@ class GenericReporterTest {
     GenericIssueReport report = mapper.readValue(file, GenericIssueReport.class);
     assertThat(report).isNotNull();
 
-    reporter.setReportDir(new File("").toPath());
-    reporter.report(analysisInfo);
-
-    mapper = new ObjectMapper();
-    report = mapper.readValue(file, GenericIssueReport.class);
-    assertThat(report).isNotNull();
-
-
   }
 
 }

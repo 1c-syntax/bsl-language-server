@@ -21,6 +21,8 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,30 +34,31 @@ public class ReportersAggregator {
   private Path reportDir;
 
   public ReportersAggregator(String... reporterKeys) {
-    addReporterKesy(reporterKeys);
+    addReporterKeys(reporterKeys);
   }
 
   public ReportersAggregator(String[] reporterKeys, Path reportDir) {
     this.reportDir = reportDir;
-    addReporterKesy(reporterKeys);
+    addReporterKeys(reporterKeys);
   }
 
   public void report(AnalysisInfo analysisInfo) {
     reporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo));
   }
 
-  private void addReporterKesy(String[] reporterKeys){
+  private void addReporterKeys(String[] reporterKeys){
     Map<String, Class> reporterMap = reporterMap();
+
     for (String reporterKey : reporterKeys) {
       Class reporterClass = reporterMap.get(reporterKey);
       if (reporterClass == null) {
         throw new RuntimeException("Incorrect reporter key: " + reporterKey);
       }
       try {
-        AbstractDiagnosticReporter reporter = (AbstractDiagnosticReporter) reporterClass.newInstance();
-        reporter.setReportDir(reportDir);
+        AbstractDiagnosticReporter reporter =
+          (AbstractDiagnosticReporter) reporterClass.getConstructor(Path.class).newInstance(reportDir);
         reporters.add(reporter);
-      } catch (InstantiationException | IllegalAccessException e) {
+      } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
         throw new RuntimeException(e);
       }
     }
