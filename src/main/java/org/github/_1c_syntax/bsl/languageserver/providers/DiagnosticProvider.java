@@ -61,6 +61,7 @@ public final class DiagnosticProvider {
       new LineLengthDiagnostic(),
       new MethodSizeDiagnostic(),
       new NestedTernaryOperatorDiagnostic(),
+      new NumberOfOptionalParamsDiagnostic(),
       new NumberOfParamsDiagnostic(),
       new OneStatementPerLineDiagnostic(),
       new SelfAssignDiagnostic(),
