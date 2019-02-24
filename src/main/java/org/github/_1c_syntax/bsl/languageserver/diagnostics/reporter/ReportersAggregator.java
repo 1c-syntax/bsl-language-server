@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;

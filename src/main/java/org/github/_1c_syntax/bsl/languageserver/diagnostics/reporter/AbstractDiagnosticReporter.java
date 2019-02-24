@@ -27,7 +27,9 @@ import java.nio.file.Path;
 public abstract class AbstractDiagnosticReporter {
   protected Path reportDir;
 
-  AbstractDiagnosticReporter() { this.reportDir = new File("./").toPath(); }
+  protected AbstractDiagnosticReporter() {
+    this.reportDir = new File("./").toPath();
+  }
 
   protected AbstractDiagnosticReporter(Path reportDir)
   {
