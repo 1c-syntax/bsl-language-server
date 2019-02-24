@@ -160,6 +160,8 @@ public final class FormatProvider {
         newTextBuilder.append(currentIndentation);
       } else if (needAddSpace(token.getType(), previousTokenType)) {
         newTextBuilder.append(' ');
+      } else {
+        // no-op
       }
 
       newTextBuilder.append(token.getText());

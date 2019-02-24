@@ -49,7 +49,7 @@ public class DocumentContext {
   }
 
   public List<Token> getTokens() {
-    return tokens;
+    return new ArrayList<>(tokens);
   }
 
   public String getUri() {
