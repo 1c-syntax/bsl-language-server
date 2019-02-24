@@ -29,14 +29,14 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CancelDiagnosticTest extends AbstractDiagnosticTest<CancelDiagnostic>{
+class UsingCancelParameterDiagnosticTest extends AbstractDiagnosticTest<UsingCancelParameterDiagnostic>{
 
-  CancelDiagnosticTest() {
-    super(CancelDiagnostic.class);
+  UsingCancelParameterDiagnosticTest() {
+    super(UsingCancelParameterDiagnostic.class);
   }
 
   @Test
-  void test() {
+  void testUsingCancel() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);

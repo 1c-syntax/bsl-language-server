@@ -53,7 +53,7 @@ public final class DiagnosticProvider {
 
   private static List<BSLDiagnostic> getDiagnosticClasses() {
     return Arrays.asList(
-      new CancelDiagnostic(),
+      new UsingCancelParameterDiagnostic(),
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
       new FunctionShouldHaveReturnDiagnostic(),

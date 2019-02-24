@@ -34,7 +34,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class CancelDiagnostic extends AbstractVisitorDiagnostic {
+public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern cancelPattern = Pattern.compile("отказ|cancel");
 
@@ -50,12 +50,12 @@ public class CancelDiagnostic extends AbstractVisitorDiagnostic {
 
     boolean inParams = params.stream().anyMatch(
       node -> cancelPattern.matcher(((BSLParser.ParamContext) node).IDENTIFIER()
-      .getText()
-      .toLowerCase(Locale.getDefault()))
-      .matches());
+        .getText()
+        .toLowerCase(Locale.getDefault()))
+        .matches());
 
     // ToDO обрабатывать не только в параметрах
-    if(!inParams){
+    if (!inParams) {
       return super.visitSub(ctx);
     }
 
@@ -65,10 +65,10 @@ public class CancelDiagnostic extends AbstractVisitorDiagnostic {
     List<ParseTree> tree = assigns.stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).complexIdentifier()
-        .getText()
-        .toLowerCase(Locale.getDefault()))
-        .matches()
-    ).collect(Collectors.toList());
+          .getText()
+          .toLowerCase(Locale.getDefault()))
+          .matches()
+      ).collect(Collectors.toList());
 
     tree.stream().skip(skip).forEach(
       (ParseTree ident) -> {
@@ -83,6 +83,29 @@ public class CancelDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean rightPartIsValid(BSLParser.AssignmentContext ident) {
+
+    return equalTrue(ident) || orCancel(ident);
+  }
+
+
+  private static boolean orCancel(BSLParser.AssignmentContext ident) {
+
+    BSLParser.OperationContext logicaloperation = ident.expression().operation(0);
+    if (logicaloperation != null && logicaloperation.boolOperation().OR_KEYWORD() != null) {
+
+      return ident.expression()
+        .member()
+        .stream()
+        .anyMatch(token -> cancelPattern.matcher(token.getText().toLowerCase(Locale.getDefault()))
+        .matches());
+
+    }
+
+    return false;
+
+  }
+
+  private static boolean equalTrue(BSLParser.AssignmentContext ident) {
 
     return ident.expression().getStop().getType() == BSLLexer.TRUE;
   }

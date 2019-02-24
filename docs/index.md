@@ -64,7 +64,6 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 
 ### Список реализованных диагностик
 
-* [Cancel - Работа с параметром «Отказ»](diagnostics/Cancel.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
@@ -76,4 +75,5 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssignDiagnostic.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
+* [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
 * [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsageDiagnostic.md)
