@@ -44,7 +44,7 @@ class FormatProviderTest {
   void testFormat() throws IOException {
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
-    params.setRange(RangeHelper.newRange(2, 0, 13, 0));
+    params.setRange(RangeHelper.newRange(2, 0, 14, 0));
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
@@ -61,6 +61,7 @@ class FormatProviderTest {
       "        // Комментарий\n" +
       "        Возврат;\n" +
       "    КонецЕсли;\n" +
+      "    А = (А ИЛИ А);\n" +
       "    \n" +
       "    Пока Истина Цикл\n" +
       "        \n" +
@@ -68,8 +69,6 @@ class FormatProviderTest {
       "    \n" +
       "КонецПроцедуры\n"
     );
-
-    // TODO: A = (Б) -> A =(Б) ?
   }
 
   private File getTestFile() {

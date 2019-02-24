@@ -207,6 +207,10 @@ public final class FormatProvider {
       case BSLLexer.LPAREN:
         return type == BSLLexer.COMMA;
       case BSLLexer.COMMA:
+      case BSLLexer.GREATER_OR_EQUAL:
+      case BSLLexer.LESS_OR_EQUAL:
+      case BSLLexer.NOT_EQUAL:
+      case BSLLexer.ASSIGN:
         return true;
       default:
         // no-op
