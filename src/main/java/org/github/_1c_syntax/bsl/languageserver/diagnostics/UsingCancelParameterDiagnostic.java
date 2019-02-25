@@ -56,7 +56,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     // ToDO обрабатывать не только в параметрах
     if (!inParams) {
-      return super.visitSub(ctx);
+      return ctx;
     }
 
     int skip = 0;
