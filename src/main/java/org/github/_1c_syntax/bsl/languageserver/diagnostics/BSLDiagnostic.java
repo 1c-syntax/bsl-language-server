@@ -53,6 +53,10 @@ public interface BSLDiagnostic {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString("diagnosticMessage");
   }
 
+  default String getDiagnosticMessage(String key) {
+    return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
+  }
+
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
     return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
   }
