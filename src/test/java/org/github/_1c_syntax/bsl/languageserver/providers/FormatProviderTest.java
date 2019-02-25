@@ -64,7 +64,7 @@ class FormatProviderTest {
       joiner.add(strings[i]);
     }
 
-    formattedFileContent = joiner.toString() + "\n";
+    formattedFileContent = joiner.toString();
 
     DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
 

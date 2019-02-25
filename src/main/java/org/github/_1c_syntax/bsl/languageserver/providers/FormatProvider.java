@@ -135,7 +135,7 @@ public final class FormatProvider {
     String indentation = insertSpaces ? StringUtils.repeat(' ', tabSize) : "\t";
 
     int currentIndentLevel = (firstToken.getCharPositionInLine() - startCharacter) / indentation.length();
-    int additionalIndentLevel = 0;
+    int additionalIndentLevel = -1;
     boolean inMethodDefinition = false;
     boolean insideOperator = false;
 
@@ -186,7 +186,7 @@ public final class FormatProvider {
         // on all operators except right paren.
         if (tokenType != BSLLexer.RPAREN && currentIndentLevel == additionalIndentLevel) {
           currentIndentLevel--;
-          additionalIndentLevel = 0;
+          additionalIndentLevel = -1;
         }
       }
 
@@ -211,14 +211,14 @@ public final class FormatProvider {
       }
 
       // Add additional indent after first `=` sign in operator
-      if (tokenType == BSLLexer.ASSIGN && additionalIndentLevel == 0 && !inMethodDefinition && !insideOperator) {
+      if (tokenType == BSLLexer.ASSIGN && additionalIndentLevel < 0 && !inMethodDefinition && !insideOperator) {
         currentIndentLevel++;
         additionalIndentLevel = currentIndentLevel;
       }
       // Remove additional indent after semicolon.
-      if (tokenType == BSLLexer.SEMICOLON && additionalIndentLevel != 0) {
+      if (tokenType == BSLLexer.SEMICOLON && additionalIndentLevel > 0) {
         currentIndentLevel--;
-        additionalIndentLevel = 0;
+        additionalIndentLevel = -1;
       }
 
       lastLine = token.getLine();
