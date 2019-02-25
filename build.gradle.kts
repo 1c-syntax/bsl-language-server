@@ -44,7 +44,7 @@ dependencies {
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    compile("com.github.1c-syntax", "bsl-parser", "0.6.1")
+    compile("com.github.1c-syntax", "bsl-parser", "0.7.0")
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.4.0")
     testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.4.0")

@@ -135,11 +135,14 @@ public final class FormatProvider {
     String indentation = insertSpaces ? StringUtils.repeat(' ', tabSize) : "\t";
 
     int currentIndentLevel = (firstToken.getCharPositionInLine() - startCharacter) / indentation.length();
+    int additionalIndentLevel = 0;
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
+
     for (Token token : filteredTokens) {
       boolean needNewLine = token.getLine() != lastLine;
+      int tokenType = token.getType();
 
       // Add indentation before token lines
       if (needNewLine) {
@@ -147,8 +150,16 @@ public final class FormatProvider {
         newTextBuilder.append(StringUtils.repeat("\n" + currentIndentation, token.getLine() - lastLine - 1));
       }
 
-      if (needDecrementIndent(token.getType())) {
+      // Decrement indent on operators ends and right paren.
+      if (needDecrementIndent(tokenType)) {
         currentIndentLevel--;
+
+        // additional decrement if additional indent was added after `=` sign.
+        // on all operators except right paren.
+        if (tokenType != BSLLexer.RPAREN && currentIndentLevel == additionalIndentLevel) {
+          currentIndentLevel--;
+          additionalIndentLevel = 0;
+        }
       }
 
       // Add indentation on token line
@@ -158,7 +169,7 @@ public final class FormatProvider {
         String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append("\n");
         newTextBuilder.append(currentIndentation);
-      } else if (needAddSpace(token.getType(), previousTokenType)) {
+      } else if (needAddSpace(tokenType, previousTokenType)) {
         newTextBuilder.append(' ');
       } else {
         // no-op
@@ -166,12 +177,24 @@ public final class FormatProvider {
 
       newTextBuilder.append(token.getText());
 
-      if (needIncrementIndent(token.getType())) {
+      // Increment on operator starts and left paren
+      if (needIncrementIndent(tokenType)) {
         currentIndentLevel++;
       }
 
+      // Add additional indent after first `=` sign in operator
+      if (tokenType == BSLLexer.ASSIGN && additionalIndentLevel == 0) {
+        currentIndentLevel++;
+        additionalIndentLevel = currentIndentLevel;
+      }
+      // Remove additional indent after semicolon.
+      if (tokenType == BSLLexer.SEMICOLON && additionalIndentLevel != 0) {
+        currentIndentLevel--;
+        additionalIndentLevel = 0;
+      }
+
       lastLine = token.getLine();
-      previousTokenType = token.getType();
+      previousTokenType = tokenType;
     }
 
     Token lastToken = tokens.get(tokens.size() - 1);
