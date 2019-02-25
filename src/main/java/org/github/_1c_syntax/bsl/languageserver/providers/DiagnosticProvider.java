@@ -69,6 +69,7 @@ public final class DiagnosticProvider {
       new SelfAssignDiagnostic(),
       new SemicolonPresenceDiagnostic(),
       new UnknownPreprocessorSymbolDiagnostic(),
+      new UsingCancelParameterDiagnostic(),
       new YoLetterUsageDiagnostic()
     );
   }

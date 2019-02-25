@@ -80,4 +80,5 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
+* [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
 * [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsage.md)
