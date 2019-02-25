@@ -218,11 +218,23 @@ public final class FormatProvider {
         // no-op
     }
 
+    if (type == BSLLexer.LPAREN) {
+      switch (previousTokenType) {
+        case BSLLexer.IDENTIFIER:
+        case BSLLexer.EXECUTE_KEYWORD:
+        case BSLLexer.NEW_KEYWORD:
+        case BSLLexer.QUESTION:
+        case BSLLexer.RAISE_KEYWORD:
+          return false;
+        default:
+          return true;
+      }
+    }
+
     switch (type) {
       case BSLLexer.SEMICOLON:
       case BSLLexer.DOT:
       case BSLLexer.COMMA:
-      case BSLLexer.LPAREN:
       case BSLLexer.RPAREN:
       case BSLLexer.LBRACK:
       case BSLLexer.RBRACK:
