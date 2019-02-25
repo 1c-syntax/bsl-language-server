@@ -137,6 +137,7 @@ public final class FormatProvider {
     int currentIndentLevel = (firstToken.getCharPositionInLine() - startCharacter) / indentation.length();
     int additionalIndentLevel = 0;
     boolean inMethodDefinition = false;
+    boolean insideOperator = false;
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
@@ -145,11 +146,30 @@ public final class FormatProvider {
       int tokenType = token.getType();
 
       boolean needNewLine = token.getLine() != lastLine;
+
       if (tokenType == BSLLexer.FUNCTION_KEYWORD || tokenType == BSLLexer.PROCEDURE_KEYWORD) {
         inMethodDefinition = true;
       }
       if (inMethodDefinition && tokenType == BSLLexer.RPAREN) {
         inMethodDefinition = false;
+      }
+      switch (tokenType) {
+        case BSLLexer.IF_KEYWORD:
+        case BSLLexer.ELSIF_KEYWORD:
+        case BSLLexer.WHILE_KEYWORD:
+        case BSLLexer.FOR_KEYWORD:
+          insideOperator = true;
+        default:
+          // no-op
+      }
+      if (insideOperator) {
+        switch (tokenType) {
+          case BSLLexer.THEN_KEYWORD:
+          case BSLLexer.DO_KEYWORD:
+            insideOperator = false;
+          default:
+            // no-op
+        }
       }
 
       // Add indentation before token lines
@@ -191,7 +211,7 @@ public final class FormatProvider {
       }
 
       // Add additional indent after first `=` sign in operator
-      if (tokenType == BSLLexer.ASSIGN && additionalIndentLevel == 0 && !inMethodDefinition) {
+      if (tokenType == BSLLexer.ASSIGN && additionalIndentLevel == 0 && !inMethodDefinition && !insideOperator) {
         currentIndentLevel++;
         additionalIndentLevel = currentIndentLevel;
       }
