@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.*;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
@@ -39,10 +40,10 @@ public final class DiagnosticProvider {
     // only statics
   }
 
-  public static void computeAndPublishDiagnostics(LanguageClient client, String uri, BSLParser.FileContext fileTree) {
-    List<Diagnostic> diagnostics = computeDiagnostics(fileTree);
+  public static void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
+    List<Diagnostic> diagnostics = computeDiagnostics(documentContext.getAst());
 
-    client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
+    client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri(), diagnostics));
   }
 
   public static List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {

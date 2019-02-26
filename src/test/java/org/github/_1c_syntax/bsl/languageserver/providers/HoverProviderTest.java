@@ -21,14 +21,17 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLExtendedParser;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -38,23 +41,27 @@ class HoverProviderTest {
   private BSLExtendedParser parser = new BSLExtendedParser();
 
   @Test
-  void getEmptyHover() {
+  void getEmptyHover() throws IOException {
     TextDocumentPositionParams params = new TextDocumentPositionParams();
     params.setPosition(new Position(0, 0));
 
-    BSLParser.FileContext fileContext = parser.parseFile(new File("./src/test/resources/providers/hover.bsl"));
-    Optional<Hover> optionalHover = HoverProvider.getHover(params, fileContext);
+    String fileContent = FileUtils.readFileToString(new File("./src/test/resources/providers/hover.bsl"), StandardCharsets.UTF_8);
+    DocumentContext documentContext = new DocumentContext("fake-uri", fileContent);
+
+    Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
 
     assertThat(optionalHover.isPresent()).isFalse();
   }
 
   @Test
-  void getHoverOverSubName() {
+  void getHoverOverSubName() throws IOException {
     TextDocumentPositionParams params = new TextDocumentPositionParams();
     params.setPosition(new Position(0, 20));
 
-    BSLParser.FileContext fileContext = parser.parseFile(new File("./src/test/resources/providers/hover.bsl"));
-    Optional<Hover> optionalHover = HoverProvider.getHover(params, fileContext);
+    String fileContent = FileUtils.readFileToString(new File("./src/test/resources/providers/hover.bsl"), StandardCharsets.UTF_8);
+    DocumentContext documentContext = new DocumentContext("fake-uri", fileContent);
+
+    Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
 
     assertThat(optionalHover.isPresent()).isTrue();
 
