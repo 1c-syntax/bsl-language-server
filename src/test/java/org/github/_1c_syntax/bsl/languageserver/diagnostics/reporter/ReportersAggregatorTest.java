@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -52,7 +53,7 @@ class ReportersAggregatorTest {
 
   @Test
   void report() {
-    ReportersAggregator aggregator = new ReportersAggregator("console");
+    ReportersAggregator aggregator = new ReportersAggregator(Paths.get("."), new String[]{ "console" });
 
     // given
     Diagnostic diagnostic = new Diagnostic(

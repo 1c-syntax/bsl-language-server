@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -25,12 +25,14 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.ResourceBundle;
 
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
@@ -68,6 +70,10 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     BSLParser parser = new BSLParser(tokens);
 
     return diagnostic.getDiagnostics(parser.file());
+  }
+
+   String getDiagnosticMessage(String key) {
+    return ResourceBundle.getBundle(diagnostic.getClass().getName(), new UTF8Control()).getString(key);
   }
 
 }

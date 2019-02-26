@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -51,6 +51,10 @@ public interface BSLDiagnostic {
 
   default String getDiagnosticMessage() {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString("diagnosticMessage");
+  }
+
+  default String getDiagnosticMessage(String key) {
+    return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {

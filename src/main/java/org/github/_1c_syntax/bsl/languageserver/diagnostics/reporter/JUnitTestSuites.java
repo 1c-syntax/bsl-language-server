@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -58,12 +58,11 @@ class JUnitTestSuites {
 
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
     packageName = "bsl-language-server";
-    testsuite = new ArrayList<>();
 
-    List<FileInfo> fileinfos = analysisInfo.getFileinfos();
-    fileinfos.stream()
+    testsuite = analysisInfo.getFileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
-      .forEach(fileInfo -> testsuite.add(new JUnitTestSuite(fileInfo)));
+      .map(JUnitTestSuite::new)
+      .collect(Collectors.toList());
   }
 
   public JUnitTestSuites(
@@ -71,7 +70,7 @@ class JUnitTestSuites {
     @JsonProperty("testsuite") List<JUnitTestSuite> testsuite
   ) {
     this.packageName = packageName;
-    this.testsuite = testsuite;
+    this.testsuite = new ArrayList<>(testsuite);
   }
 
   @Data
@@ -101,7 +100,7 @@ class JUnitTestSuites {
       @JsonProperty("testcase") List<JUnitTestCase> testcase
     ) {
       this.name = name;
-      this.testcase = testcase;
+      this.testcase = new ArrayList<>(testcase);
     }
   }
 
@@ -122,7 +121,7 @@ class JUnitTestSuites {
       this.classname = classname;
       this.failure = new ArrayList<>();
 
-      diagnostics.forEach(diagnostic -> {
+      diagnostics.forEach((Diagnostic diagnostic) -> {
         String type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
         String message = diagnostic.getMessage();
         String value = String.format(
@@ -143,7 +142,7 @@ class JUnitTestSuites {
     ) {
       this.name = name;
       this.classname = classname;
-      this.failure = failure;
+      this.failure = new ArrayList<>(failure);
     }
   }
 

@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -24,11 +24,21 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ConsoleReporter implements DiagnosticReporter {
+import java.nio.file.Path;
+
+public class ConsoleReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "console";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleReporter.class.getSimpleName());
+
+  public ConsoleReporter(){
+    super();
+  }
+
+  public ConsoleReporter(Path outputDir){
+    super(outputDir);
+  }
 
   @Override
   public void report(AnalysisInfo analysisInfo) {

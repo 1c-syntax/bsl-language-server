@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -40,10 +40,10 @@ class YoLetterUsageDiagnosticTest extends AbstractDiagnosticTest<YoLetterUsageDi
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 6, 0, 10));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(2, 10, 2, 19));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(2, 21, 2, 24));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(3, 13, 3, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(5, 39, 5, 42));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 6, 0, 11));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(2, 10, 2, 20));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(2, 21, 2, 25));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(3, 13, 3, 17));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(5, 39, 5, 43));
   }
 }

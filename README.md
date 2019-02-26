@@ -43,9 +43,10 @@ java -jar bsl-language-server.jar --diagnosticLanguage ru
 
 Доступные ключи репортеров:
 
-* json - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
-* console - вывод результата анализа в консоль;
-* tslint - вывод результата анализа в формате [TSLint JSON](https://palantir.github.io/tslint/formatters/json).
+* `generic` - вывод результата анализа в формате [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/).
+* `json` - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
+* `console` - вывод результата анализа в консоль;
+* `tslint` - вывод результата анализа в формате [TSLint JSON](https://palantir.github.io/tslint/formatters/json).
 
 Пример строки запуска анализа:
 

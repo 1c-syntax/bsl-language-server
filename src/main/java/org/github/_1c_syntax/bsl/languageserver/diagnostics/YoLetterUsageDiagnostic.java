@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -25,6 +25,8 @@ import org.antlr.v4.runtime.*;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,10 +53,8 @@ public class YoLetterUsageDiagnostic implements BSLDiagnostic {
     for(Token token : wrongIdentifiers) {
          diagnostics.add(BSLDiagnostic.createDiagnostic(
            this,
-           token.getLine()-1,
-           token.getCharPositionInLine(),
-           token.getLine()-1,
-           token.getCharPositionInLine() + token.getText().length()-1));
+           RangeHelper.newRange(token),
+           getDiagnosticMessage()));
     }
 
     return diagnostics;

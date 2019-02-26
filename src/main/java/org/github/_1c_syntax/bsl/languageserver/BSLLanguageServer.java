@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -58,6 +58,8 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
     //capabilities.setCompletionProvider(new CompletionOptions(false, Lists.newArrayList(".")));
     //capabilities.setHoverProvider(Boolean.TRUE);
+    capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
+    capabilities.setDocumentFormattingProvider(Boolean.TRUE);
 
     InitializeResult result = new InitializeResult(capabilities);
 

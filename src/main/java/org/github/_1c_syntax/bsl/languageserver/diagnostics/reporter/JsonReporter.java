@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -27,19 +27,28 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
-public class JsonReporter implements DiagnosticReporter {
+public class JsonReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "json";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JsonReporter.class.getSimpleName());
+
+  public JsonReporter(){
+    super();
+  }
+
+  public JsonReporter(Path outputDir){
+    super(outputDir);
+  }
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      File reportFile = new File("./bsl-json.json");
+      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
       mapper.writeValue(reportFile, analysisInfo);
       LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

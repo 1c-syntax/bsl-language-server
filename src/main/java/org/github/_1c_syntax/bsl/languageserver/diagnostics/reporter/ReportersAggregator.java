@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -21,33 +21,45 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ReportersAggregator {
-  private List<DiagnosticReporter> reporters = new ArrayList<>();
+  private final List<AbstractDiagnosticReporter> reporters = new ArrayList<>();
+  private final Path outputDir;
 
-  public ReportersAggregator(String... reporterKeys) {
-    Map<String, Class> reporterMap = reporterMap();
-    for (String reporterKey : reporterKeys) {
-      Class reporterClass = reporterMap.get(reporterKey);
-      if (reporterClass == null) {
-        throw new RuntimeException("Incorrect reporter key: " + reporterKey);
-      }
-      try {
-        DiagnosticReporter reporter = (DiagnosticReporter) reporterClass.newInstance();
-        reporters.add(reporter);
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-
-    }
+  public ReportersAggregator(Path outputDir, String[] reporterKeys) {
+    this.outputDir = outputDir;
+    addReporterKeys(reporterKeys);
   }
 
   public void report(AnalysisInfo analysisInfo) {
     reporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo));
+  }
+
+  @SuppressWarnings("unchecked")
+  private void addReporterKeys(String[] reporterKeys) {
+    Map<String, Class> reporterMap = reporterMap();
+
+    for (String reporterKey : reporterKeys) {
+      Class<AbstractDiagnosticReporter> reporterClass = reporterMap.get(reporterKey);
+      if (reporterClass == null) {
+        throw new RuntimeException("Incorrect reporter key: " + reporterKey);
+      }
+      if (!AbstractDiagnosticReporter.class.isAssignableFrom(reporterClass)) {
+        continue;
+      }
+      try {
+        AbstractDiagnosticReporter reporter = reporterClass.getConstructor(Path.class).newInstance(outputDir);
+        reporters.add(reporter);
+      } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   private static Map<String, Class> reporterMap() {
@@ -56,6 +68,7 @@ public class ReportersAggregator {
     map.put(JsonReporter.KEY, JsonReporter.class);
     map.put(JUnitReporter.KEY, JUnitReporter.class);
     map.put(TSLintReporter.KEY, TSLintReporter.class);
+    map.put(GenericIssueReporter.KEY, GenericIssueReporter.class);
 
     return map;
   }

@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -29,12 +29,22 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
-public class JUnitReporter implements DiagnosticReporter {
+public class JUnitReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "junit";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JUnitReporter.class.getSimpleName());
+
+  public JUnitReporter()
+  {
+    super();
+  }
+
+  public JUnitReporter(Path outputDir){
+    super(outputDir);
+  }
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
@@ -45,7 +55,7 @@ public class JUnitReporter implements DiagnosticReporter {
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
     try {
-      File reportFile = new File("./bsl-junit.xml");
+      File reportFile = new File(outputDir.toFile(), "./bsl-junit.xml");
       mapper.writeValue(reportFile, jUnitReport);
       LOGGER.info("JUnit report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

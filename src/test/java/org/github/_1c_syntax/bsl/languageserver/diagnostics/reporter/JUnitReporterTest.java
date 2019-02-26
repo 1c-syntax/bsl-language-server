@@ -2,7 +2,7 @@
  * This file is a part of BSL Language Server.
  *
  * Copyright © 2018-2019
- * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
  *
@@ -68,7 +68,7 @@ class JUnitReporterTest {
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
-    DiagnosticReporter reporter = new JUnitReporter();
+    AbstractDiagnosticReporter reporter = new JUnitReporter();
 
     // when
     reporter.report(analysisInfo);
