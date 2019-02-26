@@ -1,12 +1,28 @@
 # BSL Language Server
 
+[![Build Status](https://travis-ci.org/1c-syntax/bsl-language-server.svg?branch=master)](https://travis-ci.org/1c-syntax/bsl-language-server)
+[![Download](https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases/latest)
+[![JitPack](https://jitpack.io/v/1c-syntax/bsl-language-server.svg)](https://jitpack.io/#1c-syntax/bsl-language-server)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
+
+* <a href="#capabilities">Возможности</a>
+* <a href="#cli">Запуск из командной строки</a>
+* <a href="#reporters">Репортеры</a>
+* <a href="#diagnostics">Диагностики</a>
+
+<a id="capabilities"/>
 
 ## Возможности
 
 * Показ всплывающей информации по текущей процедуре
 * Диагностики
 * Запуск движка диагностик из командной строки
+
+<a id="cli"/>
 
 ## Запуск из командной строки
 
@@ -48,6 +64,8 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
 
+<a id="reporters"/>
+
 ## Репортеры
 
 Используются для получения результатов анализа.
@@ -55,9 +73,12 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 ### Список реализованных репортеров
 
 * [json](reporters/json.md) - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
+* [generic](reporters/generic.md) - вывод результата анализа в формате [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/) для SonarQube;
 * [junit](reporters/junit.md);
 * [tslint](reporters/tslint.md);
 * [console](reporters/console.md).
+
+<a id="diagnostics"/>
 
 ## Диагностики
 
