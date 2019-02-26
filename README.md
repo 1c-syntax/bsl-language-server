@@ -41,12 +41,7 @@ java -jar bsl-language-server.jar --diagnosticLanguage ru
 
 Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. 
 
-Доступные ключи репортеров:
-
-* `generic` - вывод результата анализа в формате [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/).
-* `json` - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
-* `console` - вывод результата анализа в консоль;
-* `tslint` - вывод результата анализа в формате [TSLint JSON](https://palantir.github.io/tslint/formatters/json).
+Список и описания репортеров доступны [на сайте проекта](https://1c-syntax.github.io/bsl-language-server/).
 
 Пример строки запуска анализа:
 
