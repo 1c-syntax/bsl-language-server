@@ -29,15 +29,11 @@ import java.util.List;
 import java.util.Map;
 
 public class ReportersAggregator {
-  private List<AbstractDiagnosticReporter> reporters = new ArrayList<>();
-  private Path reportDir;
+  private final List<AbstractDiagnosticReporter> reporters = new ArrayList<>();
+  private final Path outputDir;
 
-  public ReportersAggregator(String... reporterKeys) {
-    addReporterKeys(reporterKeys);
-  }
-
-  public ReportersAggregator(String[] reporterKeys, Path reportDir) {
-    this.reportDir = reportDir;
+  public ReportersAggregator(Path outputDir, String[] reporterKeys) {
+    this.outputDir = outputDir;
     addReporterKeys(reporterKeys);
   }
 
@@ -45,17 +41,20 @@ public class ReportersAggregator {
     reporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo));
   }
 
-  private void addReporterKeys(String[] reporterKeys){
+  @SuppressWarnings("unchecked")
+  private void addReporterKeys(String[] reporterKeys) {
     Map<String, Class> reporterMap = reporterMap();
 
     for (String reporterKey : reporterKeys) {
-      Class reporterClass = reporterMap.get(reporterKey);
+      Class<AbstractDiagnosticReporter> reporterClass = reporterMap.get(reporterKey);
       if (reporterClass == null) {
         throw new RuntimeException("Incorrect reporter key: " + reporterKey);
       }
+      if (!AbstractDiagnosticReporter.class.isAssignableFrom(reporterClass)) {
+        continue;
+      }
       try {
-        AbstractDiagnosticReporter reporter =
-          (AbstractDiagnosticReporter) reporterClass.getConstructor(Path.class).newInstance(reportDir);
+        AbstractDiagnosticReporter reporter = reporterClass.getConstructor(Path.class).newInstance(outputDir);
         reporters.add(reporter);
       } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
         throw new RuntimeException(e);

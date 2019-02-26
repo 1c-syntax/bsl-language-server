@@ -39,8 +39,8 @@ public class JsonReporter extends AbstractDiagnosticReporter {
     super();
   }
 
-  public JsonReporter(Path reportDir){
-    super(reportDir);
+  public JsonReporter(Path outputDir){
+    super(outputDir);
   }
 
   @Override
@@ -48,7 +48,7 @@ public class JsonReporter extends AbstractDiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      File reportFile = new File(reportDir.toFile(), "./bsl-json.json");
+      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
       mapper.writeValue(reportFile, analysisInfo);
       LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

@@ -21,21 +21,20 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public abstract class AbstractDiagnosticReporter {
-  protected Path reportDir;
+  protected final Path outputDir;
 
   protected AbstractDiagnosticReporter() {
-    this.reportDir = new File("./").toPath();
+    this.outputDir = Paths.get("./");
   }
 
-  protected AbstractDiagnosticReporter(Path reportDir)
-  {
-    this.reportDir = reportDir;
+  protected AbstractDiagnosticReporter(Path outputDir) {
+    this.outputDir = outputDir;
   }
 
-  void report(AnalysisInfo analysisInfo){}
+  public abstract void report(AnalysisInfo analysisInfo);
 
 }

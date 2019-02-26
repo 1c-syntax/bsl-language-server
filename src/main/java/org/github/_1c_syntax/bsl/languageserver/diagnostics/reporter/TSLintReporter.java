@@ -43,8 +43,8 @@ public class TSLintReporter extends AbstractDiagnosticReporter {
     super();
   }
 
-  public TSLintReporter(Path reportDir){
-    super(reportDir);
+  public TSLintReporter(Path outputDir){
+    super(outputDir);
   }
 
   @Override
@@ -59,7 +59,7 @@ public class TSLintReporter extends AbstractDiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      File reportFile = new File(reportDir.toFile(), "./bsl-tslint.json");
+      File reportFile = new File(outputDir.toFile(), "./bsl-tslint.json");
       mapper.writeValue(reportFile, tsLintReport);
       LOGGER.info("TSLint report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

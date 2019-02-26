@@ -36,8 +36,8 @@ public class ConsoleReporter extends AbstractDiagnosticReporter {
     super();
   }
 
-  public ConsoleReporter(Path reportDir){
-    super(reportDir);
+  public ConsoleReporter(Path outputDir){
+    super(outputDir);
   }
 
   @Override

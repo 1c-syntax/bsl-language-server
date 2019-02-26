@@ -42,8 +42,8 @@ public class JUnitReporter extends AbstractDiagnosticReporter {
     super();
   }
 
-  public JUnitReporter(Path reportDir){
-    super(reportDir);
+  public JUnitReporter(Path outputDir){
+    super(outputDir);
   }
 
   @Override
@@ -55,7 +55,7 @@ public class JUnitReporter extends AbstractDiagnosticReporter {
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
     try {
-      File reportFile = new File(reportDir.toFile(), "./bsl-junit.xml");
+      File reportFile = new File(outputDir.toFile(), "./bsl-junit.xml");
       mapper.writeValue(reportFile, jUnitReport);
       LOGGER.info("JUnit report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {
