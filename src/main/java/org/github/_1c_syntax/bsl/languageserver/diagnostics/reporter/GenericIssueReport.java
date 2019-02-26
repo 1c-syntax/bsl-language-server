@@ -72,7 +72,7 @@ public class GenericIssueReport {
   public GenericIssueReport(
     @JsonProperty("issues") List<GenericIssueEntry> issues
   ) {
-    this.issues = issues;
+    this.issues = new ArrayList<>(issues);
   }
 
   public GenericIssueReport(AnalysisInfo analysisInfo) {
