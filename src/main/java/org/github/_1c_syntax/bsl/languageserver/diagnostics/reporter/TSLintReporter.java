@@ -29,14 +29,23 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TSLintReporter implements DiagnosticReporter {
+public class TSLintReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "tslint";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TSLintReporter.class.getSimpleName());
+
+  public TSLintReporter(){
+    super();
+  }
+
+  public TSLintReporter(Path outputDir){
+    super(outputDir);
+  }
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
@@ -50,7 +59,7 @@ public class TSLintReporter implements DiagnosticReporter {
     ObjectMapper mapper = new ObjectMapper();
 
     try {
-      File reportFile = new File("./bsl-tslint.json");
+      File reportFile = new File(outputDir.toFile(), "./bsl-tslint.json");
       mapper.writeValue(reportFile, tsLintReport);
       LOGGER.info("TSLint report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {

@@ -105,8 +105,16 @@ public class BSLLSPLauncher {
       "Reporter key"
     );
 
+    Option outputDir = new Option(
+      "o",
+      "outputDir",
+      true,
+      "Output report directory"
+    );
+
     createdOptions.addOption(analyze);
     createdOptions.addOption(srcDir);
+    createdOptions.addOption(outputDir);
     createdOptions.addOption(reporter);
 
     createdOptions.addOption(diagnosticLanguageOption);

@@ -67,7 +67,7 @@ class GenericReporterTest {
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
-    DiagnosticReporter reporter = new GenericIssueReporter();
+    AbstractDiagnosticReporter reporter = new GenericIssueReporter();
 
     // when
     reporter.report(analysisInfo);

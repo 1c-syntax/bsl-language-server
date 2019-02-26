@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -52,7 +53,7 @@ class ReportersAggregatorTest {
 
   @Test
   void report() {
-    ReportersAggregator aggregator = new ReportersAggregator("console");
+    ReportersAggregator aggregator = new ReportersAggregator(Paths.get("."), new String[]{ "console" });
 
     // given
     Diagnostic diagnostic = new Diagnostic(

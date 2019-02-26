@@ -51,9 +51,11 @@ public class AnalyzeCommand implements Command {
   @Override
   public int execute() {
     String srcDirOption = cmd.getOptionValue("srcDir", "");
+    String outputDirOption = cmd.getOptionValue("outputDir", "");
     String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
 
     Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
+    Path outputDir = Paths.get(outputDirOption).toAbsolutePath();
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
@@ -66,7 +68,7 @@ public class AnalyzeCommand implements Command {
     }
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), diagnostics);
-    ReportersAggregator aggregator = new ReportersAggregator(reporters);
+    ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
     aggregator.report(analysisInfo);
     return 0;
   }

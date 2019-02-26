@@ -68,7 +68,7 @@ class JUnitReporterTest {
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
-    DiagnosticReporter reporter = new JUnitReporter();
+    AbstractDiagnosticReporter reporter = new JUnitReporter();
 
     // when
     reporter.report(analysisInfo);
