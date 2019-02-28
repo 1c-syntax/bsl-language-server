@@ -91,7 +91,10 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean orCancel(BSLParser.AssignmentContext ident) {
 
     BSLParser.OperationContext logicaloperation = ident.expression().operation(0);
-    if (logicaloperation != null && logicaloperation.boolOperation().OR_KEYWORD() != null) {
+    if (logicaloperation != null
+      && logicaloperation.boolOperation() != null
+      && logicaloperation.boolOperation().OR_KEYWORD() != null
+    ) {
 
       return ident.expression()
         .member()
