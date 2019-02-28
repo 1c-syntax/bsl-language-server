@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.cli;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.cli.CommandLine;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
@@ -28,13 +29,20 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
-import org.github._1c_syntax.bsl.languageserver.settings.LanguageServerSettings;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class LanguageServerStartCommand implements Command {
-  private CommandLine cmd;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerStartCommand.class.getSimpleName());
+
+    private CommandLine cmd;
 
   public LanguageServerStartCommand(CommandLine cmd) {
     this.cmd = cmd;
@@ -42,10 +50,25 @@ public class LanguageServerStartCommand implements Command {
 
   @Override
   public int execute() {
-    String diagnosticLanguage = cmd.getOptionValue("diagnosticLanguage", "en");
-    LanguageServerSettings settings = new LanguageServerSettings(diagnosticLanguage);
 
-    LanguageServer server = new BSLLanguageServer(settings);
+    String configurationOption = cmd.getOptionValue("configuration", "");
+    File configurationFile = new File(configurationOption);
+
+    LanguageServerConfiguration configuration = null;
+    if (configurationFile.exists()) {
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+      } catch (IOException e) {
+        LOGGER.error("Can't deserialize configuration file", e);
+      }
+    }
+
+    if (configuration == null) {
+      configuration = new LanguageServerConfiguration();
+    }
+
+    LanguageServer server = new BSLLanguageServer(configuration);
     InputStream in = System.in;
     OutputStream out = System.out;
 

@@ -70,10 +70,10 @@ public class BSLLSPLauncher {
     Options createdOptions = new Options();
 
     Option diagnosticLanguageOption = new Option(
-      "d",
-      "diagnosticLanguage",
+      "c",
+      "configuration",
       true,
-      "Language of diagnostic messages. Possible values: en, ru. Default is en."
+      "Path to language server configuration file"
     );
     diagnosticLanguageOption.setRequired(false);
 
