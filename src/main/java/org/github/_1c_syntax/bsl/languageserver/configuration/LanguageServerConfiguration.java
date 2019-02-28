@@ -21,20 +21,107 @@
  */
 package org.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 @Data
+@RequiredArgsConstructor
+@JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
 public class LanguageServerConfiguration {
-  private DiagnosticLanguage diagnosticLanguage;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
+
+  private final DiagnosticLanguage diagnosticLanguage;
   private final Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics;
 
   public LanguageServerConfiguration() {
     diagnostics = new HashMap<>();
     diagnosticLanguage = DiagnosticLanguage.EN;
+  }
+
+  static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
+
+    @Override
+    public LanguageServerConfiguration deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+      JsonNode node = jp.getCodec().readTree(jp);
+
+      String diagnosticLanguage = getDiagnosticLanguage(node);
+
+      Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = getDiagnostics(node);
+
+      return new LanguageServerConfiguration(
+        DiagnosticLanguage.valueOf(diagnosticLanguage.toUpperCase(Locale.ENGLISH)),
+        diagnosticsMap
+      );
+    }
+
+    private Map<String, Either<Boolean, DiagnosticConfiguration>> getDiagnostics(JsonNode node) {
+      JsonNode diagnostics = node.get("diagnostics");
+
+      if (diagnostics == null) {
+        return Collections.emptyMap();
+      }
+
+      ObjectMapper mapper = new ObjectMapper();
+      Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = new HashMap<>();
+
+      Iterator<JsonNode> diagnosticsNodes = diagnostics.elements();
+      diagnosticsNodes.forEachRemaining(jsonNode -> {
+        Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
+        fields.forEachRemaining(entry -> {
+          JsonNode diagnosticConfig = entry.getValue();
+          if (diagnosticConfig.isBoolean()) {
+            diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
+          } else {
+            Class<? extends DiagnosticConfiguration> diagnosticClass;
+            try {
+              diagnosticClass = Class.forName("org.github._1c_syntax.bsl.languageserver.configuration.diagnostics" + entry.getKey()).asSubclass(DiagnosticConfiguration.class);
+            } catch (ClassNotFoundException e) {
+              LOGGER.error("Can't find corresponding diagnostic class", e);
+              return;
+            }
+            DiagnosticConfiguration diagnosticConfiguration;
+            try {
+              diagnosticConfiguration = mapper.treeToValue(diagnosticConfig, diagnosticClass);
+            } catch (JsonProcessingException e) {
+              LOGGER.error("Can't deserialize diagnostic configuration", e);
+              return;
+            }
+            diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
+          }
+        });
+
+      });
+
+      return diagnosticsMap;
+    }
+
+    private String getDiagnosticLanguage(JsonNode node) {
+      String diagnosticLanguage;
+      if (node.get("diagnosticLanguage") == null) {
+        diagnosticLanguage = "en";
+      } else {
+        diagnosticLanguage = node.get("diagnosticLanguage").asText();
+      }
+      return diagnosticLanguage;
+    }
   }
 }
