@@ -52,7 +52,6 @@ public final class DiagnosticProvider {
 
   public List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {
     return getDiagnosticClasses().parallelStream()
-        .filter(this::isEnabled)
         .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
         .collect(Collectors.toList());
   }
@@ -79,20 +78,22 @@ public final class DiagnosticProvider {
       new YoLetterUsageDiagnostic()
     );
 
-    diagnostics.forEach(diagnostic -> {
-        Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration = configuration.getDiagnostics().get(diagnostic.getCode());
-        if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-          diagnostic.configure(diagnosticConfiguration.getRight());
+    return diagnostics.stream()
+      .filter(this::isEnabled)
+      .peek(diagnostic -> {
+          Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration = configuration.getDiagnostics().get(diagnostic.getCode());
+          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+            diagnostic.configure(diagnosticConfiguration.getRight());
+          }
         }
-      }
-    );
+      ).collect(Collectors.toList());
 
-    return diagnostics;
   }
 
   private boolean isEnabled(BSLDiagnostic bslDiagnostic) {
     Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration = configuration.getDiagnostics().get(bslDiagnostic.getCode());
-    return diagnosticConfiguration == null ||
-      (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());
+    return diagnosticConfiguration == null
+      || diagnosticConfiguration.isRight()
+      || (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());
   }
 }
