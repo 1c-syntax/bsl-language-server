@@ -83,33 +83,30 @@ public class LanguageServerConfiguration {
       ObjectMapper mapper = new ObjectMapper();
       Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = new HashMap<>();
 
-      Iterator<JsonNode> diagnosticsNodes = diagnostics.elements();
-      diagnosticsNodes.forEachRemaining(jsonNode -> {
-        Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
-        fields.forEachRemaining(entry -> {
-          JsonNode diagnosticConfig = entry.getValue();
-          if (diagnosticConfig.isBoolean()) {
-            diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
-          } else {
-            Class<? extends DiagnosticConfiguration> diagnosticClass;
-            try {
-              diagnosticClass = Class.forName("org.github._1c_syntax.bsl.languageserver.configuration.diagnostics" + entry.getKey()).asSubclass(DiagnosticConfiguration.class);
-            } catch (ClassNotFoundException e) {
-              LOGGER.error("Can't find corresponding diagnostic class", e);
-              return;
-            }
-            DiagnosticConfiguration diagnosticConfiguration;
-            try {
-              diagnosticConfiguration = mapper.treeToValue(diagnosticConfig, diagnosticClass);
-            } catch (JsonProcessingException e) {
-              LOGGER.error("Can't deserialize diagnostic configuration", e);
-              return;
-            }
-            diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
+      Iterator<Map.Entry<String, JsonNode>> diagnosticsNodes = diagnostics.fields();
+      diagnosticsNodes.forEachRemaining(entry -> {
+        JsonNode diagnosticConfig = entry.getValue();
+        if (diagnosticConfig.isBoolean()) {
+          diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
+        } else {
+          Class<? extends DiagnosticConfiguration> diagnosticClass;
+          try {
+            diagnosticClass = Class.forName("org.github._1c_syntax.bsl.languageserver.configuration.diagnostics." + entry.getKey() + "DiagnosticConfiguration").asSubclass(DiagnosticConfiguration.class);
+          } catch (ClassNotFoundException e) {
+            LOGGER.error("Can't find corresponding diagnostic configuration class", e);
+            return;
           }
-        });
-
+          DiagnosticConfiguration diagnosticConfiguration;
+          try {
+            diagnosticConfiguration = mapper.treeToValue(diagnosticConfig, diagnosticClass);
+          } catch (JsonProcessingException e) {
+            LOGGER.error("Can't deserialize diagnostic configuration", e);
+            return;
+          }
+          diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
+        }
       });
+
 
       return diagnosticsMap;
     }
