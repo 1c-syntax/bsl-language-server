@@ -48,27 +48,26 @@ import java.util.Map;
 public class LanguageServerConfiguration {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
+  private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
 
   private final DiagnosticLanguage diagnosticLanguage;
   private final Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics;
 
   public LanguageServerConfiguration() {
-    diagnostics = new HashMap<>();
-    diagnosticLanguage = DiagnosticLanguage.EN;
+    this(DEFAULT_DIAGNOSTIC_LANGUAGE, new HashMap<>());
   }
 
   static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
 
     @Override
-    public LanguageServerConfiguration deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+    public LanguageServerConfiguration deserialize(JsonParser jp, DeserializationContext context) throws IOException {
       JsonNode node = jp.getCodec().readTree(jp);
 
-      String diagnosticLanguage = getDiagnosticLanguage(node);
-
+      DiagnosticLanguage diagnosticLanguage = getDiagnosticLanguage(node);
       Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = getDiagnostics(node);
 
       return new LanguageServerConfiguration(
-        DiagnosticLanguage.valueOf(diagnosticLanguage.toUpperCase(Locale.ENGLISH)),
+        diagnosticLanguage,
         diagnosticsMap
       );
     }
@@ -111,12 +110,13 @@ public class LanguageServerConfiguration {
       return diagnosticsMap;
     }
 
-    private String getDiagnosticLanguage(JsonNode node) {
-      String diagnosticLanguage;
+    private DiagnosticLanguage getDiagnosticLanguage(JsonNode node) {
+      DiagnosticLanguage diagnosticLanguage;
       if (node.get("diagnosticLanguage") == null) {
-        diagnosticLanguage = "en";
+        String diagnosticLanguageValue = node.get("diagnosticLanguage").asText();
+        diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguageValue.toUpperCase(Locale.ENGLISH));
       } else {
-        diagnosticLanguage = node.get("diagnosticLanguage").asText();
+        diagnosticLanguage = DEFAULT_DIAGNOSTIC_LANGUAGE;
       }
       return diagnosticLanguage;
     }
