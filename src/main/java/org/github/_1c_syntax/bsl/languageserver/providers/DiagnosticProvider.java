@@ -64,6 +64,7 @@ public final class DiagnosticProvider {
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
       new FunctionShouldHaveReturnDiagnostic(),
+      new IfElseDuplicatedCodeBlockDiagnostic(),
       new IfElseDuplicatedConditionDiagnostic(),
       new IfElseIfEndsWithElseDiagnostic(),
       new LineLengthDiagnostic(),
