@@ -23,6 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.utils;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 public final class DiagnosticHelper {
 
@@ -37,6 +38,16 @@ public final class DiagnosticHelper {
     }
 
     if (leftNode instanceof TerminalNode) {
+
+      if (!(((TerminalNode) leftNode).getSymbol().getType() == ((TerminalNode) rightNode).getSymbol().getType())) {
+        return false;
+      }
+
+      if (((TerminalNode) leftNode).getSymbol().getType() == BSLParser.STRING
+        && !leftNode.toString().equals(rightNode.toString())) {
+        return false;
+      }
+
       if (!leftNode.toString().equalsIgnoreCase(rightNode.toString())) {
         return false;
       }

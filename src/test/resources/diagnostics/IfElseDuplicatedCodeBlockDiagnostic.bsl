@@ -1,5 +1,5 @@
 
-// Pass (is catched by another diagnostic)
+// Pass (Empty codeblock is catched by another diagnostic)
 Если ПараметрКоманды.Количество() = 0 Тогда
 ИначеЕсли ПараметрКоманды.Количество() = 1 Тогда
 Иначе

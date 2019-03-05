@@ -56,6 +56,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
         && !(currentCodeBlock.children == null && codeBlockContexts.get(j).children == null)
         && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContexts.get(j))) {
         addDiagnostic(currentCodeBlock);
+        break;
       }
     }
   }
