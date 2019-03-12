@@ -95,7 +95,15 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
       return false;
     }
     BSLParser.OperationContext logicalOperation = expression.operation(0);
-    if (logicalOperation != null && logicalOperation.boolOperation().OR_KEYWORD() != null) {
+    if (logicalOperation == null) {
+      return false;
+    }
+
+    BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
+    if (boolOperation == null) {
+      return false;
+    }
+    if (boolOperation.OR_KEYWORD() != null) {
 
       return expression
         .member()
