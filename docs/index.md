@@ -11,6 +11,8 @@
 
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
+* <a href="#analyze">Запуск в режиме анализатора</a>
+* <a href="#configuration">Конфигурационный файл</a>
 * <a href="#reporters">Репортеры</a>
 * <a href="#diagnostics">Диагностики</a>
 
@@ -31,23 +33,23 @@
 
 ```sh
 java -jar bsl-language-server.jar --help
-usage: BSL language server [-a] [-d <arg>] [-h] [-r <arg>] [-s <arg>]
- -a,--analyze                    Run analysis and get diagnostic info
- -d,--diagnosticLanguage <arg>   Language of diagnostic messages. Possible
-                                 values: en, ru. Default is en.
- -h,--help                       Show help.
- -r,--reporter <arg>             Reporter key
- -s,--srcDir <arg>               Source directory
- -o,--outputDir <arg>            Output report directory
+
+usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+ -a,--analyze               Run analysis and get diagnostic info
+ -c,--configuration <arg>   Path to language server configuration file
+ -h,--help                  Show help.
+ -o,--outputDir <arg>       Output report directory
+ -r,--reporter <arg>        Reporter key
+ -s,--srcDir <arg>          Source directory
 ```
 
-При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP](https://microsoft.github.io/language-server-protocol/). Для взаимодействия используются stdin и stdout.
+При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
 
-По умолчанию тексты диагностик выдаются на английском языке. Для переключения языка сообщений от движка диагностик используется параметр `--diagnosticLanguage` (сокращенно `-d`), за которым следует код языка:
+По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `diagnosticLanguage` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
-```sh
-java -jar bsl-language-server.jar --diagnosticLanguage ru
-```
+<a id="analyze"/>
+
+## Запуск в режиме анализатора
 
 Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
 
@@ -63,6 +65,36 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 
 ```sh
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+```
+
+<a id="configuration"/>
+
+## Конфигурационный файл
+
+Конфигурационный файл представляет собой файл в формате JSON. Файл может содержать следующие настройки:
+
+* `diagnosticLanguage` - `Строка` - язык сообщений от движка диагностик. Допустимые значения - `en` и `ru`. По умолчанию - `ru`.
+* `diagnostics` - `Объект` - коллекция настроек диагностик. Элементами коллекции являются объекты со следующей структурой:
+    * ключ объекта - `Строка` - ключ диагностики, как он описан в разделе <a href="#diagnostics">Диагностики</a>.
+    * значение объекта
+      - `Булево` - `false` для отключения диагностики, `true` - для включения диагностики без дополнительных настроек. По умолчанию - `true`.  
+      - `Объект` - Структура настроек каждой диагностики. Описание возможных параметров каждой диагностики приведено в ее описании.
+
+Ниже приведен пример настройки, устанавливающий:
+* язык сообщений диагностик - русский;
+* настройка диагностики [LineLength - Ограничение на длину строки](diagnostics/LineLength.md) - установка предела длины строки в 140 символов;
+* настройка диагностики [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md) - отключение диагностики.
+
+```json
+{
+  "diagnosticLanguage": "ru",
+  "diagnostics": {
+    "LineLength": {
+      "maxLineLength": 140
+    },
+    "MethodSize": false
+  }
+}
 ```
 
 <a id="reporters"/>
