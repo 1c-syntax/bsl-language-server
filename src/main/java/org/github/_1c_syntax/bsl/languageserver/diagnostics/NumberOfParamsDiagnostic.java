@@ -23,13 +23,15 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.NumberOfParamsDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-
 
 public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_PARAMS_COUNT = 7;
 
+  private int maxParamsCount = MAX_PARAMS_COUNT;
 
   @Override
   public DiagnosticSeverity getSeverity() {
@@ -37,9 +39,17 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
+  public void configure(DiagnosticConfiguration configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxParamsCount = ((NumberOfParamsDiagnosticConfiguration) configuration).getMaxParamsCount();
+  }
+
+  @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    if (ctx.param().size() > MAX_PARAMS_COUNT) {
+    if (ctx.param().size() > maxParamsCount) {
       addDiagnostic(ctx);
     }
 
