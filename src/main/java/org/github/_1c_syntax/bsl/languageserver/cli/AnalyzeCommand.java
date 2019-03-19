@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.cli;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
@@ -37,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -68,20 +66,7 @@ public class AnalyzeCommand implements Command {
     Path outputDir = Paths.get(outputDirOption).toAbsolutePath();
     File configurationFile = new File(configurationOption);
 
-    LanguageServerConfiguration configuration = null;
-    if (configurationFile.exists()) {
-      ObjectMapper mapper = new ObjectMapper();
-      try {
-        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-      } catch (IOException e) {
-        LOGGER.error("Can't deserialize configuration file", e);
-      }
-    }
-
-    if (configuration == null) {
-      configuration = new LanguageServerConfiguration();
-    }
-
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
     diagnosticProvider = new DiagnosticProvider(configuration);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);

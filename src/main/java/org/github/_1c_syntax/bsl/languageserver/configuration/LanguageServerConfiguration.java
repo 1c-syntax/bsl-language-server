@@ -35,6 +35,7 @@ import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,6 +58,23 @@ public class LanguageServerConfiguration {
     this(DEFAULT_DIAGNOSTIC_LANGUAGE, new HashMap<>());
   }
 
+  public static LanguageServerConfiguration create(File configurationFile) {
+    LanguageServerConfiguration configuration = null;
+    if (configurationFile.exists()) {
+      ObjectMapper mapper = new ObjectMapper();
+      try {
+        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+      } catch (IOException e) {
+        LOGGER.error("Can't deserialize configuration file", e);
+      }
+    }
+
+    if (configuration == null) {
+      configuration = new LanguageServerConfiguration();
+    }
+    return configuration;
+  }
+
   static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
 
     @Override
@@ -72,7 +90,7 @@ public class LanguageServerConfiguration {
       );
     }
 
-    private Map<String, Either<Boolean, DiagnosticConfiguration>> getDiagnostics(JsonNode node) {
+    private static Map<String, Either<Boolean, DiagnosticConfiguration>> getDiagnostics(JsonNode node) {
       JsonNode diagnostics = node.get("diagnostics");
 
       if (diagnostics == null) {
@@ -88,18 +106,12 @@ public class LanguageServerConfiguration {
         if (diagnosticConfig.isBoolean()) {
           diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
         } else {
-          Class<? extends DiagnosticConfiguration> diagnosticClass;
-          try {
-            diagnosticClass = Class.forName("org.github._1c_syntax.bsl.languageserver.configuration.diagnostics." + entry.getKey() + "DiagnosticConfiguration").asSubclass(DiagnosticConfiguration.class);
-          } catch (ClassNotFoundException e) {
-            LOGGER.error("Can't find corresponding diagnostic configuration class", e);
+          Class<? extends DiagnosticConfiguration> diagnosticClass = getDiagnosticClass(entry);
+          if (diagnosticClass == null) {
             return;
           }
-          DiagnosticConfiguration diagnosticConfiguration;
-          try {
-            diagnosticConfiguration = mapper.treeToValue(diagnosticConfig, diagnosticClass);
-          } catch (JsonProcessingException e) {
-            LOGGER.error("Can't deserialize diagnostic configuration", e);
+          DiagnosticConfiguration diagnosticConfiguration = getDiagnosticConfiguration(mapper, diagnosticConfig, diagnosticClass);
+          if (diagnosticConfiguration == null) {
             return;
           }
           diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
@@ -110,7 +122,33 @@ public class LanguageServerConfiguration {
       return diagnosticsMap;
     }
 
-    private DiagnosticLanguage getDiagnosticLanguage(JsonNode node) {
+    private static Class<? extends DiagnosticConfiguration> getDiagnosticClass(Map.Entry<String, JsonNode> entry) {
+      Class<? extends DiagnosticConfiguration> diagnosticClass;
+      try {
+        diagnosticClass = Class.forName("org.github._1c_syntax.bsl.languageserver.configuration.diagnostics." + entry.getKey() + "DiagnosticConfiguration").asSubclass(DiagnosticConfiguration.class);
+      } catch (ClassNotFoundException e) {
+        LOGGER.error("Can't find corresponding diagnostic configuration class", e);
+        return null;
+      }
+      return diagnosticClass;
+    }
+
+    private static DiagnosticConfiguration getDiagnosticConfiguration(
+      ObjectMapper mapper,
+      JsonNode diagnosticConfig,
+      Class<? extends DiagnosticConfiguration> diagnosticClass
+    ) {
+      DiagnosticConfiguration diagnosticConfiguration;
+      try {
+        diagnosticConfiguration = mapper.treeToValue(diagnosticConfig, diagnosticClass);
+      } catch (JsonProcessingException e) {
+        LOGGER.error("Can't deserialize diagnostic configuration", e);
+        return null;
+      }
+      return diagnosticConfiguration;
+    }
+
+    private static DiagnosticLanguage getDiagnosticLanguage(JsonNode node) {
       DiagnosticLanguage diagnosticLanguage;
       if (node.get("diagnosticLanguage") == null) {
         String diagnosticLanguageValue = node.get("diagnosticLanguage").asText();
