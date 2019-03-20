@@ -32,8 +32,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAg
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.parser.BSLExtendedParser;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -45,8 +43,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class AnalyzeCommand implements Command {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(AnalyzeCommand.class.getSimpleName());
 
   private CommandLine cmd;
   private DiagnosticProvider diagnosticProvider;

@@ -101,7 +101,7 @@ public class LanguageServerConfiguration {
       Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = new HashMap<>();
 
       Iterator<Map.Entry<String, JsonNode>> diagnosticsNodes = diagnostics.fields();
-      diagnosticsNodes.forEachRemaining(entry -> {
+      diagnosticsNodes.forEachRemaining((Map.Entry<String, JsonNode> entry) -> {
         JsonNode diagnosticConfig = entry.getValue();
         if (diagnosticConfig.isBoolean()) {
           diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
@@ -110,7 +110,11 @@ public class LanguageServerConfiguration {
           if (diagnosticClass == null) {
             return;
           }
-          DiagnosticConfiguration diagnosticConfiguration = getDiagnosticConfiguration(mapper, diagnosticConfig, diagnosticClass);
+          DiagnosticConfiguration diagnosticConfiguration = getDiagnosticConfiguration(
+            mapper,
+            diagnosticConfig,
+            diagnosticClass
+          );
           if (diagnosticConfiguration == null) {
             return;
           }
@@ -125,7 +129,11 @@ public class LanguageServerConfiguration {
     private static Class<? extends DiagnosticConfiguration> getDiagnosticClass(Map.Entry<String, JsonNode> entry) {
       Class<? extends DiagnosticConfiguration> diagnosticClass;
       try {
-        diagnosticClass = Class.forName("org.github._1c_syntax.bsl.languageserver.configuration.diagnostics." + entry.getKey() + "DiagnosticConfiguration").asSubclass(DiagnosticConfiguration.class);
+        diagnosticClass = Class.forName(
+          "org.github._1c_syntax.bsl.languageserver.configuration.diagnostics."
+            + entry.getKey()
+            + "DiagnosticConfiguration"
+        ).asSubclass(DiagnosticConfiguration.class);
       } catch (ClassNotFoundException e) {
         LOGGER.error("Can't find corresponding diagnostic configuration class", e);
         return null;

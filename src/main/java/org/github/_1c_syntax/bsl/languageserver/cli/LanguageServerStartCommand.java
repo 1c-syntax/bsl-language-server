@@ -29,16 +29,12 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class LanguageServerStartCommand implements Command {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerStartCommand.class.getSimpleName());
 
   private CommandLine cmd;
 
