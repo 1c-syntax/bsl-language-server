@@ -158,7 +158,7 @@ public class LanguageServerConfiguration {
 
     private static DiagnosticLanguage getDiagnosticLanguage(JsonNode node) {
       DiagnosticLanguage diagnosticLanguage;
-      if (node.get("diagnosticLanguage") == null) {
+      if (node.get("diagnosticLanguage") != null) {
         String diagnosticLanguageValue = node.get("diagnosticLanguage").asText();
         diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguageValue.toUpperCase(Locale.ENGLISH));
       } else {
