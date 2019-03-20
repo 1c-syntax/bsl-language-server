@@ -53,7 +53,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   }
 
   public BSLLanguageServer() {
-    this(new LanguageServerConfiguration());
+    this(LanguageServerConfiguration.create());
   }
 
   @Override

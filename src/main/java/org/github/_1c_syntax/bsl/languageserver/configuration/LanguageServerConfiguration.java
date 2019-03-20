@@ -54,7 +54,7 @@ public class LanguageServerConfiguration {
   private final DiagnosticLanguage diagnosticLanguage;
   private final Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics;
 
-  public LanguageServerConfiguration() {
+  private LanguageServerConfiguration() {
     this(DEFAULT_DIAGNOSTIC_LANGUAGE, new HashMap<>());
   }
 
@@ -70,9 +70,13 @@ public class LanguageServerConfiguration {
     }
 
     if (configuration == null) {
-      configuration = new LanguageServerConfiguration();
+      configuration = create();
     }
     return configuration;
+  }
+
+  public static LanguageServerConfiguration create() {
+    return new LanguageServerConfiguration();
   }
 
   static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
