@@ -46,7 +46,7 @@ import java.util.Map;
 @Data
 @RequiredArgsConstructor
 @JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
-public class LanguageServerConfiguration {
+public final class LanguageServerConfiguration {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
   private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
