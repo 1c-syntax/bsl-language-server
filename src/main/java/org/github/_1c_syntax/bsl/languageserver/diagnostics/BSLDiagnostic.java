@@ -53,10 +53,10 @@ public interface BSLDiagnostic {
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
   default String getDiagnosticMessage() {
-    return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString("diagnosticMessage");
+    return getResourceString("diagnosticMessage");
   }
 
-  default String getDiagnosticMessage(String key) {
+  default String getResourceString(String key) {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
   }
 

@@ -74,7 +74,7 @@ class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfE
 
   }
 
-  private static void checkDiagnosticContent(
+  private void checkDiagnosticContent(
     Diagnostic diagnostic,
     Range diagnosticRange,
     Range relatedLocationRange
@@ -83,8 +83,10 @@ class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfE
     List<DiagnosticRelatedInformation> relatedInformationList = diagnostic.getRelatedInformation();
     assertThat(relatedInformationList).hasSize(1);
 
+    String relatedMessage = getDiagnosticInstance().getResourceString("identicalCodeBlockRelatedMessage");
+
     DiagnosticRelatedInformation relatedInformation = relatedInformationList.get(0);
-    assertThat(relatedInformation.getMessage()).isEqualTo("something");
+    assertThat(relatedInformation.getMessage()).isEqualTo(relatedMessage);
     assertThat(relatedInformation.getLocation().getRange()).isEqualTo(relatedLocationRange);
   }
 }

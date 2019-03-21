@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
  */
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
+  private final String relatedMessage = getResourceString("identicalCodeBlockRelatedMessage");
+
   @Override
   public DiagnosticSeverity getSeverity() {
     return DiagnosticSeverity.Error;
@@ -56,16 +58,6 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   private void checkCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts, int i) {
     BSLParser.CodeBlockContext currentCodeBlock = codeBlockContexts.get(i);
 
-//    Optional<BSLParser.CodeBlockContext> firstSameCodeBlock = codeBlockContexts.stream()
-//      .skip((long) i)
-//      .filter(codeBlockContext ->
-//        !codeBlockContext.equals(currentCodeBlock)
-//          && !(currentCodeBlock.children == null && codeBlockContext.children == null)
-//          && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
-//      .findFirst();
-//
-//    firstSameCodeBlock.ifPresent(codeBlockContext -> addDiagnostic(currentCodeBlock));
-
     List<BSLParser.CodeBlockContext> identicalCodeBlocks = codeBlockContexts.stream()
       .skip((long) i)
       .filter(codeBlockContext ->
@@ -79,7 +71,12 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
     }
 
     List<DiagnosticRelatedInformation> relatedInformation = identicalCodeBlocks.stream()
-      .map(codeBlockContext -> this.createRelatedInformation(RangeHelper.newRange(codeBlockContext), "something"))
+      .map(codeBlockContext ->
+        this.createRelatedInformation(
+          RangeHelper.newRange(codeBlockContext),
+          relatedMessage
+        )
+      )
       .collect(Collectors.toList());
 
     addDiagnostic(currentCodeBlock, relatedInformation);
