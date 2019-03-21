@@ -22,10 +22,14 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
@@ -44,21 +48,41 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   }
 
   private void findDuplicatedCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts) {
-    for (int i = 0; i < codeBlockContexts.size(); i++) {
+    for (int i = 0; i < codeBlockContexts.size() - 1; i++) {
       checkCodeBlock(codeBlockContexts, i);
     }
   }
 
   private void checkCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts, int i) {
     BSLParser.CodeBlockContext currentCodeBlock = codeBlockContexts.get(i);
-    for (int j = 0; j < codeBlockContexts.size(); j++) {
-      if (!currentCodeBlock.equals(codeBlockContexts.get(j))
-        && !(currentCodeBlock.children == null && codeBlockContexts.get(j).children == null)
-        && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContexts.get(j))) {
-        addDiagnostic(currentCodeBlock);
-        break;
-      }
+
+//    Optional<BSLParser.CodeBlockContext> firstSameCodeBlock = codeBlockContexts.stream()
+//      .skip((long) i)
+//      .filter(codeBlockContext ->
+//        !codeBlockContext.equals(currentCodeBlock)
+//          && !(currentCodeBlock.children == null && codeBlockContext.children == null)
+//          && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
+//      .findFirst();
+//
+//    firstSameCodeBlock.ifPresent(codeBlockContext -> addDiagnostic(currentCodeBlock));
+
+    List<BSLParser.CodeBlockContext> identicalCodeBlocks = codeBlockContexts.stream()
+      .skip((long) i)
+      .filter(codeBlockContext ->
+        !codeBlockContext.equals(currentCodeBlock)
+          && !(currentCodeBlock.children == null && codeBlockContext.children == null)
+          && DiagnosticHelper.equalNodes(currentCodeBlock, codeBlockContext))
+      .collect(Collectors.toList());
+
+    if (identicalCodeBlocks.isEmpty()) {
+      return;
     }
+
+    List<DiagnosticRelatedInformation> relatedInformation = identicalCodeBlocks.stream()
+      .map(codeBlockContext -> this.createRelatedInformation(RangeHelper.newRange(codeBlockContext), "something"))
+      .collect(Collectors.toList());
+
+    addDiagnostic(currentCodeBlock, relatedInformation);
   }
 
 }
