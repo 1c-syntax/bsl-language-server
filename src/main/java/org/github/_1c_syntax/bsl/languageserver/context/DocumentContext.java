@@ -30,7 +30,9 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 import static org.antlr.v4.runtime.Token.EOF;
 
 public class DocumentContext {
@@ -50,6 +52,10 @@ public class DocumentContext {
 
   public List<Token> getTokens() {
     return new ArrayList<>(tokens);
+  }
+
+  public List<Token> getTokensFromDefaultChannel() {
+    return tokens.stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
   }
 
   public String getUri() {

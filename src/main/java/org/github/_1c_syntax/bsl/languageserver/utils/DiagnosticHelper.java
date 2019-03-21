@@ -39,11 +39,14 @@ public final class DiagnosticHelper {
 
     if (leftNode instanceof TerminalNode) {
 
-      if (!(((TerminalNode) leftNode).getSymbol().getType() == ((TerminalNode) rightNode).getSymbol().getType())) {
+      int leftNodeType = ((TerminalNode) leftNode).getSymbol().getType();
+      int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
+
+      if (leftNodeType != rightNodeType) {
         return false;
       }
 
-      if (((TerminalNode) leftNode).getSymbol().getType() == BSLParser.STRING
+      if (leftNodeType == BSLParser.STRING
         && !leftNode.toString().equals(rightNode.toString())) {
         return false;
       }

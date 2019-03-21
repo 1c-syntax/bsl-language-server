@@ -22,15 +22,17 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -48,7 +50,7 @@ public interface BSLDiagnostic {
     return simpleName;
   }
 
-  List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree);
+  List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
   default String getDiagnosticMessage() {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString("diagnosticMessage");
@@ -62,6 +64,19 @@ public interface BSLDiagnostic {
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
     return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
+  }
+
+  static Diagnostic createDiagnostic(
+    BSLDiagnostic bslDiagnostic,
+    BSLParserRuleContext node,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    return createDiagnostic(
+      bslDiagnostic,
+      RangeHelper.newRange(node),
+      bslDiagnostic.getDiagnosticMessage(),
+      relatedInformation
+    );
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, String diagnosticMessage, BSLParserRuleContext node) {
@@ -83,12 +98,33 @@ public interface BSLDiagnostic {
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, Range range, String diagnosticMessage) {
-    return new Diagnostic(
+    return createDiagnostic(
+      bslDiagnostic,
+      range,
+      diagnosticMessage,
+      null
+    );
+
+  }
+
+  static Diagnostic createDiagnostic(
+    BSLDiagnostic bslDiagnostic,
+    Range range,
+    String diagnosticMessage,
+    @Nullable
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    Diagnostic diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
       bslDiagnostic.getSeverity(),
       DiagnosticProvider.SOURCE,
       bslDiagnostic.getCode()
     );
+
+    if (relatedInformation != null) {
+      diagnostic.setRelatedInformation(relatedInformation);
+    }
+    return diagnostic;
   }
 }

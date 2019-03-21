@@ -26,14 +26,15 @@ import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import org.github._1c_syntax.bsl.parser.BSLExtendedParser;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -82,10 +83,15 @@ public class AnalyzeCommand implements Command {
   }
 
   private FileInfo getFileContextFromFile(File file) {
-    BSLExtendedParser parser = new BSLExtendedParser();
-    BSLParser.FileContext fileContext = parser.parseFile(file);
+    String textDocumentContent;
+    try {
+      textDocumentContent = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    DocumentContext documentContext = new DocumentContext(file.toURI().toString(), textDocumentContent);
 
-    return new FileInfo(file.toPath(), diagnosticProvider.computeDiagnostics(fileContext));
+    return new FileInfo(file.toPath(), diagnosticProvider.computeDiagnostics(documentContext));
   }
 
 

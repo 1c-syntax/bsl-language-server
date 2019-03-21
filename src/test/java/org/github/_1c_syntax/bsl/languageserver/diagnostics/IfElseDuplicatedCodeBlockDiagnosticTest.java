@@ -22,6 +22,8 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +31,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfElseDuplicatedCodeBlockDiagnostic> {
+class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfElseDuplicatedCodeBlockDiagnostic> {
 
   IfElseDuplicatedCodeBlockDiagnosticTest() {
     super(IfElseDuplicatedCodeBlockDiagnostic.class);
@@ -38,22 +40,51 @@ public class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticT
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(5);
 
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 1, 10, 9));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(12, 1, 13, 9));
+    checkDiagnosticContent(
+      diagnostics.get(0),
+      RangeHelper.newRange(9, 1, 10, 9),
+      RangeHelper.newRange(12, 1, 13, 9)
+    );
 
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(26, 1, 27, 9));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(29, 1, 30, 9));
+    checkDiagnosticContent(
+      diagnostics.get(1),
+      RangeHelper.newRange(26, 1, 27, 9),
+      RangeHelper.newRange(29, 1, 30, 9)
+    );
 
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(39, 1, 47, 11));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(52, 1, 60, 11));
+    checkDiagnosticContent(
+      diagnostics.get(2),
+      RangeHelper.newRange(39, 1, 47, 11),
+      RangeHelper.newRange(52, 1, 60, 11)
+    );
 
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(40, 2, 41, 10));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(43, 2, 44, 10));
+    checkDiagnosticContent(
+      diagnostics.get(3),
+      RangeHelper.newRange(40, 2, 41, 10),
+      RangeHelper.newRange(43, 2, 44, 10)
+    );
 
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(53, 2, 54, 10));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(56, 2, 57, 10));
+    checkDiagnosticContent(
+      diagnostics.get(4),
+      RangeHelper.newRange(53, 2, 54, 10),
+      RangeHelper.newRange(56, 2, 57, 10)
+    );
 
+  }
+
+  private static void checkDiagnosticContent(
+    Diagnostic diagnostic,
+    Range diagnosticRange,
+    Range relatedLocationRange
+  ) {
+    assertThat(diagnostic.getRange()).isEqualTo(diagnosticRange);
+    List<DiagnosticRelatedInformation> relatedInformationList = diagnostic.getRelatedInformation();
+    assertThat(relatedInformationList).hasSize(1);
+
+    DiagnosticRelatedInformation relatedInformation = relatedInformationList.get(0);
+    assertThat(relatedInformation.getMessage()).isEqualTo("something");
+    assertThat(relatedInformation.getLocation().getRange()).isEqualTo(relatedLocationRange);
   }
 }

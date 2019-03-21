@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
@@ -455,13 +456,13 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> keywords = fileTree.getTokens()
+    List<Token> keywords = documentContext.getTokensFromDefaultChannel()
       .parallelStream()
       .filter((Token t) ->
         canonicalKeywords.get(t.getType()) != null &&
-          canonicalKeywords.get(t.getType()).contains(t.getText()) == false)
+          !canonicalKeywords.get(t.getType()).contains(t.getText()))
       .collect(Collectors.toList());
 
     List<Diagnostic> diagnostics = new ArrayList<>();
