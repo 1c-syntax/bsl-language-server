@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -56,7 +57,8 @@ public final class DiagnosticProvider {
         .collect(Collectors.toList());
   }
 
-  private List<BSLDiagnostic> getDiagnosticClasses() {
+  @VisibleForTesting
+  List<BSLDiagnostic> getDiagnosticClasses() {
     List<BSLDiagnostic> diagnostics = Arrays.asList(
       new CanonicalSpellingKeywordsDiagnostic(),
       new EmptyCodeBlockDiagnostic(),
