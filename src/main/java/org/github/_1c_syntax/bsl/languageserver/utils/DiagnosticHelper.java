@@ -27,6 +27,10 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 public final class DiagnosticHelper {
 
+  private DiagnosticHelper() {
+    // Utility class
+  }
+
   public static boolean equalNodes(Tree leftNode, Tree rightNode) {
 
     if (leftNode.getChildCount() != rightNode.getChildCount()) {

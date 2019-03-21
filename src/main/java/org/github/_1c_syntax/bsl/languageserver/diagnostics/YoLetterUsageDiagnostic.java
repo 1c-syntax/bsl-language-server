@@ -30,6 +30,7 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class YoLetterUsageDiagnostic implements BSLDiagnostic {
@@ -43,19 +44,19 @@ public class YoLetterUsageDiagnostic implements BSLDiagnostic {
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
     List<Token> wrongIdentifiers = documentContext.getTokensFromDefaultChannel()
-                                  .parallelStream()
-                                  .filter((Token t) ->
-                                    t.getType() == BSLParser.IDENTIFIER &&
-                                    t.getText().toUpperCase().contains("Ё"))
-                                  .collect((Collectors.toList()));
+      .parallelStream()
+      .filter((Token t) ->
+        t.getType() == BSLParser.IDENTIFIER &&
+          t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
+      .collect((Collectors.toList()));
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
-    for(Token token : wrongIdentifiers) {
-         diagnostics.add(BSLDiagnostic.createDiagnostic(
-           this,
-           RangeHelper.newRange(token),
-           getDiagnosticMessage()));
+    for (Token token : wrongIdentifiers) {
+      diagnostics.add(BSLDiagnostic.createDiagnostic(
+        this,
+        RangeHelper.newRange(token),
+        getDiagnosticMessage()));
     }
 
     return diagnostics;

@@ -34,7 +34,7 @@ import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -85,7 +85,7 @@ public class AnalyzeCommand implements Command {
   private FileInfo getFileContextFromFile(File file) {
     String textDocumentContent;
     try {
-      textDocumentContent = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+      textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

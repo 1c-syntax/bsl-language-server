@@ -36,18 +36,15 @@ import java.util.stream.Collectors;
 
 public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
 
-  private static  Map<Integer, List<String>> canonicalKeywords = getPreset();
+  private static Map<Integer, List<String>> canonicalKeywords = getPreset();
 
   private static Map<Integer, List<String>> getPreset() {
     // Здесь возможно будет получить набор канонических слов из параметров.
     // Если входных параметров не задано, то используются значения по умолчанию.
-    Map<Integer, List<String>> result = new HashMap<>();
-    if (true)
-      result = getDefaultPreset();
-    return result;
+    return getDefaultPreset();
   }
 
-  private static Map<Integer, List<String>> getDefaultPreset(){
+  private static Map<Integer, List<String>> getDefaultPreset() {
 
     Map<Integer, List<String>> result = new HashMap<>();
 
@@ -468,10 +465,10 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
     List<Diagnostic> diagnostics = new ArrayList<>();
 
     for (Token token : keywords) {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
-          RangeHelper.newRange(token),
-          getDiagnosticMessage(token)));
+      diagnostics.add(BSLDiagnostic.createDiagnostic(
+        this,
+        RangeHelper.newRange(token),
+        getDiagnosticMessage(token)));
     }
 
     return diagnostics;
