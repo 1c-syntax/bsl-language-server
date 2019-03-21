@@ -19,18 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.settings;
+package org.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
-import java.util.Locale;
+import lombok.Value;
 
-public class LanguageServerSettings {
-  private DiagnosticLanguage diagnosticLanguage;
-
-  public LanguageServerSettings(String diagnosticLanguage) {
-    this.diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguage.toUpperCase(Locale.ENGLISH));
-  }
-
-  public DiagnosticLanguage getDiagnosticLanguage() {
-    return diagnosticLanguage;
-  }
+@Value
+public class NumberOfParamsDiagnosticConfiguration implements DiagnosticConfiguration {
+  private final int maxParamsCount;
 }

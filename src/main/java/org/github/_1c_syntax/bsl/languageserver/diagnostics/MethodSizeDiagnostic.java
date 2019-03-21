@@ -24,15 +24,27 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.MethodSizeDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final int MAX_METHOD_LENGTH = 200;
+  private static final int MAX_METHOD_SIZE = 200;
+
+  private int maxMethodSize = MAX_METHOD_SIZE;
 
   @Override
   public DiagnosticSeverity getSeverity() {
     return DiagnosticSeverity.Warning;
+  }
+
+  @Override
+  public void configure(DiagnosticConfiguration configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxMethodSize = ((MethodSizeDiagnosticConfiguration) configuration).getMaxMethodSize();
   }
 
   @Override
@@ -57,8 +69,8 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private static boolean methodSizeExceedsLimit(int methodSize) {
-    return methodSize > MAX_METHOD_LENGTH;
+  private boolean methodSizeExceedsLimit(int methodSize) {
+    return methodSize > maxMethodSize;
   }
 
   private static int methodSize(BSLParser.SubCodeBlockContext ctx) {
@@ -73,7 +85,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   private String getDiagnosticMessage(BSLParser.SubNameContext subName, int methodSize) {
     String diagnosticMessage = super.getDiagnosticMessage();
-    return String.format(diagnosticMessage, subName.getText(), methodSize, MAX_METHOD_LENGTH);
+    return String.format(diagnosticMessage, subName.getText(), methodSize, maxMethodSize);
   }
 
 }

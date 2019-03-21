@@ -8,6 +8,8 @@
 
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
 
+Сайт проекта - https://1c-syntax.github.io/bsl-language-server
+
 ## Возможности
 
 * Форматирование файла
@@ -20,29 +22,28 @@
 Запуск jar-файлов осуществляется через `java -jar path/to/file.jar`.
 
 ```sh
-java -jar bsl-language-server.jar" --help
-usage: BSL language server [-a] [-d <arg>] [-h] [-r <arg>] [-s <arg>]
- -a,--analyze                    Run analysis and get diagnostic info
- -d,--diagnosticLanguage <arg>   Language of diagnostic messages. Possible
-                                 values: en, ru. Default is en.
- -h,--help                       Show help.
- -r,--reporter <arg>             Reporter key
- -s,--srcDir <arg>               Source directory
+java -jar bsl-language-server.jar --help
+
+usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+ -a,--analyze               Run analysis and get diagnostic info
+ -c,--configuration <arg>   Path to language server configuration file
+ -h,--help                  Show help.
+ -o,--outputDir <arg>       Output report directory
+ -r,--reporter <arg>        Reporter key
+ -s,--srcDir <arg>          Source directory
 ```
 
-При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
+При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP](https://microsoft.github.io/language-server-protocol/). Для взаимодействия используются stdin и stdout.
 
-По умолчанию тексты диагностик выдаются на английском языке. Для переключения языка сообщений от движка диагностик используется параметр `--diagnosticLanguage` (сокращенно `-d`), за которым следует код языка:
+По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `diagnosticLanguage` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
-```sh
-java -jar bsl-language-server.jar --diagnosticLanguage ru
-```
+## Запуск в режиме анализатора
 
 Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
 
 Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. 
 
-Список и описания репортеров доступны [на сайте проекта](https://1c-syntax.github.io/bsl-language-server/).
+Список и описания репортеров, диагностик, конфигурационного файла доступны [на сайте проекта](https://1c-syntax.github.io/bsl-language-server/).
 
 Пример строки запуска анализа:
 

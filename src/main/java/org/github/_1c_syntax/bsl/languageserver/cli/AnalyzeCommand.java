@@ -25,6 +25,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
@@ -42,7 +43,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class AnalyzeCommand implements Command {
+
   private CommandLine cmd;
+  private DiagnosticProvider diagnosticProvider;
 
   public AnalyzeCommand(CommandLine cmd) {
     this.cmd = cmd;
@@ -53,9 +56,14 @@ public class AnalyzeCommand implements Command {
     String srcDirOption = cmd.getOptionValue("srcDir", "");
     String outputDirOption = cmd.getOptionValue("outputDir", "");
     String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
+    String configurationOption = cmd.getOptionValue("configuration", "");
 
     Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
     Path outputDir = Paths.get(outputDirOption).toAbsolutePath();
+    File configurationFile = new File(configurationOption);
+
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    diagnosticProvider = new DiagnosticProvider(configuration);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
@@ -63,7 +71,7 @@ public class AnalyzeCommand implements Command {
     try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
       diagnostics = files.parallelStream()
         .peek(file -> pb.step())
-        .map(AnalyzeCommand::getFileContextFromFile)
+        .map(this::getFileContextFromFile)
         .collect(Collectors.toList());
     }
 
@@ -73,11 +81,11 @@ public class AnalyzeCommand implements Command {
     return 0;
   }
 
-  private static FileInfo getFileContextFromFile(File file) {
+  private FileInfo getFileContextFromFile(File file) {
     BSLExtendedParser parser = new BSLExtendedParser();
     BSLParser.FileContext fileContext = parser.parseFile(file);
 
-    return new FileInfo(file.toPath(), DiagnosticProvider.computeDiagnostics(fileContext));
+    return new FileInfo(file.toPath(), diagnosticProvider.computeDiagnostics(fileContext));
   }
 
 

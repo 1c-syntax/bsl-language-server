@@ -22,6 +22,8 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.LineLengthDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
@@ -37,10 +39,28 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
 
   @Test
   void test() {
+    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    // then
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 121));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(5, 0, 5, 122));
+  }
+
+  @Test
+  void testConfigure() {
+    // given
+    DiagnosticConfiguration configuration = new LineLengthDiagnosticConfiguration(119);
+    getDiagnosticInstance().configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 0, 3, 120));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 121));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(5, 0, 5, 122));
   }
 }

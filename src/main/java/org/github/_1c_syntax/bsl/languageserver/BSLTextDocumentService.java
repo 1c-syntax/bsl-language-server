@@ -52,6 +52,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -67,12 +68,15 @@ import java.util.concurrent.CompletableFuture;
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
   private final ServerContext context = new ServerContext();
+  private final LanguageServerConfiguration configuration;
+  private final DiagnosticProvider diagnosticProvider;
 
   @CheckForNull
   private LanguageClient client;
 
-  public BSLTextDocumentService() {
-    // no-op
+  public BSLTextDocumentService(LanguageServerConfiguration configuration) {
+    this.configuration = configuration;
+    diagnosticProvider = new DiagnosticProvider(this.configuration);
   }
 
   @Override
@@ -211,7 +215,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     if (client == null) {
       return;
     }
-    DiagnosticProvider.computeAndPublishDiagnostics(client, documentContext);
+    diagnosticProvider.computeAndPublishDiagnostics(client, documentContext);
   }
 
 }

@@ -22,6 +22,8 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.NumberOfOptionalParamsDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
@@ -37,10 +39,25 @@ class NumberOfOptionalParamsDiagnosticTest extends AbstractDiagnosticTest<Number
 
   @Test
   void testOptionalParams() {
+    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    // then
     assertThat(diagnostics).hasSize(1);
 
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 45, 8, 101));
+  }
+
+  @Test
+  void testOptionalParamsConfigure() {
+    // given
+    DiagnosticConfiguration configuration = new NumberOfOptionalParamsDiagnosticConfiguration(1);
+    getDiagnosticInstance().configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(2);
   }
 }

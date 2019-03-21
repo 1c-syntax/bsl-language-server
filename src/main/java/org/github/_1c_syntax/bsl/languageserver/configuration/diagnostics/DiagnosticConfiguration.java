@@ -19,19 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.settings;
+package org.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
-public enum DiagnosticLanguage {
-  RU("ru"),
-  EN("en");
-
-  private final String languageCode;
-
-  DiagnosticLanguage(String languageCode) {
-    this.languageCode = languageCode;
-  }
-
-  public String getLanguageCode() {
-    return languageCode;
-  }
+public interface DiagnosticConfiguration {
 }

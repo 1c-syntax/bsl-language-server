@@ -30,26 +30,30 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.github._1c_syntax.bsl.languageserver.settings.LanguageServerSettings;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
-  private final LanguageServerSettings settings;
+  private final LanguageServerConfiguration configuration;
   private BSLTextDocumentService textDocumentService;
-  private WorkspaceService workspaceService;
+  private BSLWorkspaceService workspaceService;
   private boolean shutdownWasCalled;
 
-  public BSLLanguageServer(LanguageServerSettings settings) {
-    this.settings = settings;
+  public BSLLanguageServer(LanguageServerConfiguration configuration) {
+    this.configuration = configuration;
 
-    Locale currentLocale = Locale.forLanguageTag(settings.getDiagnosticLanguage().getLanguageCode());
+    Locale currentLocale = Locale.forLanguageTag(this.configuration.getDiagnosticLanguage().getLanguageCode());
     Locale.setDefault(currentLocale);
 
-    textDocumentService = new BSLTextDocumentService();
-    workspaceService = new BSLWorkspaceService();
+    workspaceService = new BSLWorkspaceService(configuration);
+    textDocumentService = new BSLTextDocumentService(configuration);
+  }
+
+  public BSLLanguageServer() {
+    this(LanguageServerConfiguration.create());
   }
 
   @Override

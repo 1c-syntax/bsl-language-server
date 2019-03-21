@@ -28,12 +28,14 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
-import org.github._1c_syntax.bsl.languageserver.settings.LanguageServerSettings;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class LanguageServerStartCommand implements Command {
+
   private CommandLine cmd;
 
   public LanguageServerStartCommand(CommandLine cmd) {
@@ -42,10 +44,13 @@ public class LanguageServerStartCommand implements Command {
 
   @Override
   public int execute() {
-    String diagnosticLanguage = cmd.getOptionValue("diagnosticLanguage", "en");
-    LanguageServerSettings settings = new LanguageServerSettings(diagnosticLanguage);
 
-    LanguageServer server = new BSLLanguageServer(settings);
+    String configurationOption = cmd.getOptionValue("configuration", "");
+    File configurationFile = new File(configurationOption);
+
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    LanguageServer server = new BSLLanguageServer(configuration);
+
     InputStream in = System.in;
     OutputStream out = System.out;
 

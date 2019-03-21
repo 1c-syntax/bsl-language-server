@@ -21,9 +21,13 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.*;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -35,25 +39,27 @@ import java.util.stream.Collectors;
 public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
+  private final LanguageServerConfiguration configuration;
 
-  private DiagnosticProvider() {
-    // only statics
+  public DiagnosticProvider(LanguageServerConfiguration configuration) {
+    this.configuration = configuration;
   }
 
-  public static void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
+  public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = computeDiagnostics(documentContext.getAst());
 
     client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri(), diagnostics));
   }
 
-  public static List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {
     return getDiagnosticClasses().parallelStream()
         .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
         .collect(Collectors.toList());
   }
 
-  private static List<BSLDiagnostic> getDiagnosticClasses() {
-    return Arrays.asList(
+  @VisibleForTesting
+  List<BSLDiagnostic> getDiagnosticClasses() {
+    List<BSLDiagnostic> diagnostics = Arrays.asList(
       new CanonicalSpellingKeywordsDiagnostic(),
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
@@ -73,5 +79,25 @@ public final class DiagnosticProvider {
       new UsingCancelParameterDiagnostic(),
       new YoLetterUsageDiagnostic()
     );
+
+    return diagnostics.stream()
+      .filter(this::isEnabled)
+      .peek((BSLDiagnostic diagnostic) -> {
+          Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
+            configuration.getDiagnostics().get(diagnostic.getCode());
+          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+            diagnostic.configure(diagnosticConfiguration.getRight());
+          }
+        }
+      ).collect(Collectors.toList());
+
+  }
+
+  private boolean isEnabled(BSLDiagnostic bslDiagnostic) {
+    Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
+      configuration.getDiagnostics().get(bslDiagnostic.getCode());
+    return diagnosticConfiguration == null
+      || diagnosticConfiguration.isRight()
+      || (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());
   }
 }
