@@ -21,11 +21,12 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +40,9 @@ public class YoLetterUsageDiagnostic implements BSLDiagnostic {
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> wrongIdentifiers = fileTree.getTokens()
+    List<Token> wrongIdentifiers = documentContext.getTokensFromDefaultChannel()
                                   .parallelStream()
                                   .filter((Token t) ->
                                     t.getType() == BSLParser.IDENTIFIER &&

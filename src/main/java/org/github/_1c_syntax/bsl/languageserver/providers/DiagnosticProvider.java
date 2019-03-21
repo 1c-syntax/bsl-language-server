@@ -26,11 +26,29 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.*;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyStatementDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.FunctionShouldHaveReturnDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedCodeBlockDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedConditionDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseIfEndsWithElseDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.NestedTernaryOperatorDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.OneStatementPerLineDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.OrderOfParamsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,14 +64,14 @@ public final class DiagnosticProvider {
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
-    List<Diagnostic> diagnostics = computeDiagnostics(documentContext.getAst());
+    List<Diagnostic> diagnostics = computeDiagnostics(documentContext);
 
     client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri(), diagnostics));
   }
 
-  public List<Diagnostic> computeDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
     return getDiagnosticClasses().parallelStream()
-        .flatMap(diagnostic -> diagnostic.getDiagnostics(fileTree).stream())
+        .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
         .collect(Collectors.toList());
   }
 
@@ -64,6 +82,7 @@ public final class DiagnosticProvider {
       new EmptyCodeBlockDiagnostic(),
       new EmptyStatementDiagnostic(),
       new FunctionShouldHaveReturnDiagnostic(),
+      new IfElseDuplicatedCodeBlockDiagnostic(),
       new IfElseDuplicatedConditionDiagnostic(),
       new IfElseIfEndsWithElseDiagnostic(),
       new LineLengthDiagnostic(),

@@ -23,11 +23,9 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
@@ -41,14 +39,25 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-
-    Set<String> set = new HashSet<>();
-
-    ctx.expression().stream()
-      .filter(expression -> !set.add(expression.getText().toLowerCase(Locale.ENGLISH)))
-      .forEach(this::addDiagnostic);
-
+    findDuplicatedExpression(ctx.expression());
     return super.visitIfStatement(ctx);
+  }
+
+  private void findDuplicatedExpression(List<BSLParser.ExpressionContext> expressionContexts) {
+    for (int i = 0; i < expressionContexts.size(); i++) {
+      checkExpression(expressionContexts, i);
+    }
+  }
+
+  private void checkExpression(List<BSLParser.ExpressionContext> expressionContexts, int i) {
+    BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
+    for (int j = 0; j < expressionContexts.size(); j++) {
+      if (!currentExpression.equals(expressionContexts.get(j))
+        && DiagnosticHelper.equalNodes(currentExpression, expressionContexts.get(j))) {
+        addDiagnostic(currentExpression);
+        break;
+      }
+    }
   }
 
 }

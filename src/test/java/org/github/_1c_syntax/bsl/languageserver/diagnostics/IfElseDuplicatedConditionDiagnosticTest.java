@@ -38,10 +38,16 @@ public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticT
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(5, 10, 5, 15));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 10, 9, 21));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(25, 10, 25, 15));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(22, 13, 22, 18));
+    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 10, 3, 15));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(5, 10, 5, 15));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(9, 10, 9, 21));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(17, 10, 17, 15));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(27, 10, 27, 15));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(20, 13, 20, 18));
+    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(22, 13, 22, 18));
+    assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(41, 5, 41, 17));
+    assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(43, 10, 43, 22));
+    assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(45, 10, 45, 22));
   }
 }

@@ -21,13 +21,10 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -35,7 +32,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
-
 
   private final T diagnostic;
 
@@ -63,13 +59,9 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    BSLLexer lexer = new BSLLexer(CharStreams.fromString(textDocumentContent));
 
-    CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-    BSLParser parser = new BSLParser(tokens);
-
-    return diagnostic.getDiagnostics(parser.file());
+    DocumentContext documentContext = new DocumentContext("fake-uri", textDocumentContent);
+    return diagnostic.getDiagnostics(documentContext);
   }
 
    String getDiagnosticMessage(String key) {

@@ -26,8 +26,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.LineLengthDiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,9 +55,9 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> tokens = fileTree.getTokens();
+    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
