@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -48,6 +49,8 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDia
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,11 +59,15 @@ import java.util.stream.Collectors;
 public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
+  private static final Logger LOGGER = LoggerFactory.getLogger(DiagnosticProvider.class.getSimpleName());
+
   private final LanguageServerConfiguration configuration;
 
   public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
   }
+
+
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = computeDiagnostics(documentContext);
@@ -69,35 +76,43 @@ public final class DiagnosticProvider {
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    return getDiagnosticClasses().parallelStream()
-        .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
-        .collect(Collectors.toList());
+    return getDiagnosticInstances().parallelStream()
+      .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+      .collect(Collectors.toList());
   }
 
-  public List<BSLDiagnostic> getDiagnosticClasses() {
-    List<BSLDiagnostic> diagnostics = Arrays.asList(
-      new CanonicalSpellingKeywordsDiagnostic(),
-      new EmptyCodeBlockDiagnostic(),
-      new EmptyStatementDiagnostic(),
-      new FunctionShouldHaveReturnDiagnostic(),
-      new IfElseDuplicatedCodeBlockDiagnostic(),
-      new IfElseDuplicatedConditionDiagnostic(),
-      new IfElseIfEndsWithElseDiagnostic(),
-      new LineLengthDiagnostic(),
-      new MethodSizeDiagnostic(),
-      new NestedTernaryOperatorDiagnostic(),
-      new NumberOfOptionalParamsDiagnostic(),
-      new NumberOfParamsDiagnostic(),
-      new OneStatementPerLineDiagnostic(),
-      new OrderOfParamsDiagnostic(),
-      new SelfAssignDiagnostic(),
-      new SemicolonPresenceDiagnostic(),
-      new UnknownPreprocessorSymbolDiagnostic(),
-      new UsingCancelParameterDiagnostic(),
-      new YoLetterUsageDiagnostic()
+  public List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
+
+    return Arrays.asList(
+      CanonicalSpellingKeywordsDiagnostic.class,
+      EmptyCodeBlockDiagnostic.class,
+      EmptyStatementDiagnostic.class,
+      FunctionShouldHaveReturnDiagnostic.class,
+      IfElseDuplicatedCodeBlockDiagnostic.class,
+      IfElseDuplicatedConditionDiagnostic.class,
+      IfElseIfEndsWithElseDiagnostic.class,
+      LineLengthDiagnostic.class,
+      MethodSizeDiagnostic.class,
+      NestedTernaryOperatorDiagnostic.class,
+      NumberOfOptionalParamsDiagnostic.class,
+      NumberOfParamsDiagnostic.class,
+      OneStatementPerLineDiagnostic.class,
+      OrderOfParamsDiagnostic.class,
+      SelfAssignDiagnostic.class,
+      SemicolonPresenceDiagnostic.class,
+      UnknownPreprocessorSymbolDiagnostic.class,
+      UsingCancelParameterDiagnostic.class,
+      YoLetterUsageDiagnostic.class
     );
 
-    return diagnostics.stream()
+  }
+
+  @VisibleForTesting
+  List<BSLDiagnostic> getDiagnosticInstances() {
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = getDiagnosticClasses();
+    
+    return diagnosticClasses.stream()
+      .map(DiagnosticProvider::createDiagnosticInstance)
       .filter(this::isEnabled)
       .peek((BSLDiagnostic diagnostic) -> {
           Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
@@ -107,10 +122,22 @@ public final class DiagnosticProvider {
           }
         }
       ).collect(Collectors.toList());
+  }
 
+  private static BSLDiagnostic createDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
+    BSLDiagnostic diagnostic = null;
+    try {
+      diagnostic = diagnosticClass.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      LOGGER.error("Can't instantiate diagnostic", e);
+    }
+    return diagnostic;
   }
 
   private boolean isEnabled(BSLDiagnostic bslDiagnostic) {
+    if (bslDiagnostic == null) {
+      return false;
+    }
     Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
       configuration.getDiagnostics().get(BSLDiagnostic.getCode(bslDiagnostic));
     return diagnosticConfiguration == null
