@@ -28,6 +28,7 @@ import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,14 +71,21 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       return;
     }
 
-    List<DiagnosticRelatedInformation> relatedInformation = identicalCodeBlocks.stream()
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+    relatedInformation.add(this.createRelatedInformation(
+      RangeHelper.newRange(currentCodeBlock),
+      relatedMessage
+    ));
+
+    identicalCodeBlocks.stream()
       .map(codeBlockContext ->
         this.createRelatedInformation(
           RangeHelper.newRange(codeBlockContext),
           relatedMessage
         )
       )
-      .collect(Collectors.toList());
+    .collect(Collectors.toCollection(() -> relatedInformation));
 
     addDiagnostic(currentCodeBlock, relatedInformation);
   }
