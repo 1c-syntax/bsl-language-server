@@ -101,7 +101,7 @@ public final class DiagnosticProvider {
       .filter(this::isEnabled)
       .peek((BSLDiagnostic diagnostic) -> {
           Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
-            configuration.getDiagnostics().get(diagnostic.getCode());
+            configuration.getDiagnostics().get(BSLDiagnostic.getCode(diagnostic));
           if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
             diagnostic.configure(diagnosticConfiguration.getRight());
           }
@@ -112,7 +112,7 @@ public final class DiagnosticProvider {
 
   private boolean isEnabled(BSLDiagnostic bslDiagnostic) {
     Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
-      configuration.getDiagnostics().get(bslDiagnostic.getCode());
+      configuration.getDiagnostics().get(BSLDiagnostic.getCode(bslDiagnostic));
     return diagnosticConfiguration == null
       || diagnosticConfiguration.isRight()
       || (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());

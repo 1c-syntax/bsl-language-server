@@ -42,14 +42,6 @@ public interface BSLDiagnostic {
     return DiagnosticSeverity.Error;
   }
 
-  default String getCode() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith("Diagnostic")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
-    }
-    return simpleName;
-  }
-
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
   default String getDiagnosticMessage() {
@@ -61,6 +53,19 @@ public interface BSLDiagnostic {
   }
 
   default void configure(DiagnosticConfiguration configuration) {}
+
+  static String getCode(Class<? extends BSLDiagnostic> diagnosticClass) {
+    String simpleName = diagnosticClass.getSimpleName();
+    if (simpleName.endsWith("Diagnostic")) {
+      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
+    }
+
+    return simpleName;
+  }
+
+  static <T extends BSLDiagnostic> String getCode(T diagnostic) {
+    return getCode(diagnostic.getClass());
+  }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
     return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
@@ -119,7 +124,7 @@ public interface BSLDiagnostic {
       diagnosticMessage,
       bslDiagnostic.getSeverity(),
       DiagnosticProvider.SOURCE,
-      bslDiagnostic.getCode()
+      getCode(bslDiagnostic)
     );
 
     if (relatedInformation != null) {
