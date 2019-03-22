@@ -25,9 +25,14 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import org.apache.commons.io.IOUtils;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,7 +72,18 @@ public class DocumentContext {
   }
 
   private void build(String content) {
-    CharStream input = CharStreams.fromString(content);
+    CharStream input;
+
+    try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
+         UnicodeBOMInputStream ubis = new UnicodeBOMInputStream(inputStream)
+    ) {
+
+      ubis.skipBOM();
+
+      input = CharStreams.fromStream(ubis, StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
 
     BSLLexer lexer = new BSLLexer(input);
 
