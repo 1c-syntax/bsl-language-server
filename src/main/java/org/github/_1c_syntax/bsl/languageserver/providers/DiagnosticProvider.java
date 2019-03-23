@@ -52,6 +52,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnos
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 public final class DiagnosticProvider {
@@ -112,6 +114,14 @@ public final class DiagnosticProvider {
 
   public static String getDiagnosticCode(BSLDiagnostic diagnostic) {
     return getDiagnosticCode(diagnostic.getClass());
+  }
+
+  public static String getDiagnosticName(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return ResourceBundle.getBundle(diagnosticClass.getName(), new UTF8Control()).getString("diagnosticName");
+  }
+
+  public static String getDiagnosticName(BSLDiagnostic diagnostic) {
+    return getDiagnosticName(diagnostic.getClass());
   }
 
   public static DiagnosticType getDiagnosticType(Class<? extends BSLDiagnostic> diagnosticClass) {
