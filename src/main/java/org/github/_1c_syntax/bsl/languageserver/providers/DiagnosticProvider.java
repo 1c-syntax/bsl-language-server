@@ -110,6 +110,14 @@ public final class DiagnosticProvider {
     return getDiagnosticCode(diagnostic.getClass());
   }
 
+  public static DiagnosticType getDiagnosticType(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return diagnosticsMetadata.get(diagnosticClass).type();
+  }
+
+  public static DiagnosticType getDiagnosticType(BSLDiagnostic diagnostic) {
+    return getDiagnosticType(diagnostic.getClass());
+  }
+
   public static DiagnosticSeverity getDiagnosticSeverity(Class<? extends BSLDiagnostic> diagnosticClass) {
     return diagnosticsMetadata.get(diagnosticClass).severity();
   }
