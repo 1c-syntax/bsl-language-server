@@ -49,11 +49,17 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDia
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class DiagnosticProvider {
@@ -61,13 +67,19 @@ public final class DiagnosticProvider {
   public static final String SOURCE = "bsl-language-server";
   private static final Logger LOGGER = LoggerFactory.getLogger(DiagnosticProvider.class.getSimpleName());
 
+  private static List<Class<? extends BSLDiagnostic>> diagnosticClasses
+    = createDiagnosticClasses();
+  private static Map<Class<? extends BSLDiagnostic>, DiagnosticMetadata> diagnosticsMetadata
+    = createDiagnosticMetadata(diagnosticClasses);
+  private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
+    = createSeverityToLSPSeverityMap();
+
+
   private final LanguageServerConfiguration configuration;
 
   public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
   }
-
-
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = computeDiagnostics(documentContext);
@@ -81,7 +93,41 @@ public final class DiagnosticProvider {
       .collect(Collectors.toList());
   }
 
-  public List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
+  public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
+    return new ArrayList<>(diagnosticClasses);
+  }
+
+  public static String getDiagnosticCode(Class<? extends BSLDiagnostic> diagnosticClass) {
+    String simpleName = diagnosticClass.getSimpleName();
+    if (simpleName.endsWith("Diagnostic")) {
+      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
+    }
+
+    return simpleName;
+  }
+
+  public static String getDiagnosticCode(BSLDiagnostic diagnostic) {
+    return getDiagnosticCode(diagnostic.getClass());
+  }
+
+  public static DiagnosticSeverity getDiagnosticSeverity(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return diagnosticsMetadata.get(diagnosticClass).severity();
+  }
+
+  public static DiagnosticSeverity getDiagnosticSeverity(BSLDiagnostic diagnostic) {
+    return getDiagnosticSeverity(diagnostic.getClass());
+  }
+
+  public static org.eclipse.lsp4j.DiagnosticSeverity getLSPDiagnosticSeverity(BSLDiagnostic diagnostic) {
+    DiagnosticMetadata diagnosticMetadata = diagnosticsMetadata.get(diagnostic.getClass());
+    if (diagnosticMetadata.type() == DiagnosticType.CODE_SMELL) {
+      return severityToLSPSeverityMap.get(diagnosticMetadata.severity());
+    } else {
+      return org.eclipse.lsp4j.DiagnosticSeverity.Error;
+    }
+  }
+
+  private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
     return Arrays.asList(
       CanonicalSpellingKeywordsDiagnostic.class,
@@ -107,16 +153,36 @@ public final class DiagnosticProvider {
 
   }
 
-  @VisibleForTesting
-  List<BSLDiagnostic> getDiagnosticInstances() {
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = getDiagnosticClasses();
-    
+  private static Map<Class<? extends BSLDiagnostic>, DiagnosticMetadata> createDiagnosticMetadata(
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses
+  ) {
+
     return diagnosticClasses.stream()
-      .map(DiagnosticProvider::createDiagnosticInstance)
+      .collect(Collectors.toMap(
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass.getAnnotation(DiagnosticMetadata.class))
+      );
+  }
+
+  private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
+    Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> map = new EnumMap<>(DiagnosticSeverity.class);
+    map.put(DiagnosticSeverity.INFO, org.eclipse.lsp4j.DiagnosticSeverity.Hint);
+    map.put(DiagnosticSeverity.MINOR, org.eclipse.lsp4j.DiagnosticSeverity.Information);
+    map.put(DiagnosticSeverity.MAJOR, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+    map.put(DiagnosticSeverity.CRITICAL, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+    map.put(DiagnosticSeverity.BLOCKER, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+
+    return map;
+  }
+
+  @VisibleForTesting
+  public List<BSLDiagnostic> getDiagnosticInstances() {
+    return diagnosticClasses.stream()
       .filter(this::isEnabled)
+      .map(DiagnosticProvider::createDiagnosticInstance)
       .peek((BSLDiagnostic diagnostic) -> {
           Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
-            configuration.getDiagnostics().get(BSLDiagnostic.getCode(diagnostic));
+            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
           if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
             diagnostic.configure(diagnosticConfiguration.getRight());
           }
@@ -134,12 +200,12 @@ public final class DiagnosticProvider {
     return diagnostic;
   }
 
-  private boolean isEnabled(BSLDiagnostic bslDiagnostic) {
-    if (bslDiagnostic == null) {
+  private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {
+    if (diagnosticClass == null) {
       return false;
     }
     Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
-      configuration.getDiagnostics().get(BSLDiagnostic.getCode(bslDiagnostic));
+      configuration.getDiagnostics().get(getDiagnosticCode(diagnosticClass));
     return diagnosticConfiguration == null
       || diagnosticConfiguration.isRight()
       || (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());

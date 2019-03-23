@@ -23,7 +23,6 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -38,10 +37,6 @@ import java.util.ResourceBundle;
 
 public interface BSLDiagnostic {
 
-  default DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
-
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
   default String getDiagnosticMessage() {
@@ -53,19 +48,6 @@ public interface BSLDiagnostic {
   }
 
   default void configure(DiagnosticConfiguration configuration) {}
-
-  static String getCode(Class<? extends BSLDiagnostic> diagnosticClass) {
-    String simpleName = diagnosticClass.getSimpleName();
-    if (simpleName.endsWith("Diagnostic")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
-    }
-
-    return simpleName;
-  }
-
-  static <T extends BSLDiagnostic> String getCode(T diagnostic) {
-    return getCode(diagnostic.getClass());
-  }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
     return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
@@ -122,9 +104,9 @@ public interface BSLDiagnostic {
     Diagnostic diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
-      bslDiagnostic.getSeverity(),
+      DiagnosticProvider.getLSPDiagnosticSeverity(bslDiagnostic),
       DiagnosticProvider.SOURCE,
-      getCode(bslDiagnostic)
+      DiagnosticProvider.getDiagnosticCode(bslDiagnostic)
     );
 
     if (relatedInformation != null) {

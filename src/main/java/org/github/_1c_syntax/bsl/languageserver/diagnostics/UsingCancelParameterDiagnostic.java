@@ -23,7 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -34,14 +34,10 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@DiagnosticMetadata
 public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern cancelPattern = Pattern.compile("отказ|cancel");
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {

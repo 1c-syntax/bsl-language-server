@@ -19,27 +19,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR
-)
-public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
-
-  @Override
-  public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-
-    if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
-      addDiagnostic(ctx.getStop());
-    }
-    return super.visitStatement(ctx);
-  }
-
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface DiagnosticMetadata {
+  DiagnosticType type() default DiagnosticType.ERROR;
+  DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
 }

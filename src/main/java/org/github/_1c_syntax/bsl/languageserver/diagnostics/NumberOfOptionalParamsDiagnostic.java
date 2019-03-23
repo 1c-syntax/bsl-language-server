@@ -22,22 +22,22 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.NumberOfOptionalParamsDiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MINOR
+)
 public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_OPTIONAL_PARAMS_COUNT = 3;
 
   private int maxOptionalParamsCount = MAX_OPTIONAL_PARAMS_COUNT;
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
-  }
 
   @Override
   public void configure(DiagnosticConfiguration configuration) {

@@ -23,24 +23,37 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 class DiagnosticProviderTest {
-
-
 
   @Test
   void configureNullDryRun() {
     // given
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider(LanguageServerConfiguration.create());
-    List<BSLDiagnostic> diagnosticClasses = diagnosticProvider.getDiagnosticClasses();
+    List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
 
     // when
-    diagnosticClasses.forEach(diagnostic -> diagnostic.configure(null));
+    diagnosticInstances.forEach(diagnostic -> diagnostic.configure(null));
 
     // then
     // should run without runtime errors
+  }
+
+  @Test
+  void testAllDiagnosticsHaveMetadataAnnotation() {
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThat(diagnosticClasses)
+      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
+        diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class)
+      );
   }
 }
