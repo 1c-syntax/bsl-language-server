@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -35,7 +36,9 @@ import java.util.stream.Collectors;
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
  */
-@DiagnosticMetadata
+@DiagnosticMetadata(
+  severity = DiagnosticSeverity.MINOR
+)
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage = getResourceString("identicalCodeBlockRelatedMessage");
