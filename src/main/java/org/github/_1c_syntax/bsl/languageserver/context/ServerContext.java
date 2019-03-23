@@ -31,6 +31,10 @@ import java.util.Map;
 public class ServerContext {
   private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
 
+  public Map<String, DocumentContext> getDocuments() {
+    return Collections.unmodifiableMap(documents);
+  }
+
   @CheckForNull
   public DocumentContext getDocument(String uri) {
     return documents.get(uri);
