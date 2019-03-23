@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
-import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,7 @@ class DiagnosticProviderTest {
   @Test
   void configureNullDryRun() {
     // given
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(LanguageServerConfiguration.create());
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
     List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
 
     // when

@@ -77,6 +77,10 @@ public final class DiagnosticProvider {
 
   private final LanguageServerConfiguration configuration;
 
+  public DiagnosticProvider() {
+    this(LanguageServerConfiguration.create());
+  }
+
   public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
   }
