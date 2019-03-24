@@ -1,4 +1,3 @@
-
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.net.URI
 import java.util.*
@@ -103,6 +102,9 @@ tasks.jacocoTestReport {
 
 tasks.processResources {
     filteringCharset = "UTF-8"
+    from("docs/diagnostics") {
+        into("org/github/_1c_syntax/bsl/languageserver/diagnostics")
+    }
 }
 
 // native2ascii gradle replacement

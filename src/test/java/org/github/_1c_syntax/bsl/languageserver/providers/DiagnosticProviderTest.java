@@ -25,6 +25,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.MissingResourceException;
 
@@ -75,7 +76,7 @@ class DiagnosticProviderTest {
   }
 
   @Test
-  void testAddDiagnosticsHaveDiagnosticMessage() {
+  void testAllDiagnosticsHaveDiagnosticMessage() {
     // when
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
     List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
@@ -86,6 +87,22 @@ class DiagnosticProviderTest {
           diagnostic.getDiagnosticMessage();
         } catch (MissingResourceException e) {
           throw new RuntimeException(diagnostic.getClass().getSimpleName() + " does not have diagnosticMessage", e);
+        }
+      }
+    )).doesNotThrowAnyException();
+  }
+
+  @Test
+  void testAllDiagnosticsHaveDescriptionResource() {
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
+        try {
+          DiagnosticProvider.getDiagnosticDescription(diagnosticClass);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
         }
       }
     )).doesNotThrowAnyException();

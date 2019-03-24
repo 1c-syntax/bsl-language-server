@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -56,6 +57,9 @@ import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -122,6 +126,16 @@ public final class DiagnosticProvider {
 
   public static String getDiagnosticName(BSLDiagnostic diagnostic) {
     return getDiagnosticName(diagnostic.getClass());
+  }
+
+  public static String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) throws IOException {
+    String diagnosticCode = getDiagnosticCode(diagnosticClass);
+    InputStream descriptionStream = diagnosticClass.getResourceAsStream(diagnosticCode + ".md");
+    return IOUtils.toString(descriptionStream, StandardCharsets.UTF_8);
+  }
+
+  public static String getDiagnosticDescription(BSLDiagnostic diagnostic) throws IOException {
+    return getDiagnosticDescription(diagnostic.getClass());
   }
 
   public static DiagnosticType getDiagnosticType(Class<? extends BSLDiagnostic> diagnosticClass) {
