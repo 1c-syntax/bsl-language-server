@@ -44,7 +44,7 @@ public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticT
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(4);
 
-    List relatedInformation = new ArrayList<DiagnosticRelatedInformation>();
+    List<Range> relatedInformation = new ArrayList<>();
     relatedInformation.add(RangeHelper.newRange(3, 10, 3, 15));
     relatedInformation.add(RangeHelper.newRange(5, 10, 5, 15));
     relatedInformation.add(RangeHelper.newRange(9, 10, 9, 21));
@@ -87,7 +87,7 @@ public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticT
   private void checkDiagnosticContent(
     Diagnostic diagnostic,
     Range diagnosticRange,
-    List diagnosticRelatedInformation) {
+    List<Range> diagnosticRelatedInformation) {
 
     assertThat(diagnostic.getRange()).isEqualTo(diagnosticRange);
 
