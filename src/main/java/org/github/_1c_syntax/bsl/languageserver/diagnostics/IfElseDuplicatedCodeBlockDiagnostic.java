@@ -29,7 +29,9 @@ import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage = getResourceString("identicalCodeBlockRelatedMessage");
+  private Set checkedBlocks = new HashSet();
 
   @Override
   public DiagnosticSeverity getSeverity() {
@@ -46,13 +49,15 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+    checkedBlocks.clear();
     findDuplicatedCodeBlock(ctx.codeBlock());
     return super.visitIfStatement(ctx);
   }
 
   private void findDuplicatedCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts) {
     for (int i = 0; i < codeBlockContexts.size() - 1; i++) {
-      checkCodeBlock(codeBlockContexts, i);
+      if (!checkedBlocks.contains(codeBlockContexts.get(i)))
+        checkCodeBlock(codeBlockContexts, i);
     }
   }
 
@@ -70,6 +75,9 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
     if (identicalCodeBlocks.isEmpty()) {
       return;
     }
+
+    identicalCodeBlocks.stream()
+      .collect(Collectors.toCollection(() -> checkedBlocks));
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
