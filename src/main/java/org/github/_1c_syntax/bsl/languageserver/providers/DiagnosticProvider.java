@@ -128,13 +128,17 @@ public final class DiagnosticProvider {
     return getDiagnosticName(diagnostic.getClass());
   }
 
-  public static String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) throws IOException {
+  public static String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) {
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(diagnosticCode + ".md");
-    return IOUtils.toString(descriptionStream, StandardCharsets.UTF_8);
+    try {
+      return IOUtils.toString(descriptionStream, StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      return "";
+    }
   }
 
-  public static String getDiagnosticDescription(BSLDiagnostic diagnostic) throws IOException {
+  public static String getDiagnosticDescription(BSLDiagnostic diagnostic) {
     return getDiagnosticDescription(diagnostic.getClass());
   }
 
