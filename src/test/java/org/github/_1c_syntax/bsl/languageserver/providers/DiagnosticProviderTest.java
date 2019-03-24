@@ -25,7 +25,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.MissingResourceException;
 
@@ -98,13 +97,7 @@ class DiagnosticProviderTest {
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
 
     // then
-    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        try {
-          DiagnosticProvider.getDiagnosticDescription(diagnosticClass);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    )).doesNotThrowAnyException();
+    assertThat(diagnosticClasses).allMatch(diagnosticClass ->
+      !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
   }
 }
