@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage = getResourceString("identicalConditionRelatedMessage");
-  private Set checkedConditions = new HashSet();
+  private Set<BSLParser.ExpressionContext> checkedConditions = new HashSet<>();
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {

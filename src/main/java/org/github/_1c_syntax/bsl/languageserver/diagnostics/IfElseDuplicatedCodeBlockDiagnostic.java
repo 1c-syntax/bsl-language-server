@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage = getResourceString("identicalCodeBlockRelatedMessage");
-  private Set checkedBlocks = new HashSet();
+  private Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
@@ -55,8 +55,9 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
   private void findDuplicatedCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts) {
     for (int i = 0; i < codeBlockContexts.size() - 1; i++) {
-      if (!checkedBlocks.contains(codeBlockContexts.get(i)))
+      if (!checkedBlocks.contains(codeBlockContexts.get(i))) {
         checkCodeBlock(codeBlockContexts, i);
+      }
     }
   }
 
