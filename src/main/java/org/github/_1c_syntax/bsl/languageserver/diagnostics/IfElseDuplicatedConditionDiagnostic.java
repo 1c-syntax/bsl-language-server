@@ -49,6 +49,7 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+    checkedConditions.clear();
     findDuplicatedExpression(ctx.expression());
     return super.visitIfStatement(ctx);
   }

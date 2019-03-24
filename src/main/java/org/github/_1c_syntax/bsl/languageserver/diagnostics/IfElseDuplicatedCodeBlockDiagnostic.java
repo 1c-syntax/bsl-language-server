@@ -49,6 +49,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+    checkedBlocks.clear();
     findDuplicatedCodeBlock(ctx.codeBlock());
     return super.visitIfStatement(ctx);
   }
