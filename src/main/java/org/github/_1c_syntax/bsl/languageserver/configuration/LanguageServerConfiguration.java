@@ -28,8 +28,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.slf4j.Logger;
@@ -44,15 +44,15 @@ import java.util.Locale;
 import java.util.Map;
 
 @Data
-@RequiredArgsConstructor
+@AllArgsConstructor
 @JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
 public final class LanguageServerConfiguration {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
   private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
 
-  private final DiagnosticLanguage diagnosticLanguage;
-  private final Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics;
+  private DiagnosticLanguage diagnosticLanguage;
+  private Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics;
 
   private LanguageServerConfiguration() {
     this(DEFAULT_DIAGNOSTIC_LANGUAGE, new HashMap<>());
