@@ -172,7 +172,26 @@ public final class DiagnosticProvider {
     return getDiagnosticParameters(diagnostic.getClass());
   }
 
-  private static Map<String, Object> getDefaultDiagnosticConfiguration(Class<? extends BSLDiagnostic> diagnosticClass) {
+  public static Object getDefaultValue(DiagnosticParameter diagnosticParameter) {
+    return castDiagnosticParameterValue(diagnosticParameter.defaultValue(), diagnosticParameter.type());
+  }
+
+  public static Object castDiagnosticParameterValue(String valueToCast, Class type) {
+    Object value;
+    if (type == Integer.class) {
+      value = Integer.parseInt(valueToCast);
+    } else if (type == Float.class) {
+      value = Float.parseFloat(valueToCast);
+    } else if (type == String.class) {
+      value = valueToCast;
+    } else {
+      throw new IllegalArgumentException("Unsupported diagnostic parameter type " + type);
+    }
+
+    return value;
+  }
+
+  public static Map<String, Object> getDefaultDiagnosticConfiguration(Class<? extends BSLDiagnostic> diagnosticClass) {
     Map<String, DiagnosticParameter> diagnosticParameters = getDiagnosticParameters(diagnosticClass);
     return diagnosticParameters.entrySet().stream()
       .collect(Collectors.toMap(
@@ -193,23 +212,6 @@ public final class DiagnosticProvider {
     } else {
       return org.eclipse.lsp4j.DiagnosticSeverity.Error;
     }
-  }
-
-  public static Object getDefaultValue(DiagnosticParameter diagnosticParameter) {
-    Class type = diagnosticParameter.type();
-    String defaultValue = diagnosticParameter.defaultValue();
-    Object value;
-    if (type == Integer.class) {
-      value = Integer.parseInt(defaultValue);
-    } else if (type == Float.class) {
-      value = Float.parseFloat(defaultValue);
-    } else if (type == String.class) {
-      value = defaultValue;
-    } else {
-      throw new IllegalArgumentException("Unsupported diagnostic parameter type " + type);
-    }
-
-    return value;
   }
 
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
