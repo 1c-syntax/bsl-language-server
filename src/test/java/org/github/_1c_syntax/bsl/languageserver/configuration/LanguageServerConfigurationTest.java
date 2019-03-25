@@ -22,8 +22,6 @@
 package org.github._1c_syntax.bsl.languageserver.configuration;
 
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.LineLengthDiagnosticConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -54,19 +52,19 @@ class LanguageServerConfigurationTest {
 
     // then
     DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
-    Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics = configuration.getDiagnostics();
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
 
     assertThat(diagnosticLanguage).isEqualTo(DiagnosticLanguage.EN);
     assertThat(diagnostics).hasSize(2);
 
-    Either<Boolean, DiagnosticConfiguration> lineLength = diagnostics.get("LineLength");
+    Either<Boolean, Map<String, Object>> lineLength = diagnostics.get("LineLength");
     assertThat(lineLength.isRight()).isTrue();
-    assertThat(lineLength.getRight()).isOfAnyClassIn(LineLengthDiagnosticConfiguration.class);
-    assertThat((LineLengthDiagnosticConfiguration) lineLength.getRight())
-      .extracting(LineLengthDiagnosticConfiguration::getMaxLineLength)
+    assertThat(lineLength.getRight()).isInstanceOfAny(Map.class);
+    assertThat(lineLength.getRight())
+      .extracting(stringObjectMap -> stringObjectMap.get("maxLineLength"))
       .isEqualTo(140);
 
-    Either<Boolean, DiagnosticConfiguration> methodSize = diagnostics.get("MethodSize");
+    Either<Boolean, Map<String, Object>> methodSize = diagnostics.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
     assertThat(methodSize.getLeft()).isEqualTo(false);
 

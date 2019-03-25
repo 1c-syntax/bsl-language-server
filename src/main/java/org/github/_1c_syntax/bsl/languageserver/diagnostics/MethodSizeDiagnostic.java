@@ -23,13 +23,13 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.MethodSizeDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
+import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -47,11 +47,11 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
   private int maxMethodSize = MAX_METHOD_SIZE;
 
   @Override
-  public void configure(DiagnosticConfiguration configuration) {
+  public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    maxMethodSize = ((MethodSizeDiagnosticConfiguration) configuration).getMaxMethodSize();
+    maxMethodSize = (Integer) configuration.get("maxMethodSize");
   }
 
   @Override

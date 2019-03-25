@@ -22,13 +22,13 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.NumberOfParamsDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
+import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -46,11 +46,11 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
   private int maxParamsCount = MAX_PARAMS_COUNT;
 
   @Override
-  public void configure(DiagnosticConfiguration configuration) {
+  public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    maxParamsCount = ((NumberOfParamsDiagnosticConfiguration) configuration).getMaxParamsCount();
+    maxParamsCount = (Integer) configuration.get("maxParamsCount");
   }
 
   @Override

@@ -28,7 +28,6 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
@@ -173,6 +172,20 @@ public final class DiagnosticProvider {
     return getDiagnosticParameters(diagnostic.getClass());
   }
 
+  private static Map<String, Object> getDefaultDiagnosticConfiguration(Class<? extends BSLDiagnostic> diagnosticClass) {
+    Map<String, DiagnosticParameter> diagnosticParameters = getDiagnosticParameters(diagnosticClass);
+    return diagnosticParameters.entrySet().stream()
+      .collect(Collectors.toMap(
+        Map.Entry::getKey,
+        (Map.Entry<String, DiagnosticParameter> entry) -> getDefaultValue(entry.getValue())
+        )
+      );
+  }
+
+  public static Map<String, Object> getDefaultDiagnosticConfiguration(BSLDiagnostic diagnostic) {
+    return getDefaultDiagnosticConfiguration(diagnostic.getClass());
+  }
+
   public static org.eclipse.lsp4j.DiagnosticSeverity getLSPDiagnosticSeverity(BSLDiagnostic diagnostic) {
     DiagnosticMetadata diagnosticMetadata = diagnosticsMetadata.get(diagnostic.getClass());
     if (diagnosticMetadata.type() == DiagnosticType.CODE_SMELL) {
@@ -180,6 +193,23 @@ public final class DiagnosticProvider {
     } else {
       return org.eclipse.lsp4j.DiagnosticSeverity.Error;
     }
+  }
+
+  public static Object getDefaultValue(DiagnosticParameter diagnosticParameter) {
+    Class type = diagnosticParameter.type();
+    String defaultValue = diagnosticParameter.defaultValue();
+    Object value;
+    if (type == Integer.class) {
+      value = Integer.parseInt(defaultValue);
+    } else if (type == Float.class) {
+      value = Float.parseFloat(defaultValue);
+    } else if (type == String.class) {
+      value = defaultValue;
+    } else {
+      throw new IllegalArgumentException("Unsupported diagnostic parameter type " + type);
+    }
+
+    return value;
   }
 
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
@@ -257,7 +287,7 @@ public final class DiagnosticProvider {
       .filter(this::isEnabled)
       .map(DiagnosticProvider::createDiagnosticInstance)
       .peek((BSLDiagnostic diagnostic) -> {
-          Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
+          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
             configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
           if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
             diagnostic.configure(diagnosticConfiguration.getRight());
@@ -280,7 +310,7 @@ public final class DiagnosticProvider {
     if (diagnosticClass == null) {
       return false;
     }
-    Either<Boolean, DiagnosticConfiguration> diagnosticConfiguration =
+    Either<Boolean, Map<String, Object>> diagnosticConfiguration =
       configuration.getDiagnostics().get(getDiagnosticCode(diagnosticClass));
     return diagnosticConfiguration == null
       || diagnosticConfiguration.isRight()

@@ -23,8 +23,6 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.LineLengthDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -54,11 +52,11 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   private int maxLineLength = MAX_LINE_LENGTH;
 
   @Override
-  public void configure(DiagnosticConfiguration configuration) {
+  public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    maxLineLength = ((LineLengthDiagnosticConfiguration) configuration).getMaxLineLength();
+    maxLineLength = (Integer) configuration.get("maxLineLength");
   }
 
   @Override

@@ -22,12 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.LineLengthDiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,7 +51,8 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
   @Test
   void testConfigure() {
     // given
-    DiagnosticConfiguration configuration = new LineLengthDiagnosticConfiguration(119);
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("maxLineLength", 119);
     getDiagnosticInstance().configure(configuration);
 
     // when
