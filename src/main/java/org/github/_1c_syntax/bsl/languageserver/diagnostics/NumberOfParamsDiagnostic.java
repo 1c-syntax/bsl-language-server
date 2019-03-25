@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.NumberOfParamsDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -37,6 +38,11 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_PARAMS_COUNT = 7;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_PARAMS_COUNT,
+    description = "Допустимое количество параметров метода"
+  )
   private int maxParamsCount = MAX_PARAMS_COUNT;
 
   @Override

@@ -45,6 +45,8 @@ dependencies {
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
+    compile("org.reflections", "reflections", "0.9.11")
+
     compile("com.github.1c-syntax", "bsl-parser", "6419ab078b")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)

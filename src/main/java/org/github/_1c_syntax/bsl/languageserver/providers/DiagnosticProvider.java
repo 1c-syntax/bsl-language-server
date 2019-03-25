@@ -51,14 +51,18 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import org.reflections.Reflections;
+import org.reflections.scanners.FieldAnnotationsScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,9 +81,10 @@ public final class DiagnosticProvider {
     = createDiagnosticClasses();
   private static Map<Class<? extends BSLDiagnostic>, DiagnosticMetadata> diagnosticsMetadata
     = createDiagnosticMetadata(diagnosticClasses);
+  private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> diagnosticParameters
+    =  createDiagnosticParameters(diagnosticClasses);
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
-
 
   private final LanguageServerConfiguration configuration;
 
@@ -158,6 +163,16 @@ public final class DiagnosticProvider {
     return getDiagnosticSeverity(diagnostic.getClass());
   }
 
+  public static Map<String, DiagnosticParameter> getDiagnosticParameters(
+    Class<? extends BSLDiagnostic> diagnosticClass
+  ) {
+    return diagnosticParameters.get(diagnosticClass);
+  }
+
+  public static Map<String, DiagnosticParameter> getDiagnosticParameters(BSLDiagnostic diagnostic) {
+    return getDiagnosticParameters(diagnostic.getClass());
+  }
+
   public static org.eclipse.lsp4j.DiagnosticSeverity getLSPDiagnosticSeverity(BSLDiagnostic diagnostic) {
     DiagnosticMetadata diagnosticMetadata = diagnosticsMetadata.get(diagnostic.getClass());
     if (diagnosticMetadata.type() == DiagnosticType.CODE_SMELL) {
@@ -202,6 +217,27 @@ public final class DiagnosticProvider {
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass.getAnnotation(DiagnosticMetadata.class))
       );
+  }
+
+  private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> createDiagnosticParameters(
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses
+  ) {
+
+    return diagnosticClasses.stream()
+      .collect(Collectors.toMap(
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> {
+          Reflections diagnosticReflections = new Reflections(
+            diagnosticClass.getCanonicalName(),
+            new FieldAnnotationsScanner()
+          );
+          return diagnosticReflections.getFieldsAnnotatedWith(DiagnosticParameter.class).stream()
+            .collect(Collectors.toMap(
+              Field::getName,
+              (Field field) -> field.getAnnotation(DiagnosticParameter.class)
+            ));
+        }
+      ));
   }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {

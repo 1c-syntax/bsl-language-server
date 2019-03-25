@@ -27,6 +27,7 @@ import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.LineLengthDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
@@ -45,6 +46,11 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_LINE_LENGTH,
+    description = "Максимальная длина строки в символах"
+  )
   private int maxLineLength = MAX_LINE_LENGTH;
 
   @Override

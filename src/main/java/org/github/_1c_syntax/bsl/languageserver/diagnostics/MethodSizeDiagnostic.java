@@ -26,6 +26,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.MethodSizeDiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -38,6 +39,11 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_METHOD_SIZE = 200;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_METHOD_SIZE,
+    description = "Максимальная длина метода в строках"
+  )
   private int maxMethodSize = MAX_METHOD_SIZE;
 
   @Override
