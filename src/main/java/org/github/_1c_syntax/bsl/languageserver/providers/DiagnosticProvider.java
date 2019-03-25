@@ -180,6 +180,8 @@ public final class DiagnosticProvider {
     Object value;
     if (type == Integer.class) {
       value = Integer.parseInt(valueToCast);
+    } else if (type == Boolean.class) {
+      value = Boolean.parseBoolean(valueToCast);
     } else if (type == Float.class) {
       value = Float.parseFloat(valueToCast);
     } else if (type == String.class) {
