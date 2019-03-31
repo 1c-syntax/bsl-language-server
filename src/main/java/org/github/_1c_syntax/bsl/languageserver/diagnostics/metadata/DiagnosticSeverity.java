@@ -19,11 +19,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import lombok.Value;
-
-@Value
-public class NumberOfOptionalParamsDiagnosticConfiguration implements DiagnosticConfiguration {
-  private final int maxOptionalParamsCount;
+public enum DiagnosticSeverity {
+  INFO,
+  MINOR,
+  MAJOR,
+  CRITICAL,
+  BLOCKER
 }

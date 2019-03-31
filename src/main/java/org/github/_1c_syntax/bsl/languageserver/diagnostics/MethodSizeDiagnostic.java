@@ -23,28 +23,35 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.MethodSizeDiagnosticConfiguration;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.Map;
+
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR
+)
 public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_METHOD_SIZE = 200;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_METHOD_SIZE,
+    description = "Максимальная длина метода в строках"
+  )
   private int maxMethodSize = MAX_METHOD_SIZE;
 
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
-  }
-
-  @Override
-  public void configure(DiagnosticConfiguration configuration) {
+  public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    maxMethodSize = ((MethodSizeDiagnosticConfiguration) configuration).getMaxMethodSize();
+    maxMethodSize = (Integer) configuration.get("maxMethodSize");
   }
 
   @Override

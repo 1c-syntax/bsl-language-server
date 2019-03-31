@@ -23,7 +23,8 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -37,15 +38,13 @@ import java.util.stream.Collectors;
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
  */
+@DiagnosticMetadata(
+  severity = DiagnosticSeverity.MINOR
+)
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage = getResourceString("identicalCodeBlockRelatedMessage");
-  private Set checkedBlocks = new HashSet();
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
+  private Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
@@ -56,8 +55,9 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
   private void findDuplicatedCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts) {
     for (int i = 0; i < codeBlockContexts.size() - 1; i++) {
-      if (!checkedBlocks.contains(codeBlockContexts.get(i)))
+      if (!checkedBlocks.contains(codeBlockContexts.get(i))) {
         checkCodeBlock(codeBlockContexts, i);
+      }
     }
   }
 

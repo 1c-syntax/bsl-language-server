@@ -19,11 +19,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import lombok.Value;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Value
-public class NumberOfParamsDiagnosticConfiguration implements DiagnosticConfiguration {
-  private final int maxParamsCount;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface DiagnosticMetadata {
+  DiagnosticType type() default DiagnosticType.ERROR;
+  DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
 }

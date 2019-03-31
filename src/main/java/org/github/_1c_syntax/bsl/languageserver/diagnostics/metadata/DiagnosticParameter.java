@@ -19,7 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-public interface DiagnosticConfiguration {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface DiagnosticParameter {
+  Class type();
+  String defaultValue() default "";
+  String description() default "";
 }

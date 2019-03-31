@@ -21,26 +21,83 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
-import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.MissingResourceException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class DiagnosticProviderTest {
-
-
 
   @Test
   void configureNullDryRun() {
     // given
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(LanguageServerConfiguration.create());
-    List<BSLDiagnostic> diagnosticClasses = diagnosticProvider.getDiagnosticClasses();
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
+    List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
 
     // when
-    diagnosticClasses.forEach(diagnostic -> diagnostic.configure(null));
+    diagnosticInstances.forEach(diagnostic -> diagnostic.configure(null));
 
     // then
     // should run without runtime errors
+  }
+
+  @Test
+  void testAllDiagnosticsHaveMetadataAnnotation() {
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThat(diagnosticClasses)
+      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
+        diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class)
+      );
+  }
+
+  @Test
+  void testAddDiagnosticsHaveDiagnosticName() {
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
+        try {
+          DiagnosticProvider.getDiagnosticName(diagnosticClass);
+        } catch (MissingResourceException e) {
+          throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have diagnosticName", e);
+        }
+      }
+    )).doesNotThrowAnyException();
+  }
+
+  @Test
+  void testAllDiagnosticsHaveDiagnosticMessage() {
+    // when
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
+    List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
+
+    // then
+    assertThatCode(() -> diagnosticInstances.forEach(diagnostic -> {
+        try {
+          diagnostic.getDiagnosticMessage();
+        } catch (MissingResourceException e) {
+          throw new RuntimeException(diagnostic.getClass().getSimpleName() + " does not have diagnosticMessage", e);
+        }
+      }
+    )).doesNotThrowAnyException();
+  }
+
+  @Test
+  void testAllDiagnosticsHaveDescriptionResource() {
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThat(diagnosticClasses).allMatch(diagnosticClass ->
+      !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
   }
 }

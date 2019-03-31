@@ -22,16 +22,16 @@
 package org.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,15 +44,15 @@ import java.util.Locale;
 import java.util.Map;
 
 @Data
-@RequiredArgsConstructor
+@AllArgsConstructor
 @JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
 public final class LanguageServerConfiguration {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
   private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
 
-  private final DiagnosticLanguage diagnosticLanguage;
-  private final Map<String, Either<Boolean, DiagnosticConfiguration>> diagnostics;
+  private DiagnosticLanguage diagnosticLanguage;
+  private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
 
   private LanguageServerConfiguration() {
     this(DEFAULT_DIAGNOSTIC_LANGUAGE, new HashMap<>());
@@ -86,7 +86,7 @@ public final class LanguageServerConfiguration {
       JsonNode node = jp.getCodec().readTree(jp);
 
       DiagnosticLanguage diagnosticLanguage = getDiagnosticLanguage(node);
-      Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = getDiagnostics(node);
+      Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
 
       return new LanguageServerConfiguration(
         diagnosticLanguage,
@@ -94,7 +94,7 @@ public final class LanguageServerConfiguration {
       );
     }
 
-    private static Map<String, Either<Boolean, DiagnosticConfiguration>> getDiagnostics(JsonNode node) {
+    private static Map<String, Either<Boolean, Map<String, Object>>> getDiagnostics(JsonNode node) {
       JsonNode diagnostics = node.get("diagnostics");
 
       if (diagnostics == null) {
@@ -102,7 +102,7 @@ public final class LanguageServerConfiguration {
       }
 
       ObjectMapper mapper = new ObjectMapper();
-      Map<String, Either<Boolean, DiagnosticConfiguration>> diagnosticsMap = new HashMap<>();
+      Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = new HashMap<>();
 
       Iterator<Map.Entry<String, JsonNode>> diagnosticsNodes = diagnostics.fields();
       diagnosticsNodes.forEachRemaining((Map.Entry<String, JsonNode> entry) -> {
@@ -110,50 +110,25 @@ public final class LanguageServerConfiguration {
         if (diagnosticConfig.isBoolean()) {
           diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
         } else {
-          Class<? extends DiagnosticConfiguration> diagnosticClass = getDiagnosticClass(entry);
-          if (diagnosticClass == null) {
-            return;
-          }
-          DiagnosticConfiguration diagnosticConfiguration = getDiagnosticConfiguration(
-            mapper,
-            diagnosticConfig,
-            diagnosticClass
-          );
-          if (diagnosticConfiguration == null) {
-            return;
-          }
+          Map<String, Object> diagnosticConfiguration = getDiagnosticConfiguration(mapper, entry.getValue());
+
           diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
         }
       });
 
-
       return diagnosticsMap;
     }
 
-    private static Class<? extends DiagnosticConfiguration> getDiagnosticClass(Map.Entry<String, JsonNode> entry) {
-      Class<? extends DiagnosticConfiguration> diagnosticClass;
-      try {
-        diagnosticClass = Class.forName(
-          "org.github._1c_syntax.bsl.languageserver.configuration.diagnostics."
-            + entry.getKey()
-            + "DiagnosticConfiguration"
-        ).asSubclass(DiagnosticConfiguration.class);
-      } catch (ClassNotFoundException e) {
-        LOGGER.error("Can't find corresponding diagnostic configuration class", e);
-        return null;
-      }
-      return diagnosticClass;
-    }
-
-    private static DiagnosticConfiguration getDiagnosticConfiguration(
+    private static Map<String, Object> getDiagnosticConfiguration(
       ObjectMapper mapper,
-      JsonNode diagnosticConfig,
-      Class<? extends DiagnosticConfiguration> diagnosticClass
+      JsonNode diagnosticConfig
     ) {
-      DiagnosticConfiguration diagnosticConfiguration;
+      Map<String, Object> diagnosticConfiguration;
       try {
-        diagnosticConfiguration = mapper.treeToValue(diagnosticConfig, diagnosticClass);
-      } catch (JsonProcessingException e) {
+        JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {
+        });
+        diagnosticConfiguration = mapper.readValue(mapper.treeAsTokens(diagnosticConfig), type);
+      } catch (IOException e) {
         LOGGER.error("Can't deserialize diagnostic configuration", e);
         return null;
       }

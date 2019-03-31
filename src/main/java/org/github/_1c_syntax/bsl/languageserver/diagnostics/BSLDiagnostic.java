@@ -23,9 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
-import org.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
@@ -34,21 +32,10 @@ import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public interface BSLDiagnostic {
-
-  default DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
-
-  default String getCode() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith("Diagnostic")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
-    }
-    return simpleName;
-  }
 
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
@@ -60,7 +47,7 @@ public interface BSLDiagnostic {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
   }
 
-  default void configure(DiagnosticConfiguration configuration) {}
+  default void configure(Map<String, Object> configuration) {}
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
     return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
@@ -117,9 +104,9 @@ public interface BSLDiagnostic {
     Diagnostic diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
-      bslDiagnostic.getSeverity(),
+      DiagnosticProvider.getLSPDiagnosticSeverity(bslDiagnostic),
       DiagnosticProvider.SOURCE,
-      bslDiagnostic.getCode()
+      DiagnosticProvider.getDiagnosticCode(bslDiagnostic)
     );
 
     if (relatedInformation != null) {

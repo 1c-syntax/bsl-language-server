@@ -23,8 +23,10 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
@@ -33,12 +35,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.INFO
+)
 public class YoLetterUsageDiagnostic implements BSLDiagnostic {
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Hint;
-  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
