@@ -49,7 +49,6 @@ public class GenericIssueReport {
   private static final String SEVERITY_CRITICAL = "CRITICAL";
   private static final String SEVERITY_MAJOR = "MAJOR";
   private static final String SEVERITY_MINOR = "MINOR";
-  private static final DiagnosticProvider dProvider = new DiagnosticProvider();
 
 
   @Getter
@@ -131,7 +130,7 @@ public class GenericIssueReport {
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);
-      effortMinutes = Integer.parseInt(dProvider.getTimeToFixForDiagnosticName(diagnostic.getCode()));
+      effortMinutes = DiagnosticProvider.getTimeToFixForDiagnosticName(diagnostic.getCode());
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {
