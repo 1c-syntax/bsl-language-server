@@ -36,7 +36,6 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -130,7 +129,7 @@ public class GenericIssueReport {
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);
-      effortMinutes = DiagnosticProvider.getTimeToFixForDiagnosticName(diagnostic.getCode());
+      effortMinutes = DiagnosticProvider.getMinutesToFixForDiagnosticName(diagnostic.getCode());
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {

@@ -86,7 +86,7 @@ public final class DiagnosticProvider {
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
 
-  private static HashMap<String, Integer> mapTimeToFixForClasses = createMapTimeToFixForClasses(diagnosticClasses);
+  private static Map<String, Integer> mapMinutesToFixForClasses = createMapMinutesToFixForClasses(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
 
@@ -256,20 +256,20 @@ public final class DiagnosticProvider {
       );
   }
 
-  private static HashMap<String, Integer> createMapTimeToFixForClasses(List<Class<? extends BSLDiagnostic>> diagnosticClasses)
+  private static Map<String, Integer> createMapMinutesToFixForClasses(List<Class<? extends BSLDiagnostic>> diagnosticClasses)
   {
-    HashMap<String, Integer> tmpMap = new HashMap<>();
-    for (Class<? extends BSLDiagnostic> element : diagnosticClasses)
-    {
-      tmpMap.put(getDiagnosticCode(element), element.getAnnotation(DiagnosticMetadata.class).timeToFix());
-    }
-    return tmpMap;
+
+    return diagnosticClasses.stream()
+      .collect(Collectors.toMap(
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> getDiagnosticCode(diagnosticClass),
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass.getAnnotation(DiagnosticMetadata.class).minutesToFix()
+      ));
   }
 
-  public static Integer getTimeToFixForDiagnosticName(String diagnosticName)
+  public static Integer getMinutesToFixForDiagnosticName(String diagnosticName)
   {
-    Integer timeToFix = mapTimeToFixForClasses.get(diagnosticName);
-    return timeToFix == null ? 0 : timeToFix;
+    Integer time = mapMinutesToFixForClasses.get(diagnosticName);
+    return time == null ? 0 : time;
   }
 
 

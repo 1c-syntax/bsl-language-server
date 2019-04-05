@@ -31,5 +31,5 @@ import java.lang.annotation.Target;
 public @interface DiagnosticMetadata {
   DiagnosticType type() default DiagnosticType.ERROR;
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
-  int ToFix() default 0;
+  int minutesToFix() default 0;
 }
