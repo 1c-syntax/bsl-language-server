@@ -66,6 +66,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -84,6 +85,8 @@ public final class DiagnosticProvider {
     =  createDiagnosticParameters(diagnosticClasses);
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
+
+  private static HashMap<String, String> mapTimeToFixForClasses = createMapTimeToFixForClasses(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
 
@@ -252,6 +255,23 @@ public final class DiagnosticProvider {
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass.getAnnotation(DiagnosticMetadata.class))
       );
   }
+
+  private static HashMap<String, String> createMapTimeToFixForClasses(List<Class<? extends BSLDiagnostic>> diagnosticClasses)
+  {
+    HashMap<String, String> tmpMap = new HashMap<>();
+    for (Class<? extends BSLDiagnostic> element : diagnosticClasses)
+    {
+      tmpMap.put(getDiagnosticCode(element), element.getAnnotation(DiagnosticMetadata.class).timeToFix());
+    }
+    return tmpMap;
+  }
+
+  public String getTimeToFixForDiagnosticName(String diagnosticName)
+  {
+    String timeToFix = mapTimeToFixForClasses.get(diagnosticName);
+    return timeToFix == null ? "0" : timeToFix;
+  }
+
 
   private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> createDiagnosticParameters(
     List<Class<? extends BSLDiagnostic>> diagnosticClasses

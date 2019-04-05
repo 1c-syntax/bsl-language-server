@@ -30,11 +30,13 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +49,7 @@ public class GenericIssueReport {
   private static final String SEVERITY_CRITICAL = "CRITICAL";
   private static final String SEVERITY_MAJOR = "MAJOR";
   private static final String SEVERITY_MINOR = "MINOR";
+  private static final DiagnosticProvider dProvider = new DiagnosticProvider();
 
 
   @Getter
@@ -128,7 +131,7 @@ public class GenericIssueReport {
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);
-      effortMinutes = 0;
+      effortMinutes = Integer.parseInt(dProvider.getTimeToFixForDiagnosticName(diagnostic.getCode()));
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {
