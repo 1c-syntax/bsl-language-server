@@ -33,8 +33,7 @@ import java.util.Collection;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 10
+  severity = DiagnosticSeverity.MAJOR
 )
 public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
 
