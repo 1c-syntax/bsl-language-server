@@ -82,11 +82,22 @@ public final class DiagnosticProvider {
   private static Map<Class<? extends BSLDiagnostic>, DiagnosticMetadata> diagnosticsMetadata
     = createDiagnosticMetadata(diagnosticClasses);
   private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> diagnosticParameters
-    =  createDiagnosticParameters(diagnosticClasses);
+    = createDiagnosticParameters(diagnosticClasses);
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
+  private static Map<String, Class<? extends BSLDiagnostic>> diagnosticsCodes
+    = createDiagnosticsCodes(diagnosticClasses);
 
-  private static Map<String, Integer> mapMinutesToFixForClasses = createMapMinutesToFixForClasses(diagnosticClasses);
+  private static Map<String, Class<? extends BSLDiagnostic>> createDiagnosticsCodes(
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses
+  ) {
+    return diagnosticClasses.stream().collect(
+      Collectors.toMap(
+        DiagnosticProvider::getDiagnosticCode,
+        diagnosticClass -> diagnosticClass
+      )
+    );
+  }
 
   private final LanguageServerConfiguration configuration;
 
@@ -165,6 +176,20 @@ public final class DiagnosticProvider {
     return getDiagnosticSeverity(diagnostic.getClass());
   }
 
+  public static int getMinutesToFix(Class<? extends BSLDiagnostic> diagnosticClass) {
+    DiagnosticMetadata diagnosticMetadata = diagnosticsMetadata.get(diagnosticClass);
+    return diagnosticMetadata == null ? 0 : diagnosticMetadata.minutesToFix();
+  }
+
+  public static int getMinutesToFix(BSLDiagnostic diagnostic) {
+    return getMinutesToFix(diagnostic.getClass());
+  }
+
+  public static int getMinutesToFix(Diagnostic diagnostic) {
+    Class<? extends BSLDiagnostic> diagnosticClass = getBSLDiagnosticClass(diagnostic);
+    return getMinutesToFix(diagnosticClass);
+  }
+
   public static Map<String, DiagnosticParameter> getDiagnosticParameters(
     Class<? extends BSLDiagnostic> diagnosticClass
   ) {
@@ -208,6 +233,10 @@ public final class DiagnosticProvider {
 
   public static Map<String, Object> getDefaultDiagnosticConfiguration(BSLDiagnostic diagnostic) {
     return getDefaultDiagnosticConfiguration(diagnostic.getClass());
+  }
+
+  public static Class<? extends BSLDiagnostic> getBSLDiagnosticClass(Diagnostic diagnostic) {
+    return diagnosticsCodes.get(diagnostic.getCode());
   }
 
   public static org.eclipse.lsp4j.DiagnosticSeverity getLSPDiagnosticSeverity(BSLDiagnostic diagnostic) {
@@ -255,23 +284,6 @@ public final class DiagnosticProvider {
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass.getAnnotation(DiagnosticMetadata.class))
       );
   }
-
-  private static Map<String, Integer> createMapMinutesToFixForClasses(List<Class<? extends BSLDiagnostic>> diagnosticClasses)
-  {
-
-    return diagnosticClasses.stream()
-      .collect(Collectors.toMap(
-        (Class<? extends BSLDiagnostic> diagnosticClass) -> getDiagnosticCode(diagnosticClass),
-        (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass.getAnnotation(DiagnosticMetadata.class).minutesToFix()
-      ));
-  }
-
-  public static Integer getMinutesToFixForDiagnosticName(String diagnosticName)
-  {
-    Integer time = mapMinutesToFixForClasses.get(diagnosticName);
-    return time == null ? 0 : time;
-  }
-
 
   private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> createDiagnosticParameters(
     List<Class<? extends BSLDiagnostic>> diagnosticClasses

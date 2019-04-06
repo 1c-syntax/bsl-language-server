@@ -129,7 +129,7 @@ public class GenericIssueReport {
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);
-      effortMinutes = DiagnosticProvider.getMinutesToFixForDiagnosticName(diagnostic.getCode());
+      effortMinutes = DiagnosticProvider.getMinutesToFix(diagnostic);
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {
