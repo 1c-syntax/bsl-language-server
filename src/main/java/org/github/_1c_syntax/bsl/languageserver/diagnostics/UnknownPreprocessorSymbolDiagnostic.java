@@ -27,7 +27,8 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
-  severity = DiagnosticSeverity.CRITICAL
+  severity = DiagnosticSeverity.CRITICAL,
+  minutesToFix = 5
 )
 public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnostic {
 

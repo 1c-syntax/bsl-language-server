@@ -38,7 +38,8 @@ import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO
+  severity = DiagnosticSeverity.INFO,
+  minutesToFix = 5
 )
 public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
 

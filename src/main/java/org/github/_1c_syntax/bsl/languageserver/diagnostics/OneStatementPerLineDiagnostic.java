@@ -29,7 +29,8 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 5
 )
 public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
   private int previousLineNumber;
