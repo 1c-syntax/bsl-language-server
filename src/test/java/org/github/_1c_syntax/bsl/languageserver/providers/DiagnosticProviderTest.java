@@ -93,11 +93,24 @@ class DiagnosticProviderTest {
 
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
+
     // when
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
 
     // then
-    assertThat(diagnosticClasses).allMatch(diagnosticClass ->
-      !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
+    assertThat(diagnosticClasses).allMatch(diagnosticClass -> !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
+
+  }
+
+  @Test
+  void testAllDiagnosticsHaveMinutesToFix()
+  {
+
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThat(diagnosticClasses).allMatch(diagnosticClass -> DiagnosticProvider.getMinutesToFix(diagnosticClass) != 0);
+
   }
 }

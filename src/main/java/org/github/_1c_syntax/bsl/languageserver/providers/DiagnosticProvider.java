@@ -149,6 +149,12 @@ public final class DiagnosticProvider {
   public static String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) {
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(diagnosticCode + ".md");
+
+    if (descriptionStream == null)
+    {
+      return "";
+    }
+
     try {
       return IOUtils.toString(descriptionStream, StandardCharsets.UTF_8);
     } catch (IOException e) {
