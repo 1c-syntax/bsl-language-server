@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -40,7 +41,11 @@ public class ProcedureReturnsValueDiagnosticTest extends AbstractDiagnosticTest<
   {
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
+
     // then
     assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 17));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 8, 16, 38));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(28, 12, 28, 31));
   }
 }

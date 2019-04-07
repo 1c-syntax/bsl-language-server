@@ -266,12 +266,12 @@ public final class DiagnosticProvider {
       NumberOfParamsDiagnostic.class,
       OneStatementPerLineDiagnostic.class,
       OrderOfParamsDiagnostic.class,
+      ProcedureReturnsValueDiagnostic.class,
       SelfAssignDiagnostic.class,
       SemicolonPresenceDiagnostic.class,
       UnknownPreprocessorSymbolDiagnostic.class,
       UsingCancelParameterDiagnostic.class,
-      YoLetterUsageDiagnostic.class,
-      ProcedureReturnsValueDiagnostic.class
+      YoLetterUsageDiagnostic.class
     );
 
   }

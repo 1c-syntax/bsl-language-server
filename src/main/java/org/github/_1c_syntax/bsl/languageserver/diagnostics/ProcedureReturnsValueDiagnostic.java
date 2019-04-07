@@ -33,7 +33,7 @@ import java.util.Collection;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.MAJOR,
+  severity = DiagnosticSeverity.BLOCKER,
   minutesToFix = 5
 )
 public class ProcedureReturnsValueDiagnostic extends AbstractVisitorDiagnostic {
