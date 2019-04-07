@@ -26,7 +26,6 @@ import org.antlr.v4.runtime.tree.Trees;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.Collection;
@@ -40,26 +39,14 @@ public class ProcedureReturnsValueDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-
-    Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement);
-    statements.forEach(thisStatement -> localVisitStatement((BSLParser.StatementContext) thisStatement));
-    return ctx;
-
-  }
-
-  public ParseTree localVisitStatement(BSLParser.StatementContext ctx) {
-
-    if (ctx.preprocessor()!= null || (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null)){
-      return super.visitStatement(ctx);
-    }
-
-    if (ctx.getStart().getType() == BSLLexer.RETURN_KEYWORD && ctx.getTokens().size() > 1)
+    Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
+    for (ParseTree thisStatement : statements)
     {
-      addDiagnostic(ctx);
+      if (thisStatement.getChildCount() > 1){
+        addDiagnostic((BSLParser.ReturnStatementContext) thisStatement);
+      }
     }
-
-    return super.visitStatement(ctx);
-
+    return ctx;
   }
 
 }

@@ -44,8 +44,8 @@ public class ProcedureReturnsValueDiagnosticTest extends AbstractDiagnosticTest<
 
     // then
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 17));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 8, 16, 38));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(28, 12, 28, 31));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 16));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 8, 16, 37));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(28, 12, 28, 30));
   }
 }
