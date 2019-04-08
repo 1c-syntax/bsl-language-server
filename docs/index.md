@@ -133,6 +133,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
+* [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)

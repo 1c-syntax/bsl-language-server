@@ -44,6 +44,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalPara
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.OneStatementPerLineDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.OrderOfParamsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValueDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
@@ -265,6 +266,7 @@ public final class DiagnosticProvider {
       NumberOfParamsDiagnostic.class,
       OneStatementPerLineDiagnostic.class,
       OrderOfParamsDiagnostic.class,
+      ProcedureReturnsValueDiagnostic.class,
       SelfAssignDiagnostic.class,
       SemicolonPresenceDiagnostic.class,
       UnknownPreprocessorSymbolDiagnostic.class,
