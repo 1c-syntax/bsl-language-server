@@ -34,7 +34,7 @@ import java.util.Map;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 60
+  minutesToFix = 30
 )
 public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 

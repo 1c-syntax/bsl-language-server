@@ -33,7 +33,7 @@ import java.util.Collection;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 10
+  minutesToFix = 5
 )
 public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
 
