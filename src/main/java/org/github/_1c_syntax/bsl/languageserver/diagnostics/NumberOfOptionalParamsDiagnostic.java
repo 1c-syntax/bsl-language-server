@@ -32,7 +32,8 @@ import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 30
 )
 public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic {
 

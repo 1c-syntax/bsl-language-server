@@ -30,7 +30,8 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10
 )
 public class IfElseIfEndsWithElseDiagnostic extends AbstractVisitorDiagnostic {
 

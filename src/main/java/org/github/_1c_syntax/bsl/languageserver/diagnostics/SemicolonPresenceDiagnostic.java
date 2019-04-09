@@ -29,7 +29,8 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 1
 )
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
 

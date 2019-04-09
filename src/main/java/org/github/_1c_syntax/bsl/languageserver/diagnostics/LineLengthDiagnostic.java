@@ -38,7 +38,8 @@ import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 1
 )
 public class LineLengthDiagnostic implements BSLDiagnostic {
 

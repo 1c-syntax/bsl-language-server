@@ -35,7 +35,8 @@ import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 5
 )
 public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 

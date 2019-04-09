@@ -39,7 +39,8 @@ import java.util.stream.Collectors;
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
  */
 @DiagnosticMetadata(
-  severity = DiagnosticSeverity.MAJOR
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10
 )
 public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnostic {
 

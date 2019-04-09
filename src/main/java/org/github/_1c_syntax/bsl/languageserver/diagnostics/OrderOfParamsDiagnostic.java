@@ -29,7 +29,8 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 30
 )
 public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 

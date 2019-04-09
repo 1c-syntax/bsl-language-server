@@ -34,7 +34,9 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@DiagnosticMetadata
+@DiagnosticMetadata(
+  minutesToFix = 10
+)
 public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern cancelPattern = Pattern.compile("отказ|cancel");

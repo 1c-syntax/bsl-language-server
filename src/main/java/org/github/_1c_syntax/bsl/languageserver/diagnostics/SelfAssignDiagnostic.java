@@ -32,7 +32,8 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.MAJOR
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10
 )
 public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
