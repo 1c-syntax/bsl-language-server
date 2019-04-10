@@ -1,6 +1,6 @@
 # Canonical Keyword Writing
 
-В конструкциях встроенного языка ключевые слова пишутся канонически.
+A built-in language constructs, keywords must be writte canonically.
 
 **Keywords**
 
@@ -51,7 +51,7 @@ RU | EN
 И | AND, And
 ИЛИ, Или | OR, Or
 Иначе | Else
-ИначеЕсли | ElsIf
+ИначеЕсли | ИначеЕсли
 КонецЕсли | EndIf
 КонецОбласти | EndRegion
 Клиент | Client
@@ -78,4 +78,4 @@ RU | EN
 НаКлиентеНаСервереБезКонтекста | AtClientAtServerNoContext
 НаКлиентеНаСервере | AtClientAtServer
 
-Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std/content/2149184090/hdoc)
+Источник: [Standart: Modules texts(RU)](https://its.1c.ru/db/v8std/content/2149184090/hdoc)
