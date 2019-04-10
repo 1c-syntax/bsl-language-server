@@ -2,11 +2,11 @@
 
 Reporter option - `console`
 
-## Описание
+## Description
 
 Output the analize result in stdout and/or attached logger. Output result, returned `toString()` method of object [AnalysisInfo](https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/reporter/AnalysisInfo.java)
 
-## Пример вывода
+## Sample output
 
 ```
 Analysis date: 2019-01-28T15:32:06.856
