@@ -69,13 +69,13 @@ public class BSLLSPLauncher {
   public static Options createOptions() {
     Options createdOptions = new Options();
 
-    Option diagnosticLanguageOption = new Option(
-      "d",
-      "diagnosticLanguage",
+    Option configurationOption = new Option(
+      "c",
+      "configuration",
       true,
-      "Language of diagnostic messages. Possible values: en, ru. Default is en."
+      "Path to language server configuration file"
     );
-    diagnosticLanguageOption.setRequired(false);
+    configurationOption.setRequired(false);
 
     Option help = new Option(
       "h",
@@ -117,7 +117,7 @@ public class BSLLSPLauncher {
     createdOptions.addOption(outputDir);
     createdOptions.addOption(reporter);
 
-    createdOptions.addOption(diagnosticLanguageOption);
+    createdOptions.addOption(configurationOption);
     createdOptions.addOption(help);
 
     return createdOptions;

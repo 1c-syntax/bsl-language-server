@@ -1,4 +1,3 @@
-
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.net.URI
 import java.util.*
@@ -31,6 +30,8 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-io/commons-io
     compile("commons-io", "commons-io", "2.6")
     compile("org.apache.commons", "commons-lang3", "3.8.1")
+    // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
+    compile("commons-beanutils", "commons-beanutils", "1.9.3")
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.8")
     compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.8")
@@ -44,7 +45,11 @@ dependencies {
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    compile("com.github.1c-syntax", "bsl-parser", "0.7.1")
+    compile("org.reflections", "reflections", "0.9.11")
+
+    compile("com.github.1c-syntax", "bsl-parser", "6419ab078b")
+
+    compileOnly("org.projectlombok", "lombok", lombok.version)
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.4.0")
     testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.4.0")
@@ -52,6 +57,11 @@ dependencies {
     testCompile("org.assertj", "assertj-core", "3.12.0")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.withType<JavaCompile> {
@@ -94,6 +104,9 @@ tasks.jacocoTestReport {
 
 tasks.processResources {
     filteringCharset = "UTF-8"
+    from("docs/diagnostics") {
+        into("org/github/_1c_syntax/bsl/languageserver/diagnostics")
+    }
 }
 
 // native2ascii gradle replacement

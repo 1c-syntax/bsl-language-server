@@ -22,33 +22,79 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Locale;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
  */
+@DiagnosticMetadata(
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10
+)
 public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnostic {
 
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
+  private final String relatedMessage = getResourceString("identicalConditionRelatedMessage");
+  private Set<BSLParser.ExpressionContext> checkedConditions = new HashSet<>();
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-
-    Set<String> set = new HashSet<>();
-
-    ctx.expression().stream()
-      .filter(expression -> !set.add(expression.getText().toLowerCase(Locale.ENGLISH)))
-      .forEach(this::addDiagnostic);
-
+    checkedConditions.clear();
+    findDuplicatedExpression(ctx.expression());
     return super.visitIfStatement(ctx);
+  }
+
+  private void findDuplicatedExpression(List<BSLParser.ExpressionContext> expressionContexts) {
+    for (int i = 0; i < expressionContexts.size() - 1; i++) {
+      if (!checkedConditions.contains(expressionContexts.get(i)))
+        checkExpression(expressionContexts, i);
+    }
+  }
+
+  private void checkExpression(List<BSLParser.ExpressionContext> expressionContexts, int i) {
+    BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
+
+    List<BSLParser.ExpressionContext> identicalExpressions = expressionContexts.stream()
+      .skip((long) i)
+      .filter(expressionContext ->
+        !expressionContext.equals(currentExpression)
+          && DiagnosticHelper.equalNodes(currentExpression, expressionContext))
+      .collect(Collectors.toList());
+
+    if (identicalExpressions.isEmpty()) {
+      return;
+    }
+
+    identicalExpressions.stream()
+      .collect(Collectors.toCollection(() -> checkedConditions));
+
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+    relatedInformation.add(this.createRelatedInformation(
+      RangeHelper.newRange(currentExpression),
+      relatedMessage
+    ));
+
+    identicalExpressions.stream()
+      .map(expressionContext ->
+        this.createRelatedInformation(
+          RangeHelper.newRange(expressionContext),
+          relatedMessage
+        )
+      )
+      .collect(Collectors.toCollection(() -> relatedInformation));
+
+    addDiagnostic(currentExpression, relatedInformation);
   }
 
 }

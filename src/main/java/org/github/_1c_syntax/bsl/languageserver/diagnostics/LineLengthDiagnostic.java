@@ -23,9 +23,12 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,19 +36,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 1
+)
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_LINE_LENGTH,
+    description = "Максимальная длина строки в символах"
+  )
+  private int maxLineLength = MAX_LINE_LENGTH;
+
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxLineLength = (Integer) configuration.get("maxLineLength");
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> tokens = fileTree.getTokens();
+    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
@@ -62,7 +80,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
       Integer maxCharPosition = max.orElse(0);
-      if (maxCharPosition > MAX_LINE_LENGTH) {
+      if (maxCharPosition > maxLineLength) {
         diagnostics.add(BSLDiagnostic.createDiagnostic(this, key, 0, key, maxCharPosition));
       }
     });

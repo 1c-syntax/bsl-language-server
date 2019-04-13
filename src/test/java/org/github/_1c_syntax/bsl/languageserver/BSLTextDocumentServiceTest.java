@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -39,7 +40,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 class BSLTextDocumentServiceTest {
 
-  private BSLTextDocumentService textDocumentService = new BSLTextDocumentService();
+  private BSLTextDocumentService textDocumentService = new BSLTextDocumentService(LanguageServerConfiguration.create());
 
   @Test
   void completion() throws ExecutionException, InterruptedException {

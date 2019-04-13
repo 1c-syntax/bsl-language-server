@@ -37,8 +37,7 @@ public class JUnitReporter extends AbstractDiagnosticReporter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(JUnitReporter.class.getSimpleName());
 
-  public JUnitReporter()
-  {
+  public JUnitReporter() {
     super();
   }
 

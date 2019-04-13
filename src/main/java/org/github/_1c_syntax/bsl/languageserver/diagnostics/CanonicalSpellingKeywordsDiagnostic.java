@@ -23,7 +23,10 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
@@ -33,20 +36,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.INFO,
+  minutesToFix = 1
+)
 public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
 
-  private static  Map<Integer, List<String>> canonicalKeywords = getPreset();
+  private static Map<Integer, List<String>> canonicalKeywords = getPreset();
 
   private static Map<Integer, List<String>> getPreset() {
     // Здесь возможно будет получить набор канонических слов из параметров.
     // Если входных параметров не задано, то используются значения по умолчанию.
-    Map<Integer, List<String>> result = new HashMap<>();
-    if (true)
-      result = getDefaultPreset();
-    return result;
+    return getDefaultPreset();
   }
 
-  private static Map<Integer, List<String>> getDefaultPreset(){
+  private static Map<Integer, List<String>> getDefaultPreset() {
 
     Map<Integer, List<String>> result = new HashMap<>();
 
@@ -450,27 +455,22 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
   }
 
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
-  }
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-  @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
-
-    List<Token> keywords = fileTree.getTokens()
+    List<Token> keywords = documentContext.getTokensFromDefaultChannel()
       .parallelStream()
       .filter((Token t) ->
         canonicalKeywords.get(t.getType()) != null &&
-          canonicalKeywords.get(t.getType()).contains(t.getText()) == false)
+          !canonicalKeywords.get(t.getType()).contains(t.getText()))
       .collect(Collectors.toList());
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
     for (Token token : keywords) {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
-          RangeHelper.newRange(token),
-          getDiagnosticMessage(token)));
+      diagnostics.add(BSLDiagnostic.createDiagnostic(
+        this,
+        RangeHelper.newRange(token),
+        getDiagnosticMessage(token)));
     }
 
     return diagnostics;

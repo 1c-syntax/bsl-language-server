@@ -25,15 +25,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GenericIssueReport {
 
@@ -94,16 +99,18 @@ public class GenericIssueReport {
     private final String ruleId;
     private final String severity;
     private final String type;
-    private final PrimaryLocation primaryLocation;
+    private final Location primaryLocation;
     private final int effortMinutes;
+    private final List<Location> secondaryLocations;
 
     public GenericIssueEntry(
       @JsonProperty("engineId") String engineId,
       @JsonProperty("ruleId") String ruleId,
       @JsonProperty("severity") String severity,
       @JsonProperty("type") String type,
-      @JsonProperty("primaryLocation") PrimaryLocation primaryLocation,
-      @JsonProperty("effortMinutes") int effortMinutes
+      @JsonProperty("primaryLocation") Location primaryLocation,
+      @JsonProperty("effortMinutes") int effortMinutes,
+      @JsonProperty("secondaryLocations") List<Location> secondaryLocations
     ) {
       this.engineId = engineId;
       this.ruleId = ruleId;
@@ -111,6 +118,7 @@ public class GenericIssueReport {
       this.type = type;
       this.primaryLocation = primaryLocation;
       this.effortMinutes = effortMinutes;
+      this.secondaryLocations = new ArrayList<>(secondaryLocations);
     }
 
     public GenericIssueEntry(String fileName, Diagnostic diagnostic) {
@@ -120,20 +128,28 @@ public class GenericIssueReport {
       ruleId = diagnostic.getCode();
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
-      primaryLocation = new PrimaryLocation(fileName, diagnostic);
-      effortMinutes = 0;
+      primaryLocation = new Location(fileName, diagnostic);
+      effortMinutes = DiagnosticProvider.getMinutesToFix(diagnostic);
 
+      List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
+      if (relatedInformation == null) {
+        secondaryLocations = new ArrayList<>();
+      } else {
+        secondaryLocations = relatedInformation.stream()
+          .map(Location::new)
+          .collect(Collectors.toList());
+      }
     }
   }
 
   @Value
-  static class PrimaryLocation {
+  static class Location {
 
     private final String message;
     private final String filePath;
     private final TextRange textRange;
 
-    public PrimaryLocation(
+    public Location(
       @JsonProperty("message") String message,
       @JsonProperty("filePath") String filePath,
       @JsonProperty("textRange") TextRange textRange
@@ -143,12 +159,17 @@ public class GenericIssueReport {
       this.textRange = textRange;
     }
 
-    public PrimaryLocation(String filePath, Diagnostic diagnostic) {
+    public Location(String filePath, Diagnostic diagnostic) {
       message = diagnostic.getMessage();
       this.filePath = filePath;
       textRange = new TextRange(diagnostic.getRange());
     }
 
+    public Location(DiagnosticRelatedInformation relatedInformation) {
+      message = relatedInformation.getMessage();
+      filePath = Paths.get(URI.create(relatedInformation.getLocation().getUri())).toAbsolutePath().toString();
+      textRange = new TextRange(relatedInformation.getLocation().getRange());
+    }
   }
 
   @Value

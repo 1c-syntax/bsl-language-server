@@ -25,15 +25,17 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Trees;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10
+)
 public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
-  }
 
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {

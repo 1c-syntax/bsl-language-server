@@ -23,16 +23,36 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.Map;
+
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 30
+)
 public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final int MAX_METHOD_LENGTH = 200;
+  private static final int MAX_METHOD_SIZE = 200;
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_METHOD_SIZE,
+    description = "Максимальная длина метода в строках"
+  )
+  private int maxMethodSize = MAX_METHOD_SIZE;
 
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Warning;
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxMethodSize = (Integer) configuration.get("maxMethodSize");
   }
 
   @Override
@@ -57,8 +77,8 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private static boolean methodSizeExceedsLimit(int methodSize) {
-    return methodSize > MAX_METHOD_LENGTH;
+  private boolean methodSizeExceedsLimit(int methodSize) {
+    return methodSize > maxMethodSize;
   }
 
   private static int methodSize(BSLParser.SubCodeBlockContext ctx) {
@@ -73,7 +93,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   private String getDiagnosticMessage(BSLParser.SubNameContext subName, int methodSize) {
     String diagnosticMessage = super.getDiagnosticMessage();
-    return String.format(diagnosticMessage, subName.getText(), methodSize, MAX_METHOD_LENGTH);
+    return String.format(diagnosticMessage, subName.getText(), methodSize, maxMethodSize);
   }
 
 }

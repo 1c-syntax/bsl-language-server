@@ -19,18 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.settings;
+package org.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import java.util.Locale;
-
-public class LanguageServerSettings {
-  private DiagnosticLanguage diagnosticLanguage;
-
-  public LanguageServerSettings(String diagnosticLanguage) {
-    this.diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguage.toUpperCase(Locale.ENGLISH));
-  }
-
-  public DiagnosticLanguage getDiagnosticLanguage() {
-    return diagnosticLanguage;
-  }
+public enum  DiagnosticType {
+  ERROR,
+  CODE_SMELL,
+  VULNERABILITY
 }

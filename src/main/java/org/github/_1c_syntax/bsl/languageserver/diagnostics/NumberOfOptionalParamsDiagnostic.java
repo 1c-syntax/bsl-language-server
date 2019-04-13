@@ -22,23 +22,43 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.Map;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 30
+)
 public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_OPTIONAL_PARAMS_COUNT = 3;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_OPTIONAL_PARAMS_COUNT,
+    description = "Допустимое количество необязательных параметров метода"
+  )
+  private int maxOptionalParamsCount = MAX_OPTIONAL_PARAMS_COUNT;
+
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxOptionalParamsCount =
+      (Integer) configuration.get("maxOptionalParamsCount");
   }
 
   @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    if (ctx.param().stream().filter(param -> param.defaultValue() != null).count() > MAX_OPTIONAL_PARAMS_COUNT){
+    if (ctx.param().stream().filter(param -> param.defaultValue() != null).count() > maxOptionalParamsCount){
       addDiagnostic(ctx);
     }
 

@@ -22,10 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,11 +39,27 @@ class NumberOfParamsDiagnosticTest extends AbstractDiagnosticTest<NumberOfParams
 
   @Test
   void test() {
+    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    // then
     assertThat(diagnostics).hasSize(1);
 
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(14, 29, 14, 77));
 
+  }
+
+  @Test
+  void testConfigure() {
+    // given
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("maxParamsCount", 1);
+    getDiagnosticInstance().configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(5);
   }
 }

@@ -24,7 +24,10 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
@@ -33,11 +36,13 @@ import java.util.List;
 
 public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
   protected List<Diagnostic> diagnostics = new ArrayList<>();
+  protected DocumentContext documentContext;
 
   @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    this.documentContext = documentContext;
     diagnostics.clear();
-    this.visitFile(fileTree);
+    this.visitFile(documentContext.getAst());
     return new ArrayList<>(diagnostics);
   }
 
@@ -63,4 +68,12 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
     ));
   }
 
+  protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
+    diagnostics.add(BSLDiagnostic.createDiagnostic(this, node, relatedInformation));
+  }
+
+  protected DiagnosticRelatedInformation createRelatedInformation(Range range, String message) {
+    Location location = new Location(documentContext.getUri(), range);
+    return new DiagnosticRelatedInformation(location, message);
+  }
 }

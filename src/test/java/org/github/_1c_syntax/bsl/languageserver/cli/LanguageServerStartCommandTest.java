@@ -36,7 +36,7 @@ class LanguageServerStartCommandTest {
   void testExecute() throws ParseException {
     Options options = createOptions();
     DefaultParser parser = new DefaultParser();
-    CommandLine commandLine = parser.parse(options, new String[]{"-d", "en"});
+    CommandLine commandLine = parser.parse(options, new String[]{});
     Command command = new LanguageServerStartCommand(commandLine);
 
     int result = command.execute();

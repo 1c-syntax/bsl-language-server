@@ -24,7 +24,9 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.Location;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.AfterEach;
@@ -63,6 +65,8 @@ class GenericReporterTest {
       "test-source",
       "test"
     );
+    Location location = new Location("file:///fake-uri", RangeHelper.newRange(0, 2, 2, 3));
+    diagnostic.setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));

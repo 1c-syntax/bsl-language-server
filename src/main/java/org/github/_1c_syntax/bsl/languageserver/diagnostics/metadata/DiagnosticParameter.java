@@ -19,19 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.settings;
+package org.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-public enum DiagnosticLanguage {
-  RU("ru"),
-  EN("en");
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  private final String languageCode;
-
-  DiagnosticLanguage(String languageCode) {
-    this.languageCode = languageCode;
-  }
-
-  public String getLanguageCode() {
-    return languageCode;
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface DiagnosticParameter {
+  Class type();
+  String defaultValue() default "";
+  String description() default "";
 }

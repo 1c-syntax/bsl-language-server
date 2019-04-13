@@ -21,16 +21,25 @@
  */
 package org.github._1c_syntax.bsl.languageserver;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLWorkspaceService implements WorkspaceService {
+
+  private LanguageServerConfiguration configuration;
+
+  public BSLWorkspaceService(LanguageServerConfiguration configuration) {
+    this.configuration = configuration;
+  }
 
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
@@ -39,7 +48,12 @@ public class BSLWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
-    // no-op
+    try {
+      PropertyUtils.copyProperties(configuration, params.getSettings());
+    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+//    configuration = (LanguageServerConfiguration) params.getSettings();
   }
 
   @Override

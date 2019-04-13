@@ -24,8 +24,6 @@ package org.github._1c_syntax.bsl.languageserver;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
-import org.eclipse.lsp4j.ServerCapabilities;
-import org.github._1c_syntax.bsl.languageserver.settings.LanguageServerSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +38,7 @@ class BSLLanguageServerTest {
 
   @BeforeEach
   void setUp() {
-    server = new BSLLanguageServer(new LanguageServerSettings("en"));
+    server = new BSLLanguageServer();
   }
 
   @Test

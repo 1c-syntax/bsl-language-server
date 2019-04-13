@@ -22,24 +22,42 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.Map;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 30
+)
 public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_PARAMS_COUNT = 7;
 
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_PARAMS_COUNT,
+    description = "Допустимое количество параметров метода"
+  )
+  private int maxParamsCount = MAX_PARAMS_COUNT;
 
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxParamsCount = (Integer) configuration.get("maxParamsCount");
   }
 
   @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    if (ctx.param().size() > MAX_PARAMS_COUNT) {
+    if (ctx.param().size() > maxParamsCount) {
       addDiagnostic(ctx);
     }
 

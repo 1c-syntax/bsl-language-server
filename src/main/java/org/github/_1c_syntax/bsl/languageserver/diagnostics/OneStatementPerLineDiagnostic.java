@@ -22,16 +22,18 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 2
+)
 public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
   private int previousLineNumber;
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Information;
-  }
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {

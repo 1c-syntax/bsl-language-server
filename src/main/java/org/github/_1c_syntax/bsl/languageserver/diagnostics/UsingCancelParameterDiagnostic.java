@@ -23,7 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -34,14 +34,12 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@DiagnosticMetadata(
+  minutesToFix = 10
+)
 public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern cancelPattern = Pattern.compile("отказ|cancel");
-
-  @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
@@ -90,10 +88,22 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean orCancel(BSLParser.AssignmentContext ident) {
 
-    BSLParser.OperationContext logicaloperation = ident.expression().operation(0);
-    if (logicaloperation != null && logicaloperation.boolOperation().OR_KEYWORD() != null) {
+    BSLParser.ExpressionContext expression = ident.expression();
+    if (expression == null) {
+      return false;
+    }
+    BSLParser.OperationContext logicalOperation = expression.operation(0);
+    if (logicalOperation == null) {
+      return false;
+    }
 
-      return ident.expression()
+    BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
+    if (boolOperation == null) {
+      return false;
+    }
+    if (boolOperation.OR_KEYWORD() != null) {
+
+      return expression
         .member()
         .stream()
         .anyMatch(token -> cancelPattern.matcher(token.getText().toLowerCase(Locale.getDefault()))

@@ -22,43 +22,48 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
-import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public interface BSLDiagnostic {
 
-  default DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Error;
-  }
-
-  default String getCode() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith("Diagnostic")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
-    }
-    return simpleName;
-  }
-
-  List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree);
+  List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
   default String getDiagnosticMessage() {
-    return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString("diagnosticMessage");
+    return getResourceString("diagnosticMessage");
   }
 
-  default String getDiagnosticMessage(String key) {
+  default String getResourceString(String key) {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
   }
 
+  default void configure(Map<String, Object> configuration) {}
+
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
     return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
+  }
+
+  static Diagnostic createDiagnostic(
+    BSLDiagnostic bslDiagnostic,
+    BSLParserRuleContext node,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    return createDiagnostic(
+      bslDiagnostic,
+      RangeHelper.newRange(node),
+      bslDiagnostic.getDiagnosticMessage(),
+      relatedInformation
+    );
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, String diagnosticMessage, BSLParserRuleContext node) {
@@ -80,12 +85,33 @@ public interface BSLDiagnostic {
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, Range range, String diagnosticMessage) {
-    return new Diagnostic(
+    return createDiagnostic(
+      bslDiagnostic,
       range,
       diagnosticMessage,
-      bslDiagnostic.getSeverity(),
-      DiagnosticProvider.SOURCE,
-      bslDiagnostic.getCode()
+      null
     );
+
+  }
+
+  static Diagnostic createDiagnostic(
+    BSLDiagnostic bslDiagnostic,
+    Range range,
+    String diagnosticMessage,
+    @Nullable
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    Diagnostic diagnostic = new Diagnostic(
+      range,
+      diagnosticMessage,
+      DiagnosticProvider.getLSPDiagnosticSeverity(bslDiagnostic),
+      DiagnosticProvider.SOURCE,
+      DiagnosticProvider.getDiagnosticCode(bslDiagnostic)
+    );
+
+    if (relatedInformation != null) {
+      diagnostic.setRelatedInformation(relatedInformation);
+    }
+    return diagnostic;
   }
 }

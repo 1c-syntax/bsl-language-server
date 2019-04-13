@@ -21,40 +21,44 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.INFO,
+  minutesToFix = 5
+)
 public class YoLetterUsageDiagnostic implements BSLDiagnostic {
 
   @Override
-  public DiagnosticSeverity getSeverity() {
-    return DiagnosticSeverity.Hint;
-  }
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-  @Override
-  public List<Diagnostic> getDiagnostics(BSLParser.FileContext fileTree) {
-
-    List<Token> wrongIdentifiers = fileTree.getTokens()
-                                  .parallelStream()
-                                  .filter((Token t) ->
-                                    t.getType() == BSLParser.IDENTIFIER &&
-                                    t.getText().toUpperCase().contains("Ё"))
-                                  .collect((Collectors.toList()));
+    List<Token> wrongIdentifiers = documentContext.getTokensFromDefaultChannel()
+      .parallelStream()
+      .filter((Token t) ->
+        t.getType() == BSLParser.IDENTIFIER &&
+          t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
+      .collect((Collectors.toList()));
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
-    for(Token token : wrongIdentifiers) {
-         diagnostics.add(BSLDiagnostic.createDiagnostic(
-           this,
-           RangeHelper.newRange(token),
-           getDiagnosticMessage()));
+    for (Token token : wrongIdentifiers) {
+      diagnostics.add(BSLDiagnostic.createDiagnostic(
+        this,
+        RangeHelper.newRange(token),
+        getDiagnosticMessage()));
     }
 
     return diagnostics;

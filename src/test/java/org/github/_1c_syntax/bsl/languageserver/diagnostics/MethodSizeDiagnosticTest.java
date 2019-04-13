@@ -22,10 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,10 +39,26 @@ class MethodSizeDiagnosticTest extends AbstractDiagnosticTest<MethodSizeDiagnost
 
   @Test
   void test() {
+    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    // then
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(6, 10, 6, 28));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(419, 8, 419, 24));
+  }
+
+  @Test
+  void testConfigure() {
+    // given
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("maxMethodSize", 20);
+    getDiagnosticInstance().configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(4);
   }
 }

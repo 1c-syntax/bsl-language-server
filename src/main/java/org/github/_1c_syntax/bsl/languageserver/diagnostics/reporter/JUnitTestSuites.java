@@ -32,8 +32,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
-import lombok.Data;
 import lombok.Getter;
+import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 
@@ -73,7 +73,7 @@ class JUnitTestSuites {
     this.testsuite = new ArrayList<>(testsuite);
   }
 
-  @Data
+  @Value
   static class JUnitTestSuite {
 
     @JacksonXmlProperty(isAttribute = true)
@@ -104,7 +104,7 @@ class JUnitTestSuites {
     }
   }
 
-  @Data
+  @Value
   static class JUnitTestCase {
 
     @JacksonXmlProperty(isAttribute = true)
@@ -146,7 +146,7 @@ class JUnitTestSuites {
     }
   }
 
-  @Data
+  @Value
   @JsonDeserialize(using = JUnitFailureDeserializer.class)
   static class JUnitFailure {
 
