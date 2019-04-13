@@ -29,13 +29,13 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -57,28 +57,41 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic{
     if (configuration == null) {
       return;
     }
-    serviceTags = (String) configuration.get("maxLineLength");
+    serviceTags = (String) configuration.get("serviceTags");
+    pattern = getPatternSearch(serviceTags);
   }
 
+  public static Pattern pattern = getPatternSearch(UsingServiceTagDiagnostic.SERVICE_TAGS_DEFAULT);
+
+  public static Pattern getPatternSearch(String value)
+  {
+    return Pattern.compile(
+      new StringBuilder().append("\\s+(").append(value).append(")").toString(),
+      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+  }
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    final Pattern pattern = Pattern.compile(
-      new StringBuilder().append("\\s+(").append(serviceTags).append(")").toString(),
-      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
-    documentContext.getTokens().forEach(
-      (Token token) -> {
-        if (token.getType() == BSLLexer.LINE_COMMENT
-          && pattern.matcher(token.getText().toLowerCase(Locale.getDefault())).find())
-        {
-          diagnostics.add(BSLDiagnostic.createDiagnostic(
-            this,
-            RangeHelper.newRange(token),
-            getDiagnosticMessage()));
-        }
-      }
-    );
+
+    List <Token> list = documentContext.getTokensWithComments()
+      .parallelStream()
+      .filter((Token token) -> pattern.matcher(token.getText()).find())
+      .collect((Collectors.toList()));
+
+    list.forEach(token -> {
+      Matcher m = pattern.matcher(token.getText());
+      diagnostics.add(BSLDiagnostic.createDiagnostic(
+        this,
+        RangeHelper.newRange(token),
+        getDiagnosticMessage(token.getText()))); // TODO: сомнительно?
+    });
+
     return diagnostics;
+  }
+
+  private String getDiagnosticMessage(String tag) {
+    String diagnosticMessage = getDiagnosticMessage();
+    return String.format(diagnosticMessage, tag.replaceAll("\\s+",""));
   }
 }

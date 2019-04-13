@@ -63,6 +63,13 @@ public class DocumentContext {
     return tokens.stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
   }
 
+  public List<Token> getTokensWithComments()
+  {
+    return tokens.stream()
+      .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
+      .collect(Collectors.toList());
+  }
+
   public String getUri() {
     return uri;
   }
