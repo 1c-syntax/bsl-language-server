@@ -37,7 +37,7 @@ public enum DiagnosticScope {
 
   public static DiagnosticScope getEnumByString(String code){
     for(DiagnosticScope e : DiagnosticScope.values()){
-      if(code.toLowerCase() == e.name) return e;
+      if(code.equals(e.name)) return e;
     }
     return null;
   }
