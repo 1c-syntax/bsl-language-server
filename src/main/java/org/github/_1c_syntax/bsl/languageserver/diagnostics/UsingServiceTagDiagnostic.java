@@ -62,23 +62,23 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic{
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
     final Pattern pattern = Pattern.compile(
-      "\\s+(" + serviceTags + ")",
+      new StringBuilder().append("\\s+(").append(serviceTags).append(")").toString(),
       Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
-    for (Token token : documentContext.getTokens())
-    {
-      if (token.getType() == BSLLexer.LINE_COMMENT
-        && pattern.matcher(token.getText().toLowerCase(Locale.getDefault())).find())
-      {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
-          RangeHelper.newRange(token),
-          getDiagnosticMessage()));
+    documentContext.getTokens().forEach(
+      (Token token) -> {
+        if (token.getType() == BSLLexer.LINE_COMMENT
+          && pattern.matcher(token.getText().toLowerCase(Locale.getDefault())).find())
+        {
+          diagnostics.add(BSLDiagnostic.createDiagnostic(
+            this,
+            RangeHelper.newRange(token),
+            getDiagnosticMessage()));
+        }
       }
-    }
+    );
     return diagnostics;
   }
 }
