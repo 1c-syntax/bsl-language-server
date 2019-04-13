@@ -9,6 +9,8 @@
 
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
 
+[English version](en/index.md)
+
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>

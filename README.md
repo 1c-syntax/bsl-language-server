@@ -10,6 +10,8 @@
 
 Сайт проекта - https://1c-syntax.github.io/bsl-language-server
 
+[English version](docs/en/index.md)
+
 ## Возможности
 
 * Форматирование файла
