@@ -47,8 +47,7 @@ public class NumberOfPropertiesInStructureConstructorDiagnostic extends Abstract
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-
-
+    
     if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
       return super.visitNewExpression(ctx);
     }

@@ -65,17 +65,3 @@ Result = New FixedStructure("Goods, Property, Count, Cost");
 
 // Pass
 Result = New FixedStructure("Goods, Property, Count", Goods, Property, 5);
-
-// Other Constructors
-
-// Pass
-Result = New TypeDescription(OrigTypeDescription, NewTypes, DeletTypes, NumQualifier);
-
-// Pass
-Result = New Query("ВЫБРАТЬ
-                   |	втТаблица.А,
-                   |	втТаблица.Б,
-                   |	втТаблица.В,
-                   |	втТаблица.Г
-                   |ИЗ
-                   |	&Таблица КАК втТаблица");
