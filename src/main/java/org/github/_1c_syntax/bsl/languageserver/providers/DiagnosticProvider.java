@@ -42,6 +42,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NestedTernaryOperatorDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfPropertiesInStructureConstructorDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.OneStatementPerLineDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.OrderOfParamsDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValueDiagnostic;
@@ -270,6 +271,7 @@ public final class DiagnosticProvider {
       NestedTernaryOperatorDiagnostic.class,
       NumberOfOptionalParamsDiagnostic.class,
       NumberOfParamsDiagnostic.class,
+      NumberOfPropertiesInStructureConstructorDiagnostic.class,
       OneStatementPerLineDiagnostic.class,
       OrderOfParamsDiagnostic.class,
       ProcedureReturnsValueDiagnostic.class,
