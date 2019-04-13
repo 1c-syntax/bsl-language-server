@@ -48,6 +48,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValu
 import org.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingServiceTagDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -67,7 +68,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -277,6 +277,7 @@ public final class DiagnosticProvider {
       SemicolonPresenceDiagnostic.class,
       UnknownPreprocessorSymbolDiagnostic.class,
       UsingCancelParameterDiagnostic.class,
+      UsingServiceTagDiagnostic.class,
       YoLetterUsageDiagnostic.class
     );
 
