@@ -50,7 +50,10 @@ public class DocumentContext {
 
   public DocumentContext(String uri, String content) {
     this.uri = uri;
-    this.extension = FilenameUtils.getExtension(uri);
+    if (uri != null)
+    {
+      this.extension = FilenameUtils.getExtension(uri).toLowerCase();
+    }
     build(content);
   }
 
