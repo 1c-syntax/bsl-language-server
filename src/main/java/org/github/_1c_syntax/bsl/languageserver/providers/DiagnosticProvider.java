@@ -52,6 +52,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameter
 import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
@@ -117,7 +118,7 @@ public final class DiagnosticProvider {
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    return getDiagnosticInstances().parallelStream()
+    return getDiagnosticInstances(documentContext.getExtension()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .collect(Collectors.toList());
   }
@@ -340,6 +341,22 @@ public final class DiagnosticProvider {
       ).collect(Collectors.toList());
   }
 
+  @VisibleForTesting
+  public List<BSLDiagnostic> getDiagnosticInstances(String extension) {
+    return diagnosticClasses.stream()
+      .filter(this::isEnabled)
+      .filter(element -> this.inScope(element, extension))
+      .map(DiagnosticProvider::createDiagnosticInstance)
+      .peek((BSLDiagnostic diagnostic) -> {
+          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
+            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
+          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+            diagnostic.configure(diagnosticConfiguration.getRight());
+          }
+        }
+      ).collect(Collectors.toList());
+  }
+
   private static BSLDiagnostic createDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
     BSLDiagnostic diagnostic = null;
     try {
@@ -348,6 +365,16 @@ public final class DiagnosticProvider {
       LOGGER.error("Can't instantiate diagnostic", e);
     }
     return diagnostic;
+  }
+
+  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, String extension)
+  {
+    if (diagnosticClass == null) {
+      return false;
+    }
+
+    DiagnosticScope scope = diagnosticsMetadata.get(diagnosticClass).scope();
+    return scope == DiagnosticScope.ALL || scope == DiagnosticScope.getEnumByString(extension);
   }
 
   private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {

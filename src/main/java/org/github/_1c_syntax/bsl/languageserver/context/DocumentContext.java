@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -45,9 +46,11 @@ public class DocumentContext {
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private String uri;
+  private String extension;
 
   public DocumentContext(String uri, String content) {
     this.uri = uri;
+    this.extension = FilenameUtils.getExtension(uri);
     build(content);
   }
 
@@ -66,6 +69,8 @@ public class DocumentContext {
   public String getUri() {
     return uri;
   }
+
+  public String getExtension() { return extension; }
 
   public void rebuild(String content) {
     build(content);
