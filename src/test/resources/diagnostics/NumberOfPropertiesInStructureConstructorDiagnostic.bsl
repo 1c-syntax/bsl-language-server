@@ -9,17 +9,20 @@
 // Pass
 Результат = Новый Структура("Номенклатура, Характеристика, Количество", Номенклатура, Характеристика, 5);
 
-// Warning
+// Pass
 Результат = Новый Структура("Номенклатура, Характеристика, Количество, Стоимость");
+
+// Warning
+Результат = Новый Структура("Номенклатура, Характеристика, Количество, Стоимость", Номенклатура, Характеристика, 5, 10);
 
 // Pass
 Результат = Новый Структура("Номенклатура, Характеристика, Количество",
                             // Warning
-                            Новый Структура("Наименование, Код, Производитель, Цена"));
+                            Новый Структура("Наименование, Код, Производитель, Цена",,,,));
 
 // Фиксированные структуры
 
-// Warning
+// Pass
 Результат = Новый ФиксированнаяСтруктура("Номенклатура, Характеристика, Количество, Стоимость");
 
 // Pass
@@ -50,17 +53,20 @@ Result = New Structure();
 // Pass
 Result = New Structure("Goods, Property, Count", Goods, Property, 5);
 
-// Warning
+// Pass
 Result = New Structure("Goods, Property, Count, Cost");
+
+// Warning
+Result = New Structure("Goods, Property, Count, Cost", Goods, Property, 5, 10);
 
 // Pass
 Result = New Structure("Goods, Property, Count",
                             // Warning
-                            New Structure("Name, Code, Manufacturer, Price"));
+                            New Structure("Name, Code, Manufacturer, Price", Name,,,100));
 
 // FixedStructure
 
-// Warning
+// Pass
 Result = New FixedStructure("Goods, Property, Count, Cost");
 
 // Pass

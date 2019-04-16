@@ -39,14 +39,12 @@ public class NumberOfPropertiesInStructureConstructorDiagnosticTest
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(4);
 
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(12, 12, 12, 82));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(17, 28, 17, 85));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(22, 12, 22, 95));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(53, 9, 53, 54));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(58, 28, 58, 76));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(63, 9, 63, 59));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(15, 12, 15, 119));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(20, 28, 20, 89));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(59, 9, 59, 78));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(64, 28, 64, 88));
 
   }
 

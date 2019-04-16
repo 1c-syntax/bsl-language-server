@@ -29,8 +29,8 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-
 import java.util.Collection;
+
 
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
@@ -47,18 +47,17 @@ public class NumberOfPropertiesInStructureConstructorDiagnostic extends Abstract
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    
+
     if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
       return super.visitNewExpression(ctx);
     }
 
-    Collection<ParseTree> parameters = Trees.findAllRuleNodes(ctx, BSLParser.RULE_callParam);
+    Collection<ParseTree> paramList = Trees.findAllRuleNodes(ctx, BSLParser.RULE_callParamList);
 
-    if (parameters.size() > 0)
-      parameters.stream()
-        .limit(1)
-        .filter(param -> param.getText().split(",").length > MAX_PROPERTIES_COUNT)
-        .forEach(param -> addDiagnostic(ctx));
+    if(paramList.stream()
+      .limit(1)
+      .anyMatch(ParseTree -> ((BSLParser.CallParamListContext) ParseTree).callParam().size() > MAX_PROPERTIES_COUNT + 1))
+      addDiagnostic(ctx);
 
     return super.visitNewExpression(ctx);
   }
