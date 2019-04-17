@@ -140,4 +140,5 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
 * [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
+* [UsingServiceTag - Использование служебных тегов](diagnostics/UsingServiceTag.md)
 * [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsage.md)
