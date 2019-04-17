@@ -29,9 +29,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.omg.PortableServer.SERVANT_RETENTION_POLICY_ID;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
