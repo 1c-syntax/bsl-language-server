@@ -29,6 +29,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.omg.PortableServer.SERVANT_RETENTION_POLICY_ID;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic{
     description = "Служебные теги"
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
+  private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -61,37 +63,32 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic{
     pattern = getPatternSearch(serviceTags);
   }
 
-  public static Pattern pattern = getPatternSearch(UsingServiceTagDiagnostic.SERVICE_TAGS_DEFAULT);
-
-  public static Pattern getPatternSearch(String value)
+  public Pattern getPatternSearch(String value)
   {
     return Pattern.compile(
-      new StringBuilder().append("\\s+(").append(value).append(")").toString(),
-      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+      "\\s+(" + value + ")",
+      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.COMMENTS);
   }
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Diagnostic> diagnostics = new ArrayList<>();
-
-    List <Token> list = documentContext.getTokensWithComments()
+    return documentContext.getComments()
       .parallelStream()
       .filter((Token token) -> pattern.matcher(token.getText()).find())
+      .map(token -> {
+        Matcher matcher = pattern.matcher(token.getText());
+        matcher.find();
+        return BSLDiagnostic.createDiagnostic(
+          this,
+          RangeHelper.newRange(token),
+          getDiagnosticMessage(matcher.group(0)));
+      })
       .collect((Collectors.toList()));
 
-    list.forEach(token -> {
-      Matcher m = pattern.matcher(token.getText());
-      diagnostics.add(BSLDiagnostic.createDiagnostic(
-        this,
-        RangeHelper.newRange(token),
-        getDiagnosticMessage(token.getText()))); // TODO: сомнительно?
-    });
-
-    return diagnostics;
   }
 
   private String getDiagnosticMessage(String tag) {
     String diagnosticMessage = getDiagnosticMessage();
-    return String.format(diagnosticMessage, tag.replaceAll("\\s+",""));
+    return String.format(diagnosticMessage, tag);
   }
 }

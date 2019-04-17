@@ -31,10 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingServiceTagDiagnostic> {
 
-  UsingServiceTagDiagnosticTest()
-  {
-    super(UsingServiceTagDiagnostic.class);
-  }
+  UsingServiceTagDiagnosticTest() { super(UsingServiceTagDiagnostic.class); }
 
   @Test
   void runTest()
