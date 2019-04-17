@@ -27,6 +27,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.github._1c_syntax.bsl.languageserver.FileType;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
@@ -36,6 +37,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -46,13 +48,20 @@ public class DocumentContext {
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private String uri;
-  private String extension;
+  private FileType fileType;
 
   public DocumentContext(String uri, String content) {
     this.uri = uri;
     if (uri != null)
     {
-      this.extension = FilenameUtils.getExtension(uri).toLowerCase();
+      try
+      {
+        this.fileType = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
+      }
+      catch (IllegalArgumentException e)
+      {
+        this.fileType = FileType.BSL;
+      }
     }
     build(content);
   }
@@ -73,7 +82,9 @@ public class DocumentContext {
     return uri;
   }
 
-  public String getExtension() { return extension; }
+  public FileType getFileType() {
+    return fileType;
+  }
 
   public void rebuild(String content) {
     build(content);

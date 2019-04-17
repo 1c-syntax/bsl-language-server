@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.github._1c_syntax.bsl.languageserver.FileType;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
@@ -68,7 +69,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -118,7 +118,7 @@ public final class DiagnosticProvider {
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    return getDiagnosticInstances(documentContext.getExtension()).parallelStream()
+    return getDiagnosticInstances(documentContext.getFileType()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .collect(Collectors.toList());
   }
@@ -342,10 +342,10 @@ public final class DiagnosticProvider {
   }
 
   @VisibleForTesting
-  public List<BSLDiagnostic> getDiagnosticInstances(String extension) {
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
-      .filter(element -> this.inScope(element, extension))
+      .filter(element -> this.inScope(element, fileType))
       .map(DiagnosticProvider::createDiagnosticInstance)
       .peek((BSLDiagnostic diagnostic) -> {
           Either<Boolean, Map<String, Object>> diagnosticConfiguration =
@@ -367,14 +367,19 @@ public final class DiagnosticProvider {
     return diagnostic;
   }
 
-  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, String extension)
+  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType)
   {
-    if (diagnosticClass == null) {
-      return false;
-    }
-
     DiagnosticScope scope = diagnosticsMetadata.get(diagnosticClass).scope();
-    return scope == DiagnosticScope.ALL || scope == DiagnosticScope.getEnumByString(extension);
+    DiagnosticScope fileScope;
+    if (fileType == FileType.OS)
+    {
+      fileScope = DiagnosticScope.OS;
+    }
+    else
+    {
+      fileScope = DiagnosticScope.BSL;
+    }
+    return scope == DiagnosticScope.ALL || scope == fileScope;
   }
 
   private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {
