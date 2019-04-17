@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
@@ -49,10 +50,12 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValu
 import org.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingServiceTagDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
@@ -117,7 +120,7 @@ public final class DiagnosticProvider {
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    return getDiagnosticInstances().parallelStream()
+    return getDiagnosticInstances(documentContext.getFileType()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .collect(Collectors.toList());
   }
@@ -151,8 +154,7 @@ public final class DiagnosticProvider {
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(diagnosticCode + ".md");
 
-    if (descriptionStream == null)
-    {
+    if (descriptionStream == null) {
       return "";
     }
 
@@ -278,6 +280,7 @@ public final class DiagnosticProvider {
       SemicolonPresenceDiagnostic.class,
       UnknownPreprocessorSymbolDiagnostic.class,
       UsingCancelParameterDiagnostic.class,
+      UsingServiceTagDiagnostic.class,
       YoLetterUsageDiagnostic.class
     );
 
@@ -341,6 +344,22 @@ public final class DiagnosticProvider {
       ).collect(Collectors.toList());
   }
 
+  @VisibleForTesting
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+    return diagnosticClasses.stream()
+      .filter(this::isEnabled)
+      .filter(element -> this.inScope(element, fileType))
+      .map(DiagnosticProvider::createDiagnosticInstance)
+      .peek((BSLDiagnostic diagnostic) -> {
+          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
+            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
+          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+            diagnostic.configure(diagnosticConfiguration.getRight());
+          }
+        }
+      ).collect(Collectors.toList());
+  }
+
   private static BSLDiagnostic createDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
     BSLDiagnostic diagnostic = null;
     try {
@@ -349,6 +368,17 @@ public final class DiagnosticProvider {
       LOGGER.error("Can't instantiate diagnostic", e);
     }
     return diagnostic;
+  }
+
+  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType) {
+    DiagnosticScope scope = diagnosticsMetadata.get(diagnosticClass).scope();
+    DiagnosticScope fileScope;
+    if (fileType == FileType.OS) {
+      fileScope = DiagnosticScope.OS;
+    } else {
+      fileScope = DiagnosticScope.BSL;
+    }
+    return scope == DiagnosticScope.ALL || scope == fileScope;
   }
 
   private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {

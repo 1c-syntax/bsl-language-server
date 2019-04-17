@@ -65,7 +65,7 @@ class GenericReporterTest {
       "test-source",
       "test"
     );
-    Location location = new Location("file:///fake-uri", RangeHelper.newRange(0, 2, 2, 3));
+    Location location = new Location("file:///fake-uri.bsl", RangeHelper.newRange(0, 2, 2, 3));
     diagnostic.setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
     FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
