@@ -24,11 +24,13 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.Map;
 
 
 /**
@@ -40,9 +42,25 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
   minutesToFix = 10
 )
 
-public class NumberOfPropertiesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
+public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
 
-  private static final int MAX_PROPERTIES_COUNT = 3;
+  private static final int MAX_VALUES_COUNT = 3;
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_VALUES_COUNT,
+    description = "Допустимое количество значений свойств, передаваемых в конструктор структуры"
+  )
+
+  private int maxValuesCount = MAX_VALUES_COUNT;
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxValuesCount = (Integer) configuration.get("maxStructureConstructorValuesCount");
+  }
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
@@ -51,7 +69,7 @@ public class NumberOfPropertiesInStructureConstructorDiagnostic extends Abstract
       return super.visitNewExpression(ctx);
     }
 
-    if(ctx.doCall().callParamList().callParam().size() > MAX_PROPERTIES_COUNT + 1)
+    if(ctx.doCall().callParamList().callParam().size() > maxValuesCount + 1)
       addDiagnostic(ctx);
 
     return super.visitNewExpression(ctx);

@@ -133,7 +133,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)
 * [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
-* [NumberOfPropertiesInStructureConstructor - Ограничение на количество свойств, передаваемых в конструктор структуры](diagnostics/NumberOfPropertiesInStructureConstructor.md)
+* [NumberOfValuesInStructureConstructor - Ограничение на количество значений свойств, передаваемых в конструктор структуры](diagnostics/NumberOfValuesInStructureConstructor.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
 * [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)

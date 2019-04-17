@@ -22,16 +22,19 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class NumberOfPropertiesInStructureConstructorDiagnosticTest
-  extends AbstractDiagnosticTest<NumberOfPropertiesInStructureConstructorDiagnostic> {
+public class NumberOfValuesInStructureConstructorDiagnosticTest
+  extends AbstractDiagnosticTest<NumberOfValuesInStructureConstructorDiagnostic> {
 
-  NumberOfPropertiesInStructureConstructorDiagnosticTest() {
-    super(NumberOfPropertiesInStructureConstructorDiagnostic.class);
+  NumberOfValuesInStructureConstructorDiagnosticTest() {
+    super(NumberOfValuesInStructureConstructorDiagnostic.class);
   }
 
   @Test
@@ -46,6 +49,18 @@ public class NumberOfPropertiesInStructureConstructorDiagnosticTest
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(59, 9, 59, 78));
     assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(64, 28, 64, 88));
 
+  }
+
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("maxStructureConstructorValuesCount", 3);
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(4);
   }
 
 }
