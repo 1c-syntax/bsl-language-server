@@ -21,22 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver;
 
-import java.util.Locale;
-
 public enum FileType {
-  UNDEFINED(""),
-  BSL("BSL"),
-  OS("OS");
-
-  private final String extension;
-
-  FileType(String extension) {
-    this.extension = extension.toUpperCase(Locale.ENGLISH);
-  }
-
-  public String getExtension()
-  {
-    return extension;
-  }
-
+  BSL,
+  OS
 }

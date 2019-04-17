@@ -152,8 +152,7 @@ public final class DiagnosticProvider {
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(diagnosticCode + ".md");
 
-    if (descriptionStream == null)
-    {
+    if (descriptionStream == null) {
       return "";
     }
 
@@ -367,16 +366,12 @@ public final class DiagnosticProvider {
     return diagnostic;
   }
 
-  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType)
-  {
+  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType) {
     DiagnosticScope scope = diagnosticsMetadata.get(diagnosticClass).scope();
     DiagnosticScope fileScope;
-    if (fileType == FileType.OS)
-    {
+    if (fileType == FileType.OS) {
       fileScope = DiagnosticScope.OS;
-    }
-    else
-    {
+    } else {
       fileScope = DiagnosticScope.BSL;
     }
     return scope == DiagnosticScope.ALL || scope == fileScope;

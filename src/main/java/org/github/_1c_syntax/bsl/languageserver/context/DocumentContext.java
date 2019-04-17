@@ -47,22 +47,24 @@ public class DocumentContext {
 
   private BSLParser.FileContext ast;
   private List<Token> tokens;
-  private String uri;
-  private FileType fileType;
+  private final String uri;
+  private final FileType fileType;
 
   public DocumentContext(String uri, String content) {
     this.uri = uri;
-    if (uri != null)
-    {
-      try
-      {
-        this.fileType = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
-      }
-      catch (IllegalArgumentException e)
-      {
-        this.fileType = FileType.BSL;
+    FileType fileTypeFromUri;
+
+    if (uri == null) {
+      fileTypeFromUri = FileType.BSL;
+    } else {
+      try {
+        fileTypeFromUri = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
+      } catch (IllegalArgumentException e) {
+        fileTypeFromUri = FileType.BSL;
       }
     }
+    this.fileType = fileTypeFromUri;
+
     build(content);
   }
 
