@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+
 public final class DiagnosticHelper {
 
   private DiagnosticHelper() {
@@ -68,6 +69,15 @@ public final class DiagnosticHelper {
 
     return true;
   }
+
+  public static boolean isStructureType(BSLParser.TypeNameContext tnc){
+    return tnc.getText().equalsIgnoreCase("Структура") || tnc.getText().equalsIgnoreCase("Structure");
+  }
+
+  public static boolean isFixedStructureType(BSLParser.TypeNameContext tnc){
+    return tnc.getText().equalsIgnoreCase("ФиксированнаяСтруктура") || tnc.getText().equalsIgnoreCase("FixedStructure");
+  }
+
 }
 
 

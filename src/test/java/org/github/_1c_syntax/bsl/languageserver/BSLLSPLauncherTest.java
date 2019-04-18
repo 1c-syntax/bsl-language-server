@@ -90,7 +90,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testAnalyze() {
     // given
-    String[] args = new String[]{"--analyze"};
+    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli"};
 
     // when
     try {
