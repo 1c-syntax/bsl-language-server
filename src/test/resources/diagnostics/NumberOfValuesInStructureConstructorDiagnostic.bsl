@@ -4,6 +4,9 @@
 // Структуры
 
 // Pass
+Результат = Новый Структура;
+
+// Pass
 Результат = Новый Структура();
 
 // Pass
@@ -47,7 +50,10 @@
 
 // Structure
 
-// pass
+// Pass
+Result = New Structure;
+
+// Pass
 Result = New Structure();
 
 // Pass
@@ -71,3 +77,4 @@ Result = New FixedStructure("Goods, Property, Count, Cost");
 
 // Pass
 Result = New FixedStructure("Goods, Property, Count", Goods, Property, 5);
+

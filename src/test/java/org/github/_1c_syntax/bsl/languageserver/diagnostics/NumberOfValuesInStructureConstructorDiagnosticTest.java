@@ -44,10 +44,10 @@ public class NumberOfValuesInStructureConstructorDiagnosticTest
 
     assertThat(diagnostics).hasSize(4);
 
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(15, 12, 15, 119));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(20, 28, 20, 89));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(59, 9, 59, 78));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(64, 28, 64, 88));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(18, 12, 18, 119));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(23, 28, 23, 89));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(65, 9, 65, 78));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(70, 28, 70, 88));
 
   }
 
