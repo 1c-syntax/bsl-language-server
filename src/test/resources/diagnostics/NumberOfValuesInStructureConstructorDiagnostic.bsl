@@ -78,3 +78,8 @@ Result = New FixedStructure("Goods, Property, Count, Cost");
 // Pass
 Result = New FixedStructure("Goods, Property, Count", Goods, Property, 5);
 
+// Pass
+Результат = Новый Массив;
+
+// Pass
+Результат = Новый ("КакойТоТип");
