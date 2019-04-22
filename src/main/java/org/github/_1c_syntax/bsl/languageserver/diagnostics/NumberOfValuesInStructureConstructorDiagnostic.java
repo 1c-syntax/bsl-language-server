@@ -71,9 +71,12 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
       return super.visitNewExpression(ctx);
     }
 
-    if(ctx.doCall().callParamList().callParam().size() > maxValuesCount + 1)
-      addDiagnostic(ctx);
+    BSLParser.DoCallContext doCallContext = ctx.doCall();
 
+    if (doCallContext != null &&
+      doCallContext.callParamList().callParam().size() > maxValuesCount + 1) {
+      addDiagnostic(ctx);
+    }
     return super.visitNewExpression(ctx);
   }
 
