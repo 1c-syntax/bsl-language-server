@@ -32,6 +32,7 @@ import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedMessage;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyStatementDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FunctionShouldHaveReturnDiagnostic;
@@ -261,6 +262,7 @@ public final class DiagnosticProvider {
 
     return Arrays.asList(
       CanonicalSpellingKeywordsDiagnostic.class,
+      DeprecatedMessage.class,
       EmptyCodeBlockDiagnostic.class,
       EmptyStatementDiagnostic.class,
       FunctionShouldHaveReturnDiagnostic.class,
