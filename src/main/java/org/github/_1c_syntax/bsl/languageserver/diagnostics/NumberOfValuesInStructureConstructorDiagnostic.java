@@ -67,6 +67,10 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
 
+    if (ctx.typeName() == null){
+      return super.visitNewExpression(ctx);
+    }
+
     if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
       return super.visitNewExpression(ctx);
     }
