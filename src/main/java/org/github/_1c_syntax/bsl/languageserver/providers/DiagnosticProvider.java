@@ -69,17 +69,6 @@ public final class DiagnosticProvider {
   private static Map<String, Class<? extends BSLDiagnostic>> diagnosticsCodes
     = createDiagnosticsCodes(diagnosticClasses);
 
-  private static Map<String, Class<? extends BSLDiagnostic>> createDiagnosticsCodes(
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses
-  ) {
-    return diagnosticClasses.stream().collect(
-      Collectors.toMap(
-        DiagnosticProvider::getDiagnosticCode,
-        diagnosticClass -> diagnosticClass
-      )
-    );
-  }
-
   private final LanguageServerConfiguration configuration;
 
   public DiagnosticProvider() {
@@ -288,6 +277,17 @@ public final class DiagnosticProvider {
     return map;
   }
 
+  private static Map<String, Class<? extends BSLDiagnostic>> createDiagnosticsCodes(
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses
+  ) {
+    return diagnosticClasses.stream().collect(
+      Collectors.toMap(
+        DiagnosticProvider::getDiagnosticCode,
+        diagnosticClass -> diagnosticClass
+      )
+    );
+  }
+
   @VisibleForTesting
   public List<BSLDiagnostic> getDiagnosticInstances() {
     return diagnosticClasses.stream()
@@ -304,10 +304,10 @@ public final class DiagnosticProvider {
   }
 
   @VisibleForTesting
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+  private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
-      .filter(element -> this.inScope(element, fileType))
+      .filter(element -> inScope(element, fileType))
       .map(DiagnosticProvider::createDiagnosticInstance)
       .peek((BSLDiagnostic diagnostic) -> {
           Either<Boolean, Map<String, Object>> diagnosticConfiguration =
@@ -329,7 +329,7 @@ public final class DiagnosticProvider {
     return diagnostic;
   }
 
-  private boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType) {
+  private static boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType) {
     DiagnosticScope scope = diagnosticsMetadata.get(diagnosticClass).scope();
     DiagnosticScope fileScope;
     if (fileType == FileType.OS) {
