@@ -122,6 +122,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 ### Список реализованных диагностик
 
 * [CanonicalSpellingKeywords - Каноническое написание ключевых слов](diagnostics/CanonicalSpellingKeywords.md)
+* [DeprecatedMessage - Ограничение на использование устаревшего метода "Сообщить"](diagnostics/DeprecatedMessage.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)

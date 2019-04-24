@@ -21,67 +21,35 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.Map;
+import java.util.regex.Pattern;
 
-
-/**
- * @author Leon Chagelishvili <lChagelishvily@gmail.com>
- */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  scope = DiagnosticScope.ALL,
-  minutesToFix = 10
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 2
 )
-
-public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
-
-  private static final int MAX_VALUES_COUNT = 3;
-
-  @DiagnosticParameter(
-    type = Integer.class,
-    defaultValue = "" + MAX_VALUES_COUNT,
-    description = "Допустимое количество значений свойств, передаваемых в конструктор структуры"
-  )
-
-  private int maxValuesCount = MAX_VALUES_COUNT;
+public class DeprecatedMessage extends AbstractVisitorDiagnostic {
+  private static final Pattern messagePattern = Pattern.compile(
+    "(сообщить|message)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    maxValuesCount = (Integer) configuration.get("maxStructureConstructorValuesCount");
-  }
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-  @Override
-  public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-
-    if (ctx.typeName() == null){
-      return super.visitNewExpression(ctx);
-    }
-
-    if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
-      return super.visitNewExpression(ctx);
-    }
-
-    BSLParser.DoCallContext doCallContext = ctx.doCall();
-
-    if (doCallContext != null &&
-      doCallContext.callParamList().callParam().size() > maxValuesCount + 1) {
+    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
       addDiagnostic(ctx);
     }
-    return super.visitNewExpression(ctx);
+
+    return super.visitGlobalMethodCall(ctx);
   }
 
 }

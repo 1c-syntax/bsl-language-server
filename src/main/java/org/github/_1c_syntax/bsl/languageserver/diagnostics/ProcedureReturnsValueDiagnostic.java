@@ -40,9 +40,8 @@ public class ProcedureReturnsValueDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
-    for (ParseTree thisStatement : statements)
-    {
-      if (thisStatement.getChildCount() > 1){
+    for (ParseTree thisStatement : statements) {
+      if (thisStatement.getChildCount() > 1) {
         addDiagnostic((BSLParser.ReturnStatementContext) thisStatement);
       }
     }

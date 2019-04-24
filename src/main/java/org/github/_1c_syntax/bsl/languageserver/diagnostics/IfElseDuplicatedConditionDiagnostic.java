@@ -56,8 +56,9 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
   private void findDuplicatedExpression(List<BSLParser.ExpressionContext> expressionContexts) {
     for (int i = 0; i < expressionContexts.size() - 1; i++) {
-      if (!checkedConditions.contains(expressionContexts.get(i)))
+      if (!checkedConditions.contains(expressionContexts.get(i))) {
         checkExpression(expressionContexts, i);
+      }
     }
   }
 

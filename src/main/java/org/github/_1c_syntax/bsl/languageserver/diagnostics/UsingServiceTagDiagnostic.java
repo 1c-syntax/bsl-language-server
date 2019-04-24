@@ -29,6 +29,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO
 )
-public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic{
+public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String SERVICE_TAGS_DEFAULT = "todo|fixme";
 
@@ -60,19 +61,19 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic{
     pattern = getPatternSearch(serviceTags);
   }
 
-  public Pattern getPatternSearch(String value)
-  {
+  public Pattern getPatternSearch(String value) {
     return Pattern.compile(
       "\\s+(" + value + ")",
       Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.COMMENTS);
   }
+
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
     return documentContext.getComments()
       .parallelStream()
       .filter((Token token) -> pattern.matcher(token.getText()).find())
-      .map(token -> {
+      .map((Token token) -> {
         Matcher matcher = pattern.matcher(token.getText());
         matcher.find();
         return BSLDiagnostic.createDiagnostic(
