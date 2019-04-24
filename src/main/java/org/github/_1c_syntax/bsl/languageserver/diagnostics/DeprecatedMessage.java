@@ -28,7 +28,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -38,13 +37,15 @@ import java.util.regex.Pattern;
   minutesToFix = 2
 )
 public class DeprecatedMessage extends AbstractVisitorDiagnostic {
-  private static final Pattern messagePattern = Pattern.compile("сообщить|message");
+  private static final Pattern messagePattern = Pattern.compile(
+    "(сообщить|message)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    String methodName = ctx.methodName().getText().toLowerCase(Locale.getDefault());
-    if (messagePattern.matcher(methodName).matches()) {
+    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
       addDiagnostic(ctx);
     }
 
