@@ -30,7 +30,6 @@ import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -39,7 +38,10 @@ import java.util.stream.Collectors;
 )
 public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern cancelPattern = Pattern.compile("отказ|cancel");
+  private static final Pattern cancelPattern = Pattern.compile(
+    "отказ|cancel",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
@@ -48,8 +50,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     boolean inParams = params.stream().anyMatch(
       node -> cancelPattern.matcher(((BSLParser.ParamContext) node).IDENTIFIER()
-        .getText()
-        .toLowerCase(Locale.getDefault()))
+        .getText())
         .matches());
 
     // ToDO обрабатывать не только в параметрах
@@ -63,8 +64,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     List<ParseTree> tree = assigns.stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).complexIdentifier()
-          .getText()
-          .toLowerCase(Locale.getDefault()))
+          .getText())
           .matches()
       ).collect(Collectors.toList());
 
@@ -106,7 +106,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
       return expression
         .member()
         .stream()
-        .anyMatch(token -> cancelPattern.matcher(token.getText().toLowerCase(Locale.getDefault()))
+        .anyMatch(token -> cancelPattern.matcher(token.getText())
         .matches());
 
     }
