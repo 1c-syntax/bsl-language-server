@@ -40,6 +40,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedCond
 import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseIfEndsWithElseDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.NestedConstructorsInStructureDeclarationDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NestedTernaryOperatorDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic;
@@ -269,6 +270,7 @@ public final class DiagnosticProvider {
       IfElseIfEndsWithElseDiagnostic.class,
       LineLengthDiagnostic.class,
       MethodSizeDiagnostic.class,
+      NestedConstructorsInStructureDeclarationDiagnostic.class,
       NestedTernaryOperatorDiagnostic.class,
       NumberOfOptionalParamsDiagnostic.class,
       NumberOfParamsDiagnostic.class,
