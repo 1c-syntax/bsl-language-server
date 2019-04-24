@@ -27,33 +27,10 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
-import org.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedMessage;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyStatementDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.FunctionShouldHaveReturnDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedCodeBlockDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedConditionDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseIfEndsWithElseDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NestedTernaryOperatorDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfValuesInStructureConstructorDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.OneStatementPerLineDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.OrderOfParamsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValueDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingServiceTagDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -70,7 +47,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -258,34 +234,15 @@ public final class DiagnosticProvider {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
-    return Arrays.asList(
-      CanonicalSpellingKeywordsDiagnostic.class,
-      DeprecatedMessage.class,
-      EmptyCodeBlockDiagnostic.class,
-      EmptyStatementDiagnostic.class,
-      FunctionShouldHaveReturnDiagnostic.class,
-      IfElseDuplicatedCodeBlockDiagnostic.class,
-      IfElseDuplicatedConditionDiagnostic.class,
-      IfElseIfEndsWithElseDiagnostic.class,
-      LineLengthDiagnostic.class,
-      MethodSizeDiagnostic.class,
-      NestedTernaryOperatorDiagnostic.class,
-      NumberOfOptionalParamsDiagnostic.class,
-      NumberOfParamsDiagnostic.class,
-      NumberOfValuesInStructureConstructorDiagnostic.class,
-      OneStatementPerLineDiagnostic.class,
-      OrderOfParamsDiagnostic.class,
-      ProcedureReturnsValueDiagnostic.class,
-      SelfAssignDiagnostic.class,
-      SemicolonPresenceDiagnostic.class,
-      UnknownPreprocessorSymbolDiagnostic.class,
-      UsingCancelParameterDiagnostic.class,
-      UsingServiceTagDiagnostic.class,
-      YoLetterUsageDiagnostic.class
-    );
+    Reflections diagnosticReflections = new Reflections(BSLDiagnostic.class.getPackage().getName());
 
+    return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
+      .stream()
+      .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
+      .collect(Collectors.toList());
   }
 
   private static Map<Class<? extends BSLDiagnostic>, DiagnosticMetadata> createDiagnosticMetadata(
