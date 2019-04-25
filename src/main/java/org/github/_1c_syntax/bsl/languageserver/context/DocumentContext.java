@@ -46,6 +46,7 @@ public class DocumentContext {
 
   private BSLParser.FileContext ast;
   private List<Token> tokens;
+  private List<MethodContext> methods;
   private final String uri;
   private final FileType fileType;
 
@@ -69,6 +70,10 @@ public class DocumentContext {
 
   public BSLParser.FileContext getAst() {
     return ast;
+  }
+
+  public List<MethodContext> getMethods() {
+    return methods;
   }
 
   public List<Token> getTokens() {
@@ -127,5 +132,10 @@ public class DocumentContext {
 
     BSLParser parser = new BSLParser(tokenStream);
     ast = parser.file();
+
+    MethodContextBuilder methodContextBuilder = new MethodContextBuilder();
+    methodContextBuilder.visitFile(ast);
+    methods = methodContextBuilder.getMethods();
   }
+
 }
