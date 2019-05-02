@@ -79,14 +79,10 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
         return BSLDiagnostic.createDiagnostic(
           this,
           RangeHelper.newRange(token),
-          getDiagnosticMessage(matcher.group(0)));
+          getCustomDiagnosticMessage(matcher.group(0)));
       })
       .collect((Collectors.toList()));
 
   }
 
-  private String getDiagnosticMessage(String tag) {
-    String diagnosticMessage = getDiagnosticMessage();
-    return String.format(diagnosticMessage, tag);
-  }
 }

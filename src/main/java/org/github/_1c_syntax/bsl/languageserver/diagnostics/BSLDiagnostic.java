@@ -47,6 +47,10 @@ public interface BSLDiagnostic {
     return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
   }
 
+  default String getCustomDiagnosticMessage(Object... args) {
+    return String.format(getDiagnosticMessage(), args);
+  }
+
   default void configure(Map<String, Object> configuration) {}
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {

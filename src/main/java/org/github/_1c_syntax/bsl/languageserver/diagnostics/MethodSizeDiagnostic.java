@@ -60,7 +60,9 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     int methodSize = methodSize(ctx.subCodeBlock());
 
     if (methodSizeExceedsLimit(methodSize)) {
-      addDiagnostic(ctx.procDeclaration().subName(), getDiagnosticMessage(ctx.procDeclaration().subName(), methodSize));
+      addDiagnostic(
+        ctx.procDeclaration().subName(),
+        getCustomDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;
@@ -71,7 +73,9 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     int methodSize = methodSize(ctx.subCodeBlock());
 
     if (methodSizeExceedsLimit(methodSize)) {
-      addDiagnostic(ctx.funcDeclaration().subName(), getDiagnosticMessage(ctx.funcDeclaration().subName(), methodSize));
+      addDiagnostic(
+        ctx.funcDeclaration().subName(),
+        getCustomDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;
@@ -89,11 +93,6 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     Token stop = ctx.getStop();
 
     return stop.getLine() - start.getLine();
-  }
-
-  private String getDiagnosticMessage(BSLParser.SubNameContext subName, int methodSize) {
-    String diagnosticMessage = super.getDiagnosticMessage();
-    return String.format(diagnosticMessage, subName.getText(), methodSize, maxMethodSize);
   }
 
 }

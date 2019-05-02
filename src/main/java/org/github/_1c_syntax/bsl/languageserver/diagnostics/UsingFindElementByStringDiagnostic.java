@@ -41,7 +41,7 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
 
   private Pattern pattern = Pattern.compile(
     "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)",
-    Pattern.CASE_INSENSITIVE);
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
@@ -49,14 +49,10 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
     if (matcher.find()) {
       BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
       if (param.children == null || param.getStart().getType() == BSLParser.STRING) {
-        addDiagnostic(ctx, getDiagnosticMessage(matcher.group(0)));
+        addDiagnostic(ctx, getCustomDiagnosticMessage(matcher.group(0)));
       }
     }
     return ctx;
-  }
-
-  private String getDiagnosticMessage(String tag) {
-    return String.format(getDiagnosticMessage(), tag);
   }
 
 }
