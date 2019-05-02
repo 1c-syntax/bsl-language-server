@@ -49,7 +49,7 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
     if (matcher.find()) {
       BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
       if (param.children == null || param.getStart().getType() == BSLParser.STRING) {
-        addDiagnostic(ctx, getCustomDiagnosticMessage(matcher.group(0)));
+        addDiagnostic(ctx, getDiagnosticMessage(matcher.group(0)));
       }
     }
     return ctx;

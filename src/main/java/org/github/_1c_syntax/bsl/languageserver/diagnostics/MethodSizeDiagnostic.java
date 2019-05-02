@@ -62,7 +62,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (methodSizeExceedsLimit(methodSize)) {
       addDiagnostic(
         ctx.procDeclaration().subName(),
-        getCustomDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
+        getDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;
@@ -75,7 +75,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (methodSizeExceedsLimit(methodSize)) {
       addDiagnostic(
         ctx.funcDeclaration().subName(),
-        getCustomDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
+        getDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;

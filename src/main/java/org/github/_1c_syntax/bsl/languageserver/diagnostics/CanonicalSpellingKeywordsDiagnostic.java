@@ -470,7 +470,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
       diagnostics.add(BSLDiagnostic.createDiagnostic(
         this,
         RangeHelper.newRange(token),
-        getCustomDiagnosticMessage(token.getText())));
+        getDiagnosticMessage(token.getText())));
     }
 
     return diagnostics;
