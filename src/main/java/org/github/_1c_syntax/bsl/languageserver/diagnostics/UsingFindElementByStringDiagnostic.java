@@ -23,19 +23,36 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-  severity = DiagnosticSeverity.CRITICAL,
-  minutesToFix = 5
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 2
 )
-public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnostic {
+
+public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnostic {
+
+  private Pattern pattern = Pattern.compile(
+    "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   @Override
-  public ParseTree visitPreproc_unknownSymbol(BSLParser.Preproc_unknownSymbolContext ctx) {
-    addDiagnostic(ctx, getDiagnosticMessage(ctx.getText()));
-    return super.visitPreproc_unknownSymbol(ctx);
+  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
+    Matcher matcher = pattern.matcher(ctx.methodName().getText());
+    if (matcher.find()) {
+      BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
+      if (param.children == null || param.getStart().getType() == BSLParser.STRING) {
+        addDiagnostic(ctx, getDiagnosticMessage(matcher.group(0)));
+      }
+    }
+    return ctx;
   }
 
 }
