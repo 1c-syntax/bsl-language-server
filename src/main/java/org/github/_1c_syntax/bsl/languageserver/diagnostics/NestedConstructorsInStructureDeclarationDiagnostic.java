@@ -61,16 +61,16 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     // Checking that new context is structure declaration with parameters
     BSLParser.TypeNameContext typeName = ctx.typeName();
     if (typeName == null ) {
-      return super.visitNewExpression(ctx);
+      return ctx;
     }
 
     if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
-      return super.visitNewExpression(ctx);
+      return ctx;
     }
 
     BSLParser.DoCallContext structureDoCallContext = ctx.doCall();
     if(structureDoCallContext == null) {
-      return super.visitNewExpression(ctx);
+      return ctx;
     }
 
     // receiving all parameters in structure declaration
@@ -89,7 +89,7 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     }
 
     if (nestedNewContext.isEmpty()){
-      return super.visitNewExpression(ctx);
+      return ctx;
     }
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
