@@ -32,6 +32,7 @@ import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParser.NewExpressionContext;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,8 +48,7 @@ import java.util.stream.Collectors;
   scope = DiagnosticScope.ALL
 )
 
-
-public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic{
+public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
   private Collection<ParseTree> nestedNewContext = new ArrayList<>();
   private final String relatedMessage = getResourceString("nestedConstructorRelatedMessage");
@@ -60,35 +60,32 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
     // Checking that new context is structure declaration with parameters
     BSLParser.TypeNameContext typeName = ctx.typeName();
-    if (typeName == null ) {
+    if (typeName == null) {
       return ctx;
     }
 
-    if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
+    if (!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
       return ctx;
     }
 
     BSLParser.DoCallContext structureDoCallContext = ctx.doCall();
-    if(structureDoCallContext == null) {
+    if (structureDoCallContext == null) {
       return ctx;
     }
 
-    // receiving all parameters in structure declaration
-    List<BSLParser.CallParamContext> params = structureDoCallContext.callParamList().callParam();
-    for (BSLParser.CallParamContext parameter : params) {
-
-      // looking for first nested constructor in parameter
-      Collection<ParseTree> nestedNewExpressions = Trees.findAllRuleNodes(parameter, BSLParser.RULE_newExpression);
-      nestedNewExpressions.stream()
+    // Looking for nested constructors
+    structureDoCallContext.callParamList().callParam().stream()
+      .filter(parseTree -> parseTree.start.getType() == BSLParser.NEW_KEYWORD)
+      .forEach(parseTree -> Trees.findAllRuleNodes(parseTree, BSLParser.RULE_newExpression)
+        .stream()
         .limit(1)
-        .filter(parseTree ->{
-            BSLParser.DoCallContext doCallContext = ((BSLParser.NewExpressionContext) parseTree).doCall();
-            return doCallContext!= null && doCallContext.callParamList().callParam().size() > 0;
-        }
-        ).collect(Collectors.toCollection(()->nestedNewContext));
-    }
+        .filter(newContext -> {
+            BSLParser.DoCallContext doCallContext = ((NewExpressionContext) newContext).doCall();
+            return doCallContext != null && doCallContext.callParamList().callParam().size() > 0;
+          }
+        ).collect(Collectors.toCollection(() -> nestedNewContext)));
 
-    if (nestedNewContext.isEmpty()){
+    if (nestedNewContext.isEmpty()) {
       return ctx;
     }
 
@@ -102,7 +99,7 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     nestedNewContext.stream()
       .map(expressionContext ->
         this.createRelatedInformation(
-          RangeHelper.newRange((BSLParser.NewExpressionContext)expressionContext),
+          RangeHelper.newRange((BSLParser.NewExpressionContext) expressionContext),
           relatedMessage
         )
       )

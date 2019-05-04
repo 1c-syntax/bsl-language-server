@@ -54,3 +54,6 @@
     Result = New Structure("Params",                                                // Warn
                             New Structure("FixedStructure",                         // Warn
                                             New FixedStructure(New Structure)));    // Pass
+
+    Result = New Structure("Params",                                              // Pass
+                            FillStructure(New FixedStructure(New Structure)));    // Pass
