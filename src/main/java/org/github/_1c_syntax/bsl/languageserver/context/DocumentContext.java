@@ -159,7 +159,12 @@ public class DocumentContext {
 
     metrics.setNcloc(ncloc);
 
-    int lines = tokens.get(tokens.size() - 1).getLine();
+    int lines;
+    if (tokens.isEmpty()) {
+      lines = 0;
+    } else {
+      lines = tokens.get(tokens.size() - 1).getLine();
+    }
     metrics.setLines(lines);
 
     int statements = Trees.findAllRuleNodes(ast, BSLParser.RULE_statement).size();
