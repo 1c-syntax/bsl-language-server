@@ -27,6 +27,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolBuilder;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
@@ -46,7 +48,8 @@ public class DocumentContext {
 
   private BSLParser.FileContext ast;
   private List<Token> tokens;
-  private List<MethodContext> methods;
+  private MetricStorage metrics;
+  private List<MethodSymbol> methods;
   private final String uri;
   private final FileType fileType;
 
@@ -72,7 +75,7 @@ public class DocumentContext {
     return ast;
   }
 
-  public List<MethodContext> getMethods() {
+  public List<MethodSymbol> getMethods() {
     return methods;
   }
 
@@ -88,6 +91,10 @@ public class DocumentContext {
     return tokens.stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
+  }
+
+  public MetricStorage getMetrics() {
+    return metrics;
   }
 
   public String getUri() {
@@ -133,9 +140,12 @@ public class DocumentContext {
     BSLParser parser = new BSLParser(tokenStream);
     ast = parser.file();
 
-    MethodContextBuilder methodContextBuilder = new MethodContextBuilder();
-    methodContextBuilder.visitFile(ast);
-    methods = methodContextBuilder.getMethods();
+    MethodSymbolBuilder methodSymbolBuilder = new MethodSymbolBuilder(ast);
+    methods = methodSymbolBuilder.getMethods();
+
+    metrics = new MetricStorage();
+    metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));
+    metrics.setProcedures(methods.size() - metrics.getFunctions());
   }
 
 }

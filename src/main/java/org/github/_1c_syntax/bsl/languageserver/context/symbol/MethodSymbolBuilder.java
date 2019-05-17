@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.context;
+package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -28,9 +28,13 @@ import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MethodContextBuilder extends BSLParserBaseVisitor<ParseTree> {
+public class MethodSymbolBuilder extends BSLParserBaseVisitor<ParseTree> {
 
-  private List<MethodContext> methods = new ArrayList<>();
+  private List<MethodSymbol> methods = new ArrayList<>();
+
+  public MethodSymbolBuilder(BSLParser.FileContext ast) {
+    visitFile(ast);
+  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -40,35 +44,35 @@ public class MethodContextBuilder extends BSLParserBaseVisitor<ParseTree> {
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-    MethodContext methodContext = new MethodContext();
+    MethodSymbol methodSymbol = new MethodSymbol();
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
-    methodContext.setName(declaration.subName().getText());
-    methodContext.setExport(declaration.EXPORT_KEYWORD() != null);
-    methodContext.setFunction(true);
-    methodContext.setNode(ctx);
+    methodSymbol.setName(declaration.subName().getText());
+    methodSymbol.setExport(declaration.EXPORT_KEYWORD() != null);
+    methodSymbol.setFunction(true);
+    methodSymbol.setNode(ctx);
 
-    methods.add(methodContext);
+    methods.add(methodSymbol);
 
     return ctx;
   }
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-    MethodContext methodContext = new MethodContext();
+    MethodSymbol methodSymbol = new MethodSymbol();
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
-    methodContext.setName(declaration.subName().getText());
-    methodContext.setExport(declaration.EXPORT_KEYWORD() != null);
-    methodContext.setFunction(false);
-    methodContext.setNode(ctx);
+    methodSymbol.setName(declaration.subName().getText());
+    methodSymbol.setExport(declaration.EXPORT_KEYWORD() != null);
+    methodSymbol.setFunction(false);
+    methodSymbol.setNode(ctx);
 
-    methods.add(methodContext);
+    methods.add(methodSymbol);
 
     return ctx;
   }
 
-  public List<MethodContext> getMethods() {
+  public List<MethodSymbol> getMethods() {
     return new ArrayList<>(methods);
   }
 

@@ -21,13 +21,14 @@
  */
 package org.github._1c_syntax.bsl.languageserver.context;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.antlr.v4.runtime.tree.ParseTree;
+import lombok.NoArgsConstructor;
 
 @Data
-public class MethodContext {
-  private String name;
-  private boolean export;
-  private boolean isFunction;
-  private ParseTree node;
+@AllArgsConstructor
+@NoArgsConstructor
+public class MetricStorage {
+  private int procedures;
+  private int functions;
 }
