@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.Trees;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -143,9 +144,26 @@ public class DocumentContext {
     MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
     methods = methodSymbolComputer.getMethods();
 
+    computeMetrics();
+  }
+
+  private void computeMetrics() {
     metrics = new MetricStorage();
     metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));
     metrics.setProcedures(methods.size() - metrics.getFunctions());
+
+    int ncloc = (int) getTokensFromDefaultChannel().stream()
+      .map(Token::getLine)
+      .distinct()
+      .count();
+
+    metrics.setNcloc(ncloc);
+
+    int lines = tokens.get(tokens.size() - 1).getLine();
+    metrics.setLines(lines);
+
+    int statements = Trees.findAllRuleNodes(ast, BSLParser.RULE_statement).size();
+    metrics.setStatements(statements);
   }
 
 }

@@ -31,4 +31,7 @@ import lombok.NoArgsConstructor;
 public class MetricStorage {
   private int procedures;
   private int functions;
+  private int lines;
+  private int ncloc;
+  private int statements;
 }
