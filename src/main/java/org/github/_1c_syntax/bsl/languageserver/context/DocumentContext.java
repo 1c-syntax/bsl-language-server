@@ -28,7 +28,7 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolBuilder;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
@@ -140,8 +140,8 @@ public class DocumentContext {
     BSLParser parser = new BSLParser(tokenStream);
     ast = parser.file();
 
-    MethodSymbolBuilder methodSymbolBuilder = new MethodSymbolBuilder(ast);
-    methods = methodSymbolBuilder.getMethods();
+    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
+    methods = methodSymbolComputer.getMethods();
 
     metrics = new MetricStorage();
     metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));

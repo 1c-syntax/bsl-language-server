@@ -28,11 +28,11 @@ import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MethodSymbolBuilder extends BSLParserBaseVisitor<ParseTree> {
+public class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> {
 
   private List<MethodSymbol> methods = new ArrayList<>();
 
-  public MethodSymbolBuilder(BSLParser.FileContext ast) {
+  public MethodSymbolComputer(BSLParser.FileContext ast) {
     visitFile(ast);
   }
 
@@ -44,13 +44,14 @@ public class MethodSymbolBuilder extends BSLParserBaseVisitor<ParseTree> {
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-    MethodSymbol methodSymbol = new MethodSymbol();
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
-    methodSymbol.setName(declaration.subName().getText());
-    methodSymbol.setExport(declaration.EXPORT_KEYWORD() != null);
-    methodSymbol.setFunction(true);
-    methodSymbol.setNode(ctx);
+    MethodSymbol methodSymbol = MethodSymbol.builder()
+      .name(declaration.subName().getText())
+      .export(declaration.EXPORT_KEYWORD() != null)
+      .function(true)
+      .node(ctx)
+      .build();
 
     methods.add(methodSymbol);
 
@@ -59,13 +60,14 @@ public class MethodSymbolBuilder extends BSLParserBaseVisitor<ParseTree> {
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-    MethodSymbol methodSymbol = new MethodSymbol();
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
-    methodSymbol.setName(declaration.subName().getText());
-    methodSymbol.setExport(declaration.EXPORT_KEYWORD() != null);
-    methodSymbol.setFunction(false);
-    methodSymbol.setNode(ctx);
+    MethodSymbol methodSymbol = MethodSymbol.builder()
+      .name(declaration.subName().getText())
+      .export(declaration.EXPORT_KEYWORD() != null)
+      .function(false)
+      .node(ctx)
+      .build();
 
     methods.add(methodSymbol);
 
