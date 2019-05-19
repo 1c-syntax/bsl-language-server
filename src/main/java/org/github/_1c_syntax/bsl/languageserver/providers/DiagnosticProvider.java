@@ -37,7 +37,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
-import org.github._1c_syntax.bsl.languageserver.utils.VersionCompliantReflections;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
 import org.slf4j.Logger;
@@ -227,7 +226,7 @@ public final class DiagnosticProvider {
   @SuppressWarnings("unchecked")
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
-    Reflections diagnosticReflections = new VersionCompliantReflections(BSLDiagnostic.class.getPackage().getName());
+    Reflections diagnosticReflections = new Reflections(BSLDiagnostic.class.getPackage().getName());
 
     return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
       .stream()
@@ -254,7 +253,7 @@ public final class DiagnosticProvider {
       .collect(Collectors.toMap(
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
         (Class<? extends BSLDiagnostic> diagnosticClass) -> {
-          Reflections diagnosticReflections = new VersionCompliantReflections(
+          Reflections diagnosticReflections = new Reflections(
             diagnosticClass.getCanonicalName(),
             new FieldAnnotationsScanner()
           );
