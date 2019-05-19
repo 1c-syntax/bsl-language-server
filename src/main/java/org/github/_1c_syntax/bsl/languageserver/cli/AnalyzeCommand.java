@@ -91,7 +91,7 @@ public class AnalyzeCommand implements Command {
     }
     DocumentContext documentContext = new DocumentContext(file.toURI().toString(), textDocumentContent);
 
-    return new FileInfo(file.toPath(), diagnosticProvider.computeDiagnostics(documentContext));
+    return new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
   }
 
 

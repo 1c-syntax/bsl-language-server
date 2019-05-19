@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Location;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.AfterEach;
@@ -68,7 +69,8 @@ class GenericReporterTest {
     Location location = new Location("file:///fake-uri.bsl", RangeHelper.newRange(0, 2, 2, 3));
     diagnostic.setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
-    FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
+    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
+    FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
     AbstractDiagnosticReporter reporter = new GenericIssueReporter();

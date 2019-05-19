@@ -60,7 +60,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", textDocumentContent);
+    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", textDocumentContent);
     return diagnostic.getDiagnostics(documentContext);
   }
 

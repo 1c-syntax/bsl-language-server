@@ -19,31 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Value;
-import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 @Value
-@AllArgsConstructor
-public class FileInfo {
-  private final Path path;
-  private final List<Diagnostic> diagnostics;
-  private final MetricStorage metrics;
-
-  public FileInfo(DocumentContext documentContext, List<Diagnostic> diagnostics) {
-    URI uri = URI.create(documentContext.getUri());
-    path = Paths.get(uri);
-    this.diagnostics = new ArrayList<>(diagnostics);
-    metrics = documentContext.getMetrics();
-  }
+@Builder
+public class MethodSymbol implements Symbol {
+  private final String name;
+  private final boolean export;
+  private final boolean function;
+  private final ParseTree node;
 }
