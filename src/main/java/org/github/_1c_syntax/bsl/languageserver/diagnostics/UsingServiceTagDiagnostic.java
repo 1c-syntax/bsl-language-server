@@ -85,8 +85,4 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   }
 
-  private String getDiagnosticMessage(String tag) {
-    String diagnosticMessage = getDiagnosticMessage();
-    return String.format(diagnosticMessage, tag);
-  }
 }
