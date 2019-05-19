@@ -47,12 +47,13 @@ public class VersionCompliantReflections extends Reflections {
       Multimap<String, String> mmap = store.get(SCANNER_CLASS_NAME);
       Sets.SetView<String> keys = Sets.difference(mmap.keySet(), Sets.newHashSet(mmap.values()));
       Multimap<String, String> expand = HashMultimap.create();
-      for (String key : keys) {
+
+      keys.forEach(key -> {
         final Class<?> type = forName(key);
         if (type != null) {
           doExpandSuperTypes(expand, key, type);
         }
-      }
+      });
       mmap.putAll(expand);
     }
   }
