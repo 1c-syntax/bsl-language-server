@@ -30,6 +30,7 @@ import org.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Value
@@ -42,7 +43,7 @@ public class FileInfo {
   public FileInfo(DocumentContext documentContext, List<Diagnostic> diagnostics) {
     URI uri = URI.create(documentContext.getUri());
     path = Paths.get(uri);
-    this.diagnostics = diagnostics;
+    this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
   }
 }

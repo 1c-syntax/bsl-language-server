@@ -77,7 +77,7 @@ public class DocumentContext {
   }
 
   public List<MethodSymbol> getMethods() {
-    return methods;
+    return new ArrayList<>(methods);
   }
 
   public List<Token> getTokens() {

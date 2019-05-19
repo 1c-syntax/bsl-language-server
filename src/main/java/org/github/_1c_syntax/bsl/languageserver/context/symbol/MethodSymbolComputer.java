@@ -28,7 +28,7 @@ import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> {
+public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> {
 
   private List<MethodSymbol> methods = new ArrayList<>();
 
