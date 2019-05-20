@@ -44,10 +44,9 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 10,
-  scope = DiagnosticScope.ALL
+  scope = DiagnosticScope.ALL,
+  minutesToFix = 10
 )
-
 public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
   private Collection<ParseTree> nestedNewContext = new ArrayList<>();
@@ -79,9 +78,9 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
       .forEach(parseTree -> Trees.findAllRuleNodes(parseTree, BSLParser.RULE_newExpression)
         .stream()
         .limit(1)
-        .filter(newContext -> {
+        .filter((ParseTree newContext) -> {
             BSLParser.DoCallContext doCallContext = ((NewExpressionContext) newContext).doCall();
-            return doCallContext != null && doCallContext.callParamList().callParam().size() > 0;
+            return doCallContext != null && !doCallContext.callParamList().callParam().isEmpty();
           }
         ).collect(Collectors.toCollection(() -> nestedNewContext)));
 
