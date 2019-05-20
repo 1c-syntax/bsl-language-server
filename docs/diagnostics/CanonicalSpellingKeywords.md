@@ -79,4 +79,4 @@
 |НаКлиентеНаСервере             |AtClientAtServer           |
 
 
-Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std/content/2149184090/hdoc)
+Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)

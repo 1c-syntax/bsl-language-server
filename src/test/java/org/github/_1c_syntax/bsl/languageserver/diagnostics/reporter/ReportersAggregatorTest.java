@@ -23,6 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.AfterEach;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -64,7 +64,8 @@ class ReportersAggregatorTest {
       "test"
     );
 
-    FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
+    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
+    FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
     aggregator.report(analysisInfo);

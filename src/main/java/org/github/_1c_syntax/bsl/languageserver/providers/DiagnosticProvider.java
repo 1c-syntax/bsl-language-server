@@ -29,29 +29,11 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.EmptyStatementDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.FunctionShouldHaveReturnDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedCodeBlockDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseDuplicatedConditionDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.IfElseIfEndsWithElseDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.MethodSizeDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NestedTernaryOperatorDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfParamsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.OneStatementPerLineDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.OrderOfParamsDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.ProcedureReturnsValueDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.SelfAssignDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.SemicolonPresenceDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.UnknownPreprocessorSymbolDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.UsingCancelParameterDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.YoLetterUsageDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
@@ -65,9 +47,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -89,17 +69,6 @@ public final class DiagnosticProvider {
   private static Map<String, Class<? extends BSLDiagnostic>> diagnosticsCodes
     = createDiagnosticsCodes(diagnosticClasses);
 
-  private static Map<String, Class<? extends BSLDiagnostic>> createDiagnosticsCodes(
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses
-  ) {
-    return diagnosticClasses.stream().collect(
-      Collectors.toMap(
-        DiagnosticProvider::getDiagnosticCode,
-        diagnosticClass -> diagnosticClass
-      )
-    );
-  }
-
   private final LanguageServerConfiguration configuration;
 
   public DiagnosticProvider() {
@@ -117,7 +86,7 @@ public final class DiagnosticProvider {
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    return getDiagnosticInstances().parallelStream()
+    return getDiagnosticInstances(documentContext.getFileType()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .collect(Collectors.toList());
   }
@@ -151,8 +120,7 @@ public final class DiagnosticProvider {
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(diagnosticCode + ".md");
 
-    if (descriptionStream == null)
-    {
+    if (descriptionStream == null) {
       return "";
     }
 
@@ -255,31 +223,15 @@ public final class DiagnosticProvider {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
-    return Arrays.asList(
-      CanonicalSpellingKeywordsDiagnostic.class,
-      EmptyCodeBlockDiagnostic.class,
-      EmptyStatementDiagnostic.class,
-      FunctionShouldHaveReturnDiagnostic.class,
-      IfElseDuplicatedCodeBlockDiagnostic.class,
-      IfElseDuplicatedConditionDiagnostic.class,
-      IfElseIfEndsWithElseDiagnostic.class,
-      LineLengthDiagnostic.class,
-      MethodSizeDiagnostic.class,
-      NestedTernaryOperatorDiagnostic.class,
-      NumberOfOptionalParamsDiagnostic.class,
-      NumberOfParamsDiagnostic.class,
-      OneStatementPerLineDiagnostic.class,
-      OrderOfParamsDiagnostic.class,
-      ProcedureReturnsValueDiagnostic.class,
-      SelfAssignDiagnostic.class,
-      SemicolonPresenceDiagnostic.class,
-      UnknownPreprocessorSymbolDiagnostic.class,
-      UsingCancelParameterDiagnostic.class,
-      YoLetterUsageDiagnostic.class
-    );
+    Reflections diagnosticReflections = new Reflections(BSLDiagnostic.class.getPackage().getName());
 
+    return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
+      .stream()
+      .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
+      .collect(Collectors.toList());
   }
 
   private static Map<Class<? extends BSLDiagnostic>, DiagnosticMetadata> createDiagnosticMetadata(
@@ -325,10 +277,37 @@ public final class DiagnosticProvider {
     return map;
   }
 
+  private static Map<String, Class<? extends BSLDiagnostic>> createDiagnosticsCodes(
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses
+  ) {
+    return diagnosticClasses.stream().collect(
+      Collectors.toMap(
+        DiagnosticProvider::getDiagnosticCode,
+        diagnosticClass -> diagnosticClass
+      )
+    );
+  }
+
   @VisibleForTesting
   public List<BSLDiagnostic> getDiagnosticInstances() {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
+      .map(DiagnosticProvider::createDiagnosticInstance)
+      .peek((BSLDiagnostic diagnostic) -> {
+          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
+            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
+          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+            diagnostic.configure(diagnosticConfiguration.getRight());
+          }
+        }
+      ).collect(Collectors.toList());
+  }
+
+  @VisibleForTesting
+  private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+    return diagnosticClasses.stream()
+      .filter(this::isEnabled)
+      .filter(element -> inScope(element, fileType))
       .map(DiagnosticProvider::createDiagnosticInstance)
       .peek((BSLDiagnostic diagnostic) -> {
           Either<Boolean, Map<String, Object>> diagnosticConfiguration =
@@ -348,6 +327,17 @@ public final class DiagnosticProvider {
       LOGGER.error("Can't instantiate diagnostic", e);
     }
     return diagnostic;
+  }
+
+  private static boolean inScope(Class<? extends BSLDiagnostic> diagnosticClass, FileType fileType) {
+    DiagnosticScope scope = diagnosticsMetadata.get(diagnosticClass).scope();
+    DiagnosticScope fileScope;
+    if (fileType == FileType.OS) {
+      fileScope = DiagnosticScope.OS;
+    } else {
+      fileScope = DiagnosticScope.BSL;
+    }
+    return scope == DiagnosticScope.ALL || scope == fileScope;
   }
 
   private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {

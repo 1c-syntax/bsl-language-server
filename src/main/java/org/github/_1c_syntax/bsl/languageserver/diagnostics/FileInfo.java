@@ -21,14 +21,29 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 
+import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Value
+@AllArgsConstructor
 public class FileInfo {
   private final Path path;
   private final List<Diagnostic> diagnostics;
+  private final MetricStorage metrics;
+
+  public FileInfo(DocumentContext documentContext, List<Diagnostic> diagnostics) {
+    URI uri = URI.create(documentContext.getUri());
+    path = Paths.get(uri);
+    this.diagnostics = new ArrayList<>(diagnostics);
+    metrics = documentContext.getMetrics();
+  }
 }

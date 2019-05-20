@@ -122,6 +122,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 ### Список реализованных диагностик
 
 * [CanonicalSpellingKeywords - Каноническое написание ключевых слов](diagnostics/CanonicalSpellingKeywords.md)
+* [DeprecatedMessage - Ограничение на использование устаревшего метода "Сообщить"](diagnostics/DeprecatedMessage.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
@@ -130,9 +131,11 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [IfElseIfEndsWithElse - Использование синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseIfEndsWithElse.md)
 * [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
+* [NestedConstructorsInStructureDeclaration - Ограничение на использование конструкторов с параметрами при объявлении структуры](diagnostics/NestedConstructorsInStructureDeclaration.md)
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)
 * [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
+* [NumberOfValuesInStructureConstructor - Ограничение на количество значений свойств, передаваемых в конструктор структуры](diagnostics/NumberOfValuesInStructureConstructor.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
 * [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
 * [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)
@@ -140,4 +143,6 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
 * [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
+* [UsingFindElementByString - Использование методов «НайтиПоНаименованию» и «НайтиПоКоду»](diagnostics/UsingFindElementByString.md)
+* [UsingServiceTag - Использование служебных тегов](diagnostics/UsingServiceTag.md)
 * [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsage.md)

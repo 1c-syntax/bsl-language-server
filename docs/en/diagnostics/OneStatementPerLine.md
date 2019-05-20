@@ -5,4 +5,4 @@ For example:
 
 НачальныйИндекс = 0; Индекс = 0; Результат = 0;
 
-Reference: [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:-2145783191:hdoc)
+Reference: [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)

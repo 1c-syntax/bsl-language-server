@@ -46,7 +46,7 @@ class HoverProviderTest {
     params.setPosition(new Position(0, 0));
 
     String fileContent = FileUtils.readFileToString(new File("./src/test/resources/providers/hover.bsl"), StandardCharsets.UTF_8);
-    DocumentContext documentContext = new DocumentContext("fake-uri", fileContent);
+    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
 
     Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
 
@@ -59,7 +59,7 @@ class HoverProviderTest {
     params.setPosition(new Position(0, 20));
 
     String fileContent = FileUtils.readFileToString(new File("./src/test/resources/providers/hover.bsl"), StandardCharsets.UTF_8);
-    DocumentContext documentContext = new DocumentContext("fake-uri", fileContent);
+    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
 
     Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
 

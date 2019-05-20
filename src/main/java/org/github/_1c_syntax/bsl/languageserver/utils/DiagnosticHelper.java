@@ -21,9 +21,11 @@
  */
 package org.github._1c_syntax.bsl.languageserver.utils;
 
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
 
 public final class DiagnosticHelper {
 
@@ -68,6 +70,15 @@ public final class DiagnosticHelper {
 
     return true;
   }
+
+  public static boolean isStructureType(ParseTree tnc){
+    return "Структура".equalsIgnoreCase(tnc.getText()) || "Structure".equalsIgnoreCase(tnc.getText());
+  }
+
+  public static boolean isFixedStructureType(ParseTree tnc){
+    return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
+  }
+
 }
 
 
