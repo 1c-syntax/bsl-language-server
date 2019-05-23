@@ -1,11 +1,10 @@
 # Limit on the number of property values passed to the structure constructor
 
-При создании объекта типа Структура не рекомендуется передавать в конструктор более 3-х значений свойств.
-Вместо этого рекомендуется использовать метод Вставить или присваивать значения свойствам явным образом
+When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly.
 
 #### Example
 
-Неправильно:
+Incorrect:
 
 ```bsl
 ПараметрыФормыКомпоновки  = Новый Структура(
@@ -31,7 +30,7 @@
    ЗаголовокФормыНастройкиСхемыКомпоновкиДанных));
 ```
 
-Правильно:
+Correct:
 
 ```bsl
 ПараметрыФормыКомпоновки  = Новый Структура;
