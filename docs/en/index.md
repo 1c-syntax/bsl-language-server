@@ -67,7 +67,7 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 > When run analysis for large code base it is recommended to set parameter {code0}-Xmx{/code0} to set maximum limit of  memory being allocated to java process. The size of allocated memory depends on the size of code base for analysis.
 
 ```sh
-java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+java -Xmx4g -jar bsl-language-server.jar ... other parameters
 ```
 
 <a id="configuration"></a>
@@ -92,7 +92,7 @@ Configuration file example, setting:
 
 ```json
 {
-  "diagnosticLanguage": "ru",
+  "diagnosticLanguage": "en",
   "diagnostics": {
     "LineLength": {
       "maxLineLength": 140
@@ -125,7 +125,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 ### Implemented diagnostics
 
 - [CanonicalSpellingKeywords - Canonical Keywords Spelling ](diagnostics/CanonicalSpellingKeywords.md)
-- [DeprecatedMessage - Ограничение на использование устаревшего метода "Сообщить"](diagnostics/DeprecatedMessage.md)
+- [DeprecatedMessage - Restriction on using of the obsolete method "Message"](diagnostics/DeprecatedMessage.md)
 - [EmptyCodeBlock - Empty Code Block](diagnostics/EmptyCodeBlock.md)
 - [EmptyStatement - Empty Statement](diagnostics/EmptyStatement.md)
 - [FunctionShouldHaveReturn - Function Should Have Return](diagnostics/FunctionShouldHaveReturn.md)
@@ -138,7 +138,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [NestedTernaryOperator - Nested Ternary Operator](diagnostics/NestedTernaryOperator.md)
 - [NumberOfOptionalParams - Number Of Optional Parameters in Method](diagnostics/NumberOfOptionalParams.md)
 - [NumberOfParams - Number Of Parameters in Method](diagnostics/NumberOfParams.md)
-- [NumberOfValuesInStructureConstructor - Ограничение на количество значений свойств, передаваемых в конструктор структуры](diagnostics/NumberOfValuesInStructureConstructor.md)
+- [NumberOfValuesInStructureConstructor - Restriction on the number of property values ​​passed to the structure constructor](diagnostics/NumberOfValuesInStructureConstructor.md)
 - [OneStatementPerLine - One Statement Per Line](diagnostics/OneStatementPerLine.md)
 - [OrderOfParams - Order Of Parameters in Method](diagnostics/OrderOfParams.md)
 - [ProcedureReturnsValue - Procedure should not return Value](diagnostics/ProcedureReturnsValue.md)
@@ -146,6 +146,6 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [SelfAssign - Variable is Assigned to itself](diagnostics/SelfAssign.md)
 - [UnknownPreprocessorSymbol - Unknown Preprocessor Symbol](diagnostics/UnknownPreprocessorSymbol.md)
 - [UsingCancelParameter - Using Cancel Parameter](diagnostics/UsingCancelParameter.md)
-- [UsingFindElementByString - Использование методов «НайтиПоНаименованию» и «НайтиПоКоду»](diagnostics/UsingFindElementByString.md)
-- [UsingServiceTag - Использование служебных тегов](diagnostics/UsingServiceTag.md)
+- [UsingFindElementByString - Using the methods "FindByDescription" and "FindByCode"](diagnostics/UsingFindElementByString.md)
+- [UsingServiceTag - Using service tags](diagnostics/UsingServiceTag.md)
 - [YoLetterUsageDiagnostic - Yo Letter Usage in code](diagnostics/YoLetterUsage.md)
