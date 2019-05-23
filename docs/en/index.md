@@ -134,7 +134,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [IfElseIfEndsWithElse - If...ElseIf Ends With Else](diagnostics/IfElseIfEndsWithElse.md)
 - [LineLength - Line Length](diagnostics/LineLength.md)
 - [MethodSize - Method Size](diagnostics/MethodSize.md)
-- [NestedConstructorsInStructureDeclaration - Ограничение на использование конструкторов с параметрами при объявлении структуры](diagnostics/NestedConstructorsInStructureDeclaration.md)
+- [NestedConstructorsInStructureDeclaration - Nested constructors with parameters in structure declaration](diagnostics/NestedConstructorsInStructureDeclaration.md)
 - [NestedTernaryOperator - Nested Ternary Operator](diagnostics/NestedTernaryOperator.md)
 - [NumberOfOptionalParams - Number Of Optional Parameters in Method](diagnostics/NumberOfOptionalParams.md)
 - [NumberOfParams - Number Of Parameters in Method](diagnostics/NumberOfParams.md)
