@@ -9,6 +9,8 @@
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
+[English version](en/index.md)
+
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
 - <a href="#analyze">Run in analyzer mode</a>
@@ -51,8 +53,8 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 
 ## Run in analyzer mode
 
-To run in analyzer mode use parameter `--analyze` or `-a`. To set source code folder for analysis use parameter 
-`--srcDir` or `-s` followed by the path (relative or absolute) to the source code folder.
+To run in analyzer mode use parameter `--analyze` (short `-a`). To set source code folder for analysis use parameter 
+`--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
 
 To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
 
@@ -65,7 +67,7 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 > When run analysis for large code base it is recommended to set parameter {code0}-Xmx{/code0} to set maximum limit of  memory being allocated to java process. The size of allocated memory depends on the size of code base for analysis.
 
 ```sh
-java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+java -Xmx4g -jar bsl-language-server.jar ... other parameters
 ```
 
 <a id="configuration"></a>
@@ -90,7 +92,7 @@ Configuration file example, setting:
 
 ```json
 {
-  "diagnosticLanguage": "ru",
+  "diagnosticLanguage": "en",
   "diagnostics": {
     "LineLength": {
       "maxLineLength": 140
@@ -123,6 +125,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 ### Implemented diagnostics
 
 - [CanonicalSpellingKeywords - Canonical Keywords Spelling ](diagnostics/CanonicalSpellingKeywords.md)
+- [DeprecatedMessage - Restriction on using of the obsolete method "Message"](diagnostics/DeprecatedMessage.md)
 - [EmptyCodeBlock - Empty Code Block](diagnostics/EmptyCodeBlock.md)
 - [EmptyStatement - Empty Statement](diagnostics/EmptyStatement.md)
 - [FunctionShouldHaveReturn - Function Should Have Return](diagnostics/FunctionShouldHaveReturn.md)
@@ -131,9 +134,11 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [IfElseIfEndsWithElse - If...ElseIf Ends With Else](diagnostics/IfElseIfEndsWithElse.md)
 - [LineLength - Line Length](diagnostics/LineLength.md)
 - [MethodSize - Method Size](diagnostics/MethodSize.md)
+- [NestedConstructorsInStructureDeclaration - Nested constructors with parameters in structure declaration](diagnostics/NestedConstructorsInStructureDeclaration.md)
 - [NestedTernaryOperator - Nested Ternary Operator](diagnostics/NestedTernaryOperator.md)
 - [NumberOfOptionalParams - Number Of Optional Parameters in Method](diagnostics/NumberOfOptionalParams.md)
 - [NumberOfParams - Number Of Parameters in Method](diagnostics/NumberOfParams.md)
+- [NumberOfValuesInStructureConstructor - Restriction on the number of property values ​​passed to the structure constructor](diagnostics/NumberOfValuesInStructureConstructor.md)
 - [OneStatementPerLine - One Statement Per Line](diagnostics/OneStatementPerLine.md)
 - [OrderOfParams - Order Of Parameters in Method](diagnostics/OrderOfParams.md)
 - [ProcedureReturnsValue - Procedure should not return Value](diagnostics/ProcedureReturnsValue.md)
@@ -141,4 +146,6 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [SelfAssign - Variable is Assigned to itself](diagnostics/SelfAssign.md)
 - [UnknownPreprocessorSymbol - Unknown Preprocessor Symbol](diagnostics/UnknownPreprocessorSymbol.md)
 - [UsingCancelParameter - Using Cancel Parameter](diagnostics/UsingCancelParameter.md)
+- [UsingFindElementByString - Using the methods "FindByDescription" and "FindByCode"](diagnostics/UsingFindElementByString.md)
+- [UsingServiceTag - Using service tags](diagnostics/UsingServiceTag.md)
 - [YoLetterUsageDiagnostic - Yo Letter Usage in code](diagnostics/YoLetterUsage.md)

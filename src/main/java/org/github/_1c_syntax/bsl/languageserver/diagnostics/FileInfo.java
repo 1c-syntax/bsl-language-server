@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
@@ -35,10 +36,11 @@ import java.util.List;
 
 @Value
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileInfo {
   private final Path path;
   private final List<Diagnostic> diagnostics;
-  private final MetricStorage metrics;
+  private MetricStorage metrics;
 
   public FileInfo(DocumentContext documentContext, List<Diagnostic> diagnostics) {
     URI uri = URI.create(documentContext.getUri());
