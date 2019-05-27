@@ -74,6 +74,11 @@ public class FoldingRangeProvider {
 
     foldingRanges.addAll(regionRangeFinder.getRegionRanges());
 
+    PreprocIfRegionRangeFinder preprocIfRegionRangeFinder = new PreprocIfRegionRangeFinder();
+    preprocIfRegionRangeFinder.visitFile(documentContext.getAst());
+
+    foldingRanges.addAll(preprocIfRegionRangeFinder.getRegionRanges());
+
     return foldingRanges;
   }
 
@@ -164,5 +169,37 @@ public class FoldingRangeProvider {
 
       return super.visitRegionEnd(ctx);
     }
+  }
+
+  private static class PreprocIfRegionRangeFinder extends BSLParserBaseVisitor<ParseTree> {
+
+    private Deque<BSLParser.Preproc_ifContext> preprocIfRegionStack = new ArrayDeque<>();
+    private List<FoldingRange> regionRanges = new ArrayList<>();
+
+    public List<FoldingRange> getRegionRanges() {
+      return regionRanges;
+    }
+
+    @Override
+    public ParseTree visitPreproc_if(BSLParser.Preproc_ifContext ctx) {
+      preprocIfRegionStack.push(ctx);
+      return super.visitPreproc_if(ctx);
+    }
+
+    @Override
+    public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
+      BSLParser.Preproc_ifContext regionStart = preprocIfRegionStack.pop();
+
+      int start = regionStart.getStart().getLine();
+      int stop = ctx.getStop().getLine();
+
+      FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
+      foldingRange.setKind("region");
+
+      regionRanges.add(foldingRange);
+
+      return super.visitPreproc_endif(ctx);
+    }
+
   }
 }
