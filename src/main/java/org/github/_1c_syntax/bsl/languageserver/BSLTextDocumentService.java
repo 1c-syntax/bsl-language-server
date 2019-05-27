@@ -180,8 +180,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    List<FoldingRange> edits = FoldingRangeProvider.getFoldingRange(documentContext);
-    return CompletableFuture.completedFuture(edits);
+    return CompletableFuture.supplyAsync(() -> FoldingRangeProvider.getFoldingRange(documentContext));
   }
 
   @Override
