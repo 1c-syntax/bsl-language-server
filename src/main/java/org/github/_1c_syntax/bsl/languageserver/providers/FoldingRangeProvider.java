@@ -23,11 +23,11 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.FoldingRange;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -64,6 +64,14 @@ public class FoldingRangeProvider {
       previousLine = tokenLine;
     }
 
+    // add last range
+    if (lastRangeStart != previousLine) {
+      FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
+      foldingRange.setKind("comment");
+
+      foldingRanges.add(foldingRange);
+    }
+
     CodeBlockRangeFinder codeBlockRangeFinder = new CodeBlockRangeFinder();
     codeBlockRangeFinder.visitFile(documentContext.getAst());
 
@@ -91,47 +99,53 @@ public class FoldingRangeProvider {
     }
 
     @Override
-    public ParseTree visitSub(BSLParser.SubContext ctx) {
-      addRegionRange(ctx);
-      return super.visitSub(ctx);
+    public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
+      addRegionRange(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD());
+      return super.visitProcedure(ctx);
+    }
+
+    @Override
+    public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
+      addRegionRange(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD());
+      return super.visitFunction(ctx);
     }
 
     @Override
     public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-      addRegionRange(ctx);
+      addRegionRange(ctx.IF_KEYWORD(), ctx.ENDIF_KEYWORD());
       return super.visitIfStatement(ctx);
     }
 
     @Override
     public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-      addRegionRange(ctx);
+      addRegionRange(ctx.WHILE_KEYWORD(), ctx.ENDDO_KEYWORD());
       return super.visitWhileStatement(ctx);
     }
 
     @Override
     public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
-      addRegionRange(ctx);
+      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD());
       return super.visitForStatement(ctx);
     }
 
     @Override
     public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
-      addRegionRange(ctx);
+      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD());
       return super.visitForEachStatement(ctx);
     }
 
     @Override
     public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
-      addRegionRange(ctx);
+      addRegionRange(ctx.TRY_KEYWORD(), ctx.ENDTRY_KEYWORD());
       return super.visitTryStatement(ctx);
     }
 
-    private void addRegionRange(BSLParserRuleContext ctx) {
-      int start = ctx.getStart().getLine();
-      int stop = ctx.getStop().getLine();
+    private void addRegionRange(TerminalNode start, TerminalNode stop) {
+      int startLine = start.getSymbol().getLine();
+      int stopLine = stop.getSymbol().getLine();
 
-      if (stop > start) {
-        FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
+      if (stopLine > startLine) {
+        FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind("region");
 
         regionRanges.add(foldingRange);
