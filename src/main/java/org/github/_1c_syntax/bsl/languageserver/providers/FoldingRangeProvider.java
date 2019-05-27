@@ -45,6 +45,28 @@ public final class FoldingRangeProvider {
 
   public static List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
 
+    List<FoldingRange> foldingRanges = getCommentRanges(documentContext);
+
+    CodeBlockRangeFinder codeBlockRangeFinder = new CodeBlockRangeFinder();
+    codeBlockRangeFinder.visitFile(documentContext.getAst());
+    List<FoldingRange> codeBlockRegionRanges = codeBlockRangeFinder.getRegionRanges();
+
+    RegionRangeFinder regionRangeFinder = new RegionRangeFinder();
+    regionRangeFinder.visitFile(documentContext.getAst());
+    List<FoldingRange> regionRanges = regionRangeFinder.getRegionRanges();
+
+    PreprocIfRegionRangeFinder preprocIfRegionRangeFinder = new PreprocIfRegionRangeFinder();
+    preprocIfRegionRangeFinder.visitFile(documentContext.getAst());
+    List<FoldingRange> preprocRegionRanges = preprocIfRegionRangeFinder.getRegionRanges();
+
+    foldingRanges.addAll(codeBlockRegionRanges);
+    foldingRanges.addAll(regionRanges);
+    foldingRanges.addAll(preprocRegionRanges);
+
+    return foldingRanges;
+  }
+
+  private static List<FoldingRange> getCommentRanges(DocumentContext documentContext) {
     List<FoldingRange> foldingRanges = new ArrayList<>();
 
     int lastRangeStart = -1;
@@ -74,22 +96,6 @@ public final class FoldingRangeProvider {
 
       foldingRanges.add(foldingRange);
     }
-
-    CodeBlockRangeFinder codeBlockRangeFinder = new CodeBlockRangeFinder();
-    codeBlockRangeFinder.visitFile(documentContext.getAst());
-
-    foldingRanges.addAll(codeBlockRangeFinder.getRegionRanges());
-
-    RegionRangeFinder regionRangeFinder = new RegionRangeFinder();
-    regionRangeFinder.visitFile(documentContext.getAst());
-
-    foldingRanges.addAll(regionRangeFinder.getRegionRanges());
-
-    PreprocIfRegionRangeFinder preprocIfRegionRangeFinder = new PreprocIfRegionRangeFinder();
-    preprocIfRegionRangeFinder.visitFile(documentContext.getAst());
-
-    foldingRanges.addAll(preprocIfRegionRangeFinder.getRegionRanges());
-
     return foldingRanges;
   }
 
