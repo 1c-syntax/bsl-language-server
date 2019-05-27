@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-public class FoldingRangeProvider {
+public final class FoldingRangeProvider {
 
   private static final String REGION_KIND = "region";
   private static final String COMMENT_KIND = "comment";
@@ -98,7 +98,7 @@ public class FoldingRangeProvider {
     private List<FoldingRange> regionRanges = new ArrayList<>();
 
     public List<FoldingRange> getRegionRanges() {
-      return regionRanges;
+      return new ArrayList<>(regionRanges);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class FoldingRangeProvider {
     private List<FoldingRange> regionRanges = new ArrayList<>();
 
     public List<FoldingRange> getRegionRanges() {
-      return regionRanges;
+      return new ArrayList<>(regionRanges);
     }
 
     @Override
@@ -194,7 +194,7 @@ public class FoldingRangeProvider {
     private List<FoldingRange> regionRanges = new ArrayList<>();
 
     public List<FoldingRange> getRegionRanges() {
-      return regionRanges;
+      return new ArrayList<>(regionRanges);
     }
 
     @Override
