@@ -46,7 +46,7 @@ class FoldingRangeProviderTest {
 
     List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
 
-    assertThat(foldingRanges).hasSize(9);
+    assertThat(foldingRanges).hasSize(10);
 
     // regions
     assertThat(foldingRanges)
