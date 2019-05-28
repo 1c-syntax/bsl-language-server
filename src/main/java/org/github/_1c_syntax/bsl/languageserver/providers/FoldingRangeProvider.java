@@ -150,6 +150,10 @@ public final class FoldingRangeProvider {
     }
 
     private void addRegionRange(TerminalNode start, TerminalNode stop) {
+      if (start == null || stop == null) {
+        return;
+      }
+
       int startLine = start.getSymbol().getLine();
       int stopLine = stop.getSymbol().getLine();
 
