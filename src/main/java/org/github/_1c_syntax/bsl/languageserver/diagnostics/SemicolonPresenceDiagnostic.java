@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -38,7 +39,10 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
     if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
-      addDiagnostic(ctx.getStop());
+      Token lastToken = ctx.getStop();
+      if (lastToken != null) {
+        addDiagnostic(lastToken);
+      }
     }
     return super.visitStatement(ctx);
   }
