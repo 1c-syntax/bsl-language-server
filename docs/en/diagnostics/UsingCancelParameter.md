@@ -31,4 +31,4 @@ or
 Cancel = Cancel Или ЕстьОшибкиЗаполнения();
 ```
 
-Reference: [Standart: Modules texts(RU)](https://its.1c.ru/db/v8std#content:2149184335:hdoc)
+Reference: [Standart: Working with the "Cancel" option in event handlers(RU)](https://its.1c.ru/db/v8std#content:686:hdoc)

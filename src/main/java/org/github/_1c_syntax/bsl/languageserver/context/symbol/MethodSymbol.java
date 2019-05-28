@@ -19,32 +19,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import org.antlr.v4.runtime.Token;
+import lombok.Builder;
+import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
-@DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1
-)
-public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
-
-  @Override
-  public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-
-    if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
-      Token lastToken = ctx.getStop();
-      if (lastToken != null) {
-        addDiagnostic(lastToken);
-      }
-    }
-    return super.visitStatement(ctx);
-  }
-
+@Value
+@Builder
+public class MethodSymbol implements Symbol {
+  private final String name;
+  private final boolean export;
+  private final boolean function;
+  private final ParseTree node;
 }

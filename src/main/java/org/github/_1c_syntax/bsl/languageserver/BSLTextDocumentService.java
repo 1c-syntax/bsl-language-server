@@ -39,6 +39,8 @@ import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.ReferenceParams;
@@ -56,6 +58,7 @@ import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import org.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 
@@ -168,6 +171,16 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> FoldingRangeProvider.getFoldingRange(documentContext));
   }
 
   @Override

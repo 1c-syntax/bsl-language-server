@@ -131,6 +131,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [IfElseIfEndsWithElse - Использование синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseIfEndsWithElse.md)
 * [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
+* [NestedConstructorsInStructureDeclaration - Ограничение на использование конструкторов с параметрами при объявлении структуры](diagnostics/NestedConstructorsInStructureDeclaration.md)
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [NestedFunctionsInStructureDeclaration - Использование функций в конструкторе структуры](diagnostics/NestedFunctionsInStructureDeclaration.md)
 * [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)

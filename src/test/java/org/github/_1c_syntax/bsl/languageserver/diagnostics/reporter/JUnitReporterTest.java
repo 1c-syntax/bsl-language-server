@@ -26,6 +26,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +66,8 @@ class JUnitReporterTest {
       "test"
     );
 
-    FileInfo fileInfo = new FileInfo(new File("").toPath(), Collections.singletonList(diagnostic));
+    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
+    FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
     AbstractDiagnosticReporter reporter = new JUnitReporter();
