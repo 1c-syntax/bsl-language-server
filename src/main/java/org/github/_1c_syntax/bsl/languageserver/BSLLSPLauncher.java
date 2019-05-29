@@ -33,6 +33,7 @@ import org.github._1c_syntax.bsl.languageserver.cli.Command;
 import org.github._1c_syntax.bsl.languageserver.cli.HelpCommand;
 import org.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import org.github._1c_syntax.bsl.languageserver.cli.ParseExceptionCommand;
+import org.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 
 public class BSLLSPLauncher {
 
@@ -49,6 +50,8 @@ public class BSLLSPLauncher {
 
       if (cmd.hasOption("help")) {
         command = new HelpCommand(options);
+      } else if (cmd.hasOption("ver")) {
+        command = new VersionCommand();
       } else if (cmd.hasOption("analyze")) {
         command = new AnalyzeCommand(cmd);
       } else {
@@ -112,6 +115,13 @@ public class BSLLSPLauncher {
       "Output report directory"
     );
 
+    Option version = new Option(
+      "v",
+      "ver",
+      false,
+      "Show version."
+    );
+
     createdOptions.addOption(analyze);
     createdOptions.addOption(srcDir);
     createdOptions.addOption(outputDir);
@@ -119,6 +129,7 @@ public class BSLLSPLauncher {
 
     createdOptions.addOption(configurationOption);
     createdOptions.addOption(help);
+    createdOptions.addOption(version);
 
     return createdOptions;
   }
