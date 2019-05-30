@@ -50,7 +50,7 @@ public class BSLLSPLauncher {
 
       if (cmd.hasOption("help")) {
         command = new HelpCommand(options);
-      } else if (cmd.hasOption("ver")) {
+      } else if (cmd.hasOption("version")) {
         command = new VersionCommand();
       } else if (cmd.hasOption("analyze")) {
         command = new AnalyzeCommand(cmd);
