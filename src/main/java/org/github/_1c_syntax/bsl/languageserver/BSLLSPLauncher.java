@@ -117,7 +117,7 @@ public class BSLLSPLauncher {
 
     Option version = new Option(
       "v",
-      "ver",
+      "version",
       false,
       "Show version."
     );
