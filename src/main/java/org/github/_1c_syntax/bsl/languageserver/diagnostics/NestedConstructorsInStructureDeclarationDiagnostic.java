@@ -57,13 +57,7 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
     nestedNewContext.clear();
 
-    // Checking that new context is structure declaration with parameters
-    BSLParser.TypeNameContext typeName = ctx.typeName();
-    if (typeName == null) {
-      return ctx;
-    }
-
-    if (!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
+    if (!(DiagnosticHelper.isStructureConstructor(ctx) || (DiagnosticHelper.isFixedStructureConstructor(ctx)))) {
       return ctx;
     }
 

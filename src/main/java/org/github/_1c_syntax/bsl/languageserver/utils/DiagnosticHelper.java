@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.utils;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -71,12 +70,37 @@ public final class DiagnosticHelper {
     return true;
   }
 
-  public static boolean isStructureType(ParseTree tnc){
-    return "Структура".equalsIgnoreCase(tnc.getText()) || "Structure".equalsIgnoreCase(tnc.getText());
+  public static boolean isStructureConstructor(BSLParser.NewExpressionContext ctx) {
+    String typeName = newExpressionTypeName(ctx);
+    return "Структура".equalsIgnoreCase(typeName) || "Structure".equalsIgnoreCase(typeName);
   }
 
-  public static boolean isFixedStructureType(ParseTree tnc){
-    return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
+  public static boolean isFixedStructureConstructor(BSLParser.NewExpressionContext ctx) {
+    String typeName = newExpressionTypeName(ctx);
+    return "ФиксированнаяСтруктура".equalsIgnoreCase(typeName) || "FixedStructure".equalsIgnoreCase(typeName);
+  }
+
+
+  public static String newExpressionTypeName(BSLParser.NewExpressionContext ctx) {
+
+    BSLParser.TypeNameContext typeName = ctx.typeName();
+    if (typeName != null) {
+      return typeName.getText();
+    }
+
+    BSLParser.DoCallContext doCallContext = ctx.doCall();
+    if (doCallContext == null) {
+      return null;
+    }
+
+    BSLParser.CallParamContext callParamContext = doCallContext.callParamList().callParam(0);
+
+    if (callParamContext.start.getType() == BSLParser.STRING) {
+      return callParamContext.getText().replaceAll("\"", "");
+    }
+
+    return "";
+
   }
 
 }
