@@ -46,12 +46,7 @@ public class NestedFunctionsInStructureDeclarationDiagnostic extends AbstractVis
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
 
-    if (ctx.typeName() == null){
-      return ctx;
-    }
-
-    // TODO: Учесть, что структура может быть обявлена как "Новый ("Структура", МассивПараметров())"
-    if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
+    if (!(DiagnosticHelper.isStructureConstructor(ctx) || (DiagnosticHelper.isFixedStructureConstructor(ctx)))) {
       return ctx;
     }
 

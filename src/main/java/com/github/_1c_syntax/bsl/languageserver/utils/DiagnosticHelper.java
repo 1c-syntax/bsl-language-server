@@ -48,7 +48,7 @@ public final class DiagnosticHelper {
 
       if (leftNodeType != rightNodeType
         || (leftNodeType == BSLParser.STRING
-        && !leftNode.toString().equals(rightNode.toString()))
+          && !leftNode.toString().equals(rightNode.toString()))
         || (!leftNode.toString().equalsIgnoreCase(rightNode.toString()))) {
         return false;
       }
@@ -72,6 +72,39 @@ public final class DiagnosticHelper {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
   }
 
+   public static boolean isStructureConstructor(BSLParser.NewExpressionContext ctx) {
+    String typeName = newExpressionTypeName(ctx);
+    return "Структура".equalsIgnoreCase(typeName) || "Structure".equalsIgnoreCase(typeName);
+  }
+
+  public static boolean isFixedStructureConstructor(BSLParser.NewExpressionContext ctx) {
+    String typeName = newExpressionTypeName(ctx);
+    return "ФиксированнаяСтруктура".equalsIgnoreCase(typeName) || "FixedStructure".equalsIgnoreCase(typeName);
+  }
+
+
+  public static String newExpressionTypeName(BSLParser.NewExpressionContext ctx) {
+
+    BSLParser.TypeNameContext typeName = ctx.typeName();
+    if (typeName != null) {
+      return typeName.getText();
+    }
+
+    BSLParser.DoCallContext doCallContext = ctx.doCall();
+    if (doCallContext == null) {
+      return null;
+    }
+
+    BSLParser.CallParamContext callParamContext = doCallContext.callParamList().callParam(0);
+
+    if (callParamContext.start.getType() == BSLParser.STRING) {
+      return callParamContext.getText().replaceAll("\"", "");
+    }
+
+    return "";
+
+  }
+  
   public static boolean findErrorNode(ParseTree tnc) {
 
     if (tnc instanceof BSLParserRuleContext) {
