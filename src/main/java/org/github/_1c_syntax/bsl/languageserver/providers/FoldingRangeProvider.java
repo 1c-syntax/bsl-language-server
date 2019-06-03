@@ -24,13 +24,16 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 
@@ -48,6 +51,10 @@ public final class FoldingRangeProvider {
     codeBlockRangeFinder.visitFile(documentContext.getAst());
     List<FoldingRange> codeBlockRegionRanges = codeBlockRangeFinder.getRegionRanges();
 
+    UseRangeFinder useRangeFinder = new UseRangeFinder();
+    useRangeFinder.visitFile(documentContext.getAst());
+    List<FoldingRange> useRegionRanges = useRangeFinder.getRegionRanges();
+
     RegionRangeFinder regionRangeFinder = new RegionRangeFinder();
     regionRangeFinder.visitFile(documentContext.getAst());
     List<FoldingRange> regionRanges = regionRangeFinder.getRegionRanges();
@@ -57,6 +64,7 @@ public final class FoldingRangeProvider {
     List<FoldingRange> preprocRegionRanges = preprocIfRegionRangeFinder.getRegionRanges();
 
     foldingRanges.addAll(codeBlockRegionRanges);
+    foldingRanges.addAll(useRegionRanges);
     foldingRanges.addAll(regionRanges);
     foldingRanges.addAll(preprocRegionRanges);
 
@@ -94,6 +102,36 @@ public final class FoldingRangeProvider {
       foldingRanges.add(foldingRange);
     }
     return foldingRanges;
+  }
+
+  private static class UseRangeFinder extends BSLParserBaseVisitor<ParseTree> {
+
+    private List<FoldingRange> regionRanges = new ArrayList<>();
+
+    public List<FoldingRange> getRegionRanges() {
+      return new ArrayList<>(regionRanges);
+    }
+
+    @Override
+    public ParseTree visitFile(BSLParser.FileContext ctx) {
+      Collection<ParseTree> uses = Trees.findAllRuleNodes(ctx, BSLParser.RULE_use);
+      if (uses.size() > 1) {
+        uses.forEach((ParseTree use) -> {
+          BSLParser.UseContext useCtx = (BSLParser.UseContext) use;
+          int start = useCtx.getStart().getLine();
+          int stop = useCtx.getStop().getLine();
+
+          FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
+          foldingRange.setKind(FoldingRangeKind.Imports);
+
+          regionRanges.add(foldingRange);
+        });
+
+      }
+
+      return ctx;
+    }
+
   }
 
   private static class CodeBlockRangeFinder extends BSLParserBaseVisitor<ParseTree> {
