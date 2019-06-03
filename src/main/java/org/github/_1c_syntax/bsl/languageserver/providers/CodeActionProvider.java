@@ -22,35 +22,29 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider.getDiagnosticCode;
-
 public final class CodeActionProvider {
 
-  private CodeActionProvider() {
-    // only statics
+  private final DiagnosticProvider diagnosticProvider;
+
+  public CodeActionProvider(DiagnosticProvider diagnosticProvider) {
+    this.diagnosticProvider = diagnosticProvider;
   }
 
-  public static List<Either<Command, CodeAction>> getCodeActions(
+  public List<Either<Command, CodeAction>> getCodeActions(
     CodeActionParams params,
     DocumentContext documentContext
   ) {
@@ -65,35 +59,20 @@ public final class CodeActionProvider {
       (Function<CodeAction, Either<Command, CodeAction>>) Either::forRight).collect(Collectors.toList());
   }
 
-  private static List<CodeAction> getCodeActionsByDiagnostic(
+  private List<CodeAction> getCodeActionsByDiagnostic(
     Diagnostic diagnostic,
     CodeActionParams params,
     DocumentContext documentContext
   ) {
 
-    List<CodeAction> codeActions = new ArrayList<>();
-    if (diagnostic.getCode().equals(getDiagnosticCode(CanonicalSpellingKeywordsDiagnostic.class))) {
-      Range range = diagnostic.getRange();
-
-      Map<String, List<TextEdit>> changes = new HashMap<>();
-      String originalText = documentContext.getText(range);
-      TextEdit textEdit = new TextEdit(range, originalText.toUpperCase(Locale.ENGLISH));
-
-      changes.put(documentContext.getUri(), Collections.singletonList(textEdit));
-
-      WorkspaceEdit edit = new WorkspaceEdit();
-
-      edit.setChanges(changes);
-
-      CodeAction codeAction = new CodeAction("Каноникализировать ключевые слова");
-      codeAction.setDiagnostics(Collections.singletonList(diagnostic));
-      codeAction.setEdit(edit);
-      codeAction.setKind(CodeActionKind.QuickFix);
-
-      codeActions.add(codeAction);
+    Class<? extends BSLDiagnostic> bslDiagnosticClass = DiagnosticProvider.getBSLDiagnosticClass(diagnostic);
+    if (!QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
+      return Collections.emptyList();
     }
 
-    return codeActions;
+    BSLDiagnostic diagnosticInstance = diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
+    return ((QuickFixProvider) diagnosticInstance).getQuickFixes(diagnostic, params, documentContext);
+
   }
 
 }

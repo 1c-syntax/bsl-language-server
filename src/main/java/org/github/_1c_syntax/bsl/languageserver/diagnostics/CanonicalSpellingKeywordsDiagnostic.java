@@ -22,7 +22,13 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -31,8 +37,10 @@ import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -41,7 +49,7 @@ import java.util.stream.Collectors;
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1
 )
-public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
+public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, QuickFixProvider {
 
   private static Map<Integer, List<String>> canonicalKeywords = getPreset();
 
@@ -477,4 +485,33 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic {
 
   }
 
+  @Override
+  public List<CodeAction> getQuickFixes(
+    Diagnostic diagnostic,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+    List<CodeAction> codeActions = new ArrayList<>();
+
+    Range range = diagnostic.getRange();
+
+    Map<String, List<TextEdit>> changes = new HashMap<>();
+    String originalText = documentContext.getText(range);
+    TextEdit textEdit = new TextEdit(range, originalText.toUpperCase(Locale.ENGLISH));
+
+    changes.put(documentContext.getUri(), Collections.singletonList(textEdit));
+
+    WorkspaceEdit edit = new WorkspaceEdit();
+
+    edit.setChanges(changes);
+
+    CodeAction codeAction = new CodeAction("Каноникализировать ключевые слова");
+    codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+    codeAction.setEdit(edit);
+    codeAction.setKind(CodeActionKind.QuickFix);
+
+    codeActions.add(codeAction);
+
+    return codeActions;
+  }
 }

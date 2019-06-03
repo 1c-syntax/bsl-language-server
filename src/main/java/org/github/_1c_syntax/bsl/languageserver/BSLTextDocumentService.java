@@ -74,6 +74,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final ServerContext context = new ServerContext();
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
+  private final CodeActionProvider codeActionProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -81,6 +82,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public BSLTextDocumentService(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
+    codeActionProvider = new CodeActionProvider(diagnosticProvider);
   }
 
   @Override
@@ -139,7 +141,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> CodeActionProvider.getCodeActions(params, documentContext));
+    return CompletableFuture.supplyAsync(() -> codeActionProvider.getCodeActions(params, documentContext));
   }
 
   @Override

@@ -288,34 +288,29 @@ public final class DiagnosticProvider {
     );
   }
 
+  public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
+    BSLDiagnostic diagnosticInstance = createDiagnosticInstance(diagnosticClass);
+    configureDiagnostic(diagnosticInstance);
+
+    return diagnosticInstance;
+  }
+
   @VisibleForTesting
   public List<BSLDiagnostic> getDiagnosticInstances() {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
       .map(DiagnosticProvider::createDiagnosticInstance)
-      .peek((BSLDiagnostic diagnostic) -> {
-          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
-          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-            diagnostic.configure(diagnosticConfiguration.getRight());
-          }
-        }
+      .peek(this::configureDiagnostic
       ).collect(Collectors.toList());
   }
 
   @VisibleForTesting
-  private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
       .filter(element -> inScope(element, fileType))
       .map(DiagnosticProvider::createDiagnosticInstance)
-      .peek((BSLDiagnostic diagnostic) -> {
-          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
-          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-            diagnostic.configure(diagnosticConfiguration.getRight());
-          }
-        }
+      .peek(this::configureDiagnostic
       ).collect(Collectors.toList());
   }
 
@@ -338,6 +333,14 @@ public final class DiagnosticProvider {
       fileScope = DiagnosticScope.BSL;
     }
     return scope == DiagnosticScope.ALL || scope == fileScope;
+  }
+
+  private void configureDiagnostic(BSLDiagnostic diagnostic) {
+    Either<Boolean, Map<String, Object>> diagnosticConfiguration =
+      configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
+    if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+      diagnostic.configure(diagnosticConfiguration.getRight());
+    }
   }
 
   private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {
