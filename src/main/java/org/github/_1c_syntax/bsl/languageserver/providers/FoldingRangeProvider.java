@@ -36,9 +36,6 @@ import java.util.List;
 
 public final class FoldingRangeProvider {
 
-  private static final String REGION_KIND = "region";
-  private static final String COMMENT_KIND = "comment";
-
   private FoldingRangeProvider() {
     // only statics
   }
@@ -78,7 +75,7 @@ public final class FoldingRangeProvider {
       if (tokenLine != previousLine + 1) {
         if (lastRangeStart != previousLine) {
           FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
-          foldingRange.setKind(COMMENT_KIND);
+          foldingRange.setKind(FoldingRangeKind.Comment);
 
           foldingRanges.add(foldingRange);
         }
@@ -92,7 +89,7 @@ public final class FoldingRangeProvider {
     // add last range
     if (lastRangeStart != previousLine) {
       FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
-      foldingRange.setKind(COMMENT_KIND);
+      foldingRange.setKind(FoldingRangeKind.Comment);
 
       foldingRanges.add(foldingRange);
     }
@@ -159,7 +156,7 @@ public final class FoldingRangeProvider {
 
       if (stopLine > startLine) {
         FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
-        foldingRange.setKind(REGION_KIND);
+        foldingRange.setKind(FoldingRangeKind.Region);
 
         regionRanges.add(foldingRange);
       }
@@ -190,7 +187,7 @@ public final class FoldingRangeProvider {
       int stop = ctx.getStop().getLine();
 
       FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
-      foldingRange.setKind(REGION_KIND);
+      foldingRange.setKind(FoldingRangeKind.Region);
 
       regionRanges.add(foldingRange);
 
@@ -221,7 +218,7 @@ public final class FoldingRangeProvider {
       int stop = ctx.getStop().getLine();
 
       FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
-      foldingRange.setKind(REGION_KIND);
+      foldingRange.setKind(FoldingRangeKind.Region);
 
       regionRanges.add(foldingRange);
 
