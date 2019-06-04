@@ -2,7 +2,7 @@
 
 It is not recommended to use constructors of other objects in the structure constructor if these constructors accept parameters. In particular, in the constructor of one structure it is not recommended to create other structures with the declaration of property values.
 
-Неправильно
+Incorrect:
 
 ```bsl
 НоменклатураСервер.ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции(
@@ -17,7 +17,7 @@ It is not recommended to use constructors of other objects in the structure cons
  );
 ```
 
-Правильно
+Correct:
 
 ```bsl
 ПараметрыЗаполненияРеквизитов = Новый Структура;
