@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -33,6 +34,7 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,8 +48,24 @@ import java.util.stream.Collectors;
 )
 public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final int MAX_ALLOWED_NESTED = 3;
+  private final String relatedMessage = getResourceString("parentStatementRelatedMessage");
+  private static final int MAX_ALLOWED_NESTED = 4;
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_ALLOWED_NESTED,
+    description = "Максимальный уровень вложенности конструкций"
+  )
+  private int maxAllowedNested = MAX_ALLOWED_NESTED;
+
   private Collection<ParseTree> nestedParents = new ArrayList<>();
+  private List<Class> statementClasses = Arrays.asList(
+    BSLParser.IfStatementContext.class,
+    BSLParser.WhileStatementContext.class,
+    BSLParser.ForStatementContext.class,
+    BSLParser.ForEachStatementContext.class,
+    BSLParser.TryStatementContext.class
+    );
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
@@ -84,42 +102,36 @@ public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
     nestedParents.clear();
     reverseParent(ctx);
 
-    if (nestedParents.size() >= MAX_ALLOWED_NESTED) {
+    if (maxAllowedNested < nestedParents.size() + 1) {
 
       List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-      String relatedMessage = "sdddd";
 
       nestedParents.stream()
         .map(expressionContext ->
           this.createRelatedInformation(
-            RangeHelper.newRange((BSLParserRuleContext) expressionContext),
+            RangeHelper.newRange(((BSLParserRuleContext) expressionContext).getStart()),
             relatedMessage
           )
         )
         .collect(Collectors.toCollection(() -> relatedInformation));
 
-      addDiagnostic(ctx, relatedInformation);
-
+      addDiagnostic(ctx.getStart(), relatedInformation);
     }
-
   }
 
   private void reverseParent(BSLParserRuleContext ctx) {
 
     ParserRuleContext parent = ctx.getParent();
-    if (parent instanceof BSLParser.IfStatementContext
-      || parent instanceof BSLParser.WhileStatementContext
-      || parent instanceof BSLParser.ForStatementContext
-      || parent instanceof BSLParser.ForEachStatementContext
-      || parent instanceof BSLParser.TryStatementContext
-    ) {
+
+    if (parent != null && statementClasses.contains(parent.getClass())) {
       nestedParents.add(parent);
     }
 
-    if (parent != null) {
-      reverseParent((BSLParserRuleContext) parent);
+    if (parent == null
+      || parent instanceof BSLParser.SubContext
+      || parent instanceof BSLParser.FileContext) {
+      return;
     }
+    reverseParent((BSLParserRuleContext) parent);
   }
-
 }
