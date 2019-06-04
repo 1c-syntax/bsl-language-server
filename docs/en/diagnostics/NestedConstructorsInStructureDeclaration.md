@@ -1,8 +1,6 @@
 # Nested constructors with parameters in structure declaration
 
-Не рекомендуется в конструкторе структуры использовать конструкторы других объектов, если эти конструкторы принимают
-параметры. В частности в конструкторе одной структуры не рекомендуется создавать другие структуры с объявлением
-значений свойств.
+It is not recommended to use constructors of other objects in the structure constructor if these constructors accept parameters. In particular, in the constructor of one structure it is not recommended to create other structures with the declaration of property values.
 
 Неправильно
 
