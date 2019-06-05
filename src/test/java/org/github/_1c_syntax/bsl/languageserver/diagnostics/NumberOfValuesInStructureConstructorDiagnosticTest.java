@@ -55,7 +55,7 @@ public class NumberOfValuesInStructureConstructorDiagnosticTest
   void testConfigure() {
 
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    configuration.put("maxStructureConstructorValuesCount", 3);
+    configuration.put("maxValuesCount", 3);
     getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();

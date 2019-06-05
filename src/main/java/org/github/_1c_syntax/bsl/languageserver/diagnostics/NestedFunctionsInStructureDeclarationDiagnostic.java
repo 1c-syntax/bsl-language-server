@@ -23,12 +23,21 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -43,13 +52,113 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 public class NestedFunctionsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final int MAX_VALUES_COUNT = 3;
+  private Collection<ParseTree> nestedFunctionContext = new ArrayList<>();
+  private final String relatedMessage = getResourceString("nestedFunctionRelatedMessage");
+  private final ArrayList<Integer> methodCallRules = new ArrayList<>();
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_VALUES_COUNT,
+    description = "Допустимое количество параметров функции, используемой при инициализации структуры"
+  )
+  private int maxValuesCount = MAX_VALUES_COUNT;
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    maxValuesCount = (Integer) configuration.get("maxValuesCount");
+  }
+
+  public NestedFunctionsInStructureDeclarationDiagnostic() {
+    methodCallRules.add(BSLParser.RULE_globalMethodCall);
+    methodCallRules.add(BSLParser.RULE_methodCall);
+  }
+
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
+
+    nestedFunctionContext.clear();
 
     if (!(DiagnosticHelper.isStructureConstructor(ctx) || (DiagnosticHelper.isFixedStructureConstructor(ctx)))) {
       return ctx;
     }
 
+    BSLParser.DoCallContext structureDoCallContext = ctx.doCall();
+    if (structureDoCallContext == null) {
+      return ctx;
+    }
+
+    List<BSLParser.CallParamContext> paramContexts = structureDoCallContext.callParamList().callParam();
+
+    for (BSLParser.CallParamContext parameter : paramContexts) {
+      BSLParserRuleContext methodCall = DiagnosticHelper.findFirstRuleNode(parameter, methodCallRules);
+      if (!isEqualContexts(parameter, methodCall) || countOfMethodParameters(methodCall) <= maxValuesCount) {
+        continue;
+      }
+
+      nestedFunctionContext.add(methodCall);
+
+    }
+
+    if (nestedFunctionContext.isEmpty()) {
+      return ctx;
+    }
+
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+    relatedInformation.add(this.createRelatedInformation(
+      RangeHelper.newRange(ctx),
+      relatedMessage
+    ));
+
+    for (ParseTree methodContext : nestedFunctionContext) {
+
+      if (methodContext instanceof BSLParser.MethodCallContext) {
+        relatedInformation.add(this.createRelatedInformation(
+          RangeHelper.newRange((BSLParser.MethodCallContext) methodContext),
+          relatedMessage
+        ));
+      }
+
+      if (methodContext instanceof BSLParser.GlobalMethodCallContext) {
+        relatedInformation.add(this.createRelatedInformation(
+          RangeHelper.newRange((BSLParser.GlobalMethodCallContext) methodContext),
+          relatedMessage
+        ));
+      }
+    }
+
+    addDiagnostic(ctx, relatedInformation);
+
     return super.visitNewExpression(ctx);
   }
+
+  private boolean isEqualContexts(BSLParserRuleContext ctx1, BSLParserRuleContext ctx2) {
+
+    if (ctx1 == null || ctx2 == null)
+      return false;
+
+    return ctx1.getTokens().equals(ctx2.getTokens());
+
+  }
+
+  private int countOfMethodParameters(BSLParserRuleContext methodContext) {
+
+    int result = 0;
+
+    if (methodContext instanceof BSLParser.MethodCallContext) {
+      result = ((BSLParser.MethodCallContext) methodContext).doCall().callParamList().callParam().size();
+    }
+
+    if (methodContext instanceof BSLParser.GlobalMethodCallContext) {
+      result = ((BSLParser.GlobalMethodCallContext) methodContext).doCall().callParamList().callParam().size();
+    }
+
+    return result;
+
+  }
 }
+
