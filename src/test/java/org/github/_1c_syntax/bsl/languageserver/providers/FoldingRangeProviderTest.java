@@ -46,18 +46,18 @@ class FoldingRangeProviderTest {
 
     List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
 
-    assertThat(foldingRanges).hasSize(10);
+    assertThat(foldingRanges).hasSize(12);
 
     // regions
     assertThat(foldingRanges)
       .filteredOn(foldingRange -> foldingRange.getKind().equals("region"))
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 0 && foldingRange.getEndLine() == 23)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 2 && foldingRange.getEndLine() == 16)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 4 && foldingRange.getEndLine() == 14)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 8 && foldingRange.getEndLine() == 12)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 9 && foldingRange.getEndLine() == 11)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 20 && foldingRange.getEndLine() == 21)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 25 && foldingRange.getEndLine() == 26)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 3 && foldingRange.getEndLine() == 26)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 5 && foldingRange.getEndLine() == 19)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 7 && foldingRange.getEndLine() == 17)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 11 && foldingRange.getEndLine() == 15)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 12 && foldingRange.getEndLine() == 14)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 23 && foldingRange.getEndLine() == 24)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 28 && foldingRange.getEndLine() == 29)
       ;
 
 
@@ -65,9 +65,16 @@ class FoldingRangeProviderTest {
     assertThat(foldingRanges)
       .filteredOn(foldingRange -> foldingRange.getKind().equals("comment"))
       .hasSize(2)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 6 && foldingRange.getEndLine() == 7)
-      .anyMatch(foldingRange -> foldingRange.getStartLine() == 18 && foldingRange.getEndLine() == 19)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 9 && foldingRange.getEndLine() == 10)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 21 && foldingRange.getEndLine() == 22)
       ;
+
+    // import
+    assertThat(foldingRanges)
+      .filteredOn(foldingRange -> foldingRange.getKind().equals("imports"))
+      .hasSize(1)
+      .anyMatch(foldingRange -> foldingRange.getStartLine() == 0 && foldingRange.getEndLine() == 1)
+    ;
 
   }
 }
