@@ -28,6 +28,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class DiagnosticHelper {
 
   private DiagnosticHelper() {
@@ -82,7 +85,6 @@ public final class DiagnosticHelper {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(typeName) || "FixedStructure".equalsIgnoreCase(typeName);
   }
 
-
   public static String newExpressionTypeName(BSLParser.NewExpressionContext ctx) {
 
     BSLParser.TypeNameContext typeName = ctx.typeName();
@@ -104,6 +106,34 @@ public final class DiagnosticHelper {
     return "";
 
   }
+  public static BSLParserRuleContext findFirstRuleNode(ParseTree t, ArrayList<Integer> ruleIndex) {
+    List<ParseTree> nodes = new ArrayList<ParseTree>();
+    _findRuleNodes(t, ruleIndex, nodes, 1);
+
+    if (nodes.size() != 0)
+      return (BSLParserRuleContext) nodes.get(0);
+
+    return null;
+
+  }
+
+  private static void _findRuleNodes(ParseTree t, ArrayList<Integer> ruleIndex, List<? super ParseTree> nodes, int count){
+
+    if (nodes.size() == count)
+      return;
+
+    if (t instanceof BSLParserRuleContext) {
+      BSLParserRuleContext ctx = (BSLParserRuleContext) t;
+      if (ruleIndex.contains(ctx.getRuleIndex())) {
+        nodes.add(ctx);
+      }
+    }
+
+    // check children
+    for (int i = 0; i < t.getChildCount(); i++) {
+      _findRuleNodes(t.getChild(i), ruleIndex, nodes, count);
+    }
+  }
   
   public static boolean findErrorNode(ParseTree tnc) {
 
@@ -121,3 +151,4 @@ public final class DiagnosticHelper {
     return false;
   }
 }
+
