@@ -65,6 +65,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
     capabilities.setDocumentFormattingProvider(Boolean.TRUE);
     capabilities.setFoldingRangeProvider(Boolean.TRUE);
+    capabilities.setDocumentSymbolProvider(Boolean.TRUE);
 
     InitializeResult result = new InitializeResult(capabilities);
 

@@ -23,7 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import lombok.Builder;
 import lombok.Value;
-import org.antlr.v4.runtime.tree.ParseTree;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 @Value
 @Builder
@@ -31,5 +31,5 @@ public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
-  private final ParseTree node;
+  private final BSLParserRuleContext node;
 }
