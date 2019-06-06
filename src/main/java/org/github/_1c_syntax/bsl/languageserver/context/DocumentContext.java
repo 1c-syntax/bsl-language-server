@@ -25,8 +25,11 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.Trees;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
@@ -46,6 +49,8 @@ public class DocumentContext {
 
   private BSLParser.FileContext ast;
   private List<Token> tokens;
+  private MetricStorage metrics;
+  private List<MethodSymbol> methods;
   private final String uri;
   private final FileType fileType;
 
@@ -71,6 +76,10 @@ public class DocumentContext {
     return ast;
   }
 
+  public List<MethodSymbol> getMethods() {
+    return new ArrayList<>(methods);
+  }
+
   public List<Token> getTokens() {
     return new ArrayList<>(tokens);
   }
@@ -83,6 +92,10 @@ public class DocumentContext {
     return tokens.stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
+  }
+
+  public MetricStorage getMetrics() {
+    return metrics;
   }
 
   public String getUri() {
@@ -127,5 +140,35 @@ public class DocumentContext {
 
     BSLParser parser = new BSLParser(tokenStream);
     ast = parser.file();
+
+    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
+    methods = methodSymbolComputer.getMethods();
+
+    computeMetrics();
   }
+
+  private void computeMetrics() {
+    metrics = new MetricStorage();
+    metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));
+    metrics.setProcedures(methods.size() - metrics.getFunctions());
+
+    int ncloc = (int) getTokensFromDefaultChannel().stream()
+      .map(Token::getLine)
+      .distinct()
+      .count();
+
+    metrics.setNcloc(ncloc);
+
+    int lines;
+    if (tokens.isEmpty()) {
+      lines = 0;
+    } else {
+      lines = tokens.get(tokens.size() - 1).getLine();
+    }
+    metrics.setLines(lines);
+
+    int statements = Trees.findAllRuleNodes(ast, BSLParser.RULE_statement).size();
+    metrics.setStatements(statements);
+  }
+
 }

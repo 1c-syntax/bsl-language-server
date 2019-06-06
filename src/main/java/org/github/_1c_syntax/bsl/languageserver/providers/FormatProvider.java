@@ -73,9 +73,16 @@ public final class FormatProvider {
   }
 
   public static List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
+    List<Token> tokens = documentContext.getTokens();
+    if (tokens.isEmpty()) {
+      return Collections.emptyList();
+    }
+    Token firstToken = tokens.get(0);
+    Token lastToken = tokens.get(tokens.size() - 1);
+
     return getTextEdits(
-      documentContext.getTokens(),
-      RangeHelper.newRange(documentContext.getAst()), 0, params.getOptions()
+      tokens,
+      RangeHelper.newRange(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
     );
   }
 

@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -33,7 +32,6 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.Map;
 
-
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
  */
@@ -43,7 +41,6 @@ import java.util.Map;
   scope = DiagnosticScope.ALL,
   minutesToFix = 10
 )
-
 public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
 
   private static final int MAX_VALUES_COUNT = 3;
@@ -53,7 +50,6 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
     defaultValue = "" + MAX_VALUES_COUNT,
     description = "Допустимое количество значений свойств, передаваемых в конструктор структуры"
   )
-
   private int maxValuesCount = MAX_VALUES_COUNT;
 
   @Override
@@ -61,7 +57,7 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
     if (configuration == null) {
       return;
     }
-    maxValuesCount = (Integer) configuration.get("maxStructureConstructorValuesCount");
+    maxValuesCount = (Integer) configuration.get("maxValuesCount");
   }
 
   @Override

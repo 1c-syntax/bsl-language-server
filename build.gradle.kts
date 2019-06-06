@@ -8,9 +8,9 @@ plugins {
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.7"
-    id("io.franzbecker.gradle-lombok") version "2.1"
+    id("io.franzbecker.gradle-lombok") version "3.0.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
-    id("com.github.ben-manes.versions") version "0.20.0"
+    id("com.github.ben-manes.versions") version "0.21.0"
 }
 
 repositories {
@@ -29,7 +29,7 @@ dependencies {
     compile("commons-cli", "commons-cli", "1.4")
     // https://mvnrepository.com/artifact/commons-io/commons-io
     compile("commons-io", "commons-io", "2.6")
-    compile("org.apache.commons", "commons-lang3", "3.8.1")
+    compile("org.apache.commons", "commons-lang3", "3.9")
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
     compile("commons-beanutils", "commons-beanutils", "1.9.3")
 
@@ -40,21 +40,21 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile("com.google.code.findbugs", "jsr305", "3.0.2")
 
-    compile("me.tongfei", "progressbar", "0.7.2")
+    compile("me.tongfei", "progressbar", "0.7.3")
 
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    compile("org.reflections", "reflections", "0.9.11")
+    compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "master-SNAPSHOT")
+    compile("com.github.1c-syntax", "bsl-parser", "525788f18d")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.4.0")
-    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.4.0")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.0-M1")
+    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.0-M1")
 
-    testCompile("org.assertj", "assertj-core", "3.12.0")
+    testCompile("org.assertj", "assertj-core", "3.12.2")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }
