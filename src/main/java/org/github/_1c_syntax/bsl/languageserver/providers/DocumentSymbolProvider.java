@@ -57,13 +57,13 @@ public final class DocumentSymbolProvider {
       }
       Range selectionRange = RangeHelper.newRange(subNameContext);
 
-      DocumentSymbol documentSymbol = new DocumentSymbol();
-
-      documentSymbol.setName(methodSymbol.getName());
-      documentSymbol.setKind(SymbolKind.Method);
-      documentSymbol.setRange(range);
-      documentSymbol.setSelectionRange(selectionRange);
-
+      DocumentSymbol documentSymbol = new DocumentSymbol(
+        methodSymbol.getName(),
+        SymbolKind.Method,
+        range,
+        selectionRange
+      );
+      
       symbols.add(documentSymbol);
     });
 
