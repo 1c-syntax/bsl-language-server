@@ -33,7 +33,6 @@ import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 
@@ -114,20 +113,19 @@ public final class FoldingRangeProvider {
 
     @Override
     public ParseTree visitFile(BSLParser.FileContext ctx) {
-      Collection<ParseTree> uses = Trees.findAllRuleNodes(ctx, BSLParser.RULE_use);
-      if (uses.size() > 1) {
-        uses.forEach((ParseTree use) -> {
-          BSLParser.UseContext useCtx = (BSLParser.UseContext) use;
-          int start = useCtx.getStart().getLine();
-          int stop = useCtx.getStop().getLine();
+      ParseTree[] uses = Trees.findAllRuleNodes(ctx, BSLParser.RULE_use).toArray(new ParseTree[0]);
 
-          FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
-          foldingRange.setKind(FoldingRangeKind.Imports);
-
-          regionRanges.add(foldingRange);
-        });
-
+      if (uses.length <= 1) {
+        return ctx;
       }
+
+      int start = ((BSLParser.UseContext) uses[0]).getStart().getLine();
+      int stop = ((BSLParser.UseContext) uses[uses.length - 1]).getStop().getLine();
+
+      FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
+      foldingRange.setKind(FoldingRangeKind.Imports);
+
+      regionRanges.add(foldingRange);
 
       return ctx;
     }
