@@ -40,10 +40,9 @@ class TryNumberDiagnosticTest extends AbstractDiagnosticTest<TryNumberDiagnostic
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 12));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(10, 4, 10, 13));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(13, 8, 13, 17));
-
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 12));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 13));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 8, 12, 17));
 
   }
 }

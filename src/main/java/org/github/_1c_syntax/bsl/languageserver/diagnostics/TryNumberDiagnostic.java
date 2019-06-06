@@ -41,7 +41,7 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   @Override
-  public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
+  public ParseTree visitTryCodeBlock(BSLParser.TryCodeBlockContext ctx) {
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
