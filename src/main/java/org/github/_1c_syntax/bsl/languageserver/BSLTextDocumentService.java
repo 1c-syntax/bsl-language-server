@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -43,6 +44,7 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -213,7 +215,13 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-    // no-op
+    if (client == null) {
+      return;
+    }
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    client.publishDiagnostics(
+      new PublishDiagnosticsParams(params.getTextDocument().getUri(), diagnostics)
+    );
   }
 
   @Override
