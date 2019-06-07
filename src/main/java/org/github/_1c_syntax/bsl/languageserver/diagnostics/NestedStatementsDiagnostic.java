@@ -49,14 +49,14 @@ import java.util.stream.Collectors;
 public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage = getResourceString("parentStatementRelatedMessage");
-  private static final int MAX_ALLOWED_NESTED = 4;
+  private static final int MAX_ALLOWED_LEVEL = 4;
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_ALLOWED_NESTED,
+    defaultValue = "" + MAX_ALLOWED_LEVEL,
     description = "Максимальный уровень вложенности конструкций"
   )
-  private int maxAllowedNested = MAX_ALLOWED_NESTED;
+  private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 
   private Collection<ParseTree> nestedParents = new ArrayList<>();
   private List<Class> statementClasses = Arrays.asList(
@@ -102,7 +102,7 @@ public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
     nestedParents.clear();
     reverseParent(ctx);
 
-    if (maxAllowedNested < nestedParents.size() + 1) {
+    if (nestedParents.size() + 1 > maxAllowedLevel) {
 
       List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
@@ -129,6 +129,7 @@ public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
 
     if (parent == null
       || parent instanceof BSLParser.SubContext
+      || parent instanceof BSLParser.CodeBlockBeforeSubContext
       || parent instanceof BSLParser.FileContext) {
       return;
     }
