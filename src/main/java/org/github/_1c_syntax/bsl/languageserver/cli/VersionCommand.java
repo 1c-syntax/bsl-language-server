@@ -33,7 +33,6 @@ import java.util.jar.Manifest;
 public class VersionCommand implements Command {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(VersionCommand.class.getName());
- // private static final Logger LOGSTDOUT = LoggerFactory.getLogger("stdout");
 
 
   @Override
@@ -50,7 +49,6 @@ public class VersionCommand implements Command {
       LOGGER.error("Can't read manifest", e);
     }
 
-    // LOGSTDOUT.info( "version: {}",  manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION));
     System.out.print(String.format(
        "version: %s%n",
        manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
