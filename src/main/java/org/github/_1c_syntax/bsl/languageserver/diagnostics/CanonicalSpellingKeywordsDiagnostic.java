@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, QuickFixProvider {
 
   private static Map<Integer, List<String>> canonicalKeywords = getPreset();
+  private static Map<String, String> canonicalStrings = getCanonical();
 
   private static Map<Integer, List<String>> getPreset() {
     // Здесь возможно будет получить набор канонических слов из параметров.
@@ -462,6 +463,122 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
     return result;
   }
 
+  private static Map<String, String> getCanonical() {
+
+    Map<String, String> result = new HashMap<>();
+
+    result.put("ЕСЛИ", "Если");
+    result.put("IF", "If");
+    result.put("ТОГДА", "Тогда");
+    result.put("THEN", "Then");
+    result.put("ИНАЧЕ", "Иначе");
+    result.put("ELSE", "Else");
+    result.put("ИНАЧЕЕСЛИ", "ИначеЕсли");
+    result.put("ELSIF", "ElsIf");
+    result.put("КОНЕЦЕСЛИ", "КонецЕсли");
+    result.put("ENDIF", "EndIf");
+    result.put("ДЛЯ", "Для");
+    result.put("FOR", "For");
+    result.put("КАЖДОГО", "Каждого");
+    result.put("EACH", "Each");
+    result.put("ИЗ", "Из");
+    result.put("IN", "In");
+    result.put("ЦИКЛ", "Цикл");
+    result.put("DO", "Do");
+    result.put("ПОКА", "Пока");
+    result.put("WHILE", "While");
+    result.put("ПРЕРВАТЬ", "Прервать");
+    result.put("BREAK", "Break");
+    result.put("ПРОДОЛЖИТЬ", "Продолжить");
+    result.put("CONTINUE", "Continue");
+    result.put("КОНЕЦЦИКЛА", "КонецЦикла");
+    result.put("ENDDO", "EndDo");
+    result.put("ПО", "По");
+    result.put("TO", "To");
+    result.put("ПРОЦЕДУРА", "Процедура");
+    result.put("PROCEDURE", "Procedure");
+    result.put("ЗНАЧ", "Знач");
+    result.put("VAL", "Val");
+    result.put("ЭКСПОРТ", "Экспорт");
+    result.put("EXPORT", "Export");
+    result.put("ПЕРЕМ", "Перем");
+    result.put("VAR", "Var");
+    result.put("ПОПЫТКА", "Попытка");
+    result.put("TRY", "Try");
+    result.put("ВЫПОЛНИТЬ", "Выполнить");
+    result.put("EXECUTE", "Execute");
+    result.put("ВОЗВРАТ", "Возврат");
+    result.put("RETURN", "Return");
+    result.put("ИСТИНА", "Истина");
+    result.put("TRUE", "True");
+    result.put("ИСКЛЮЧЕНИЕ", "Исключение");
+    result.put("EXCEPT", "Except");
+    result.put("ВЫЗВАТЬИСКЛЮЧЕНИЕ", "ВызватьИсключение");
+    result.put("RAISE", "Raise");
+    result.put("КОНЕЦПОПЫТКИ", "КонецПопытки");
+    result.put("ENDTRY", "EndTry");
+    result.put("КОНЕЦПРОЦЕДУРЫ", "КонецПроцедуры");
+    result.put("ENDPROCEDURE", "EndProcedure");
+    result.put("ФУНКЦИЯ", "Функция");
+    result.put("FUNCTION", "Function");
+    result.put("КОНЕЦФУНКЦИИ", "КонецФункции");
+    result.put("ENDFUNCTION", "EndFunction");
+    result.put("ЛОЖЬ", "Ложь");
+    result.put("FALSE", "False");
+    result.put("ДОБАВИТЬОБРАБОТЧИК", "ДобавитьОбработчик");
+    result.put("ADDHANDLER", "AddHandler");
+    result.put("УДАЛИТЬОБРАБОТЧИК", "УдалитьОбработчик");
+    result.put("REMOVEHANDLER", "RemoveHandler");
+    result.put("ПЕРЕЙТИ", "Перейти");
+    result.put("GOTO", "Goto");
+    result.put("И", "И");
+    result.put("AND", "AND");
+    result.put("ИЛИ", "ИЛИ");
+    result.put("OR", "OR");
+    result.put("НЕ", "НЕ");
+    result.put("NOT", "NOT");
+    result.put("НОВЫЙ", "Новый");
+    result.put("NEW", "New");
+    result.put("НЕОПРЕДЕЛЕНО", "Неопределено");
+    result.put("UNDEFINED", "Undefined");
+    result.put("ОБЛАСТЬ", "Область");
+    result.put("REGION", "Region");
+    result.put("КОНЕЦОБЛАСТИ", "КонецОбласти");
+    result.put("ENDREGION", "EndRegion");
+    result.put("СЕРВЕР", "Сервер");
+    result.put("SERVER", "Server");
+    result.put("КЛИЕНТ", "Клиент");
+    result.put("CLIENT", "Client");
+    result.put("МОБИЛЬНОЕПРИЛОЖЕНИЕКЛИЕНТ", "МобильноеПриложениеКлиент");
+    result.put("MOBILEAPPCLIENT", "MobileAppClient");
+    result.put("МОБИЛЬНОЕПРИЛОЖЕНИЕСЕРВЕР", "МобильноеПриложениеСервер");
+    result.put("MOBILEAPPSERVER", "MobileAppServer");
+    result.put("МОБИЛЬНЫЙКЛИЕНТ", "МобильныйКлиент");
+    result.put("MOBILECLIENT", "MobileClient");
+    result.put("ТОЛСТЫЙКЛИЕНТОБЫЧНОЕПРИЛОЖЕНИЕ", "ТолстыйКлиентОбычноеПриложение");
+    result.put("THICKCLIENTORDINARYAPPLICATION", "ThickClientOrdinaryApplication");
+    result.put("ТОЛСТЫЙКЛИЕНТУПРАВЛЯЕМОЕПРИЛОЖЕНИЕ", "ТолстыйКлиентУправляемоеПриложение");
+    result.put("THICKCLIENTMANAGEDAPPLICATION", "ThickClientManagedApplication");
+    result.put("ВНЕШНЕЕСОЕДИНЕНИЕ", "ВнешнееСоединение");
+    result.put("EXTERNALCONNECTION", "ExternalConnection");
+    result.put("ТОНКИЙКЛИЕНТ", "ТонкийКлиент");
+    result.put("THINCLIENT", "ThinClient");
+    result.put("ВЕБКЛИЕНТ", "ВебКлиент");
+    result.put("WEBCLIENT", "WebClient");
+    result.put("НАКЛИЕНТЕ", "НаКлиенте");
+    result.put("ATCLIENT", "AtClient");
+    result.put("НАСЕРВЕРЕ", "НаСервере");
+    result.put("ATSERVER", "AtServer");
+    result.put("НАСЕРВЕРЕБЕЗКОНТЕКСТА", "НаСервереБезКонтекста");
+    result.put("ATSERVERNOCONTEXT", "AtServerNoContext");
+    result.put("НАКЛИЕНТЕНАСЕРВЕРЕБЕЗКОНТЕКСТА", "НаКлиентеНаСервереБезКонтекста");
+    result.put("ATCLIENTATSERVERNOCONTEXT", "AtClientAtServerNoContext");
+    result.put("НАКЛИЕНТЕНАСЕРВЕРЕ", "НаКлиентеНаСервере");
+    result.put("ATCLIENTATSERVER", "AtClientAtServer");
+
+    return result;
+  }
+
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
@@ -497,7 +614,8 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
 
     Map<String, List<TextEdit>> changes = new HashMap<>();
     String originalText = documentContext.getText(range);
-    TextEdit textEdit = new TextEdit(range, originalText.toUpperCase(Locale.ENGLISH));
+    String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
+    TextEdit textEdit = new TextEdit(range, canonicalText);
 
     changes.put(documentContext.getUri(), Collections.singletonList(textEdit));
 
