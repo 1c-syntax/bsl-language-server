@@ -50,7 +50,7 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
       .collect(Collectors.toList());
 
     if (childIdentifiers.isEmpty()){
-      addDiagnostic(ctx.getStart());
+      addDiagnostic(iterator.getSymbol());
     }
 
     return super.visitForEachStatement(ctx);

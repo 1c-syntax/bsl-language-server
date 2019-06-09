@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,9 +40,7 @@ class UseLessForEachDiagnosticTest extends AbstractDiagnosticTest<UseLessForEach
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);
-//    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 12));
-//    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 13));
-//    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 8, 12, 17));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 12, 0, 20));
 
   }
 }
