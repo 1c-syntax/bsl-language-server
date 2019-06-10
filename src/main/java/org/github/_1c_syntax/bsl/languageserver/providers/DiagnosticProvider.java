@@ -304,8 +304,7 @@ public final class DiagnosticProvider {
       ).collect(Collectors.toList());
   }
 
-  @VisibleForTesting
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+  private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
       .filter(element -> inScope(element, fileType))

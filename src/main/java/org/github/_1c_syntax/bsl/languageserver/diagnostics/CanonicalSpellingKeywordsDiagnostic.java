@@ -623,7 +623,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
 
     edit.setChanges(changes);
 
-    CodeAction codeAction = new CodeAction("Каноникализировать ключевые слова");
+    CodeAction codeAction = new CodeAction(getResourceString("quickFixMessage"));
     codeAction.setDiagnostics(Collections.singletonList(diagnostic));
     codeAction.setEdit(edit);
     codeAction.setKind(CodeActionKind.QuickFix);
