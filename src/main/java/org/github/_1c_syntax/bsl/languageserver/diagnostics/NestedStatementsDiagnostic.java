@@ -32,8 +32,9 @@ import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 
   private ParseTree lastCtx;
-  private Collection<ParseTree> nestedParents = new ArrayList<>();
+  private Deque<ParseTree> nestedParents = new ArrayDeque<>();
 
 
   @Override
@@ -65,6 +66,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     enterNode(ctx);
   }
 
+  @Override
   public void exitIfStatement(BSLParser.IfStatementContext ctx) {
     exitNode(ctx);
   }
@@ -74,6 +76,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     enterNode(ctx);
   }
 
+  @Override
   public void exitWhileStatement(BSLParser.WhileStatementContext ctx) {
     exitNode(ctx);
   }
@@ -93,7 +96,6 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     enterNode(ctx);
   }
 
-
   @Override
   public void exitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     exitNode(ctx);
@@ -111,12 +113,12 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
   private void enterNode(BSLParserRuleContext ctx) {
     lastCtx = ctx;
-    nestedParents.add(ctx);
+    nestedParents.addLast(ctx);
   }
 
   private void exitNode(BSLParserRuleContext ctx) {
 
-    if (ctx.equals(lastCtx) && nestedParents.size() > maxAllowedLevel) {
+    if (ctx == lastCtx && nestedParents.size() > maxAllowedLevel) {
       addRelatedInformationDiagnostic(ctx);
     }
     nestedParents.remove(ctx);
