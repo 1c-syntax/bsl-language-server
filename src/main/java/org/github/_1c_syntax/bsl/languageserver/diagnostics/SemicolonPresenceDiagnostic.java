@@ -24,24 +24,18 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -74,23 +68,13 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
 
     Range range = new Range(diagnosticRangeEnd, diagnosticRangeEnd);
 
-    Map<String, List<TextEdit>> changes = new HashMap<>();
-    TextEdit textEdit = new TextEdit(range, ";");
+    return CodeActionProvider.createCodeActions(
+      range,
+      ";",
+      getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostic
+    );
 
-    changes.put(documentContext.getUri(), Collections.singletonList(textEdit));
-
-    WorkspaceEdit edit = new WorkspaceEdit();
-
-    edit.setChanges(changes);
-
-    CodeAction codeAction = new CodeAction(getResourceString("quickFixMessage"));
-    codeAction.setDiagnostics(Collections.singletonList(diagnostic));
-    codeAction.setEdit(edit);
-    codeAction.setKind(CodeActionKind.QuickFix);
-
-    List<CodeAction> codeActions = new ArrayList<>();
-    codeActions.add(codeAction);
-
-    return codeActions;
   }
 }

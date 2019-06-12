@@ -26,6 +26,9 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
@@ -33,7 +36,9 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,6 +48,31 @@ public final class CodeActionProvider {
 
   public CodeActionProvider(DiagnosticProvider diagnosticProvider) {
     this.diagnosticProvider = diagnosticProvider;
+  }
+
+  public static List<CodeAction> createCodeActions(
+    Range range,
+    String newText,
+    String title,
+    String uri,
+    Diagnostic diagnostic
+  ) {
+
+    Map<String, List<TextEdit>> changes = new HashMap<>();
+    TextEdit textEdit = new TextEdit(range, newText);
+
+    changes.put(uri, Collections.singletonList(textEdit));
+
+    WorkspaceEdit edit = new WorkspaceEdit();
+
+    edit.setChanges(changes);
+
+    CodeAction codeAction = new CodeAction(title);
+    codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+    codeAction.setEdit(edit);
+    codeAction.setKind(CodeActionKind.QuickFix);
+
+    return Collections.singletonList(codeAction);
   }
 
   public List<Either<Command, CodeAction>> getCodeActions(
@@ -80,5 +110,7 @@ public final class CodeActionProvider {
     return ((QuickFixProvider) diagnosticInstance).getQuickFixes(diagnostic, params, documentContext);
 
   }
+
+
 
 }
