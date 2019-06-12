@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
@@ -48,6 +49,11 @@ public final class CodeActionProvider {
     CodeActionParams params,
     DocumentContext documentContext
   ) {
+
+    List<String> only = params.getContext().getOnly();
+    if (only != null && !only.isEmpty() && !only.contains(CodeActionKind.QuickFix)) {
+      return Collections.emptyList();
+    }
 
     List<CodeAction> actions = new ArrayList<>();
 
