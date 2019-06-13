@@ -58,14 +58,6 @@ build/
 intellij-bsl/src/test/resources/parser/.idea/
 
 gen/
-out/
 
-# Crashlytics plugin (for Android Studio and IntelliJ)
-com_crashlytics_export_strings.xml
-crashlytics.properties
-crashlytics-build.properties
-fabric.properties
-
-\.idea/sonarlint-state\.xml
-
-\.idea/sonarlint\.xml
+.idea/sonarlint-state.xml
+.idea/sonarlint.xml

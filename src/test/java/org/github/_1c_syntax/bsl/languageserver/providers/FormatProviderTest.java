@@ -45,8 +45,8 @@ class FormatProviderTest {
   @Test
   void testRangeFormat() throws IOException {
     // given
-    int startLine = 2;
-    int endLine = 21;
+    int startLine = 3;
+    int endLine = 22;
 
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
