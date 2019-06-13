@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -52,10 +53,12 @@ public final class LanguageServerConfiguration {
   private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
 
   private DiagnosticLanguage diagnosticLanguage;
+  @Nullable
+  private File traceLog;
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
 
   private LanguageServerConfiguration() {
-    this(DEFAULT_DIAGNOSTIC_LANGUAGE, new HashMap<>());
+    this(DEFAULT_DIAGNOSTIC_LANGUAGE, null, new HashMap<>());
   }
 
   public static LanguageServerConfiguration create(File configurationFile) {
@@ -86,10 +89,12 @@ public final class LanguageServerConfiguration {
       JsonNode node = jp.getCodec().readTree(jp);
 
       DiagnosticLanguage diagnosticLanguage = getDiagnosticLanguage(node);
+      File traceLog = getTraceLog(node);
       Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
 
       return new LanguageServerConfiguration(
         diagnosticLanguage,
+        traceLog,
         diagnosticsMap
       );
     }
@@ -144,6 +149,15 @@ public final class LanguageServerConfiguration {
         diagnosticLanguage = DEFAULT_DIAGNOSTIC_LANGUAGE;
       }
       return diagnosticLanguage;
+    }
+
+    private static File getTraceLog(JsonNode node) {
+      File traceLog = null;
+      if (node.get("traceLog") != null) {
+        String traceLogValue = node.get("traceLog").asText();
+        traceLog = new File(traceLogValue);
+      }
+      return traceLog;
     }
   }
 }
