@@ -75,24 +75,25 @@ public class LanguageServerStartCommand implements Command {
     InputStream in = System.in;
     OutputStream out = System.out;
 
-    Launcher<LanguageClient> launcher;
-
     File logFile = configuration.getTraceLog();
     if (logFile == null) {
-      launcher = LSPLauncher.createServerLauncher(server, in, out);
-    } else if (logFile.isDirectory()) {
-      LOGGER.error("Trace log setting must lead to file, not directory! {}", logFile.getAbsolutePath());
-      launcher = LSPLauncher.createServerLauncher(server, in, out);
-    } else {
-      try {
-        PrintWriter printWriter = new PrintWriter(logFile, StandardCharsets.UTF_8.name());
-        launcher = LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
-
-      } catch (FileNotFoundException | UnsupportedEncodingException e) {
-        LOGGER.error("Can't create LSP trace file", e);
-        launcher = LSPLauncher.createServerLauncher(server, in, out);
-      }
+      return LSPLauncher.createServerLauncher(server, in, out);
     }
+
+    Launcher<LanguageClient> launcher;
+
+    try {
+      PrintWriter printWriter = new PrintWriter(logFile, StandardCharsets.UTF_8.name());
+      launcher = LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
+    } catch (FileNotFoundException | UnsupportedEncodingException e) {
+      LOGGER.error("Can't create LSP trace file", e);
+      if (logFile.isDirectory()) {
+        LOGGER.error("Trace log setting must lead to file, not directory! {}", logFile.getAbsolutePath());
+      }
+
+      launcher = LSPLauncher.createServerLauncher(server, in, out);
+    }
+
     return launcher;
   }
 }
