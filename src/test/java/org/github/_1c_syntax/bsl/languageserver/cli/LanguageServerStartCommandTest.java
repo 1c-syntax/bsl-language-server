@@ -25,18 +25,39 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.createOptions;
 
 class LanguageServerStartCommandTest {
 
+  @BeforeEach
+  void startUp() throws IOException {
+    Files.deleteIfExists(Paths.get("build/.trace.log"));
+  }
+
   @Test
   void testExecute() throws ParseException {
     Options options = createOptions();
     DefaultParser parser = new DefaultParser();
     CommandLine commandLine = parser.parse(options, new String[]{});
+    Command command = new LanguageServerStartCommand(commandLine);
+
+    int result = command.execute();
+    assertThat(result).isEqualTo(-1);
+  }
+
+  @Test
+  void testExecuteWithConfigurationFile() throws ParseException {
+    Options options = createOptions();
+    DefaultParser parser = new DefaultParser();
+    CommandLine commandLine = parser.parse(options, new String[]{"-c", "src/test/resources/bsl-language-server.conf"});
     Command command = new LanguageServerStartCommand(commandLine);
 
     int result = command.execute();
