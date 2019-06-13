@@ -25,6 +25,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +44,7 @@ class LanguageServerConfigurationTest {
   }
 
   @Test
-  void createFromFile() {
+  void createFromFile() throws IOException {
 
     // given
     File configurationFile = new File("./src/test/resources/bsl-language-server.conf");
@@ -68,6 +70,6 @@ class LanguageServerConfigurationTest {
     assertThat(methodSize.isLeft()).isTrue();
     assertThat(methodSize.getLeft()).isEqualTo(false);
 
-
+    Files.deleteIfExists(configuration.getTraceLog().toPath());
   }
 }

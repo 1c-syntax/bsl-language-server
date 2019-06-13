@@ -68,7 +68,7 @@ public class LanguageServerStartCommand implements Command {
     return -1;
   }
 
-  private Launcher<LanguageClient> getLanguageClientLauncher(
+  private static Launcher<LanguageClient> getLanguageClientLauncher(
     LanguageServer server,
     LanguageServerConfiguration configuration
   ) {
