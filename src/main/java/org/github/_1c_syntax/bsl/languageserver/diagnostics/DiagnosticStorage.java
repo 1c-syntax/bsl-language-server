@@ -22,72 +22,73 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
-  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+public class DiagnosticStorage {
 
-  @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    diagnosticStorage.setDocumentContext(documentContext);
-    diagnosticStorage.clearDiagnostics();
-    this.visitFile(documentContext.getAst());
-    return diagnosticStorage.getDiagnostics();
+  private DocumentContext documentContext;
+  private BSLDiagnostic diagnostic;
+  private List<Diagnostic> diagnosticList = new ArrayList<>();
+
+  DiagnosticStorage(BSLDiagnostic diagnostic) {
+    this.diagnostic = diagnostic;
   }
 
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
+  public DocumentContext getDocumentContext() {
+    return documentContext;
+  }
+
+  public void setDocumentContext(DocumentContext documentContext) {
+    this.documentContext = documentContext;
+  }
+
+  public List<Diagnostic> getDiagnostics() {
+    return new ArrayList<>(diagnosticList);
+  }
+
+  public void clearDiagnostics() {
+    diagnosticList.clear();
+  }
+
   protected void addDiagnostic(BSLParserRuleContext node) {
-    diagnosticStorage.addDiagnostic(node);
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, node));
   }
 
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
   protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
-    diagnosticStorage.addDiagnostic(node, diagnosticMessage);
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, diagnosticMessage, node));
   }
 
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
   protected void addDiagnostic(int startLine, int startChar, int endLine, int endChar) {
-    diagnosticStorage.addDiagnostic(startLine, startChar, endLine, endChar);
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, startLine, startChar, endLine, endChar));
   }
 
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
   protected void addDiagnostic(Token token) {
-    diagnosticStorage.addDiagnostic(token);
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      token.getLine() - 1,
+      token.getCharPositionInLine(),
+      token.getLine() - 1,
+      token.getCharPositionInLine() + token.getText().length()
+    ));
   }
 
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
   protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
-    diagnosticStorage.addDiagnostic(node, relatedInformation);
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, node, relatedInformation));
   }
 
-  /**
-   * @deprecated use diagnosticStorage.DiagnosticRelatedInformation()
-   */
-  @Deprecated
   protected DiagnosticRelatedInformation createRelatedInformation(Range range, String message) {
-    return diagnosticStorage.createRelatedInformation(range, message);
+    Location location = new Location(documentContext.getUri(), range);
+    return new DiagnosticRelatedInformation(location, message);
   }
+
 }
+
+
