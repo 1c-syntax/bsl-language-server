@@ -22,6 +22,8 @@
 package org.github._1c_syntax.bsl.languageserver.utils;
 
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -61,5 +63,10 @@ public final class RangeHelper {
     int endChar = token.getCharPositionInLine() + token.getText().length();
 
     return newRange(startLine, startChar, endLine, endChar);
+  }
+
+  public static DiagnosticRelatedInformation createRelatedInformation(String uri, Range range, String message) {
+    Location location = new Location(uri, range);
+    return new DiagnosticRelatedInformation(location, message);
   }
 }

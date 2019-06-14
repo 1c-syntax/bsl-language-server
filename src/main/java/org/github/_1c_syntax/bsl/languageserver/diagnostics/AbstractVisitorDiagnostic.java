@@ -27,17 +27,20 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.List;
 
 public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
+
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  protected DocumentContext documentContext;
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    diagnosticStorage.setDocumentContext(documentContext);
+    this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
     this.visitFile(documentContext.getAst());
     return diagnosticStorage.getDiagnostics();
@@ -84,10 +87,10 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
   }
 
   /**
-   * @deprecated use diagnosticStorage.DiagnosticRelatedInformation()
+   * @deprecated use RangeHelper.createRelatedInformation()
    */
   @Deprecated
   protected DiagnosticRelatedInformation createRelatedInformation(Range range, String message) {
-    return diagnosticStorage.createRelatedInformation(range, message);
+    return RangeHelper.createRelatedInformation(documentContext.getUri(), range, message);
   }
 }

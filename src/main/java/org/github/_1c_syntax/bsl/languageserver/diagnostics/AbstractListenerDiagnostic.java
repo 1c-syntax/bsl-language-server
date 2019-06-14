@@ -31,10 +31,11 @@ import java.util.List;
 public abstract class AbstractListenerDiagnostic extends BSLParserBaseListener implements BSLDiagnostic {
 
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  private DocumentContext documentContext;
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    diagnosticStorage.setDocumentContext(documentContext);
+    this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());

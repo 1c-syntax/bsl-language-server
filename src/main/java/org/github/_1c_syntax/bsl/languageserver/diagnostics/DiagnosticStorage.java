@@ -24,9 +24,6 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.Range;
-import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
@@ -34,20 +31,11 @@ import java.util.List;
 
 public class DiagnosticStorage {
 
-  private DocumentContext documentContext;
   private BSLDiagnostic diagnostic;
   private List<Diagnostic> diagnosticList = new ArrayList<>();
 
   DiagnosticStorage(BSLDiagnostic diagnostic) {
     this.diagnostic = diagnostic;
-  }
-
-  public DocumentContext getDocumentContext() {
-    return documentContext;
-  }
-
-  public void setDocumentContext(DocumentContext documentContext) {
-    this.documentContext = documentContext;
   }
 
   public List<Diagnostic> getDiagnostics() {
@@ -82,11 +70,6 @@ public class DiagnosticStorage {
 
   protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, node, relatedInformation));
-  }
-
-  protected DiagnosticRelatedInformation createRelatedInformation(Range range, String message) {
-    Location location = new Location(documentContext.getUri(), range);
-    return new DiagnosticRelatedInformation(location, message);
   }
 
 }
