@@ -113,7 +113,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
   private void enterNode(BSLParserRuleContext ctx) {
     lastCtx = ctx;
-    nestedParents.addLast(ctx);
+    nestedParents.push(ctx);
   }
 
   private void exitNode(BSLParserRuleContext ctx) {
@@ -121,7 +121,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     if (ctx == lastCtx && nestedParents.size() > maxAllowedLevel) {
       addRelatedInformationDiagnostic(ctx);
     }
-    nestedParents.remove(ctx);
+    nestedParents.pop();
   }
 
   private void addRelatedInformationDiagnostic(BSLParserRuleContext ctx) {
