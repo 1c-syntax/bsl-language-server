@@ -42,7 +42,8 @@ public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnosti
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    if (ctx.ENDFUNCTION_KEYWORD().getClass().equals(ErrorNodeImpl.class)) {
+    if (ctx.ENDFUNCTION_KEYWORD() == null
+      || ctx.ENDFUNCTION_KEYWORD().getClass() == ErrorNodeImpl.class) {
       return ctx;
     }
 
