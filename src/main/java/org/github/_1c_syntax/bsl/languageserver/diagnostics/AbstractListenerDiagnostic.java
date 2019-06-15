@@ -31,7 +31,7 @@ import java.util.List;
 public abstract class AbstractListenerDiagnostic extends BSLParserBaseListener implements BSLDiagnostic {
 
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  private DocumentContext documentContext;
+  protected DocumentContext documentContext;
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
