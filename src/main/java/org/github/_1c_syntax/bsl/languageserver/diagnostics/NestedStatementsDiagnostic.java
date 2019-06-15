@@ -129,7 +129,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     relatedInformation.add(this.createRelatedInformation(RangeHelper.newRange(ctx.getStart()), relatedMessage));
 
     nestedParents.stream()
-      .filter(node -> node.equals(ctx))
+      .filter(node -> node != ctx)
       .map(expressionContext ->
         this.createRelatedInformation(
           RangeHelper.newRange(((BSLParserRuleContext) expressionContext).getStart()),
