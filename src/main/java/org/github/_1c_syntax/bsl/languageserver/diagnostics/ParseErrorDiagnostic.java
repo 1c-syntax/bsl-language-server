@@ -46,7 +46,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
     ParseTree parent = node.getParent();
     if (parent != lastParent) {
       lastParent = parent;
-      addDiagnostic((Token) node.getPayload());
+      diagnosticStorage.addDiagnostic((Token) node.getPayload());
     }
   }
 

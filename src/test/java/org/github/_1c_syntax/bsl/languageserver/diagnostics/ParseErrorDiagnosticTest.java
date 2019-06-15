@@ -40,7 +40,7 @@ public class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorD
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(2);
 //    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 8, 4, 20));
 //    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(10, 0, 10, 13));
 
