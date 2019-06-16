@@ -72,6 +72,9 @@ public class DiagnosticStorage {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, node, relatedInformation));
   }
 
+  public void addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, token, relatedInformation));
+  }
 }
 
 

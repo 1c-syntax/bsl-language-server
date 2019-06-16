@@ -126,18 +126,25 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
   private void addRelatedInformationDiagnostic(BSLParserRuleContext ctx) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-    relatedInformation.add(this.createRelatedInformation(RangeHelper.newRange(ctx.getStart()), relatedMessage));
+    relatedInformation.add(
+      RangeHelper.createRelatedInformation(
+        documentContext.getUri(),
+        RangeHelper.newRange(ctx.getStart()),
+        relatedMessage
+      )
+    );
 
     nestedParents.stream()
       .filter(node -> node != ctx)
       .map(expressionContext ->
-        this.createRelatedInformation(
+        RangeHelper.createRelatedInformation(
+          documentContext.getUri(),
           RangeHelper.newRange(((BSLParserRuleContext) expressionContext).getStart()),
           relatedMessage
         )
       )
       .collect(Collectors.toCollection(() -> relatedInformation));
 
-    addDiagnostic(ctx.getStart(), relatedInformation);
+    diagnosticStorage.addDiagnostic(ctx.getStart(), relatedInformation);
   }
 }
