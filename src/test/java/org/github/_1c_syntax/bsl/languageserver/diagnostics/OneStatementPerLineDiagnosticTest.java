@@ -42,6 +42,6 @@ class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatem
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 8, 3, 13));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(8, 18, 8, 32));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(8, 33, 8, 37));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 5, 12, 9));
   }
 }
