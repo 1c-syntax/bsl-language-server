@@ -45,12 +45,13 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
     TerminalNode iterator = ctx.IDENTIFIER();
     List<ParseTree> childIdentifiers = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
       .stream()
-      .filter(node -> node.getParent() instanceof BSLParser.ComplexIdentifierContext)
+      .filter(node -> node.getParent().getClass() == BSLParser.ComplexIdentifierContext.class
+        || node.getParent().getClass() == BSLParser.CallStatementContext.class)
       .filter(node -> node.getText().equalsIgnoreCase(iterator.getText()))
       .collect(Collectors.toList());
 
-    if (childIdentifiers.isEmpty()){
-      addDiagnostic(iterator.getSymbol());
+    if (childIdentifiers.isEmpty()) {
+      diagnosticStorage.addDiagnostic(iterator.getSymbol());
     }
 
     return super.visitForEachStatement(ctx);
