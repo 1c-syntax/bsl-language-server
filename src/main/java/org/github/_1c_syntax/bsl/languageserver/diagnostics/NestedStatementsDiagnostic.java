@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -34,7 +33,6 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +44,7 @@ import java.util.stream.Collectors;
   scope = DiagnosticScope.ALL,
   minutesToFix = 30
 )
-public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
+public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
   private final String relatedMessage = getResourceString("parentStatementRelatedMessage");
   private static final int MAX_ALLOWED_LEVEL = 4;
@@ -58,81 +56,86 @@ public class NestedStatementsDiagnostic extends AbstractVisitorDiagnostic {
   )
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 
+  private ParseTree lastCtx;
   private Collection<ParseTree> nestedParents = new ArrayList<>();
-  private List<Class> statementClasses = Arrays.asList(
-    BSLParser.IfStatementContext.class,
-    BSLParser.WhileStatementContext.class,
-    BSLParser.ForStatementContext.class,
-    BSLParser.ForEachStatementContext.class,
-    BSLParser.TryStatementContext.class
-    );
+
 
   @Override
-  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-    doDiagnostic(ctx);
-    return super.visitIfStatement(ctx);
+  public void enterIfStatement(BSLParser.IfStatementContext ctx) {
+    enterNode(ctx);
+  }
+
+  public void exitIfStatement(BSLParser.IfStatementContext ctx) {
+    exitNode(ctx);
   }
 
   @Override
-  public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-    doDiagnostic(ctx);
-    return super.visitWhileStatement(ctx);
+  public void enterWhileStatement(BSLParser.WhileStatementContext ctx) {
+    enterNode(ctx);
+  }
+
+  public void exitWhileStatement(BSLParser.WhileStatementContext ctx) {
+    exitNode(ctx);
   }
 
   @Override
-  public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
-    doDiagnostic(ctx);
-    return super.visitForStatement(ctx);
+  public void enterForStatement(BSLParser.ForStatementContext ctx) {
+    enterNode(ctx);
   }
 
   @Override
-  public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
-    doDiagnostic(ctx);
-    return super.visitForEachStatement(ctx);
+  public void exitForStatement(BSLParser.ForStatementContext ctx) {
+    exitNode(ctx);
   }
 
   @Override
-  public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
-    doDiagnostic(ctx);
-    return super.visitTryStatement(ctx);
+  public void enterForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    enterNode(ctx);
   }
 
-  private void doDiagnostic(BSLParserRuleContext ctx) {
 
-    nestedParents.clear();
-    reverseParent(ctx);
+  @Override
+  public void exitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    exitNode(ctx);
+  }
 
-    if (nestedParents.size() + 1 > maxAllowedLevel) {
+  @Override
+  public void enterTryStatement(BSLParser.TryStatementContext ctx) {
+    enterNode(ctx);
+  }
 
-      List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+  @Override
+  public void exitTryStatement(BSLParser.TryStatementContext ctx) {
+    exitNode(ctx);
+  }
 
-      nestedParents.stream()
-        .map(expressionContext ->
-          this.createRelatedInformation(
-            RangeHelper.newRange(((BSLParserRuleContext) expressionContext).getStart()),
-            relatedMessage
-          )
+  private void enterNode(BSLParserRuleContext ctx) {
+    lastCtx = ctx;
+    nestedParents.add(ctx);
+  }
+
+  private void exitNode(BSLParserRuleContext ctx) {
+
+    if (ctx.equals(lastCtx) && nestedParents.size() > maxAllowedLevel) {
+      addRelatedInformationDiagnostic(ctx);
+    }
+    nestedParents.remove(ctx);
+  }
+
+  private void addRelatedInformationDiagnostic(BSLParserRuleContext ctx) {
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+    relatedInformation.add(this.createRelatedInformation(RangeHelper.newRange(ctx.getStart()), relatedMessage));
+
+    nestedParents.stream()
+      .filter(node -> node.equals(ctx))
+      .map(expressionContext ->
+        this.createRelatedInformation(
+          RangeHelper.newRange(((BSLParserRuleContext) expressionContext).getStart()),
+          relatedMessage
         )
-        .collect(Collectors.toCollection(() -> relatedInformation));
+      )
+      .collect(Collectors.toCollection(() -> relatedInformation));
 
-      addDiagnostic(ctx.getStart(), relatedInformation);
-    }
-  }
-
-  private void reverseParent(BSLParserRuleContext ctx) {
-
-    ParserRuleContext parent = ctx.getParent();
-
-    if (parent != null && statementClasses.contains(parent.getClass())) {
-      nestedParents.add(parent);
-    }
-
-    if (parent == null
-      || parent instanceof BSLParser.SubContext
-      || parent instanceof BSLParser.CodeBlockBeforeSubContext
-      || parent instanceof BSLParser.FileContext) {
-      return;
-    }
-    reverseParent((BSLParserRuleContext) parent);
+    addDiagnostic(ctx.getStart(), relatedInformation);
   }
 }
