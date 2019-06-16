@@ -34,7 +34,7 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 )
 public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
   private int previousLineNumber;
-  private int priviesonDiagnosticLineNumber;
+  private int previousDiagnosticLineNumber;
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
@@ -49,9 +49,9 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
 
     int currentLine = ctx.getStart().getLine();
 
-    if (currentLine == previousLineNumber && currentLine != priviesonDiagnosticLineNumber) {
+    if (currentLine == previousLineNumber && currentLine != previousDiagnosticLineNumber) {
       diagnosticStorage.addDiagnostic(ctx);
-      priviesonDiagnosticLineNumber = currentLine;
+      previousDiagnosticLineNumber = currentLine;
     }
 
     previousLineNumber = currentLine;
