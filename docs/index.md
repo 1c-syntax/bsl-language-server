@@ -134,6 +134,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
 * [NestedConstructorsInStructureDeclaration - Ограничение на использование конструкторов с параметрами при объявлении структуры](diagnostics/NestedConstructorsInStructureDeclaration.md)
+* [NestedStatements - Управляющие конструкции не должны быть вложены слишком глубоко](diagnostics/NestedStatements.md)
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)
 * [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
