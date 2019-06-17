@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.context;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.Trees;
 import org.apache.commons.io.FilenameUtils;
@@ -127,6 +128,7 @@ public class DocumentContext {
     BSLLexer lexer = new BSLLexer(input);
 
     lexer.setInputStream(input);
+    lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
 
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     tokenStream.fill();
@@ -139,6 +141,7 @@ public class DocumentContext {
     }
 
     BSLParser parser = new BSLParser(tokenStream);
+    parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
     ast = parser.file();
 
     MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
