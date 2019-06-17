@@ -139,6 +139,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
 * [NumberOfValuesInStructureConstructor - Ограничение на количество значений свойств, передаваемых в конструктор структуры](diagnostics/NumberOfValuesInStructureConstructor.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
+* [ParseError - Ошибка разбора исходного кода](diagnostics/ParseError.md)
 * [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
 * [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)

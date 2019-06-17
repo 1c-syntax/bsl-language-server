@@ -22,17 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.Tree;
-import org.antlr.v4.runtime.tree.Trees;
+import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-
-import java.util.List;
-import java.util.Optional;
 
 
 @DiagnosticMetadata(
@@ -43,26 +38,14 @@ import java.util.Optional;
 )
 public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
-  private Tree lastParent;
-
   @Override
   public void visitErrorNode(ErrorNode node) {
 
-    Tree parent = node.getParent();
-
-    List<? extends Tree> allParents = Trees.getAncestors(node.getParent());
-    Optional<? extends Tree> parentLast = allParents.stream()
-      .filter(parentNode -> parentNode.getClass() == BSLParser.SubContext.class)
-      .findFirst();
-
-    if (parentLast.isPresent()) {
-      parent = parentLast.get();
-    }
-
-    if (parent != lastParent) {
-      lastParent = parent;
-      diagnosticStorage.addDiagnostic(((BSLParserRuleContext) parent).getStart());
+    if (((ErrorNodeImpl) node).symbol.getTokenIndex() == -1) {
+      diagnosticStorage.addDiagnostic(
+        ((BSLParserRuleContext) node.getParent()).getStart(),
+        getDiagnosticMessage(node.getText())
+      );
     }
   }
-
 }

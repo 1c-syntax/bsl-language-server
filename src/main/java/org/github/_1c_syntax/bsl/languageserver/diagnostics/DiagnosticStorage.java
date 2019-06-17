@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
@@ -61,10 +62,16 @@ public class DiagnosticStorage {
   protected void addDiagnostic(Token token) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
-      token.getLine() - 1,
-      token.getCharPositionInLine(),
-      token.getLine() - 1,
-      token.getCharPositionInLine() + token.getText().length()
+      RangeHelper.newRange(token),
+      diagnostic.getDiagnosticMessage()
+    ));
+  }
+
+  protected void addDiagnostic(Token token, String diagnosticMessage) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      RangeHelper.newRange(token),
+      diagnosticMessage
     ));
   }
 
