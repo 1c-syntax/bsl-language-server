@@ -39,6 +39,8 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.reflections.Reflections;
 import org.reflections.scanners.FieldAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +228,16 @@ public final class DiagnosticProvider {
   @SuppressWarnings("unchecked")
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
-    Reflections diagnosticReflections = new Reflections(BSLDiagnostic.class.getPackage().getName());
+    Reflections diagnosticReflections = new Reflections(
+      new ConfigurationBuilder()
+        .setUrls(
+          ClasspathHelper.forPackage(
+            BSLDiagnostic.class.getPackage().getName(),
+            ClasspathHelper.contextClassLoader(),
+            ClasspathHelper.staticClassLoader()
+          )
+        )
+    );
 
     return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
       .stream()
@@ -254,8 +265,15 @@ public final class DiagnosticProvider {
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
         (Class<? extends BSLDiagnostic> diagnosticClass) -> {
           Reflections diagnosticReflections = new Reflections(
-            diagnosticClass.getCanonicalName(),
-            new FieldAnnotationsScanner()
+            new ConfigurationBuilder()
+              .setUrls(
+                ClasspathHelper.forPackage(
+                  diagnosticClass.getCanonicalName(),
+                  ClasspathHelper.contextClassLoader(),
+                  ClasspathHelper.staticClassLoader()
+                )
+              )
+              .setScanners(new FieldAnnotationsScanner())
           );
           return diagnosticReflections.getFieldsAnnotatedWith(DiagnosticParameter.class).stream()
             .collect(Collectors.toMap(
