@@ -260,6 +260,9 @@ public final class DiagnosticProvider {
     List<Class<? extends BSLDiagnostic>> diagnosticClasses
   ) {
 
+
+
+
     return diagnosticClasses.stream()
       .collect(Collectors.toMap(
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
@@ -268,7 +271,7 @@ public final class DiagnosticProvider {
             new ConfigurationBuilder()
               .setUrls(
                 ClasspathHelper.forClass(
-                  diagnosticClass,
+                  BSLDiagnostic.class,
                   ClasspathHelper.contextClassLoader(),
                   ClasspathHelper.staticClassLoader()
                 )
@@ -276,6 +279,7 @@ public final class DiagnosticProvider {
               .setScanners(new FieldAnnotationsScanner())
           );
           return diagnosticReflections.getFieldsAnnotatedWith(DiagnosticParameter.class).stream()
+            .filter(diagnostic -> diagnostic.getDeclaringClass() == diagnosticClass)
             .collect(Collectors.toMap(
               Field::getName,
               (Field field) -> field.getAnnotation(DiagnosticParameter.class)
