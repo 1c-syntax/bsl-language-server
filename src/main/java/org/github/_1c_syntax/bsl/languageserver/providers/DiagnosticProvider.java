@@ -267,8 +267,8 @@ public final class DiagnosticProvider {
           Reflections diagnosticReflections = new Reflections(
             new ConfigurationBuilder()
               .setUrls(
-                ClasspathHelper.forPackage(
-                  diagnosticClass.getCanonicalName(),
+                ClasspathHelper.forClass(
+                  diagnosticClass,
                   ClasspathHelper.contextClassLoader(),
                   ClasspathHelper.staticClassLoader()
                 )
