@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -107,9 +108,14 @@ class DiagnosticProviderTest {
 
   @Test
   void testDiagnosticParametrs(){
+
     Map<String, DiagnosticParameter> params = DiagnosticProvider.getDiagnosticParameters(NumberOfOptionalParamsDiagnostic.class);
     assertThat(params).hasSize(1);
-    DiagnosticProvider.getDefaultValue(params.get("maxOptionalParamsCount")).equals("3");
-    params.get("maxOptionalParamsCount").defaultValue().equals("3");
+    assertThat(DiagnosticProvider.getDefaultValue(params.get("maxOptionalParamsCount"))).isEqualTo(3);
+    assertThat(params.get("maxOptionalParamsCount").defaultValue()).isEqualTo("3");
+
+    Map<String, DiagnosticParameter> lineLengthParams = DiagnosticProvider.getDiagnosticParameters(LineLengthDiagnostic.class);
+    assertThat(lineLengthParams.get("maxLineLength").defaultValue()).isEqualTo("120");
+
   }
 }
