@@ -38,7 +38,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.reflections.Reflections;
-import org.reflections.scanners.FieldAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
@@ -54,6 +53,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
+import static org.reflections.ReflectionUtils.getAllFields;
+import static org.reflections.ReflectionUtils.withAnnotation;
 
 public final class DiagnosticProvider {
 
@@ -260,27 +262,18 @@ public final class DiagnosticProvider {
     List<Class<? extends BSLDiagnostic>> diagnosticClasses
   ) {
 
+
     return diagnosticClasses.stream()
       .collect(Collectors.toMap(
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
-        (Class<? extends BSLDiagnostic> diagnosticClass) -> {
-          Reflections diagnosticReflections = new Reflections(
-            new ConfigurationBuilder()
-              .setUrls(
-                ClasspathHelper.forPackage(
-                  diagnosticClass.getCanonicalName(),
-                  ClasspathHelper.contextClassLoader(),
-                  ClasspathHelper.staticClassLoader()
-                )
-              )
-              .setScanners(new FieldAnnotationsScanner())
-          );
-          return diagnosticReflections.getFieldsAnnotatedWith(DiagnosticParameter.class).stream()
-            .collect(Collectors.toMap(
-              Field::getName,
-              (Field field) -> field.getAnnotation(DiagnosticParameter.class)
-            ));
-        }
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> getAllFields(
+          diagnosticClass,
+          withAnnotation(DiagnosticParameter.class)
+        ).stream()
+          .collect(Collectors.toMap(
+            Field::getName,
+            (Field field) -> field.getAnnotation(DiagnosticParameter.class)
+          ))
       ));
   }
 
