@@ -59,6 +59,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
@@ -76,6 +77,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final ServerContext context = new ServerContext();
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
+  private final CodeActionProvider codeActionProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -83,6 +85,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public BSLTextDocumentService(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
+    codeActionProvider = new CodeActionProvider(diagnosticProvider);
   }
 
   @Override
@@ -141,7 +144,12 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> codeActionProvider.getCodeActions(params, documentContext));
   }
 
   @Override
