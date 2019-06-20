@@ -80,7 +80,8 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
         .limit(1)
         .filter((ParseTree newContext) -> {
             BSLParser.DoCallContext doCallContext = ((NewExpressionContext) newContext).doCall();
-            return doCallContext != null && !doCallContext.callParamList().callParam().isEmpty();
+            return doCallContext != null &&
+              doCallContext.callParamList().callParam().stream().anyMatch(param -> param.getChildCount() > 0);
           }
         ).collect(Collectors.toCollection(() -> nestedNewContext)));
 
@@ -90,21 +91,23 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    relatedInformation.add(this.createRelatedInformation(
+    relatedInformation.add(RangeHelper.createRelatedInformation(
+      documentContext.getUri(),
       RangeHelper.newRange(ctx),
       relatedMessage
     ));
 
     nestedNewContext.stream()
       .map(expressionContext ->
-        this.createRelatedInformation(
+        RangeHelper.createRelatedInformation(
+          documentContext.getUri(),
           RangeHelper.newRange((BSLParser.NewExpressionContext) expressionContext),
           relatedMessage
         )
       )
       .collect(Collectors.toCollection(() -> relatedInformation));
 
-    addDiagnostic(ctx, relatedInformation);
+    diagnosticStorage.addDiagnostic(ctx, relatedInformation);
 
     return super.visitNewExpression(ctx);
   }
