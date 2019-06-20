@@ -54,7 +54,7 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 
 ## Run in analyzer mode
 
-To run in analyzer mode use parameter `--analyze` (short `-a`). To set source code folder for analysis use parameter 
+To run in analyzer mode use parameter `--analyze` (short `-a`). To set source code folder for analysis use parameter
 `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
 
 To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
@@ -79,6 +79,7 @@ Configuration file is a file in JSON format.
 The file can contain the following blocks:
 
 - `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
+- `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
 - `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with thestructure as following:
     - object key - `String` - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.
     - object value
@@ -136,16 +137,20 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [LineLength - Line Length](diagnostics/LineLength.md)
 - [MethodSize - Method Size](diagnostics/MethodSize.md)
 - [NestedConstructorsInStructureDeclaration - Nested constructors with parameters in structure declaration](diagnostics/NestedConstructorsInStructureDeclaration.md)
+- [NestedStatements - Managing statements should not be nested too deep](diagnostics/NestedStatements.md)
 - [NestedTernaryOperator - Nested Ternary Operator](diagnostics/NestedTernaryOperator.md)
 - [NumberOfOptionalParams - Number Of Optional Parameters in Method](diagnostics/NumberOfOptionalParams.md)
 - [NumberOfParams - Number Of Parameters in Method](diagnostics/NumberOfParams.md)
 - [NumberOfValuesInStructureConstructor - Restriction on the number of property values ​​passed to the structure constructor](diagnostics/NumberOfValuesInStructureConstructor.md)
 - [OneStatementPerLine - One Statement Per Line](diagnostics/OneStatementPerLine.md)
+- [ParseError - Source code parse error](diagnostics/ParseError.md)
 - [OrderOfParams - Order Of Parameters in Method](diagnostics/OrderOfParams.md)
 - [ProcedureReturnsValue - Procedure should not return Value](diagnostics/ProcedureReturnsValue.md)
 - [SemicolonPresence - Statement should end with Semicolon](diagnostics/SemicolonPresence.md)
 - [SelfAssign - Variable is Assigned to itself](diagnostics/SelfAssign.md)
+- [TryNumber - Cast to number in try catch block](diagnostics/TryNumber.md)
 - [UnknownPreprocessorSymbol - Unknown Preprocessor Symbol](diagnostics/UnknownPreprocessorSymbol.md)
+- [UseLessForEach - Useless collection iteration](diagnostics/UseLessForEach.md)
 - [UsingCancelParameter - Using Cancel Parameter](diagnostics/UsingCancelParameter.md)
 - [UsingFindElementByString - Using the methods "FindByDescription" and "FindByCode"](diagnostics/UsingFindElementByString.md)
 - [UsingServiceTag - Using service tags](diagnostics/UsingServiceTag.md)
