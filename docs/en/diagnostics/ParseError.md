@@ -1,7 +1,6 @@
 # Source code parse error
 
-Ошибка возникает если исходный код модуля написан с нарушением синтаксиса языка или при
-неправильном использовании инструкций препроцессора.
+An error occurs if the source code of the module is written with a violation of the syntax of the language or if the preprocessor instructions are used incorrectly.
 
 3. Do not split separate grammatical structures, expressions, declarations and procedures and functions calls by the preprocessor instructions and regions.
 
