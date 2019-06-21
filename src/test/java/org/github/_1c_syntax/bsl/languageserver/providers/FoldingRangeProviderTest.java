@@ -77,4 +77,19 @@ class FoldingRangeProviderTest {
     ;
 
   }
+
+  @Test
+  void testFoldingRangeParseError() throws IOException{
+
+    String fileContent = FileUtils.readFileToString(
+      new File("./src/test/resources/providers/foldingRangeParseError.bsl"),
+      StandardCharsets.UTF_8
+    );
+    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+
+    List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
+
+    assertThat(foldingRanges).hasSize(0);
+
+  }
 }
