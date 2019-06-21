@@ -217,6 +217,10 @@ public final class FoldingRangeProvider {
     @Override
     public ParseTree visitRegionEnd(BSLParser.RegionEndContext ctx) {
 
+      if (regionStack.isEmpty()) {
+        return super.visitRegionEnd(ctx);
+      }
+
       BSLParser.RegionStartContext regionStart = regionStack.pop();
 
       int start = regionStart.getStart().getLine();
@@ -248,6 +252,11 @@ public final class FoldingRangeProvider {
 
     @Override
     public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
+
+      if (preprocIfRegionStack.isEmpty()) {
+        return super.visitPreproc_endif(ctx);
+      }
+
       BSLParser.Preproc_ifContext regionStart = preprocIfRegionStack.pop();
 
       int start = regionStart.getStart().getLine();
