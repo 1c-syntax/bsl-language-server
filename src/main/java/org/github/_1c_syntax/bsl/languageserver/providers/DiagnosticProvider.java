@@ -258,11 +258,10 @@ public final class DiagnosticProvider {
       );
   }
 
+  @SuppressWarnings("unchecked")
   private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> createDiagnosticParameters(
     List<Class<? extends BSLDiagnostic>> diagnosticClasses
   ) {
-
-
     return diagnosticClasses.stream()
       .collect(Collectors.toMap(
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
