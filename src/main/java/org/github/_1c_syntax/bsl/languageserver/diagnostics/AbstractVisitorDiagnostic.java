@@ -21,15 +21,10 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.List;
 
@@ -46,51 +41,4 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
     return diagnosticStorage.getDiagnostics();
   }
 
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
-  protected void addDiagnostic(BSLParserRuleContext node) {
-    diagnosticStorage.addDiagnostic(node);
-  }
-
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
-  protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
-    diagnosticStorage.addDiagnostic(node, diagnosticMessage);
-  }
-
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
-  protected void addDiagnostic(int startLine, int startChar, int endLine, int endChar) {
-    diagnosticStorage.addDiagnostic(startLine, startChar, endLine, endChar);
-  }
-
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
-  protected void addDiagnostic(Token token) {
-    diagnosticStorage.addDiagnostic(token);
-  }
-
-  /**
-   * @deprecated use diagnosticStorage.addDiagnostic()
-   */
-  @Deprecated
-  protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
-    diagnosticStorage.addDiagnostic(node, relatedInformation);
-  }
-
-  /**
-   * @deprecated use RangeHelper.createRelatedInformation()
-   */
-  @Deprecated
-  protected DiagnosticRelatedInformation createRelatedInformation(Range range, String message) {
-    return RangeHelper.createRelatedInformation(documentContext.getUri(), range, message);
-  }
 }

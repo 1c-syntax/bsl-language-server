@@ -60,7 +60,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     int methodSize = methodSize(ctx.subCodeBlock());
 
     if (methodSizeExceedsLimit(methodSize)) {
-      addDiagnostic(
+      diagnosticStorage.addDiagnostic(
         ctx.procDeclaration().subName(),
         getDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
@@ -73,7 +73,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     int methodSize = methodSize(ctx.subCodeBlock());
 
     if (methodSizeExceedsLimit(methodSize)) {
-      addDiagnostic(
+      diagnosticStorage.addDiagnostic(
         ctx.funcDeclaration().subName(),
         getDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
     }

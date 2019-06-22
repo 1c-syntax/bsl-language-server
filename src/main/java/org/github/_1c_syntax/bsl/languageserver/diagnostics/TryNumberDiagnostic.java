@@ -47,7 +47,7 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(node -> pattern.matcher((
         (BSLParser.GlobalMethodCallContext) node).methodName().getText()).matches())
-      .forEach(node -> addDiagnostic((BSLParser.GlobalMethodCallContext) node));
+      .forEach(node -> diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) node));
 
     return ctx;
   }

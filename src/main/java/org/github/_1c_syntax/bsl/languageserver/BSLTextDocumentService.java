@@ -44,6 +44,7 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
@@ -116,7 +117,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position) {
+  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+    TextDocumentPositionParams position
+  ) {
     throw new UnsupportedOperationException();
   }
 

@@ -82,21 +82,23 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    relatedInformation.add(this.createRelatedInformation(
+    relatedInformation.add(RangeHelper.createRelatedInformation(
+      documentContext.getUri(),
       RangeHelper.newRange(currentCodeBlock),
       relatedMessage
     ));
 
     identicalCodeBlocks.stream()
       .map(codeBlockContext ->
-        this.createRelatedInformation(
+        RangeHelper.createRelatedInformation(
+          documentContext.getUri(),
           RangeHelper.newRange(codeBlockContext),
           relatedMessage
         )
       )
     .collect(Collectors.toCollection(() -> relatedInformation));
 
-    addDiagnostic(currentCodeBlock, relatedInformation);
+    diagnosticStorage.addDiagnostic(currentCodeBlock, relatedInformation);
   }
 
 }

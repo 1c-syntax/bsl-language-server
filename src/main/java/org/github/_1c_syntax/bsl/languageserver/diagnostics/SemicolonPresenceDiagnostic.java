@@ -50,7 +50,7 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
     if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
       Token lastToken = ctx.getStop();
       if (lastToken != null) {
-        addDiagnostic(lastToken);
+        diagnosticStorage.addDiagnostic(lastToken);
       }
     }
     return super.visitStatement(ctx);

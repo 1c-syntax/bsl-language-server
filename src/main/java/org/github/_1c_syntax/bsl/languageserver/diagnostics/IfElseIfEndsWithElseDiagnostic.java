@@ -39,7 +39,7 @@ public class IfElseIfEndsWithElseDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
 
     if (ctx.getToken(BSLLexer.ELSIF_KEYWORD, 0) != null && ctx.getToken(BSLLexer.ELSE_KEYWORD, 0) == null) {
-      addDiagnostic(ctx.getStop());
+      diagnosticStorage.addDiagnostic(ctx.getStop());
     }
 
     return super.visitIfStatement(ctx);

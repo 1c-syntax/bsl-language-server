@@ -50,7 +50,7 @@ public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnosti
     Collection<ParseTree> tokens = Trees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
     if (tokens.isEmpty()) {
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
-      addDiagnostic(subName);
+      diagnosticStorage.addDiagnostic(subName);
     }
     return ctx;
   }

@@ -81,21 +81,23 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    relatedInformation.add(this.createRelatedInformation(
+    relatedInformation.add(RangeHelper.createRelatedInformation(
+      documentContext.getUri(),
       RangeHelper.newRange(currentExpression),
       relatedMessage
     ));
 
     identicalExpressions.stream()
       .map(expressionContext ->
-        this.createRelatedInformation(
+        RangeHelper.createRelatedInformation(
+          documentContext.getUri(),
           RangeHelper.newRange(expressionContext),
           relatedMessage
         )
       )
       .collect(Collectors.toCollection(() -> relatedInformation));
 
-    addDiagnostic(currentExpression, relatedInformation);
+    diagnosticStorage.addDiagnostic(currentExpression, relatedInformation);
   }
 
 }

@@ -48,7 +48,7 @@ public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
       }
 
       if (!onlyOne && !itsOptional && wasOptional) {
-        addDiagnostic(ctx);
+        diagnosticStorage.addDiagnostic(ctx);
         onlyOne = true;
       }
     }
