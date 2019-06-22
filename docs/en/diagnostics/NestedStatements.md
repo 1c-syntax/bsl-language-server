@@ -1,4 +1,4 @@
-# Managing statements should not not be bested too deep
+# Control flow statements should not be nested too deep
 
 Nested "If", "For", "ForEach", "While" and "Try" operators are key ingredients for so called "spaghetti-code".
 
