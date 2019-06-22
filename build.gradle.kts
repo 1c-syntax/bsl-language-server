@@ -7,8 +7,8 @@ plugins {
     maven
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
-    id("org.sonarqube") version "2.7"
-    id("io.franzbecker.gradle-lombok") version "3.0.0"
+    id("org.sonarqube") version "2.7.1"
+    id("io.franzbecker.gradle-lombok") version "3.1.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
     id("com.github.ben-manes.versions") version "0.21.0"
 }
@@ -23,7 +23,7 @@ version = gitVersionCalculator.calculateVersion("v")
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    compile("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.6.0")
+    compile("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.7.2")
 
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     compile("commons-cli", "commons-cli", "1.4")
@@ -33,26 +33,26 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
     compile("commons-beanutils", "commons-beanutils", "1.9.3")
 
-    compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.8")
-    compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.8")
-    compile("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.9.8")
+    compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.9")
+    compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.9")
+    compile("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.9.9")
 
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile("com.google.code.findbugs", "jsr305", "3.0.2")
 
-    compile("me.tongfei", "progressbar", "0.7.3")
+    compile("me.tongfei", "progressbar", "0.7.4")
 
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "f81eb2e55a")
+    compile("com.github.1c-syntax", "bsl-parser", "0.8.0")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.0-M1")
-    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.0-M1")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.0-RC2")
+    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.0-RC2")
 
     testCompile("org.assertj", "assertj-core", "3.12.2")
 
@@ -141,6 +141,6 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.6"
-    sha256 = "6373d9ade79efdc028cd48d40a9af9ac6a090dbcfaec55b438ec49556a4e92fb"
+    version = "1.18.8"
+    sha256 = "0396952823579b316a0fe85cbd871bbb3508143c2bcbd985dd7800e806cb24fc"
 }
