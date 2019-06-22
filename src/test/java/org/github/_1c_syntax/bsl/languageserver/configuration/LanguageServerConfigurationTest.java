@@ -22,14 +22,28 @@
 package org.github._1c_syntax.bsl.languageserver.configuration;
 
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystemException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerConfigurationTest {
+
+  @BeforeEach
+  void startUp() throws IOException {
+    try {
+      Files.deleteIfExists(Paths.get("build/.trace.log"));
+    } catch (FileSystemException e) {
+      // no-op
+    }
+  }
 
   @Test
   void createDefault() {
@@ -67,7 +81,6 @@ class LanguageServerConfigurationTest {
     Either<Boolean, Map<String, Object>> methodSize = diagnostics.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
     assertThat(methodSize.getLeft()).isEqualTo(false);
-
 
   }
 }

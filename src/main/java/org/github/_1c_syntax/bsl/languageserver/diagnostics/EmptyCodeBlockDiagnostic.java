@@ -44,6 +44,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
 
     if (ctx.getParent() instanceof BSLParser.FileContext
+      || ctx.getParent() instanceof BSLParser.CodeBlockBeforeSubContext
       || ctx.getParent() instanceof BSLParser.SubCodeBlockContext) {
       return super.visitCodeBlock(ctx);
     }
@@ -59,15 +60,19 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
       .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfstop)
       .collect(Collectors.toList());
 
-    TerminalNode first = (TerminalNode) list.get(0);
-    TerminalNode last = (TerminalNode) list.get(list.size() - 1);
+    if (!list.isEmpty()) {
+      TerminalNode first = (TerminalNode) list.get(0);
+      TerminalNode last = (TerminalNode) list.get(list.size() - 1);
 
-    addDiagnostic(
-      first.getSymbol().getLine() - 1,
-      first.getSymbol().getCharPositionInLine(),
-      last.getSymbol().getLine() - 1,
-      last.getSymbol().getCharPositionInLine() + last.getText().length()
-    );
+      diagnosticStorage.addDiagnostic(
+        first.getSymbol().getLine() - 1,
+        first.getSymbol().getCharPositionInLine(),
+        last.getSymbol().getLine() - 1,
+        last.getSymbol().getCharPositionInLine() + last.getText().length()
+      );
+    } else {
+      diagnosticStorage.addDiagnostic(ctx.getParent().getStop());
+    }
 
     return super.visitCodeBlock(ctx);
   }

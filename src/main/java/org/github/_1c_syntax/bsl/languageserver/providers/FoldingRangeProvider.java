@@ -24,7 +24,9 @@ package org.github._1c_syntax.bsl.languageserver.providers;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
@@ -35,9 +37,6 @@ import java.util.Deque;
 import java.util.List;
 
 public final class FoldingRangeProvider {
-
-  private static final String REGION_KIND = "region";
-  private static final String COMMENT_KIND = "comment";
 
   private FoldingRangeProvider() {
     // only statics
@@ -51,6 +50,10 @@ public final class FoldingRangeProvider {
     codeBlockRangeFinder.visitFile(documentContext.getAst());
     List<FoldingRange> codeBlockRegionRanges = codeBlockRangeFinder.getRegionRanges();
 
+    UseRangeFinder useRangeFinder = new UseRangeFinder();
+    useRangeFinder.visitFile(documentContext.getAst());
+    List<FoldingRange> useRegionRanges = useRangeFinder.getRegionRanges();
+
     RegionRangeFinder regionRangeFinder = new RegionRangeFinder();
     regionRangeFinder.visitFile(documentContext.getAst());
     List<FoldingRange> regionRanges = regionRangeFinder.getRegionRanges();
@@ -60,6 +63,7 @@ public final class FoldingRangeProvider {
     List<FoldingRange> preprocRegionRanges = preprocIfRegionRangeFinder.getRegionRanges();
 
     foldingRanges.addAll(codeBlockRegionRanges);
+    foldingRanges.addAll(useRegionRanges);
     foldingRanges.addAll(regionRanges);
     foldingRanges.addAll(preprocRegionRanges);
 
@@ -78,7 +82,7 @@ public final class FoldingRangeProvider {
       if (tokenLine != previousLine + 1) {
         if (lastRangeStart != previousLine) {
           FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
-          foldingRange.setKind(COMMENT_KIND);
+          foldingRange.setKind(FoldingRangeKind.Comment);
 
           foldingRanges.add(foldingRange);
         }
@@ -92,11 +96,40 @@ public final class FoldingRangeProvider {
     // add last range
     if (lastRangeStart != previousLine) {
       FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
-      foldingRange.setKind(COMMENT_KIND);
+      foldingRange.setKind(FoldingRangeKind.Comment);
 
       foldingRanges.add(foldingRange);
     }
     return foldingRanges;
+  }
+
+  private static class UseRangeFinder extends BSLParserBaseVisitor<ParseTree> {
+
+    private List<FoldingRange> regionRanges = new ArrayList<>();
+
+    public List<FoldingRange> getRegionRanges() {
+      return new ArrayList<>(regionRanges);
+    }
+
+    @Override
+    public ParseTree visitFile(BSLParser.FileContext ctx) {
+      ParseTree[] uses = Trees.findAllRuleNodes(ctx, BSLParser.RULE_use).toArray(new ParseTree[0]);
+
+      if (uses.length <= 1) {
+        return ctx;
+      }
+
+      int start = ((BSLParser.UseContext) uses[0]).getStart().getLine();
+      int stop = ((BSLParser.UseContext) uses[uses.length - 1]).getStop().getLine();
+
+      FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
+      foldingRange.setKind(FoldingRangeKind.Imports);
+
+      regionRanges.add(foldingRange);
+
+      return ctx;
+    }
+
   }
 
   private static class CodeBlockRangeFinder extends BSLParserBaseVisitor<ParseTree> {
@@ -150,12 +183,16 @@ public final class FoldingRangeProvider {
     }
 
     private void addRegionRange(TerminalNode start, TerminalNode stop) {
+      if (start == null || stop == null) {
+        return;
+      }
+
       int startLine = start.getSymbol().getLine();
       int stopLine = stop.getSymbol().getLine();
 
       if (stopLine > startLine) {
         FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
-        foldingRange.setKind(REGION_KIND);
+        foldingRange.setKind(FoldingRangeKind.Region);
 
         regionRanges.add(foldingRange);
       }
@@ -180,13 +217,17 @@ public final class FoldingRangeProvider {
     @Override
     public ParseTree visitRegionEnd(BSLParser.RegionEndContext ctx) {
 
+      if (regionStack.isEmpty()) {
+        return super.visitRegionEnd(ctx);
+      }
+
       BSLParser.RegionStartContext regionStart = regionStack.pop();
 
       int start = regionStart.getStart().getLine();
       int stop = ctx.getStop().getLine();
 
       FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
-      foldingRange.setKind(REGION_KIND);
+      foldingRange.setKind(FoldingRangeKind.Region);
 
       regionRanges.add(foldingRange);
 
@@ -211,13 +252,18 @@ public final class FoldingRangeProvider {
 
     @Override
     public ParseTree visitPreproc_endif(BSLParser.Preproc_endifContext ctx) {
+
+      if (preprocIfRegionStack.isEmpty()) {
+        return super.visitPreproc_endif(ctx);
+      }
+
       BSLParser.Preproc_ifContext regionStart = preprocIfRegionStack.pop();
 
       int start = regionStart.getStart().getLine();
       int stop = ctx.getStop().getLine();
 
       FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
-      foldingRange.setKind(REGION_KIND);
+      foldingRange.setKind(FoldingRangeKind.Region);
 
       regionRanges.add(foldingRange);
 

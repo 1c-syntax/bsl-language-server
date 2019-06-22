@@ -38,7 +38,8 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.reflections.Reflections;
-import org.reflections.scanners.FieldAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
+import static org.reflections.ReflectionUtils.getAllFields;
+import static org.reflections.ReflectionUtils.withAnnotation;
 
 public final class DiagnosticProvider {
 
@@ -226,7 +230,16 @@ public final class DiagnosticProvider {
   @SuppressWarnings("unchecked")
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
-    Reflections diagnosticReflections = new Reflections(BSLDiagnostic.class.getPackage().getName());
+    Reflections diagnosticReflections = new Reflections(
+      new ConfigurationBuilder()
+        .setUrls(
+          ClasspathHelper.forPackage(
+            BSLDiagnostic.class.getPackage().getName(),
+            ClasspathHelper.contextClassLoader(),
+            ClasspathHelper.staticClassLoader()
+          )
+        )
+    );
 
     return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
       .stream()
@@ -245,24 +258,21 @@ public final class DiagnosticProvider {
       );
   }
 
+  @SuppressWarnings("unchecked")
   private static Map<Class<? extends BSLDiagnostic>, Map<String, DiagnosticParameter>> createDiagnosticParameters(
     List<Class<? extends BSLDiagnostic>> diagnosticClasses
   ) {
-
     return diagnosticClasses.stream()
       .collect(Collectors.toMap(
         (Class<? extends BSLDiagnostic> diagnosticClass) -> diagnosticClass,
-        (Class<? extends BSLDiagnostic> diagnosticClass) -> {
-          Reflections diagnosticReflections = new Reflections(
-            diagnosticClass.getCanonicalName(),
-            new FieldAnnotationsScanner()
-          );
-          return diagnosticReflections.getFieldsAnnotatedWith(DiagnosticParameter.class).stream()
-            .collect(Collectors.toMap(
-              Field::getName,
-              (Field field) -> field.getAnnotation(DiagnosticParameter.class)
-            ));
-        }
+        (Class<? extends BSLDiagnostic> diagnosticClass) -> getAllFields(
+          diagnosticClass,
+          withAnnotation(DiagnosticParameter.class)
+        ).stream()
+          .collect(Collectors.toMap(
+            Field::getName,
+            (Field field) -> field.getAnnotation(DiagnosticParameter.class)
+          ))
       ));
   }
 
@@ -288,34 +298,28 @@ public final class DiagnosticProvider {
     );
   }
 
+  public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
+    BSLDiagnostic diagnosticInstance = createDiagnosticInstance(diagnosticClass);
+    configureDiagnostic(diagnosticInstance);
+
+    return diagnosticInstance;
+  }
+
   @VisibleForTesting
   public List<BSLDiagnostic> getDiagnosticInstances() {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
       .map(DiagnosticProvider::createDiagnosticInstance)
-      .peek((BSLDiagnostic diagnostic) -> {
-          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
-          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-            diagnostic.configure(diagnosticConfiguration.getRight());
-          }
-        }
+      .peek(this::configureDiagnostic
       ).collect(Collectors.toList());
   }
 
-  @VisibleForTesting
   private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
       .filter(element -> inScope(element, fileType))
       .map(DiagnosticProvider::createDiagnosticInstance)
-      .peek((BSLDiagnostic diagnostic) -> {
-          Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-            configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
-          if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-            diagnostic.configure(diagnosticConfiguration.getRight());
-          }
-        }
+      .peek(this::configureDiagnostic
       ).collect(Collectors.toList());
   }
 
@@ -338,6 +342,14 @@ public final class DiagnosticProvider {
       fileScope = DiagnosticScope.BSL;
     }
     return scope == DiagnosticScope.ALL || scope == fileScope;
+  }
+
+  private void configureDiagnostic(BSLDiagnostic diagnostic) {
+    Either<Boolean, Map<String, Object>> diagnosticConfiguration =
+      configuration.getDiagnostics().get(getDiagnosticCode(diagnostic));
+    if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
+      diagnostic.configure(diagnosticConfiguration.getRight());
+    }
   }
 
   private boolean isEnabled(Class<? extends BSLDiagnostic> diagnosticClass) {

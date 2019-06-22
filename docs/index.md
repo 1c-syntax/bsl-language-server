@@ -43,6 +43,7 @@ usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
  -s,--srcDir <arg>          Source directory
+ -v,--version               Version
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
@@ -76,6 +77,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 Конфигурационный файл представляет собой файл в формате JSON. Файл может содержать следующие настройки:
 
 * `diagnosticLanguage` - `Строка` - язык сообщений от движка диагностик. Допустимые значения - `en` и `ru`. По умолчанию - `ru`.
+* `traceLog` - `Строка` - путь к файлу для логирования всех входящих и исходящих запросов между BSL Language Server и Language Client из используемой IDE. Может быть абсолютным или относительным (от корня проекта). Заполнение настройки **значительно замедляет** скорость взаимодействия между сервером и клиентом. По умолчанию - значение не заполнено.
 * `diagnostics` - `Объект` - коллекция настроек диагностик. Элементами коллекции являются объекты со следующей структурой:
     * ключ объекта - `Строка` - ключ диагностики, как он описан в разделе <a href="#diagnostics">Диагностики</a>.
     * значение объекта
@@ -132,16 +134,20 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
 * [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
 * [NestedConstructorsInStructureDeclaration - Ограничение на использование конструкторов с параметрами при объявлении структуры](diagnostics/NestedConstructorsInStructureDeclaration.md)
+* [NestedStatements - Управляющие конструкции не должны быть вложены слишком глубоко](diagnostics/NestedStatements.md)
 * [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
 * [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)
 * [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
 * [NumberOfValuesInStructureConstructor - Ограничение на количество значений свойств, передаваемых в конструктор структуры](diagnostics/NumberOfValuesInStructureConstructor.md)
 * [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
+* [ParseError - Ошибка разбора исходного кода](diagnostics/ParseError.md)
 * [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
 * [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
+* [TryNumber - Приведение к числу в попытке](diagnostics/TryNumber.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
+* [UseLessForEach - Бесполезный перебор коллекции](diagnostics/UseLessForEach.md)
 * [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
 * [UsingFindElementByString - Использование методов «НайтиПоНаименованию» и «НайтиПоКоду»](diagnostics/UsingFindElementByString.md)
 * [UsingServiceTag - Использование служебных тегов](diagnostics/UsingServiceTag.md)

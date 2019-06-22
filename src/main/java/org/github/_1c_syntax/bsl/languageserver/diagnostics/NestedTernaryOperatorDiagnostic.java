@@ -43,7 +43,7 @@ public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
     if (nestedTernaryOperators.size() > 1) {
       nestedTernaryOperators.stream()
         .skip(1)
-        .forEach(parseTree -> addDiagnostic((BSLParser.TernaryOperatorContext) parseTree));
+        .forEach(parseTree -> diagnosticStorage.addDiagnostic((BSLParser.TernaryOperatorContext) parseTree));
     }
     
     return super.visitTernaryOperator(ctx);

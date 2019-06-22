@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -43,6 +44,8 @@ import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
@@ -57,7 +60,9 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import org.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
@@ -73,6 +78,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final ServerContext context = new ServerContext();
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
+  private final CodeActionProvider codeActionProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -80,6 +86,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public BSLTextDocumentService(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
+    codeActionProvider = new CodeActionProvider(diagnosticProvider);
   }
 
   @Override
@@ -110,7 +117,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<List<? extends Location>> definition(TextDocumentPositionParams position) {
+  public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
+    TextDocumentPositionParams position
+  ) {
     throw new UnsupportedOperationException();
   }
 
@@ -128,12 +137,22 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> DocumentSymbolProvider.getDocumentSymbol(documentContext));
   }
 
   @Override
   public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> codeActionProvider.getCodeActions(params, documentContext));
   }
 
   @Override
@@ -207,7 +226,13 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-    // no-op
+    if (client == null) {
+      return;
+    }
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    client.publishDiagnostics(
+      new PublishDiagnosticsParams(params.getTextDocument().getUri(), diagnostics)
+    );
   }
 
   @Override

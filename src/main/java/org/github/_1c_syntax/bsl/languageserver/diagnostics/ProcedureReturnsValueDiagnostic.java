@@ -42,7 +42,7 @@ public class ProcedureReturnsValueDiagnostic extends AbstractVisitorDiagnostic {
     Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
     for (ParseTree thisStatement : statements) {
       if (thisStatement.getChildCount() > 1) {
-        addDiagnostic((BSLParser.ReturnStatementContext) thisStatement);
+        diagnosticStorage.addDiagnostic((BSLParser.ReturnStatementContext) thisStatement);
       }
     }
     return ctx;

@@ -24,10 +24,13 @@ package org.github._1c_syntax.bsl.languageserver.context;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.Trees;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
@@ -47,6 +50,8 @@ import static org.antlr.v4.runtime.Token.EOF;
 
 public class DocumentContext {
 
+  private String content;
+  private String[] contentList;
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private MetricStorage metrics;
@@ -94,6 +99,30 @@ public class DocumentContext {
       .collect(Collectors.toList());
   }
 
+  public String getText(Range range) {
+    Position start = range.getStart();
+    Position end = range.getEnd();
+
+    StringBuilder sb = new StringBuilder();
+
+    String startString = contentList[start.getLine()];
+    if (start.getLine() == end.getLine()) {
+      sb.append(startString, start.getCharacter(), end.getCharacter());
+    } else {
+      sb.append(startString.substring(start.getCharacter()));
+    }
+
+    for(int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
+      sb.append(contentList[i]);
+    }
+
+    if (start.getLine() != end.getLine()) {
+      sb.append(contentList[end.getLine()], 0, end.getCharacter());
+    }
+
+    return sb.toString();
+  }
+
   public MetricStorage getMetrics() {
     return metrics;
   }
@@ -111,6 +140,9 @@ public class DocumentContext {
   }
 
   private void build(String content) {
+    this.content = content;
+    this.contentList = content.split("\n");
+
     CharStream input;
 
     try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
@@ -127,6 +159,7 @@ public class DocumentContext {
     BSLLexer lexer = new BSLLexer(input);
 
     lexer.setInputStream(input);
+    lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
 
     CommonTokenStream tokenStream = new CommonTokenStream(lexer);
     tokenStream.fill();
@@ -139,6 +172,7 @@ public class DocumentContext {
     }
 
     BSLParser parser = new BSLParser(tokenStream);
+    parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
     ast = parser.file();
 
     MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);

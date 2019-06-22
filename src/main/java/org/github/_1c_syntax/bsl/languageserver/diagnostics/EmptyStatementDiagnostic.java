@@ -22,27 +22,59 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
+import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1
 )
-public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic {
+public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider{
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
     if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
 
-      addDiagnostic(ctx);
+      diagnosticStorage.addDiagnostic(ctx);
 
     }
 
     return super.visitStatement(ctx);
   }
+
+  @Override
+  public List<CodeAction> getQuickFixes(
+    Diagnostic diagnostic,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+
+    Position diagnosticRangeEnd = diagnostic.getRange().getEnd();
+    Position diagnosticRangeNewEnd = new Position(diagnosticRangeEnd.getLine(), diagnosticRangeEnd.getCharacter() -1);
+
+    Range range = new Range(diagnosticRangeNewEnd, diagnosticRangeEnd);
+
+    return CodeActionProvider.createCodeActions(
+      range,
+      "",
+      getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostic
+    );
+
+  }
+
 }

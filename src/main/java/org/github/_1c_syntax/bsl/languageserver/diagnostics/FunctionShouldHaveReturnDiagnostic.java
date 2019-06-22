@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -40,10 +41,16 @@ public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
+
+    if (ctx.ENDFUNCTION_KEYWORD() == null
+      || ctx.ENDFUNCTION_KEYWORD().getClass() == ErrorNodeImpl.class) {
+      return ctx;
+    }
+
     Collection<ParseTree> tokens = Trees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
     if (tokens.isEmpty()) {
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
-      addDiagnostic(subName);
+      diagnosticStorage.addDiagnostic(subName);
     }
     return ctx;
   }

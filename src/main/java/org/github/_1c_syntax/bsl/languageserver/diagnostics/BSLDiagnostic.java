@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
@@ -65,6 +66,19 @@ public interface BSLDiagnostic {
     return createDiagnostic(
       bslDiagnostic,
       RangeHelper.newRange(node),
+      bslDiagnostic.getDiagnosticMessage(),
+      relatedInformation
+    );
+  }
+
+  static Diagnostic createDiagnostic(
+    BSLDiagnostic bslDiagnostic,
+    Token token,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    return createDiagnostic(
+      bslDiagnostic,
+      RangeHelper.newRange(token),
       bslDiagnostic.getDiagnosticMessage(),
       relatedInformation
     );

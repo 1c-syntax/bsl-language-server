@@ -71,7 +71,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     tree.stream().skip(skip).forEach(
       (ParseTree ident) -> {
         if (!rightPartIsValid((BSLParser.AssignmentContext) ident)) {
-          addDiagnostic((BSLParserRuleContext) ident.getParent());
+          diagnosticStorage.addDiagnostic((BSLParserRuleContext) ident.getParent());
         }
 
       }

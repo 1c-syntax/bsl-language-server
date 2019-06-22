@@ -75,7 +75,7 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
 
     if (doCallContext != null &&
       doCallContext.callParamList().callParam().size() > maxValuesCount + 1) {
-      addDiagnostic(ctx);
+      diagnosticStorage.addDiagnostic(ctx);
     }
     return super.visitNewExpression(ctx);
   }

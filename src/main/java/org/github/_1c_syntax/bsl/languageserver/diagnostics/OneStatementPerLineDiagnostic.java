@@ -34,11 +34,12 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 )
 public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
   private int previousLineNumber;
+  private int previousDiagnosticLineNumber;
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (ctx.preprocessor()!= null){
+    if (ctx.preprocessor() != null) {
       return super.visitStatement(ctx);
     }
 
@@ -46,10 +47,14 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitStatement(ctx);
     }
 
-    if (ctx.getStart().getLine() == previousLineNumber) {
-      addDiagnostic(ctx);
+    int currentLine = ctx.getStart().getLine();
+
+    if (currentLine == previousLineNumber && currentLine != previousDiagnosticLineNumber) {
+      diagnosticStorage.addDiagnostic(ctx);
+      previousDiagnosticLineNumber = currentLine;
     }
-    previousLineNumber = ctx.getStart().getLine();
+
+    previousLineNumber = currentLine;
 
     return super.visitStatement(ctx);
   }

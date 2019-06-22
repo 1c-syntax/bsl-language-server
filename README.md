@@ -5,6 +5,7 @@
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+[![telegram](https://img.shields.io/badge/telegram-chat-green.svg)](https://t.me/bsl_language_server)
 
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
 
@@ -16,6 +17,8 @@
 
 * Форматирование файла
 * Форматирование выбранного диапазона
+* Определение символов текущего файла (процедуры, функции, переменные, объявленные через `Перем`)
+* Сворачивание областей, блоков кода, процедур и функций, секций `#Использовать`
 * Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода
 * Диагностики
 * Запуск движка диагностик из командной строки
@@ -34,6 +37,7 @@ usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
  -s,--srcDir <arg>          Source directory
+ -v,--version               Version
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP](https://microsoft.github.io/language-server-protocol/). Для взаимодействия используются stdin и stdout.

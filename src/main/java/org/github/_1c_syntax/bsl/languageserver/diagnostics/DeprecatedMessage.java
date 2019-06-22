@@ -46,7 +46,7 @@ public class DeprecatedMessage extends AbstractVisitorDiagnostic {
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
     if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
-      addDiagnostic(ctx);
+      diagnosticStorage.addDiagnostic(ctx);
     }
 
     return super.visitGlobalMethodCall(ctx);

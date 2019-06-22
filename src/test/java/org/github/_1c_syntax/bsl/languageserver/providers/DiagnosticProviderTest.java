@@ -22,10 +22,14 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.MissingResourceException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,6 +103,19 @@ class DiagnosticProviderTest {
 
     // then
     assertThat(diagnosticClasses).allMatch(diagnosticClass -> !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
+
+  }
+
+  @Test
+  void testDiagnosticParametrs(){
+
+    Map<String, DiagnosticParameter> params = DiagnosticProvider.getDiagnosticParameters(NumberOfOptionalParamsDiagnostic.class);
+    assertThat(params).hasSize(1);
+    assertThat(DiagnosticProvider.getDefaultValue(params.get("maxOptionalParamsCount"))).isEqualTo(3);
+    assertThat(params.get("maxOptionalParamsCount").defaultValue()).isEqualTo("3");
+
+    Map<String, DiagnosticParameter> lineLengthParams = DiagnosticProvider.getDiagnosticParameters(LineLengthDiagnostic.class);
+    assertThat(lineLengthParams.get("maxLineLength").defaultValue()).isEqualTo("120");
 
   }
 }
