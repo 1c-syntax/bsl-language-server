@@ -27,6 +27,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +49,9 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
     Matcher matcher = pattern.matcher(ctx.methodName().getText());
     if (matcher.find()) {
       BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().get(0);
-      if (param.children == null || param.getStart().getType() == BSLParser.STRING) {
+      if (param.children == null ||
+        param.getStart().getType() == BSLParser.STRING ||
+        param.getStart().getType() == BSLParser.DECIMAL) {
         diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(matcher.group(0)));
       }
     }

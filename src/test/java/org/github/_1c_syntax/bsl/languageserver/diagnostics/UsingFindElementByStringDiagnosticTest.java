@@ -40,11 +40,12 @@ public class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTe
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(7, 38, 7, 78));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 40, 9, 61));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(13, 27, 13, 59));
     assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(24, 35, 24, 53));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(27, 35, 27, 51));
 
   }
 
