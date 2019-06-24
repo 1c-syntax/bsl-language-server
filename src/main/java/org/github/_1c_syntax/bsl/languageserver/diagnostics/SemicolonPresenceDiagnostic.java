@@ -22,7 +22,9 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -46,6 +48,12 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
+
+    boolean hasParseError = Trees.getDescendants(ctx).stream().anyMatch(node -> node instanceof ErrorNodeImpl);
+
+    if (hasParseError) {
+      return ctx;
+    }
 
     if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
       Token lastToken = ctx.getStop();
