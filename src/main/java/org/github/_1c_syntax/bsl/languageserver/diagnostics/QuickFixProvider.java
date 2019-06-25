@@ -30,6 +30,10 @@ import java.util.List;
 
 public interface QuickFixProvider {
 
-  List<CodeAction> getQuickFixes(Diagnostic diagnostic, CodeActionParams params, DocumentContext documentContext);
+  List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  );
 
 }

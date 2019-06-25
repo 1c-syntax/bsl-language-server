@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -71,6 +72,7 @@ class CodeActionProviderTest {
 
     codeActionContext.setDiagnostics(diagnostics);
 
+    params.setRange(new Range());
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 

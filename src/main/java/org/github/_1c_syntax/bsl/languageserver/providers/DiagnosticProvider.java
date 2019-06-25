@@ -49,8 +49,10 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -74,6 +76,7 @@ public final class DiagnosticProvider {
     = createDiagnosticsCodes(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
+  private final Map<String, List<Diagnostic>> computedDiagnostics;
 
   public DiagnosticProvider() {
     this(LanguageServerConfiguration.create());
@@ -81,6 +84,7 @@ public final class DiagnosticProvider {
 
   public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
+    computedDiagnostics = new HashMap<>();
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
@@ -89,15 +93,40 @@ public final class DiagnosticProvider {
     client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri(), diagnostics));
   }
 
+  public void publishEmptyDiagnosticList(LanguageClient client, DocumentContext documentContext) {
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    computedDiagnostics.put(documentContext.getUri(), diagnostics);
+    client.publishDiagnostics(
+      new PublishDiagnosticsParams(documentContext.getUri(), diagnostics)
+    );
+  }
+
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    return getDiagnosticInstances(documentContext.getFileType()).parallelStream()
+
+    List<Diagnostic> diagnostics = getDiagnosticInstances(documentContext.getFileType()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .collect(Collectors.toList());
+
+    computedDiagnostics.put(documentContext.getUri(), diagnostics);
+
+    return diagnostics;
+  }
+
+  public List<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
+    return computedDiagnostics.getOrDefault(documentContext.getUri(), new ArrayList<>());
   }
 
   public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
     return new ArrayList<>(diagnosticClasses);
   }
+
+  public static Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(String diagnosticCode) {
+    return DiagnosticProvider.getDiagnosticClasses()
+      .stream()
+      .filter(bslDiagnosticClass -> DiagnosticProvider.getDiagnosticCode(bslDiagnosticClass).equals(diagnosticCode))
+      .findAny();
+  }
+
 
   public static String getDiagnosticCode(Class<? extends BSLDiagnostic> diagnosticClass) {
     String simpleName = diagnosticClass.getSimpleName();

@@ -42,7 +42,7 @@ import java.util.List;
   severity = DiagnosticSeverity.MINOR,
   minutesToFix = 1
 )
-public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
@@ -56,7 +56,7 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
     return super.visitStatement(ctx);
   }
 
-  @Override
+  //@Override
   public List<CodeAction> getQuickFixes(
     Diagnostic diagnostic,
     CodeActionParams params,

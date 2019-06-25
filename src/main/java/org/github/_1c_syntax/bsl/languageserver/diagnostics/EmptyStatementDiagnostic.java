@@ -41,7 +41,7 @@ import java.util.List;
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1
 )
-public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider{
+public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
@@ -55,7 +55,7 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
     return super.visitStatement(ctx);
   }
 
-  @Override
+  //@Override
   public List<CodeAction> getQuickFixes(
     Diagnostic diagnostic,
     CodeActionParams params,
