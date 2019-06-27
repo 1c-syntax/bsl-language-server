@@ -47,7 +47,7 @@ dependencies {
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "0.8.0")
+    compile("com.github.1c-syntax", "bsl-parser", "02979826e621126099120f8170e3b51ca92d764a")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 

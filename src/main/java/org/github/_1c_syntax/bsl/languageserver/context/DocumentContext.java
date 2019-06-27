@@ -23,8 +23,9 @@ package org.github._1c_syntax.bsl.languageserver.context;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ConsoleErrorListener;
+import org.antlr.v4.runtime.IncrementalParserData;
+import org.antlr.v4.runtime.IncrementalTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.Trees;
 import org.apache.commons.io.FilenameUtils;
@@ -161,7 +162,7 @@ public class DocumentContext {
     lexer.setInputStream(input);
     lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
 
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+    IncrementalTokenStream tokenStream = new IncrementalTokenStream(lexer);
     tokenStream.fill();
 
     tokens = new ArrayList<>(tokenStream.getTokens());
@@ -171,7 +172,13 @@ public class DocumentContext {
       tokens.remove(tokens.size() - 1);
     }
 
-    BSLParser parser = new BSLParser(tokenStream);
+    BSLParser parser;
+    if (ast == null) {
+      parser = new BSLParser(tokenStream);
+    } else {
+      IncrementalParserData parserData = new IncrementalParserData(tokenStream, new ArrayList<>(), ast);
+      parser = new BSLParser(tokenStream, parserData);
+    }
     parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
     ast = parser.file();
 
