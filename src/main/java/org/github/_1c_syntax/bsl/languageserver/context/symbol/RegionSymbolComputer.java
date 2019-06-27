@@ -48,7 +48,10 @@ public final class RegionSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
 
     RegionSymbol.RegionSymbolBuilder builder = new RegionSymbol.RegionSymbolBuilder();
     builder.node(ctx);
-    builder.start(ctx);
+    builder.startNode(ctx);
+    builder.startLine(ctx.getStart().getLine());
+    builder.name(ctx.regionName().getText());
+    builder.nameNode(ctx.regionName());
 
     regionStack.push(builder);
     return super.visitRegionStart(ctx);
@@ -62,7 +65,8 @@ public final class RegionSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
     }
 
     RegionSymbol.RegionSymbolBuilder builder = regionStack.pop();
-    builder.end(ctx);
+    builder.endNode(ctx);
+    builder.endLine(ctx.getStop().getLine());
 
     RegionSymbol region = builder.build();
 

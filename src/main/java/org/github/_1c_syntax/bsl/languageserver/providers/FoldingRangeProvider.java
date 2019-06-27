@@ -216,8 +216,8 @@ public final class FoldingRangeProvider {
     }
 
     private void createFoldingRange(RegionSymbol regionSymbol) {
-      BSLParser.RegionStartContext regionStart = regionSymbol.getStart();
-      BSLParser.RegionEndContext regionEnd = regionSymbol.getEnd();
+      BSLParser.RegionStartContext regionStart = regionSymbol.getStartNode();
+      BSLParser.RegionEndContext regionEnd = regionSymbol.getEndNode();
 
       int start = regionStart.getStart().getLine();
       int stop = regionEnd.getStop().getLine();

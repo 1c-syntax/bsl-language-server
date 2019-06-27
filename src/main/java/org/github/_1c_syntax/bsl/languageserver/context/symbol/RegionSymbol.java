@@ -32,9 +32,18 @@ import java.util.List;
 @Value
 @Builder
 public class RegionSymbol implements Symbol {
-  private final BSLParser.RegionStartContext start;
-  private final BSLParser.RegionEndContext end;
+  private final String name;
+  private final BSLParser.RegionNameContext nameNode;
+
+  private final BSLParser.RegionStartContext startNode;
+  private final int startLine;
+
+
+  private final BSLParser.RegionEndContext endNode;
+  private final int endLine;
+
   @Singular
   private final List<RegionSymbol> children;
+
   private final BSLParserRuleContext node;
 }

@@ -22,18 +22,24 @@
 package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> {
 
+  private final DocumentContext documentContext;
   private List<MethodSymbol> methods = new ArrayList<>();
 
-  public MethodSymbolComputer(BSLParser.FileContext ast) {
-    visitFile(ast);
+  public MethodSymbolComputer(DocumentContext documentContext) {
+    this.documentContext = documentContext;
+    visitFile(documentContext.getAst());
   }
 
   @Override
@@ -51,6 +57,7 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(true)
       .node(ctx)
+      .region(findRegion(ctx))
       .build();
 
     methods.add(methodSymbol);
@@ -67,6 +74,7 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(false)
       .node(ctx)
+      .region(findRegion(ctx))
       .build();
 
     methods.add(methodSymbol);
@@ -78,4 +86,16 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
     return new ArrayList<>(methods);
   }
 
+  private RegionSymbol findRegion(BSLParserRuleContext ctx) {
+
+    int startLine = ctx.getStart().getLine();
+    int endLine = ctx.getStop().getLine();
+
+    Optional<RegionSymbol> region = documentContext.getRegionsFlat().stream()
+      .filter(regionSymbol -> regionSymbol.getStartLine() < startLine && regionSymbol.getEndLine() > endLine)
+      .max(Comparator.comparingInt(RegionSymbol::getStartLine));
+
+    return region.orElse(null);
+
+  }
 }

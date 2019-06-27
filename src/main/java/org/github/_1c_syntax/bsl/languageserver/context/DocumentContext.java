@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -59,6 +61,7 @@ public class DocumentContext {
   private MetricStorage metrics;
   private List<MethodSymbol> methods;
   private List<RegionSymbol> regions;
+  private List<RegionSymbol> regionsFlat;
   private final String uri;
   private final FileType fileType;
 
@@ -88,8 +91,16 @@ public class DocumentContext {
     return new ArrayList<>(methods);
   }
 
+  public Optional<MethodSymbol> getMethodSymbol(BSLParser.ProcedureContext ctx) {
+    return methods.stream().filter(methodSymbol -> methodSymbol.getNode().equals(ctx)).findFirst();
+  }
+
   public List<RegionSymbol> getRegions() {
     return new ArrayList<>(regions);
+  }
+
+  public List<RegionSymbol> getRegionsFlat() {
+    return regionsFlat;
   }
 
   public List<Token> getTokens() {
@@ -182,11 +193,21 @@ public class DocumentContext {
     parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
     ast = parser.file();
 
-    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
-    methods = methodSymbolComputer.getMethods();
-
     RegionSymbolComputer regionSymbolComputer = new RegionSymbolComputer(ast);
     regions = regionSymbolComputer.getRegions();
+    regionsFlat = regions.stream()
+      .map((RegionSymbol regionSymbol) -> {
+        List<RegionSymbol> list = new ArrayList<>();
+        list.add(regionSymbol);
+        list.addAll(regionSymbol.getChildren());
+
+        return list;
+      })
+      .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+
+    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(this);
+    methods = methodSymbolComputer.getMethods();
 
     computeMetrics();
   }
