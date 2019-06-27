@@ -33,6 +33,8 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolComputer;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
@@ -56,6 +58,7 @@ public class DocumentContext {
   private List<Token> tokens;
   private MetricStorage metrics;
   private List<MethodSymbol> methods;
+  private List<RegionSymbol> regions;
   private final String uri;
   private final FileType fileType;
 
@@ -83,6 +86,10 @@ public class DocumentContext {
 
   public List<MethodSymbol> getMethods() {
     return new ArrayList<>(methods);
+  }
+
+  public List<RegionSymbol> getRegions() {
+    return new ArrayList<>(regions);
   }
 
   public List<Token> getTokens() {
@@ -177,6 +184,9 @@ public class DocumentContext {
 
     MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
     methods = methodSymbolComputer.getMethods();
+
+    RegionSymbolComputer regionSymbolComputer = new RegionSymbolComputer(ast);
+    regions = regionSymbolComputer.getRegions();
 
     computeMetrics();
   }

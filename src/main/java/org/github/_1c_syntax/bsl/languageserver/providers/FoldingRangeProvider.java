@@ -28,6 +28,7 @@ import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
@@ -54,8 +55,7 @@ public final class FoldingRangeProvider {
     useRangeFinder.visitFile(documentContext.getAst());
     List<FoldingRange> useRegionRanges = useRangeFinder.getRegionRanges();
 
-    RegionRangeFinder regionRangeFinder = new RegionRangeFinder();
-    regionRangeFinder.visitFile(documentContext.getAst());
+    RegionRangeFinder regionRangeFinder = new RegionRangeFinder(documentContext);
     List<FoldingRange> regionRanges = regionRangeFinder.getRegionRanges();
 
     PreprocIfRegionRangeFinder preprocIfRegionRangeFinder = new PreprocIfRegionRangeFinder();
@@ -199,40 +199,35 @@ public final class FoldingRangeProvider {
     }
   }
 
-  private static class RegionRangeFinder extends BSLParserBaseVisitor<ParseTree> {
+  private static class RegionRangeFinder {
 
-    private Deque<BSLParser.RegionStartContext> regionStack = new ArrayDeque<>();
     private List<FoldingRange> regionRanges = new ArrayList<>();
 
-    public List<FoldingRange> getRegionRanges() {
+    RegionRangeFinder(DocumentContext documentContext) {
+      documentContext.getRegions().forEach((RegionSymbol regionSymbol) -> {
+        createFoldingRange(regionSymbol);
+        regionSymbol.getChildren().forEach(this::createFoldingRange);
+      });
+
+    }
+
+    List<FoldingRange> getRegionRanges() {
       return new ArrayList<>(regionRanges);
     }
 
-    @Override
-    public ParseTree visitRegionStart(BSLParser.RegionStartContext ctx) {
-      regionStack.push(ctx);
-      return super.visitRegionStart(ctx);
-    }
-
-    @Override
-    public ParseTree visitRegionEnd(BSLParser.RegionEndContext ctx) {
-
-      if (regionStack.isEmpty()) {
-        return super.visitRegionEnd(ctx);
-      }
-
-      BSLParser.RegionStartContext regionStart = regionStack.pop();
+    private void createFoldingRange(RegionSymbol regionSymbol) {
+      BSLParser.RegionStartContext regionStart = regionSymbol.getStart();
+      BSLParser.RegionEndContext regionEnd = regionSymbol.getEnd();
 
       int start = regionStart.getStart().getLine();
-      int stop = ctx.getStop().getLine();
+      int stop = regionEnd.getStop().getLine();
 
       FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
       foldingRange.setKind(FoldingRangeKind.Region);
 
       regionRanges.add(foldingRange);
-
-      return super.visitRegionEnd(ctx);
     }
+
   }
 
   private static class PreprocIfRegionRangeFinder extends BSLParserBaseVisitor<ParseTree> {
