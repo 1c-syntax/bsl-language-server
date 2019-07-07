@@ -40,7 +40,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 class DocumentSymbolProviderTest {
 
   @Test
-  void testFoldingRange() throws IOException {
+  void testDocumentSymbol() throws IOException {
 
     String fileContent = FileUtils.readFileToString(
       new File("./src/test/resources/providers/documentSymbol.bsl"),

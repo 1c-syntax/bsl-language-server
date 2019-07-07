@@ -22,10 +22,10 @@
 package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -57,7 +57,7 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(true)
       .node(ctx)
-      .region(findRegion(ctx))
+      .region(findRegion(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
       .build();
 
     methods.add(methodSymbol);
@@ -74,7 +74,7 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(false)
       .node(ctx)
-      .region(findRegion(ctx))
+      .region(findRegion(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
       .build();
 
     methods.add(methodSymbol);
@@ -86,10 +86,10 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
     return new ArrayList<>(methods);
   }
 
-  private RegionSymbol findRegion(BSLParserRuleContext ctx) {
+  private RegionSymbol findRegion(TerminalNode start, TerminalNode stop) {
 
-    int startLine = ctx.getStart().getLine();
-    int endLine = ctx.getStop().getLine();
+    int startLine = start.getSymbol().getLine();
+    int endLine = stop.getSymbol().getLine();
 
     Optional<RegionSymbol> region = documentContext.getRegionsFlat().stream()
       .filter(regionSymbol -> regionSymbol.getStartLine() < startLine && regionSymbol.getEndLine() > endLine)
