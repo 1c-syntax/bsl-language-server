@@ -56,7 +56,7 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
       .collect(Collectors.toList());
 
     if (!childIdentifiers.isEmpty()) {
-      diagnosticStorage.addDiagnostic(ctx, expression);
+      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(expression));
     }
 
     return super.visitForEachStatement(ctx);
