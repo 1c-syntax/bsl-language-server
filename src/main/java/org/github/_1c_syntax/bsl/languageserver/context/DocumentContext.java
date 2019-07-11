@@ -37,6 +37,7 @@ import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
 
 import java.io.IOException;
@@ -91,7 +92,7 @@ public class DocumentContext {
     return new ArrayList<>(methods);
   }
 
-  public Optional<MethodSymbol> getMethodSymbol(BSLParser.ProcedureContext ctx) {
+  public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
     return methods.stream().filter(methodSymbol -> methodSymbol.getNode().equals(ctx)).findFirst();
   }
 
