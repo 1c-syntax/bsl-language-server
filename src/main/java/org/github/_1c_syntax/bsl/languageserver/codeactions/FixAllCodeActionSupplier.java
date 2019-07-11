@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 
 public class FixAllCodeActionSupplier implements CodeActionSupplier {
 
+  private static final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;
+
   private DiagnosticProvider diagnosticProvider;
 
   public FixAllCodeActionSupplier(DiagnosticProvider diagnosticProvider) {
@@ -47,61 +49,67 @@ public class FixAllCodeActionSupplier implements CodeActionSupplier {
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
+    List<Diagnostic> incomingDiagnostics = params.getContext().getDiagnostics();
+    if (incomingDiagnostics.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     List<CodeAction> actions = new ArrayList<>();
 
-    List<Diagnostic> incomingDiagnostics = params.getContext().getDiagnostics();
-    if (!incomingDiagnostics.isEmpty()) {
+    incomingDiagnostics.stream()
+      .map(Diagnostic::getCode)
+      .distinct()
+      .flatMap(diagnosticCode -> getFixAllCodeAction(diagnosticCode, params, documentContext).stream())
+      .collect(Collectors.toCollection(() -> actions));
 
-      incomingDiagnostics.stream()
-        .map(Diagnostic::getCode)
-        .distinct()
-        .forEach((String diagnosticCode) -> {
-          Optional<Class<? extends BSLDiagnostic>> diagnosticClass
-            = DiagnosticProvider.getDiagnosticClass(diagnosticCode);
-
-          diagnosticClass.ifPresent((Class<? extends BSLDiagnostic> bslDiagnosticClass) -> {
-            if (!QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
-              return;
-            }
-
-            List<Diagnostic> suitableDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext).stream()
-              .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
-              .collect(Collectors.toList());
-
-            long diagnosticsWithTheSameCode = suitableDiagnostics.stream()
-              .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
-              .count();
-
-            // if incomingDiagnostics list is empty - nothing to fix
-            // if incomingDiagnostics list has size = 1 - it will be displayed as regular quick fix
-            final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;
-
-            if (diagnosticsWithTheSameCode < ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD) {
-              return;
-            }
-
-            CodeActionContext fixAllContext = new CodeActionContext();
-            fixAllContext.setDiagnostics(suitableDiagnostics);
-            fixAllContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
-
-            CodeActionParams fixAllParams = new CodeActionParams();
-            fixAllParams.setTextDocument(params.getTextDocument());
-            fixAllParams.setRange(params.getRange());
-            fixAllParams.setContext(fixAllContext);
-
-            BSLDiagnostic diagnosticInstance = diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
-
-            List<CodeAction> quickFixes = ((QuickFixProvider) diagnosticInstance).getQuickFixes(
-              suitableDiagnostics,
-              fixAllParams,
-              documentContext
-            );
-            actions.addAll(quickFixes);
-          });
-
-        });
-
-    }
     return actions;
+  }
+
+  private List<CodeAction> getFixAllCodeAction(
+    String diagnosticCode,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+
+    Optional<Class<? extends BSLDiagnostic>> diagnosticClass = DiagnosticProvider.getDiagnosticClass(diagnosticCode);
+
+    if (!diagnosticClass.isPresent()) {
+      return Collections.emptyList();
+    }
+
+    Class<? extends BSLDiagnostic> bslDiagnosticClass = diagnosticClass.get();
+
+    if (!QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
+      return Collections.emptyList();
+    }
+
+    List<Diagnostic> suitableDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext).stream()
+      .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
+      .collect(Collectors.toList());
+
+    // if incomingDiagnostics list is empty - nothing to fix
+    // if incomingDiagnostics list has size = 1 - it will be displayed as regular quick fix
+    if (suitableDiagnostics.size() < ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD) {
+      return Collections.emptyList();
+    }
+
+    CodeActionContext fixAllContext = new CodeActionContext();
+    fixAllContext.setDiagnostics(suitableDiagnostics);
+    fixAllContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
+
+    CodeActionParams fixAllParams = new CodeActionParams();
+    fixAllParams.setTextDocument(params.getTextDocument());
+    fixAllParams.setRange(params.getRange());
+    fixAllParams.setContext(fixAllContext);
+
+    QuickFixProvider diagnosticInstance =
+      (QuickFixProvider) diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
+
+    return diagnosticInstance.getQuickFixes(
+      suitableDiagnostics,
+      fixAllParams,
+      documentContext
+    );
+
   }
 }
