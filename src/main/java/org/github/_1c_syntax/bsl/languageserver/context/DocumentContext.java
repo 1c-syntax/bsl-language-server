@@ -45,8 +45,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -61,6 +63,7 @@ public class DocumentContext {
   private List<Token> tokens;
   private MetricStorage metrics;
   private List<MethodSymbol> methods;
+  private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
   private List<RegionSymbol> regions;
   private List<RegionSymbol> regionsFlat;
   private final String uri;
@@ -93,7 +96,7 @@ public class DocumentContext {
   }
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
-    return methods.stream().filter(methodSymbol -> methodSymbol.getNode().equals(ctx)).findFirst();
+    return Optional.ofNullable(nodeToMethodsMap.get(ctx));
   }
 
   public List<RegionSymbol> getRegions() {
@@ -101,7 +104,7 @@ public class DocumentContext {
   }
 
   public List<RegionSymbol> getRegionsFlat() {
-    return regionsFlat;
+    return new ArrayList<>(regionsFlat);
   }
 
   public List<Token> getTokens() {
@@ -224,6 +227,9 @@ public class DocumentContext {
   private void computeMethods() {
     MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(this);
     methods = methodSymbolComputer.getMethods();
+
+    nodeToMethodsMap.clear();
+    methods.forEach(methodSymbol -> nodeToMethodsMap.put(methodSymbol.getNode(), methodSymbol));
   }
 
   private void adjustRegions() {
