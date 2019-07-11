@@ -22,7 +22,6 @@
 package org.github._1c_syntax.bsl.languageserver.providers;
 
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
@@ -31,16 +30,16 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.github._1c_syntax.bsl.languageserver.codeactions.CodeActionSupplier;
+import org.github._1c_syntax.bsl.languageserver.codeactions.FixAllCodeActionSupplier;
+import org.github._1c_syntax.bsl.languageserver.codeactions.QuickFixCodeActionSupplier;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -82,107 +81,20 @@ public final class CodeActionProvider {
     DocumentContext documentContext
   ) {
 
-    List<Either<Command, CodeAction>> codeActions = new ArrayList<>();
+    List<CodeAction> codeActions = new ArrayList<>();
 
-    List<Diagnostic> incomingDiagnostics = params.getContext().getDiagnostics();
-    if (!incomingDiagnostics.isEmpty()) {
+    CodeActionSupplier fixAllCodeActionSupplier = new FixAllCodeActionSupplier(diagnosticProvider);
+    CodeActionSupplier quickFixCodeActionSupplier = new QuickFixCodeActionSupplier(diagnosticProvider);
 
-      incomingDiagnostics.stream()
-        .map(Diagnostic::getCode)
-        .distinct()
-        .forEach((String diagnosticCode) -> {
-          Optional<Class<? extends BSLDiagnostic>> diagnosticClass
-            = DiagnosticProvider.getDiagnosticClass(diagnosticCode);
+    codeActions.addAll(quickFixCodeActionSupplier.getCodeActions(params, documentContext));
+    codeActions.addAll(fixAllCodeActionSupplier.getCodeActions(params, documentContext));
 
-          diagnosticClass.ifPresent((Class<? extends BSLDiagnostic> bslDiagnosticClass) -> {
-            if (!QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
-              return;
-            }
-
-            List<Diagnostic> suitableDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext).stream()
-              .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
-              .collect(Collectors.toList());
-
-            long diagnosticsWithTheSameCode = suitableDiagnostics.stream()
-              .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
-              .count();
-
-            // if incomingDiagnostics list is empty - nothing to fix
-            // if incomingDiagnostics list has size = 1 - it will be displayed as regular quick fix
-            final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;
-
-            if (diagnosticsWithTheSameCode < ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD) {
-              return;
-            }
-
-            CodeActionContext fixAllContext = new CodeActionContext();
-            fixAllContext.setDiagnostics(suitableDiagnostics);
-            fixAllContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
-
-            CodeActionParams fixAllParams = new CodeActionParams();
-            fixAllParams.setTextDocument(params.getTextDocument());
-            fixAllParams.setRange(params.getRange());
-            fixAllParams.setContext(fixAllContext);
-
-            BSLDiagnostic diagnosticInstance = diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
-
-            List<CodeAction> quickFixes = ((QuickFixProvider) diagnosticInstance).getQuickFixes(
-              suitableDiagnostics,
-              fixAllParams,
-              documentContext
-            );
-            codeActions.addAll(convertCodeActionListToEitherList(quickFixes));
-          });
-
-        });
-
-    }
-
-    List<Either<Command, CodeAction>> quickFixes = getQuickFixes(params, documentContext);
-    codeActions.addAll(quickFixes);
-
-    return codeActions;
-  }
-
-  private List<Either<Command, CodeAction>> getQuickFixes(CodeActionParams params, DocumentContext documentContext) {
-    List<String> only = params.getContext().getOnly();
-    if (only != null && !only.isEmpty() && !only.contains(CodeActionKind.QuickFix)) {
-      return Collections.emptyList();
-    }
-
-    List<CodeAction> actions = new ArrayList<>();
-
-    List<Diagnostic> diagnostics = params.getContext().getDiagnostics();
-    diagnostics.forEach(diagnostic ->
-      actions.addAll(getCodeActionsByDiagnostic(diagnostic, params, documentContext)));
-
-    return convertCodeActionListToEitherList(actions);
-  }
-
-  private List<CodeAction> getCodeActionsByDiagnostic(
-    Diagnostic diagnostic,
-    CodeActionParams params,
-    DocumentContext documentContext
-  ) {
-
-    Class<? extends BSLDiagnostic> bslDiagnosticClass = DiagnosticProvider.getBSLDiagnosticClass(diagnostic);
-    if (bslDiagnosticClass == null || !QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
-      return Collections.emptyList();
-    }
-
-    BSLDiagnostic diagnosticInstance = diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
-    return ((QuickFixProvider) diagnosticInstance).getQuickFixes(
-      Collections.singletonList(diagnostic),
-      params,
-      documentContext
-    );
-
+    return convertCodeActionListToEitherList(codeActions);
   }
 
   private static List<Either<Command, CodeAction>> convertCodeActionListToEitherList(List<CodeAction> actions) {
     return actions.stream().map(
       (Function<CodeAction, Either<Command, CodeAction>>) Either::forRight).collect(Collectors.toList());
   }
-
 
 }
