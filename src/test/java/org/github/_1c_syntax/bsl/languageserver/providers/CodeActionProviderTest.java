@@ -81,7 +81,7 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
-      .hasSize(2)
+      .hasSize(3)
       .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(0)))
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(1)))

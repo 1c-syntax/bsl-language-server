@@ -23,21 +23,19 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -609,13 +607,8 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
     DocumentContext documentContext
   ) {
 
-    String uri = documentContext.getUri();
-    WorkspaceEdit edit = new WorkspaceEdit();
     List<TextEdit> textEdits = new ArrayList<>();
 
-    if (diagnostics.isEmpty()) {
-      return Collections.emptyList();
-    }
     diagnostics.forEach((Diagnostic diagnostic) -> {
       Range range = diagnostic.getRange();
       String originalText = documentContext.getText(range);
@@ -625,20 +618,12 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
       textEdits.add(textEdit);
     });
 
-    Map<String, List<TextEdit>> changes = new HashMap<>();
-    changes.put(uri, textEdits);
-    edit.setChanges(changes);
-
-    String title = getResourceString("quickFixMessage");
-    if (diagnostics.size() > 1) {
-      title = "Fix all: " + title;
-    }
-    CodeAction codeAction = new CodeAction(title);
-    codeAction.setDiagnostics(diagnostics);
-    codeAction.setEdit(edit);
-    codeAction.setKind(CodeActionKind.QuickFix);
-
-    return Collections.singletonList(codeAction);
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
+    );
 
   }
 }

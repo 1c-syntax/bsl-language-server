@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -34,6 +35,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -41,38 +43,47 @@ import java.util.List;
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1
 )
-public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic {
+public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
     if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-
       diagnosticStorage.addDiagnostic(ctx);
-
     }
 
     return super.visitStatement(ctx);
   }
 
-  //@Override
+  @Override
   public List<CodeAction> getQuickFixes(
-    Diagnostic diagnostic,
+    List<Diagnostic> diagnostics,
     CodeActionParams params,
     DocumentContext documentContext
   ) {
 
-    Position diagnosticRangeEnd = diagnostic.getRange().getEnd();
-    Position diagnosticRangeNewEnd = new Position(diagnosticRangeEnd.getLine(), diagnosticRangeEnd.getCharacter() -1);
+    List<TextEdit> textEdits = new ArrayList<>();
 
-    Range range = new Range(diagnosticRangeNewEnd, diagnosticRangeEnd);
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+
+      Position diagnosticRangeEnd = diagnostic.getRange().getEnd();
+      Position diagnosticRangeNewEnd = new Position(
+        diagnosticRangeEnd.getLine(),
+        diagnosticRangeEnd.getCharacter() - 1
+      );
+
+      Range range = new Range(diagnosticRangeNewEnd, diagnosticRangeEnd);
+
+      TextEdit textEdit = new TextEdit(range, "");
+      textEdits.add(textEdit);
+
+    });
 
     return CodeActionProvider.createCodeActions(
-      range,
-      "",
+      textEdits,
       getResourceString("quickFixMessage"),
       documentContext.getUri(),
-      diagnostic
+      diagnostics
     );
 
   }

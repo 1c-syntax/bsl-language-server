@@ -26,7 +26,6 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -52,28 +51,33 @@ public final class CodeActionProvider {
   }
 
   public static List<CodeAction> createCodeActions(
-    Range range,
-    String newText,
+    List<TextEdit> textEdits,
     String title,
     String uri,
-    Diagnostic diagnostic
+    List<Diagnostic> diagnostics
   ) {
 
-    Map<String, List<TextEdit>> changes = new HashMap<>();
-    TextEdit textEdit = new TextEdit(range, newText);
-
-    changes.put(uri, Collections.singletonList(textEdit));
+    if (diagnostics.isEmpty()) {
+      return Collections.emptyList();
+    }
 
     WorkspaceEdit edit = new WorkspaceEdit();
 
+    Map<String, List<TextEdit>> changes = new HashMap<>();
+    changes.put(uri, textEdits);
     edit.setChanges(changes);
 
+    if (diagnostics.size() > 1) {
+      title = "Fix all: " + title;
+    }
+
     CodeAction codeAction = new CodeAction(title);
-    codeAction.setDiagnostics(Collections.singletonList(diagnostic));
+    codeAction.setDiagnostics(diagnostics);
     codeAction.setEdit(edit);
     codeAction.setKind(CodeActionKind.QuickFix);
 
     return Collections.singletonList(codeAction);
+
   }
 
   public List<Either<Command, CodeAction>> getCodeActions(
