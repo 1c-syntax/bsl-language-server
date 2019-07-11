@@ -21,6 +21,8 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,30 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 9));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 6, 3, 7));
 
+  }
+
+  @Test
+  void testQuickFix() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      RangeHelper.newRange(6, 10, 6, 10)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().equals(";")
+      )
+    ;
   }
 }
 
