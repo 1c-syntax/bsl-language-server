@@ -88,6 +88,10 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
 
   private RegionSymbol findRegion(TerminalNode start, TerminalNode stop) {
 
+    if (start == null || stop == null) {
+      return null;
+    }
+
     int startLine = start.getSymbol().getLine();
     int endLine = stop.getSymbol().getLine();
 

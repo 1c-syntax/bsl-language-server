@@ -27,6 +27,7 @@ import lombok.Value;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Value
@@ -38,12 +39,12 @@ public class RegionSymbol implements Symbol {
   private final BSLParser.RegionStartContext startNode;
   private final int startLine;
 
-
   private final BSLParser.RegionEndContext endNode;
   private final int endLine;
 
   @Singular
   private final List<RegionSymbol> children;
+  private final List<MethodSymbol> methods = new ArrayList<>();
 
   private final BSLParserRuleContext node;
 }

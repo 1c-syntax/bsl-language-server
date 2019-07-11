@@ -161,6 +161,17 @@ public class DocumentContext {
     this.content = content;
     this.contentList = content.split("\n");
 
+    // order of computing is important
+    computeTokensAndAST();
+
+    computeRegions();
+    computeMethods();
+    adjustRegions();
+
+    computeMetrics();
+  }
+
+  private void computeTokensAndAST() {
     CharStream input;
 
     try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
@@ -192,7 +203,9 @@ public class DocumentContext {
     BSLParser parser = new BSLParser(tokenStream);
     parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
     ast = parser.file();
+  }
 
+  private void computeRegions() {
     RegionSymbolComputer regionSymbolComputer = new RegionSymbolComputer(ast);
     regions = regionSymbolComputer.getRegions();
     regionsFlat = regions.stream()
@@ -205,11 +218,20 @@ public class DocumentContext {
       })
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+  }
 
+  private void computeMethods() {
     MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(this);
     methods = methodSymbolComputer.getMethods();
+  }
 
-    computeMetrics();
+  private void adjustRegions() {
+    methods.forEach((MethodSymbol methodSymbol) -> {
+      RegionSymbol region = methodSymbol.getRegion();
+      if (region != null) {
+        region.getMethods().add(methodSymbol);
+      }
+    });
   }
 
   private void computeMetrics() {
