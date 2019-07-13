@@ -22,15 +22,29 @@
 package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import lombok.Builder;
+import lombok.Singular;
 import lombok.Value;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Value
 @Builder
-public class MethodSymbol implements Symbol {
+public class RegionSymbol implements Symbol {
   private final String name;
-  private final boolean export;
-  private final boolean function;
-  private final RegionSymbol region;
+  private final BSLParser.RegionNameContext nameNode;
+
+  private final BSLParser.RegionStartContext startNode;
+  private final int startLine;
+
+  private final BSLParser.RegionEndContext endNode;
+  private final int endLine;
+
+  @Singular
+  private final List<RegionSymbol> children;
+  private final List<MethodSymbol> methods = new ArrayList<>();
+
   private final BSLParserRuleContext node;
 }
