@@ -26,6 +26,7 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -601,21 +602,27 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
 
   @Override
   public List<CodeAction> getQuickFixes(
-    Diagnostic diagnostic,
+    List<Diagnostic> diagnostics,
     CodeActionParams params,
     DocumentContext documentContext
   ) {
 
-    Range range = diagnostic.getRange();
-    String originalText = documentContext.getText(range);
-    String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+      Range range = diagnostic.getRange();
+      String originalText = documentContext.getText(range);
+      String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
+
+      TextEdit textEdit = new TextEdit(range, canonicalText);
+      textEdits.add(textEdit);
+    });
 
     return CodeActionProvider.createCodeActions(
-      range,
-      canonicalText,
+      textEdits,
       getResourceString("quickFixMessage"),
       documentContext.getUri(),
-      diagnostic
+      diagnostics
     );
 
   }

@@ -19,21 +19,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.codeactions;
 
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 import java.util.List;
 
-public interface QuickFixProvider {
-
-  List<CodeAction> getQuickFixes(
-    List<Diagnostic> diagnostics,
-    CodeActionParams params,
-    DocumentContext documentContext
-  );
-
+public interface CodeActionSupplier {
+  List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext);
 }
