@@ -130,6 +130,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [DeprecatedMessage - Restriction on the use of deprecated "Message" method](diagnostics/DeprecatedMessage.md)
 - [EmptyCodeBlock - Empty code block](diagnostics/EmptyCodeBlock.md)
 - [EmptyStatement - Empty Ssatement](diagnostics/EmptyStatement.md)
+- [ExtraCommas - Commas without a parameter at the end of a method call](diagnostics/ExtraCommas.md)
 - [FunctionShouldHaveReturn - Function must have Return statement](diagnostics/FunctionShouldHaveReturn.md)
 - [IfElseDuplicatedCodeBlockDiagnostic - Duplicated code blocks in If...Then...ElsIf...](diagnostics/IfElseDuplicatedCodeBlock.md)
 - [IfElseDuplicatedConditionDiagnostic - Duplicated conditions in If...Then...ElsIf...](diagnostics/IfElseDuplicatedCondition.md)
