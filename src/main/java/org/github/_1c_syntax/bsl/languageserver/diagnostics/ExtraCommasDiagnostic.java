@@ -40,9 +40,7 @@ public class ExtraCommasDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCallParamList(BSLParser.CallParamListContext ctx) {
 
-    int stopText = ctx.stop.getType();
-
-    if (stopText == BSLParser.COMMA) {
+    if (ctx.stop.getType() == BSLParser.COMMA) {
       diagnosticStorage.addDiagnostic(ctx.stop);
     }
 
