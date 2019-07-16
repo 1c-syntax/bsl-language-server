@@ -23,12 +23,18 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
+import org.apache.commons.lang3.StringUtils;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -38,25 +44,44 @@ import java.util.stream.Collectors;
 )
 public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final Pattern deletePattern = Pattern.compile(
+    "(удалить|delete)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
-    String iterator = ctx.IDENTIFIER().getText();
-    String expression = ctx.expression().getText();
+    String collectionName = ctx.expression().getText();
 
-    List<ParseTree> childIdentifiers = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
+    Collection<ParseTree> childStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_accessCall)
       .stream()
-      .filter( node -> node.getParent().getClass() == BSLParser.MethodNameContext.class
-        && node.getParent().getParent().getClass() != BSLParser.GlobalMethodCallContext.class )
-      .filter( node -> node.getText().equalsIgnoreCase("удалить")
-        || node.getText().equalsIgnoreCase("delete") )
-      .filter( node -> node.getParent().getParent().getParent().getParent().getText().startsWith(
-          expression + "." + node.getParent().getText() ) )
-      .filter( node -> node.getParent().getParent().getText().contains( iterator ) )
-      .collect(Collectors.toList());
+      .filter(node -> deletePattern.matcher(
+        ((BSLParser.AccessCallContext) node).methodCall().methodName().getText()).matches()
+      ).collect(Collectors.toList());
 
-    if (!childIdentifiers.isEmpty()) {
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(expression));
+    for (ParseTree node : childStatements) {
+
+      ArrayList<ParseTree> statementsParts = new ArrayList<>();
+      ParseTree callStatement = node.getParent();
+      statementsParts.add(((BSLParser.CallStatementContext) callStatement).IDENTIFIER());
+      statementsParts.add(((BSLParser.CallStatementContext) callStatement).globalMethodCall());
+
+      if (((BSLParser.CallStatementContext) callStatement).modifier() != null) {
+        statementsParts.addAll(((BSLParser.CallStatementContext) callStatement).modifier());
+      }
+
+      List<String> deleteCollection = statementsParts.stream()
+        .filter(Objects::nonNull)
+        .map(ParseTree::getText).collect(Collectors.toList());
+
+      String deleteCollectionName = StringUtils.join(deleteCollection, "");
+
+      if (!deleteCollectionName.equalsIgnoreCase(collectionName)) {
+        continue;
+      }
+
+      diagnosticStorage.addDiagnostic((BSLParserRuleContext) callStatement, getDiagnosticMessage());
     }
 
     return super.visitForEachStatement(ctx);

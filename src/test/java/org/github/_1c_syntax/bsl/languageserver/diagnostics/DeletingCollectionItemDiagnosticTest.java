@@ -38,13 +38,16 @@ public class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(15, 0, 19, 10));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(22, 0, 24, 5));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(27, 0, 29, 5));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(32, 0, 34, 10));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(37, 0, 41, 10));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(44, 0, 46, 5));
+    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(17, 8, 17, 47));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(23, 4, 23, 21));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(28, 4, 28, 25));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(33, 4, 33, 30));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(39, 8, 39, 34));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(45, 4, 45, 23));
+    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(50, 4, 50, 37));
+    assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(55, 4, 55, 39));
+
 
   }
 
