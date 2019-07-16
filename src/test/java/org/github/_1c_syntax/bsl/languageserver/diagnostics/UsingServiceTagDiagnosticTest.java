@@ -41,12 +41,12 @@ public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingS
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 0, 1, 36));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(13, 1, 13, 47));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(13, 4, 13, 50));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(21, 4, 21, 29));
     assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(25, 0, 25, 26));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(26, 33, 26, 57));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(26, 33, 26, 58));
     assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(28, 4, 28, 11));
     assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(29, 20, 29, 30));
     assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(31, 4, 31, 12));
@@ -54,7 +54,9 @@ public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingS
     assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(34, 8, 34, 21));
     assertThat(diagnostics.get(10).getRange()).isEqualTo(RangeHelper.newRange(42, 4, 42, 51));
     assertThat(diagnostics.get(11).getRange()).isEqualTo(RangeHelper.newRange(61, 4, 61, 51));
-    // TODO: Описать MRG
+    assertThat(diagnostics.get(12).getRange()).isEqualTo(RangeHelper.newRange(65, 0, 65, 11));
+    assertThat(diagnostics.get(13).getRange()).isEqualTo(RangeHelper.newRange(67, 0, 67, 11));
+    assertThat(diagnostics.get(14).getRange()).isEqualTo(RangeHelper.newRange(71, 4, 71, 36));
 
   }
 }
