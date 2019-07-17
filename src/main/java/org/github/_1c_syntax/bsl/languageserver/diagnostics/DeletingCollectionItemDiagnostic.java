@@ -23,19 +23,15 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
-import org.apache.commons.lang3.StringUtils;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -48,43 +44,42 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
     "(удалить|delete)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private String collectionName;
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
-    String collectionName = ctx.expression().getText();
+    collectionName = ctx.expression().getText();
 
-    Collection<ParseTree> childStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_accessCall)
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_accessCall)
       .stream()
+      .filter(Objects::nonNull)
       .filter(node -> deletePattern.matcher(
         ((BSLParser.AccessCallContext) node).methodCall().methodName().getText()).matches()
-      ).collect(Collectors.toList());
-
-    for (ParseTree node : childStatements) {
-
-      ArrayList<ParseTree> statementsParts = new ArrayList<>();
-      ParseTree callStatement = node.getParent();
-      statementsParts.add(((BSLParser.CallStatementContext) callStatement).IDENTIFIER());
-      statementsParts.add(((BSLParser.CallStatementContext) callStatement).globalMethodCall());
-
-      if (((BSLParser.CallStatementContext) callStatement).modifier() != null) {
-        statementsParts.addAll(((BSLParser.CallStatementContext) callStatement).modifier());
-      }
-
-      List<String> deleteCollection = statementsParts.stream()
-        .filter(Objects::nonNull)
-        .map(ParseTree::getText).collect(Collectors.toList());
-
-      String deleteCollectionName = StringUtils.join(deleteCollection, "");
-
-      if (!deleteCollectionName.equalsIgnoreCase(collectionName)) {
-        continue;
-      }
-
-      diagnosticStorage.addDiagnostic((BSLParserRuleContext) callStatement, getDiagnosticMessage());
-    }
+      )
+      .map(ParseTree::getParent)
+      .filter(callStatement -> collectionNamesEqual(((BSLParser.CallStatementContext) callStatement)))
+      .forEach(callStatement -> diagnosticStorage.addDiagnostic(
+        ((BSLParserRuleContext) callStatement), getDiagnosticMessage(collectionName)
+      ));
 
     return super.visitForEachStatement(ctx);
 
   }
+
+  private boolean collectionNamesEqual(BSLParser.CallStatementContext node) {
+
+    boolean isEqual = false;
+
+    String callStatementText = node.getText().toLowerCase(Locale.getDefault());
+    String methodText = node.accessCall().methodCall().getText().toLowerCase(Locale.getDefault());
+
+    String deleteCollectionName = callStatementText.replace( "." + methodText, "");
+    if (deleteCollectionName.equalsIgnoreCase(collectionName)) {
+      isEqual = true;
+    }
+
+    return isEqual;
+  }
+
 }

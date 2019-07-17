@@ -52,6 +52,13 @@ for each elem in mass.mass1().mass2 do
 enddo;
 
 //error7
-for each elem in mass().mass1.mass2() do
-    mass().mass1.mass2().delete(elem+1);
+for each elem in Mass().mass1.mass2() do
+    mass().mAss1.mass2().delete(elem+1);
 enddo;
+
+//good
+Для Каждого Элемент Из Коллекция Цикл
+    Если Элемент < 10 Тогда
+        Коллекция1.Удалить(Элемент);
+    КонецЕсли;
+КонецЦикла;
