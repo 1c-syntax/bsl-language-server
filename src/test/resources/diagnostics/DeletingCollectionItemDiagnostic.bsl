@@ -21,12 +21,12 @@
 
 //error2
 for each elem in mass do
-	mass.delete(elem);
+    mass.delete(elem);
 enddo;
 
 //error3
 for each elem in mass do
-	mass.delete( (elem ));
+    mass.delete( (elem ));
 enddo;
 
 //error4
@@ -43,5 +43,22 @@ enddo;
 
 //error6
 for each elem in mass do
-	mass.delete(elem+1);
+    mass.delete(elem+1);
 enddo;
+
+//error7
+for each elem in mass.mass1().mass2 do
+    mass.mass1().mass2.delete(elem+1);
+enddo;
+
+//error7
+for each elem in Mass().mass1.mass2() do
+    mass().mAss1.mass2().delete(elem+1);
+enddo;
+
+//good
+Для Каждого Элемент Из Коллекция Цикл
+    Если Элемент < 10 Тогда
+        Коллекция1.Удалить(Элемент);
+    КонецЕсли;
+КонецЦикла;

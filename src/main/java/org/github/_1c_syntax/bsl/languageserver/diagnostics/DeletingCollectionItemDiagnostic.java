@@ -27,8 +27,10 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -50,16 +52,33 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
         && node.getParent().getParent().getClass() != BSLParser.GlobalMethodCallContext.class )
       .filter( node -> node.getText().equalsIgnoreCase("удалить")
         || node.getText().equalsIgnoreCase("delete") )
-      .filter( node -> node.getParent().getParent().getParent().getParent().getText().startsWith(
-          expression + "." + node.getParent().getText() ) )
-      .filter( node -> node.getParent().getParent().getText().contains( iterator ) )
+      .filter( node -> namesEqual(node, expression) )
       .collect(Collectors.toList());
 
     if (!childIdentifiers.isEmpty()) {
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(expression));
+      for (ParseTree node : childIdentifiers) {
+        ParseTree callStatement = node.getParent().getParent().getParent().getParent();
+        diagnosticStorage.addDiagnostic((BSLParserRuleContext) callStatement, getDiagnosticMessage(expression));
+      }
     }
 
     return super.visitForEachStatement(ctx);
 
   }
+
+  private boolean namesEqual(ParseTree node, String expression) {
+
+    ParseTree callStatement = node.getParent().getParent().getParent().getParent();
+
+    if ( !(callStatement instanceof BSLParser.CallStatementContext) ) {
+      return false;
+    }
+
+    String callStatementText = callStatement.getText().toLowerCase(Locale.getDefault());
+    String prefix = expression.toLowerCase(Locale.getDefault())
+                    + "." + node.getParent().getText().toLowerCase(Locale.getDefault());
+    return callStatementText.startsWith(prefix);
+
+  }
+
 }
