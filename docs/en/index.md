@@ -136,6 +136,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [IfElseDuplicatedConditionDiagnostic - Duplicated conditions in If...Then...ElsIf...](diagnostics/IfElseDuplicatedCondition.md)
 - [IfElseIfEndsWithElse - Using If...Then...ElsIf... statement](diagnostics/IfElseIfEndsWithElse.md)
 - [LineLength - Line length restriction](diagnostics/LineLength.md)
+- [MagicNumber - Using magic number](diagnostics/MagicNumber.md)
 - [MethodSize - Method size restriction](diagnostics/MethodSize.md)
 - [NestedConstructorsInStructureDeclaration - Nested constructors with parameters in structure declaration](diagnostics/NestedConstructorsInStructureDeclaration.md)
 - [NestedStatements - Control flow statements should not be nested too deep](diagnostics/NestedStatements.md)
