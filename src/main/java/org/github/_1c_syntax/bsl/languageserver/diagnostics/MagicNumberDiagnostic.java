@@ -88,7 +88,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitChildren(ctx);
     }
 
-    diagnosticStorage.addDiagnostic(ctx.stop);
+    diagnosticStorage.addDiagnostic(ctx.stop, getDiagnosticMessage(checked));
     return super.visitChildren(ctx);
   }
 
