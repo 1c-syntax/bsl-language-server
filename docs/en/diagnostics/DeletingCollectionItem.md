@@ -1,6 +1,7 @@
 # Deleting an item when iterating through collection using the operator "For each ... In ... Do"
 
-Don't delete elements of collection %s when iterating through collection using the operator **For each ... In ... Do**.
+Don't delete elements of collection %s when iterating through collection using the 
+operator **For each ... In ... Do**. Because it change index of next element.
 
 Example:
 
