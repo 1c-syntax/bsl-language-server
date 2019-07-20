@@ -79,17 +79,17 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     String checked = ctx.getText();
 
     if(checked == null || isExcluded(checked)) {
-      return super.visitChildren(ctx);
+      return super.visitNumeric(ctx);
     }
 
     BSLParser.ExpressionContext expression = (BSLParser.ExpressionContext) ctx.getParent().getParent().getParent();
 
     if (isNumericExpression(expression)) {
-      return super.visitChildren(ctx);
+      return super.visitNumeric(ctx);
     }
 
     diagnosticStorage.addDiagnostic(ctx.stop, getDiagnosticMessage(checked));
-    return super.visitChildren(ctx);
+    return ctx;
   }
 
 }
