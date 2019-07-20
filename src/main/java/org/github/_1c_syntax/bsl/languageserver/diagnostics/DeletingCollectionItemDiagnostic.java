@@ -27,11 +27,9 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
-import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -40,43 +38,44 @@ import java.util.stream.Collectors;
 )
 public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final Pattern deletePattern = Pattern.compile(
+    "(удалить|delete)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
-    String iterator = ctx.IDENTIFIER().getText();
-    String expression = ctx.expression().getText();
+    String expression = ctx.expression().getText().toLowerCase(Locale.getDefault());
 
-    List<ParseTree> childIdentifiers = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
+    Trees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
       .stream()
-      .filter( node -> node.getParent().getClass() == BSLParser.MethodNameContext.class
-        && node.getParent().getParent().getClass() != BSLParser.GlobalMethodCallContext.class )
-      .filter( node -> node.getText().equalsIgnoreCase("удалить")
-        || node.getText().equalsIgnoreCase("delete") )
-      .filter( node -> namesEqual(node, expression) )
-      .collect(Collectors.toList());
-
-    if (!childIdentifiers.isEmpty()) {
-      for (ParseTree node : childIdentifiers) {
-        ParseTree callStatement = node.getParent().getParent().getParent().getParent();
-        diagnosticStorage.addDiagnostic((BSLParserRuleContext) callStatement, getDiagnosticMessage(expression));
-      }
-    }
+      .filter(node -> deletePattern.matcher(
+        ((BSLParser.MethodCallContext) node).methodName().getText()).matches()
+      )
+      .map(node -> node.getParent().getParent())
+      .filter(callStatement -> namesEqual(callStatement, expression))
+      .forEach(callStatement -> diagnosticStorage.addDiagnostic(
+          (BSLParser.CallStatementContext) callStatement, getDiagnosticMessage(expression))
+      );
 
     return super.visitForEachStatement(ctx);
 
   }
 
-  private boolean namesEqual(ParseTree node, String expression) {
+  private static boolean namesEqual(ParseTree node, String expression) {
 
-    ParseTree callStatement = node.getParent().getParent().getParent().getParent();
-
-    if ( !(callStatement instanceof BSLParser.CallStatementContext) ) {
+    if (!(node instanceof BSLParser.CallStatementContext)) {
       return false;
     }
 
+    BSLParser.CallStatementContext callStatement = (BSLParser.CallStatementContext) node;
+
     String callStatementText = callStatement.getText().toLowerCase(Locale.getDefault());
-    String prefix = expression.toLowerCase(Locale.getDefault())
-                    + "." + node.getParent().getText().toLowerCase(Locale.getDefault());
+    String prefix = expression
+      + "."
+      + callStatement.accessCall().methodCall().methodName().getText().toLowerCase(Locale.getDefault())
+      + "(";
     return callStatementText.startsWith(prefix);
 
   }
