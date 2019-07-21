@@ -34,4 +34,5 @@ public class MetricStorage {
   private int lines;
   private int ncloc;
   private int statements;
+  private int[] nclocData;
 }

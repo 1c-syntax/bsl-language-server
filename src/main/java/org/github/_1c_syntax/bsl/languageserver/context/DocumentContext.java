@@ -253,6 +253,11 @@ public class DocumentContext {
 
     metrics.setNcloc(ncloc);
 
+    int[] nclocData = getTokensFromDefaultChannel().stream()
+      .mapToInt(Token::getLine)
+      .distinct().toArray();
+    metrics.setNclocData(nclocData);
+
     int lines;
     if (tokens.isEmpty()) {
       lines = 0;
