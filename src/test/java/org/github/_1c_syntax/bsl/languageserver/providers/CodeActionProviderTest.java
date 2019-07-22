@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,6 +73,7 @@ class CodeActionProviderTest {
 
     codeActionContext.setDiagnostics(diagnostics);
 
+    params.setRange(new Range());
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
@@ -79,11 +82,42 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
-      .hasSize(2)
+      .hasSize(3)
       .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(0)))
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(1)))
       .allMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
     ;
+  }
+
+  @Test
+  void testEmptyDiagnosticList() throws IOException {
+    // given
+    String fileContent = FileUtils.readFileToString(
+      new File("./src/test/resources/providers/codeAction.bsl"),
+      StandardCharsets.UTF_8
+    );
+    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
+    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider);
+
+    CodeActionParams params = new CodeActionParams();
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+
+    codeActionContext.setDiagnostics(Collections.emptyList());
+
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .hasSize(0);
   }
 }

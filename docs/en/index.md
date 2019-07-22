@@ -9,7 +9,7 @@
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
-[English version](en/index.md)
+[Russian version](../index.md)
 
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
@@ -24,7 +24,10 @@
 
 - File formatting
 - Selected region formatting
+- Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
+- Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
 - Diagnostics
+- Quick fixes for several diagnostics
 - Run diagnostics engine from command line
 
 <a id="cli"></a>
@@ -130,11 +133,13 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [DeprecatedMessage - Restriction on the use of deprecated "Message" method](diagnostics/DeprecatedMessage.md)
 - [EmptyCodeBlock - Empty code block](diagnostics/EmptyCodeBlock.md)
 - [EmptyStatement - Empty Ssatement](diagnostics/EmptyStatement.md)
+- [ExtraCommas - Commas without a parameter at the end of a method call](diagnostics/ExtraCommas.md)
 - [FunctionShouldHaveReturn - Function must have Return statement](diagnostics/FunctionShouldHaveReturn.md)
 - [IfElseDuplicatedCodeBlockDiagnostic - Duplicated code blocks in If...Then...ElsIf...](diagnostics/IfElseDuplicatedCodeBlock.md)
 - [IfElseDuplicatedConditionDiagnostic - Duplicated conditions in If...Then...ElsIf...](diagnostics/IfElseDuplicatedCondition.md)
 - [IfElseIfEndsWithElse - Using If...Then...ElsIf... statement](diagnostics/IfElseIfEndsWithElse.md)
 - [LineLength - Line length restriction](diagnostics/LineLength.md)
+- [MagicNumber - Using magic number](diagnostics/MagicNumber.md)
 - [MethodSize - Method size restriction](diagnostics/MethodSize.md)
 - [NestedConstructorsInStructureDeclaration - Nested constructors with parameters in structure declaration](diagnostics/NestedConstructorsInStructureDeclaration.md)
 - [NestedStatements - Control flow statements should not be nested too deep](diagnostics/NestedStatements.md)

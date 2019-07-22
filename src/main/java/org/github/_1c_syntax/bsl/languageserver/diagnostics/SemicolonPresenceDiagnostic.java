@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -35,6 +36,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -58,22 +60,28 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
 
   @Override
   public List<CodeAction> getQuickFixes(
-    Diagnostic diagnostic,
+    List<Diagnostic> diagnostics,
     CodeActionParams params,
     DocumentContext documentContext
   ) {
 
-    Range diagnosticRange = diagnostic.getRange();
-    Position diagnosticRangeEnd = diagnosticRange.getEnd();
+    List<TextEdit> textEdits = new ArrayList<>();
 
-    Range range = new Range(diagnosticRangeEnd, diagnosticRangeEnd);
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+      Range diagnosticRange = diagnostic.getRange();
+      Position diagnosticRangeEnd = diagnosticRange.getEnd();
+
+      Range range = new Range(diagnosticRangeEnd, diagnosticRangeEnd);
+
+      TextEdit textEdit = new TextEdit(range, ";");
+      textEdits.add(textEdit);
+    });
 
     return CodeActionProvider.createCodeActions(
-      range,
-      ";",
+      textEdits,
       getResourceString("quickFixMessage"),
       documentContext.getUri(),
-      diagnostic
+      diagnostics
     );
 
   }

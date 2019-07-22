@@ -29,23 +29,22 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<UsingFindElementByStringDiagnostic> {
+public class ExtraCommasDiagnosticTest extends AbstractDiagnosticTest<ExtraCommasDiagnostic> {
 
-  UsingFindElementByStringDiagnosticTest() { super(UsingFindElementByStringDiagnostic.class); }
+  ExtraCommasDiagnosticTest() { super(ExtraCommasDiagnostic.class); }
 
   @Test
   void runTest() {
 
-    // When
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then
-    assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(7, 38, 7, 78));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 40, 9, 61));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(13, 27, 13, 59));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(24, 35, 24, 53));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(27, 35, 27, 51));
+    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 35, 8, 36));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 35, 9, 36));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(10, 49, 10, 50));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(11, 45, 11, 46));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(13, 31, 13, 32));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(17, 38, 17, 39));
 
   }
 

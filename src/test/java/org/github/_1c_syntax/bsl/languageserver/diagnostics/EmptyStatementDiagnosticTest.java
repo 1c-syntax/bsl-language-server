@@ -21,6 +21,8 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
@@ -43,5 +45,29 @@ class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatement
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 18, 1, 19));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(2, 8, 2, 9));
 
+  }
+
+  @Test
+  void testQuickFix() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      RangeHelper.newRange(3, 19, 3, 19)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().equals("")
+      )
+    ;
   }
 }

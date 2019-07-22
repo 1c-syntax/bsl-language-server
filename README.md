@@ -1,6 +1,6 @@
 # BSL Language Server
 
-[![Build Status](https://travis-ci.org/1c-syntax/bsl-language-server.svg?branch=master)](https://travis-ci.org/1c-syntax/bsl-language-server)
+[![Build Status](https://travis-ci.org/1c-syntax/bsl-language-server.svg?branch=develop)](https://travis-ci.org/1c-syntax/bsl-language-server)
 [![JitPack](https://jitpack.io/v/1c-syntax/bsl-language-server.svg)](https://jitpack.io/#1c-syntax/bsl-language-server)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
@@ -17,10 +17,10 @@
 
 * Форматирование файла
 * Форматирование выбранного диапазона
-* Определение символов текущего файла (процедуры, функции, переменные, объявленные через `Перем`)
-* Сворачивание областей, блоков кода, процедур и функций, секций `#Использовать`
+* Определение символов текущего файла (области, процедуры, функции, переменные, объявленные через `Перем`)
 * Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода
 * Диагностики
+* "Быстрые исправления" (quick fixes) для ряда диагностик
 * Запуск движка диагностик из командной строки
 
 ## Запуск из командной строки

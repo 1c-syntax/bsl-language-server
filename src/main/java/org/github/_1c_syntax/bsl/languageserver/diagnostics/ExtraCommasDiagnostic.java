@@ -21,19 +21,30 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.List;
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 1
+)
 
-public interface QuickFixProvider {
+public class ExtraCommasDiagnostic extends AbstractVisitorDiagnostic {
 
-  List<CodeAction> getQuickFixes(
-    List<Diagnostic> diagnostics,
-    CodeActionParams params,
-    DocumentContext documentContext
-  );
+  @Override
+  public ParseTree visitCallParamList(BSLParser.CallParamListContext ctx) {
+
+    if (ctx.stop.getType() == BSLParser.COMMA) {
+      diagnosticStorage.addDiagnostic(ctx.stop);
+    }
+
+    return super.visitCallParamList(ctx);
+  }
 
 }

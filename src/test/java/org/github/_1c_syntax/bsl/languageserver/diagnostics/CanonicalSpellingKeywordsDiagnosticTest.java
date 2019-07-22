@@ -21,6 +21,8 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
@@ -297,5 +299,29 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
     assertThat(diagnostics.get(125).getRange()).isEqualTo(RangeHelper.newRange(464, 1, 464, 7));
     // EndRegioN
     assertThat(diagnostics.get(126).getRange()).isEqualTo(RangeHelper.newRange(465, 1, 465, 10));
+  }
+
+  @Test
+  void testQuickFix() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      RangeHelper.newRange(10, 8, 10, 8)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().equals("Перем")
+      )
+    ;
   }
 }

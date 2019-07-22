@@ -19,20 +19,32 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.context;
+package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.Value;
+import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class MetricStorage {
-  private int procedures;
-  private int functions;
-  private int lines;
-  private int ncloc;
-  private int statements;
-  private int[] nclocData;
+import java.util.ArrayList;
+import java.util.List;
+
+@Value
+@Builder
+public class RegionSymbol implements Symbol {
+  private final String name;
+  private final BSLParser.RegionNameContext nameNode;
+
+  private final BSLParser.RegionStartContext startNode;
+  private final int startLine;
+
+  private final BSLParser.RegionEndContext endNode;
+  private final int endLine;
+
+  @Singular
+  private final List<RegionSymbol> children;
+  private final List<MethodSymbol> methods = new ArrayList<>();
+
+  private final BSLParserRuleContext node;
 }

@@ -33,16 +33,23 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolComputer;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -56,6 +63,9 @@ public class DocumentContext {
   private List<Token> tokens;
   private MetricStorage metrics;
   private List<MethodSymbol> methods;
+  private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
+  private List<RegionSymbol> regions;
+  private List<RegionSymbol> regionsFlat;
   private final String uri;
   private final FileType fileType;
 
@@ -83,6 +93,18 @@ public class DocumentContext {
 
   public List<MethodSymbol> getMethods() {
     return new ArrayList<>(methods);
+  }
+
+  public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
+    return Optional.ofNullable(nodeToMethodsMap.get(ctx));
+  }
+
+  public List<RegionSymbol> getRegions() {
+    return new ArrayList<>(regions);
+  }
+
+  public List<RegionSymbol> getRegionsFlat() {
+    return new ArrayList<>(regionsFlat);
   }
 
   public List<Token> getTokens() {
@@ -143,6 +165,17 @@ public class DocumentContext {
     this.content = content;
     this.contentList = content.split("\n");
 
+    // order of computing is important
+    computeTokensAndAST();
+
+    computeRegions();
+    computeMethods();
+    adjustRegions();
+
+    computeMetrics();
+  }
+
+  private void computeTokensAndAST() {
     CharStream input;
 
     try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
@@ -174,11 +207,38 @@ public class DocumentContext {
     BSLParser parser = new BSLParser(tokenStream);
     parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
     ast = parser.file();
+  }
 
-    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(ast);
+  private void computeRegions() {
+    RegionSymbolComputer regionSymbolComputer = new RegionSymbolComputer(ast);
+    regions = regionSymbolComputer.getRegions();
+    regionsFlat = regions.stream()
+      .map((RegionSymbol regionSymbol) -> {
+        List<RegionSymbol> list = new ArrayList<>();
+        list.add(regionSymbol);
+        list.addAll(regionSymbol.getChildren());
+
+        return list;
+      })
+      .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+  }
+
+  private void computeMethods() {
+    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(this);
     methods = methodSymbolComputer.getMethods();
 
-    computeMetrics();
+    nodeToMethodsMap.clear();
+    methods.forEach(methodSymbol -> nodeToMethodsMap.put(methodSymbol.getNode(), methodSymbol));
+  }
+
+  private void adjustRegions() {
+    methods.forEach((MethodSymbol methodSymbol) -> {
+      RegionSymbol region = methodSymbol.getRegion();
+      if (region != null) {
+        region.getMethods().add(methodSymbol);
+      }
+    });
   }
 
   private void computeMetrics() {
@@ -192,6 +252,11 @@ public class DocumentContext {
       .count();
 
     metrics.setNcloc(ncloc);
+
+    int[] nclocData = getTokensFromDefaultChannel().stream()
+      .mapToInt(Token::getLine)
+      .distinct().toArray();
+    metrics.setNclocData(nclocData);
 
     int lines;
     if (tokens.isEmpty()) {
