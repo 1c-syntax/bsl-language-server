@@ -24,7 +24,10 @@
 
 - File formatting
 - Selected region formatting
+- Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
+- Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
 - Diagnostics
+- Quick fixes for several diagnostics
 - Run diagnostics engine from command line
 
 <a id="cli"></a>
