@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -59,7 +60,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     return false;
   }
 
-  private boolean isNumericExpression(BSLParser.ExpressionContext expression) {
+  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
     return (expression.getChildCount() <= 1);
   }
 
@@ -75,6 +76,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
+  @Override
   public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
     String checked = ctx.getText();
 
@@ -82,9 +84,13 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitNumeric(ctx);
     }
 
-    BSLParser.ExpressionContext expression = (BSLParser.ExpressionContext) ctx.getParent().getParent().getParent();
+    ParserRuleContext expression = ctx.getParent().getParent().getParent();
 
-    if (isNumericExpression(expression)) {
+    if (!(expression instanceof BSLParser.ExpressionContext)) {
+      return ctx;
+    }
+
+    if (isNumericExpression((BSLParser.ExpressionContext) expression)) {
       return super.visitNumeric(ctx);
     }
 
