@@ -46,9 +46,9 @@ public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumbe
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 23, 3, 25));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(7, 31, 7, 33));
     assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(11, 20, 11, 21));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(19, 17, 19, 19));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(22, 20, 22, 22));
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(26, 30, 26, 31));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(20, 21, 20, 23));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(23, 24, 23, 26));
+    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(27, 34, 27, 35));
   }
 
   @Test
@@ -65,7 +65,7 @@ public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumbe
     assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(7, 31, 7, 33));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(11, 20, 11, 21));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(19, 17, 19, 19));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(22, 20, 22, 22));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(20, 21, 20, 23));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(23, 24, 23, 26));
   }
 }
