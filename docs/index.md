@@ -127,6 +127,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [DeprecatedMessage - Ограничение на использование устаревшего метода "Сообщить"](diagnostics/DeprecatedMessage.md)
 * [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
 * [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
+* [ExtraCommas - Запятые без указания параметра в конце вызова метода](diagnostics/ExtraCommas.md)
 * [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
 * [IfElseDuplicatedCodeBlockDiagnostic - Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseDuplicatedCodeBlock.md)
 * [IfElseDuplicatedConditionDiagnostic - Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseDuplicatedCondition.md)

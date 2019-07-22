@@ -27,12 +27,14 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,29 +51,61 @@ public final class DocumentSymbolProvider {
 
     List<DocumentSymbol> symbols = new ArrayList<>(globalVariables);
 
-    documentContext.getMethods().forEach((MethodSymbol methodSymbol) -> {
-      BSLParserRuleContext context = methodSymbol.getNode();
-      BSLParser.SubNameContext subNameContext = getSubNameContext(methodSymbol);
+    documentContext.getRegions().forEach(regionSymbol -> addRegion(documentContext, symbols, regionSymbol));
 
-      DocumentSymbol documentSymbol = new DocumentSymbol(
-        methodSymbol.getName(),
-        SymbolKind.Method,
-        RangeHelper.newRange(context),
-        RangeHelper.newRange(subNameContext)
-      );
-
-      BSLParser.SubVarsContext subVariablesContext = getSubVarsContext(methodSymbol);
-      List<DocumentSymbol> subVariables = getSubVariables(subVariablesContext);
-
-      documentSymbol.setChildren(subVariables);
-
-      symbols.add(documentSymbol);
-    });
+    documentContext.getMethods().stream()
+      .filter(methodSymbol -> methodSymbol.getRegion() == null)
+      .forEach((MethodSymbol methodSymbol) -> addMethod(symbols, methodSymbol));
 
     return symbols.stream()
       .map(Either::<SymbolInformation, DocumentSymbol>forRight)
       .collect(Collectors.toList());
   }
+
+  private static void addRegion(
+    DocumentContext documentContext,
+    Collection<DocumentSymbol> symbols,
+    RegionSymbol regionSymbol
+  ) {
+    DocumentSymbol documentSymbol = new DocumentSymbol(
+      regionSymbol.getName(),
+      SymbolKind.Namespace,
+      RangeHelper.newRange(regionSymbol.getStartNode().getStart(), regionSymbol.getEndNode().getStop()),
+      RangeHelper.newRange(regionSymbol.getNameNode())
+    );
+
+    List<DocumentSymbol> children = new ArrayList<>();
+    regionSymbol.getChildren().forEach(childRegionSymbol -> addRegion(documentContext, children, childRegionSymbol));
+
+    documentContext.getMethods().stream()
+      .filter(methodSymbol -> regionSymbol.equals(methodSymbol.getRegion()))
+      .forEach(methodSymbol -> addMethod(children, methodSymbol));
+
+    documentSymbol.setChildren(children);
+
+    symbols.add(documentSymbol);
+  }
+
+  private static void addMethod(Collection<DocumentSymbol> symbols, MethodSymbol methodSymbol) {
+    BSLParserRuleContext context = methodSymbol.getNode();
+    BSLParser.SubNameContext subNameContext = getSubNameContext(methodSymbol);
+
+    DocumentSymbol documentSymbol = new DocumentSymbol(
+      methodSymbol.getName(),
+      SymbolKind.Method,
+      RangeHelper.newRange(context),
+      RangeHelper.newRange(subNameContext)
+    );
+
+    BSLParser.SubVarsContext subVariablesContext = getSubVarsContext(methodSymbol);
+    List<DocumentSymbol> subVariables = getSubVariables(subVariablesContext);
+
+    documentSymbol.setChildren(subVariables);
+
+    symbols.add(documentSymbol);
+  }
+
+
 
   private static BSLParser.SubNameContext getSubNameContext(MethodSymbol methodSymbol) {
     BSLParser.SubNameContext subNameContext;

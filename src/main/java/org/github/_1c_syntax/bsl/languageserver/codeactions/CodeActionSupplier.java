@@ -19,20 +19,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.context;
+package org.github._1c_syntax.bsl.languageserver.codeactions;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class MetricStorage {
-  private int procedures;
-  private int functions;
-  private int lines;
-  private int ncloc;
-  private int statements;
-  private int[] nclocData;
+import java.util.List;
+
+public interface CodeActionSupplier {
+  List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext);
 }

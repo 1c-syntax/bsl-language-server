@@ -31,5 +31,6 @@ public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
+  private final RegionSymbol region;
   private final BSLParserRuleContext node;
 }

@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 )
 public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final String SERVICE_TAGS_DEFAULT = "todo|fixme";
+  private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG";
 
   @DiagnosticParameter(
     type = String.class,
@@ -63,7 +63,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   public Pattern getPatternSearch(String value) {
     return Pattern.compile(
-      "\\s+(" + value + ")",
+      "//\\s*+(" + value + ")",
       Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.COMMENTS);
   }
 

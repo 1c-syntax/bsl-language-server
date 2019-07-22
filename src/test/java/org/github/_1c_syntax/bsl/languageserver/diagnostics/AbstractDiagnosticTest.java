@@ -22,14 +22,19 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionContext;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
-import java.util.ResourceBundle;
 
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
@@ -49,6 +54,41 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   List<Diagnostic> getDiagnostics() {
+    DocumentContext documentContext = getDocumentContext();
+    return diagnostic.getDiagnostics(documentContext);
+  }
+
+  List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
+    DocumentContext documentContext = getDocumentContext();
+    return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
+  }
+
+  List<CodeAction> getQuickFixes(Range range) {
+    DocumentContext documentContext = getDocumentContext();
+    List<Diagnostic> diagnostics = this.diagnostic.getDiagnostics(documentContext);
+
+    return getQuickFixes(documentContext, diagnostics, range);
+  }
+
+  private List<CodeAction> getQuickFixes(DocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
+    TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setDiagnostics(diagnostics);
+    codeActionContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
+
+    CodeActionParams params = new CodeActionParams();
+    params.setTextDocument(textDocument);
+    params.setRange(range);
+    params.setContext(codeActionContext);
+
+    return ((QuickFixProvider) this.diagnostic).getQuickFixes(diagnostics, params, documentContext);
+
+  }
+
+
+
+  private DocumentContext getDocumentContext() {
     String textDocumentContent;
     try {
       textDocumentContent = IOUtils.resourceToString(
@@ -60,12 +100,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", textDocumentContent);
-    return diagnostic.getDiagnostics(documentContext);
-  }
-
-   String getDiagnosticMessage(String key) {
-    return ResourceBundle.getBundle(diagnostic.getClass().getName(), new UTF8Control()).getString(key);
+    return new DocumentContext("file:///fake-uri.bsl", textDocumentContent);
   }
 
 }

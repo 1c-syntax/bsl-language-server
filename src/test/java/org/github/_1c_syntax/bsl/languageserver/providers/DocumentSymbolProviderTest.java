@@ -40,7 +40,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 class DocumentSymbolProviderTest {
 
   @Test
-  void testFoldingRange() throws IOException {
+  void testDocumentSymbol() throws IOException {
 
     String fileContent = FileUtils.readFileToString(
       new File("./src/test/resources/providers/documentSymbol.bsl"),
@@ -50,7 +50,7 @@ class DocumentSymbolProviderTest {
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbol(documentContext);
 
-    assertThat(documentSymbols).hasSize(6);
+    assertThat(documentSymbols).hasSize(7);
 
     // global variables
     assertThat(documentSymbols)
@@ -82,6 +82,24 @@ class DocumentSymbolProviderTest {
       .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(11, 10, 11, 11)))
       .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(12, 10, 12, 11)))
       .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(12, 12, 12, 13)))
+      ;
+
+    // regions
+    assertThat(documentSymbols)
+      .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Namespace))
+      .extracting(Either::getRight)
+      .hasSize(1)
+
+      .flatExtracting(DocumentSymbol::getChildren)
+      .hasSize(2)
+      .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Namespace))
+      .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
+
+      .filteredOn(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Namespace))
+      .flatExtracting(DocumentSymbol::getChildren)
+      .hasSize(1)
+      .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
+      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(21, 0, 25, 14)))
       ;
 
   }
