@@ -24,10 +24,10 @@
 
 - File formatting
 - Selected region formatting
-- Определение символов текущего файла (области, процедуры, функции, переменные, объявленные через `Перем`)
-- Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода
+- Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
+- Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
 - Diagnostics
-- "Быстрые исправления" (quick fixes) для ряда диагностик
+- Quick fixes for several diagnostics
 - Run diagnostics engine from command line
 
 <a id="cli"></a>
