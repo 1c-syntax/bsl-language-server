@@ -9,7 +9,7 @@
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
-[Russian version](../index.md)
+[English version](en/index.md)
 
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
@@ -24,7 +24,10 @@
 
 - File formatting
 - Selected region formatting
+- Определение символов текущего файла (области, процедуры, функции, переменные, объявленные через `Перем`)
+- Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода
 - Diagnostics
+- "Быстрые исправления" (quick fixes) для ряда диагностик
 - Run diagnostics engine from command line
 
 <a id="cli"></a>
