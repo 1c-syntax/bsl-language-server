@@ -22,10 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,5 +60,21 @@ public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingS
     assertThat(diagnostics.get(13).getRange()).isEqualTo(RangeHelper.newRange(67, 0, 67, 11));
     assertThat(diagnostics.get(14).getRange()).isEqualTo(RangeHelper.newRange(71, 4, 71, 36));
 
+  }
+
+  @Test
+  void runTestWithConfigure() {
+    // conf
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("serviceTags", "todo");
+    getDiagnosticInstance().configure(configuration);
+
+    //when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 0, 1, 36));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(21, 4, 21, 29));
   }
 }

@@ -42,7 +42,8 @@ import java.util.stream.Collectors;
 )
 public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG";
+  private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки"
+    + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG";
 
   @DiagnosticParameter(
     type = String.class,
