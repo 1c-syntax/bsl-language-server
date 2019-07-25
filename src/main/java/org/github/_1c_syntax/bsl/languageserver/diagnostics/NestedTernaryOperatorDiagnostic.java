@@ -27,8 +27,10 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.Collection;
+import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -37,15 +39,27 @@ import java.util.Collection;
 )
 public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
 
+  private void findNestedTernaryOperator(BSLParserRuleContext ctx, int skip) {
+    Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
+    if (nestedTernaryOperators.size() > skip) {
+      nestedTernaryOperators.stream()
+        .skip(skip)
+        .forEach(parseTree -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree));
+    }
+  }
+
+  @Override
+  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+    List<BSLParser.ExpressionContext> expressionContexts = ctx.expression();
+    for (BSLParser.ExpressionContext expCtx : expressionContexts) {
+      findNestedTernaryOperator(expCtx, 0);
+    }
+    return super.visitChildren(ctx);
+  }
+
   @Override
   public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
-    if (nestedTernaryOperators.size() > 1) {
-      nestedTernaryOperators.stream()
-        .skip(1)
-        .forEach(parseTree -> diagnosticStorage.addDiagnostic((BSLParser.TernaryOperatorContext) parseTree));
-    }
-    
+    findNestedTernaryOperator(ctx, 1);
     return super.visitTernaryOperator(ctx);
   }
 
