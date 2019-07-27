@@ -158,5 +158,6 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [UseLessForEach - Useless For Each loop](diagnostics/UseLessForEach.md)
 - [UsingCancelParameter - Using "Cancel" parameter](diagnostics/UsingCancelParameter.md)
 - [UsingFindElementByString - Restriction on the use of "FindByDescription" and "FindByCode" methods](diagnostics/UsingFindElementByString.md)
+- [UsingGoto - "goto" statement should not be used](diagnostics/UsingGoto.md)
 - [UsingServiceTag - Using service tags](diagnostics/UsingServiceTag.md)
 - [YoLetterUsageDiagnostic - Using "Ё" letter in code](diagnostics/YoLetterUsage.md)
