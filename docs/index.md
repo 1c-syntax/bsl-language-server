@@ -155,5 +155,6 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [UseLessForEach - Бесполезный перебор коллекции](diagnostics/UseLessForEach.md)
 * [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
 * [UsingFindElementByString - Использование методов «НайтиПоНаименованию» и «НайтиПоКоду»](diagnostics/UsingFindElementByString.md)
+* [UsingGoto - Использование оператора "Перейти"](diagnostics/UsingGoto.md)
 * [UsingServiceTag - Использование служебных тегов](diagnostics/UsingServiceTag.md)
 * [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsage.md)
