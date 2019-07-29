@@ -198,6 +198,14 @@ public final class DiagnosticProvider {
     return getMinutesToFix(diagnosticClass);
   }
 
+  public static boolean isActivatedByDefault(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return diagnosticsMetadata.get(diagnosticClass).activatedByDefault();
+  }
+
+  public static boolean isActivatedByDefault(BSLDiagnostic diagnostic) {
+    return isActivatedByDefault(diagnostic.getClass());
+  }
+
   public static Map<String, DiagnosticParameter> getDiagnosticParameters(
     Class<? extends BSLDiagnostic> diagnosticClass
   ) {
@@ -385,10 +393,18 @@ public final class DiagnosticProvider {
     if (diagnosticClass == null) {
       return false;
     }
+
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
       configuration.getDiagnostics().get(getDiagnosticCode(diagnosticClass));
-    return diagnosticConfiguration == null
-      || diagnosticConfiguration.isRight()
-      || (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());
+
+    boolean activatedByDefault = diagnosticConfiguration == null && isActivatedByDefault(diagnosticClass);
+    boolean hasCustomConfiguration = diagnosticConfiguration != null && diagnosticConfiguration.isRight();
+    boolean enabledDirectly = diagnosticConfiguration != null
+      && diagnosticConfiguration.isLeft()
+      && diagnosticConfiguration.getLeft();
+
+    return activatedByDefault
+      || hasCustomConfiguration
+      || enabledDirectly;
   }
 }
