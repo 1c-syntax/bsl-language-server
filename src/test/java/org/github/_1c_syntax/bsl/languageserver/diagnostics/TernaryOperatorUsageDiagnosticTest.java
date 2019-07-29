@@ -21,5 +21,31 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-public class TernaryOperatorDiagnosticTest {
+import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class TernaryOperatorUsageDiagnosticTest extends AbstractDiagnosticTest<TernaryOperatorUsageDiagnostic> {
+
+  TernaryOperatorUsageDiagnosticTest() {
+    super(TernaryOperatorUsageDiagnostic.class);
+  }
+
+  @Test
+  void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 11, 10, 13));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 13, 9, 14));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 9, 12, 85));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(14, 5, 14, 60));
+
+  }
+
 }

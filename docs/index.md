@@ -150,6 +150,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 * [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)
 * [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
 * [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
+* [TernaryOperatorUsage - Использование тернарного оператора](diagnostics/TernaryOperatorUsage.md)
 * [TryNumber - Приведение к числу в попытке](diagnostics/TryNumber.md)
 * [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
 * [UseLessForEach - Бесполезный перебор коллекции](diagnostics/UseLessForEach.md)

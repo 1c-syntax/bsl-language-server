@@ -1,7 +1,6 @@
 # Ternary operator usage
 
-The use of ternary operators makes the code less readable.
-Use If-Else instead of ternary operator.
+Use If-Else instead of ternary operator
 
 Bad:
 ```bsl

@@ -153,6 +153,7 @@ Used for code analysis to meet coding standards and search for possible errors.
 - [ProcedureReturnsValue - Procedure must have no Return statement](diagnostics/ProcedureReturnsValue.md)
 - [SemicolonPresence - Statement should end with ";"](diagnostics/SemicolonPresence.md)
 - [SelfAssign - Variable self assignment](diagnostics/SelfAssign.md)
+- [TernaryOperatorUsage - Using ternary operator](diagnostics/TernaryOperatorUsage.md)
 - [TryNumber - Cast to number in try catch block](diagnostics/TryNumber.md)
 - [UnknownPreprocessorSymbol - Unknown Preprocessor Symbol](diagnostics/UnknownPreprocessorSymbol.md)
 - [UseLessForEach - Useless For Each loop](diagnostics/UseLessForEach.md)
