@@ -124,37 +124,42 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 
 Используются для проверки кода на соответствие стандартам кодирования и для поиска возможных ошибок.
 
+Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="#configuration">конфигурационный файл</a>.
+
 ### Список реализованных диагностик
 
-* [CanonicalSpellingKeywords - Каноническое написание ключевых слов](diagnostics/CanonicalSpellingKeywords.md)
-* [DeprecatedMessage - Ограничение на использование устаревшего метода "Сообщить"](diagnostics/DeprecatedMessage.md)
-* [EmptyCodeBlock - Пустой блок кода](diagnostics/EmptyCodeBlock.md)
-* [EmptyStatement - Пустой оператор](diagnostics/EmptyStatement.md)
-* [ExtraCommas - Запятые без указания параметра в конце вызова метода](diagnostics/ExtraCommas.md)
-* [FunctionShouldHaveReturn - Функция должна содержать возврат](diagnostics/FunctionShouldHaveReturn.md)
-* [IfElseDuplicatedCodeBlockDiagnostic - Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseDuplicatedCodeBlock.md)
-* [IfElseDuplicatedConditionDiagnostic - Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseDuplicatedCondition.md)
-* [IfElseIfEndsWithElse - Использование синтаксической конструкции Если...Тогда...ИначеЕсли...](diagnostics/IfElseIfEndsWithElse.md)
-* [LineLength - Ограничение на длину строки](diagnostics/LineLength.md)
-* [MagicNumber - Использование магического числа](diagnostics/MagicNumber.md)
-* [MethodSize - Ограничение на размер метода](diagnostics/MethodSize.md)
-* [NestedConstructorsInStructureDeclaration - Ограничение на использование конструкторов с параметрами при объявлении структуры](diagnostics/NestedConstructorsInStructureDeclaration.md)
-* [NestedStatements - Управляющие конструкции не должны быть вложены слишком глубоко](diagnostics/NestedStatements.md)
-* [NestedTernaryOperator - Вложенный тернарный оператор](diagnostics/NestedTernaryOperator.md)
-* [NumberOfOptionalParams - Ограничение на количество не обязательных параметров метода](diagnostics/NumberOfOptionalParams.md)
-* [NumberOfParams - Ограничение на количество параметров метода](diagnostics/NumberOfParams.md)
-* [NumberOfValuesInStructureConstructor - Ограничение на количество значений свойств, передаваемых в конструктор структуры](diagnostics/NumberOfValuesInStructureConstructor.md)
-* [OneStatementPerLine - Одно выражение в одной строке](diagnostics/OneStatementPerLine.md)
-* [ParseError - Ошибка разбора исходного кода](diagnostics/ParseError.md)
-* [OrderOfParams - Порядок параметров метода](diagnostics/OrderOfParams.md)
-* [ProcedureReturnsValue - Процедура не может возвращать значение](diagnostics/ProcedureReturnsValue.md)
-* [SemicolonPresence - Выражение должно заканчиваться ";"](diagnostics/SemicolonPresence.md)
-* [SelfAssign - Присвоение переменной самой себе](diagnostics/SelfAssign.md)
-* [TryNumber - Приведение к числу в попытке](diagnostics/TryNumber.md)
-* [UnknownPreprocessorSymbol - Неизвестный символ препроцессора](diagnostics/UnknownPreprocessorSymbol.md)
-* [UseLessForEach - Бесполезный перебор коллекции](diagnostics/UseLessForEach.md)
-* [UsingCancelParameter - Работа с параметром «Отказ»](diagnostics/UsingCancelParameter.md)
-* [UsingFindElementByString - Использование методов «НайтиПоНаименованию» и «НайтиПоКоду»](diagnostics/UsingFindElementByString.md)
-* [UsingGoto - Использование оператора "Перейти"](diagnostics/UsingGoto.md)
-* [UsingServiceTag - Использование служебных тегов](diagnostics/UsingServiceTag.md)
-* [YoLetterUsageDiagnostic - Использование буквы "ё" в текстах модулей](diagnostics/YoLetterUsage.md)
+| Ключ                                                                                                | Название                                                                          | Включена по умолчанию |
+|-----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|:---------------------:|
+| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md)                               | Каноническое написание ключевых слов                                              | Да                    |
+| [DeprecatedMessage](diagnostics/DeprecatedMessage.md)                                               | Ограничение на использование устаревшего метода "Сообщить"                        | Да                    |
+| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md)                                                     | Пустой блок кода                                                                  | Да                    |
+| [EmptyStatement](diagnostics/EmptyStatement.md)                                                     | Пустой оператор                                                                   | Да                    |
+| [ExtraCommas](diagnostics/ExtraCommas.md)                                                           | Запятые без указания параметра в конце вызова метода                              | Да                    |
+| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md)                                 | Функция должна содержать возврат                                                  | Да                    |
+| [IfElseDuplicatedCodeBlockDiagnostic](diagnostics/IfElseDuplicatedCodeBlock.md)                     | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да                    |
+| [IfElseDuplicatedConditionDiagnostic](diagnostics/IfElseDuplicatedCondition.md)                     | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли...    | Да                    |
+| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md)                                         | Использование синтаксической конструкции Если...Тогда...ИначеЕсли...              | Да                    |
+| [LineLength](diagnostics/LineLength.md)                                                             | Ограничение на длину строки                                                       | Да                    |
+| [MagicNumber](diagnostics/MagicNumber.md)                                                           | Использование магического числа                                                   | Да                    |
+| [MethodSize](diagnostics/MethodSize.md)                                                             | Ограничение на размер метода                                                      | Да                    |
+| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Ограничение на использование конструкторов с параметрами при объявлении структуры | Да                    |
+| [NestedStatements](diagnostics/NestedStatements.md)                                                 | Управляющие конструкции не должны быть вложены слишком глубоко                    | Да                    |
+| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md)                                       | Вложенный тернарный оператор                                                      | Да                    |
+| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md)                                     | Ограничение на количество не обязательных параметров метода                       | Да                    |
+| [NumberOfParams](diagnostics/NumberOfParams.md)                                                     | Ограничение на количество параметров метода                                       | Да                    |
+| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md)         | Ограничение на количество значений свойств, передаваемых в конструктор структуры  | Да                    |
+| [OneStatementPerLine](diagnostics/OneStatementPerLine.md)                                           | Одно выражение в одной строке                                                     | Да                    |
+| [ParseError](diagnostics/ParseError.md)                                                             | Ошибка разбора исходного кода                                                     | Да                    |
+| [OrderOfParams](diagnostics/OrderOfParams.md)                                                       | Порядок параметров метода                                                         | Да                    |
+| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md)                                       | Процедура не может возвращать значение                                            | Да                    |
+| [SemicolonPresence](diagnostics/SemicolonPresence.md)                                               | Выражение должно заканчиваться ";"                                                | Да                    |
+| [SelfAssign](diagnostics/SelfAssign.md)                                                             | Присвоение переменной самой себе                                                  | Да                    |
+| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md)                                         | Использование тернарного оператора                                                | Нет                   |
+| [TryNumber](diagnostics/TryNumber.md)                                                               | Приведение к числу в попытке                                                      | Да                    |
+| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md)                               | Неизвестный символ препроцессора                                                  | Да                    |
+| [UseLessForEach](diagnostics/UseLessForEach.md)                                                     | Бесполезный перебор коллекции                                                     | Да                    |
+| [UsingCancelParameter](diagnostics/UsingCancelParameter.md)                                         | Работа с параметром «Отказ»                                                       | Да                    |
+| [UsingFindElementByString](diagnostics/UsingFindElementByString.md)                                 | Использование методов «НайтиПоНаименованию» и «НайтиПоКоду»                       | Да                    |
+| [UsingGoto](diagnostics/UsingGoto.md)                                                               | Использование оператора "Перейти"                                                 | Да                    |
+| [UsingServiceTag](diagnostics/UsingServiceTag.md)                                                   | Использование служебных тегов                                                     | Да                    |
+| [YoLetterUsageDiagnostic](diagnostics/YoLetterUsage.md)                                             | Использование буквы "ё" в текстах модулей                                         | Да                    |
