@@ -67,7 +67,6 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     return groupOperation.size() == 1
       && ((BSLParser.OperationContext) groupOperation.get(0)).start.getType() != BSLParser.MUL;
-// 19
   }
 
   @Override
