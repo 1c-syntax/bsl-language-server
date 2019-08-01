@@ -31,7 +31,6 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.CRITICAL,
-  scope = DiagnosticScope.BSL,
   minutesToFix = 5
 )
 public class UsingGotoDiagnostic extends AbstractVisitorDiagnostic {
