@@ -44,20 +44,22 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
-.gradle/
-*.zip
-*.ps1
-target/
-build/
-
 # Scala compiler user settings
 .idea/hydra.xml
 
+# Sonar configuration
 .idea/sonarlint/
-
-intellij-bsl/src/test/resources/parser/.idea/
-
-gen/
-
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
+
+# Archive files
+*.zip
+*.ps1
+
+# Other folder
+intellij-bsl/src/test/resources/parser/.idea/
+gen/
+target/
+build/
+gradle/
+
