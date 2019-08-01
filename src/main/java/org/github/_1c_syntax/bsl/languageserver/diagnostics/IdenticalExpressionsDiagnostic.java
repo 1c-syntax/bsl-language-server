@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.MAJOR,
-  scope = DiagnosticScope.BSL,
   minutesToFix = 5
 )
 public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
