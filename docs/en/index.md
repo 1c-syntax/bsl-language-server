@@ -165,4 +165,5 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md)                                 | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes                |
 | [UsingGoto](diagnostics/UsingGoto.md)                                                               | "goto" statement should not be used                                    | Yes                |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md)                                                   | Using service tags                                                     | Yes                |
+| [YodaStyleDiagnostic](diagnostics/YodaStyle.md)                                                     | Using Yoda style for comparing values                                  | Yes                |
 | [YoLetterUsageDiagnostic](diagnostics/YoLetterUsage.md)                                             | Using "Ё" letter in code                                               | Yes                |
