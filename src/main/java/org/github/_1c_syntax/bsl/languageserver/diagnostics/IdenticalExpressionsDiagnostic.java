@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -48,24 +49,13 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean isUniformExpression(List<BSLParser.OperationContext> onlyOperation) {
 
-    List<ParseTree> groupOperation = onlyOperation
-      .stream()
-      .reduce(
-        new ArrayList<>(),
-        (List<ParseTree> acc, ParseTree el) -> {
-          if(acc.stream().noneMatch((ParseTree node) -> DiagnosticHelper.equalNodes(node, el))) {
-            acc.add(el);
-          }
-
-          return acc;
-        },
-        (List<ParseTree> acc, List<ParseTree> acc2) -> {
-          acc.addAll(acc2);
-          return acc;
-        });
+    List<Integer> groupOperation = onlyOperation.stream()
+      .map((BSLParser.OperationContext operation) -> operation.start.getType())
+      .distinct()
+      .collect(Collectors.toList());
 
     return groupOperation.size() == 1
-      && ((BSLParser.OperationContext) groupOperation.get(0)).start.getType() != BSLParser.MUL;
+      && groupOperation.get(0) != BSLParser.MUL;
   }
 
   @Override

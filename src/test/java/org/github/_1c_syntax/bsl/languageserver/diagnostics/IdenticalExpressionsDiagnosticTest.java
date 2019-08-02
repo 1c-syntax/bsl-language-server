@@ -38,7 +38,7 @@ public class IdenticalExpressionsDiagnosticTest  extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(11);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 9, 4, 24));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 9, 4, 25));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(6, 16, 6, 31));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(10, 13, 10, 28));
     assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(11, 13, 11, 28));
