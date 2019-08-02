@@ -48,7 +48,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS,
     description = "Список разрешенных чисел через запятую. Например: -1,0,1,60"
   )
-  private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
+  private List<String> authorizedNumbers = Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(","));
 
   private boolean isExcluded(String s) {
     for (String elem : this.authorizedNumbers) {

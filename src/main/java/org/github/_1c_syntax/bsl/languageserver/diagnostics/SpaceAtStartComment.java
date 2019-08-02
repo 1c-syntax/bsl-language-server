@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
-  minutesToFix = 5
+  minutesToFix = 1
 )
 public class SpaceAtStartComment implements BSLDiagnostic {
 
@@ -53,7 +53,7 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
     description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)"
   )
-  private List<String> commentsAnnotation = new ArrayList<>(Arrays.asList(DEFAULT_COMMENTS_ANNOTATION.split(",")));
+  private List<String> commentsAnnotation = Arrays.asList(DEFAULT_COMMENTS_ANNOTATION.split(","));
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -67,26 +67,33 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     }
   }
 
-  private boolean isAnnotation(String s) {
-    for (String elem : this.commentsAnnotation) {
-      if (s.matches("^" + Pattern.quote(elem) + ".*$")) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
+    String commentsAnnotationPatternString = "";
+    for (String elem : this.commentsAnnotation) {
+      commentsAnnotationPatternString += "(?:^" + Pattern.quote(elem) + ".*)|";
+    }
+
+    if(!commentsAnnotationPatternString.isEmpty()) {
+      commentsAnnotationPatternString = commentsAnnotationPatternString.substring(0, commentsAnnotationPatternString.length() - 1);
+    }
+
+    Pattern commentsAnnotationPattern = Pattern.compile(
+      "" + commentsAnnotationPatternString,
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
+    Pattern goodCommentPattern = Pattern.compile(
+      "(?://\\s.*)|(?://[/]*)$",
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
     List<Token> comments = documentContext.getComments()
       .parallelStream()
-      .filter((Token t) ->
-        t.getType() == BSLParser.LINE_COMMENT
-          && !t.getText().matches("(?://\\s.*)|(?://[/]*)$")
-          && !isAnnotation(t.getText()))
-      .collect((Collectors.toList()));
+      .collect(Collectors.filtering((Token t) ->
+        !goodCommentPattern.matcher(t.getText()).matches()
+          && !commentsAnnotationPattern.matcher(t.getText()).matches(), Collectors.toList()));
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 
