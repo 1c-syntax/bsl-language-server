@@ -26,9 +26,12 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,32 +40,19 @@ import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
+  severity = DiagnosticSeverity.MINOR,
   minutesToFix = 2
 )
-public class YodaStyleDiagnostic implements BSLDiagnostic {
+public class YodaStyleDiagnostic extends AbstractVisitorDiagnostic{
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
 
-    List<Token> wrongIdentifiers = documentContext.getTokensFromDefaultChannel()
-      .parallelStream()
-      .filter((Token t) ->
-        t.getType() == BSLParser.IDENTIFIER &&
-          t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
-      .collect((Collectors.toList()));
-
-    List<Diagnostic> diagnostics = new ArrayList<>();
-
-    for (Token token : wrongIdentifiers) {
-      diagnostics.add(BSLDiagnostic.createDiagnostic(
-        this,
-        RangeHelper.newRange(token),
-        getDiagnosticMessage()));
+    if (ctx.getToken(BSLLexer.ELSIF_KEYWORD, 0) != null && ctx.getToken(BSLLexer.ELSE_KEYWORD, 0) == null) {
+      diagnosticStorage.addDiagnostic(ctx.getStop());
     }
 
-    return diagnostics;
-
+    return super.visitIfStatement(ctx);
   }
 }

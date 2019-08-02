@@ -41,6 +41,7 @@ class YodaStyleDiagnosticTest extends AbstractDiagnosticTest<YodaStyleDiagnostic
     List<Diagnostic> diagnostics = getDiagnostics();
     // then
     assertThat(diagnostics).hasSize(1);
-      assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 5, 2, 33));
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(1, 8 , 1, 27)));
   }
 }
