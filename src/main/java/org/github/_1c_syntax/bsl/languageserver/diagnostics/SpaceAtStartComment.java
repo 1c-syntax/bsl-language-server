@@ -28,17 +28,11 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -61,7 +55,7 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
     description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)"
   )
-  private List<String> commentsAnnotation = new ArrayList<>(Arrays.asList(DEFAULT_COMMENTS_ANNOTATION.split(",")));
+  private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -70,39 +64,34 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     }
 
     String commentsAnnotationString = (String) configuration.get("commentsAnnotation");
-    this.commentsAnnotation.clear();
-    for (String s : commentsAnnotationString.split(",")) {
-      this.commentsAnnotation.add(s.trim());
-    }
+    this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));
   }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
     diagnosticStorage.clearDiagnostics();
-
-    String commentsAnnotationPatternString = "";
-    for (String elem : this.commentsAnnotation) {
-      commentsAnnotationPatternString += "(?:^" + Pattern.quote(elem) + ".*)|";
-    }
-
-    if(!commentsAnnotationPatternString.isEmpty()) {
-      commentsAnnotationPatternString = commentsAnnotationPatternString.substring(0, commentsAnnotationPatternString.length() - 1);
-    }
-
-    Pattern commentsAnnotationPattern = Pattern.compile(
-      "" + commentsAnnotationPatternString,
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
 
     documentContext.getComments()
       .parallelStream()
       .filter((Token t) ->
         !goodCommentPattern.matcher(t.getText()).matches()
-          && !commentsAnnotationPattern.matcher(t.getText()).matches())
+          && !commentsAnnotation.matcher(t.getText()).matches())
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t));
 
     return diagnosticStorage.getDiagnostics();
+  }
+
+  private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
+    StringJoiner stringJoiner = new StringJoiner("|");
+    for (String elem : patternParts) {
+      String commentsAnnotationPatternString = "(?:^" + Pattern.quote(elem) + ".*)";
+      stringJoiner.add(commentsAnnotationPatternString);
+    }
+
+    return Pattern.compile(
+      stringJoiner.toString(),
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
   }
 }
