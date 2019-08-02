@@ -40,8 +40,12 @@ class YodaStyleDiagnosticTest extends AbstractDiagnosticTest<YodaStyleDiagnostic
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
     // then
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(1, 8 , 1, 27)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 0 , 3, 23)));
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 0 , 9, 28)));
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 0 , 13, 32)));
   }
 }
