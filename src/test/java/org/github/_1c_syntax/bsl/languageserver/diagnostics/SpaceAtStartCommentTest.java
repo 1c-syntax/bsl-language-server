@@ -22,10 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,10 +42,28 @@ class SpaceAtStartCommentTest extends AbstractDiagnosticTest<SpaceAtStartComment
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(6, 0, 6, 20));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(8, 12, 8, 26));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(9, 16, 9, 32));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(20, 0, 20, 56));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(22, 0, 22, 40));
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 0, 20, 56)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)));
+  }
+
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("commentsAnnotation", "//@,//(c),//(с)");
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)));
   }
 }

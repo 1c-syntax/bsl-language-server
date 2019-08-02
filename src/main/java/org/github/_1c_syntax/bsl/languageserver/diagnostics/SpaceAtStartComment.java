@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -60,7 +61,7 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
     description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)"
   )
-  private List<String> commentsAnnotation = Arrays.asList(DEFAULT_COMMENTS_ANNOTATION.split(","));
+  private List<String> commentsAnnotation = new ArrayList<>(Arrays.asList(DEFAULT_COMMENTS_ANNOTATION.split(",")));
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -69,6 +70,7 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     }
 
     String commentsAnnotationString = (String) configuration.get("commentsAnnotation");
+    this.commentsAnnotation.clear();
     for (String s : commentsAnnotationString.split(",")) {
       this.commentsAnnotation.add(s.trim());
     }
@@ -93,20 +95,13 @@ public class SpaceAtStartComment implements BSLDiagnostic {
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
-    List<Token> comments = documentContext.getComments()
+    documentContext.getComments()
       .parallelStream()
       .filter((Token t) ->
         !goodCommentPattern.matcher(t.getText()).matches()
           && !commentsAnnotationPattern.matcher(t.getText()).matches())
-      .collect((Collectors.toList()));
-
-    for (Token token : comments) {
-      diagnosticStorage.addDiagnostic(
-        token.getLine() - 1,
-        token.getCharPositionInLine(),
-        token.getLine() - 1,
-        token.getCharPositionInLine() + token.getText().length());
-    }
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t));
 
     return diagnosticStorage.getDiagnostics();
   }
