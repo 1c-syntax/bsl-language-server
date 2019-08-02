@@ -44,9 +44,14 @@ import java.util.stream.Collectors;
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1
 )
+
 public class SpaceAtStartComment implements BSLDiagnostic {
 
   private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c)";
+  private static final Pattern goodCommentPattern = Pattern.compile(
+    "(?://\\s.*)|(?://[/]*)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   @DiagnosticParameter(
     type = String.class,
@@ -84,14 +89,9 @@ public class SpaceAtStartComment implements BSLDiagnostic {
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
 
-    Pattern goodCommentPattern = Pattern.compile(
-      "(?://\\s.*)|(?://[/]*)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
     List<Token> comments = documentContext.getComments()
       .parallelStream()
-      .collect(Collectors.filtering((Token t) ->
+      .collect(Collectors.filtering(t ->
         !goodCommentPattern.matcher(t.getText()).matches()
           && !commentsAnnotationPattern.matcher(t.getText()).matches(), Collectors.toList()));
 
