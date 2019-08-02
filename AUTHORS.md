@@ -7,6 +7,7 @@ with help of awesome contributors (inevitably incomplete list):
 
 * Leon Chagelishvili (@lChagelishvili)
 * Oleg Tymko (@otymko)
+* Anton Stepanov (@Stepa86)
 * Dmitry Mironov (@MironovDmitry)
 * Eduard Ivanov (@qtLex)
 * Alexander Strizhachuk (@astrizhachuk)
