@@ -21,22 +21,14 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -44,15 +36,21 @@ import java.util.stream.Collectors;
   severity = DiagnosticSeverity.MINOR,
   minutesToFix = 2
 )
-public class YodaStyleDiagnostic extends AbstractVisitorDiagnostic{
+
+public class YodaStyleDiagnostic extends AbstractVisitorDiagnostic {
+  private static final Pattern messagePattern = Pattern.compile(
+    "(Если|if)\\s+([\\d]|\\\")(.)*\\=(.)(?!\\\"|\\d)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   @Override
-  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (ctx.getToken(BSLLexer.ELSIF_KEYWORD, 0) != null && ctx.getToken(BSLLexer.ELSE_KEYWORD, 0) == null) {
-      diagnosticStorage.addDiagnostic(ctx.getStop());
+    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
+      diagnosticStorage.addDiagnostic(ctx);
     }
 
-    return super.visitIfStatement(ctx);
+    return super.visitGlobalMethodCall(ctx);
   }
+
 }
