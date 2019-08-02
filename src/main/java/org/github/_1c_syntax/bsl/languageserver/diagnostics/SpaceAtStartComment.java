@@ -53,6 +53,8 @@ public class SpaceAtStartComment implements BSLDiagnostic {
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
+  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
@@ -75,6 +77,8 @@ public class SpaceAtStartComment implements BSLDiagnostic {
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
+    diagnosticStorage.clearDiagnostics();
+
     String commentsAnnotationPatternString = "";
     for (String elem : this.commentsAnnotation) {
       commentsAnnotationPatternString += "(?:^" + Pattern.quote(elem) + ".*)|";
@@ -91,19 +95,19 @@ public class SpaceAtStartComment implements BSLDiagnostic {
 
     List<Token> comments = documentContext.getComments()
       .parallelStream()
-      .collect(Collectors.filtering(t ->
+      .filter((Token t) ->
         !goodCommentPattern.matcher(t.getText()).matches()
-          && !commentsAnnotationPattern.matcher(t.getText()).matches(), Collectors.toList()));
-
-    List<Diagnostic> diagnostics = new ArrayList<>();
+          && !commentsAnnotationPattern.matcher(t.getText()).matches())
+      .collect((Collectors.toList()));
 
     for (Token token : comments) {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
-          RangeHelper.newRange(token),
-          getDiagnosticMessage(token.getText())));
+      diagnosticStorage.addDiagnostic(
+        token.getLine() - 1,
+        token.getCharPositionInLine(),
+        token.getLine() - 1,
+        token.getCharPositionInLine() + token.getText().length());
     }
 
-    return diagnostics;
+    return diagnosticStorage.getDiagnostics();
   }
 }
