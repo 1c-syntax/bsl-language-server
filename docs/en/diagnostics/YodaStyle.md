@@ -1,6 +1,6 @@
 # In comparison operations, the variable must be to the left of the operator, the value must be to the right
 
-Assigning values to variables, remember: the variables on the left should be (С) Yoda 
+Compare values and variables, remember: the variables on the left should be (С) Yoda 
 
 Bad:
 ```BSL
