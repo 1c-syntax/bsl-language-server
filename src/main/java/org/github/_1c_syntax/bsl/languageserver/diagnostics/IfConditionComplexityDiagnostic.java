@@ -34,7 +34,7 @@ import java.util.Map;
 
 @DiagnosticMetadata(
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 10
+  minutesToFix = 5
 )
 
 public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
