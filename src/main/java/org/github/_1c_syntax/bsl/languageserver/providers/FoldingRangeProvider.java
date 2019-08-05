@@ -154,7 +154,7 @@ public final class FoldingRangeProvider {
 
     @Override
     public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-      addRegionRange(ctx.IF_KEYWORD(), ctx.ENDIF_KEYWORD());
+      addRegionRange(ctx.ifBranch().IF_KEYWORD(), ctx.ENDIF_KEYWORD());
       return super.visitIfStatement(ctx);
     }
 
