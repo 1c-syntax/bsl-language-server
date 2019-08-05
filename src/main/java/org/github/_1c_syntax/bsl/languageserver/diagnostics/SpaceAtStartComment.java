@@ -76,6 +76,7 @@ public class SpaceAtStartComment implements BSLDiagnostic {
       .filter((Token t) ->
         !goodCommentPattern.matcher(t.getText()).matches()
           && !commentsAnnotation.matcher(t.getText()).matches())
+      .sequential()
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t));
 
