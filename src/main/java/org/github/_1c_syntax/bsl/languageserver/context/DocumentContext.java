@@ -31,10 +31,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbolComputer;
+import org.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbolComputer;
+import org.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -210,8 +211,8 @@ public class DocumentContext {
   }
 
   private void computeRegions() {
-    RegionSymbolComputer regionSymbolComputer = new RegionSymbolComputer(ast);
-    regions = regionSymbolComputer.getRegions();
+    Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
+    regions = regionSymbolComputer.compute();
     regionsFlat = regions.stream()
       .map((RegionSymbol regionSymbol) -> {
         List<RegionSymbol> list = new ArrayList<>();
@@ -225,8 +226,8 @@ public class DocumentContext {
   }
 
   private void computeMethods() {
-    MethodSymbolComputer methodSymbolComputer = new MethodSymbolComputer(this);
-    methods = methodSymbolComputer.getMethods();
+    Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
+    methods = methodSymbolComputer.compute();
 
     nodeToMethodsMap.clear();
     methods.forEach(methodSymbol -> nodeToMethodsMap.put(methodSymbol.getNode(), methodSymbol));

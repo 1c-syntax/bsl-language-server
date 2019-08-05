@@ -19,9 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.context.symbol;
+package org.github._1c_syntax.bsl.languageserver.context.computer;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
@@ -30,23 +32,33 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-public final class RegionSymbolComputer extends BSLParserBaseVisitor<ParseTree> {
+public final class RegionSymbolComputer
+  extends BSLParserBaseVisitor<ParseTree>
+  implements Computer<List<RegionSymbol>>
+{
 
+  private final DocumentContext documentContext;
   private Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
   private List<RegionSymbol> regions = new ArrayList<>();
 
-  public RegionSymbolComputer(BSLParser.FileContext ast) {
-    visitFile(ast);
+  public RegionSymbolComputer(DocumentContext documentContext) {
+    this.documentContext = documentContext;
   }
 
-  public List<RegionSymbol> getRegions() {
+  @Override
+  public List<RegionSymbol> compute() {
+    regionStack.clear();
+    regions.clear();
+
+    visitFile(documentContext.getAst());
+
     return new ArrayList<>(regions);
   }
 
   @Override
   public ParseTree visitRegionStart(BSLParser.RegionStartContext ctx) {
 
-    RegionSymbol.RegionSymbolBuilder builder = new RegionSymbol.RegionSymbolBuilder();
+    RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder();
     builder.node(ctx);
     builder.startNode(ctx);
     builder.startLine(ctx.getStart().getLine());
@@ -79,4 +91,5 @@ public final class RegionSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
 
     return super.visitRegionEnd(ctx);
   }
+
 }
