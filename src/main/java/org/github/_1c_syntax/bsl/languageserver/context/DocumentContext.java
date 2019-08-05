@@ -31,6 +31,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import org.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
@@ -63,6 +64,7 @@ public class DocumentContext {
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private MetricStorage metrics;
+  private int cognitiveComplexity;
   private List<MethodSymbol> methods;
   private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
   private List<RegionSymbol> regions;
@@ -231,6 +233,11 @@ public class DocumentContext {
 
     nodeToMethodsMap.clear();
     methods.forEach(methodSymbol -> nodeToMethodsMap.put(methodSymbol.getNode(), methodSymbol));
+  }
+
+  private void computeCognitiveComplexity() {
+    Computer<Integer> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    cognitiveComplexity = cognitiveComplexityComputer.compute();
   }
 
   private void adjustRegions() {
