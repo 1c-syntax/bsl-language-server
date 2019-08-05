@@ -1,4 +1,4 @@
-# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()"
+# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
 
 **Translate me, please**
 

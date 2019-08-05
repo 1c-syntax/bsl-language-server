@@ -28,6 +28,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
   import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
   import org.github._1c_syntax.bsl.parser.BSLParser;
 
+  import java.util.ArrayDeque;
   import java.util.ArrayList;
   import java.util.HashMap;
   import java.util.regex.Pattern;
@@ -43,16 +44,25 @@ public class PairingBrokenTranDiagnostic extends AbstractVisitorDiagnostic {
   private Pattern beginTransaction = Pattern.compile("НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private Pattern allTransaction = Pattern.compile("ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction",
+  private Pattern beginEndTransaction = Pattern.compile("ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private HashMap<String, String> pairMethods = new HashMap<>();
+  private Pattern beginCancelTransaction = Pattern.compile("ОтменитьТранзакцию|RollbackTransaction|НачатьТранзакцию|BeginTransaction",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
+  private HashMap<String, String> pairMethodsBeginCancel = new HashMap<>();
 
   public PairingBrokenTranDiagnostic() {
-    pairMethods.put("НАЧАТЬТРАНЗАКЦИЮ", "ЗафиксироватьТранзакцию");
-    pairMethods.put("ЗАФИКСИРОВАТЬТРАНЗАКЦИЮ", "НачатьТранзакцию");
-    pairMethods.put("BEGINTRANSACTION", "CommitTransaction");
-    pairMethods.put("COMMITTRANSACTION", "BeginTransaction");
+    pairMethodsBeginEnd.put("НАЧАТЬТРАНЗАКЦИЮ", "ЗафиксироватьТранзакцию");
+    pairMethodsBeginEnd.put("ЗАФИКСИРОВАТЬТРАНЗАКЦИЮ", "НачатьТранзакцию");
+    pairMethodsBeginEnd.put("BEGINTRANSACTION", "CommitTransaction");
+    pairMethodsBeginEnd.put("COMMITTRANSACTION", "BeginTransaction");
+
+    pairMethodsBeginCancel.put("НАЧАТЬТРАНЗАКЦИЮ", "ОтменитьТранзакцию");
+    pairMethodsBeginCancel.put("ОТМЕНИТЬТРАНЗАКЦИЮ", "НачатьТранзакцию");
+    pairMethodsBeginCancel.put("BEGINTRANSACTION", "RollbackTransaction");
+    pairMethodsBeginCancel.put("ROLLBACKTRANSACTION", "BeginTransaction");
   }
 
   @Override
@@ -66,37 +76,37 @@ public class PairingBrokenTranDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private ParseTree visitFuncProc(ParseTree ctx) {
+    findAndAddDiagnostic(ctx, beginEndTransaction, pairMethodsBeginEnd);
+    findAndAddDiagnostic(ctx, beginCancelTransaction, pairMethodsBeginCancel);
+    return ctx;
+  }
+
+  private void findAndAddDiagnostic(ParseTree ctx, Pattern pattern, HashMap<String, String> pairMethods) {
 
     ArrayList<ParseTree> allTranCalls = new ArrayList<>();
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
-      .filter(node -> allTransaction.matcher((
+      .filter(node -> pattern.matcher((
         (BSLParser.GlobalMethodCallContext) node).methodName().getText()).matches())
       .collect(Collectors.toCollection(() -> allTranCalls));
 
-    if(!allTranCalls.isEmpty()) {
-      ArrayList<ParseTree> beginCalls = new ArrayList<>();
-      for (ParseTree tranCall : allTranCalls) {
-        if(beginTransaction.matcher(((BSLParser.GlobalMethodCallContext) tranCall)
-            .methodName().getText()).matches()) {
-          beginCalls.add(tranCall);
-        } else if(!beginCalls.isEmpty()) {
-          beginCalls.remove(beginCalls.size() - 1);
-        } else {
-          addDiagnosticWithMessage(tranCall);
-        }
-      }
-
-      if(!beginCalls.isEmpty()) {
-        beginCalls.forEach(tranCall -> addDiagnosticWithMessage(tranCall));
+    ArrayDeque<ParseTree> beginCalls = new ArrayDeque<>();
+    for (ParseTree tranCall : allTranCalls) {
+      if(beginTransaction.matcher(((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText()).matches()) {
+        beginCalls.add(tranCall);
+      } else if(!beginCalls.isEmpty()) {
+        beginCalls.pop();
+      } else {
+        addDiagnosticWithMessage(tranCall, pairMethods);
       }
     }
-
-    return ctx;
+    if(!beginCalls.isEmpty()) {
+      beginCalls.forEach(tranCall -> addDiagnosticWithMessage(tranCall, pairMethods));
+    }
   }
 
-  private void addDiagnosticWithMessage(ParseTree tranCall) {
+  private void addDiagnosticWithMessage(ParseTree tranCall, HashMap<String, String> pairMethods) {
     String methodName = ((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText();
     diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) tranCall,
       getDiagnosticMessage(pairMethods.get(methodName.toUpperCase()), methodName));
