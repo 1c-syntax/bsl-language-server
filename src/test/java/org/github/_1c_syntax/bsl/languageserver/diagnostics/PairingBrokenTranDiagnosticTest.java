@@ -40,7 +40,7 @@ class PairingBrokenTranDiagnosticTest extends AbstractDiagnosticTest<PairingBrok
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 4, 24, 29)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(28, 4, 28, 22)))
@@ -48,6 +48,7 @@ class PairingBrokenTranDiagnosticTest extends AbstractDiagnosticTest<PairingBrok
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 4, 40, 22)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(75, 4, 75, 29)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(78, 4, 78, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(90, 4, 90, 29)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(90, 4, 90, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(102, 4, 102, 29)));
   }
 }

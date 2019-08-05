@@ -49,10 +49,10 @@ public class PairingBrokenTranDiagnostic extends AbstractVisitorDiagnostic {
   private HashMap<String, String> pairMethods = new HashMap<>();
 
   public PairingBrokenTranDiagnostic() {
-    pairMethods.put("НачатьТранзакцию", "ЗафиксироватьТранзакцию");
-    pairMethods.put("ЗафиксироватьТранзакцию", "НачатьТранзакцию");
-    pairMethods.put("BeginTransaction", "CommitTransaction");
-    pairMethods.put("CommitTransaction", "BeginTransaction");
+    pairMethods.put("НАЧАТЬТРАНЗАКЦИЮ", "ЗафиксироватьТранзакцию");
+    pairMethods.put("ЗАФИКСИРОВАТЬТРАНЗАКЦИЮ", "НачатьТранзакцию");
+    pairMethods.put("BEGINTRANSACTION", "CommitTransaction");
+    pairMethods.put("COMMITTRANSACTION", "BeginTransaction");
   }
 
   @Override
@@ -99,7 +99,7 @@ public class PairingBrokenTranDiagnostic extends AbstractVisitorDiagnostic {
   private void addDiagnosticWithMessage(ParseTree tranCall) {
     String methodName = ((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText();
     diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) tranCall,
-      getDiagnosticMessage(pairMethods.get(methodName), methodName));
+      getDiagnosticMessage(pairMethods.get(methodName.toUpperCase()), methodName));
   }
 
 }
