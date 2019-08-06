@@ -39,7 +39,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 15
 )
-public class PairingBrokenTranDiagnostic extends AbstractVisitorDiagnostic {
+public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnostic {
 
   private Pattern beginTransaction = Pattern.compile("НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -53,7 +53,7 @@ public class PairingBrokenTranDiagnostic extends AbstractVisitorDiagnostic {
   private HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
   private HashMap<String, String> pairMethodsBeginCancel = new HashMap<>();
 
-  public PairingBrokenTranDiagnostic() {
+  public PairingBrokenTransactionDiagnostic() {
     pairMethodsBeginEnd.put("НАЧАТЬТРАНЗАКЦИЮ", "ЗафиксироватьТранзакцию");
     pairMethodsBeginEnd.put("ЗАФИКСИРОВАТЬТРАНЗАКЦИЮ", "НачатьТранзакцию");
     pairMethodsBeginEnd.put("BEGINTRANSACTION", "CommitTransaction");

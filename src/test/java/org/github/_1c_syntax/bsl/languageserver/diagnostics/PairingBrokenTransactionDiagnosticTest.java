@@ -29,10 +29,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class PairingBrokenTranDiagnosticTest extends AbstractDiagnosticTest<PairingBrokenTranDiagnostic> {
+class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<PairingBrokenTransactionDiagnostic> {
 
-  PairingBrokenTranDiagnosticTest() {
-    super(PairingBrokenTranDiagnostic.class);
+  PairingBrokenTransactionDiagnosticTest() {
+    super(PairingBrokenTransactionDiagnostic.class);
   }
 
   @Test
