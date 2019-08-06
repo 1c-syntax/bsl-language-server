@@ -176,6 +176,7 @@ public class DocumentContext {
     adjustRegions();
 
     computeMetrics();
+    computeCognitiveComplexity();
   }
 
   private void computeTokensAndAST() {
