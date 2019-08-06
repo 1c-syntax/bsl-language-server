@@ -64,7 +64,7 @@ public class DocumentContext {
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private MetricStorage metrics;
-  private int cognitiveComplexity;
+  private Map<MethodSymbol, Integer> cognitiveComplexity;
   private List<MethodSymbol> methods;
   private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
   private List<RegionSymbol> regions;
@@ -99,7 +99,17 @@ public class DocumentContext {
   }
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
-    return Optional.ofNullable(nodeToMethodsMap.get(ctx));
+    BSLParserRuleContext methodNode;
+    if (ctx instanceof BSLParser.SubContext) {
+      methodNode = ((BSLParser.SubContext) ctx).function();
+      if (methodNode == null) {
+        methodNode = ((BSLParser.SubContext) ctx).procedure();
+      }
+    } else {
+      methodNode = ctx;
+    }
+
+    return Optional.ofNullable(nodeToMethodsMap.get(methodNode));
   }
 
   public List<RegionSymbol> getRegions() {
@@ -237,7 +247,7 @@ public class DocumentContext {
   }
 
   private void computeCognitiveComplexity() {
-    Computer<Integer> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    Computer<Map<MethodSymbol, Integer>> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
     cognitiveComplexity = cognitiveComplexityComputer.compute();
   }
 

@@ -23,50 +23,66 @@ package org.github._1c_syntax.bsl.languageserver.context.computer;
 
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // Based on Cognitive Complexity white-paper, version 1.4.
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
-public class CognitiveComplexityComputer extends BSLParserBaseListener implements Computer<Integer> {
+public class CognitiveComplexityComputer extends BSLParserBaseListener implements Computer<Map<MethodSymbol, Integer>> {
 
   private final DocumentContext documentContext;
 
+  private Map<MethodSymbol, Integer> methodsComplexity;
+
+  private MethodSymbol currentMethod;
   private int complexity;
   private int nestedLevel;
 
-  private String currentMethodName = "";
 
   public CognitiveComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
     complexity = 0;
     nestedLevel = 0;
+    methodsComplexity = new HashMap<>();
   }
 
   @Override
-  public Integer compute() {
+  public Map<MethodSymbol, Integer> compute() {
     complexity = 0;
     nestedLevel = 0;
+    methodsComplexity.clear();
 
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
-    return complexity;
+    return methodsComplexity;
   }
 
   @Override
-  public void enterProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
-    currentMethodName = ctx.subName().getText();
-    super.enterProcDeclaration(ctx);
+  public void enterSub(BSLParser.SubContext ctx) {
+    // TODO: Cognitive complexity for module entrypoint?
+    Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
+    if (!methodSymbol.isPresent()) {
+      return;
+    }
+
+    currentMethod = methodSymbol.get();
+
+    super.enterSub(ctx);
   }
 
   @Override
-  public void enterFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
-    currentMethodName = ctx.subName().getText();
-    super.enterFuncDeclaration(ctx);
+  public void exitSub(BSLParser.SubContext ctx) {
+    methodsComplexity.put(currentMethod, complexity);
+    currentMethod = null;
+    super.exitSub(ctx);
   }
 
   @Override
@@ -174,9 +190,9 @@ public class CognitiveComplexityComputer extends BSLParserBaseListener implement
   @Override
   public void enterGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     BSLParser.MethodNameContext methodNameContext = ctx.methodName();
-    if (methodNameContext != null) {
+    if (methodNameContext != null && currentMethod != null) {
       String calledMethodName = methodNameContext.getText();
-      if (currentMethodName.equalsIgnoreCase(calledMethodName)) {
+      if (currentMethod.getName().equalsIgnoreCase(calledMethodName)) {
         fundamentalIncrement();
       }
     }
