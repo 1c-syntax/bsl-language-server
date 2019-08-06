@@ -34,8 +34,7 @@ import java.util.List;
 
 public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
-  implements Computer<List<RegionSymbol>>
-{
+  implements Computer<List<RegionSymbol>> {
 
   private final DocumentContext documentContext;
   private Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();

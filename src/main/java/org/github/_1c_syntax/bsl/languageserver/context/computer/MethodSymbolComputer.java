@@ -36,8 +36,7 @@ import java.util.Optional;
 
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
-  implements Computer<List<MethodSymbol>>
-{
+  implements Computer<List<MethodSymbol>> {
 
   private final DocumentContext documentContext;
   private List<MethodSymbol> methods = new ArrayList<>();
