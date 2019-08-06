@@ -23,6 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Singular;
 import lombok.Value;
 import org.github._1c_syntax.bsl.parser.BSLParser;
@@ -33,6 +34,7 @@ import java.util.List;
 
 @Value
 @Builder(access = AccessLevel.PUBLIC)
+@EqualsAndHashCode(exclude="methods")
 public class RegionSymbol implements Symbol {
   private final String name;
   private final BSLParser.RegionNameContext nameNode;
