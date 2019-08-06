@@ -27,12 +27,13 @@ import org.antlr.v4.runtime.tree.Trees;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.Collection;
 import java.util.Map;
 
 @DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
   minutesToFix = 5
 )
@@ -44,7 +45,7 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY,
-    description = "Допустимое количество операндов в условии оператора Если"
+    description = "Допустимое количество логических конструкций в условии оператора Если"
   )
 
   private int maxIfConditionComplexity = MAX_IF_CONDITION_COMPLEXITY;
@@ -60,9 +61,12 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-    Collection<ParseTree> boolOperations = Trees.findAllRuleNodes(ctx.expression(0), BSLParser.RULE_boolOperation);
-    if (boolOperations.size() + 1 > maxIfConditionComplexity)
-      diagnosticStorage.addDiagnostic(ctx.expression(0));
+
+    ctx.expression()
+      .stream()
+      .filter(s-> Trees.findAllRuleNodes(s, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity)
+      .forEach(s-> diagnosticStorage.addDiagnostic(s));
+
     return super.visitIfStatement(ctx);
   }
 

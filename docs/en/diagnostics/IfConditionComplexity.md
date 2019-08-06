@@ -42,3 +42,7 @@ Function IsCorrectId(Id)
 
 EndFunction
 ```
+
+## Parameters
+
+- `maxIfConditionComplexity` - `Integer` - Max number of boolean constructs in "If" condition. By default - 3.

@@ -43,9 +43,11 @@ public class IfConditionComplexityDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 5, 10, 51));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(27, 6, 30, 60));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(45, 5, 48, 36));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(51, 10, 57, 37));
   }
 
   @Test
@@ -60,8 +62,9 @@ public class IfConditionComplexityDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 5, 10, 51));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(51, 10, 57, 37));
 
   }
 
