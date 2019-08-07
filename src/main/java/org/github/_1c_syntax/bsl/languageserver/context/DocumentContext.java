@@ -64,7 +64,8 @@ public class DocumentContext {
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private MetricStorage metrics;
-  private Map<MethodSymbol, Integer> cognitiveComplexity;
+  private int fileCodeBlockCognitiveComplexity;
+  private Map<MethodSymbol, Integer> methodsCognitiveComplexity;
   private List<MethodSymbol> methods;
   private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
   private List<RegionSymbol> regions;
@@ -251,7 +252,8 @@ public class DocumentContext {
     CognitiveComplexityComputer.Result cognitiveComplexityResult = cognitiveComplexityComputer.compute();
 
     metrics.setCognitiveComplexity(cognitiveComplexityResult.getFileComplexity());
-    cognitiveComplexity = cognitiveComplexityResult.getMethodsComplexity();
+    fileCodeBlockCognitiveComplexity = cognitiveComplexityResult.getFileCodeBlockComplexity();
+    methodsCognitiveComplexity = cognitiveComplexityResult.getMethodsComplexity();
   }
 
   private void adjustRegions() {

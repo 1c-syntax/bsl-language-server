@@ -44,6 +44,7 @@ public class CognitiveComplexityComputer
   private final DocumentContext documentContext;
 
   private int fileComplexity;
+  private int fileCodeBlockComplexity;
   private Map<MethodSymbol, Integer> methodsComplexity;
 
   private MethodSymbol currentMethod;
@@ -53,6 +54,7 @@ public class CognitiveComplexityComputer
   public CognitiveComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
     fileComplexity = 0;
+    fileCodeBlockComplexity = 0;
     resetMethodComplexityCounters();
     methodsComplexity = new HashMap<>();
   }
@@ -60,13 +62,14 @@ public class CognitiveComplexityComputer
   @Override
   public Result compute() {
     fileComplexity = 0;
+    fileCodeBlockComplexity = 0;
     resetMethodComplexityCounters();
     methodsComplexity.clear();
 
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
-    return new Result(fileComplexity, methodsComplexity);
+    return new Result(fileComplexity, fileCodeBlockComplexity, methodsComplexity);
   }
 
   @Override
@@ -99,6 +102,7 @@ public class CognitiveComplexityComputer
   @Override
   public void exitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
     incrementFileComplexity();
+    incrementFileCodeBlockComplexity();
     super.exitFileCodeBlockBeforeSub(ctx);
   }
 
@@ -111,6 +115,7 @@ public class CognitiveComplexityComputer
   @Override
   public void exitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     incrementFileComplexity();
+    incrementFileCodeBlockComplexity();
     super.exitFileCodeBlock(ctx);
   }
 
@@ -256,6 +261,10 @@ public class CognitiveComplexityComputer
     fileComplexity += complexity;
   }
 
+  private void incrementFileCodeBlockComplexity() {
+    fileCodeBlockComplexity += complexity;
+  }
+
   private void structuralIncrement() {
     complexity += 1 + nestedLevel;
     nestedLevel++;
@@ -274,6 +283,7 @@ public class CognitiveComplexityComputer
   @AllArgsConstructor
   public static class Result {
     private final int fileComplexity;
+    private final int fileCodeBlockComplexity;
     private final Map<MethodSymbol, Integer> methodsComplexity;
   }
 }
