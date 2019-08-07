@@ -44,7 +44,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
 
     if (ctx.getParent() instanceof BSLParser.FileContext
-      || ctx.getParent() instanceof BSLParser.CodeBlockBeforeSubContext
+      || ctx.getParent() instanceof BSLParser.FileCodeBlockBeforeSubContext
       || ctx.getParent() instanceof BSLParser.SubCodeBlockContext) {
       return super.visitCodeBlock(ctx);
     }
