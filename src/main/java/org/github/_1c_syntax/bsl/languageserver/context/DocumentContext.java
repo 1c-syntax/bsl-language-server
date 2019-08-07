@@ -171,6 +171,14 @@ public class DocumentContext {
     return fileType;
   }
 
+  public int getFileCodeBlockCognitiveComplexity() {
+    return fileCodeBlockCognitiveComplexity;
+  }
+
+  public Map<MethodSymbol, Integer> getMethodsCognitiveComplexity() {
+    return new HashMap<>(methodsCognitiveComplexity);
+  }
+
   public void rebuild(String content) {
     build(content);
   }
