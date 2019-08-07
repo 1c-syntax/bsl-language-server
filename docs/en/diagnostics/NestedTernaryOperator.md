@@ -7,6 +7,14 @@ Bad:
 Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz");
 ```
 
+```bsl
+If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
+
+      Status = "Done";
+
+EndIf;
+```
+
 Good:
 ```bsl
 If x% 15 = 0 Then
@@ -20,16 +28,6 @@ Else
 EndIf;
 ```
 
-Bad:
-```bsl
-If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
-
-      Status = "Done";
-
-EndIf;
-```
-
-Good:
 ```bsl
 If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
 
