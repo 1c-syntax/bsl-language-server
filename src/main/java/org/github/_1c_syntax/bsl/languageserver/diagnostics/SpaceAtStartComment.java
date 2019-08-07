@@ -53,7 +53,8 @@ public class SpaceAtStartComment implements BSLDiagnostic {
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
-    description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)"
+    description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок."
+      + " Список через запятую. Например: //@,//(c)"
   )
   private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
 
