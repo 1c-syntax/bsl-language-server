@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
@@ -73,6 +74,10 @@ public class DiagnosticStorage {
       RangeHelper.newRange(token),
       diagnosticMessage
     ));
+  }
+
+  protected void addDiagnostic(TerminalNode terminalNode) {
+    addDiagnostic(terminalNode.getSymbol());
   }
 
   protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {

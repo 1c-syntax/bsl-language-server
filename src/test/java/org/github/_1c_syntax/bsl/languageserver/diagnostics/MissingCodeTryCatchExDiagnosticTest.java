@@ -31,43 +31,38 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagnostic> {
+class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<MissingCodeTryCatchExDiagnostic> {
 
-  MagicNumberDiagnosticTest() { super(MagicNumberDiagnostic.class); }
+  MissingCodeTryCatchExDiagnosticTest() {
+    super(MissingCodeTryCatchExDiagnostic.class);
+  }
 
   @Test
-  void runTest() {
-    // when
+  void test() {
+
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 18, 3, 20)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 23, 3, 25)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 31, 7, 33)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 20, 11, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 21, 20, 23)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 24, 23, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(27, 34, 27, 35)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 4, 23, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(32, 4, 32, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(50, 8, 50, 18)));
+
   }
 
   @Test
   void testConfigure() {
-    // conf
+
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    configuration.put("authorizedNumbers", "-1,0,1,60,7");
+    configuration.put("commentAsCode", "true");
     getDiagnosticInstance().configure(configuration);
 
-    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 31, 7, 33)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 20, 11, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 21, 20, 23)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 24, 23, 26)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 4, 23, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(50, 8, 50, 18)));
+
   }
 }
