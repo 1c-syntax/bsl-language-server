@@ -21,6 +21,8 @@
  */
 package org.github._1c_syntax.bsl.languageserver.context.computer;
 
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -35,44 +37,46 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // Based on Cognitive Complexity white-paper, version 1.4.
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
-public class CognitiveComplexityComputer extends BSLParserBaseListener implements Computer<Map<MethodSymbol, Integer>> {
+public class CognitiveComplexityComputer
+  extends BSLParserBaseListener
+  implements Computer<CognitiveComplexityComputer.Result> {
 
   private final DocumentContext documentContext;
 
+  private int fileComplexity;
   private Map<MethodSymbol, Integer> methodsComplexity;
 
   private MethodSymbol currentMethod;
   private int complexity;
   private int nestedLevel;
 
-
   public CognitiveComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
-    complexity = 0;
-    nestedLevel = 0;
+    fileComplexity = 0;
+    resetMethodComplexityCounters();
     methodsComplexity = new HashMap<>();
   }
 
   @Override
-  public Map<MethodSymbol, Integer> compute() {
-    complexity = 0;
-    nestedLevel = 0;
+  public Result compute() {
+    fileComplexity = 0;
+    resetMethodComplexityCounters();
     methodsComplexity.clear();
 
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
-    return methodsComplexity;
+    return new Result(fileComplexity, methodsComplexity);
   }
 
   @Override
   public void enterSub(BSLParser.SubContext ctx) {
-    // TODO: Cognitive complexity for module entrypoint?
     Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
     if (!methodSymbol.isPresent()) {
       return;
     }
 
+    resetMethodComplexityCounters();
     currentMethod = methodSymbol.get();
 
     super.enterSub(ctx);
@@ -80,9 +84,34 @@ public class CognitiveComplexityComputer extends BSLParserBaseListener implement
 
   @Override
   public void exitSub(BSLParser.SubContext ctx) {
+    incrementFileComplexity();
     methodsComplexity.put(currentMethod, complexity);
     currentMethod = null;
     super.exitSub(ctx);
+  }
+
+  @Override
+  public void enterFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
+    resetMethodComplexityCounters();
+    super.enterFileCodeBlockBeforeSub(ctx);
+  }
+
+  @Override
+  public void exitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
+    incrementFileComplexity();
+    super.exitFileCodeBlockBeforeSub(ctx);
+  }
+
+  @Override
+  public void enterFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    resetMethodComplexityCounters();
+    super.enterFileCodeBlock(ctx);
+  }
+
+  @Override
+  public void exitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    incrementFileComplexity();
+    super.exitFileCodeBlock(ctx);
   }
 
   @Override
@@ -218,6 +247,15 @@ public class CognitiveComplexityComputer extends BSLParserBaseListener implement
     super.enterExpression(ctx);
   }
 
+  private void resetMethodComplexityCounters() {
+    complexity = 0;
+    nestedLevel = 0;
+  }
+
+  private void incrementFileComplexity() {
+    fileComplexity += complexity;
+  }
+
   private void structuralIncrement() {
     complexity += 1 + nestedLevel;
     nestedLevel++;
@@ -232,4 +270,10 @@ public class CognitiveComplexityComputer extends BSLParserBaseListener implement
     nestedLevel++;
   }
 
+  @Value
+  @AllArgsConstructor
+  public static class Result {
+    private final int fileComplexity;
+    private final Map<MethodSymbol, Integer> methodsComplexity;
+  }
 }

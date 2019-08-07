@@ -247,8 +247,11 @@ public class DocumentContext {
   }
 
   private void computeCognitiveComplexity() {
-    Computer<Map<MethodSymbol, Integer>> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
-    cognitiveComplexity = cognitiveComplexityComputer.compute();
+    Computer<CognitiveComplexityComputer.Result> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    CognitiveComplexityComputer.Result cognitiveComplexityResult = cognitiveComplexityComputer.compute();
+
+    metrics.setCognitiveComplexity(cognitiveComplexityResult.getFileComplexity());
+    cognitiveComplexity = cognitiveComplexityResult.getMethodsComplexity();
   }
 
   private void adjustRegions() {
