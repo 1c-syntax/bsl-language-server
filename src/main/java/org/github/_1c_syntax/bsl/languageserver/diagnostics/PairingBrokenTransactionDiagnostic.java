@@ -66,16 +66,7 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
   }
 
   @Override
-  public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-    return visitFuncProc(ctx);
-  }
-
-  @Override
-  public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-    return visitFuncProc(ctx);
-  }
-
-  private ParseTree visitFuncProc(ParseTree ctx) {
+  public ParseTree visitSub(BSLParser.SubContext ctx) {
     findAndAddDiagnostic(ctx, beginEndTransaction, pairMethodsBeginEnd);
     findAndAddDiagnostic(ctx, beginCancelTransaction, pairMethodsBeginCancel);
     return ctx;
