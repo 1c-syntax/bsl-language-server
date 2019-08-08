@@ -29,9 +29,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DeprecatedMessageTest extends AbstractDiagnosticTest<DeprecatedMessage> {
+public class DeprecatedMessageDiagnosticTest extends AbstractDiagnosticTest<DeprecatedMessageDiagnostic> {
 
-  DeprecatedMessageTest() { super(DeprecatedMessage.class); }
+  DeprecatedMessageDiagnosticTest() { super(DeprecatedMessageDiagnostic.class); }
 
   @Test
   void runTest()

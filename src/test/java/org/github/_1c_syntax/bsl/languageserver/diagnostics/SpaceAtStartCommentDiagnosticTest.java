@@ -31,10 +31,10 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SpaceAtStartCommentTest extends AbstractDiagnosticTest<SpaceAtStartComment> {
+class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtStartCommentDiagnostic> {
 
-  SpaceAtStartCommentTest() {
-    super(SpaceAtStartComment.class);
+  SpaceAtStartCommentDiagnosticTest() {
+    super(SpaceAtStartCommentDiagnostic.class);
   }
 
   @Test

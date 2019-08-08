@@ -1,7 +1,5 @@
 # Missing code in Raise block in "Try ... Raise ... EndTry"
 
-**Translate me, please**
-
 Недопустимо перехватывать любые исключения, бесследно для системного администратора
 
 *Неправильно*

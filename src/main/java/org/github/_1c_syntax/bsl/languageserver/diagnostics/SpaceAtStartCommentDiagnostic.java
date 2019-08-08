@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
   minutesToFix = 1
 )
 
-public class SpaceAtStartComment implements BSLDiagnostic {
+public class SpaceAtStartCommentDiagnostic implements BSLDiagnostic {
 
   private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c)";
   private static final Pattern goodCommentPattern = Pattern.compile(

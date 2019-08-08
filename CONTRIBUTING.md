@@ -11,4 +11,3 @@
 
 * Java SDK на JDK8
 * File | Settings | Build, Execution, Deployment | Compiler | Annotation Processors | Enable annotation processing - checked
-
