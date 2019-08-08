@@ -318,6 +318,7 @@ public class CognitiveComplexityComputer
     }
 
     locations.add(secondaryLocation);
+    methodsComplexitySecondaryLocations.put(currentMethod, locations);
   }
 
   @Value
