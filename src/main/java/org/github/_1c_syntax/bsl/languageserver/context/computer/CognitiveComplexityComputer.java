@@ -23,12 +23,16 @@ package org.github._1c_syntax.bsl.languageserver.context.computer;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +43,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
 public class CognitiveComplexityComputer
   extends BSLParserBaseListener
-  implements Computer<CognitiveComplexityComputer.Result> {
+  implements Computer<CognitiveComplexityComputer.Data> {
 
   private final DocumentContext documentContext;
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
+  private List<SecondaryLocation> fileBlockComplexitySecondaryLocations;
+
   private Map<MethodSymbol, Integer> methodsComplexity;
+  private Map<MethodSymbol, List<SecondaryLocation>> methodsComplexitySecondaryLocations;
 
   private MethodSymbol currentMethod;
   private int complexity;
@@ -55,12 +62,14 @@ public class CognitiveComplexityComputer
     this.documentContext = documentContext;
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;
+    fileBlockComplexitySecondaryLocations = new ArrayList<>();
     resetMethodComplexityCounters();
     methodsComplexity = new HashMap<>();
+    methodsComplexitySecondaryLocations = new HashMap<>();
   }
 
   @Override
-  public Result compute() {
+  public Data compute() {
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;
     resetMethodComplexityCounters();
@@ -69,7 +78,13 @@ public class CognitiveComplexityComputer
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
-    return new Result(fileComplexity, fileCodeBlockComplexity, methodsComplexity);
+    return new Data(
+      fileComplexity,
+      fileCodeBlockComplexity,
+      fileBlockComplexitySecondaryLocations,
+      methodsComplexity,
+      methodsComplexitySecondaryLocations
+    );
   }
 
   @Override
@@ -121,7 +136,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterIfBranch(BSLParser.IfBranchContext ctx) {
-    structuralIncrement();
+    structuralIncrement(ctx.IF_KEYWORD().getSymbol());
     super.enterIfBranch(ctx);
   }
 
@@ -133,7 +148,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterElsifBranch(BSLParser.ElsifBranchContext ctx) {
-    hybridIncrement();
+    hybridIncrement(ctx.ELSIF_KEYWORD().getSymbol());
     super.enterElsifBranch(ctx);
   }
 
@@ -145,7 +160,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterElseBranch(BSLParser.ElseBranchContext ctx) {
-    hybridIncrement();
+    hybridIncrement(ctx.ELSE_KEYWORD().getSymbol());
     super.enterElseBranch(ctx);
   }
 
@@ -157,7 +172,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    structuralIncrement();
+    structuralIncrement(ctx.QUESTION().getSymbol());
     super.enterTernaryOperator(ctx);
   }
 
@@ -169,7 +184,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterForEachStatement(BSLParser.ForEachStatementContext ctx) {
-    structuralIncrement();
+    structuralIncrement(ctx.FOR_KEYWORD().getSymbol());
     super.enterForEachStatement(ctx);
   }
 
@@ -181,7 +196,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterForStatement(BSLParser.ForStatementContext ctx) {
-    structuralIncrement();
+    structuralIncrement(ctx.FOR_KEYWORD().getSymbol());
     super.enterForStatement(ctx);
   }
 
@@ -193,7 +208,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterWhileStatement(BSLParser.WhileStatementContext ctx) {
-    structuralIncrement();
+    structuralIncrement(ctx.WHILE_KEYWORD().getSymbol());
     super.enterWhileStatement(ctx);
   }
 
@@ -205,7 +220,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterExceptCodeBlock(BSLParser.ExceptCodeBlockContext ctx) {
-    structuralIncrement();
+    structuralIncrement(((BSLParser.TryStatementContext) ctx.getParent()).EXCEPT_KEYWORD().getSymbol());
     super.enterExceptCodeBlock(ctx);
   }
 
@@ -217,7 +232,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterGotoStatement(BSLParser.GotoStatementContext ctx) {
-    fundamentalIncrement();
+    fundamentalIncrement(ctx.GOTO_KEYWORD().getSymbol());
     super.enterGotoStatement(ctx);
   }
 
@@ -227,7 +242,7 @@ public class CognitiveComplexityComputer
     if (methodNameContext != null && currentMethod != null) {
       String calledMethodName = methodNameContext.getText();
       if (currentMethod.getName().equalsIgnoreCase(calledMethodName)) {
-        fundamentalIncrement();
+        fundamentalIncrement(methodNameContext.IDENTIFIER().getSymbol());
       }
     }
 
@@ -243,7 +258,7 @@ public class CognitiveComplexityComputer
       operations.forEach((BSLParser.OperationContext operationContext) -> {
         int currentOperationType = operationContext.getStart().getType();
         if (lastOperationType.get() != currentOperationType) {
-          fundamentalIncrement();
+          fundamentalIncrement(operationContext.getStart());
           lastOperationType.set(currentOperationType);
         }
       });
@@ -265,25 +280,61 @@ public class CognitiveComplexityComputer
     fileCodeBlockComplexity += complexity;
   }
 
-  private void structuralIncrement() {
+  private void structuralIncrement(Token token) {
     complexity += 1 + nestedLevel;
+    addSecondaryLocation(token,  1 + nestedLevel, nestedLevel);
     nestedLevel++;
   }
 
-  private void fundamentalIncrement() {
+  private void fundamentalIncrement(Token token) {
     complexity++;
+    addSecondaryLocation(token);
   }
 
-  private void hybridIncrement() {
+  private void hybridIncrement(Token token) {
     complexity++;
     nestedLevel++;
+    addSecondaryLocation(token);
+  }
+
+  private void addSecondaryLocation(Token token) {
+    addSecondaryLocation(token, 1, 0);
+  }
+
+  private void addSecondaryLocation(Token token, int increment, int nested) {
+    String message;
+    if (nested > 0) {
+      message = String.format("+%d (nested +%d)", increment, nested);
+    } else {
+      message = String.format("+%d", increment);
+    }
+
+    SecondaryLocation secondaryLocation = new SecondaryLocation(RangeHelper.newRange(token), message);
+    List<SecondaryLocation> locations;
+    if (currentMethod != null) {
+      locations = methodsComplexitySecondaryLocations.getOrDefault(currentMethod, new ArrayList<>());
+    } else {
+      locations = fileBlockComplexitySecondaryLocations;
+    }
+
+    locations.add(secondaryLocation);
   }
 
   @Value
   @AllArgsConstructor
-  public static class Result {
+  public static class SecondaryLocation {
+    private final Range range;
+    private final String message;
+  }
+
+  @Value
+  @AllArgsConstructor
+  public static class Data {
     private final int fileComplexity;
     private final int fileCodeBlockComplexity;
+    private List<SecondaryLocation> fileBlockComplexitySecondaryLocations;
+
     private final Map<MethodSymbol, Integer> methodsComplexity;
+    private Map<MethodSymbol, List<SecondaryLocation>> methodsComplexitySecondaryLocations;
   }
 }

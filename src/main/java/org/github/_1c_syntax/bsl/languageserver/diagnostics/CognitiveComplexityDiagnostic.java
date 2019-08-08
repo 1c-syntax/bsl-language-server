@@ -22,16 +22,22 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -72,12 +78,35 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> optionalMethodSymbol = documentContext.getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
-      Integer methodComplexity = documentContext.getMethodsCognitiveComplexity().get(methodSymbol);
+      Integer methodComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
+
+        List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+        relatedInformation.add(RangeHelper.createRelatedInformation(
+          documentContext.getUri(),
+          RangeHelper.newRange(getSubNameContext(methodSymbol)),
+          getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+        ));
+
+        List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
+          documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
+
+        secondaryLocations.stream()
+          .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
+            RangeHelper.createRelatedInformation(
+              documentContext.getUri(),
+              secondaryLocation.getRange(),
+              secondaryLocation.getMessage()
+            )
+          )
+          .collect(Collectors.toCollection(() -> relatedInformation));
+
         diagnosticStorage.addDiagnostic(
           getSubNameContext(methodSymbol),
-          getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+          getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
+          relatedInformation
         );
       }
 
@@ -105,12 +134,35 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    Integer fileCodeBlockComplexity = documentContext.getFileCodeBlockCognitiveComplexity();
+    Integer fileCodeBlockComplexity = documentContext.getCognitiveComplexityData().getFileCodeBlockComplexity();
 
     if (fileCodeBlockComplexity > complexityThreshold) {
+
+      List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+      relatedInformation.add(RangeHelper.createRelatedInformation(
+        documentContext.getUri(),
+        RangeHelper.newRange(ctx.getStart()),
+        getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold)
+      ));
+
+      List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
+        documentContext.getCognitiveComplexityData().getFileBlockComplexitySecondaryLocations();
+
+      secondaryLocations.stream()
+        .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
+          RangeHelper.createRelatedInformation(
+            documentContext.getUri(),
+            secondaryLocation.getRange(),
+            secondaryLocation.getMessage()
+          )
+        )
+        .collect(Collectors.toCollection(() -> relatedInformation));
+
       diagnosticStorage.addDiagnostic(
         ctx.getStart(),
-        getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold)
+        getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold),
+        relatedInformation
       );
     }
   }

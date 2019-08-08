@@ -64,8 +64,7 @@ public class DocumentContext {
   private BSLParser.FileContext ast;
   private List<Token> tokens;
   private MetricStorage metrics;
-  private int fileCodeBlockCognitiveComplexity;
-  private Map<MethodSymbol, Integer> methodsCognitiveComplexity;
+  private CognitiveComplexityComputer.Data cognitiveComplexityData;
   private List<MethodSymbol> methods;
   private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
   private List<RegionSymbol> regions;
@@ -171,12 +170,8 @@ public class DocumentContext {
     return fileType;
   }
 
-  public int getFileCodeBlockCognitiveComplexity() {
-    return fileCodeBlockCognitiveComplexity;
-  }
-
-  public Map<MethodSymbol, Integer> getMethodsCognitiveComplexity() {
-    return new HashMap<>(methodsCognitiveComplexity);
+  public CognitiveComplexityComputer.Data getCognitiveComplexityData() {
+    return cognitiveComplexityData;
   }
 
   public void rebuild(String content) {
@@ -256,12 +251,11 @@ public class DocumentContext {
   }
 
   private void computeCognitiveComplexity() {
-    Computer<CognitiveComplexityComputer.Result> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
-    CognitiveComplexityComputer.Result cognitiveComplexityResult = cognitiveComplexityComputer.compute();
+    Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+    cognitiveComplexityData = cognitiveComplexityComputer.compute();
 
-    metrics.setCognitiveComplexity(cognitiveComplexityResult.getFileComplexity());
-    fileCodeBlockCognitiveComplexity = cognitiveComplexityResult.getFileCodeBlockComplexity();
-    methodsCognitiveComplexity = cognitiveComplexityResult.getMethodsComplexity();
+    metrics.setCognitiveComplexity(cognitiveComplexityData.getFileComplexity());
+
   }
 
   private void adjustRegions() {

@@ -87,6 +87,32 @@ public class DiagnosticStorage {
   public void addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, token, relatedInformation));
   }
+
+  public void addDiagnostic(
+    BSLParserRuleContext node,
+    String diagnosticMessage,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      RangeHelper.newRange(node),
+      diagnosticMessage,
+      relatedInformation
+    ));
+  }
+
+  public void addDiagnostic(
+    Token token,
+    String diagnosticMessage,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      RangeHelper.newRange(token),
+      diagnosticMessage,
+      relatedInformation
+    ));
+  }
 }
 
 
