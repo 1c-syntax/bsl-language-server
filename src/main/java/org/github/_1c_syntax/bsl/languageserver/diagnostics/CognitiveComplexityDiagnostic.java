@@ -28,6 +28,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +41,7 @@ import java.util.Optional;
 public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int COMPLEXITY_THRESHOLD = 15;
+  private static final boolean CHECK_MODULE_BODY = true;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -48,12 +50,22 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
   )
   private int complexityThreshold = COMPLEXITY_THRESHOLD;
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_MODULE_BODY,
+    description = "Проверять тело модуля"
+  )
+  private boolean checkModuleBody = CHECK_MODULE_BODY;
+
+  private boolean fileCodeBlockChecked;
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
     complexityThreshold = (Integer) configuration.get("complexityThreshold");
+    checkModuleBody = (Boolean) configuration.get("checkModuleBody");
   }
 
   @Override
@@ -64,7 +76,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
       if (methodComplexity > complexityThreshold) {
         diagnosticStorage.addDiagnostic(
-          ctx,
+          getSubNameContext(methodSymbol),
           getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
         );
       }
@@ -74,16 +86,43 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
+  public ParseTree visitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
+    checkFileCodeBlock(ctx);
+    fileCodeBlockChecked = ctx.getChildCount() > 0;
+    return ctx;
+  }
+
+  @Override
   public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    if (!fileCodeBlockChecked) {
+      checkFileCodeBlock(ctx);
+    }
+    return ctx;
+  }
+
+  private void checkFileCodeBlock(BSLParserRuleContext ctx) {
+    if (!checkModuleBody) {
+      return;
+    }
+
     Integer fileCodeBlockComplexity = documentContext.getFileCodeBlockCognitiveComplexity();
 
     if (fileCodeBlockComplexity > complexityThreshold) {
       diagnosticStorage.addDiagnostic(
-        ctx,
-        getDiagnosticMessage("тело модуля", fileCodeBlockComplexity, complexityThreshold)
+        ctx.getStart(),
+        getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold)
       );
     }
+  }
 
-    return ctx;
+  // TODO: ASTHelper? BSPParserRuleContext static methods?
+  private static BSLParser.SubNameContext getSubNameContext(MethodSymbol methodSymbol) {
+    BSLParser.SubNameContext subNameContext;
+    if (methodSymbol.isFunction()) {
+      subNameContext = ((BSLParser.FunctionContext) methodSymbol.getNode()).funcDeclaration().subName();
+    } else {
+      subNameContext = ((BSLParser.ProcedureContext) methodSymbol.getNode()).procDeclaration().subName();
+    }
+    return subNameContext;
   }
 }
