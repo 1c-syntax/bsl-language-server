@@ -1,3 +1,4 @@
 *.java eol=lf
 *.bsl eol=lf
 *.xml eol=lf
+*.md eol=lf

@@ -1,7 +1,5 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
 
-**Translate me, please**
-
 Начало транзакции и ее фиксация (отмена) должны происходить в контексте одного метода.
 
 *Правильно*
