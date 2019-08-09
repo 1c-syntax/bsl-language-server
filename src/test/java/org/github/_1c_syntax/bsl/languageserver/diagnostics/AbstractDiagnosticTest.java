@@ -32,7 +32,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,6 +55,11 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   List<Diagnostic> getDiagnostics() {
     DocumentContext documentContext = getDocumentContext();
+    return diagnostic.getDiagnostics(documentContext);
+  }
+
+  List<Diagnostic> getDiagnostics(String SimpleFileName) {
+    DocumentContext documentContext = getDocumentContext(SimpleFileName);
     return diagnostic.getDiagnostics(documentContext);
   }
 
@@ -86,14 +91,16 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   }
 
-
-
   private DocumentContext getDocumentContext() {
+    return getDocumentContext(diagnostic.getClass().getSimpleName());
+  }
+
+  private DocumentContext getDocumentContext(String SimpleFileName) {
     String textDocumentContent;
     try {
       textDocumentContent = IOUtils.resourceToString(
-        "diagnostics/" + diagnostic.getClass().getSimpleName() + ".bsl",
-        Charset.forName("UTF-8"),
+        "diagnostics/" + SimpleFileName + ".bsl",
+        StandardCharsets.UTF_8,
         this.getClass().getClassLoader()
       );
     } catch (IOException e) {
