@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<CognitiveComplexityDiagnostic> {
 
@@ -37,16 +36,13 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
   }
 
   @Test
-  void runTest()
-  {
-
+  void runTest() {
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 8, 0, 32));
-//    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(10, 0, 10, 13));
-
+    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(35);
   }
 }

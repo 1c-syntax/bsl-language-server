@@ -312,13 +312,15 @@ public class CognitiveComplexityComputer
     SecondaryLocation secondaryLocation = new SecondaryLocation(RangeHelper.newRange(token), message);
     List<SecondaryLocation> locations;
     if (currentMethod != null) {
-      locations = methodsComplexitySecondaryLocations.getOrDefault(currentMethod, new ArrayList<>());
+      locations = methodsComplexitySecondaryLocations.computeIfAbsent(
+        currentMethod,
+        (MethodSymbol methodSymbol) -> new ArrayList<>()
+      );
     } else {
       locations = fileBlockComplexitySecondaryLocations;
     }
 
     locations.add(secondaryLocation);
-    methodsComplexitySecondaryLocations.put(currentMethod, locations);
   }
 
   @Value
