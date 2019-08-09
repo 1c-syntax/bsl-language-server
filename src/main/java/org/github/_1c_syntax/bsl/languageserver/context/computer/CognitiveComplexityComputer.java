@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 
@@ -253,10 +254,13 @@ public class CognitiveComplexityComputer
   public void enterExpression(BSLParser.ExpressionContext ctx) {
     List<BSLParser.OperationContext> operations = ctx.operation();
     if (!operations.isEmpty()) {
-      AtomicInteger lastOperationType = new AtomicInteger(operations.get(0).getStart().getType());
+      AtomicInteger lastOperationType = new AtomicInteger(-1);
 
       operations.forEach((BSLParser.OperationContext operationContext) -> {
         int currentOperationType = operationContext.getStart().getType();
+        if (currentOperationType != BSLLexer.AND_KEYWORD && currentOperationType != BSLLexer.OR_KEYWORD) {
+          return;
+        }
         if (lastOperationType.get() != currentOperationType) {
           fundamentalIncrement(operationContext.getStart());
           lastOperationType.set(currentOperationType);
