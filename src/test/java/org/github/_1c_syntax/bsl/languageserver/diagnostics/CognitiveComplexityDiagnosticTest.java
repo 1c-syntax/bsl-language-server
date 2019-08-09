@@ -22,10 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,5 +46,18 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 8, 0, 32));
     assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(35);
+  }
+
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("complexityThreshold", 0);
+    configuration.put("checkModuleBody", true);
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(2);
   }
 }
