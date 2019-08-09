@@ -304,7 +304,7 @@ public class CognitiveComplexityComputer
   private void addSecondaryLocation(Token token, int increment, int nested) {
     String message;
     if (nested > 0) {
-      message = String.format("+%d (nested +%d)", increment, nested);
+      message = String.format("+%d (nesting = %d)", increment, nested);
     } else {
       message = String.format("+%d", increment);
     }
