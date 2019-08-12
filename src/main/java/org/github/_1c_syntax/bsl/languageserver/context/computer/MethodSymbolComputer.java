@@ -19,11 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.context.symbol;
+package org.github._1c_syntax.bsl.languageserver.context.computer;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
@@ -32,20 +34,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> {
+public final class MethodSymbolComputer
+  extends BSLParserBaseVisitor<ParseTree>
+  implements Computer<List<MethodSymbol>> {
 
   private final DocumentContext documentContext;
   private List<MethodSymbol> methods = new ArrayList<>();
 
   public MethodSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
-    visitFile(documentContext.getAst());
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  public List<MethodSymbol> compute() {
     methods.clear();
-    return super.visitFile(ctx);
+    visitFile(documentContext.getAst());
+    return new ArrayList<>(methods);
   }
 
   @Override
@@ -80,10 +84,6 @@ public final class MethodSymbolComputer extends BSLParserBaseVisitor<ParseTree> 
     methods.add(methodSymbol);
 
     return ctx;
-  }
-
-  public List<MethodSymbol> getMethods() {
-    return new ArrayList<>(methods);
   }
 
   private RegionSymbol findRegion(TerminalNode start, TerminalNode stop) {

@@ -19,21 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.context;
+package org.github._1c_syntax.bsl.languageserver.context.computer;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class MetricStorage {
-  private int procedures;
-  private int functions;
-  private int lines;
-  private int ncloc;
-  private int statements;
-  private int[] nclocData;
-  private int cognitiveComplexity;
+public interface Computer<T> {
+  T compute();
 }

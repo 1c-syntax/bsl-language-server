@@ -30,7 +30,6 @@ import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.Collection;
-import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -39,6 +38,26 @@ import java.util.List;
 )
 public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
 
+  @Override
+  public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
+    BSLParser.ExpressionContext expressionContext = ctx.expression();
+    findNestedTernaryOperator(expressionContext, 0);
+    return super.visitIfBranch(ctx);
+  }
+
+  @Override
+  public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
+    BSLParser.ExpressionContext expressionContext = ctx.expression();
+    findNestedTernaryOperator(expressionContext, 0);
+    return super.visitElsifBranch(ctx);
+  }
+
+  @Override
+  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
+    findNestedTernaryOperator(ctx, 1);
+    return super.visitTernaryOperator(ctx);
+  }
+
   private void findNestedTernaryOperator(BSLParserRuleContext ctx, int skip) {
     Collection<ParseTree> nestedTernaryOperators = Trees.findAllRuleNodes(ctx, BSLParser.RULE_ternaryOperator);
     if (nestedTernaryOperators.size() > skip) {
@@ -46,21 +65,6 @@ public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
         .skip(skip)
         .forEach(parseTree -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree));
     }
-  }
-
-  @Override
-  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-    List<BSLParser.ExpressionContext> expressionContexts = ctx.expression();
-    for (BSLParser.ExpressionContext expCtx : expressionContexts) {
-      findNestedTernaryOperator(expCtx, 0);
-    }
-    return super.visitChildren(ctx);
-  }
-
-  @Override
-  public ParseTree visitTernaryOperator(BSLParser.TernaryOperatorContext ctx) {
-    findNestedTernaryOperator(ctx, 1);
-    return super.visitTernaryOperator(ctx);
   }
 
 }
