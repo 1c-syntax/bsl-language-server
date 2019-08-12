@@ -40,21 +40,6 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
 
-  private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
-    return ctx.children.size() < MIN_EXPRESSION_SIZE;
-  }
-
-  private static boolean isUniformExpression(List<BSLParser.OperationContext> onlyOperation) {
-
-    List<Integer> groupOperation = onlyOperation.stream()
-      .map((BSLParser.OperationContext operation) -> operation.start.getType())
-      .distinct()
-      .collect(Collectors.toList());
-
-    return groupOperation.size() == 1
-      && groupOperation.get(0) != BSLParser.MUL;
-  }
-
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
 
@@ -84,4 +69,23 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   }
 
+  private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
+    return ctx.children.size() < MIN_EXPRESSION_SIZE;
+  }
+
+  private static boolean isUniformExpression(List<BSLParser.OperationContext> operation) {
+    List<Integer> groupOperation = grupOperation(operation);
+
+    return groupOperation.size() == 1
+      && groupOperation.get(0) != BSLParser.MUL
+      && groupOperation.get(0) != BSLParser.PLUS;
+  }
+
+  private static List<Integer> grupOperation(List<BSLParser.OperationContext> operation) {
+    return operation
+      .stream()
+      .map((BSLParser.OperationContext o) -> o.start.getType())
+      .distinct()
+      .collect(Collectors.toList());
+  }
 }
