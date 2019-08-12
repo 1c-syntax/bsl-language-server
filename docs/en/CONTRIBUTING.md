@@ -1,0 +1,3 @@
+# Contributor's Guide
+
+<Заготовка>
