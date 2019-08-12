@@ -26,6 +26,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
@@ -49,5 +50,11 @@ public class RegionSymbol implements Symbol {
   private final List<RegionSymbol> children;
   private final List<MethodSymbol> methods = new ArrayList<>();
 
-  private final BSLParserRuleContext node;
+  @NonFinal
+  private BSLParserRuleContext node;
+
+  @Override
+  public void clearASTData() {
+    node = null;
+  }
 }
