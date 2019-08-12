@@ -62,3 +62,4 @@ gen/
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
 *.bak
+*.orig

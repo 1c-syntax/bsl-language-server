@@ -56,6 +56,13 @@ public final class RangeHelper {
     return newRange(startLine, startChar, endLine, endChar);
   }
 
+  public static Range newRange(Token startToken, int endLine, int endChar) {
+    int startLine = startToken.getLine() - 1;
+    int startChar = startToken.getCharPositionInLine();
+
+    return newRange(startLine, startChar, endLine, endChar);
+  }
+
   public static Range newRange(Token token) {
     int startLine = token.getLine() - 1;
     int startChar = token.getCharPositionInLine();

@@ -21,11 +21,13 @@
  */
 package org.github._1c_syntax.bsl.languageserver.context.computer;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
@@ -55,6 +57,7 @@ public final class MethodSymbolComputer
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
+    ParserRuleContext parent = ctx.getParent();
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
@@ -62,6 +65,10 @@ public final class MethodSymbolComputer
       .function(true)
       .node(ctx)
       .region(findRegion(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
+      .range(RangeHelper.newRange(
+        parent.start,
+        parent.stop.getLine(),
+        parent.stop.getCharPositionInLine() + parent.stop.getText().length()))
       .build();
 
     methods.add(methodSymbol);
@@ -72,6 +79,7 @@ public final class MethodSymbolComputer
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
+    ParserRuleContext parent = ctx.getParent();
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
@@ -79,6 +87,10 @@ public final class MethodSymbolComputer
       .function(false)
       .node(ctx)
       .region(findRegion(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
+      .range(RangeHelper.newRange(
+        parent.start,
+        parent.stop.getLine(),
+        parent.stop.getCharPositionInLine() + parent.stop.getText().length()))
       .build();
 
     methods.add(methodSymbol);

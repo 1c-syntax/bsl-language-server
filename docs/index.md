@@ -160,6 +160,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 | [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да |
 | [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да |
+| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет |
 | [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да |

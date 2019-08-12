@@ -23,6 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import lombok.Builder;
 import lombok.Value;
+import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 @Value
@@ -33,4 +34,5 @@ public class MethodSymbol implements Symbol {
   private final boolean function;
   private final RegionSymbol region;
   private final BSLParserRuleContext node;
+  private final Range range;
 }
