@@ -74,14 +74,14 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean isUniformExpression(List<BSLParser.OperationContext> operation) {
-    List<Integer> groupOperation = grupOperation(operation);
+    List<Integer> groupOperation = groupIdenticalOperation(operation);
 
     return groupOperation.size() == 1
       && groupOperation.get(0) != BSLParser.MUL
       && groupOperation.get(0) != BSLParser.PLUS;
   }
 
-  private static List<Integer> grupOperation(List<BSLParser.OperationContext> operation) {
+  private static List<Integer> groupIdenticalOperation(List<BSLParser.OperationContext> operation) {
     return operation
       .stream()
       .map((BSLParser.OperationContext o) -> o.start.getType())
