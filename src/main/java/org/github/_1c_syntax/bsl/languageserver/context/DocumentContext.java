@@ -180,6 +180,8 @@ public class DocumentContext {
   }
 
   public void clearASTData() {
+    content = null;
+    contentList = null;
     ast = null;
     tokens = null;
 
