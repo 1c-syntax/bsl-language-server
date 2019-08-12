@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL,
   minutesToFix = 2
 )
-public class DeprecatedMessage extends AbstractVisitorDiagnostic {
+public class DeprecatedMessageDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(сообщить|message)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE

@@ -131,43 +131,45 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 
 ### Implemented diagnostics
 
-| Key                                                                                                 | Name                                                                                        | Enabled by default |
-| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | :----------------: |
-| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md)                               | Canonical spelling of keywords                                                              |        Yes         |
-| [CognitiveComplexity](diagnostics/CognitiveComplexity.md)                                           | Cognitive complexity                                                                        |        Yes         |
-| [DeprecatedMessage](diagnostics/DeprecatedMessage.md)                                               | Restriction on the use of deprecated "Message" method                                       |        Yes         |
-| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md)                                                     | Empty code block                                                                            |        Yes         |
-| [EmptyStatement](diagnostics/EmptyStatement.md)                                                     | Empty Statement                                                                             |        Yes         |
-| [ExtraCommas](diagnostics/ExtraCommas.md)                                                           | Commas without a parameter at the end of a method call                                      |        Yes         |
-| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md)                                 | Function must have Return statement                                                         |        Yes         |
-| [IdenticalExpressions](diagnostics/IdenticalExpressions.md)                                         | There are identical sub-expressions to the left and to the right of the 'foo' operator      |        Yes         |
-| [IfConditionComplexityDiagnostic](diagnostics/IfConditionComplexity.md)                             | Usage of complex expressions in the "If" condition                                          |        Yes         |
-| [IfElseDuplicatedCodeBlockDiagnostic](diagnostics/IfElseDuplicatedCodeBlock.md)                     | Duplicated code blocks in If...Then...ElsIf...                                              |        Yes         |
-| [IfElseDuplicatedConditionDiagnostic](diagnostics/IfElseDuplicatedCondition.md)                     | Duplicated conditions in If...Then...ElsIf...                                               |        Yes         |
-| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md)                                         | Using If...Then...ElsIf... statement                                                        |        Yes         |
-| [LineLength](diagnostics/LineLength.md)                                                             | Line length restriction                                                                     |        Yes         |
-| [MagicNumber](diagnostics/MagicNumber.md)                                                           | Using magic number                                                                          |        Yes         |
-| [MethodSize](diagnostics/MethodSize.md)                                                             | Method size restriction                                                                     |        Yes         |
-| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration                                |        Yes         |
-| [NestedStatements](diagnostics/NestedStatements.md)                                                 | Control flow statements should not be nested too deep                                       |        Yes         |
-| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md)                                       | Nested Ternary Operator                                                                     |        Yes         |
-| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md)                                     | Number of optional method parameters restriction                                            |        Yes         |
-| [NumberOfParams](diagnostics/NumberOfParams.md)                                                     | Number of method parameters restriction                                                     |        Yes         |
-| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md)         | Number of values in structure constructor restriction                                       |        Yes         |
-| [OneStatementPerLine](diagnostics/OneStatementPerLine.md)                                           | One Statement Per Line                                                                      |        Yes         |
-| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md)                                 | Violation of pairing using methods BeginTransaction & CommitTransaction/RollbackTransaction |        Yes         |
-| [ParseError](diagnostics/ParseError.md)                                                             | Error parsing source code                                                                   |        Yes         |
-| [OrderOfParams](diagnostics/OrderOfParams.md)                                                       | Order of method parameters                                                                  |        Yes         |
-| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md)                                       | Procedure must have no Return statement                                                     |        Yes         |
-| [SemicolonPresence](diagnostics/SemicolonPresence.md)                                               | Statement should end with ";"                                                               |        Yes         |
-| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md)                                           | Space at the beginning of the comment                                                       |        Yes         |
-| [SelfAssign](diagnostics/SelfAssign.md)                                                             | Variable self assignment                                                                    |        Yes         |
-| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md)                                         | Using ternary operator                                                                      |        Yes         |
-| [TryNumber](diagnostics/TryNumber.md)                                                               | Cast to number in try catch block                                                           |        Yes         |
-| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md)                               | Unknown Preprocessor Symbol                                                                 |        Yes         |
-| [UseLessForEach](diagnostics/UseLessForEach.md)                                                     | Useless For Each loop                                                                       |        Yes         |
-| [UsingCancelParameter](diagnostics/UsingCancelParameter.md)                                         | Using "Cancel" parameter                                                                    |        Yes         |
-| [UsingFindElementByString](diagnostics/UsingFindElementByString.md)                                 | Restriction on the use of "FindByDescription" and "FindByCode" methods                      |        Yes         |
-| [UsingGoto](diagnostics/UsingGoto.md)                                                               | "goto" statement should not be used                                                         |        Yes         |
-| [UsingServiceTag](diagnostics/UsingServiceTag.md)                                                   | Using service tags                                                                          |        Yes         |
-| [YoLetterUsageDiagnostic](diagnostics/YoLetterUsage.md)                                             | Using "Ё" letter in code                                                                    |        Yes         |
+| Key | Name| Enabled by default |
+| --- | --- | :-: |
+| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Canonical spelling of keywords | Yes |
+| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Cognitive complexity | Yes |
+| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes |
+| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes |
+| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Empty code block | Yes |
+| [EmptyStatement](diagnostics/EmptyStatement.md) | Empty statement | Yes |
+| [ExtraCommas](diagnostics/ExtraCommas.md) | Extra commas when calling a method | Yes |
+| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Function must have Return statement | Yes |
+| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | There are identical sub-expressions to the left and to the right of the "foo" operator | Yes |
+| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | If condition is too complex | Yes |
+| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElsIf... | Yes |
+| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElsIf... | Yes |
+| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Using If...Then...ElsIf... statement | Yes |
+| [LineLength](diagnostics/LineLength.md) | Line length restriction | Yes |
+| [MagicNumber](diagnostics/MagicNumber.md) | Using magic number | Yes |
+| [MethodSize](diagnostics/MethodSize.md) | Method size restriction | Yes |
+| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes |
+| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes |
+| [NestedStatements](diagnostics/NestedStatements.md) | Control flow statements should not be nested too deep | Yes |
+| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Nested ternary operator | Yes |
+| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Number of optional method parameters restriction | Yes |
+| [NumberOfParams](diagnostics/NumberOfParams.md) | Number of method parameters restriction | Yes |
+| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Number of values in structure constructor restriction | Yes |
+| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | One statement per line | Yes |
+| [OrderOfParams](diagnostics/OrderOfParams.md) | Order of method parameters | Yes |
+| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes |
+| [ParseError](diagnostics/ParseError.md) | Error parsing source code | Yes |
+| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Procedure must have no Return value | Yes |
+| [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes |
+| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes |
+| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes |
+| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No |
+| [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes |
+| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes |
+| [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes |
+| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Using "Cancel" parameter | Yes |
+| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes |
+| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Yes |
+| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
+| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |

@@ -1,26 +1,13 @@
-# Nested ternary operator
+# Nested Ternary Operator
 
-The use of nested ternary operators makes the code more readable.
+Use of nested ternary operators decrease code readability.
 
-Bad:
+Samples of wrong usage:
+
 ```bsl
 Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz");
 ```
 
-Good:
-```bsl
-If x% 15 = 0 Then
-    Result = "FizzBuzz";
-ElseIf, if x% 3 = 0 Then
-    Result = "Fizz";
-ElseIf, if x% 5 = 0 Then
-    Result = "Buzz";
-Else
-    Result = x;
-EndIf;
-```
-
-Bad:
 ```bsl
 If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
 
@@ -29,7 +16,20 @@ If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
 EndIf;
 ```
 
-Good:
+Possible refactoring:
+
+```bsl
+If x % 15 = 0 Then
+	Result = "FizzBuzz";
+ElseIf x % 3 = 0 Then
+	Result = "Fizz";
+ElseIf x % 5 = 0 Then
+	Result = "Buzz";
+Else
+	Result = x;
+EndIf;
+```
+
 ```bsl
 If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
 

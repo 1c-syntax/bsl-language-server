@@ -31,6 +31,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
   import java.util.ArrayDeque;
   import java.util.ArrayList;
   import java.util.HashMap;
+  import java.util.Locale;
   import java.util.regex.Pattern;
   import java.util.stream.Collectors;
 
@@ -44,10 +45,12 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
   private Pattern beginTransaction = Pattern.compile("НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private Pattern beginEndTransaction = Pattern.compile("ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction",
+  private Pattern beginEndTransaction = Pattern.compile(
+    "ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private Pattern beginCancelTransaction = Pattern.compile("ОтменитьТранзакцию|RollbackTransaction|НачатьТранзакцию|BeginTransaction",
+  private Pattern beginCancelTransaction = Pattern.compile(
+    "ОтменитьТранзакцию|RollbackTransaction|НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
@@ -100,7 +103,7 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
   private void addDiagnosticWithMessage(ParseTree tranCall, HashMap<String, String> pairMethods) {
     String methodName = ((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText();
     diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) tranCall,
-      getDiagnosticMessage(pairMethods.get(methodName.toUpperCase()), methodName));
+      getDiagnosticMessage(pairMethods.get(methodName.toUpperCase(Locale.ENGLISH)), methodName));
   }
 
 }
