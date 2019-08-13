@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
   minutesToFix = 1
 )
 
-public class SpaceAtStartCommentDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagnostic {
 
   private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c)";
   private static final Pattern goodCommentPattern = Pattern.compile(
