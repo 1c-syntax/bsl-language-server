@@ -21,6 +21,8 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
@@ -65,5 +67,51 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)));
+  }
+
+  @Test
+  void testQuickFixStartLine() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      RangeHelper.newRange(6, 10, 6, 20)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().startsWith("// ")
+      );
+  }
+
+  @Test
+  void testQuickFixInLine() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(1),
+      RangeHelper.newRange(8, 12, 8, 26)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(1)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().startsWith("// ")
+      );
   }
 }
