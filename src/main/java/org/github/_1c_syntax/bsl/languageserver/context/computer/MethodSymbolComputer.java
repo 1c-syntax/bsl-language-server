@@ -26,6 +26,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 
@@ -61,7 +62,8 @@ public final class MethodSymbolComputer
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(true)
       .node(ctx)
-      .region(findRegion(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
+      .region(findRegion(declaration.FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
+      .range(RangeHelper.newRange(declaration.FUNCTION_KEYWORD().getSymbol(), ctx.ENDFUNCTION_KEYWORD().getSymbol()))
       .build();
 
     methods.add(methodSymbol);
@@ -78,7 +80,8 @@ public final class MethodSymbolComputer
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(false)
       .node(ctx)
-      .region(findRegion(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
+      .region(findRegion(declaration.PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
+      .range(RangeHelper.newRange(declaration.PROCEDURE_KEYWORD().getSymbol(), ctx.ENDPROCEDURE_KEYWORD().getSymbol()))
       .build();
 
     methods.add(methodSymbol);

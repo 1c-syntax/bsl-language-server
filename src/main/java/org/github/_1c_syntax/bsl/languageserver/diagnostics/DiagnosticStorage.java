@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
@@ -58,6 +59,13 @@ public class DiagnosticStorage {
 
   protected void addDiagnostic(int startLine, int startChar, int endLine, int endChar) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, startLine, startChar, endLine, endChar));
+  }
+
+  protected void addDiagnostic(Range range) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      range,
+      diagnostic.getDiagnosticMessage()));
   }
 
   protected void addDiagnostic(Token token) {

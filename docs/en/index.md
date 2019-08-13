@@ -163,6 +163,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Procedure must have no Return value | Yes |
 | [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes |
+| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Misuse of multiple compilation directives | Yes |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No |
 | [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes |
