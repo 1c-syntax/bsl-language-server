@@ -27,33 +27,48 @@ import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO
+  severity = DiagnosticSeverity.INFO,
+  minutesToFix = 1
 )
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
+  //TODO <> если вместе - подумать
+  private static final String symbolsLR = "+-*/=%<>"; //символы, требующие пробелы слева и справа
+  private static final String symbolsR = ",;";        //символы, требующие пробелы справа
 
-  private static final Pattern PATTERN = Pattern.compile(
-//    "(?://\\s.*)|(?://[/]*)$",
-    "[^\\s][=+]|[=+][^\\s]|[,][^\\s]",
+  private static final Pattern PATTERN_LR = Pattern.compile(
+//    "\\S[\\Q"+symbolsLR+"\\E]|[\\Q"+symbolsLR+"\\E]\\S",
+    ".*Процедура.*",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final Pattern PATTERN_R = Pattern.compile(
+    "[\\Q"+symbolsR+"\\E]\\S",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    //diagnosticStorage.clearDiagnostics();
+    //String f = "0";
+    diagnosticStorage.clearDiagnostics();
 
-    documentContext.getTokens()
+    Stream<Token> ps = documentContext.getTokens().parallelStream();
+    Stream<Token> f = ps.filter((Token t) -> PATTERN_LR.matcher(t.getText()).matches());
+    f.forEach((Token t) -> diagnosticStorage.addDiagnostic(t));
+
+    /*documentContext.getTokens()
       .parallelStream()
       .filter((Token t) ->
-        PATTERN.matcher(t.getText()).matches())
+        PATTERN_LR.matcher(t.getText()).matches())
       .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t));
+        diagnosticStorage.addDiagnostic(t));*/
 
     return diagnosticStorage.getDiagnostics();
   }
