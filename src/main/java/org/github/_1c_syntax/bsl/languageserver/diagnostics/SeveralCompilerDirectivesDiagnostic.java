@@ -23,10 +23,13 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
   import org.antlr.v4.runtime.tree.ParseTree;
   import org.antlr.v4.runtime.tree.Trees;
+  import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
   import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
   import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
   import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
   import org.github._1c_syntax.bsl.parser.BSLParser;
+
+  import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -45,9 +48,12 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
-      diagnosticStorage.addDiagnostic(documentContext.getMethodSymbol(ctx).get().getRange());
+    Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
+    if (methodSymbol.isPresent()
+      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+      diagnosticStorage.addDiagnostic(methodSymbol.get().getRange());
     }
+
     return super.visitSub(ctx);
   }
 }

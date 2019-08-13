@@ -21,7 +21,6 @@
  */
 package org.github._1c_syntax.bsl.languageserver.context.computer;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -57,18 +56,14 @@ public final class MethodSymbolComputer
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
-    ParserRuleContext parent = ctx.getParent();
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(true)
       .node(ctx)
-      .region(findRegion(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
-      .range(RangeHelper.newRange(
-        parent.start,
-        parent.stop.getLine(),
-        parent.stop.getCharPositionInLine() + parent.stop.getText().length()))
+      .region(findRegion(declaration.FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
+      .range(RangeHelper.newRange(declaration.FUNCTION_KEYWORD().getSymbol(), ctx.ENDFUNCTION_KEYWORD().getSymbol()))
       .build();
 
     methods.add(methodSymbol);
@@ -79,18 +74,14 @@ public final class MethodSymbolComputer
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
-    ParserRuleContext parent = ctx.getParent();
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(false)
       .node(ctx)
-      .region(findRegion(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
-      .range(RangeHelper.newRange(
-        parent.start,
-        parent.stop.getLine(),
-        parent.stop.getCharPositionInLine() + parent.stop.getText().length()))
+      .region(findRegion(declaration.PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
+      .range(RangeHelper.newRange(declaration.PROCEDURE_KEYWORD().getSymbol(), ctx.ENDPROCEDURE_KEYWORD().getSymbol()))
       .build();
 
     methods.add(methodSymbol);

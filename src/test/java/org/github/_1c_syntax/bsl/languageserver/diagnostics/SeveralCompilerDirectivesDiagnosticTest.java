@@ -44,7 +44,7 @@ class SeveralCompilerDirectivesDiagnosticTest extends AbstractDiagnosticTest<Sev
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 0, 15, 31)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(17, 0, 19, 31)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 0, 25, 31)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(38, 0, 43, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(44, 0, 52, 14)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 0, 42, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 0, 51, 14)));
   }
 }
