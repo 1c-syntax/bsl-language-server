@@ -22,13 +22,20 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -40,7 +47,7 @@ import java.util.regex.Pattern;
   minutesToFix = 1
 )
 
-public class SpaceAtStartCommentDiagnostic implements BSLDiagnostic {
+public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagnostic {
 
   private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c)";
   private static final Pattern goodCommentPattern = Pattern.compile(
@@ -94,6 +101,34 @@ public class SpaceAtStartCommentDiagnostic implements BSLDiagnostic {
     return Pattern.compile(
       stringJoiner.toString(),
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+  }
+
+  @Override
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+      Range diagnosticRange = diagnostic.getRange();
+      Position currentEnd = diagnosticRange.getEnd();
+      String currentText = documentContext.getText(diagnosticRange);
+      Position newEnd = new Position(currentEnd.getLine(), currentEnd.getCharacter() + 1);
+      Range newRange = new Range(diagnosticRange.getStart(), newEnd);
+
+      TextEdit textEdit = new TextEdit(newRange, currentText.substring(0, 2) + " " + currentText.substring(2));
+      textEdits.add(textEdit);
+    });
+
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
     );
   }
 }
