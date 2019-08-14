@@ -131,6 +131,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 | Ключ | Название | Включена по умолчанию |
 | --- | --- | :-: |
 | [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
+| [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да |
 | [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
 | [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
 | [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
