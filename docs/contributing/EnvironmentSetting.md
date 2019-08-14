@@ -14,3 +14,4 @@
 
 * Настроить Java SDK на JDK8
 * Включить обработку аннотаций: `File -> Settings -> Build, Execution, Deployment -> Compiler -> Annotation Processors -> Enable annotation processing`
+* Выполнить настройки автоимпорта, подробно описано в [статье](https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html). Отдельно стоит обратить внимание на оптимизацию импорта.
