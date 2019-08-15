@@ -63,7 +63,7 @@ public final class MethodSymbolComputer
       .function(true)
       .node(ctx)
       .region(findRegion(declaration.FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
-      .range(RangeHelper.newRange(declaration.FUNCTION_KEYWORD().getSymbol(), ctx.ENDFUNCTION_KEYWORD().getSymbol()))
+      .range(RangeHelper.newRange(declaration.FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
       .build();
 
     methods.add(methodSymbol);
@@ -81,7 +81,7 @@ public final class MethodSymbolComputer
       .function(false)
       .node(ctx)
       .region(findRegion(declaration.PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
-      .range(RangeHelper.newRange(declaration.PROCEDURE_KEYWORD().getSymbol(), ctx.ENDPROCEDURE_KEYWORD().getSymbol()))
+      .range(RangeHelper.newRange(declaration.PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
       .build();
 
     methods.add(methodSymbol);
