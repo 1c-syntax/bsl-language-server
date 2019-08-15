@@ -21,43 +21,45 @@
  */
 package org.github._1c_syntax.bsl.languageserver.providers;
 
-import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class CodeLensProvider {
-  public static List<CodeLens> getCodeLens(CodeLensParams params, DocumentContext documentContext) {
+public final class CodeLensProvider {
+
+  private final LanguageServerConfiguration configuration;
+
+  public CodeLensProvider(LanguageServerConfiguration configuration) {
+    this.configuration = configuration;
+  }
+
+  public List<CodeLens> getCodeLens(DocumentContext documentContext) {
+    return getCognitiveComplexityCodeLenses(documentContext);
+  }
+
+  private List<CodeLens> getCognitiveComplexityCodeLenses(DocumentContext documentContext) {
+    if (!configuration.isShowCognitiveComplexityCodeLens()) {
+      return Collections.emptyList();
+    }
 
     List<CodeLens> codeLenses = new ArrayList<>();
 
     Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
-    methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
-      BSLParserRuleContext node = methodSymbol.getNode();
 
-      Token symbol;
-      if (methodSymbol.isFunction()) {
-        symbol = ((BSLParser.FunctionContext) node).funcDeclaration().FUNCTION_KEYWORD().getSymbol();
-      } else {
-        symbol = ((BSLParser.ProcedureContext) node).procDeclaration().PROCEDURE_KEYWORD().getSymbol();
-      }
-      Range range = RangeHelper.newRange(symbol);
+    methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
       String title = String.format("Cognitive complexity is %d", complexity);
-      Command command = new Command(title, "cognitiveComplexity");
+      Command command = new Command(title, "");
       CodeLens codeLens = new CodeLens(
-        range,
+        methodSymbol.getSubNameRange(),
         command,
-        null // methodSymbol?
+        null
       );
 
       codeLenses.add(codeLens);

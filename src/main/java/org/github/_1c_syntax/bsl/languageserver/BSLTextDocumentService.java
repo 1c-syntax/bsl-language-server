@@ -78,6 +78,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
+  private final CodeLensProvider codeLensProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -86,6 +87,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
+    codeLensProvider = new CodeLensProvider(this.configuration);
   }
 
   @Override
@@ -161,7 +163,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> CodeLensProvider.getCodeLens(params, documentContext));
+    return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
   }
 
   @Override
