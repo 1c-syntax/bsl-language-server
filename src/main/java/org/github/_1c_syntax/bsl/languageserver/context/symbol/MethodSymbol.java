@@ -35,4 +35,5 @@ public class MethodSymbol implements Symbol {
   private final RegionSymbol region;
   private final BSLParserRuleContext node;
   private final Range range;
+  private final Range subNameRange;
 }
