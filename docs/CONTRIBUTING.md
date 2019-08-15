@@ -12,3 +12,4 @@
   - [Процесс (workflow) разработки диагностики](docs/contributing/DiagnosticDevWorkFlow.md)
   - [Описание типов и важности диагностик](docs/contributing/DiagnosticTypeAndSeverity.md)
   - [Добавление параметров диагностике](docs/contributing/DiagnostcAddSettings.md)
+  - [Добавление быстрых исправлений диагностике](docs/contributing/DiagnosticQuickFix.md)
