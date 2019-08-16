@@ -59,7 +59,7 @@ class LanguageServerConfigurationTest {
   void createFromFile() {
 
     // given
-    File configurationFile = new File("./src/test/resources/bsl-language-server.conf");
+    File configurationFile = new File("./src/test/resources/.bsl-language-server.json");
 
     // when
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);

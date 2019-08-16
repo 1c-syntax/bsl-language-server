@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/root.json",
+    "type": "object",
+    "title": "BSL Language Server Configuration File.",
+    "definitions": {
+        "Diagnostic": {
+            "$id": "#/definitions/Diagnostic",
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Concrete diagnostic configuration.\nCan be boolean for turning on/off or object.",
+            "default": null
+        }
+    },
+    "properties": {
+        "diagnosticLanguage": {
+            "$id": "#/properties/diagnosticLanguage",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "en",
+                    "description": "English"
+                },
+                {
+                    "const": "ru",
+                    "description": "Русский (russian)"
+                }
+            ],
+            "title": "Diagnostics text language.",
+            "default": "ru"
+        },
+        "showCognitiveComplexityCodeLens": {
+            "$id": "#/properties/showCognitiveComplexityCodeLens",
+            "type": "boolean",
+            "title": "Show cognitive complexity score above method definition (codeLens).",
+            "default": true
+        },
+        "computeDiagnostics": {
+            "$id": "#/properties/computeDiagnostics",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "onSave",
+                    "description": "Compute on save"
+                },
+                {
+                    "const": "onType",
+                    "description": "Compute on type (edit file)"
+                },
+                {
+                    "const": "never",
+                    "description": "Never compute"
+                }
+            ],
+            "title": "Trigger for the computation of diagnostics.",
+            "default": "onSave"
+        },
+        "traceLog": {
+            "$id": "#/properties/traceLog",
+            "type": "string",
+            "title": "Path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE.\nCan be absolute or relative (to the project root). If set *significantly slows down* communication speed between server and client.",
+            "default": "",
+            "examples": [
+                ".trace.log"
+            ]
+        },
+        "diagnostics": {
+            "$id": "#/properties/diagnostics",
+            "type": "object",
+            "title": "Diagnostics configuration.\nKey-value object, where key is a diagnosticCode, and value is boolean or object with concrete diagnostic configuration.",
+            "default": null,
+            "additionalProperties": {
+                "$ref": "#/definitions/Diagnostic"
+            }
+        }
+    }
+}

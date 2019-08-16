@@ -52,9 +52,11 @@ public final class LanguageServerConfiguration {
   private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
   private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
+  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
 
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
+  private ComputeDiagnosticsTrigger computeDiagnostics;
   @Nullable
   private File traceLog;
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
@@ -63,6 +65,7 @@ public final class LanguageServerConfiguration {
     this(
       DEFAULT_DIAGNOSTIC_LANGUAGE,
       DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
+      DEFAULT_COMPUTE_DIAGNOSTICS,
       null,
       new HashMap<>()
     );
@@ -97,12 +100,14 @@ public final class LanguageServerConfiguration {
 
       DiagnosticLanguage diagnosticLanguage = getDiagnosticLanguage(node);
       boolean showCognitiveComplexityCodeLens = getShowCognitiveComplexityCodeLens(node);
+      ComputeDiagnosticsTrigger computeDiagnostics = getComputeDiagnostics(node);
       File traceLog = getTraceLog(node);
       Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
 
       return new LanguageServerConfiguration(
         diagnosticLanguage,
         showCognitiveComplexityCodeLens,
+        computeDiagnostics,
         traceLog,
         diagnosticsMap
       );
@@ -166,6 +171,15 @@ public final class LanguageServerConfiguration {
         showCognitiveComplexityCodeLens = node.get("showCognitiveComplexityCodeLens").asBoolean();
       }
       return showCognitiveComplexityCodeLens;
+    }
+
+    private static ComputeDiagnosticsTrigger getComputeDiagnostics(JsonNode node) {
+      ComputeDiagnosticsTrigger computeDiagnostics = DEFAULT_COMPUTE_DIAGNOSTICS;
+      if (node.get("computeDiagnostics") != null) {
+        String computeDiagnosticsValue = node.get("computeDiagnostics").asText();
+        computeDiagnostics = ComputeDiagnosticsTrigger.valueOf(computeDiagnosticsValue.toUpperCase(Locale.ENGLISH));
+      }
+      return computeDiagnostics;
     }
 
     private static File getTraceLog(JsonNode node) {

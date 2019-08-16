@@ -206,7 +206,9 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void didSave() {
-    textDocumentService.didSave(null);
+    DidSaveTextDocumentParams params = new DidSaveTextDocumentParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    textDocumentService.didSave(params);
   }
 
   @Test
