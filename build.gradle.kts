@@ -126,6 +126,7 @@ license {
     mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
+    exclude("**/*.json")
     exclude("**/*.bsl")
 }
 
