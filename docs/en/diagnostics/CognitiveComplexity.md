@@ -1,22 +1,22 @@
 # Cognitive complexity
 
-Когнитивная сложность показывает на сколько сложно воспринимать написанный код.
+Cognitive complexity shows how difficult it is to perceive the written code.
 
-Высокая когнитивная сложность явно указывает на необходимость проведения рефакторинга кода для облегчения его будущей поддерки.
+High cognitive complexity clearly indicates the need for refactoring to make future support easier.
+ 
+The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
-Наиболее эффективным способом снижения когнитивной сложности является декомпозиция кода, дробление методов на более простые, а также оптимизация логических выражений.
+## Parameters
 
-## Параметры
+- `complexityThreshold` - `Integer` - Acceptable cognitive complexity of the method. Default value: 15.
+- `checkModuleBody` - `Boolean` - Check module body. Default value: Yes.
 
-- `complexityThreshold` - `Число` - Допустимая когнитивная сложность метода. Значение по-умолчанию: 15.
-- `checkModuleBody` - `Булево` - Проверять тело модуля. Значение по-умолчанию: Да.
+## Cognitive Complexity calculation
 
-## Подсчет Когнитивной сложности
+Bellow are given code analysis rules, conditions increase cognitive complexity.
+**Reference**: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
 
-Ниже приведены правила анализа когда, условия повышения когнитивной сложности.
-**Источник**: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
-
-### Каждый следующий блок увеличивает сложность на 1
+### Each next block increases complexity by 1
 
 ```bsl
 
@@ -75,7 +75,7 @@
 
 ```
 
-### За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности
+### For each nesting level, next blocks get additional 1 to complexity
 
 ```bsl
 
@@ -108,100 +108,106 @@
 
 ```
 
-### Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении
+### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
 
-## `Когнитивная сложность` на примерах
+## `Cognitive complexity` examples
 
-Ниже на примерах кода произведен рассчет когнитивной сложности методов.
+Bellow are code examples and their cognitive complexity calculation.
 
 ```bsl
-Функция Пример1(ТипКласса)
-    Если ТипКласса.Неизвестен() Тогда                                                  // +1, условие, вложенности нет
-        Возврат Символы.НеизвестныйСимвол;
-    КонецЕсли;
+Function Example1(ClassType)
+    If ClassType.Unknown() Then                                                  // +1, condition expression, no nesting
+        Return Chars.UnknownSymbol;
+    EndIf;
 
-    НеизвестностьНайдена = Ложь;
-    СписокСимволов = ТипКласса.ПолучитьСимвол().Потомки.Поиск("имя");
-    Для Каждого Символ Из СписокСимволов Цикл                                          // +1, цикл, вложенности нет
-        Если Символ.ИмеетТип(Символы.Странное)                                         // +2, условие вложенное в цикл, вложенность 1
-            И НЕ Символы.Экспортный() Тогда                                            // +1, логическая операция, вложенность не учитывается
+    AmbiguityFound = False;
+    ListSymbols = ClassType.GetSymbol().Children.Find("name");
+    For Each Symbol in ListSymbols Do
+// +1, loop, no nesting
+        If Symbol.HasType(Symbols.Strage)                                         // +2, condition nested in loop, nesting 1
+            AND NOT Symbols.Export() Then                                            // +1, logival operation, nesting not taken into account
 
-            Если МожноПереопределить(Символ) Тогда                                     // +3, вложенное условие, вложенность 2
-                Переопредялемость = ПроверитьПереопределяемость(Символ, ТипКласса);
-                Если Переопределяемость = Неопределено Тогда                           // +4, вложенное условие, вложенность 3
-                    Если НЕ НеизвестностьНайдена Тогда                                 // +5, вложенное условие, вложенность 4
-                        НеизвестностьНайдена = Истина;
-                    КонецЕсли;
-                ИначеЕсли Переопределяемость Тогда                                     // +1, альтернативная ветвь условия, вложенность не учитывается
-                    Возврат Символ;
-                КонецЕсли;
-            Иначе                                                                      // +1, ветвь по-умолчанию, вложенность не учитывается
-                Продолжить;
-            КонецЕсли;
-        КонецЕсли;
-    КонецЦикла;
+            If CanOverride(Symbol) Then                                     // +3, nested condition, nesting 2
+                Overrideability = CheckOverrideability(Symbol, ClassType);
+                If Overrideability = Undefined Then                           // +4, nested condition, nesting 3
+                    If NOT AmbiguityFound Then                                 // +5, nested condition, nesting 4
+                        AmbiguityFound = True;
+                    EndIf;
+                ElseIf Overrideability Then                                     // +1, alternative condition branch, nesting not taken into account
+                    Return Symbol;
+                EndIf;
+            Else                                                                      // +1, default branch, nesting not taken into account
+                Continue;
+            EndIf;
+        EndIf;
+    EndDo;
 
-    Если НеизвестностьНайдена Тогда                                                   // +1, вложенности нет
-        Возврат Символы.НеизвестныйСимвол;
-    КонецЕсли;
+    If AmbiguityFound Then                                                   // +1, no nesting
+        Return Symbols.UnknownSymbol;
+    EndIf;
 
-    Возврат Неопределено;
-КонецФункции
+    Return Undefined;
+EndFunction
 
 ```
 
 ```bsl
-Функция Пример2(Документ)
-    НачатьТранзакцию();
-    НадоПровести = ?(Документ.Проведен, ЛОЖЬ,                                                        // +1, тернарный оператор
-                                        ?(Документ.ПометкаУдаления, ЛОЖЬ, ИСТИНА));                  // +2, вложенный тернарный оператор, вложенность 1
-    Попытка                                                                                          // +0, попытка, повышает уровень вложенности
-        ДокументОбъект = Документ.ПолучитьОбъект();
-        Если ДокументОбъект.Проведен Тогда                                                           // +2, вложенное условие, вложенность 1
-            Для Каждого СтрокаТабличнойЧасти Из ДокументОбъект.ТабличнаяЧасть Цикл                   // +3, вложенный цикл, вложенность 2
-                Если СтрокаТабличнойЧасти.Колонка1 = 7                                               // +4, вложенное условие, вложенность 3
-                        ИЛИ СтрокаТабличнойЧасти.Колонка2 = 7 Тогда                                  // +1, логическая операция, вложенность не учитывается
-                    Продолжить;
-                КонецЕсли;
-                Если СтрокаТабличнойЧасти.Колонка4 > 1 Тогда                                         // +4, вложенное условие, вложенность 3
-                    Прервать;
-                Иначе                                                                                // +1, ветвь по-умолчанию, вложенность не учитывается
-                    Если СтрокаТабличнойЧасти.Колонка1 + СтрокаТабличнойЧасти.Колонка2 = 2 Тогда     // +5, вложенное условие, вложенность 4
-                        СтрокаТабличнойЧасти.Колонка10 = СтрокаТабличнойЧасти.Колонка1 * 2;
-                    КонецЕсли;
-                КонецЕсли;
-            КонецЦикла;
-        Иначе                                                                                        // +1, ветвь по-умолчанию, вложенность не учитывается
-            НадоПровести = ДокументОбъект.Дата > ТекущаяДата();                                      // +1, логическая операция, вложенность не учитывается
-            Перейти ~Метка;                                                                          // +1, переход на метку, вложенность не учитывается
-        КонецЕсли;
+Function Example2(Document)
+    StartTransaction();
+    NeedPost = ?(Document.Posted, FALSE,                                                        // +1, ternary operator
+                                        ?(Document.DeletionMark, FALSE, TRUE));                  // +2, nested ternary operator, nesting 1
+    Try                                                                                          // +0, try increases nesting level
+        DocumentObject = Document.GetObject();
+        If DocumentObject.Posted Then                                                           // +2, nested condition, nesting 1
+            For Each TabularSectionLine Из DocumentObject.TabularSection Do
+                    // +3, nested loop, nesting 2
+                If TabularSectionLine.Column1 = 7                                               // +4, nested condition, nesting 3
+                        OR TabularSectionLine.Column2 = 7 Then                                  // +1, logical operation, nesting not taken into account
+                    Continue;
+                EndIf;
+                If TabularSectionLine.Column4 > 1 Then                                         // +4, nested condition, nesting 3
+                    Break;
+                Else                                                                               // +1, default branch, nesting not taken into account
+                    If TabularSectionLine.Column1 + TabularSectionLine.Column2 = 2 Then     // +5, nested condition, nesting 4
+                        TabularSectionLine.Column10 = TabularSectionLine.Column1 * 2;
+                    EndIf;
+                EndIf;
+            EndDo;
+        Else
+// +1, default branch, nesting not taken into account
+            NeedPost = DocumentObject.Date > CurrentDate();                                      // +1, logical operation, nesting not taken into account
+            Goto ~Label;                                                                          // +1, go to label, nesting not taken into account
+        EndIf;
 
-        Если НадоПровести Тогда                                                                      // +2, вложенное условие, вложенность 1
-            ДокументОбъект.Записать(РежимЗаписиДокумента.Проведение);
-        ИначеЕсли НЕ НадоПровести Тогда                                                              // +1, альтернативная ветвь, вложенность не учитывается
-            ДокументОбъект.Записать(РежимЗаписиДокумента.Запись);
-        Иначе                                                                                        // +1, ветвь по-умолчанию, вложенность не учитывается
-            ВызватьИсключение "Как так-то?";
-        КонецЕсли;
-    Исключение                                                                                       // +1, обработка исключения
-        ПовторнаяЗапись = ЛОЖЬ;
-        Попытка                                                                                      // +0, попытка, повышает уровень вложенности
-            Если ДокументОбъект.Проведен Тогда                                                       // +3, вложенное условие, вложенность 2
-                ДокументОбъект.Записать(РежимЗаписиДокумента.Запись);
-            КонецЕсли;
-        Исключение                                                                                   // +2, обработка исключения, вложенность 1
-            ПовторнаяЗапись = ИСТИНА;
-        КонецПопытки;
-        Если Не ПовторнаяЗапись Тогда                                                                // +2, вложенное условие, вложенность 1
-            Пока ТранзакцияАктина() Цикл                                                             // +3, вложенный цикл, вложенность 2
-                ОтменитьТранзакцию();
-            КонецЦикла;
-        КонецЕсли;
-        ВызватьИсключение "Ошибка"
-    КонецПопытки;
+        If NeedPost Then                                                                      // +2, nested condition, nesting 1
+            DocumentObject.Write(DocumentWriteMode.Posting);
+        ElseIf NOT NeedPost Then                                                              // +1, alternative branch, nesting not taken into account
+            DocumentObject.Write(DocumentWriteMode.Write);
+        Else                                                                                        // +1, default branch, nesting not taken into account
+            Raise "Why?";
+        EndIf;
+    Except
+// +1, except processing
+        RetryWrite = FALSE;
+        Try
+// +0, try, increases nesting level
+            If DocumentObject.Posted Then                                                       // +3, nested condition, nesting 2
+                DocumentObject.Write(DocumentWriteMode.Write);
+            EndIf;
+        Raise
+// +2, except processing, nesting 1
+            RetryWrite = ИСТИНА;
+        EndTry;
+        If NOT RetryWrite Then                                                                // +2, nested condition, nesting 1
+            While TransactionIsActive() Do                                                             // +3, nested loop, nesting 2
+                CancelTransaction();
+            EndDo;
+        EndIf;
+        Raise "Error"
+    EndTry;
 
-    ~Метка:
-    Возврат Неопределено;
-КонецФункции
+    ~Label:
+    Return Undefined;
+EndFunction
 
 ```
