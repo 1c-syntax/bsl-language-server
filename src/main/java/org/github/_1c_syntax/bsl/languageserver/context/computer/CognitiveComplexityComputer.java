@@ -104,7 +104,9 @@ public class CognitiveComplexityComputer
   @Override
   public void exitSub(BSLParser.SubContext ctx) {
     incrementFileComplexity();
-    methodsComplexity.put(currentMethod, complexity);
+    if (currentMethod != null) {
+      methodsComplexity.put(currentMethod, complexity);
+    }
     currentMethod = null;
     super.exitSub(ctx);
   }
