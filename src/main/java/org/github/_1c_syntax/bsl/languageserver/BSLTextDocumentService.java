@@ -235,7 +235,13 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     if (client == null) {
       return;
     }
+
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return;
+    }
+
+    documentContext.clearASTData();
     diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
   }
 

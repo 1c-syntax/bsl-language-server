@@ -33,10 +33,11 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import org.github._1c_syntax.bsl.languageserver.context.computer.Computer;
-import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
-import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import org.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -176,6 +177,18 @@ public class DocumentContext {
 
   public void rebuild(String content) {
     build(content);
+  }
+
+  public void clearASTData() {
+    content = null;
+    contentList = null;
+    ast = null;
+    tokens = null;
+
+    nodeToMethodsMap.clear();
+
+    regions.forEach(Symbol::clearASTData);
+    methods.forEach(Symbol::clearASTData);
   }
 
   private void build(String content) {
