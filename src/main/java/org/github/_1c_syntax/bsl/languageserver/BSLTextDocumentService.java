@@ -55,6 +55,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -216,7 +217,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
-    validate(documentContext);
+    if (configuration.getComputeDiagnostics() != ComputeDiagnosticsTrigger.NEVER) {
+      validate(documentContext);
+    }
   }
 
   @Override
@@ -227,7 +230,9 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       params.getContentChanges().get(0).getText()
     );
 
-    validate(documentContext);
+    if (configuration.getComputeDiagnostics() == ComputeDiagnosticsTrigger.ONTYPE) {
+      validate(documentContext);
+    }
   }
 
   @Override
@@ -247,7 +252,14 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    // no-op
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return;
+    }
+
+    if (configuration.getComputeDiagnostics() != ComputeDiagnosticsTrigger.NEVER) {
+      validate(documentContext);
+    }
   }
 
   @Override
