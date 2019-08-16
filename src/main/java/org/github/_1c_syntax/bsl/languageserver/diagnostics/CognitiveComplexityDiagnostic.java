@@ -86,7 +86,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
         relatedInformation.add(RangeHelper.createRelatedInformation(
           documentContext.getUri(),
-          RangeHelper.newRange(getSubNameContext(methodSymbol)),
+          methodSymbol.getSubNameRange(),
           getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
         ));
 
@@ -104,7 +104,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
           .collect(Collectors.toCollection(() -> relatedInformation));
 
         diagnosticStorage.addDiagnostic(
-          getSubNameContext(methodSymbol),
+          methodSymbol.getSubNameRange(),
           getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
           relatedInformation
         );
@@ -167,14 +167,4 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  // TODO: ASTHelper? BSPParserRuleContext static methods?
-  private static BSLParser.SubNameContext getSubNameContext(MethodSymbol methodSymbol) {
-    BSLParser.SubNameContext subNameContext;
-    if (methodSymbol.isFunction()) {
-      subNameContext = ((BSLParser.FunctionContext) methodSymbol.getNode()).funcDeclaration().subName();
-    } else {
-      subNameContext = ((BSLParser.ProcedureContext) methodSymbol.getNode()).procDeclaration().subName();
-    }
-    return subNameContext;
-  }
 }

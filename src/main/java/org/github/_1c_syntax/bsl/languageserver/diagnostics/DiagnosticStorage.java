@@ -121,6 +121,19 @@ public class DiagnosticStorage {
       relatedInformation
     ));
   }
+
+  public void addDiagnostic(
+    Range range,
+    String diagnosticMessage,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      range,
+      diagnosticMessage,
+      relatedInformation
+    ));
+  }
 }
 
 
