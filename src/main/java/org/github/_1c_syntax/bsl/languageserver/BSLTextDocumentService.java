@@ -59,6 +59,7 @@ import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
@@ -77,6 +78,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
+  private final CodeLensProvider codeLensProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -85,6 +87,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
+    codeLensProvider = new CodeLensProvider(this.configuration);
   }
 
   @Override
@@ -155,7 +158,12 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
   }
 
   @Override

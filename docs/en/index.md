@@ -26,6 +26,7 @@
 - Selected region formatting
 - Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
 - Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
+* Methods "Cognitive Complexity" score
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
@@ -82,11 +83,12 @@ Configuration file is a file in JSON format.
 The file can contain the following blocks:
 
 - `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
+* `showCognitiveComplexityCodeLens` - `Boolean` - show cognitive complexity score above method definition (codeLens). By default set to `true`.
 - `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
-- `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with thestructure as following:
+- `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with the structure as following:
     - object key - `String` - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.
     - object value
-        - `Boolean` - `false` to disable diagnostics, `true` - to enable diagnostics without additional settings. By deafult set to `true`.
+        - `Boolean` - `false` to disable diagnostics, `true` - to enable diagnostics without additional settings. By default set to `true`.
         - `Object` - Structure of settings for each diagnostics. Available parameters are give in each diagnostics section.
 
 Configuration file example, setting:
