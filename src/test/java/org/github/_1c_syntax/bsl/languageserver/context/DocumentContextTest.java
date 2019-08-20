@@ -45,15 +45,40 @@ class DocumentContextTest {
 
   }
 
+  @Test
+  void testMethodCompute() throws IOException {
+
+    DocumentContext documentContext = getDocumentContext();
+
+    assertThat(documentContext.getMethods().size()).isEqualTo(2);
+
+  }
+
+  @Test
+  void testMethodComputeParseError() throws IOException {
+
+    DocumentContext documentContext =
+      getDocumentContext("./src/test/resources/context/DocumentContextParseErrorTest.bsl");
+
+    assertThat(documentContext.getMethods().isEmpty()).isTrue();
+
+  }
 
   public DocumentContext getDocumentContext() throws IOException {
 
+    String filePath = "./src/test/resources/context/DocumentContextTest.bsl";
+    return getDocumentContext(filePath);
+  }
+
+  private DocumentContext getDocumentContext(String filePath) throws IOException {
+
     // given
     String fileContent = FileUtils.readFileToString(
-      new File("./src/test/resources/context/DocumentContextTest.bsl"),
+      new File(filePath),
       StandardCharsets.UTF_8
     );
 
     return new DocumentContext("fake-uri.bsl", fileContent);
   }
+
 }
