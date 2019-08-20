@@ -10,7 +10,7 @@ plugins {
     id("org.sonarqube") version "2.7.1"
     id("io.franzbecker.gradle-lombok") version "3.1.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
-    id("com.github.ben-manes.versions") version "0.21.0"
+    id("com.github.ben-manes.versions") version "0.22.0"
 }
 
 repositories {
@@ -31,7 +31,7 @@ dependencies {
     compile("commons-io", "commons-io", "2.6")
     compile("org.apache.commons", "commons-lang3", "3.9")
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
-    compile("commons-beanutils", "commons-beanutils", "1.9.3")
+    compile("commons-beanutils", "commons-beanutils", "1.9.4")
 
     compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.9")
     compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.9")
@@ -47,14 +47,14 @@ dependencies {
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "f8a9686a03a7a704e4fe53df0e8b91eb55f022ff")
+    compile("com.github.1c-syntax", "bsl-parser", "0.9.0")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.0-RC2")
-    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.0-RC2")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.1")
+    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.1")
 
-    testCompile("org.assertj", "assertj-core", "3.12.2")
+    testCompile("org.assertj", "assertj-core", "3.13.2")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }
