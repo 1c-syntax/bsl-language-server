@@ -224,11 +224,15 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
+
     // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
-    DocumentContext documentContext = context.addDocument(
-      params.getTextDocument().getUri(),
-      params.getContentChanges().get(0).getText()
-    );
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return;
+    }
+
+    diagnosticProvider.clearComputedDiagnostics(documentContext);
+    documentContext.rebuild(params.getContentChanges().get(0).getText());
 
     if (configuration.getComputeDiagnostics() == ComputeDiagnosticsTrigger.ONTYPE) {
       validate(documentContext);
