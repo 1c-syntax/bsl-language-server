@@ -23,33 +23,22 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.regex.Pattern;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MINOR,
-  scope = DiagnosticScope.BSL,
-  minutesToFix = 2
+  severity = DiagnosticSeverity.CRITICAL,
+  minutesToFix = 5
 )
-public class DeprecatedMessage extends AbstractVisitorDiagnostic {
-  private static final Pattern messagePattern = Pattern.compile(
-    "(сообщить|message)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
+public class UsingGotoDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+  public ParseTree visitGotoStatement(BSLParser.GotoStatementContext ctx) {
 
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+    diagnosticStorage.addDiagnostic(ctx);
+    return super.visitGotoStatement(ctx);
   }
 
 }

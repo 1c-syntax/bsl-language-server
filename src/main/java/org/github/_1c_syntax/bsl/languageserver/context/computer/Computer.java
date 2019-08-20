@@ -19,31 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package org.github._1c_syntax.bsl.languageserver.context.computer;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-public class DeprecatedMessageTest extends AbstractDiagnosticTest<DeprecatedMessage> {
-
-  DeprecatedMessageTest() { super(DeprecatedMessage.class); }
-
-  @Test
-  void runTest()
-  {
-
-    // when
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    // then
-    assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 8, 4, 20));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(10, 0, 10, 13));
-
-  }
+public interface Computer<T> {
+  T compute();
 }

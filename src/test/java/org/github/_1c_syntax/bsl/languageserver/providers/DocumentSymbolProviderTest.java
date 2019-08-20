@@ -99,7 +99,7 @@ class DocumentSymbolProviderTest {
       .flatExtracting(DocumentSymbol::getChildren)
       .hasSize(1)
       .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
-      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(21, 0, 25, 14)))
+      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(23, 0, 25, 14)))
       ;
 
   }

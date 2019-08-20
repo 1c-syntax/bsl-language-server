@@ -21,9 +21,12 @@
  */
 package org.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Singular;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
@@ -31,7 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Value
-@Builder
+@Builder(access = AccessLevel.PUBLIC)
+@EqualsAndHashCode(exclude="methods")
 public class RegionSymbol implements Symbol {
   private final String name;
   private final BSLParser.RegionNameContext nameNode;
@@ -46,5 +50,11 @@ public class RegionSymbol implements Symbol {
   private final List<RegionSymbol> children;
   private final List<MethodSymbol> methods = new ArrayList<>();
 
-  private final BSLParserRuleContext node;
+  @NonFinal
+  private BSLParserRuleContext node;
+
+  @Override
+  public void clearASTData() {
+    node = null;
+  }
 }

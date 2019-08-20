@@ -614,8 +614,11 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
       String originalText = documentContext.getText(range);
       String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
 
-      TextEdit textEdit = new TextEdit(range, canonicalText);
-      textEdits.add(textEdit);
+      if (canonicalText != null) {
+        TextEdit textEdit = new TextEdit(range, canonicalText);
+        textEdits.add(textEdit);
+      }
+
     });
 
     return CodeActionProvider.createCodeActions(

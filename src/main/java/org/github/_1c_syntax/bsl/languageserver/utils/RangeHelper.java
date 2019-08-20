@@ -21,12 +21,13 @@
  */
 package org.github._1c_syntax.bsl.languageserver.utils;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 public final class RangeHelper {
 
@@ -38,7 +39,7 @@ public final class RangeHelper {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
   }
 
-  public static Range newRange(BSLParserRuleContext ruleContext) {
+  public static Range newRange(ParserRuleContext ruleContext) {
     return newRange(ruleContext.getStart(), ruleContext.getStop());
   }
 
@@ -54,6 +55,14 @@ public final class RangeHelper {
     }
 
     return newRange(startLine, startChar, endLine, endChar);
+  }
+
+  public static Range newRange(TerminalNode terminalNode) {
+    return newRange(terminalNode.getSymbol());
+  }
+
+  public static Range newRange(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
+    return newRange(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
 
   public static Range newRange(Token token) {

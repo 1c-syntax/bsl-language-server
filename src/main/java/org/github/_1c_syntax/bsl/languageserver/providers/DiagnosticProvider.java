@@ -50,10 +50,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.reflections.ReflectionUtils.getAllFields;
@@ -76,7 +78,7 @@ public final class DiagnosticProvider {
     = createDiagnosticsCodes(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
-  private final Map<String, List<Diagnostic>> computedDiagnostics;
+  private final Map<String, Set<Diagnostic>> computedDiagnostics;
 
   public DiagnosticProvider() {
     this(LanguageServerConfiguration.create());
@@ -95,7 +97,7 @@ public final class DiagnosticProvider {
 
   public void publishEmptyDiagnosticList(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = new ArrayList<>();
-    computedDiagnostics.put(documentContext.getUri(), diagnostics);
+    computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
     client.publishDiagnostics(
       new PublishDiagnosticsParams(documentContext.getUri(), diagnostics)
     );
@@ -107,13 +109,17 @@ public final class DiagnosticProvider {
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .collect(Collectors.toList());
 
-    computedDiagnostics.put(documentContext.getUri(), diagnostics);
+    computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
 
     return diagnostics;
   }
 
-  public List<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
-    return computedDiagnostics.getOrDefault(documentContext.getUri(), new ArrayList<>());
+  public Set<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
+    return computedDiagnostics.getOrDefault(documentContext.getUri(), new LinkedHashSet<>());
+  }
+
+  public void clearComputedDiagnostics(DocumentContext documentContext) {
+    computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
   }
 
   public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
@@ -196,6 +202,14 @@ public final class DiagnosticProvider {
   public static int getMinutesToFix(Diagnostic diagnostic) {
     Class<? extends BSLDiagnostic> diagnosticClass = getBSLDiagnosticClass(diagnostic);
     return getMinutesToFix(diagnosticClass);
+  }
+
+  public static boolean isActivatedByDefault(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return diagnosticsMetadata.get(diagnosticClass).activatedByDefault();
+  }
+
+  public static boolean isActivatedByDefault(BSLDiagnostic diagnostic) {
+    return isActivatedByDefault(diagnostic.getClass());
   }
 
   public static Map<String, DiagnosticParameter> getDiagnosticParameters(
@@ -385,10 +399,18 @@ public final class DiagnosticProvider {
     if (diagnosticClass == null) {
       return false;
     }
+
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
       configuration.getDiagnostics().get(getDiagnosticCode(diagnosticClass));
-    return diagnosticConfiguration == null
-      || diagnosticConfiguration.isRight()
-      || (diagnosticConfiguration.isLeft() && diagnosticConfiguration.getLeft());
+
+    boolean activatedByDefault = diagnosticConfiguration == null && isActivatedByDefault(diagnosticClass);
+    boolean hasCustomConfiguration = diagnosticConfiguration != null && diagnosticConfiguration.isRight();
+    boolean enabledDirectly = diagnosticConfiguration != null
+      && diagnosticConfiguration.isLeft()
+      && diagnosticConfiguration.getLeft();
+
+    return activatedByDefault
+      || hasCustomConfiguration
+      || enabledDirectly;
   }
 }

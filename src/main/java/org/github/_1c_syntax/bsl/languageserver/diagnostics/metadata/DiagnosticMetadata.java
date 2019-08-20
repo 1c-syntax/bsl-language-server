@@ -33,4 +33,5 @@ public @interface DiagnosticMetadata {
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
   DiagnosticScope scope() default DiagnosticScope.ALL;
   int minutesToFix() default 0;
+  boolean activatedByDefault() default true;
 }
