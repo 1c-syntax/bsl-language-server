@@ -57,13 +57,20 @@ public final class MethodSymbolComputer
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
+    TerminalNode startNode = declaration.FUNCTION_KEYWORD();
+    TerminalNode stopNode = ctx.ENDFUNCTION_KEYWORD();
+
+    if (startNode == null || stopNode == null) {
+      return ctx;
+    }
+
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(true)
       .node(ctx)
-      .region(findRegion(declaration.FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
-      .range(RangeHelper.newRange(declaration.FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD()))
+      .region(findRegion(startNode, stopNode))
+      .range(RangeHelper.newRange(startNode, stopNode))
       .subNameRange(RangeHelper.newRange(declaration.subName()))
       .build();
 
@@ -76,13 +83,20 @@ public final class MethodSymbolComputer
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
+    TerminalNode startNode = declaration.PROCEDURE_KEYWORD();
+    TerminalNode stopNode = ctx.ENDPROCEDURE_KEYWORD();
+
+    if (startNode == null || stopNode == null) {
+      return ctx;
+    }
+
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
       .export(declaration.EXPORT_KEYWORD() != null)
       .function(false)
       .node(ctx)
-      .region(findRegion(declaration.PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
-      .range(RangeHelper.newRange(declaration.PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD()))
+      .region(findRegion(startNode, stopNode))
+      .range(RangeHelper.newRange(startNode, stopNode))
       .subNameRange(RangeHelper.newRange(declaration.subName()))
       .build();
 

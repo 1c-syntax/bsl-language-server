@@ -22,50 +22,51 @@
 package org.github._1c_syntax.bsl.languageserver.codeactions;
 
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
+public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 
-  public QuickFixCodeActionSupplier(DiagnosticProvider diagnosticProvider) {
-    super(diagnosticProvider);
+  protected DiagnosticProvider diagnosticProvider;
+
+  public AbstractQuickFixSupplier(DiagnosticProvider diagnosticProvider) {
+    this.diagnosticProvider = diagnosticProvider;
   }
 
   @Override
-  protected Stream<CodeAction> processDiagnosticStream(
-    Stream<Diagnostic> diagnosticStream,
-    CodeActionParams params,
-    DocumentContext documentContext
-  ) {
-    return diagnosticStream
-      .flatMap(diagnostic -> getCodeActionsByDiagnostic(diagnostic, params, documentContext).stream());
-  }
-
-  private List<CodeAction> getCodeActionsByDiagnostic(
-    Diagnostic diagnostic,
-    CodeActionParams params,
-    DocumentContext documentContext
-  ) {
-
-    Class<? extends BSLDiagnostic> bslDiagnosticClass = DiagnosticProvider.getBSLDiagnosticClass(diagnostic);
-    if (bslDiagnosticClass == null || !QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
+  public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
+    List<String> only = params.getContext().getOnly();
+    if (only != null && !only.isEmpty() && !only.contains(CodeActionKind.QuickFix)) {
       return Collections.emptyList();
     }
 
-    BSLDiagnostic diagnosticInstance = diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
-    return ((QuickFixProvider) diagnosticInstance).getQuickFixes(
-      Collections.singletonList(diagnostic),
-      params,
-      documentContext
-    );
+    List<Diagnostic> incomingDiagnostics = params.getContext().getDiagnostics();
+    if (incomingDiagnostics.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    Set<Diagnostic> computedDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext);
+
+    Stream<Diagnostic> diagnosticStream = incomingDiagnostics.stream()
+      .filter(computedDiagnostics::contains);
+
+    return processDiagnosticStream(diagnosticStream, params, documentContext)
+      .collect(Collectors.toList());
 
   }
+
+  protected abstract Stream<CodeAction> processDiagnosticStream(
+    Stream<Diagnostic> diagnosticStream,
+    CodeActionParams params,
+    DocumentContext documentContext
+  );
 }
