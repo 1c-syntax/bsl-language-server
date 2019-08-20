@@ -68,6 +68,17 @@ public final class FormatProvider {
     BSLLexer.ENDTRY_KEYWORD
   ));
 
+  private static final Set<Integer> primitiveTokenTypes = new HashSet<>(Arrays.asList(
+    BSLLexer.NULL,
+    BSLLexer.DATETIME,
+    BSLLexer.DECIMAL,
+    BSLLexer.TRUE,
+    BSLLexer.FALSE,
+    BSLLexer.UNDEFINED,
+    BSLLexer.FLOAT,
+    BSLLexer.STRING
+  ));
+
   private FormatProvider() {
     // only statics
   }
@@ -145,6 +156,7 @@ public final class FormatProvider {
     int additionalIndentLevel = -1;
     boolean inMethodDefinition = false;
     boolean insideOperator = false;
+    boolean parameterDeclarationMode = false;
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
@@ -177,6 +189,10 @@ public final class FormatProvider {
           default:
             // no-op
         }
+      }
+
+      if (previousTokenType == BSLLexer.ANNOTATION_CUSTOM_SYMBOL && tokenType == BSLLexer.LPAREN) {
+        parameterDeclarationMode = true;
       }
 
       // Add indentation before token lines
@@ -222,10 +238,15 @@ public final class FormatProvider {
         currentIndentLevel++;
         additionalIndentLevel = currentIndentLevel;
       }
-      // Remove additional indent after semicolon.
-      if (tokenType == BSLLexer.SEMICOLON && additionalIndentLevel > 0) {
+      // Remove additional indent after semicolon or parameter default value.
+      if (additionalIndentLevel > 0
+        && (tokenType == BSLLexer.SEMICOLON || parameterDeclarationMode && isPrimitive(tokenType))) {
         currentIndentLevel--;
         additionalIndentLevel = -1;
+      }
+
+      if (parameterDeclarationMode && tokenType == BSLLexer.RPAREN) {
+        parameterDeclarationMode = false;
       }
 
       lastLine = token.getLine();
@@ -279,6 +300,7 @@ public final class FormatProvider {
     if (type == BSLLexer.LPAREN) {
       switch (previousTokenType) {
         case BSLLexer.IDENTIFIER:
+        case BSLLexer.ANNOTATION_CUSTOM_SYMBOL:
         case BSLLexer.EXECUTE_KEYWORD:
         case BSLLexer.NEW_KEYWORD:
         case BSLLexer.QUESTION:
@@ -308,6 +330,10 @@ public final class FormatProvider {
 
   private static boolean needDecrementIndent(int tokenType) {
     return decrementIndentTokens.contains(tokenType);
+  }
+
+  private static boolean isPrimitive(int tokenType) {
+    return primitiveTokenTypes.contains(tokenType);
   }
 
 }
