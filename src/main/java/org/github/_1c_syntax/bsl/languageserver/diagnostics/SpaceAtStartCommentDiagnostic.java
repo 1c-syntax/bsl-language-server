@@ -114,13 +114,10 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range diagnosticRange = diagnostic.getRange();
-      Position currentEnd = diagnosticRange.getEnd();
-      String currentText = documentContext.getText(diagnosticRange);
-      Position newEnd = new Position(currentEnd.getLine(), currentEnd.getCharacter() + 1);
-      Range newRange = new Range(diagnosticRange.getStart(), newEnd);
+      Range range = diagnostic.getRange();
+      String currentText = documentContext.getText(range);
 
-      TextEdit textEdit = new TextEdit(newRange, currentText.substring(0, 2) + " " + currentText.substring(2));
+      TextEdit textEdit = new TextEdit(range, currentText.substring(0, 2) + " " + currentText.substring(2));
       textEdits.add(textEdit);
     });
 
