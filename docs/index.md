@@ -11,6 +11,7 @@
 
 [English version](en/index.md)
 
+* [Руководство контрибьютора](CONTRIBUTING.md)
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>
