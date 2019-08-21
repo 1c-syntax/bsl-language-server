@@ -21,27 +21,21 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
+
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
+import org.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
+import org.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -50,7 +44,13 @@ import java.util.regex.Pattern;
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final double THRESHOLD = 0.9;
   private static Pattern pattern = Pattern.compile("//");
+  private final CodeRecognizer codeRecognizer;
+
+  public CommentedCodeDiagnostic() {
+    codeRecognizer = new CodeRecognizer(THRESHOLD, new BSLFootprint());
+  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -109,36 +109,10 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     return uncommentedText.toString().trim();
   }
 
-  private static boolean isTextParsedAsCode(String text) {
-    BSLParser.FileContext ast = computeAST(text);
-    return ast.exception == null;
-  }
+  private boolean isTextParsedAsCode(String text) {
 
-  private static BSLParser.FileContext computeAST(String text) {
-    CharStream input;
+    return codeRecognizer.meetsCondition(text);
 
-    try (InputStream inputStream = IOUtils.toInputStream(text, StandardCharsets.UTF_8);
-         UnicodeBOMInputStream ubis = new UnicodeBOMInputStream(inputStream)
-    ) {
-
-      ubis.skipBOM();
-
-      input = CharStreams.fromStream(ubis, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    BSLLexer lexer = new BSLLexer(input);
-
-    lexer.setInputStream(input);
-    lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
-
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-    tokenStream.fill();
-
-    BSLParser parser = new BSLParser(tokenStream);
-    parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
-    return parser.file();
   }
 
   private void addIssue(List<Token> commentGroup) {

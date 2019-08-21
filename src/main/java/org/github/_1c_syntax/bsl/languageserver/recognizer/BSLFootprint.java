@@ -9,9 +9,9 @@ public class BSLFootprint implements LanguageFootprint {
 
   public BSLFootprint() {
     detectors.add(new CamelCaseDetector(0.7));
-    detectors.add(new ContainsDetector(0.95, "КонецПроцедуры;", "КонецФункции;", "КонецЕсли;", "КонецЦикла;",
+    detectors.add(new ContainsDetector(0.95, "КонецПроцедуры", "КонецФункции", "КонецЕсли;", "КонецЦикла;",
       "Возврат;", ".НайтиСтроки(", "СтрНачинается(", "СтрНайти(", ".Выбрать(", ".Выгрузить(", ".Выполнить("));
-    detectors.add(new KeywordsDetector(0.95,, "И", "ИЛИ", "НЕ", "ИначеЕсли"));
+    detectors.add(new KeywordsDetector(0.95,"И", "ИЛИ", "НЕ", "ИначеЕсли"));
     detectors.add(new KeywordsDetector(0.7, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ", "СОЕДИНЕНИЕ",
       "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ"));
     detectors.add(new KeywordsDetector(0.3, "Если", "Тогда", "Процедура", "Функция", "Пока", "Для", "Каждого",

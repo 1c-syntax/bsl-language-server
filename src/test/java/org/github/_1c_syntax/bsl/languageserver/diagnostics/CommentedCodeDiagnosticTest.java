@@ -39,10 +39,6 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 0, 2, 17));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 6, 13));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(19, 0, 19, 43));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(21, 0, 21, 30));
+    assertThat(diagnostics).hasSize(2);
   }
 }
