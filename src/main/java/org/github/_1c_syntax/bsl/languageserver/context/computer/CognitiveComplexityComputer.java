@@ -23,21 +23,26 @@ package org.github._1c_syntax.bsl.languageserver.context.computer;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.antlr.v4.runtime.tree.Tree;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserBaseListener;
+import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // Based on Cognitive Complexity white-paper, version 1.4.
@@ -58,6 +63,7 @@ public class CognitiveComplexityComputer
   private MethodSymbol currentMethod;
   private int complexity;
   private int nestedLevel;
+  private Set<BSLParserRuleContext> ignoredContexts;
 
   public CognitiveComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -67,6 +73,7 @@ public class CognitiveComplexityComputer
     resetMethodComplexityCounters();
     methodsComplexity = new HashMap<>();
     methodsComplexitySecondaryLocations = new HashMap<>();
+    ignoredContexts = new HashSet<>();
   }
 
   @Override
@@ -75,6 +82,7 @@ public class CognitiveComplexityComputer
     fileCodeBlockComplexity = 0;
     resetMethodComplexityCounters();
     methodsComplexity.clear();
+    ignoredContexts.clear();
 
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
@@ -108,6 +116,7 @@ public class CognitiveComplexityComputer
       methodsComplexity.put(currentMethod, complexity);
     }
     currentMethod = null;
+    ignoredContexts.clear();
     super.exitSub(ctx);
   }
 
@@ -121,6 +130,7 @@ public class CognitiveComplexityComputer
   public void exitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
     incrementFileComplexity();
     incrementFileCodeBlockComplexity();
+    ignoredContexts.clear();
     super.exitFileCodeBlockBeforeSub(ctx);
   }
 
@@ -134,6 +144,7 @@ public class CognitiveComplexityComputer
   public void exitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     incrementFileComplexity();
     incrementFileCodeBlockComplexity();
+    ignoredContexts.clear();
     super.exitFileCodeBlock(ctx);
   }
 
@@ -254,23 +265,77 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterExpression(BSLParser.ExpressionContext ctx) {
-    List<BSLParser.OperationContext> operations = ctx.operation();
-    if (!operations.isEmpty()) {
-      AtomicInteger lastOperationType = new AtomicInteger(-1);
 
-      operations.forEach((BSLParser.OperationContext operationContext) -> {
-        int currentOperationType = operationContext.getStart().getType();
-        if (currentOperationType != BSLLexer.AND_KEYWORD && currentOperationType != BSLLexer.OR_KEYWORD) {
-          return;
-        }
-        if (lastOperationType.get() != currentOperationType) {
-          fundamentalIncrement(operationContext.getStart());
-          lastOperationType.set(currentOperationType);
-        }
-      });
+    if (ignoredContexts.contains(ctx)) {
+      return;
     }
 
+    final List<Token> flattenExpression = flattenExpression(ctx);
+
+    int emptyTokenType = -1;
+    AtomicInteger lastOperationType = new AtomicInteger(emptyTokenType);
+
+    flattenExpression.forEach(token -> {
+      int currentOperationType = token.getType();
+      if (lastOperationType.get() != currentOperationType) {
+        lastOperationType.set(currentOperationType);
+        if (currentOperationType != emptyTokenType) {
+          fundamentalIncrement(token);
+        }
+      }
+    });
+
     super.enterExpression(ctx);
+  }
+
+  private List<Token> flattenExpression(BSLParser.ExpressionContext ctx) {
+
+    ignoredContexts.add(ctx);
+
+    List<Token> result = new ArrayList<>();
+
+    final List<Tree> children = Trees.getChildren(ctx);
+    for (Tree tree : children) {
+      if (!(tree instanceof BSLParserRuleContext)) {
+        continue;
+      }
+
+      BSLParserRuleContext parserRule = ((BSLParserRuleContext) tree);
+      if (parserRule instanceof BSLParser.MemberContext) {
+        flattenMember(result, (BSLParser.MemberContext) parserRule);
+      } else if (parserRule instanceof BSLParser.OperationContext) {
+        flattenOperation(result, (BSLParser.OperationContext) parserRule);
+      }
+    }
+
+    return result;
+  }
+
+  private void flattenMember(List<Token> result, BSLParser.MemberContext member) {
+    final BSLParser.ExpressionContext expression = member.expression();
+
+    if (expression == null) {
+      return;
+    }
+
+    final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
+
+    if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
+      final CommonToken splitter = new CommonToken(-1);
+      result.add(splitter);
+      result.addAll(flattenExpression(expression));
+      result.add(splitter);
+    } else {
+      result.addAll(flattenExpression(expression));
+    }
+  }
+
+  private void flattenOperation(List<Token> result, BSLParser.OperationContext operation) {
+    final BSLParser.BoolOperationContext boolOperation = operation.boolOperation();
+
+    if (boolOperation != null) {
+      result.add(boolOperation.getStart());
+    }
   }
 
   private void resetMethodComplexityCounters() {
