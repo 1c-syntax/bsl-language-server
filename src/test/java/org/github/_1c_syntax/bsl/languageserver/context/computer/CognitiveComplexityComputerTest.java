@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,18 +49,23 @@ class CognitiveComplexityComputerTest {
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer =
       new CognitiveComplexityComputer(documentContext);
     CognitiveComplexityComputer.Data data = cognitiveComplexityComputer.compute();
+    final Map<MethodSymbol, Integer> methodsComplexity = data.getMethodsComplexity();
 
     //then
     MethodSymbol example1 = documentContext.getMethods().get(0);
-    Integer example1Complexity = data.getMethodsComplexity().get(example1);
+    Integer example1Complexity = methodsComplexity.get(example1);
     assertThat(example1Complexity).isEqualTo(19);
 
     MethodSymbol example2 = documentContext.getMethods().get(1);
-    Integer example2Complexity = data.getMethodsComplexity().get(example2);
+    Integer example2Complexity = methodsComplexity.get(example2);
     assertThat(example2Complexity).isEqualTo(33);
 
     MethodSymbol example3 = documentContext.getMethods().get(2);
-    Integer example3Complexity = data.getMethodsComplexity().get(example3);
+    Integer example3Complexity = methodsComplexity.get(example3);
     assertThat(example3Complexity).isEqualTo(20);
+
+    MethodSymbol example4 = documentContext.getMethods().get(3);
+    Integer example4Complexity = methodsComplexity.get(example4);
+    assertThat(example4Complexity).isEqualTo(14);
   }
 }

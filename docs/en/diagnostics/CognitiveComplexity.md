@@ -40,7 +40,7 @@ If Condition Then                                    // +1
 ElseIf Condition2 Then                               // +1
 
 // Default branch
-Else                                                 // +1
+Else
 EndIf;
 
 // Ternary operator

@@ -1,6 +1,6 @@
 # Usage of complex expressions in the "If" condition
 
-Complex expressions (with more than 3 boolean constructs) must be extracted to separated method.
+Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.
 
 Bad:
 
