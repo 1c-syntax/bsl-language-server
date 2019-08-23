@@ -318,15 +318,20 @@ public class CognitiveComplexityComputer
       return;
     }
 
+    final List<Token> nestedTokens = flattenExpression(expression);
+    if (nestedTokens.isEmpty()) {
+      return;
+    }
+
     final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
 
     if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
       final CommonToken splitter = new CommonToken(-1);
       result.add(splitter);
-      result.addAll(flattenExpression(expression));
+      result.addAll(nestedTokens);
       result.add(splitter);
     } else {
-      result.addAll(flattenExpression(expression));
+      result.addAll(nestedTokens);
     }
   }
 

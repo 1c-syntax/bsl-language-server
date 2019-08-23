@@ -66,6 +66,6 @@ class CognitiveComplexityComputerTest {
 
     MethodSymbol example4 = documentContext.getMethods().get(3);
     Integer example4Complexity = methodsComplexity.get(example4);
-    assertThat(example4Complexity).isEqualTo(14);
+    assertThat(example4Complexity).isEqualTo(15);
   }
 }
