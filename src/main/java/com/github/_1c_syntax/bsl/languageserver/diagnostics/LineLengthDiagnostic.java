@@ -23,12 +23,23 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
+<<<<<<< develop:src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/LineLengthDiagnostic.java
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+=======
+import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
+>>>>>>> allow last  semicolon in multiline string:src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/LineLengthDiagnostic.java
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +55,7 @@ import java.util.Optional;
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
+  private int prevTokenType;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -64,28 +76,40 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
     List<Token> tokens = documentContext.getTokensFromDefaultChannel();
-
     List<Diagnostic> diagnostics = new ArrayList<>();
-
     Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
-    tokens.forEach((Token token) -> {
-        List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine(), new ArrayList<>());
-        if ((token.getType() != BSLLexer.STRINGPART)
-        && (token.getType() != BSLLexer.STRINGTAIL)) {
-          tokenList.add(token.getCharPositionInLine() + token.getText().length());
-          tokensInOneLine.put(token.getLine() - 1, tokenList);
-        }
-      });
+
+    for (Token token : tokens) {
+      if ((token.getType() != BSLLexer.STRINGPART
+        && token.getType() != BSLLexer.STRINGTAIL)
+        && ((prevTokenType != BSLLexer.STRINGPART && prevTokenType != BSLLexer.STRINGTAIL) && token.getType() == BSLLexer.SEMICOLON)) {
+        putInCollection(tokensInOneLine, token);
+      }
+      prevTokenType = token.getType();
+    }
+
+    List<Token> comments = documentContext.getComments();
+    comments.forEach((Token token) -> putInCollection(tokensInOneLine, token));
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
       Integer maxCharPosition = max.orElse(0);
       if (maxCharPosition > maxLineLength) {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(this, key, 0, key, maxCharPosition));
+        Range range = RangeHelper.newRange(key, 0, key, maxCharPosition);
+        diagnostics.add(BSLDiagnostic.createDiagnostic(
+          this,
+          range,
+          getDiagnosticMessage(maxCharPosition, maxLineLength)));
       }
     });
 
     return diagnostics;
+  }
+
+  private void putInCollection(Map<Integer, List<Integer>> tokensInOneLine, Token token) {
+    List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine(), new ArrayList<>());
+    tokenList.add(token.getCharPositionInLine() + token.getText().length());
+    tokensInOneLine.put(token.getLine() - 1, tokenList);
   }
 
 }
