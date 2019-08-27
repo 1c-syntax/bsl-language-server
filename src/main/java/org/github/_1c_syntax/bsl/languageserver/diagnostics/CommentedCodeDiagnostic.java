@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final float COMMENTED_CODE_THRESHOLD = (float) 0.9;
+  private static final float COMMENTED_CODE_THRESHOLD = 0.9f;
   private static final Pattern pattern = Pattern.compile("//");
 
   @DiagnosticParameter(
@@ -57,7 +57,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
-    codeRecognizer = new CodeRecognizer((double) threshold, new BSLFootprint());
+    codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
   @Override
@@ -65,8 +65,8 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    threshold = (float) configuration.get("commentedCodeThreshold") / 100;
-    codeRecognizer = new CodeRecognizer((double) threshold, new BSLFootprint());
+    threshold = (float) configuration.get("commentedCodeThreshold");
+    codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
   @Override

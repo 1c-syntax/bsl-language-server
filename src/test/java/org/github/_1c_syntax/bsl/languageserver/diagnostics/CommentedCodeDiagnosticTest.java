@@ -55,7 +55,7 @@ public class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<Commente
   void testConfigure() {
 
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    configuration.put("commentedCodeThreshold", (float) 0.8);
+    configuration.put("commentedCodeThreshold", 0.8f);
     getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
