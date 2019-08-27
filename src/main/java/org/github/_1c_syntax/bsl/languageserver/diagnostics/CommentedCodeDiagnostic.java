@@ -26,6 +26,7 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
@@ -33,6 +34,7 @@ import org.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 
@@ -43,12 +45,28 @@ import java.util.regex.Pattern;
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final double THRESHOLD = 0.9;
+  private static final int COMMENTED_CODE_THRESHOLD = 90;
   private static final Pattern pattern = Pattern.compile("//");
-  private final CodeRecognizer codeRecognizer;
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + COMMENTED_CODE_THRESHOLD,
+    description = "Порог чуствительности"
+  )
+  private double threshold = (double) COMMENTED_CODE_THRESHOLD / 100;
+  private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
-    codeRecognizer = new CodeRecognizer(THRESHOLD, new BSLFootprint());
+    codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    threshold = (double) ((Integer) configuration.get("commentedCodeThreshold")) / 100;
+    codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
   @Override

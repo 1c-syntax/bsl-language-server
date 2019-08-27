@@ -22,15 +22,18 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDiagnostic> {
+public class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDiagnostic> {
 
-  private CommentedCodeDiagnosticTest() {
+  CommentedCodeDiagnosticTest() {
     super(CommentedCodeDiagnostic.class);
   }
 
@@ -46,5 +49,18 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
     assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(44, 4, 49, 16));
     assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(59, 4, 65, 78));
     assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(76, 0, 80, 16));
+  }
+
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("commentedCodeThreshold", 80);
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(6);
+
   }
 }
