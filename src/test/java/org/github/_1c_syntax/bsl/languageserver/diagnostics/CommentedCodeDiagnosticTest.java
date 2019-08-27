@@ -42,7 +42,7 @@ public class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<Commente
   {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 0, 6, 81));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 4, 34, 16));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(36, 4, 42, 156));
@@ -55,12 +55,12 @@ public class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<Commente
   void testConfigure() {
 
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    configuration.put("commentedCodeThreshold", 80);
+    configuration.put("commentedCodeThreshold", (float) 0.8);
     getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(8);
 
   }
 }

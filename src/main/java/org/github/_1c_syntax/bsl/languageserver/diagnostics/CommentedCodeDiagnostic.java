@@ -45,19 +45,19 @@ import java.util.regex.Pattern;
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final int COMMENTED_CODE_THRESHOLD = 90;
+  private static final float COMMENTED_CODE_THRESHOLD = (float) 0.9;
   private static final Pattern pattern = Pattern.compile("//");
 
   @DiagnosticParameter(
-    type = Integer.class,
+    type = Float.class,
     defaultValue = "" + COMMENTED_CODE_THRESHOLD,
     description = "Порог чуствительности"
   )
-  private double threshold = (double) COMMENTED_CODE_THRESHOLD / 100;
+  private float threshold = COMMENTED_CODE_THRESHOLD;
   private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
-    codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
+    codeRecognizer = new CodeRecognizer((double) threshold, new BSLFootprint());
   }
 
   @Override
@@ -65,8 +65,8 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    threshold = (double) ((Integer) configuration.get("commentedCodeThreshold")) / 100;
-    codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
+    threshold = (float) configuration.get("commentedCodeThreshold") / 100;
+    codeRecognizer = new CodeRecognizer((double) threshold, new BSLFootprint());
   }
 
   @Override
@@ -105,7 +105,9 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean isAdjacent(Token comment, List<Token> currentGroup) {
-    return currentGroup.get(currentGroup.size() - 1).getLine() + 1 == comment.getLine();
+
+    Token last = currentGroup.get(currentGroup.size() - 1);
+    return last.getLine() + 1 == comment.getLine();
   }
 
   private void checkCommentGroup(List<Token> commentGroup) {
