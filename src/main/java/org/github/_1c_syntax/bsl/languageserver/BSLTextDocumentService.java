@@ -55,10 +55,12 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
@@ -77,6 +79,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
+  private final CodeLensProvider codeLensProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -85,6 +88,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
+    codeLensProvider = new CodeLensProvider(this.configuration);
   }
 
   @Override
@@ -155,7 +159,12 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> codeLensProvider.getCodeLens(documentContext));
   }
 
   @Override
@@ -208,18 +217,26 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
-    validate(documentContext);
+    if (configuration.getComputeDiagnostics() != ComputeDiagnosticsTrigger.NEVER) {
+      validate(documentContext);
+    }
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-    // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
-    DocumentContext documentContext = context.addDocument(
-      params.getTextDocument().getUri(),
-      params.getContentChanges().get(0).getText()
-    );
 
-    validate(documentContext);
+    // TODO: Place to optimize -> migrate to #TextDocumentSyncKind.INCREMENTAL and build changed parse tree
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return;
+    }
+
+    diagnosticProvider.clearComputedDiagnostics(documentContext);
+    documentContext.rebuild(params.getContentChanges().get(0).getText());
+
+    if (configuration.getComputeDiagnostics() == ComputeDiagnosticsTrigger.ONTYPE) {
+      validate(documentContext);
+    }
   }
 
   @Override
@@ -227,13 +244,26 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     if (client == null) {
       return;
     }
+
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return;
+    }
+
+    documentContext.clearASTData();
     diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
   }
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    // no-op
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return;
+    }
+
+    if (configuration.getComputeDiagnostics() != ComputeDiagnosticsTrigger.NEVER) {
+      validate(documentContext);
+    }
   }
 
   @Override

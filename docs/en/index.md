@@ -11,6 +11,7 @@
 
 [Russian version](../index.md)
 
+- [Contributing guidelines](CONTRIBUTING.md)
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
 - <a href="#analyze">Run in analyzer mode</a>
@@ -26,6 +27,7 @@
 - Selected region formatting
 - Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
 - Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
+* Methods "Cognitive Complexity" score
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
@@ -78,16 +80,23 @@ java -Xmx4g -jar bsl-language-server.jar ... other parameters
 
 ## Configuration file
 
-Configuration file is a file in JSON format.
-The file can contain the following blocks:
+Configuration file is a file in JSON format. The file can contain the following blocks:
 
-- `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
-- `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
-- `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with thestructure as following:
-    - object key - `String` - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.
-    - object value
-        - `Boolean` - `false` to disable diagnostics, `true` - to enable diagnostics without additional settings. By deafult set to `true`.
+* `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
+* `showCognitiveComplexityCodeLens` - `Boolean` - show cognitive complexity score above method definition (codeLens). By default set to `true`.
+* `computeDiagnostics` - `String` - trigger for the computation of diagnostics. Valid values: `onType` (on file edit), `onSave` (on file save), `never`. By default set to `onSave`.
+* `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
+* `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with the structure as following:
+    * object key - `String` - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.
+    * object value
+        - `Boolean` - `false` to disable diagnostics, `true` - to enable diagnostics without additional settings. By default set to `true`.
         - `Object` - Structure of settings for each diagnostics. Available parameters are give in each diagnostics section.
+
+You may use this JSON-schema to simplify file editing:
+
+```
+https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json
+```
 
 Configuration file example, setting:
 
@@ -97,6 +106,7 @@ Configuration file example, setting:
 
 ```json
 {
+  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
   "diagnosticLanguage": "en",
   "diagnostics": {
     "LineLength": {
@@ -134,6 +144,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | Key | Name| Enabled by default |
 | --- | --- | :-: |
 | [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Canonical spelling of keywords | Yes |
+| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Cognitive complexity | Yes |
 | [CommentedCode](diagnostics/CommentedCode.md) | Commented code | Yes |
 | [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes |
 | [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes |
@@ -163,6 +174,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Procedure must have no Return value | Yes |
 | [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes |
+| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Misuse of multiple compilation directives | Yes |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No |
 | [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes |

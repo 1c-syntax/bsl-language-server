@@ -31,38 +31,30 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class FixAllCodeActionSupplier implements CodeActionSupplier {
+public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 
   private static final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;
 
-  private DiagnosticProvider diagnosticProvider;
-
   public FixAllCodeActionSupplier(DiagnosticProvider diagnosticProvider) {
-    this.diagnosticProvider = diagnosticProvider;
+    super(diagnosticProvider);
   }
 
   @Override
-  public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
-    List<Diagnostic> incomingDiagnostics = params.getContext().getDiagnostics();
-    if (incomingDiagnostics.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    List<CodeAction> actions = new ArrayList<>();
-
-    incomingDiagnostics.stream()
+  protected Stream<CodeAction> processDiagnosticStream(
+    Stream<Diagnostic> diagnosticStream,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+    return diagnosticStream
       .map(Diagnostic::getCode)
       .distinct()
-      .flatMap(diagnosticCode -> getFixAllCodeAction(diagnosticCode, params, documentContext).stream())
-      .collect(Collectors.toCollection(() -> actions));
-
-    return actions;
+      .flatMap(diagnosticCode -> getFixAllCodeAction(diagnosticCode, params, documentContext).stream());
   }
 
   private List<CodeAction> getFixAllCodeAction(

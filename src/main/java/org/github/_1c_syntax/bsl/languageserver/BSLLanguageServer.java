@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver;
 
+import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -67,6 +68,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     capabilities.setFoldingRangeProvider(Boolean.TRUE);
     capabilities.setDocumentSymbolProvider(Boolean.TRUE);
     capabilities.setCodeActionProvider(Boolean.TRUE);
+    capabilities.setCodeLensProvider(new CodeLensOptions());
 
     InitializeResult result = new InitializeResult(capabilities);
 

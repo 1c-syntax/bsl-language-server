@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Range;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
@@ -60,6 +61,13 @@ public class DiagnosticStorage {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, startLine, startChar, endLine, endChar));
   }
 
+  protected void addDiagnostic(Range range) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      range,
+      diagnostic.getDiagnosticMessage()));
+  }
+
   protected void addDiagnostic(Token token) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
@@ -86,6 +94,45 @@ public class DiagnosticStorage {
 
   public void addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, token, relatedInformation));
+  }
+
+  public void addDiagnostic(
+    BSLParserRuleContext node,
+    String diagnosticMessage,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      RangeHelper.newRange(node),
+      diagnosticMessage,
+      relatedInformation
+    ));
+  }
+
+  public void addDiagnostic(
+    Token token,
+    String diagnosticMessage,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      RangeHelper.newRange(token),
+      diagnosticMessage,
+      relatedInformation
+    ));
+  }
+
+  public void addDiagnostic(
+    Range range,
+    String diagnosticMessage,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      range,
+      diagnosticMessage,
+      relatedInformation
+    ));
   }
 }
 

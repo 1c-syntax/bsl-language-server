@@ -60,15 +60,21 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-
-    ctx.expression()
-      .stream()
-      .filter(s-> Trees.findAllRuleNodes(s, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity)
-      .forEach(s-> diagnosticStorage.addDiagnostic(s));
-
-    return super.visitIfStatement(ctx);
+  public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
+    checkExpressionAndRaise(ctx.expression());
+    return super.visitIfBranch(ctx);
   }
 
+  @Override
+  public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
+    checkExpressionAndRaise(ctx.expression());
+    return super.visitElsifBranch(ctx);
+  }
+
+  private void checkExpressionAndRaise(BSLParser.ExpressionContext expression) {
+    if (Trees.findAllRuleNodes(expression, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity) {
+      diagnosticStorage.addDiagnostic(expression);
+    }
+  }
 }
 

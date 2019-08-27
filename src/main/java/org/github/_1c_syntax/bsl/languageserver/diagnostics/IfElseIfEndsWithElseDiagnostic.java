@@ -25,7 +25,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 @DiagnosticMetadata(
@@ -38,7 +37,7 @@ public class IfElseIfEndsWithElseDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
 
-    if (ctx.getToken(BSLLexer.ELSIF_KEYWORD, 0) != null && ctx.getToken(BSLLexer.ELSE_KEYWORD, 0) == null) {
+    if (!ctx.elsifBranch().isEmpty() && ctx.elseBranch() == null) {
       diagnosticStorage.addDiagnostic(ctx.getStop());
     }
 
