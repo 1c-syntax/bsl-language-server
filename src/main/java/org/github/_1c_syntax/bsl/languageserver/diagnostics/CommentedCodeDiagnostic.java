@@ -30,7 +30,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import org.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +44,7 @@ import java.util.regex.Pattern;
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final double THRESHOLD = 0.9;
-  private static Pattern pattern = Pattern.compile("//");
+  private static final Pattern pattern = Pattern.compile("//");
   private final CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {

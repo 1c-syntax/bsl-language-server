@@ -21,29 +21,23 @@
  */
 package org.github._1c_syntax.bsl.languageserver.recognizer;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringTokenizer;
+public abstract class AbstractDetector {
+  private final double probability;
 
-public class KeywordsDetector extends AbstractDetector {
-
-  private final List<String> keywords;
-  public KeywordsDetector(double probability, String... keywords) {
-    super(probability);
-    this.keywords = Arrays.asList(keywords);
-  }
-
-  @Override
-  public int scan(String line) {
-    int matchers = 0;
-    StringTokenizer tokenizer = new StringTokenizer(line, " \t\n");
-    while (tokenizer.hasMoreTokens()) {
-      String word = tokenizer.nextToken();
-      if (keywords.contains(word)) {
-        matchers++;
-      }
+  public AbstractDetector(double probability) {
+    if (probability < 0 || probability > 1) {
+      throw new IllegalArgumentException("probability should be between [0 .. 1]");
     }
-    return matchers;
+    this.probability = probability;
   }
 
+  abstract int scan(String line);
+
+  final double detect(String line) {
+    int matchers = scan(line);
+    if (matchers == 0) {
+      return 0;
+    }
+    return 1 - Math.pow(1 - probability, matchers);
+  }
 }
