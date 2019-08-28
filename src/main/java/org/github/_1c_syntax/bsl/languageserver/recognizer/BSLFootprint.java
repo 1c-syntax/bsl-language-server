@@ -39,9 +39,12 @@ public class BSLFootprint implements LanguageFootprint {
       "Возврат;", ".НайтиСтроки(", "СтрНачинается(",
       "СтрНайти(", ".Выбрать(", ".Выгрузить(", ".Выполнить(",  "?(", ");"));
     detectors.add(new KeywordsDetector(CODE_EXACTLY,"И", "ИЛИ", "НЕ", "ИначеЕсли"));
+    detectors.add(new EndWithDetector(CODE_EXACTLY, ';'));
+
     detectors.add(new CamelCaseDetector(CODE_MOST_LIKELY));
     detectors.add(new KeywordsDetector(CODE_MOST_LIKELY, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ", "СОЕДИНЕНИЕ",
       "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ"));
+
     detectors.add(new KeywordsDetector(CODE_MAYBE, "Если", "Тогда", "Процедура", "Функция", "Пока", "Для", "Каждого",
       "Цикл", "Возврат", "Новый"));
   }
