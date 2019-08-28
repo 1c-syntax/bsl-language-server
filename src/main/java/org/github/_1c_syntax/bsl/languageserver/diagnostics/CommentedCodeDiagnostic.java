@@ -31,11 +31,11 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import org.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
+import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 
 @DiagnosticMetadata(
@@ -45,8 +45,7 @@ import java.util.regex.Pattern;
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final float COMMENTED_CODE_THRESHOLD = 0.9f;
-  private static final Pattern pattern = Pattern.compile("//");
+  private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
 
   @DiagnosticParameter(
     type = Float.class,
@@ -71,12 +70,14 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    this.documentContext = documentContext;
+    diagnosticStorage.clearDiagnostics();
     List<List<Token>> commentGroups = groupComments(documentContext.getComments());
     commentGroups.forEach(this::checkCommentGroup);
     return diagnosticStorage.getDiagnostics();
   }
 
-  private static List<List<Token>> groupComments(List<Token> comments) {
+  private List<List<Token>> groupComments(List<Token> comments) {
     List<List<Token>> groups = new ArrayList<>();
     List<Token> currentGroup = null;
 
@@ -104,39 +105,45 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     return group;
   }
 
-  private static boolean isAdjacent(Token comment, List<Token> currentGroup) {
+  private boolean isAdjacent(Token comment, List<Token> currentGroup) {
 
     Token last = currentGroup.get(currentGroup.size() - 1);
-    return last.getLine() + 1 == comment.getLine();
+    return last.getLine() + 1 == comment.getLine()
+      && onlyEmptyDelimiters(last.getTokenIndex(), comment.getTokenIndex());
+  }
+
+  private boolean onlyEmptyDelimiters(int firstTokenIndex, int lastTokenIndex) {
+    if (firstTokenIndex > lastTokenIndex) {
+      return false;
+    }
+
+    for (int index = firstTokenIndex + 1; index < lastTokenIndex; index++) {
+      int tokenType = documentContext.getTokens().get(index).getType();
+      if (tokenType != BSLParser.WHITE_SPACE) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private void checkCommentGroup(List<Token> commentGroup) {
-    String groupText = uncomment(commentGroup);
+    Token firstComment = commentGroup.get(0);
+    Token lastComment = commentGroup.get(commentGroup.size() - 1);
 
-    if (isTextParsedAsCode(groupText)) {
-      addIssue(commentGroup);
-    }
-  }
-
-  private static String uncomment(List<Token> commentGroup) {
-    StringBuilder uncommentedText = new StringBuilder();
     for (Token comment : commentGroup) {
-      String value = pattern.matcher(comment.getText()).replaceFirst("");
-      uncommentedText.append("\n");
-      uncommentedText.append(value);
+      if (isTextParsedAsCode(comment.getText())) {
+        addIssue(firstComment, lastComment);
+        return;
+      }
     }
-    return uncommentedText.toString().trim();
   }
 
   private boolean isTextParsedAsCode(String text) {
-
     return codeRecognizer.meetsCondition(text);
-
   }
 
-  private void addIssue(List<Token> commentGroup) {
-    Token first = commentGroup.get(0);
-    Token last = commentGroup.get(commentGroup.size() - 1);
+  private void addIssue(Token first, Token last) {
     diagnosticStorage.addDiagnostic(
       first.getLine() - 1,
       first.getCharPositionInLine(),

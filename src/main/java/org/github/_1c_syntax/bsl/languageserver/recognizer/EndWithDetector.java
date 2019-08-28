@@ -25,14 +25,9 @@ public class EndWithDetector extends AbstractDetector {
 
   private final char[] endOfLines;
 
-  public EndWithDetector(double probability, char endOfLines) {
+  public EndWithDetector(double probability, char... endOfLines) {
     super(probability);
-    this.endOfLines = new char[]{endOfLines};
-  }
-
-  public EndWithDetector(double probability, char[] endOfLines) {
-    super(probability);
-    this.endOfLines = endOfLines;
+    this.endOfLines = endOfLines.clone();
   }
 
   @Override

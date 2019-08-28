@@ -34,5 +34,7 @@ class EndWithDetectorTest {
 
     assertThat(detector.detect("Какой-то текст с ; в середине")).isEqualTo(0);
     assertThat(detector.detect("Какой-то текст заказнчивающийся на ;")).isEqualTo(1);
+    assertThat(detector.detect("Какой-то текст заказнчивающийся на ;  ")).isEqualTo(1);
   }
+
 }
