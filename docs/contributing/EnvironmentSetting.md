@@ -5,7 +5,7 @@
 ## Необходимое ПО
 
 * Java Development Kit 8
-* [IntelliJ IDEA Community Edition](s://www.jetbrains.com/idea/download/)
+* [IntelliJ IDEA Community Edition](https://www.jetbrains.com/idea/download/)
 * Плагины IntelliJ IDEA
   * Lombok Plugin
   * EditorConfig Plugin
