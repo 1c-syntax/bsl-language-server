@@ -11,7 +11,7 @@
 
 [Russian version](../index.md)
 
-- [Contributing guidelines](CONTRIBUTING.md)
+- [Contributing guidelines](contributing/index.md)
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
 - <a href="#analyze">Run in analyzer mode</a>
