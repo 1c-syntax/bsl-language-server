@@ -183,4 +183,5 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes |
 | [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Yes |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
+| [UsingThisForm](diagnostics/UsingThisForm.md) |Using deprecated property "ThisForm" | Yes |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |
