@@ -95,7 +95,6 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(368, 12, 368, 59))
 				&& diagnostic.getMessage().matches(".*синхронного.*ЗапроситьРазрешениеПользователя.*НачатьЗапросРазрешенияПользователя.*"))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(391, 4, 391, 38))
-				&& diagnostic.getMessage().matches(".*синхронного.*ЗапуститьПриложение.*НачатьЗапускПриложения.*"))
-		;
+				&& diagnostic.getMessage().matches(".*синхронного.*ЗапуститьПриложение.*НачатьЗапускПриложения.*"));
 	}
 }
