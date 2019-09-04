@@ -41,7 +41,10 @@ import java.util.regex.Pattern;
   minutesToFix = 1
 )
 public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern pattern = Pattern.compile("^(этаформа|thisform)", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern pattern = Pattern.compile(
+    "^(этаформа|thisform)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
@@ -63,7 +66,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean needCheck(BSLParserRuleContext declaration) {
     List<BSLParser.ParamContext> params = getParams(declaration);
-    return params.size() == 0;
+    return params.isEmpty() || !hasThisForm(params);
   }
 
   private static List<BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
@@ -72,6 +75,16 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
       return Collections.emptyList();
     }
     return paramList.getRuleContexts(BSLParser.ParamContext.class);
+  }
+
+  private static boolean hasThisForm(List<BSLParser.ParamContext> params) {
+    for(BSLParser.ParamContext param : params) {
+      if(pattern.matcher(param.getText()).find()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Override
