@@ -66,7 +66,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean needCheck(BSLParserRuleContext declaration) {
     List<BSLParser.ParamContext> params = getParams(declaration);
-    return params.isEmpty() || !hasThisForm(params);
+    return isMethodInFormModule(declaration) && (params.isEmpty() || !hasThisForm(params));
   }
 
   private static List<BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
@@ -85,6 +85,10 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     return false;
+  }
+
+  private static boolean isMethodInFormModule(BSLParserRuleContext declaration) {
+    return declaration.getRuleContext(BSLParser.CompilerDirectiveContext.class, 0) != null;
   }
 
   @Override
