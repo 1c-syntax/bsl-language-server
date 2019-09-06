@@ -25,7 +25,6 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -49,9 +48,9 @@ import java.util.regex.Pattern;
 
 public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagnostic {
 
-  private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c)";
+  private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c),//©";
   private static final Pattern goodCommentPattern = Pattern.compile(
-    "(?://\\s.*)|(?://[/]*)$",
+    "(?://\\s.*)|(?://[/]*\\s*)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
   private static final int COMMENT_LENGTH = 2;

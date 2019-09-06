@@ -61,12 +61,13 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(28, 0, 28, 81)));
   }
 
   @Test
