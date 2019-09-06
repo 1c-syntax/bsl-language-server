@@ -47,6 +47,28 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
   );
 
   @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    if(isMethodInFormModule()) {
+      return super.visitFile(ctx);
+    }
+
+    return ctx;
+  }
+
+  private boolean isMethodInFormModule() {
+
+    return this.documentContext
+      .getTokens()
+      .stream()
+      .anyMatch((Token token) -> token.getType() == BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+        || token.getType() == BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
+        || token.getType() == BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
+        || token.getType() == BSLParser.ANNOTATION_ATCLIENT_SYMBOL
+        || token.getType() == BSLParser.ANNOTATION_ATSERVER_SYMBOL);
+
+  }
+
+  @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     if (needCheck(ctx.procDeclaration())) {
       return super.visitProcedure(ctx);
@@ -66,7 +88,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean needCheck(BSLParserRuleContext declaration) {
     List<BSLParser.ParamContext> params = getParams(declaration);
-    return isMethodInFormModule(declaration) && (params.isEmpty() || !hasThisForm(params));
+    return params.isEmpty() || !hasThisForm(params);
   }
 
   private static List<BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
@@ -85,10 +107,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     return false;
-  }
-
-  private static boolean isMethodInFormModule(BSLParserRuleContext declaration) {
-    return declaration.getRuleContext(BSLParser.CompilerDirectiveContext.class, 0) != null;
   }
 
   @Override

@@ -46,7 +46,6 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
     assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(14, 20, 14, 28));
     assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(15, 33, 15, 41));
     assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(16, 12, 16, 20));
-
     assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(40, 16, 40, 24));
     assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(41, 25, 41, 33));
     assertThat(diagnostics.get(10).getRange()).isEqualTo(RangeHelper.newRange(42, 0, 42, 8));
