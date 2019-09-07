@@ -37,10 +37,10 @@ import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -151,18 +151,21 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> newTextEdits = diagnostics
-      .stream()
-      .map(this::getQuickFixText)
-      .collect(Collectors.toList());
+    List<TextEdit> newTextEdits = new ArrayList<>();
+
+    for(Diagnostic diagnostic : diagnostics) {
+      newTextEdits.add(getQuickFixText(diagnostic, documentContext));
+    }
+
     return CodeActionProvider.createCodeActions(
       newTextEdits,
       getResourceString("quickFixMessage"),
       documentContext.getUri(),
-      diagnostics);
+      diagnostics
+    );
   }
 
-  private TextEdit getQuickFixText(Diagnostic diagnostic) {
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
     Range range = diagnostic.getRange();
     String currentText = documentContext.getText(range);
 
