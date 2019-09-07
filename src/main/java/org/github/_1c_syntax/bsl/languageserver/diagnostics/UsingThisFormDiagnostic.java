@@ -23,16 +23,24 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
+import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -40,11 +48,18 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL,
   minutesToFix = 1
 )
-public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
+public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+
   private static final Pattern pattern = Pattern.compile(
     "^(этаформа|thisform)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private static final Pattern onlyRuPattern = Pattern.compile(
+    "этаформа",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final String THIS_OBJECT = "ЭтотОбъект";
+  private static final String THIS_OBJECT_EN = "ThisObject";
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -128,4 +143,27 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic {
 
     return super.visitExpression(ctx);
   }
+
+  @Override
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+
+    List<TextEdit> newTextEdits = diagnostics
+      .stream()
+      .map(UsingThisFormDiagnostic::getQuickFixText)
+      .collect(Collectors.toList());
+    return CodeActionProvider.createCodeActions(
+      newTextEdits,
+      getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics);
+  }
+
+  private static TextEdit getQuickFixText(Diagnostic diagnostic) {
+    return new TextEdit(diagnostic.getRange(), THIS_OBJECT);
+  }
+
 }

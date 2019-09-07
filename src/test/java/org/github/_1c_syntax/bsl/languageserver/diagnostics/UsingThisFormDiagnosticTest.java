@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
@@ -51,5 +52,16 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
     assertThat(diagnostics.get(10).getRange()).isEqualTo(RangeHelper.newRange(42, 0, 42, 8));
     assertThat(diagnostics.get(11).getRange()).isEqualTo(RangeHelper.newRange(43, 8, 43, 16));
 
+  }
+
+  @Test
+  void runQuickFixTest() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      RangeHelper.newRange(3, 20, 3, 28)
+    );
+
+    assertThat(quickFixes).hasSize(1);
   }
 }
