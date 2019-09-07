@@ -153,7 +153,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
     List<TextEdit> newTextEdits = diagnostics
       .stream()
-      .map(UsingThisFormDiagnostic::getQuickFixText)
+      .map(this::getQuickFixText)
       .collect(Collectors.toList());
     return CodeActionProvider.createCodeActions(
       newTextEdits,
@@ -162,8 +162,14 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
       diagnostics);
   }
 
-  private static TextEdit getQuickFixText(Diagnostic diagnostic) {
-    return new TextEdit(diagnostic.getRange(), THIS_OBJECT);
-  }
+  private TextEdit getQuickFixText(Diagnostic diagnostic) {
+    Range range = diagnostic.getRange();
+    String currentText = documentContext.getText(range);
 
+    if(onlyRuPattern.matcher(currentText).matches()) {
+      return new TextEdit(range, THIS_OBJECT);
+    }
+
+    return new TextEdit(range, THIS_OBJECT_EN);
+  }
 }

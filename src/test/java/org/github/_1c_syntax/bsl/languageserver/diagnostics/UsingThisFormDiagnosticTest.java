@@ -23,15 +23,19 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.TextEdit;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDiagnostic> {
-  public UsingThisFormDiagnosticTest() {
+  private static final String THIS_OBJECT = "ЭтотОбъект";
+
+  UsingThisFormDiagnosticTest() {
     super(UsingThisFormDiagnostic.class);
   }
 
@@ -57,11 +61,11 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
   @Test
   void runQuickFixTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    List<CodeAction> quickFixes = getQuickFixes(
-      diagnostics.get(0),
-      RangeHelper.newRange(3, 20, 3, 28)
-    );
+    List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0).getRange());
 
     assertThat(quickFixes).hasSize(1);
+    Map<String, List<TextEdit>> changes = quickFixes.get(0).getEdit().getChanges();
+    assertThat(changes).hasSize(1);
+    assertThat(changes.get("file:///fake-uri.bsl")).allMatch(t -> t.getNewText().equals(THIS_OBJECT));
   }
 }
