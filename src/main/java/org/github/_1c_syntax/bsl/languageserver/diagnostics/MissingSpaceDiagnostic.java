@@ -27,7 +27,6 @@ import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -40,28 +39,51 @@ import java.util.stream.Stream;
 )
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
-  //TODO <> если вместе - подумать
-  private static final String symbolsLR = "+-*/=%<>"; //символы, требующие пробелы слева и справа
-  private static final String symbolsR = ",;";        //символы, требующие пробелы справа
+  // TODO если "<>" "<=" ">=" рядом - то это верно - надо сделать
+  private static final String symbols_LR = "+-*/=%<>"; // символы, требующие пробелы слева и справа
+  private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
 
   private static final Pattern PATTERN_LR = Pattern.compile(
-//    "\\S[\\Q"+symbolsLR+"\\E]|[\\Q"+symbolsLR+"\\E]\\S",
-    ".*Процедура.*",
+    "[\\Q"+ symbols_LR +"\\E]",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
   private static final Pattern PATTERN_R = Pattern.compile(
-    "[\\Q"+symbolsR+"\\E]\\S",
+    "[\\Q"+ symbols_R +"\\E]",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final Pattern PATTERN_SPACE = Pattern.compile(
+    "\\S+",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    //String f = "0";
-    diagnosticStorage.clearDiagnostics();
 
-    Stream<Token> ps = documentContext.getTokens().parallelStream();
-    Stream<Token> f = ps.filter((Token t) -> PATTERN_LR.matcher(t.getText()).matches());
-    f.forEach((Token t) -> diagnosticStorage.addDiagnostic(t));
+    List<Token> tokens = documentContext.getTokens();
+
+    // проверяем слева и справа
+    Stream<Token> tokens1 = tokens.stream()
+      .filter((Token t) ->
+      PATTERN_LR.matcher( t.getText() ).matches());
+
+    Stream<Token> tokens2 = tokens1.filter((Token t) ->
+        noSpaceLeftAndRight(tokens, t)
+    );
+    tokens2.forEach((Token t) ->
+      diagnosticStorage.addDiagnostic(t));
+
+    // проверяем справа
+    Stream<Token> tokens3 = tokens.stream()
+      .filter((Token t) ->
+        PATTERN_R.matcher( t.getText() ).matches());
+
+    Stream<Token> tokens4 = tokens3.filter((Token t) ->
+      NoSpaceRight(tokens, t)
+    );
+    tokens4.forEach((Token t) ->
+      diagnosticStorage.addDiagnostic(t));
+
+
 
     /*documentContext.getTokens()
       .parallelStream()
@@ -71,5 +93,31 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
         diagnosticStorage.addDiagnostic(t));*/
 
     return diagnosticStorage.getDiagnostics();
+  }
+
+  private boolean noSpaceLeftAndRight(List<Token> tokens, Token t) {
+    int tokenIndex = t.getTokenIndex();
+    Token prevToken = tokens.get(tokenIndex - 1);
+    String prevTokenText = prevToken.getText();
+
+    Token nextToken = tokens.get(tokenIndex + 1);
+    String nextTokenText = nextToken.getText();
+
+    return PATTERN_SPACE.matcher(prevTokenText).matches()
+          ||
+           PATTERN_SPACE.matcher(nextTokenText).matches()
+      ;
+
+    //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
+  }
+  private boolean NoSpaceRight(List<Token> tokens, Token t) {
+    int tokenIndex = t.getTokenIndex();
+
+    Token nextToken = tokens.get(tokenIndex + 1);
+    String nextTokenText = nextToken.getText();
+
+    return PATTERN_SPACE.matcher(nextTokenText).matches();
+
+    //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
   }
 }

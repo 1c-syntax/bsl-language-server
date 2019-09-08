@@ -41,12 +41,19 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics)
-      /*.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(0, 15, 0, 15)))*/
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(2, 2, 2, 2)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(2, 4, 2, 4)));
+      // на +
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(2, 15, 2, 16)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 14, 3, 15)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(5, 12, 5, 13)))
+      // на =
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 9, 3, 10)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(5, 7, 5, 8)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 7, 6, 8)));
+
   }
+
 
 
 }
