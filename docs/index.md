@@ -181,4 +181,5 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
 | [UsingGoto](diagnostics/UsingGoto.md) | Using "goto" | Да |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование устаревщего свойства "ЭтаФорма" | Да |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |
