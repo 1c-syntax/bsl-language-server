@@ -184,5 +184,6 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
-| [UsingThisForm](diagnostics/UsingThisForm.md) |Using deprecated property "ThisForm" | Yes |
+| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |

@@ -22,7 +22,6 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -113,18 +112,12 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
 	}
 
 	@Override
-	public ParseTree visitFile(BSLParser.FileContext ctx) {
-		Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
-			.stream().filter(node -> modalityMethods.matcher((
-			(BSLParser.GlobalMethodCallContext) node).methodName().getText()).matches())
-			.forEach(node -> addDiagnostic(node));
-
-		return ctx;
-	}
-
-	private void addDiagnostic(ParseTree node) {
-		String methodName = ((BSLParser.GlobalMethodCallContext) node).methodName().getText();
-		diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) node,
-			getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+	public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+		String methodName = ctx.methodName().getText();
+		if(modalityMethods.matcher(methodName).matches()) {
+			diagnosticStorage.addDiagnostic(ctx,
+				getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+		}
+		return super.visitGlobalMethodCall(ctx);
 	}
 }
