@@ -33,18 +33,21 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1
+  type = DiagnosticType.ERROR, //TODO Не забыть заменить обратно
+  severity = DiagnosticSeverity.BLOCKER,
+  /*type = DiagnosticType.CODE_SMELL
+  severity = DiagnosticSeverity.INFO,*/
+  minutesToFix = 1,
+  activatedByDefault = true   //TODO поставить false
 )
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
-  // TODO если "<>" "<=" ">=" рядом - то это верно - надо сделать
+
   private static final String symbols_LR = "+-*/=%<>"; // символы, требующие пробелы слева и справа
   private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
 
   private static final Pattern PATTERN_LR = Pattern.compile(
-    "[\\Q"+ symbols_LR +"\\E]",
+    "[\\Q"+ symbols_LR +"\\E]|(<>)|(<=)|(>=)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
   private static final Pattern PATTERN_R = Pattern.compile(
@@ -62,27 +65,44 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
     List<Token> tokens = documentContext.getTokens();
 
     // проверяем слева и справа
-    Stream<Token> tokens1 = tokens.stream()
+    tokens.stream()
+      .filter((Token t) ->
+            PATTERN_LR.matcher( t.getText() ).matches())
+      .filter((Token t) ->
+            noSpaceLeft(tokens, t) || noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+            diagnosticStorage.addDiagnostic(t));
+
+    /*Stream<Token> tokens1 = tokens.stream()
       .filter((Token t) ->
       PATTERN_LR.matcher( t.getText() ).matches());
 
     Stream<Token> tokens2 = tokens1.filter((Token t) ->
-        noSpaceLeftAndRight(tokens, t)
+        noSpaceLeft(tokens, t) || noSpaceRight(tokens, t)
     );
     tokens2.forEach((Token t) ->
-      diagnosticStorage.addDiagnostic(t));
+      diagnosticStorage.addDiagnostic(t));*/
 
     // проверяем справа
+    tokens.stream()
+      .filter((Token t) ->
+            PATTERN_R.matcher( t.getText() ).matches())
+      .filter((Token t) ->
+            noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+            diagnosticStorage.addDiagnostic(t));
+
+    /*
     Stream<Token> tokens3 = tokens.stream()
       .filter((Token t) ->
         PATTERN_R.matcher( t.getText() ).matches());
 
     Stream<Token> tokens4 = tokens3.filter((Token t) ->
-      NoSpaceRight(tokens, t)
+      noSpaceRight(tokens, t)
     );
     tokens4.forEach((Token t) ->
       diagnosticStorage.addDiagnostic(t));
-
+*/
 
 
     /*documentContext.getTokens()
@@ -95,7 +115,30 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
     return diagnosticStorage.getDiagnostics();
   }
 
-  private boolean noSpaceLeftAndRight(List<Token> tokens, Token t) {
+  private boolean noSpaceLeft(List<Token> tokens, Token t) {
+    /*
+    int tokenIndex = t.getTokenIndex();
+
+    Token prevToken = tokens.get(tokenIndex - 1);
+    String prevTokenText = prevToken.getText();
+
+    return PATTERN_SPACE.matcher(prevTokenText).matches();
+*/
+    return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
+  }
+  private boolean noSpaceRight(List<Token> tokens, Token t) {
+    /*
+    int tokenIndex = t.getTokenIndex();
+
+    Token nextToken = tokens.get(tokenIndex + 1);
+    String nextTokenText = nextToken.getText();
+
+    return PATTERN_SPACE.matcher(nextTokenText).matches();
+*/
+    return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
+  }
+
+  private boolean noSpaceLeftAndRight1(List<Token> tokens, Token t) {
     int tokenIndex = t.getTokenIndex();
     Token prevToken = tokens.get(tokenIndex - 1);
     String prevTokenText = prevToken.getText();
@@ -104,13 +147,13 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
     String nextTokenText = nextToken.getText();
 
     return PATTERN_SPACE.matcher(prevTokenText).matches()
-          ||
-           PATTERN_SPACE.matcher(nextTokenText).matches()
+      ||
+      PATTERN_SPACE.matcher(nextTokenText).matches()
       ;
 
     //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
   }
-  private boolean NoSpaceRight(List<Token> tokens, Token t) {
+  private boolean noSpaceRight1(List<Token> tokens, Token t) {
     int tokenIndex = t.getTokenIndex();
 
     Token nextToken = tokens.get(tokenIndex + 1);
