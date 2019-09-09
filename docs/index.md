@@ -11,7 +11,7 @@
 
 [English version](en/index.md)
 
-* [Руководство контрибьютора](CONTRIBUTING.md)
+* [Руководство контрибьютора](contributing/index.md)
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>
@@ -182,5 +182,5 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
-| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование устаревщего свойства "ЭтаФорма" | Да |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |

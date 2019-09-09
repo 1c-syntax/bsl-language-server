@@ -11,7 +11,7 @@
 
 [Russian version](../index.md)
 
-- [Contributing guidelines](CONTRIBUTING.md)
+- [Contributing guidelines](contributing/index.md)
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
 - <a href="#analyze">Run in analyzer mode</a>
@@ -184,5 +184,5 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
-| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No |
+| [UsingThisForm](diagnostics/UsingThisForm.md) |Using deprecated property "ThisForm" | Yes |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |

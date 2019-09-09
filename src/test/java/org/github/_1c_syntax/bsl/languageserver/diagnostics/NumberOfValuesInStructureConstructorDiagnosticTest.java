@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 
