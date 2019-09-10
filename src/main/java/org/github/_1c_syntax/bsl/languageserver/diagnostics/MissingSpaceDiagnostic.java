@@ -30,7 +30,6 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR, //TODO Не забыть заменить обратно
@@ -64,33 +63,46 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
 
     List<Token> tokens = documentContext.getTokens();
 
+
     // проверяем слева и справа
-    tokens.stream()
+    //Вариант с одним проходом, но без указания где пропущено
+/*    tokens.stream()
       .filter((Token t) ->
-            PATTERN_LR.matcher( t.getText() ).matches())
+        PATTERN_LR.matcher( t.getText() ).matches())
       .filter((Token t) ->
-            noSpaceLeft(tokens, t) || noSpaceRight(tokens, t))
+        noSpaceLeft(tokens, t) || noSpaceRight(tokens, t))
       .forEach((Token t) ->
-            diagnosticStorage.addDiagnostic(t));
+        diagnosticStorage.addDiagnostic(t));*/
 
-    /*Stream<Token> tokens1 = tokens.stream()
-      .filter((Token t) ->
-      PATTERN_LR.matcher( t.getText() ).matches());
+    tokens.stream()
+      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
+      .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(3), t.getText())));
 
-    Stream<Token> tokens2 = tokens1.filter((Token t) ->
-        noSpaceLeft(tokens, t) || noSpaceRight(tokens, t)
-    );
-    tokens2.forEach((Token t) ->
-      diagnosticStorage.addDiagnostic(t));*/
+    tokens.stream()
+      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
+      .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(1), t.getText())));
+
+    tokens.stream()
+      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
+      .filter((Token t) -> !noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(2), t.getText())));
+
 
     // проверяем справа
     tokens.stream()
-      .filter((Token t) ->
-            PATTERN_R.matcher( t.getText() ).matches())
-      .filter((Token t) ->
-            noSpaceRight(tokens, t))
+      .filter((Token t) -> PATTERN_R.matcher( t.getText() ).matches())
+      .filter((Token t) -> noSpaceRight(tokens, t))
       .forEach((Token t) ->
-            diagnosticStorage.addDiagnostic(t));
+        diagnosticStorage.addDiagnostic(t,
+         getDiagnosticMessage(getErrorMessage(2), t.getText())));
 
     /*
     Stream<Token> tokens3 = tokens.stream()
@@ -115,6 +127,26 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
     return diagnosticStorage.getDiagnostics();
   }
 
+  private String getErrorMessage(int errCode) {
+    String errMessage = "Слева или справа";
+
+    switch (errCode){
+      case 1:
+        errMessage = "Слева";
+        break;
+      case 2:
+        errMessage = "Справа";
+        break;
+      case 3:
+        errMessage = "Слева и справа";
+        break;
+      default:
+        break;
+    }
+
+    return errMessage;
+  }
+
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
     /*
     int tokenIndex = t.getTokenIndex();
@@ -124,6 +156,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
 
     return PATTERN_SPACE.matcher(prevTokenText).matches();
 */
+
     return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
   }
   private boolean noSpaceRight(List<Token> tokens, Token t) {
@@ -135,6 +168,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
 
     return PATTERN_SPACE.matcher(nextTokenText).matches();
 */
+
     return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
   }
 
