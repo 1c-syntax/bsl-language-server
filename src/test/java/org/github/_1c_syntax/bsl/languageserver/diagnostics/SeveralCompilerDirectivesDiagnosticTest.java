@@ -41,10 +41,10 @@ class SeveralCompilerDirectivesDiagnosticTest extends AbstractDiagnosticTest<Sev
 
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 0, 15, 31)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(17, 0, 19, 31)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 0, 25, 31)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 0, 42, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 0, 51, 14)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(15, 6, 15, 30)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 6, 19, 30)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 6, 25, 30)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 10, 40, 34)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 10, 49, 34)));
   }
 }
