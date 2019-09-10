@@ -1,5 +1,3 @@
-
-
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.net.URI
 import java.util.*
@@ -13,6 +11,7 @@ plugins {
     id("io.franzbecker.gradle-lombok") version "3.1.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
     id("com.github.ben-manes.versions") version "0.22.0"
+
 }
 
 repositories {
@@ -150,34 +149,25 @@ lombok {
 
 open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
-    @Option(option = "key", description = "Diagnostic key")
+    @Option(option = "key", description = "Diagnostic key (required)")
     private var key = "";
 
-    @Option(option = "nameRu", description = "Diagnostic name in Russian")
+    @Option(option = "nameRu", description = "Diagnostic name in Russian (optional)")
     private var nameRu = "<Имя диагностики>";
 
-    @Option(option = "nameEn", description = "Diagnostic name in English")
+    @Option(option = "nameEn", description = "Diagnostic name in English (optional)")
     private var nameEn = "<Diagnostic name>";
 
     fun setKey(key: String) {
         this.key = key;
     }
-    fun getKey(): String {
-        return key;
-    }
 
     fun setNameRu(nameRu: String) {
         this.nameRu = nameRu;
     }
-    fun getNameRu(): String {
-        return nameRu;
-    }
 
     fun setNameEn(nameEn: String) {
         this.nameEn = nameEn;
-    }
-    fun getNameEn(): String {
-        return nameEn;
     }
 
     @OutputDirectory
@@ -195,9 +185,9 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
             throw Throwable("Empty diagnostic key")
         }
         logger.quiet("Creating new diagnostics files with the key '{}'", key);
-        var srcPath = File(outputDir.get().asFile.path, "src");
-        var packPath = "org/github/_1c_syntax/bsl/languageserver/diagnostics";
-        var docPath = File(outputDir.get().asFile.path, "docs");
+        val srcPath = File(outputDir.get().asFile.path, "src");
+        val packPath = "org/github/_1c_syntax/bsl/languageserver/diagnostics";
+        val docPath = File(outputDir.get().asFile.path, "docs");
         createFile("${docPath}/diagnostics/${key}.md",
                 "# ${nameRu}\n\n<Описание диагностики>\n\n## Параметры\n\n" +
                         "* `ИмяПараметра` - `ТипПараметра` - Описание параметра\n");
