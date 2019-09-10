@@ -181,7 +181,9 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Using "Cancel" parameter | Yes |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes |
-| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Yes |
+| [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes |
+| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
-| [UsingThisForm](diagnostics/UsingThisForm.md) |Using deprecated property "ThisForm" | Yes |
+| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |
