@@ -45,6 +45,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
   private static final String symbols_LR = "+-*/=%<>"; // символы, требующие пробелы слева и справа
   private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
 
+  //TODO Извлечь Pattern.compile в метод
   private static final Pattern PATTERN_LR = Pattern.compile(
     "[\\Q"+ symbols_LR +"\\E]|(<>)|(<=)|(>=)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
@@ -60,6 +61,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+
+    //TODO Задачи
+    //1. Унарные + и -
+    //2. Дописать тест
 
     List<Token> tokens = documentContext.getTokens();
 
@@ -128,6 +133,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private String getErrorMessage(int errCode) {
+    //TODO Локализовать сообщение
     String errMessage = "Слева или справа";
 
     switch (errCode){
