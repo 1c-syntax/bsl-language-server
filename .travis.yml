@@ -10,8 +10,14 @@ addons:
 git:
   depth: false
 
-after_script:
-  - ./gradlew sonarqube
+jobs:
+  - include:
+    - stage: jdk8
+      jdk: openjdk8
+      after_script:
+      - ./gradlew sonarqube
+    - stage: jdk11
+      jdk: openjdk11
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
