@@ -20,6 +20,9 @@ jobs:
     - name: jdk11
       jdk: openjdk11
 
+stages:
+ - test
+
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
