@@ -11,12 +11,13 @@ git:
   depth: false
 
 jobs:
-  - include:
-    - stage: jdk8
+  include:
+    - stage: test
+      name: jdk8
       jdk: openjdk8
       after_script:
       - ./gradlew sonarqube
-    - stage: jdk11
+    - name: jdk11
       jdk: openjdk11
 
 before_cache:
