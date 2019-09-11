@@ -11,6 +11,7 @@ plugins {
     id("io.franzbecker.gradle-lombok") version "3.1.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
     id("com.github.ben-manes.versions") version "0.22.0"
+
 }
 
 repositories {
@@ -145,3 +146,7 @@ lombok {
     version = "1.18.8"
     sha256 = "0396952823579b316a0fe85cbd871bbb3508143c2bcbd985dd7800e806cb24fc"
 }
+
+// custom developers tools
+apply(from = "gradle/tools-new-diagnostic.gradle.kts")
+apply(from = "gradle/tools-update-diagnostics-index.gradle.kts")
