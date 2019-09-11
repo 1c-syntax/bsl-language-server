@@ -38,6 +38,10 @@ dependencies {
     compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.9")
     compile("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.9.9")
 
+    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+    compile("javax.xml.bind", "jaxb-api", "2.3.1")
+
+
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile("com.google.code.findbugs", "jsr305", "3.0.2")
 
