@@ -148,5 +148,5 @@ lombok {
 }
 
 // custom developers tools
-apply( from = "gradle/tools-new-diagnostic.gradle.kts")
-apply( from = "gradle/tools-update-diagnostics-index.gradle.kts")
+apply(from = "gradle/tools-new-diagnostic.gradle.kts")
+apply(from = "gradle/tools-update-diagnostics-index.gradle.kts")
