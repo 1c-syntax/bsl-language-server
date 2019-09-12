@@ -34,11 +34,13 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import org.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR, //TODO Не забыть заменить обратно
@@ -49,32 +51,28 @@ import java.util.regex.Pattern;
   activatedByDefault = true   //TODO поставить false
 )
 
-public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
 
-  private static final String symbols_LR = "+-*/=%<>"; // символы, требующие пробелы слева и справа
+  private static final String symbols_L = ")";        // символы, требующие пробелы только слева
   private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
+  //private static final String symbols_LR = "-"; // символы, требующие пробелы слева и справа
+  private static final String symbols_LR = "+-*/=%<>"; // символы, требующие пробелы слева и справа
 
   //TODO Извлечь Pattern.compile в метод
-  private static final Pattern PATTERN_LR = Pattern.compile(
-    "[\\Q"+ symbols_LR +"\\E]|(<>)|(<=)|(>=)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
-  private static final Pattern PATTERN_R = Pattern.compile(
-    "[\\Q"+ symbols_R +"\\E]",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
-  private static final Pattern PATTERN_SPACE = Pattern.compile(
-    "\\S+",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
+  //private static final Pattern PATTERN_LR = compilePatterm("[\\Q"+ symbols_LR +"\\E]");
+  private static final Pattern PATTERN_LR = compilePatterm("[\\Q"+ symbols_LR +"\\E]|(<>)|(<=)|(>=)");
+  private static final Pattern PATTERN_R = compilePatterm("[\\Q"+ symbols_R +"\\E]");
+  private static final Pattern PATTERN_SPACE = compilePatterm("\\S+");
+
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
     //TODO Задачи
     // 1. Унарные + и -
-    // 2. Дописать тест
-    // 3. Справа от запятой может быть запятая
+    //    Унарным считаем, если перед ним (пропуская пробельные символы) находим +-*/=%<>([,Возврат а также <> <= >=
+    // +2. Дописать тест
+    // +3. Справа от запятой может быть запятая
 
     List<Token> tokens = documentContext.getTokens();
 
@@ -89,13 +87,30 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t));*/
 
-    tokens.stream()
-      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
+    List<Token> tokensLoR = tokens
+      .parallelStream()
+      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches()).collect(Collectors.toList());
+
+
+    tokensLoR.stream()
+      .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(1), t.getText())));
+
+    tokensLoR.stream()
+      .filter((Token t) -> !noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(2), t.getText())));
+
+    tokensLoR.stream()
       .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t,
           getDiagnosticMessage(getErrorMessage(3), t.getText())));
 
+    /*
     tokens.stream()
       .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
       .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
@@ -110,14 +125,33 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
         diagnosticStorage.addDiagnostic(t,
           getDiagnosticMessage(getErrorMessage(2), t.getText())));
 
+    tokens.stream()
+      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
+      .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(3), t.getText())));
+*/
 
     // проверяем справа
+    List<Token> tokensR = tokens
+      .parallelStream()
+      .filter((Token t) -> PATTERN_R.matcher( t.getText() ).matches()).collect(Collectors.toList());
+
+    tokensR.stream()
+      .filter((Token t) -> noSpaceRight(tokens, t))
+      .forEach((Token t) ->
+        diagnosticStorage.addDiagnostic(t,
+          getDiagnosticMessage(getErrorMessage(2), t.getText())));
+    /*
     tokens.stream()
       .filter((Token t) -> PATTERN_R.matcher( t.getText() ).matches())
       .filter((Token t) -> noSpaceRight(tokens, t))
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t,
          getDiagnosticMessage(getErrorMessage(2), t.getText())));
+    */
+
 
     /*
     Stream<Token> tokens3 = tokens.stream()
@@ -131,7 +165,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       diagnosticStorage.addDiagnostic(t));
 */
 
-
     /*documentContext.getTokens()
       .parallelStream()
       .filter((Token t) ->
@@ -142,19 +175,27 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     return diagnosticStorage.getDiagnostics();
   }
 
+
+  private static Pattern compilePatterm(String s) {
+    return Pattern.compile(
+      s,
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+  }
+
   private String getErrorMessage(int errCode) {
-    //TODO Локализовать сообщение
-    String errMessage = "Слева или справа";
+    //TODO Локализовать сообщения
+    String errMessage = "Слева или справа"; // Left or right
 
     switch (errCode){
       case 1:
-        errMessage = "Слева";
+        errMessage = "Слева"; // To the left
         break;
       case 2:
-        errMessage = "Справа";
+        errMessage = "Справа"; // To the right
         break;
       case 3:
-        errMessage = "Слева и справа";
+        errMessage = "Слева и справа"; // Left and right
         break;
       default:
         break;
@@ -184,6 +225,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     return PATTERN_SPACE.matcher(nextTokenText).matches();
 */
+    // Если это запятая, то допустимо что бы справа от нее была запятая
+    if (t.getType() == BSLLexer.COMMA && tokens.get(t.getTokenIndex() + 1).getType() == BSLLexer.COMMA)
+      return false;
 
     return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
   }
@@ -214,6 +258,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
   }
 
+
+
+/*
   @Override
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
@@ -223,14 +270,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     List<TextEdit> textEdits = new ArrayList<>();
 
-    /*diagnostics.forEach((Diagnostic diagnostic) -> {
+    diagnostics.forEach((Diagnostic diagnostic) -> {
       Range range = diagnostic.getRange();
       String originalText = documentContext.getText(range);
       String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
 
       TextEdit textEdit = new TextEdit(range, canonicalText);
       textEdits.add(textEdit);
-    });*/
+    });
 
     return CodeActionProvider.createCodeActions(
       textEdits,
@@ -238,5 +285,5 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       documentContext.getUri(),
       diagnostics
     );
-  }
+  }*/
 }
