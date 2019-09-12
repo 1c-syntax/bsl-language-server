@@ -48,11 +48,17 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
 	private BSLParserRuleContext nodeEndFile = null;
 
 	@Override
+	public ParseTree visitExceptCodeBlock(BSLParser.ExceptCodeBlockContext ctx) {
+		nodeEndTransaction = null;
+		return super.visitExceptCodeBlock(ctx);
+	}
+
+	@Override
 	public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 		int ctxType = ctx.getStart().getType();
 
-		if(ctxType == BSLParser.TRY_KEYWORD || ctxType == BSLParser.EXCEPT_KEYWORD) {
-			if(ctxType == BSLParser.TRY_KEYWORD && nodeEndTransaction != null) {
+		if(ctxType == BSLParser.TRY_KEYWORD ) {
+			if(nodeEndTransaction != null) {
 				diagnosticStorage.addDiagnostic(nodeEndTransaction);
 			}
 			nodeEndTransaction = null;
