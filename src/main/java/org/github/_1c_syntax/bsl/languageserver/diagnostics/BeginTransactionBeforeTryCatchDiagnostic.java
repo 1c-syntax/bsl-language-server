@@ -17,42 +17,38 @@ import java.util.stream.Collectors;
 	severity = DiagnosticSeverity.MAJOR,
 	minutesToFix = 10
 )
-public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorDiagnostic {
-
-	private Pattern endTransaction = Pattern.compile(
-		"ЗафиксироватьТранзакцию|CommitTransaction",
+public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDiagnostic {
+	private Pattern beginTransaction = Pattern.compile(
+		"НачатьТранзакцию|BeginTransaction",
 		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private BSLParserRuleContext nodeEndTransaction = null;
+	private BSLParserRuleContext nodeBeginTransaction = null;
 	private BSLParserRuleContext nodeEndFile = null;
 
 	@Override
 	public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 		int ctxType = ctx.getStart().getType();
 
-		if(ctxType == BSLParser.TRY_KEYWORD || ctxType == BSLParser.EXCEPT_KEYWORD) {
-			if(ctxType == BSLParser.TRY_KEYWORD && nodeEndTransaction != null) {
-				diagnosticStorage.addDiagnostic(nodeEndTransaction);
-			}
-			nodeEndTransaction = null;
+		if(ctxType == BSLParser.TRY_KEYWORD) {
+			nodeBeginTransaction = null;
 			return super.visitStatement(ctx);
 		}
 
-		// Это код после ЗафиксироватьТранзакцию
-		if(nodeEndTransaction != null) {
-			diagnosticStorage.addDiagnostic(nodeEndTransaction);
-			nodeEndTransaction = null;
+		// Это код после НачатьТранзакцию
+		if(nodeBeginTransaction != null) {
+			diagnosticStorage.addDiagnostic(nodeBeginTransaction);
+			nodeBeginTransaction = null;
 		}
 
 		// Ищем только в идентификаторах
-		if(ctxType == BSLParser.IDENTIFIER && endTransaction.matcher(ctx.getText()).find()) {
-			nodeEndTransaction = ctx;
+		if(ctxType == BSLParser.IDENTIFIER && beginTransaction.matcher(ctx.getText()).find()) {
+			nodeBeginTransaction = ctx;
 		}
 
-		// Если это код в конце модуля, ЗафиксироватьТранзакию был/есть тогда фиксируем
-		if(nodeEndFile != null && nodeEndTransaction != null && nodeEndFile == ctx) {
-			diagnosticStorage.addDiagnostic(nodeEndTransaction);
-			nodeEndTransaction = null;
+		// Если это код в конце модуля, НачатьТранзакию был/есть тогда фиксируем
+		if(nodeEndFile != null && nodeBeginTransaction != null && nodeEndFile == ctx) {
+			diagnosticStorage.addDiagnostic(nodeBeginTransaction);
+			nodeBeginTransaction = null;
 		}
 		return super.visitStatement(ctx);
 	}

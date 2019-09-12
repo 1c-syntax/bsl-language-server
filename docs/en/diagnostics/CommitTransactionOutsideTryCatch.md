@@ -1,4 +1,4 @@
-# Violating transaction rules for the 'Commit Transaction' method
+# Violating transaction rules for the 'CommitTransaction' method
 
 Метод ЗафиксироватьТранзакцию должен идти последним в блоке Попытка перед оператором Исключение, чтобы  гарантировать, что после ЗафиксироватьТранзакцию не возникнет исключение.
 
