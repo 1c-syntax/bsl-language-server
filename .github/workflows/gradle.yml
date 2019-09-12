@@ -17,15 +17,8 @@ jobs:
         java-version: ${{ matrix.java_version }}
     - name: Build with Gradle
       run: ./gradlew check
-
-  sonarcloud:
-    name: SonarCloud
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        with:
-          java-version: 11
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    - name: SonarCloud Scan
+      if: ${{ matrix.java_version }} == '11' && ${{ matrix.os }} = 'ubuntu-latest'
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
