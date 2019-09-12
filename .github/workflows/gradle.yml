@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,3 +17,15 @@ jobs:
         java-version: ${{ matrix.java_version }}
     - name: Build with Gradle
       run: ./gradlew check
+
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          java-version: 11
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
