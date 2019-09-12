@@ -72,8 +72,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
     //TODO Задачи
-    //1. Унарные + и -
-    //2. Дописать тест
+    // 1. Унарные + и -
+    // 2. Дописать тест
+    // 3. Справа от запятой может быть запятая
 
     List<Token> tokens = documentContext.getTokens();
 
