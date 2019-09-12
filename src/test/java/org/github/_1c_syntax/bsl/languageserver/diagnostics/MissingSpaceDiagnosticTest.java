@@ -45,6 +45,9 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 
     assertThat(diagnostics).hasSize(24);
 
+    /*assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)));
+
     assertThat(diagnostics.get(0).getRange().equals(RangeHelper.newRange(4, 8, 4, 9)));
     assertThat(diagnostics.get(1).getRange().equals(RangeHelper.newRange(4, 12, 4, 13)));
     assertThat(diagnostics.get(2).getRange().equals(RangeHelper.newRange(4, 18, 4, 19)));
@@ -77,47 +80,48 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
       // на ;
     assertThat(diagnostics.get(22).getRange().equals(RangeHelper.newRange(28, 13, 28, 14)));
     assertThat(diagnostics.get(23).getRange().equals(RangeHelper.newRange(28, 27, 28, 28)));
-
+*/
 
       // на +
-/*    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 21, 4, 22)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 15, 7, 16)))
-      // на =
+
+    assertThat(diagnostics)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 8, 7, 9)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 8, 8, 9)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 8, 9, 9)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(10, 9, 10, 10)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 9, 11, 10)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 8, 13, 9)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 12, 7, 13)))
+      // на =
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 15, 4, 16)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 5, 7, 6)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 5, 8, 6)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 5, 9, 6)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(10, 6, 10, 7)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 6, 11, 7)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 5, 13, 6)))
       // на ,
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 12, 4, 13)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 9, 4, 10)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(17, 18, 17, 19)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(28, 9, 28, 10)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(28, 27, 28, 28)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(29, 9, 29, 10)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(29, 28, 29, 29)))
       // на ;
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 8, 4, 9)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(28, 13, 28, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 12, 4, 13)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(29, 13, 29, 14)))
       // на -
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 15, 8, 16)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 13)))
       // на *
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(10, 16, 10, 17)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(10, 13, 10, 14)))
       // на /
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 17, 11, 18)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 14, 11, 15)))
       // на %
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 16, 13, 17)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 13, 13, 14)))
       // на >
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(18, 11, 18, 12)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(18, 8, 18, 9)))
       // на <
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 12, 19, 13)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 9, 19, 10)))
       // на >=
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 11, 22, 12)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 8, 22, 10)))
       // на <=
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 12, 23, 13)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 9, 23, 11)))
       // на <>
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 11, 25, 12)))
-;*/
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 8, 25, 10)))
+;
   }
 
   @Test
