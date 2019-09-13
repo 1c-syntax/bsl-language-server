@@ -27,6 +27,8 @@ import org.antlr.v4.runtime.TokenSource;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -37,6 +39,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
@@ -55,7 +58,7 @@ import java.util.stream.Collectors;
   activatedByDefault = true   //TODO поставить false
 )
 
-public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
+public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final String symbols_L = ")";        // символы, требующие пробелы только слева
   private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
@@ -152,9 +155,21 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
 
     tokensR.stream()
       .filter((Token t) -> noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(2), t.getText())));
+      .forEach((Token t) ->{
+
+          /*List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+          String relatedMessage = getDiagnosticMessage(getErrorMessage(2), t.getText());
+          relatedInformation.add(RangeHelper.createRelatedInformation(
+            documentContext.getUri(),
+            RangeHelper.newRange(t.getLine()-1, t.getTokenIndex(), t.getLine()-1, t.getTokenIndex()),
+            relatedMessage
+          ));
+
+        diagnosticStorage.addDiagnostic(t, relatedInformation);*/
+
+        diagnosticStorage.addDiagnostic(t, getDiagnosticMessage(getErrorMessage(2), t.getText()));
+      });
+
     /*
     tokens.stream()
       .filter((Token t) -> PATTERN_R.matcher( t.getText() ).matches())
@@ -277,7 +292,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
 
 
 
-/*
+
   @Override
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
@@ -288,12 +303,24 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-      String originalText = documentContext.getText(range);
-      String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
+      String diagnosticMessage = diagnostic.getMessage().toLowerCase();
+      Boolean isLeft = diagnosticMessage.contains("слева"); // TODO локализовать
+      Boolean isRight = diagnosticMessage.contains("справа");
 
-      TextEdit textEdit = new TextEdit(range, canonicalText);
-      textEdits.add(textEdit);
+      Range range = diagnostic.getRange();
+
+      if (isLeft) {
+        TextEdit textEdit = new TextEdit(
+          new Range(range.getStart(), range.getStart()),
+          " ");
+        textEdits.add(textEdit);
+      }
+      if (isRight) {
+        TextEdit textEdit = new TextEdit(
+          new Range(range.getEnd(), range.getEnd()),
+          " ");
+        textEdits.add(textEdit);
+      }
     });
 
     return CodeActionProvider.createCodeActions(
@@ -302,5 +329,5 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
       documentContext.getUri(),
       diagnostics
     );
-  }*/
+  }
 }
