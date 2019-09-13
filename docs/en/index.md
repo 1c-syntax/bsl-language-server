@@ -145,7 +145,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | --- | --- | :-: |
 | [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Canonical spelling of keywords | Yes |
 | [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Cognitive complexity | Yes |
-| [CommentedCode](diagnostics/CommentedCode.md) | Commented code | Yes |
+| [CommentedCode](diagnostics/CommentedCode.md) | Commented out code | Yes |
 | [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes |
 | [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes |
 | [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Empty code block | Yes |
