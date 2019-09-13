@@ -38,12 +38,16 @@ public class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<Unreac
 	void test() {
 		List<Diagnostic> diagnostics = getDiagnostics();
 
-		assertThat(diagnostics).hasSize(5);
+		assertThat(diagnostics).hasSize(9);
 		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 0, 20, 56)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 12, 12, 20)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 12, 21, 20)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(30, 12, 30, 20)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(37, 4, 41, 15)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(46, 4, 51, 15)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(58, 12, 58, 20)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(67, 12, 69, 21)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(76, 4, 78, 13)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(82, 0, 82, 9)));
 	}
 }
