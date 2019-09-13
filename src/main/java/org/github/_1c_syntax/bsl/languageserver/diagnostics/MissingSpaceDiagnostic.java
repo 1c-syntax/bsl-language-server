@@ -29,6 +29,9 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
+import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -39,6 +42,7 @@ import org.github._1c_syntax.bsl.parser.BSLLexer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -70,9 +74,17 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
 
     //TODO Задачи
     // 1. Унарные + и -
-    //    Унарным считаем, если перед ним (пропуская пробельные символы) находим +-*/=%<>([,Возврат а также <> <= >=
+    //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
     // +2. Дописать тест
     // +3. Справа от запятой может быть запятая
+    // 4. Реализовать быстрое исправление
+    // 5. Вынести в параметры:
+    //    - для запятой есть исключение - справа может быть другая запятая. Сделать параметр
+    //        типа "Допускать справа от запятой другую запятую" или "Допускать несколько запятых подряд"
+    //    - символы, у которых проверять слева и справа
+    //    - символы, у которых проверять только слева
+    //    - символы, у которых проверять только справа
+    //    - для унарных знаков, параметр, проверять ли справа наличие пробела - по умолчанию проверять
 
     List<Token> tokens = documentContext.getTokens();
 
@@ -185,6 +197,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic  {//
 
   private String getErrorMessage(int errCode) {
     //TODO Локализовать сообщения
+
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
+    Boolean isRU = configuration.getDiagnosticLanguage() == DiagnosticLanguage.RU;
+
+
     String errMessage = "Слева или справа"; // Left or right
 
     switch (errCode){
