@@ -35,8 +35,8 @@ import java.util.regex.Pattern;
 @DiagnosticMetadata(
 	type = DiagnosticType.CODE_SMELL,
 	severity = DiagnosticSeverity.MAJOR,
-	minutesToFix = 15,
 	scope = DiagnosticScope.BSL,
+	minutesToFix = 15,
 	activatedByDefault = false
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
