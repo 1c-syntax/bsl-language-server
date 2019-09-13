@@ -82,9 +82,8 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
     assertThat(diagnostics.get(23).getRange().equals(RangeHelper.newRange(28, 27, 28, 28)));
 */
 
-      // на +
-
     assertThat(diagnostics)
+      // на +
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 12, 7, 13)))
       // на =
@@ -121,7 +120,7 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 9, 23, 11)))
       // на <>
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 8, 25, 10)))
-;
+    ;
   }
 
   @Test
@@ -129,7 +128,7 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
-      diagnostics.get(0),
+      diagnostics.get(23),
       RangeHelper.newRange(10, 8, 10, 8)
     );
 
