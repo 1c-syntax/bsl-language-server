@@ -178,6 +178,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No |
 | [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes |
 | [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes |
+| [UnreachableCode](diagnostics/UnreachableCode.md) | Unreachable Code | Yes |
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Using "Cancel" parameter | Yes |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes |

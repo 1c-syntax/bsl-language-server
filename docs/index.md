@@ -176,6 +176,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет |
 | [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да |
 | [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да |
+| [UnreachableCode](diagnostics/UnreachableCode.md) | Недостижимый код | Да |
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
