@@ -138,13 +138,37 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
       .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
-      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(23)))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().equals("Перем")
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().equals(" ")
       )
     ;
   }
 
+  @Test
+  void testConfigure() {
+    // given
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("listForCheckLeftAndRight", "(");
+    getDiagnosticInstance().configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(12);
+/*    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 0, 3, 120));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 121));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(5, 0, 5, 122));
+*/
+    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("checkSpaceToRightOfUnary", "true");
+    getDiagnosticInstance().configure(configuration);
+
+    // when
+    diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(36);
+  }
 }
