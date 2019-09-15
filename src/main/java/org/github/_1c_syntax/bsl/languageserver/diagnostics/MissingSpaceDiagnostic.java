@@ -21,30 +21,24 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.TokenSource;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,22 +49,76 @@ import java.util.stream.Collectors;
   /*type = DiagnosticType.CODE_SMELL
   severity = DiagnosticSeverity.INFO,*/
   minutesToFix = 1,
-  activatedByDefault = true   //TODO поставить false
+  activatedByDefault = true   //TODO решить, включено ли по умолчанию
 )
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final String symbols_L = ")";        // символы, требующие пробелы только слева
   private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
-  //private static final String symbols_LR = "-"; // символы, требующие пробелы слева и справа
-  private static final String symbols_LR = "+-*/=%<>"; // символы, требующие пробелы слева и справа
+//  private static final String symbols_LR = "-"; // символы, требующие пробелы слева и справа
+//  private static final String DEFAULT_SYMBOLS_LR = "+ - * / = % < >"; // символы, требующие пробелы слева и справа
+  private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы слева и справа
+//  private static final String DEFAULT_checkSpacesLeftAndRight = "+-*/=%<>"; // символы, требующие пробелы слева и справа
+  private static final String DEFAULT_checkSpaceToRightOfUnary = "false";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + default_listForCheckLeftAndRight,
+    description = "Список проверяемых символов через пробел (пробелы с обоих сторон). Например: + - * / = % < >"
+  )
+//  private static String SYMBOLS_LR = DEFAULT_SYMBOLS_LR.trim().replace(" ", "");
+  private static String listForCheckLeftAndRight = getRegularString(default_listForCheckLeftAndRight);
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + DEFAULT_checkSpaceToRightOfUnary,
+    description = "Проверять наличие пробела справа от унарных знаков (+ -)"
+  )
+  private static Boolean checkSpaceToRightOfUnary = DEFAULT_checkSpaceToRightOfUnary == "true";
+
+
+
+  private static String getRegularString(String string) {
+
+    String singleChar = "", doubleChar = "";
+
+    String[] listOfString = string.trim().split(" ");
+
+    for (String s:listOfString) {
+      if (s.length() == 1){
+        singleChar = singleChar + s;
+      } else {
+        doubleChar = doubleChar + "|(" + s + ")";
+      }
+    }
+
+    return "[\\Q"+ singleChar +"\\E]"+doubleChar;
+  }
+
 
   //TODO Извлечь Pattern.compile в метод
   //private static final Pattern PATTERN_LR = compilePatterm("[\\Q"+ symbols_LR +"\\E]");
-  private static final Pattern PATTERN_LR = compilePatterm("[\\Q"+ symbols_LR +"\\E]|(<>)|(<=)|(>=)");
-  private static final Pattern PATTERN_R = compilePatterm("[\\Q"+ symbols_R +"\\E]");
-  private static final Pattern PATTERN_SPACE = compilePatterm("\\S+");
+  //private static Pattern PATTERN_LR = compilePatterm("[\\Q"+ checkSpacesLeftAndRight +"\\E]|(<>)|(<=)|(>=)");
+  private static Pattern PATTERN_LR = compilePattern(listForCheckLeftAndRight);
+  private static final Pattern PATTERN_R = compilePattern("[\\Q"+ symbols_R +"\\E]");
+  private static final Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
 
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+
+    String SYMBOLS_LR_String = (String) configuration.get("listForCheckLeftAndRight");
+    this.listForCheckLeftAndRight = getRegularString(SYMBOLS_LR_String);
+    PATTERN_LR = compilePattern(listForCheckLeftAndRight);
+
+    String Enable_chech_Unary = (String) configuration.get("checkSpaceToRightOfUnary");
+    this.checkSpaceToRightOfUnary = Enable_chech_Unary == "true";
+
+  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -80,17 +128,20 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
     // +2. Дописать тест
     // +3. Справа от запятой может быть запятая
-    // 4. Реализовать быстрое исправление
+    // +4. Реализовать быстрое исправление
     // 5. Вынести в параметры:
     //    - для запятой есть исключение - справа может быть другая запятая. Сделать параметр
-    //        типа "Допускать справа от запятой другую запятую" или "Допускать несколько запятых подряд"
+    //        типа "Допускать справа от запятой другую запятую" или "Разрешить несколько запятых подряд"
     //    - символы, у которых проверять слева и справа
     //    - символы, у которых проверять только слева
     //    - символы, у которых проверять только справа
     //    - для унарных знаков, параметр, проверять ли справа наличие пробела - по умолчанию проверять
+    //        типа "Проверять наличие пробела справа от унарных знаков"
 
     List<Token> tokens = documentContext.getTokens();
 
+    //LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
+    //Boolean isRU = configuration.getDiagnosticLanguage() == DiagnosticLanguage.RU;
 
     // проверяем слева и справа
     //Вариант с одним проходом, но без указания где пропущено
@@ -203,7 +254,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
 
-  private static Pattern compilePatterm(String s) {
+  private static Pattern compilePattern(String s) {
     return Pattern.compile(
       s,
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
@@ -217,17 +268,17 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     Boolean isRU = configuration.getDiagnosticLanguage() == DiagnosticLanguage.RU;
 
 
-    String errMessage = "Слева или справа"; // Left or right
+    String errMessage = isRU ? "Слева или справа" : "Left or right";
 
     switch (errCode){
       case 1:
-        errMessage = "Слева"; // To the left
+        errMessage = isRU ? "Слева" : "To the left";
         break;
       case 2:
-        errMessage = "Справа"; // To the right
+        errMessage = isRU ? "Справа" : "To the right";
         break;
       case 3:
-        errMessage = "Слева и справа"; // Left and right
+        errMessage = isRU ? "Слева и справа" : "Left and right";
         break;
       default:
         break;
@@ -246,7 +297,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     return PATTERN_SPACE.matcher(prevTokenText).matches();
 */
 
-    return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
+    return PATTERN_NOT_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
   }
   private boolean noSpaceRight(List<Token> tokens, Token t) {
     /*
@@ -257,11 +308,38 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     return PATTERN_SPACE.matcher(nextTokenText).matches();
 */
+
+    // Если это унарный + или - то пробел справа проверяем в соответствии с параметром
+    if (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS){
+      // Надо понять что они унарные
+      if (isUnaryChar(tokens, t) && !checkSpaceToRightOfUnary) // TODO false - если настройка выключена
+        return false;
+    }
+
     // Если это запятая, то допустимо что бы справа от нее была запятая
     if (t.getType() == BSLLexer.COMMA && tokens.get(t.getTokenIndex() + 1).getType() == BSLLexer.COMMA)
       return false;
 
-    return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
+    return PATTERN_NOT_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
+  }
+
+  private boolean isUnaryChar(List<Token> tokens, Token t) {
+    // 1. Унарные + и -
+    //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
+
+    Pattern CHECK_CHAR = compilePattern(getRegularString("+ - * / = % < > ( [ , Возврат <> <= >="));
+
+    Integer currentIndex = t.getTokenIndex() - 1;
+    while (true){
+
+      if (PATTERN_NOT_SPACE.matcher(tokens.get(currentIndex).getText()).matches())
+        if (CHECK_CHAR.matcher(tokens.get(currentIndex).getText()).matches())
+          return true;
+        else
+          return false;
+
+      currentIndex--;
+    }
   }
 
   private boolean noSpaceLeftAndRight1(List<Token> tokens, Token t) {
@@ -272,9 +350,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     Token nextToken = tokens.get(tokenIndex + 1);
     String nextTokenText = nextToken.getText();
 
-    return PATTERN_SPACE.matcher(prevTokenText).matches()
+    return PATTERN_NOT_SPACE.matcher(prevTokenText).matches()
       ||
-      PATTERN_SPACE.matcher(nextTokenText).matches()
+      PATTERN_NOT_SPACE.matcher(nextTokenText).matches()
       ;
 
     //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
@@ -285,7 +363,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     Token nextToken = tokens.get(tokenIndex + 1);
     String nextTokenText = nextToken.getText();
 
-    return PATTERN_SPACE.matcher(nextTokenText).matches();
+    return PATTERN_NOT_SPACE.matcher(nextTokenText).matches();
 
     //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
   }
@@ -304,18 +382,18 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       String diagnosticMessage = diagnostic.getMessage().toLowerCase();
-      Boolean isLeft = diagnosticMessage.contains("слева"); // TODO локализовать
-      Boolean isRight = diagnosticMessage.contains("справа");
+      Boolean missedLeft = diagnosticMessage.contains("слева"); // TODO локализовать
+      Boolean missedRight = diagnosticMessage.contains("справа");
 
       Range range = diagnostic.getRange();
 
-      if (isLeft) {
+      if (missedLeft) {
         TextEdit textEdit = new TextEdit(
           new Range(range.getStart(), range.getStart()),
           " ");
         textEdits.add(textEdit);
       }
-      if (isRight) {
+      if (missedRight) {
         TextEdit textEdit = new TextEdit(
           new Range(range.getEnd(), range.getEnd()),
           " ");
