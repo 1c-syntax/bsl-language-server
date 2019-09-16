@@ -41,7 +41,7 @@ import java.util.Map;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 5
+  minutesToFix = 1
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
