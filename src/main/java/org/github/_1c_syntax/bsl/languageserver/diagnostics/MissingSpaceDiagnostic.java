@@ -61,6 +61,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы слева и справа
 //  private static final String DEFAULT_checkSpacesLeftAndRight = "+-*/=%<>"; // символы, требующие пробелы слева и справа
   private static final String DEFAULT_checkSpaceToRightOfUnary = "false";
+  private static Boolean diagnosticLanguageIsRU = true;
 
   @DiagnosticParameter(
     type = String.class,
@@ -76,6 +77,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     description = "Проверять наличие пробела справа от унарных знаков (+ -)"
   )
   private static Boolean checkSpaceToRightOfUnary = DEFAULT_checkSpaceToRightOfUnary == "true";
+
 
 
 
@@ -97,7 +99,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
 
-  //TODO Извлечь Pattern.compile в метод
   //private static final Pattern PATTERN_LR = compilePatterm("[\\Q"+ symbols_LR +"\\E]");
   //private static Pattern PATTERN_LR = compilePatterm("[\\Q"+ checkSpacesLeftAndRight +"\\E]|(<>)|(<=)|(>=)");
   private static Pattern PATTERN_LR = compilePattern(listForCheckLeftAndRight);
@@ -110,6 +111,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     if (configuration == null) {
       return;
     }
+
+    String diagnosticLanguageIsParam = (String) configuration.get("diagnosticLanguage");
+    this.diagnosticLanguageIsRU = diagnosticLanguageIsParam == "ru";
 
     String SYMBOLS_LR_String = (String) configuration.get("listForCheckLeftAndRight");
     this.listForCheckLeftAndRight = getRegularString(SYMBOLS_LR_String);
@@ -264,21 +268,18 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private String getErrorMessage(int errCode) {
     //TODO Локализовать сообщения
 
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-    Boolean isRU = configuration.getDiagnosticLanguage() == DiagnosticLanguage.RU;
 
-
-    String errMessage = isRU ? "Слева или справа" : "Left or right";
+    String errMessage = diagnosticLanguageIsRU ? "Слева или справа" : "Left or right";
 
     switch (errCode){
       case 1:
-        errMessage = isRU ? "Слева" : "To the left";
+        errMessage = diagnosticLanguageIsRU ? "Слева" : "To the left";
         break;
       case 2:
-        errMessage = isRU ? "Справа" : "To the right";
+        errMessage = diagnosticLanguageIsRU ? "Справа" : "To the right";
         break;
       case 3:
-        errMessage = isRU ? "Слева и справа" : "Left and right";
+        errMessage = diagnosticLanguageIsRU ? "Слева и справа" : "Left and right";
         break;
       default:
         break;
