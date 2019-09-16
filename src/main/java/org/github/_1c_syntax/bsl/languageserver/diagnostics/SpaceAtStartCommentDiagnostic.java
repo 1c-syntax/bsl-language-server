@@ -51,7 +51,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c),//©";
   private static final Pattern goodCommentPattern = Pattern.compile(
     "(?://\\s.*)|(?://[/]*\\s*)$",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
   private static final int COMMENT_LENGTH = 2;
 

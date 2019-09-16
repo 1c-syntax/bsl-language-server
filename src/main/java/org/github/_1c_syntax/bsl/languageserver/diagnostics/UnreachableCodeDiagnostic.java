@@ -48,6 +48,12 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 	private List<Range> ranges = new ArrayList<>();
 
 	@Override
+	public ParseTree visitFile(BSLParser.FileContext ctx) {
+		ranges.clear();
+		return super.visitFile(ctx);
+	}
+
+	@Override
 	public ParseTree visitContinueStatement(BSLParser.ContinueStatementContext ctx) {
 		findAndAddDiagnostic(ctx);
 		return super.visitContinueStatement(ctx);
@@ -87,16 +93,32 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 			}
 		}
 
-		BSLParserRuleContext ppNode = (BSLParserRuleContext) ctx.getParent().getParent();
-		List<ParseTree> statements = Trees.findAllRuleNodes(ppNode.getParent(), BSLParser.RULE_statement).stream()
-			.filter(node -> node.getParent() == ppNode.getParent()).collect(Collectors.toList());
+		BSLParserRuleContext nodeParent = (BSLParserRuleContext) ctx.getParent();
+		if(nodeParent == null) {
+			return;
+		}
+
+		BSLParser.StatementContext ppNode = (BSLParser.StatementContext) nodeParent.getParent();
+		if(ppNode == null) {
+			return;
+		}
+
+		BSLParserRuleContext ppNodeParent = (BSLParserRuleContext) ppNode.getParent();
+		if(ppNodeParent == null) {
+			return;
+		}
+
+		List<ParseTree> statements = Trees.findAllRuleNodes(ppNodeParent, BSLParser.RULE_statement)
+			.stream()
+			.filter(node -> node.getParent().equals(ppNodeParent))
+			.collect(Collectors.toList());
 
 		// если в блоке кода есть еще стейты кроме текущего
 		if(statements.size() > 1) {
 			BSLParserRuleContext endCurrentBlockNode = (BSLParserRuleContext) statements.get(statements.size() - 1);
 
 			// если последний стей не текущий, значит он будет недостижим
-			if(ppNode != endCurrentBlockNode) {
+			if(!ppNode.equals(endCurrentBlockNode)) {
 				int indexStart = statements.indexOf(ppNode);
 				Range newRange = RangeHelper.newRange(
 					((BSLParserRuleContext) statements.get(indexStart + 1)).getStart(),
