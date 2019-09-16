@@ -32,6 +32,7 @@ import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
 	type = DiagnosticType.ERROR,
@@ -45,7 +46,7 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
 		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 	private BSLParserRuleContext nodeEndTransaction = null;
-	private BSLParserRuleContext nodeEndFile = null;
+	private BSLParser.StatementContext nodeEndFile = null;
 
 	@Override
 	public ParseTree visitExceptCodeBlock(BSLParser.ExceptCodeBlockContext ctx) {
@@ -77,7 +78,7 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
 		}
 
 		// Если это код в конце модуля, ЗафиксироватьТранзакию был/есть тогда фиксируем
-		if(nodeEndFile != null && nodeEndTransaction != null && nodeEndFile == ctx) {
+		if(nodeEndFile != null && nodeEndTransaction != null && nodeEndFile.equals(ctx)) {
 			diagnosticStorage.addDiagnostic(nodeEndTransaction);
 			nodeEndTransaction = null;
 		}
@@ -87,10 +88,8 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
 	@Override
 	public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
 		// Находим последний стейт в модуле и запоминаем его
-		List<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream().collect(Collectors.toList());
-		if(statements.size() > 0) {
-			nodeEndFile = (BSLParserRuleContext) statements.get(statements.size() - 1);
-		}
+		Stream<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream();
+		nodeEndFile = (BSLParser.StatementContext) statements.reduce((a, b) -> b).orElse(null);
 		return super.visitFileCodeBlock(ctx);
 	}
 }
