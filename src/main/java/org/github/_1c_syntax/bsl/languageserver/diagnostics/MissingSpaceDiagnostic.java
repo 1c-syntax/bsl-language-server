@@ -175,9 +175,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     List<Token> tokens = documentContext.getTokens();
 
-    //LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-    //Boolean isRU = configuration.getDiagnosticLanguage() == DiagnosticLanguage.RU;
-
     // проверяем слева и справа
     //Вариант с одним проходом, но без указания где пропущено
 /*    tokens.stream()
@@ -297,7 +294,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode) {
-    //TODO Локализовать сообщения
+    //TODO Локализовать сообщения. Переделать, чтоб красиво было
 
 
     String errMessage = diagnosticLanguageIsRU ? "Слева или справа" : "Left or right";
@@ -356,6 +353,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private boolean isUnaryChar(List<Token> tokens, Token t) {
+    // TODO Что то неверно работает в определении унарности. Тест работает, в VSC - нет
     // 1. Унарные + и -
     //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
 
