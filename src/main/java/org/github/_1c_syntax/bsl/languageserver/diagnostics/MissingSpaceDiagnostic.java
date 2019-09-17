@@ -54,10 +54,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private static final String default_listForCheckLeft = "";          // символы, требующие пробелы только слева
   private static final String default_listForCheckRight = ", ;";      // символы, требующие пробелы только справа
-  private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы слева и справа
+  private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы с обоих сторон
   private static final String default_checkSpaceToRightOfUnary = "false";
+  private static final String default_allowMultipleCommas = "false";
   private static Boolean diagnosticLanguageIsRU = true;
-  private static Boolean allowMultipleCommas = false;
+
 
   @DiagnosticParameter(
     type = String.class,
@@ -84,6 +85,13 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     description = "Проверять наличие пробела справа от унарных знаков (+ -)"
   )
   private static Boolean checkSpaceToRightOfUnary = default_checkSpaceToRightOfUnary == "true";
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + default_allowMultipleCommas,
+    description = "Разрешать несколько запятых подряд"
+  )
+  private static Boolean allowMultipleCommas = default_allowMultipleCommas == "true";
 
 
   private static String getRegularString(String string) {
@@ -140,6 +148,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     String enableCheckUnary_Param = (String) configuration.get("checkSpaceToRightOfUnary");
     if (enableCheckUnary_Param != null)
       this.checkSpaceToRightOfUnary = enableCheckUnary_Param == "true";
+
+    String allowMultipleCommas_Param = (String) configuration.get("allowMultipleCommas");
+    if (allowMultipleCommas_Param != null)
+      this.allowMultipleCommas = allowMultipleCommas_Param == "true";
 
   }
 
