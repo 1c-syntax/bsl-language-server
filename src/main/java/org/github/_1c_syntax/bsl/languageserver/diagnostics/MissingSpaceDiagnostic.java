@@ -112,9 +112,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
 
-  private static Pattern PATTERN_L = compilePattern(listForCheckLeft);
-  private static Pattern PATTERN_R = compilePattern(listForCheckRight);
-  private static Pattern PATTERN_LR = compilePattern(listForCheckLeftAndRight);
+  private static Pattern PATTERN_L  = listForCheckLeft == "" ? compilePattern(listForCheckLeft) : null;
+  private static Pattern PATTERN_R  = listForCheckRight == "" ? compilePattern(listForCheckRight) : null;
+  private static Pattern PATTERN_LR = listForCheckLeftAndRight == "" ? compilePattern(listForCheckLeftAndRight) : null;
   private static Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
 
 
@@ -164,7 +164,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     // +2. Дописать тест
     // +3. Справа от запятой может быть запятая
     // +4. Реализовать быстрое исправление
-    // 5. Вынести в параметры:
+    // +5. Вынести в параметры:
     //    - для запятой есть исключение - справа может быть другая запятая. Сделать параметр
     //        типа "Допускать справа от запятой другую запятую" или "Разрешить несколько запятых подряд"
     //    - символы, у которых проверять слева и справа
