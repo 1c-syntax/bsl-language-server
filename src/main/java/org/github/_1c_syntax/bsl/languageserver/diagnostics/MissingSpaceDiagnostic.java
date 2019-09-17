@@ -27,8 +27,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-import org.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
-import org.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -54,31 +52,38 @@ import java.util.stream.Collectors;
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final String symbols_L = ")";        // символы, требующие пробелы только слева
-  private static final String symbols_R = ",;";        // символы, требующие пробелы только справа
-//  private static final String symbols_LR = "-"; // символы, требующие пробелы слева и справа
-//  private static final String DEFAULT_SYMBOLS_LR = "+ - * / = % < >"; // символы, требующие пробелы слева и справа
+  private static final String default_listForCheckLeft = "";          // символы, требующие пробелы только слева
+  private static final String default_listForCheckRight = ", ;";      // символы, требующие пробелы только справа
   private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы слева и справа
-//  private static final String DEFAULT_checkSpacesLeftAndRight = "+-*/=%<>"; // символы, требующие пробелы слева и справа
-  private static final String DEFAULT_checkSpaceToRightOfUnary = "false";
+  private static final String default_checkSpaceToRightOfUnary = "false";
   private static Boolean diagnosticLanguageIsRU = true;
+  private static Boolean allowMultipleCommas = false;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + default_listForCheckLeftAndRight,
-    description = "Список проверяемых символов через пробел (пробелы с обоих сторон). Например: + - * / = % < >"
+    defaultValue = "" + default_listForCheckLeft,
+    description = "Список символов для проверки слева (разделенные пробелом). Например: ) ="
   )
-//  private static String SYMBOLS_LR = DEFAULT_SYMBOLS_LR.trim().replace(" ", "");
+  private static String listForCheckLeft = getRegularString(default_listForCheckLeft);
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + default_listForCheckRight,
+    description = "Список символов для проверки справа (разделенные пробелом). Например: ( ="
+  )
+  private static String listForCheckRight = getRegularString(default_listForCheckRight);
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + default_listForCheckLeftAndRight,
+    description = "Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >"
+  )
   private static String listForCheckLeftAndRight = getRegularString(default_listForCheckLeftAndRight);
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_checkSpaceToRightOfUnary,
+    defaultValue = "" + default_checkSpaceToRightOfUnary,
     description = "Проверять наличие пробела справа от унарных знаков (+ -)"
   )
-  private static Boolean checkSpaceToRightOfUnary = DEFAULT_checkSpaceToRightOfUnary == "true";
-
-
+  private static Boolean checkSpaceToRightOfUnary = default_checkSpaceToRightOfUnary == "true";
 
 
   private static String getRegularString(String string) {
@@ -99,11 +104,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
 
-  //private static final Pattern PATTERN_LR = compilePatterm("[\\Q"+ symbols_LR +"\\E]");
-  //private static Pattern PATTERN_LR = compilePatterm("[\\Q"+ checkSpacesLeftAndRight +"\\E]|(<>)|(<=)|(>=)");
+  private static Pattern PATTERN_L = compilePattern(listForCheckLeft);
+  private static Pattern PATTERN_R = compilePattern(listForCheckRight);
   private static Pattern PATTERN_LR = compilePattern(listForCheckLeftAndRight);
-  private static final Pattern PATTERN_R = compilePattern("[\\Q"+ symbols_R +"\\E]");
-  private static final Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
+  private static Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
 
 
   @Override
@@ -112,15 +116,30 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return;
     }
 
-    String diagnosticLanguageIsParam = (String) configuration.get("diagnosticLanguage");
-    this.diagnosticLanguageIsRU = diagnosticLanguageIsParam == "ru";
+    String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
+    if (diagnosticLanguage_Param != null)
+      this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";
 
-    String SYMBOLS_LR_String = (String) configuration.get("listForCheckLeftAndRight");
-    this.listForCheckLeftAndRight = getRegularString(SYMBOLS_LR_String);
-    PATTERN_LR = compilePattern(listForCheckLeftAndRight);
 
-    String Enable_chech_Unary = (String) configuration.get("checkSpaceToRightOfUnary");
-    this.checkSpaceToRightOfUnary = Enable_chech_Unary == "true";
+    String listL_Param = (String) configuration.get("listForCheckLeft");
+    if (listL_Param != null){
+      this.listForCheckLeft = getRegularString(listL_Param);
+      PATTERN_L = compilePattern(listForCheckLeft);
+    }
+    String listR_Param = (String) configuration.get("listForCheckRight");
+    if (listR_Param != null){
+      this.listForCheckRight = getRegularString(listR_Param);
+      PATTERN_R = compilePattern(listForCheckRight);
+    }
+    String listLR_Param = (String) configuration.get("listForCheckLeftAndRight");
+    if (listLR_Param != null){
+      this.listForCheckLeftAndRight = getRegularString(listLR_Param);
+      PATTERN_LR = compilePattern(listForCheckLeftAndRight);
+    }
+
+    String enableCheckUnary_Param = (String) configuration.get("checkSpaceToRightOfUnary");
+    if (enableCheckUnary_Param != null)
+      this.checkSpaceToRightOfUnary = enableCheckUnary_Param == "true";
 
   }
 
