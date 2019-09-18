@@ -66,12 +66,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     description = "Список символов для проверки слева (разделенные пробелом). Например: ) ="
   )
   private static String listForCheckLeft = getRegularString(default_listForCheckLeft);
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + default_listForCheckRight,
     description = "Список символов для проверки справа (разделенные пробелом). Например: ( ="
   )
   private static String listForCheckRight = getRegularString(default_listForCheckRight);
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + default_listForCheckLeftAndRight,
@@ -128,17 +130,18 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     if (diagnosticLanguage_Param != null)
       this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";
 
-
     String listL_Param = (String) configuration.get("listForCheckLeft");
     if (listL_Param != null){
       this.listForCheckLeft = getRegularString(listL_Param);
       PATTERN_L = compilePattern(listForCheckLeft);
     }
+
     String listR_Param = (String) configuration.get("listForCheckRight");
     if (listR_Param != null){
       this.listForCheckRight = getRegularString(listR_Param);
       PATTERN_R = compilePattern(listForCheckRight);
     }
+
     String listLR_Param = (String) configuration.get("listForCheckLeftAndRight");
     if (listLR_Param != null){
       this.listForCheckLeftAndRight = getRegularString(listLR_Param);
@@ -252,6 +255,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
         diagnosticStorage.addDiagnostic(t, getDiagnosticMessage(getErrorMessage(2), t.getText()));
       });
+
+
 
     /*
     tokens.stream()
@@ -412,8 +417,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       String diagnosticMessage = diagnostic.getMessage().toLowerCase();
-      Boolean missedLeft = diagnosticMessage.contains("слева"); // TODO локализовать
-      Boolean missedRight = diagnosticMessage.contains("справа");
+
+      // TODO переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
+      Boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
+      Boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
 
       Range range = diagnostic.getRange();
 
