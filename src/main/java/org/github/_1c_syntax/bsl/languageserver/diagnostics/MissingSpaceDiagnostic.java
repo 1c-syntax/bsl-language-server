@@ -55,10 +55,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String default_listForCheckLeft = "";          // символы, требующие пробелы только слева
   private static final String default_listForCheckRight = ", ;";      // символы, требующие пробелы только справа
   private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы с обоих сторон
-  private static final String default_checkSpaceToRightOfUnary = "false";
-  private static final String default_allowMultipleCommas = "false";
+  private static final String default_checkSpaceToRightOfUnary = "false";   // Проверять пробел справа от унарного знака
+  private static final String default_allowMultipleCommas = "false";        // Разрешить несколько запятых подряд
   private static Boolean diagnosticLanguageIsRU = true;
-
 
   @DiagnosticParameter(
     type = String.class,
@@ -95,68 +94,12 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   )
   private static Boolean allowMultipleCommas = default_allowMultipleCommas == "true";
 
-
-  private static String getRegularString(String string) {
-
-    String singleChar = "", doubleChar = "";
-
-    String[] listOfString = string.trim().split(" ");
-
-    for (String s:listOfString) {
-      if (s.length() == 1){
-        singleChar = singleChar + s;
-      } else {
-        doubleChar = doubleChar + "|(" + s + ")";
-      }
-    }
-
-    return "[\\Q"+ singleChar +"\\E]"+doubleChar;
-  }
-
-
-  private static Pattern PATTERN_L  = listForCheckLeft == "" ? compilePattern(listForCheckLeft) : null;
-  private static Pattern PATTERN_R  = listForCheckRight == "" ? compilePattern(listForCheckRight) : null;
-  private static Pattern PATTERN_LR = listForCheckLeftAndRight == "" ? compilePattern(listForCheckLeftAndRight) : null;
+  private static Pattern PATTERN_L  = listForCheckLeft != "" ? compilePattern(listForCheckLeft) : null;
+  private static Pattern PATTERN_R  = listForCheckRight != "" ? compilePattern(listForCheckRight) : null;
+  private static Pattern PATTERN_LR = listForCheckLeftAndRight != "" ? compilePattern(listForCheckLeftAndRight) : null;
   private static Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
 
 
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
-    String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
-    if (diagnosticLanguage_Param != null)
-      this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";
-
-    String listL_Param = (String) configuration.get("listForCheckLeft");
-    if (listL_Param != null){
-      this.listForCheckLeft = getRegularString(listL_Param);
-      PATTERN_L = compilePattern(listForCheckLeft);
-    }
-
-    String listR_Param = (String) configuration.get("listForCheckRight");
-    if (listR_Param != null){
-      this.listForCheckRight = getRegularString(listR_Param);
-      PATTERN_R = compilePattern(listForCheckRight);
-    }
-
-    String listLR_Param = (String) configuration.get("listForCheckLeftAndRight");
-    if (listLR_Param != null){
-      this.listForCheckLeftAndRight = getRegularString(listLR_Param);
-      PATTERN_LR = compilePattern(listForCheckLeftAndRight);
-    }
-
-    String enableCheckUnary_Param = (String) configuration.get("checkSpaceToRightOfUnary");
-    if (enableCheckUnary_Param != null)
-      this.checkSpaceToRightOfUnary = enableCheckUnary_Param == "true";
-
-    String allowMultipleCommas_Param = (String) configuration.get("allowMultipleCommas");
-    if (allowMultipleCommas_Param != null)
-      this.allowMultipleCommas = allowMultipleCommas_Param == "true";
-
-  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -179,14 +122,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     List<Token> tokens = documentContext.getTokens();
 
     // проверяем слева и справа
-    //Вариант с одним проходом, но без указания где пропущено
-/*    tokens.stream()
-      .filter((Token t) ->
-        PATTERN_LR.matcher( t.getText() ).matches())
-      .filter((Token t) ->
-        noSpaceLeft(tokens, t) || noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t));*/
 
     List<Token> tokensLoR = tokens
       .parallelStream()
@@ -242,55 +177,72 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     tokensR.stream()
       .filter((Token t) -> noSpaceRight(tokens, t))
       .forEach((Token t) ->{
-
-          /*List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-          String relatedMessage = getDiagnosticMessage(getErrorMessage(2), t.getText());
-          relatedInformation.add(RangeHelper.createRelatedInformation(
-            documentContext.getUri(),
-            RangeHelper.newRange(t.getLine()-1, t.getTokenIndex(), t.getLine()-1, t.getTokenIndex()),
-            relatedMessage
-          ));
-
-        diagnosticStorage.addDiagnostic(t, relatedInformation);*/
-
         diagnosticStorage.addDiagnostic(t, getDiagnosticMessage(getErrorMessage(2), t.getText()));
       });
-
-
-
-    /*
-    tokens.stream()
-      .filter((Token t) -> PATTERN_R.matcher( t.getText() ).matches())
-      .filter((Token t) -> noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-         getDiagnosticMessage(getErrorMessage(2), t.getText())));
-    */
-
-
-    /*
-    Stream<Token> tokens3 = tokens.stream()
-      .filter((Token t) ->
-        PATTERN_R.matcher( t.getText() ).matches());
-
-    Stream<Token> tokens4 = tokens3.filter((Token t) ->
-      noSpaceRight(tokens, t)
-    );
-    tokens4.forEach((Token t) ->
-      diagnosticStorage.addDiagnostic(t));
-*/
-
-    /*documentContext.getTokens()
-      .parallelStream()
-      .filter((Token t) ->
-        PATTERN_LR.matcher(t.getText()).matches())
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t));*/
 
     return diagnosticStorage.getDiagnostics();
   }
 
 
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+
+    String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
+    if (diagnosticLanguage_Param != null)
+      this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";
+
+    String listL_Param = (String) configuration.get("listForCheckLeft");
+    if (listL_Param != null){
+      this.listForCheckLeft = getRegularString(listL_Param);
+      PATTERN_L = compilePattern(listForCheckLeft);
+    }
+
+    String listR_Param = (String) configuration.get("listForCheckRight");
+    if (listR_Param != null){
+      this.listForCheckRight = getRegularString(listR_Param);
+      PATTERN_R = compilePattern(listForCheckRight);
+    }
+
+    String listLR_Param = (String) configuration.get("listForCheckLeftAndRight");
+    if (listLR_Param != null){
+      this.listForCheckLeftAndRight = getRegularString(listLR_Param);
+      PATTERN_LR = compilePattern(listForCheckLeftAndRight);
+    }
+
+    String enableCheckUnary_Param = (String) configuration.get("checkSpaceToRightOfUnary");
+    if (enableCheckUnary_Param != null)
+      this.checkSpaceToRightOfUnary = enableCheckUnary_Param == "true";
+
+    String allowMultipleCommas_Param = (String) configuration.get("allowMultipleCommas");
+    if (allowMultipleCommas_Param != null)
+      this.allowMultipleCommas = allowMultipleCommas_Param == "true";
+
+  }
+
+
+
+  private static String getRegularString(String string) {
+
+    if (string.isEmpty())
+      return "";
+
+    String singleChar = "", doubleChar = "";
+
+    String[] listOfString = string.trim().split(" ");
+
+    for (String s:listOfString) {
+      if (s.length() == 1){
+        singleChar = singleChar + s;
+      } else {
+        doubleChar = doubleChar + "|(" + s + ")";
+      }
+    }
+
+    return "[\\Q"+ singleChar +"\\E]"+doubleChar;
+  }
   private static Pattern compilePattern(String s) {
     return Pattern.compile(
       s,
@@ -298,63 +250,32 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     );
   }
 
-  private String getErrorMessage(int errCode) {
-    //TODO Локализовать сообщения. Переделать, чтоб красиво было
-
-
-    String errMessage = diagnosticLanguageIsRU ? "Слева или справа" : "Left or right";
-
-    switch (errCode){
-      case 1:
-        errMessage = diagnosticLanguageIsRU ? "Слева" : "To the left";
-        break;
-      case 2:
-        errMessage = diagnosticLanguageIsRU ? "Справа" : "To the right";
-        break;
-      case 3:
-        errMessage = diagnosticLanguageIsRU ? "Слева и справа" : "Left and right";
-        break;
-      default:
-        break;
-    }
-
-    return errMessage;
-  }
 
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
-    /*
-    int tokenIndex = t.getTokenIndex();
 
-    Token prevToken = tokens.get(tokenIndex - 1);
-    String prevTokenText = prevToken.getText();
+    Token previousToken = tokens.get(t.getTokenIndex() - 1);
 
-    return PATTERN_SPACE.matcher(prevTokenText).matches();
-*/
+    return PATTERN_NOT_SPACE.matcher(previousToken.getText()).matches();
 
-    return PATTERN_NOT_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
+    //return PATTERN_NOT_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
   }
   private boolean noSpaceRight(List<Token> tokens, Token t) {
-    /*
-    int tokenIndex = t.getTokenIndex();
-
-    Token nextToken = tokens.get(tokenIndex + 1);
-    String nextTokenText = nextToken.getText();
-
-    return PATTERN_SPACE.matcher(nextTokenText).matches();
-*/
 
     // Если это унарный + или - то пробел справа проверяем в соответствии с параметром
     if (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS){
       // Надо понять что они унарные
-      if (isUnaryChar(tokens, t) && !checkSpaceToRightOfUnary) // TODO false - если настройка выключена
+      if (isUnaryChar(tokens, t) && !checkSpaceToRightOfUnary)
         return false;
     }
 
-    // Если это запятая, то допустимо что бы справа от нее была запятая
-    if (t.getType() == BSLLexer.COMMA && tokens.get(t.getTokenIndex() + 1).getType() == BSLLexer.COMMA)
+    Token nextToken = tokens.get(t.getTokenIndex() + 1);
+
+    // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
+    if (allowMultipleCommas
+      && (t.getType() == BSLLexer.COMMA && nextToken.getType() == BSLLexer.COMMA))
       return false;
 
-    return PATTERN_NOT_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
+    return PATTERN_NOT_SPACE.matcher(nextToken.getText()).matches();
   }
 
   private boolean isUnaryChar(List<Token> tokens, Token t) {
@@ -375,6 +296,62 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
       currentIndex--;
     }
+  }
+
+  private String getErrorMessage(int errCode) {
+    //TODO Локализовать сообщения. Переделать, чтоб красиво было
+
+    String sampleLeftOrRight, sampleLeft, sampleRight, sampleLeftAndRight;
+
+    String[] sampleMessage = new String[4];
+
+    if (diagnosticLanguageIsRU) {
+      /*sampleLeftOrRight   = "Слева или справа";
+      sampleLeft          = "Слева";
+      sampleRight         = "Справа";
+      sampleLeftAndRight  = "Слева и справа";*/
+
+      sampleMessage[0] = "Слева или справа";
+      sampleMessage[1] = "Слева";
+      sampleMessage[2] = "Справа";
+      sampleMessage[3] = "Слева и справа";
+
+    } else {
+      /*sampleLeftOrRight   = "Left or right";
+      sampleLeft          = "To the left";
+      sampleRight         = "To the right";
+      sampleLeftAndRight  = "Left and right";*/
+
+      sampleMessage[0] = "Left or right";
+      sampleMessage[1] = "To the left";
+      sampleMessage[2] = "To the right";
+      sampleMessage[3] = "Left and right";
+
+    }
+
+    if (errCode == 1 || errCode == 2 || errCode == 3)
+      return sampleMessage[errCode];
+    else
+      return sampleMessage[0];
+
+
+    /*String errMessage = sampleLeftOrRight;
+
+    switch (errCode){
+      case 1:
+        errMessage = sampleLeft;
+        break;
+      case 2:
+        errMessage = sampleRight;
+        break;
+      case 3:
+        errMessage = sampleLeftAndRight;
+        break;
+      default:
+        break;
+    }*/
+
+    //return errMessage;
   }
 
   private boolean noSpaceLeftAndRight1(List<Token> tokens, Token t) {
