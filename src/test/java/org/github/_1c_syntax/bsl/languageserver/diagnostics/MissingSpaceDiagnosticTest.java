@@ -43,7 +43,7 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(24);
+    assertThat(diagnostics).hasSize(25);
 
     /*assertThat(diagnostics)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)));
@@ -97,11 +97,12 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
       // на ,
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 9, 4, 10)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(17, 18, 17, 19)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(29, 9, 29, 10)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(29, 28, 29, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 9, 31, 10)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 27, 31, 28)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 28, 31, 29)))
       // на ;
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 12, 4, 13)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(29, 13, 29, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 13, 31, 14)))
       // на -
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 13)))
       // на *
