@@ -94,15 +94,16 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   )
   private static Boolean allowMultipleCommas = default_allowMultipleCommas == "true";
 
-  private static Pattern PATTERN_L  = listForCheckLeft != "" ? compilePattern(listForCheckLeft) : null;
-  private static Pattern PATTERN_R  = listForCheckRight != "" ? compilePattern(listForCheckRight) : null;
-  private static Pattern PATTERN_LR = listForCheckLeftAndRight != "" ? compilePattern(listForCheckLeftAndRight) : null;
+  private static Pattern PATTERN_L  = compilePattern(listForCheckLeft);
+  private static Pattern PATTERN_R  = compilePattern(listForCheckRight);
+  private static Pattern PATTERN_LR = compilePattern(listForCheckLeftAndRight);
   private static Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
 
 
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    diagnosticStorage.clearDiagnostics();
 
     //TODO Задачи
     // 1. Унарные + и -
@@ -121,66 +122,52 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     List<Token> tokens = documentContext.getTokens();
 
-    // проверяем слева и справа
-
-    List<Token> tokensLoR = tokens
-      .parallelStream()
-      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches()).collect(Collectors.toList());
-
-
-    tokensLoR.stream()
-      .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(1), t.getText())));
-
-    tokensLoR.stream()
-      .filter((Token t) -> !noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(2), t.getText())));
-
-    tokensLoR.stream()
-      .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(3), t.getText())));
-
-    /*
-    tokens.stream()
-      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
-      .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(1), t.getText())));
-
-    tokens.stream()
-      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
-      .filter((Token t) -> !noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(2), t.getText())));
-
-    tokens.stream()
-      .filter((Token t) -> PATTERN_LR.matcher( t.getText() ).matches())
-      .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t,
-          getDiagnosticMessage(getErrorMessage(3), t.getText())));
-*/
 
     // проверяем справа
-    List<Token> tokensR = tokens
-      .parallelStream()
-      .filter((Token t) -> PATTERN_R.matcher( t.getText() ).matches()).collect(Collectors.toList());
+    if (PATTERN_R != null) {
+      List<Token> tokensR = findTokensByPattern(tokens, PATTERN_R);
 
-    tokensR.stream()
-      .filter((Token t) -> noSpaceRight(tokens, t))
-      .forEach((Token t) ->{
-        diagnosticStorage.addDiagnostic(t, getDiagnosticMessage(getErrorMessage(2), t.getText()));
-      });
+      tokensR.stream()
+        .filter((Token t) -> noSpaceRight(tokens, t))
+        .forEach((Token t) ->{
+          diagnosticStorage.addDiagnostic(t,
+            getDiagnosticMessage(getErrorMessage(2), t.getText()));
+        });
+    }
+
+
+    // проверяем слева и справа
+    if (PATTERN_LR != null) {
+      List<Token> tokensLoR = findTokensByPattern(tokens, PATTERN_LR);
+
+      tokensLoR.stream()
+        .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t,
+            getDiagnosticMessage(getErrorMessage(1), t.getText())));
+
+      tokensLoR.stream()
+        .filter((Token t) -> !noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t,
+            getDiagnosticMessage(getErrorMessage(2), t.getText())));
+
+      tokensLoR.stream()
+        .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t,
+            getDiagnosticMessage(getErrorMessage(3), t.getText())));
+
+    }
+
 
     return diagnosticStorage.getDiagnostics();
+  }
+
+  private List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
+    return tokens
+      .parallelStream()
+      .filter((Token t) -> pattern.matcher(t.getText()).matches()).collect(Collectors.toList());
   }
 
 
@@ -243,11 +230,12 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     return "[\\Q"+ singleChar +"\\E]"+doubleChar;
   }
-  private static Pattern compilePattern(String s) {
-    return Pattern.compile(
-      s,
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
+  private static Pattern compilePattern(String string) {
+
+    if (string.isEmpty())
+      return null;
+
+    return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
 
