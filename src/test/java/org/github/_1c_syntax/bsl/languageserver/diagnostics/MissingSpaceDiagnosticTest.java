@@ -24,6 +24,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
@@ -155,6 +156,7 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", "");
     configuration.put("listForCheckLeftAndRight", "(");
+    //configuration.put("diagnosticLanguage", DiagnosticLanguage.RU);
     getDiagnosticInstance().configure(configuration);
 
     // when
@@ -168,13 +170,13 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 */
     configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
     configuration.put("listForCheckLeft", "");
-    configuration.put("listForCheckRight", "-");
-    configuration.put("listForCheckLeftAndRight", "");
-    configuration.put("checkSpaceToRightOfUnary", "true");
+    configuration.put("listForCheckRight", "");
+    configuration.put("listForCheckLeftAndRight", "-");
+    configuration.put("checkSpaceToRightOfUnary", true);
     getDiagnosticInstance().configure(configuration);
 
     // when
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(2);
   }
 }

@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -55,8 +56,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String default_listForCheckLeft = "";          // символы, требующие пробелы только слева
   private static final String default_listForCheckRight = ", ;";      // символы, требующие пробелы только справа
   private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы с обоих сторон
-  private static final String default_checkSpaceToRightOfUnary = "false";   // Проверять пробел справа от унарного знака
-  private static final String default_allowMultipleCommas = "false";        // Разрешить несколько запятых подряд
+  private static final Boolean default_checkSpaceToRightOfUnary = false;   // Проверять пробел справа от унарного знака
+  private static final Boolean default_allowMultipleCommas = false;        // Разрешить несколько запятых подряд
   private static Boolean diagnosticLanguageIsRU = true;
 
   @DiagnosticParameter(
@@ -81,18 +82,18 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static String listForCheckLeftAndRight = getRegularString(default_listForCheckLeftAndRight);
 
   @DiagnosticParameter(
-    type = String.class,
-    defaultValue = "" + default_checkSpaceToRightOfUnary,
+    type = Boolean.class,
+    defaultValue = "false",// + (String) default_checkSpaceToRightOfUnary,
     description = "Проверять наличие пробела справа от унарных знаков (+ -)"
   )
-  private static Boolean checkSpaceToRightOfUnary = default_checkSpaceToRightOfUnary == "true";
+  private static Boolean checkSpaceToRightOfUnary = (Boolean) default_checkSpaceToRightOfUnary;
 
   @DiagnosticParameter(
-    type = String.class,
-    defaultValue = "" + default_allowMultipleCommas,
+    type = Boolean.class,
+    defaultValue = "false",// + default_allowMultipleCommas,
     description = "Разрешать несколько запятых подряд"
   )
-  private static Boolean allowMultipleCommas = default_allowMultipleCommas == "true";
+  private static Boolean allowMultipleCommas = (Boolean) default_allowMultipleCommas;
 
   private static Pattern PATTERN_L  = compilePattern(listForCheckLeft);
   private static Pattern PATTERN_R  = compilePattern(listForCheckRight);
@@ -106,7 +107,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     diagnosticStorage.clearDiagnostics();
 
     //TODO Задачи
-    // 1. Унарные + и -
+    // +1. Унарные + и -
     //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
     // +2. Дописать тест
     // +3. Справа от запятой может быть запятая
@@ -176,6 +177,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     if (configuration == null) {
       return;
     }
+    /*String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
+    if (diagnosticLanguage_Param != null)
+      diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";*/
+
+    //DiagnosticLanguage diagnosticLanguage_Param = (DiagnosticLanguage) configuration.get("diagnosticLanguage");
+    //if (diagnosticLanguage_Param != null)
+    //  diagnosticLanguageIsRU = diagnosticLanguage_Param == DiagnosticLanguage.RU;
+    //diagnosticLanguageIsRU = diagnosticLanguage_Param == null;
 
     String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
     if (diagnosticLanguage_Param != null)
@@ -183,29 +192,29 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     String listL_Param = (String) configuration.get("listForCheckLeft");
     if (listL_Param != null){
-      this.listForCheckLeft = getRegularString(listL_Param);
+      listForCheckLeft = getRegularString(listL_Param);
       PATTERN_L = compilePattern(listForCheckLeft);
     }
 
     String listR_Param = (String) configuration.get("listForCheckRight");
     if (listR_Param != null){
-      this.listForCheckRight = getRegularString(listR_Param);
+      listForCheckRight = getRegularString(listR_Param);
       PATTERN_R = compilePattern(listForCheckRight);
     }
 
     String listLR_Param = (String) configuration.get("listForCheckLeftAndRight");
     if (listLR_Param != null){
-      this.listForCheckLeftAndRight = getRegularString(listLR_Param);
+      listForCheckLeftAndRight = getRegularString(listLR_Param);
       PATTERN_LR = compilePattern(listForCheckLeftAndRight);
     }
 
-    String enableCheckUnary_Param = (String) configuration.get("checkSpaceToRightOfUnary");
+    Boolean enableCheckUnary_Param = (Boolean) configuration.get("checkSpaceToRightOfUnary");
     if (enableCheckUnary_Param != null)
-      this.checkSpaceToRightOfUnary = enableCheckUnary_Param == "true";
+      checkSpaceToRightOfUnary = enableCheckUnary_Param;
 
-    String allowMultipleCommas_Param = (String) configuration.get("allowMultipleCommas");
+    Boolean allowMultipleCommas_Param = (Boolean) configuration.get("allowMultipleCommas");
     if (allowMultipleCommas_Param != null)
-      this.allowMultipleCommas = allowMultipleCommas_Param == "true";
+      allowMultipleCommas = allowMultipleCommas_Param;
 
   }
 
@@ -287,7 +296,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode) {
-    //TODO Локализовать сообщения. Переделать, чтоб красиво было
+    //TODO Поломалось определение языка
 
     String sampleLeftOrRight, sampleLeft, sampleRight, sampleLeftAndRight;
 
