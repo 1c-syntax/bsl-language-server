@@ -152,6 +152,8 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
   void testConfigure() {
     // given
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("listForCheckLeft", "");
+    configuration.put("listForCheckRight", "");
     configuration.put("listForCheckLeftAndRight", "(");
     getDiagnosticInstance().configure(configuration);
 
@@ -159,17 +161,20 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(6);
 /*    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 0, 3, 120));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 121));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(5, 0, 5, 122));
 */
     configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("listForCheckLeft", "");
+    configuration.put("listForCheckRight", "-");
+    configuration.put("listForCheckLeftAndRight", "");
     configuration.put("checkSpaceToRightOfUnary", "true");
     getDiagnosticInstance().configure(configuration);
 
     // when
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(36);
+    assertThat(diagnostics).hasSize(1);
   }
 }
