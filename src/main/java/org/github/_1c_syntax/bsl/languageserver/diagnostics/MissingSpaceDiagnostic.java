@@ -53,11 +53,11 @@ import java.util.stream.Collectors;
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final String default_listForCheckLeft = "";          // символы, требующие пробелы только слева
-  private static final String default_listForCheckRight = ", ;";      // символы, требующие пробелы только справа
+  private static final String default_listForCheckLeft = "";                // символы, требующие пробелы только слева
+  private static final String default_listForCheckRight = ", ;";            // символы, требующие пробелы только справа
   private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы с обоих сторон
-  private static final Boolean default_checkSpaceToRightOfUnary = false;   // Проверять пробел справа от унарного знака
-  private static final Boolean default_allowMultipleCommas = false;        // Разрешить несколько запятых подряд
+  private static final Boolean default_checkSpaceToRightOfUnary = false;    // Проверять пробел справа от унарного знака
+  private static final Boolean default_allowMultipleCommas = false;         // Разрешить несколько запятых подряд
   private static Boolean diagnosticLanguageIsRU = true;
 
   @DiagnosticParameter(
@@ -122,13 +122,25 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     //        типа "Проверять наличие пробела справа от унарных знаков"
 
     List<Token> tokens = documentContext.getTokens();
+    List<Token> foundTokens;
 
+    // проверяем слева
+    if (PATTERN_L != null) {
+      foundTokens = findTokensByPattern(tokens, PATTERN_L);
+
+      foundTokens.stream()
+        .filter((Token t) -> noSpaceLeft(tokens, t))
+        .forEach((Token t) ->{
+          diagnosticStorage.addDiagnostic(t,
+            getDiagnosticMessage(getErrorMessage(1), t.getText()));
+        });
+    }
 
     // проверяем справа
     if (PATTERN_R != null) {
-      List<Token> tokensR = findTokensByPattern(tokens, PATTERN_R);
+      foundTokens = findTokensByPattern(tokens, PATTERN_R);
 
-      tokensR.stream()
+      foundTokens.stream()
         .filter((Token t) -> noSpaceRight(tokens, t))
         .forEach((Token t) ->{
           diagnosticStorage.addDiagnostic(t,
@@ -136,24 +148,23 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
         });
     }
 
-
     // проверяем слева и справа
     if (PATTERN_LR != null) {
-      List<Token> tokensLoR = findTokensByPattern(tokens, PATTERN_LR);
+      foundTokens = findTokensByPattern(tokens, PATTERN_LR);
 
-      tokensLoR.stream()
+      foundTokens.stream()
         .filter((Token t) -> noSpaceLeft(tokens, t) & !noSpaceRight(tokens, t))
         .forEach((Token t) ->
           diagnosticStorage.addDiagnostic(t,
             getDiagnosticMessage(getErrorMessage(1), t.getText())));
 
-      tokensLoR.stream()
+      foundTokens.stream()
         .filter((Token t) -> !noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
         .forEach((Token t) ->
           diagnosticStorage.addDiagnostic(t,
             getDiagnosticMessage(getErrorMessage(2), t.getText())));
 
-      tokensLoR.stream()
+      foundTokens.stream()
         .filter((Token t) -> noSpaceLeft(tokens, t) & noSpaceRight(tokens, t))
         .forEach((Token t) ->
           diagnosticStorage.addDiagnostic(t,
@@ -165,13 +176,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     return diagnosticStorage.getDiagnostics();
   }
 
-  private List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
-    return tokens
-      .parallelStream()
-      .filter((Token t) -> pattern.matcher(t.getText()).matches()).collect(Collectors.toList());
-  }
-
-
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -181,14 +185,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     if (diagnosticLanguage_Param != null)
       diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";*/
 
-    //DiagnosticLanguage diagnosticLanguage_Param = (DiagnosticLanguage) configuration.get("diagnosticLanguage");
-    //if (diagnosticLanguage_Param != null)
-    //  diagnosticLanguageIsRU = diagnosticLanguage_Param == DiagnosticLanguage.RU;
-    //diagnosticLanguageIsRU = diagnosticLanguage_Param == null;
-
-    String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
+    DiagnosticLanguage diagnosticLanguage_Param = (DiagnosticLanguage) configuration.get("diagnosticLanguage");
+    //System.out.println(diagnosticLanguage_Param);
     if (diagnosticLanguage_Param != null)
-      this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";
+      diagnosticLanguageIsRU = diagnosticLanguage_Param == DiagnosticLanguage.RU;
+
+    /*String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
+    if (diagnosticLanguage_Param != null)
+      this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";*/
 
     String listL_Param = (String) configuration.get("listForCheckLeft");
     if (listL_Param != null){
@@ -218,7 +222,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   }
 
-
+  private List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
+    return tokens
+      .parallelStream()
+      .filter((Token t) -> pattern.matcher(t.getText()).matches()).collect(Collectors.toList());
+  }
 
   private static String getRegularString(String string) {
 
@@ -239,6 +247,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     return "[\\Q"+ singleChar +"\\E]"+doubleChar;
   }
+
   private static Pattern compilePattern(String string) {
 
     if (string.isEmpty())
@@ -246,7 +255,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
-
 
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
 
@@ -256,6 +264,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     //return PATTERN_NOT_SPACE.matcher(tokens.get(t.getTokenIndex() - 1).getText()).matches();
   }
+
   private boolean noSpaceRight(List<Token> tokens, Token t) {
 
     // Если это унарный + или - то пробел справа проверяем в соответствии с параметром
@@ -350,35 +359,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     //return errMessage;
   }
-
-  private boolean noSpaceLeftAndRight1(List<Token> tokens, Token t) {
-    int tokenIndex = t.getTokenIndex();
-    Token prevToken = tokens.get(tokenIndex - 1);
-    String prevTokenText = prevToken.getText();
-
-    Token nextToken = tokens.get(tokenIndex + 1);
-    String nextTokenText = nextToken.getText();
-
-    return PATTERN_NOT_SPACE.matcher(prevTokenText).matches()
-      ||
-      PATTERN_NOT_SPACE.matcher(nextTokenText).matches()
-      ;
-
-    //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
-  }
-  private boolean noSpaceRight1(List<Token> tokens, Token t) {
-    int tokenIndex = t.getTokenIndex();
-
-    Token nextToken = tokens.get(tokenIndex + 1);
-    String nextTokenText = nextToken.getText();
-
-    return PATTERN_NOT_SPACE.matcher(nextTokenText).matches();
-
-    //return PATTERN_SPACE.matcher(tokens.get(t.getTokenIndex() + 1).getText()).matches();
-  }
-
-
-
 
   @Override
   public List<CodeAction> getQuickFixes(

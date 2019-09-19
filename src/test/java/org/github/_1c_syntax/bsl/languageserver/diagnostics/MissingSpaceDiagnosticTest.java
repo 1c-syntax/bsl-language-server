@@ -127,6 +127,10 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 
   @Test
   void testQuickFix() {
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    //configuration.clear();
+    //configuration.put("diagnosticLanguage", DiagnosticLanguage.RU);
+    getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
@@ -151,23 +155,34 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 
   @Test
   void testConfigure() {
-    // given
+
+    List<Diagnostic> diagnostics;
+
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    configuration.put("listForCheckLeft", "");
-    configuration.put("listForCheckRight", "");
-    configuration.put("listForCheckLeftAndRight", "(");
+    configuration.put("listForCheckLeft", ")");
+    configuration.put("listForCheckRight", "(");
+    configuration.put("listForCheckLeftAndRight", "");
     //configuration.put("diagnosticLanguage", DiagnosticLanguage.RU);
     getDiagnosticInstance().configure(configuration);
 
-    // when
-    List<Diagnostic> diagnostics = getDiagnostics();
+    diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(12);
+    // на )
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 31, 3, 32));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(17, 26, 17, 27));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(31, 12, 31, 13));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(31, 31, 31, 32));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(33, 17, 33, 18));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(36, 4, 36, 5));
+    // на (
+    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(3, 16, 3, 17));
+    assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(17, 16, 17, 17));
+    assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(31, 6, 31, 7));
+    assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(31, 20, 31, 21));
+    assertThat(diagnostics.get(10).getRange()).isEqualTo(RangeHelper.newRange(33, 6, 33, 7));
+    assertThat(diagnostics.get(11).getRange()).isEqualTo(RangeHelper.newRange(34, 6, 34, 7));
 
-    // then
-    assertThat(diagnostics).hasSize(6);
-/*    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 0, 3, 120));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 121));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(5, 0, 5, 122));
-*/
+
     configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", "");
@@ -175,8 +190,25 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
     configuration.put("checkSpaceToRightOfUnary", true);
     getDiagnosticInstance().configure(configuration);
 
-    // when
+
     diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 12, 8, 13));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(27, 10, 27, 11));
+
+
+    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("listForCheckLeft", "");
+    configuration.put("listForCheckRight", ",");
+    configuration.put("listForCheckLeftAndRight", "");
+    configuration.put("allowMultipleCommas", true);
+    getDiagnosticInstance().configure(configuration);
+
+    diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 9, 4, 10));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(17, 18, 17, 19));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(31, 9, 31, 10));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(31, 28, 31, 29));
   }
 }
