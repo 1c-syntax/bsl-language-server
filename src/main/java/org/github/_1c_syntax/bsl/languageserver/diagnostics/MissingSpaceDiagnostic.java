@@ -58,7 +58,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String default_listForCheckLeftAndRight = "+ - * / = % < > <> <= >="; // символы, требующие пробелы с обоих сторон
   private static final Boolean default_checkSpaceToRightOfUnary = false;    // Проверять пробел справа от унарного знака
   private static final Boolean default_allowMultipleCommas = false;         // Разрешить несколько запятых подряд
-  private static Boolean diagnosticLanguageIsRU = true;
 
   @DiagnosticParameter(
     type = String.class,
@@ -181,18 +180,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     if (configuration == null) {
       return;
     }
-    /*String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
-    if (diagnosticLanguage_Param != null)
-      diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";*/
-
-    DiagnosticLanguage diagnosticLanguage_Param = (DiagnosticLanguage) configuration.get("diagnosticLanguage");
-    //System.out.println(diagnosticLanguage_Param);
-    if (diagnosticLanguage_Param != null)
-      diagnosticLanguageIsRU = diagnosticLanguage_Param == DiagnosticLanguage.RU;
-
-    /*String diagnosticLanguage_Param = (String) configuration.get("diagnosticLanguage");
-    if (diagnosticLanguage_Param != null)
-      this.diagnosticLanguageIsRU = diagnosticLanguage_Param == "ru";*/
 
     String listL_Param = (String) configuration.get("listForCheckLeft");
     if (listL_Param != null){
@@ -285,7 +272,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private boolean isUnaryChar(List<Token> tokens, Token t) {
-    // TODO Что то неверно работает в определении унарности. Тест работает, в VSC - нет
+
     // 1. Унарные + и -
     //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
 
@@ -305,59 +292,19 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode) {
-    //TODO Поломалось определение языка
-
-    String sampleLeftOrRight, sampleLeft, sampleRight, sampleLeftAndRight;
 
     String[] sampleMessage = new String[4];
 
-    if (diagnosticLanguageIsRU) {
-      /*sampleLeftOrRight   = "Слева или справа";
-      sampleLeft          = "Слева";
-      sampleRight         = "Справа";
-      sampleLeftAndRight  = "Слева и справа";*/
-
-      sampleMessage[0] = "Слева или справа";
-      sampleMessage[1] = "Слева";
-      sampleMessage[2] = "Справа";
-      sampleMessage[3] = "Слева и справа";
-
-    } else {
-      /*sampleLeftOrRight   = "Left or right";
-      sampleLeft          = "To the left";
-      sampleRight         = "To the right";
-      sampleLeftAndRight  = "Left and right";*/
-
-      sampleMessage[0] = "Left or right";
-      sampleMessage[1] = "To the left";
-      sampleMessage[2] = "To the right";
-      sampleMessage[3] = "Left and right";
-
-    }
+    sampleMessage[0] = getResourceString("wordLeftOrRight");  // "Слева или справа";
+    sampleMessage[1] = getResourceString("wordLeft");         // "Слева";
+    sampleMessage[2] = getResourceString("wordRight");        // "Справа";
+    sampleMessage[3] = getResourceString("wordLeftAndRight"); // "Слева и справа";
 
     if (errCode == 1 || errCode == 2 || errCode == 3)
       return sampleMessage[errCode];
     else
       return sampleMessage[0];
 
-
-    /*String errMessage = sampleLeftOrRight;
-
-    switch (errCode){
-      case 1:
-        errMessage = sampleLeft;
-        break;
-      case 2:
-        errMessage = sampleRight;
-        break;
-      case 3:
-        errMessage = sampleLeftAndRight;
-        break;
-      default:
-        break;
-    }*/
-
-    //return errMessage;
   }
 
   @Override
