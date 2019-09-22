@@ -56,7 +56,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     "Вставить|Insert",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private final String SEPARATOR = ",";
+  private static final String separatorParams = ",";
 
   @DiagnosticParameter(
     type = String.class,
@@ -76,7 +76,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     pattern = getPatternSearch(searchWords);
   }
 
-  private Pattern getPatternSearch(String value) {
+  private static Pattern getPatternSearch(String value) {
     return Pattern.compile(
       "^(" + value + ")",
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -97,7 +97,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (matcherMethod.find()) {
       List<BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
       Matcher matcher = pattern.matcher(getClearString(list.get(0).getText()));
-      if (matcher.find() && list.size() == 2) {
+      if (matcher.find() && list.size() > 1) {
         if (isNotEmptyStringByToken(list.get(1).getStart())) {
           addDiagnosticByAssignment(ctx, BSLParser.RULE_statement);
         }
@@ -113,20 +113,25 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       BSLParser.DoCallContext doCallContext = ctx.doCall();
       if (doCallContext != null) {
         List<BSLParser.CallParamContext> list = doCallContext.callParamList().callParam();
-        if (list.size() > 0) {
-          String[] arr = list.get(0).getText().split(SEPARATOR);
-          for (int index = 0; index < arr.length; index++) {
-            Matcher matcher = pattern.matcher(getClearString(arr[index]));
-            if (matcher.find() && list.size() >= index) {
-              if (isNotEmptyStringByToken(list.get(index + 1).getStart())) {
-                addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
-              }
-            }
-          }
+        if (!list.isEmpty()) {
+          processParameterList(ctx, list);
         }
       }
     }
     return super.visitNewExpression(ctx);
+  }
+
+  private void processParameterList(BSLParser.NewExpressionContext ctx, List<BSLParser.CallParamContext> list) {
+    String[] arr = list.get(0).getText().split(separatorParams);
+    for (int index = 0; index < arr.length; index++) {
+      Matcher matcher = pattern.matcher(getClearString(arr[index]));
+      if (matcher.find() && list.size() >= index) {
+        if (isNotEmptyStringByToken(list.get(index + 1).getStart())) {
+          addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
+          break;
+        }
+      }
+    }
   }
 
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
@@ -140,13 +145,13 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return token.getType() == BSLParser.STRING && !(token.getText().length() == 2);
   }
 
-  private String getClearString(String inputString) {
-    return inputString.replaceAll("\"", "").replaceAll(" ", "");
+  private static String getClearString(String inputString) {
+    return inputString.replace("\"", "").replace(" ", "");
   }
 
   // TODO: перенести в bsl parser
   @CheckForNull
-  private ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
+  private static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
     ParserRuleContext parent = element.getParent();
     if (parent == null) {
       return null;
