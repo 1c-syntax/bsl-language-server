@@ -1,3 +1,4 @@
+
 /*
  * This file is a part of BSL Language Server.
  *
@@ -56,8 +57,6 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     "Вставить|Insert",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private static final String separatorParams = ",";
-
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + FIND_WORD_DEFAULT,
@@ -97,10 +96,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (matcherMethod.find()) {
       List<BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
       Matcher matcher = pattern.matcher(getClearString(list.get(0).getText()));
-      if (matcher.find() && list.size() > 1) {
-        if (isNotEmptyStringByToken(list.get(1).getStart())) {
-          addDiagnosticByAssignment(ctx, BSLParser.RULE_statement);
-        }
+      if (matcher.find() && list.size() > 1 && isNotEmptyStringByToken(list.get(1).getStart())) {
+        addDiagnosticByAssignment(ctx, BSLParser.RULE_statement);
       }
     }
     return super.visitMethodCall(ctx);
@@ -122,14 +119,12 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void processParameterList(BSLParser.NewExpressionContext ctx, List<BSLParser.CallParamContext> list) {
-    String[] arr = list.get(0).getText().split(separatorParams);
+    String[] arr = list.get(0).getText().split(",");
     for (int index = 0; index < arr.length; index++) {
       Matcher matcher = pattern.matcher(getClearString(arr[index]));
-      if (matcher.find() && list.size() >= index) {
-        if (isNotEmptyStringByToken(list.get(index + 1).getStart())) {
-          addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
-          break;
-        }
+      if (matcher.find() && list.size() >= index && isNotEmptyStringByToken(list.get(index + 1).getStart())) {
+        addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
+        break;
       }
     }
   }
@@ -141,7 +136,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     }
   }
 
-  private boolean isNotEmptyStringByToken(Token token) {
+  private static boolean isNotEmptyStringByToken(Token token) {
     return token.getType() == BSLParser.STRING && !(token.getText().length() == 2);
   }
 
