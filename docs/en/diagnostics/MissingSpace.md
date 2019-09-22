@@ -1,7 +1,7 @@
-# Пропущены пробелы слева или справа от операторов +-*/=%<>, а так же справа от , и ;
+# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , и ;
 
 
-Для улучшения читаемости кода слева и справа от операторов `+-*/=%<>` должны быть пробелы.
-Так же пробел должен быть справа от `,` и `;`  
+To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.
+Also, the space bar should be to the right of `,` и `;`  
 
 
