@@ -25,4 +25,5 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 public interface Symbol {
   ParseTree getNode();
+  void clearASTData();
 }

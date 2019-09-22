@@ -48,4 +48,15 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(40, 4, 40, 9));
 
   }
+
+  @Test
+  void testEmptyCodeBlock() {
+
+    List<Diagnostic> diagnostics = getDiagnostics("EmptyCodeBlockDiagnosticFileCodeBlock");
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 4, 3, 16));
+
+  }
+
 }

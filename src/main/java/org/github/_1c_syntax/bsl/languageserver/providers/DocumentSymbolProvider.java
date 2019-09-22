@@ -30,7 +30,6 @@ import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
-import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -87,14 +86,11 @@ public final class DocumentSymbolProvider {
   }
 
   private static void addMethod(Collection<DocumentSymbol> symbols, MethodSymbol methodSymbol) {
-    BSLParserRuleContext context = methodSymbol.getNode();
-    BSLParser.SubNameContext subNameContext = getSubNameContext(methodSymbol);
-
     DocumentSymbol documentSymbol = new DocumentSymbol(
       methodSymbol.getName(),
       SymbolKind.Method,
-      RangeHelper.newRange(context),
-      RangeHelper.newRange(subNameContext)
+      methodSymbol.getRange(),
+      methodSymbol.getSubNameRange()
     );
 
     BSLParser.SubVarsContext subVariablesContext = getSubVarsContext(methodSymbol);
@@ -103,18 +99,6 @@ public final class DocumentSymbolProvider {
     documentSymbol.setChildren(subVariables);
 
     symbols.add(documentSymbol);
-  }
-
-
-
-  private static BSLParser.SubNameContext getSubNameContext(MethodSymbol methodSymbol) {
-    BSLParser.SubNameContext subNameContext;
-    if (methodSymbol.isFunction()) {
-      subNameContext = ((BSLParser.FunctionContext) methodSymbol.getNode()).funcDeclaration().subName();
-    } else {
-      subNameContext = ((BSLParser.ProcedureContext) methodSymbol.getNode()).procDeclaration().subName();
-    }
-    return subNameContext;
   }
 
   private static BSLParser.SubVarsContext getSubVarsContext(MethodSymbol methodSymbol) {

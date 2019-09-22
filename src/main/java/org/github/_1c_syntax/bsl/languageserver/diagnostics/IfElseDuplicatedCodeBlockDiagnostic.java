@@ -50,7 +50,21 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
     checkedBlocks.clear();
-    findDuplicatedCodeBlock(ctx.codeBlock());
+    List<BSLParser.CodeBlockContext> codeBlocks = new ArrayList<>();
+
+    codeBlocks.add(ctx.ifBranch().codeBlock());
+
+    ctx.elsifBranch().stream()
+      .map(BSLParser.ElsifBranchContext::codeBlock)
+      .collect(Collectors.toCollection(() -> codeBlocks));
+
+
+    BSLParser.ElseBranchContext elseBranch = ctx.elseBranch();
+    if (elseBranch != null) {
+      codeBlocks.add(elseBranch.codeBlock());
+    }
+
+    findDuplicatedCodeBlock(codeBlocks);
     return super.visitIfStatement(ctx);
   }
 

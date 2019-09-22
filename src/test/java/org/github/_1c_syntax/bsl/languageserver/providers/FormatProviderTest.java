@@ -46,7 +46,7 @@ class FormatProviderTest {
   void testRangeFormat() throws IOException {
     // given
     int startLine = 3;
-    int endLine = 22;
+    int endLine = 23;
 
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -54,7 +54,7 @@ class FormatProviderTest {
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
-    String formattedFileContent = FileUtils.readFileToString(getFormatedTestFile(), StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
     String[] strings = formattedFileContent.split("\n");
     StringJoiner joiner = new StringJoiner("\n");
     for (int i = 0; i < strings.length; i++) {
@@ -86,7 +86,7 @@ class FormatProviderTest {
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
-    String formattedFileContent = FileUtils.readFileToString(getFormatedTestFile(), StandardCharsets.UTF_8);
+    String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
 
     DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
 
@@ -105,7 +105,7 @@ class FormatProviderTest {
     return new File("./src/test/resources/providers/format.bsl");
   }
 
-  private File getFormatedTestFile() {
+  private File getFormattedTestFile() {
     return new File("./src/test/resources/providers/format_formatted.bsl");
   }
 

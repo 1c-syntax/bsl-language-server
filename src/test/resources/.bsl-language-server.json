@@ -1,0 +1,12 @@
+{
+  "diagnosticLanguage": "en",
+  "showCognitiveComplexityCodeLens": true,
+  "computeDiagnostics": "onType",
+  "traceLog": "build/.trace.log",
+  "diagnostics": {
+    "LineLength": {
+      "maxLineLength": 140
+    },
+    "MethodSize": false
+  }
+}

@@ -1,7 +1,5 @@
 language: java
 
-jdk:
-  - openjdk8
 
 addons:
   sonarcloud: true
@@ -9,8 +7,18 @@ addons:
 git:
   depth: false
 
-after_script:
-  - ./gradlew sonarqube
+jobs:
+  include:
+    - stage: test
+      name: jdk8
+      jdk: openjdk8
+      after_script:
+      - ./gradlew sonarqube
+    - name: jdk11
+      jdk: openjdk11
+
+stages:
+ - test
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

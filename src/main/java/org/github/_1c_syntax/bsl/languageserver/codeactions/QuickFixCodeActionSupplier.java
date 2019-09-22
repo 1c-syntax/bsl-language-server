@@ -22,7 +22,6 @@
 package org.github._1c_syntax.bsl.languageserver.codeactions;
 
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -30,32 +29,24 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
-public class QuickFixCodeActionSupplier implements CodeActionSupplier {
-
-  private DiagnosticProvider diagnosticProvider;
+public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
 
   public QuickFixCodeActionSupplier(DiagnosticProvider diagnosticProvider) {
-    this.diagnosticProvider = diagnosticProvider;
+    super(diagnosticProvider);
   }
 
   @Override
-  public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
-    List<String> only = params.getContext().getOnly();
-    if (only != null && !only.isEmpty() && !only.contains(CodeActionKind.QuickFix)) {
-      return Collections.emptyList();
-    }
-
-    List<CodeAction> actions = new ArrayList<>();
-
-    List<Diagnostic> diagnostics = params.getContext().getDiagnostics();
-    diagnostics.forEach(diagnostic ->
-      actions.addAll(getCodeActionsByDiagnostic(diagnostic, params, documentContext)));
-
-    return actions;
+  protected Stream<CodeAction> processDiagnosticStream(
+    Stream<Diagnostic> diagnosticStream,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+    return diagnosticStream
+      .flatMap(diagnostic -> getCodeActionsByDiagnostic(diagnostic, params, documentContext).stream());
   }
 
   private List<CodeAction> getCodeActionsByDiagnostic(
