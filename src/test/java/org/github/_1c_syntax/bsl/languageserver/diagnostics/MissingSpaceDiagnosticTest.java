@@ -42,47 +42,10 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 
   @Test
   void test() {
+
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(25);
-
-    /*assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)));
-
-    assertThat(diagnostics.get(0).getRange().equals(RangeHelper.newRange(4, 8, 4, 9)));
-    assertThat(diagnostics.get(1).getRange().equals(RangeHelper.newRange(4, 12, 4, 13)));
-    assertThat(diagnostics.get(2).getRange().equals(RangeHelper.newRange(4, 18, 4, 19)));
-    assertThat(diagnostics.get(3).getRange().equals(RangeHelper.newRange(4, 21, 4, 22)));
-    assertThat(diagnostics.get(4).getRange().equals(RangeHelper.newRange(7, 8, 7, 9)));
-    assertThat(diagnostics.get(5).getRange().equals(RangeHelper.newRange(7, 15, 7, 16)));
-      // на =
-    assertThat(diagnostics.get(6).getRange().equals(RangeHelper.newRange(8, 8, 8, 9)));
-    assertThat(diagnostics.get(7).getRange().equals(RangeHelper.newRange(8, 15, 8, 16)));
-    assertThat(diagnostics.get(8).getRange().equals(RangeHelper.newRange(9, 8, 9, 9)));
-    assertThat(diagnostics.get(9).getRange().equals(RangeHelper.newRange(10, 9, 10, 10)));
-    assertThat(diagnostics.get(10).getRange().equals(RangeHelper.newRange(10, 16, 10, 17)));
-    assertThat(diagnostics.get(11).getRange().equals(RangeHelper.newRange(11, 9, 11, 10)));
-    assertThat(diagnostics.get(12).getRange().equals(RangeHelper.newRange(11, 17, 11, 18)));
-    assertThat(diagnostics.get(13).getRange().equals(RangeHelper.newRange(13, 8, 13, 9)));
-
-    assertThat(diagnostics.get(14).getRange().equals(RangeHelper.newRange(13, 16, 13, 17)));
-      // на >
-    assertThat(diagnostics.get(15).getRange().equals(RangeHelper.newRange(17, 18, 17, 19)));
-    assertThat(diagnostics.get(16).getRange().equals(RangeHelper.newRange(18, 11, 18, 12)));
-      // на <
-    assertThat(diagnostics.get(17).getRange().equals(RangeHelper.newRange(19, 12, 19, 13)));
-      // на >=
-    assertThat(diagnostics.get(18).getRange().equals(RangeHelper.newRange(22, 11, 22, 12)));
-      // на <=
-    assertThat(diagnostics.get(19).getRange().equals(RangeHelper.newRange(23, 12, 23, 13)));
-      // на <>
-    assertThat(diagnostics.get(20).getRange().equals(RangeHelper.newRange(25, 11, 25, 12)));
-    assertThat(diagnostics.get(21).getRange().equals(RangeHelper.newRange(28, 9, 28, 10)));
-      // на ;
-    assertThat(diagnostics.get(22).getRange().equals(RangeHelper.newRange(28, 13, 28, 14)));
-    assertThat(diagnostics.get(23).getRange().equals(RangeHelper.newRange(28, 27, 28, 28)));
-*/
-
     assertThat(diagnostics)
       // на +
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)))
@@ -127,10 +90,6 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
 
   @Test
   void testQuickFix() {
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    //configuration.clear();
-    //configuration.put("diagnosticLanguage", DiagnosticLanguage.RU);
-    getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
@@ -162,7 +121,6 @@ public class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSp
     configuration.put("listForCheckLeft", ")");
     configuration.put("listForCheckRight", "(");
     configuration.put("listForCheckLeftAndRight", "");
-    //configuration.put("diagnosticLanguage", DiagnosticLanguage.RU);
     getDiagnosticInstance().configure(configuration);
 
     diagnostics = getDiagnostics();
