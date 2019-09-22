@@ -42,12 +42,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.ERROR, //TODO Не забыть заменить обратно
-  severity = DiagnosticSeverity.BLOCKER,
-  /*type = DiagnosticType.CODE_SMELL
-  severity = DiagnosticSeverity.INFO,*/
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.INFO,
   minutesToFix = 1,
-  activatedByDefault = true   //TODO решить, включено ли по умолчанию
+  activatedByDefault = true
 )
 
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
@@ -55,8 +53,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String default_listForCheckLeft          = "";      // символы, требующие пробелы только слева
   private static final String default_listForCheckRight         = ", ;";   // ... только справа
   private static final String default_listForCheckLeftAndRight  = "+ - * / = % < > <> <= >="; // ... с обоих сторон
-  private static final String default_checkSpaceToRightOfUnary = "false";  // Проверять пробел справа от унарного знака
-  private static final String default_allowMultipleCommas      = "false";  // Разрешить несколько запятых подряд
+  private static final String default_checkSpaceToRightOfUnary  = "false"; // Проверять пробел справа от унарного знака
+  private static final String default_allowMultipleCommas       = "false"; // Разрешить несколько запятых подряд
 
   @DiagnosticParameter(
     type = String.class,
@@ -98,26 +96,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private Pattern PATTERN_LR = compilePattern(listForCheckLeftAndRight);
   private Pattern PATTERN_NOT_SPACE = compilePattern("\\S+");
 
-
-
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     diagnosticStorage.clearDiagnostics();
-
-    //TODO Задачи
-    // +1. Унарные + и -
-    //    - Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
-    // +2. Дописать тест
-    // +3. Справа от запятой может быть запятая
-    // +4. Реализовать быстрое исправление
-    // +5. Вынести в параметры:
-    //    - для запятой есть исключение - справа может быть другая запятая. Сделать параметр
-    //        типа "Допускать справа от запятой другую запятую" или "Разрешить несколько запятых подряд"
-    //    - символы, у которых проверять слева и справа
-    //    - символы, у которых проверять только слева
-    //    - символы, у которых проверять только справа
-    //    - для унарных знаков, параметр, проверять ли справа наличие пробела - по умолчанию проверять
-    //        типа "Проверять наличие пробела справа от унарных знаков"
 
     List<Token> tokens = documentContext.getTokens();
     List<Token> foundTokens;
