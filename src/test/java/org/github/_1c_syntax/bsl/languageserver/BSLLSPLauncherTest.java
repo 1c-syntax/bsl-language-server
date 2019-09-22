@@ -82,8 +82,7 @@ class BSLLSPLauncherTest {
     }
 
     // then
-    // FIXME How test logger?
-    // assertThat(outContent.toString()).containsIgnoringCase("Unrecognized option: --error");
+    assertThat(errContent.toString()).containsIgnoringCase("Unrecognized option: --error");
   }
 
   @Test
