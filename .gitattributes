@@ -2,3 +2,4 @@
 *.bsl eol=lf
 *.xml eol=lf
 *.md eol=lf
+*.bat eol=crlf
