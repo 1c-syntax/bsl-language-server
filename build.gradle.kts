@@ -98,13 +98,13 @@ tasks.test {
     }
 
     reports {
-        html.setEnabled(true)
+        html.isEnabled = true
     }
 }
 
 tasks.jacocoTestReport {
     reports {
-        xml.setEnabled(true)
+        xml.isEnabled = true
     }
 }
 
