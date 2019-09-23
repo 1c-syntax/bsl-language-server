@@ -41,7 +41,7 @@ public class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagno
 		List<Diagnostic> diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(5);
+		assertThat(diagnostics).hasSize(7);
 
 		assertThat(diagnostics)
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 4, 8, 49)))
@@ -49,7 +49,8 @@ public class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagno
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 4, 16, 23)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(17, 4, 17, 23)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(27, 4, 27, 35)))
-		;
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(32, 4, 32, 27)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(33, 4, 33, 31)));
 
 	}
 }

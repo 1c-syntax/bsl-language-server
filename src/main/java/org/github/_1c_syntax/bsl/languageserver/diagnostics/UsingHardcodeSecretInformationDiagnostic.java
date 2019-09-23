@@ -49,18 +49,18 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private static final String FIND_WORD_DEFAULT = "Пароль|Password";
 
-  private final Pattern patternNewExpression = Pattern.compile(
+  private static final Pattern patternNewExpression = Pattern.compile(
     "Структура|Structure|Соответствие|Map",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private final Pattern patternMethodInsert = Pattern.compile(
+  private static final Pattern patternMethodInsert = Pattern.compile(
     "Вставить|Insert",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + FIND_WORD_DEFAULT,
-    description = "Слова поиска конфиденциальной информации"
+    description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
   )
   private String searchWords = FIND_WORD_DEFAULT;
 
@@ -84,10 +84,28 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
     Matcher matcher = pattern.matcher(ctx.getStart().getText());
-    if (matcher.find() && isNotEmptyStringByToken(ctx.getStop())) {
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+    if (matcher.find()) {
+      List<Token> list = ctx.expression().getTokens();
+      if (list.size() == 1 && isNotEmptyStringByToken(list.get(0))) {
+        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+      }
     }
     return super.visitAssignment(ctx);
+  }
+
+  @Override
+  public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
+    List<Token> list = ctx.getTokens();
+    if (!list.isEmpty()) {
+      processCheckAssignmentKey(ctx, list.get(0).getText());
+    }
+    return super.visitAccessIndex(ctx);
+  }
+
+  @Override
+  public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
+    processCheckAssignmentKey(ctx, ctx.getStop().getText());
+    return super.visitAccessProperty(ctx);
   }
 
   @Override
@@ -123,11 +141,21 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return super.visitNewExpression(ctx);
   }
 
+  private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
+    Matcher matcher = pattern.matcher(getClearString(accessText));
+    if (matcher.find()) {
+      ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_assignment);
+      if (assignment != null && isNotEmptyStringByToken(assignment.getStop())) {
+        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, getDiagnosticMessage());
+      }
+    }
+  }
+
   private void processParameterList(BSLParser.NewExpressionContext ctx, List<BSLParser.CallParamContext> list) {
     String[] arr = list.get(0).getText().split(",");
     for (int index = 0; index < arr.length; index++) {
       Matcher matcher = pattern.matcher(getClearString(arr[index]));
-      if (matcher.find() && list.size() >= index && isNotEmptyStringByToken(list.get(index + 1).getStart())) {
+      if (matcher.find() && list.size() > index + 1 && isNotEmptyStringByToken(list.get(index + 1).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
         break;
       }
