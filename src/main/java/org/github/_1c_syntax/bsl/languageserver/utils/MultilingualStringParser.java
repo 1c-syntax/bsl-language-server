@@ -27,18 +27,38 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public final class MultilingualStringHelper {
+public final class MultilingualStringParser {
 
-  public static boolean isMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+  private BSLParser.GlobalMethodCallContext globalMethodCallContext;
+  private Map<String, String> expandedMultilingualString = new HashMap<>();
+
+  public static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
     Pattern nStrPattern = Pattern.compile(
       "НСтр|NStr",
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     return !nStrPattern.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
-  public static boolean hasAllDeclaredLanguages(BSLParser.GlobalMethodCallContext globalMethodCallContext, String languages) {
-    String text = getMultilingualString(globalMethodCallContext);
-    Map<String, String> expandedMultilingualString = expandMultilingualString(text);
+  public MultilingualStringParser(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+    this.globalMethodCallContext = globalMethodCallContext;
+    expandMultilingualString();
+  }
+
+  private void expandMultilingualString() {
+    String[] languagesStrings = getMultilingualString().split("';");
+    for (String s : languagesStrings) {
+      String[] parts = s.split("='");
+      if(parts.length == 2) {
+        expandedMultilingualString.put(parts[0].replaceAll("\\W+", ""), parts[1]);
+      }
+    }
+  }
+
+  private String getMultilingualString() {
+    return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
+  }
+
+  public boolean hasAllDeclaredLanguages(String languages) {
     if(expandedMultilingualString.isEmpty()) {
       return true;
     }
@@ -49,28 +69,8 @@ public final class MultilingualStringHelper {
       if(!expandedMultilingualString.containsKey(lang)) {
         return false;
       }
-    };
+    }
 
     return true;
   }
-
-  private static String getMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
-  }
-
-  private static Map<String, String> expandMultilingualString(String text) {
-    String[] languagesStrings = text.split("';");
-
-    Map<String, String> expandedMultilingualString = new HashMap<>();
-
-    for (String s : languagesStrings) {
-      String[] parts = s.split("='");
-      if(parts.length == 2) {
-        expandedMultilingualString.put(parts[0].replaceAll("\\W+", ""), parts[1]);
-      }
-    }
-
-    return expandedMultilingualString;
-  }
-
 }

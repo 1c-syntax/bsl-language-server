@@ -27,7 +27,7 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.languageserver.utils.MultilingualStringHelper;
+import org.github._1c_syntax.bsl.languageserver.utils.MultilingualStringParser;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.Map;
@@ -60,14 +60,14 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends Abstrac
 
 	@Override
 	public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-		if(
-			MultilingualStringHelper.isMultilingualString(ctx)
-			|| MultilingualStringHelper.hasAllDeclaredLanguages(ctx, declaredLanguages)
-		) {
+		if(MultilingualStringParser.isNotMultilingualString(ctx)) {
 			return super.visitGlobalMethodCall(ctx);
 		}
 
-		diagnosticStorage.addDiagnostic(ctx);
+		MultilingualStringParser parser = new MultilingualStringParser(ctx);
+		if(!parser.hasAllDeclaredLanguages(declaredLanguages)) {
+			diagnosticStorage.addDiagnostic(ctx);
+		}
 		return super.visitGlobalMethodCall(ctx);
 	}
 
