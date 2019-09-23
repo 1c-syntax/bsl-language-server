@@ -105,7 +105,12 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    Matcher matcherTypeName = patternNewExpression.matcher(ctx.typeName().getText());
+    BSLParser.TypeNameContext typeNameContext = ctx.typeName();
+    if (typeNameContext == null) {
+      return super.visitNewExpression(ctx);
+    }
+
+    Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
     if (matcherTypeName.find()) {
       BSLParser.DoCallContext doCallContext = ctx.doCall();
       if (doCallContext != null) {
