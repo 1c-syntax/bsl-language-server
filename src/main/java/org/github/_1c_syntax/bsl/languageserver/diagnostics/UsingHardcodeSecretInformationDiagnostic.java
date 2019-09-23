@@ -59,11 +59,10 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + FIND_WORD_DEFAULT,
+    defaultValue = FIND_WORD_DEFAULT,
     description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
   )
   private String searchWords = FIND_WORD_DEFAULT;
-
   private Pattern pattern = getPatternSearch(FIND_WORD_DEFAULT);
 
   @Override
@@ -81,6 +80,12 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
+  /**
+   * Проверяется левая часть Assignment на присутствие в ключевых
+   * словах поиска (searchWords) и права часть на непустую строку.
+   * Пример кода:
+   * Пароль = "12345";
+   */
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
     Matcher matcher = pattern.matcher(ctx.getStart().getText());
@@ -93,6 +98,10 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return super.visitAssignment(ctx);
   }
 
+  /**
+   * Пример:
+   * Структура["Пароль"] = "12345";
+   */
   @Override
   public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
     List<Token> list = ctx.getTokens();
@@ -102,12 +111,24 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return super.visitAccessIndex(ctx);
   }
 
+  /**
+   * Проверяется свойство (AccessProperty) комплексного идентификатора (complexIdentifier) на присутствие
+   * в ключевых словах поиска (searchWords) и значение присваивания на непустую строку.
+   * Обработка поиска в коде:
+   * Структура.Пароль = "12345";
+   */
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
     processCheckAssignmentKey(ctx, ctx.getStop().getText());
     return super.visitAccessProperty(ctx);
   }
 
+  /**
+   * Проверяется использования метода Вставить с ключом (параметром), который присутствует в ключевых
+   * словах поиска (searchWords) и значение этого параметра на непустую строку.
+   * Пример:
+   * Структура.Вставить("Пароль", "12345");
+   */
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
     Matcher matcherMethod = patternMethodInsert.matcher(ctx.methodName().getText());
@@ -121,13 +142,18 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return super.visitMethodCall(ctx);
   }
 
+  /**
+   * Проверяется при объявлении новой структуры наличие параметра, который присутствует в ключевых
+   * словах поиска (searchWords) и значения этого параметра на непустую строку.
+   * Обработка поиска в коде:
+   * Структура = Новый Структура("Пароль", "12345");
+   */
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
     BSLParser.TypeNameContext typeNameContext = ctx.typeName();
     if (typeNameContext == null) {
       return super.visitNewExpression(ctx);
     }
-
     Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
     if (matcherTypeName.find()) {
       BSLParser.DoCallContext doCallContext = ctx.doCall();
