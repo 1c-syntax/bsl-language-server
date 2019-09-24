@@ -36,10 +36,9 @@ class SelfInsertionDiagnosticTest extends AbstractDiagnosticTest<SelfInsertionDi
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 0, 2, 54));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(8, 0, 8, 24));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 0, 12, 43));
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 0, 2, 53));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(8, 0, 8, 23));
   }
 
 }

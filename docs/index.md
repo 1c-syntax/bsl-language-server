@@ -170,6 +170,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [ParseError](diagnostics/ParseError.md) | Ошибка разбора исходного кода | Да |
 | [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да |
 | [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да |
+| [SelfInsertion](diagnostics/SelfInsertion.md) | Вставка коллекции в саму себя | Да |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да |
 | [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да |

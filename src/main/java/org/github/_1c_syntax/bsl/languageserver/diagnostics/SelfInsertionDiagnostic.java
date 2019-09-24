@@ -27,9 +27,8 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -38,19 +37,27 @@ import java.util.List;
 )
 public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final Pattern deletePattern = Pattern.compile(
+    "(вставить|добавить|insert|add)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
     String identifier = ctx.IDENTIFIER().getText().trim();
-    List<BSLParser.CallParamContext> callParams = ctx
-      .accessCall()
-      .methodCall()
-      .doCall()
-      .callParamList()
-      .callParam();
-    for(BSLParser.CallParamContext param : callParams) {
-      if(param.getText().trim().equals(identifier)) {
-        diagnosticStorage.addDiagnostic(ctx);
+    BSLParser.MethodCallContext methodCall = ctx.accessCall().methodCall();
+
+    if(deletePattern.matcher(methodCall.methodName().getText()).matches()) {
+      List<BSLParser.CallParamContext> callParams = methodCall
+        .doCall()
+        .callParamList()
+        .callParam();
+
+      for(BSLParser.CallParamContext param : callParams) {
+        if(param.getText().trim().equals(identifier)) {
+          diagnosticStorage.addDiagnostic(ctx);
+        }
       }
     }
 

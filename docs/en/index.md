@@ -172,6 +172,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [ParseError](diagnostics/ParseError.md) | Error parsing source code | Yes |
 | [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Procedure must have no Return value | Yes |
 | [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes |
+| [SelfInsertion](diagnostics/SelfInsertion.md) | Insert a collection into itself | Yes |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes |
 | [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Misuse of multiple compilation directives | Yes |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes |
