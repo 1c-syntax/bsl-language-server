@@ -78,6 +78,8 @@ public class DocumentContext {
 
   public DocumentContext(String uri, String content) {
     this.uri = uri;
+    this.content = content;
+
     FileType fileTypeFromUri;
 
     if (uri == null) {
@@ -90,8 +92,6 @@ public class DocumentContext {
       }
     }
     this.fileType = fileTypeFromUri;
-
-    build(content);
   }
 
   public BSLParser.FileContext getAst() {
@@ -184,7 +184,8 @@ public class DocumentContext {
   }
 
   public void rebuild(String content) {
-    build(content);
+    clear();
+    this.content = content;
   }
 
   public void clearASTData() {
@@ -212,26 +213,6 @@ public class DocumentContext {
     methods.clear();
     regions.clear();
     regionsFlat.clear();
-  }
-
-  private void build(String content) {
-    clear();
-
-    this.content = content;
-    //this.contentList = content.split("\n");
-//    computeContentList();
-
-    // order of computing is important
-//    computeTokenStream();
-//    computeTokens();
-//    computeAST();
-
-    computeRegions();
-    computeMethods();
-    adjustRegions();
-
-    computeMetrics();
-    computeCognitiveComplexity();
   }
 
   private String[] getContentList() {
@@ -298,7 +279,9 @@ public class DocumentContext {
 
   private List<RegionSymbol> computeRegions() {
     Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
-    return regionSymbolComputer.compute();
+    final List<RegionSymbol> regionSymbols = regionSymbolComputer.compute();
+    adjustRegions();
+    return regionSymbols;
   }
 
   private List<RegionSymbol> computeRegionsFlat() {
