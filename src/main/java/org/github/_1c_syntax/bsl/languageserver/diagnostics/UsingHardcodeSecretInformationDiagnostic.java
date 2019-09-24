@@ -76,7 +76,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private static Pattern getPatternSearch(String value) {
     return Pattern.compile(
-      "^(" + value + ")",
+      "^(" + value + ")$",
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
@@ -105,7 +105,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   @Override
   public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
     List<Token> list = ctx.getTokens();
-    if (!list.isEmpty()) {
+    if (list.size() == 1) {
       processCheckAssignmentKey(ctx, list.get(0).getText());
     }
     return super.visitAccessIndex(ctx);
@@ -170,8 +170,11 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
     Matcher matcher = pattern.matcher(getClearString(accessText));
     if (matcher.find()) {
+      boolean checkBefore = true;
       ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_assignment);
-      if (assignment != null && isNotEmptyStringByToken(assignment.getStop())) {
+      if (assignment != null
+        && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
+        && isNotEmptyStringByToken(assignment.getStop())) {
         diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, getDiagnosticMessage());
       }
     }
