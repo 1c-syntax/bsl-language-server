@@ -67,12 +67,12 @@ public class DocumentContext {
   private Lazy<CommonTokenStream> tokenStream = new Lazy<>();
   private Lazy<List<Token>> tokens = new Lazy<>();
   private Lazy<BSLParser.FileContext> ast = new Lazy<>();
-  private MetricStorage metrics;
-  private CognitiveComplexityComputer.Data cognitiveComplexityData;
-  private List<MethodSymbol> methods;
-  private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
-  private List<RegionSymbol> regions;
-  private List<RegionSymbol> regionsFlat;
+  private Lazy<MetricStorage> metrics = new Lazy<>();
+  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>();
+  private Lazy<List<MethodSymbol>> methods = new Lazy<>();
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>();
+  private Lazy<List<RegionSymbol>> regions = new Lazy<>();
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>();
   private final String uri;
   private final FileType fileType;
 
@@ -99,7 +99,8 @@ public class DocumentContext {
   }
 
   public List<MethodSymbol> getMethods() {
-    return new ArrayList<>(methods);
+    final List<MethodSymbol> methodsUnboxed = methods.getOrCompute(this::computeMethods);
+    return new ArrayList<>(methodsUnboxed);
   }
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
@@ -113,15 +114,17 @@ public class DocumentContext {
       methodNode = ctx;
     }
 
-    return Optional.ofNullable(nodeToMethodsMap.get(methodNode));
+    return Optional.ofNullable(getNodeToMethodsMap().get(methodNode));
   }
 
   public List<RegionSymbol> getRegions() {
-    return new ArrayList<>(regions);
+    final List<RegionSymbol> regionsUnboxed = regions.getOrCompute(this::computeRegions);
+    return new ArrayList<>(regionsUnboxed);
   }
 
   public List<RegionSymbol> getRegionsFlat() {
-    return new ArrayList<>(regionsFlat);
+    final List<RegionSymbol> regionsFlatUnboxed = regionsFlat.getOrCompute(this::computeRegionsFlat);
+    return new ArrayList<>(regionsFlatUnboxed);
   }
 
   public List<Token> getTokens() {
@@ -165,7 +168,7 @@ public class DocumentContext {
   }
 
   public MetricStorage getMetrics() {
-    return metrics;
+    return metrics.getOrCompute(this::computeMetrics);
   }
 
   public String getUri() {
@@ -177,7 +180,7 @@ public class DocumentContext {
   }
 
   public CognitiveComplexityComputer.Data getCognitiveComplexityData() {
-    return cognitiveComplexityData;
+    return cognitiveComplexityData.getOrCompute(this::computeCognitiveComplexity);
   }
 
   public void rebuild(String content) {
@@ -193,11 +196,26 @@ public class DocumentContext {
 
     nodeToMethodsMap.clear();
 
-    regions.forEach(Symbol::clearASTData);
-    methods.forEach(Symbol::clearASTData);
+    if (regions.isPresent()) {
+      getRegions().forEach(Symbol::clearASTData);
+    }
+    if (methods.isPresent()) {
+      getMethods().forEach(Symbol::clearASTData);
+    }
+  }
+
+  private void clear() {
+    clearASTData();
+
+    metrics.clear();
+    cognitiveComplexityData.clear();
+    methods.clear();
+    regions.clear();
+    regionsFlat.clear();
   }
 
   private void build(String content) {
+    clear();
 
     this.content = content;
     //this.contentList = content.split("\n");
@@ -224,6 +242,10 @@ public class DocumentContext {
     final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute(this::computeTokenStream);
     tokenStreamUnboxed.seek(0);
     return tokenStreamUnboxed;
+  }
+
+  private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
+    return nodeToMethodsMap.getOrCompute(this::computeNodeToMethodsMap);
   }
 
   private String[] computeContentList() {
@@ -274,10 +296,13 @@ public class DocumentContext {
     return parser.file();
   }
 
-  private void computeRegions() {
+  private List<RegionSymbol> computeRegions() {
     Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
-    regions = regionSymbolComputer.compute();
-    regionsFlat = regions.stream()
+    return regionSymbolComputer.compute();
+  }
+
+  private List<RegionSymbol> computeRegionsFlat() {
+    return getRegions().stream()
       .map((RegionSymbol regionSymbol) -> {
         List<RegionSymbol> list = new ArrayList<>();
         list.add(regionSymbol);
@@ -289,24 +314,29 @@ public class DocumentContext {
       .collect(Collectors.toList());
   }
 
-  private void computeMethods() {
+  private List<MethodSymbol> computeMethods() {
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
-    methods = methodSymbolComputer.compute();
-
-    nodeToMethodsMap.clear();
-    methods.forEach(methodSymbol -> nodeToMethodsMap.put(methodSymbol.getNode(), methodSymbol));
+    return methodSymbolComputer.compute();
   }
 
-  private void computeCognitiveComplexity() {
+  private Map<BSLParserRuleContext, MethodSymbol> computeNodeToMethodsMap() {
+    final Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMapTemp = new HashMap<>();
+    getMethods().forEach(methodSymbol -> nodeToMethodsMapTemp.put(methodSymbol.getNode(), methodSymbol));
+
+    return nodeToMethodsMapTemp;
+  }
+
+  private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
-    cognitiveComplexityData = cognitiveComplexityComputer.compute();
+    CognitiveComplexityComputer.Data cognitiveComplexityDataTemp = cognitiveComplexityComputer.compute();
 
-    metrics.setCognitiveComplexity(cognitiveComplexityData.getFileComplexity());
+    getMetrics().setCognitiveComplexity(cognitiveComplexityDataTemp.getFileComplexity());
 
+    return cognitiveComplexityDataTemp;
   }
 
   private void adjustRegions() {
-    methods.forEach((MethodSymbol methodSymbol) -> {
+    getMethods().forEach((MethodSymbol methodSymbol) -> {
       RegionSymbol region = methodSymbol.getRegion();
       if (region != null) {
         region.getMethods().add(methodSymbol);
@@ -314,22 +344,24 @@ public class DocumentContext {
     });
   }
 
-  private void computeMetrics() {
-    metrics = new MetricStorage();
-    metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));
-    metrics.setProcedures(methods.size() - metrics.getFunctions());
+  private MetricStorage computeMetrics() {
+    MetricStorage metricsTemp = new MetricStorage();
+    final List<MethodSymbol> methodsUnboxed = getMethods();
+
+    metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
+    metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
 
     int ncloc = (int) getTokensFromDefaultChannel().stream()
       .map(Token::getLine)
       .distinct()
       .count();
 
-    metrics.setNcloc(ncloc);
+    metricsTemp.setNcloc(ncloc);
 
     int[] nclocData = getTokensFromDefaultChannel().stream()
       .mapToInt(Token::getLine)
       .distinct().toArray();
-    metrics.setNclocData(nclocData);
+    metricsTemp.setNclocData(nclocData);
 
     int lines;
     final List<Token> tokensUnboxed = getTokens();
@@ -338,12 +370,13 @@ public class DocumentContext {
     } else {
       lines = tokensUnboxed.get(tokensUnboxed.size() - 1).getLine();
     }
-    metrics.setLines(lines);
+    metricsTemp.setLines(lines);
 
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
-    metrics.setStatements(statements);
-  }
+    metricsTemp.setStatements(statements);
 
+    return metricsTemp;
+  }
 
   public static final class Lazy<T> {
 
@@ -352,6 +385,11 @@ public class DocumentContext {
     T getOrCompute(Supplier<T> supplier) {
       final T result = value; // Just one volatile read
       return result == null ? maybeCompute(supplier) : result;
+    }
+
+    boolean isPresent() {
+      final T result = value;
+      return result != null;
     }
 
     public void clear() {
