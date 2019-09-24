@@ -53,17 +53,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 import static org.antlr.v4.runtime.Token.EOF;
 
 public class DocumentContext {
 
   private String content;
-  private String[] contentList;
-  private BSLParser.FileContext ast;
-  private List<Token> tokens;
+  private Lazy<String[]> contentList = new Lazy<>();
+  private Lazy<CommonTokenStream> tokenStream = new Lazy<>();
+  private Lazy<List<Token>> tokens = new Lazy<>();
+  private Lazy<BSLParser.FileContext> ast = new Lazy<>();
   private MetricStorage metrics;
   private CognitiveComplexityComputer.Data cognitiveComplexityData;
   private List<MethodSymbol> methods;
@@ -92,7 +95,7 @@ public class DocumentContext {
   }
 
   public BSLParser.FileContext getAst() {
-    return ast;
+    return ast.getOrCompute(this::computeAST);
   }
 
   public List<MethodSymbol> getMethods() {
@@ -122,15 +125,16 @@ public class DocumentContext {
   }
 
   public List<Token> getTokens() {
-    return new ArrayList<>(tokens);
+    final List<Token> tokensUnboxed = tokens.getOrCompute(this::computeTokens);
+    return new ArrayList<>(tokensUnboxed);
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return tokens.stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
+    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
   }
 
   public List<Token> getComments() {
-    return tokens.stream()
+    return getTokens().stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
   }
@@ -141,7 +145,8 @@ public class DocumentContext {
 
     StringBuilder sb = new StringBuilder();
 
-    String startString = contentList[start.getLine()];
+    String[] contentListUnboxed = getContentList();
+    String startString = contentListUnboxed[start.getLine()];
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
     } else {
@@ -149,11 +154,11 @@ public class DocumentContext {
     }
 
     for(int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
-      sb.append(contentList[i]);
+      sb.append(contentListUnboxed[i]);
     }
 
     if (start.getLine() != end.getLine()) {
-      sb.append(contentList[end.getLine()], 0, end.getCharacter());
+      sb.append(contentListUnboxed[end.getLine()], 0, end.getCharacter());
     }
 
     return sb.toString();
@@ -181,9 +186,10 @@ public class DocumentContext {
 
   public void clearASTData() {
     content = null;
-    contentList = null;
-    ast = null;
-    tokens = null;
+    contentList.clear();
+    tokenStream.clear();
+    tokens.clear();
+    ast.clear();
 
     nodeToMethodsMap.clear();
 
@@ -192,11 +198,15 @@ public class DocumentContext {
   }
 
   private void build(String content) {
+
     this.content = content;
-    this.contentList = content.split("\n");
+    //this.contentList = content.split("\n");
+//    computeContentList();
 
     // order of computing is important
-    computeTokensAndAST();
+//    computeTokenStream();
+//    computeTokens();
+//    computeAST();
 
     computeRegions();
     computeMethods();
@@ -206,7 +216,23 @@ public class DocumentContext {
     computeCognitiveComplexity();
   }
 
-  private void computeTokensAndAST() {
+  private String[] getContentList() {
+    return contentList.getOrCompute(this::computeContentList);
+  }
+
+  private CommonTokenStream getTokenStream() {
+    final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute(this::computeTokenStream);
+    tokenStreamUnboxed.seek(0);
+    return tokenStreamUnboxed;
+  }
+
+  private String[] computeContentList() {
+    return content.split("\n");
+  }
+
+  private CommonTokenStream computeTokenStream() {
+    requireNonNull(content);
+
     CharStream input;
 
     try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
@@ -225,19 +251,27 @@ public class DocumentContext {
     lexer.setInputStream(input);
     lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
 
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-    tokenStream.fill();
+    CommonTokenStream tempTokenStream = new CommonTokenStream(lexer);
+    tempTokenStream.fill();
 
-    tokens = new ArrayList<>(tokenStream.getTokens());
+    return tempTokenStream;
+  }
 
-    Token lastToken = tokens.get(tokens.size() - 1);
+  private List<Token> computeTokens() {
+    List<Token> tokensTemp = new ArrayList<>(getTokenStream().getTokens());
+
+    Token lastToken = tokensTemp.get(tokensTemp.size() - 1);
     if (lastToken.getType() == EOF) {
-      tokens.remove(tokens.size() - 1);
+      tokensTemp.remove(tokensTemp.size() - 1);
     }
 
-    BSLParser parser = new BSLParser(tokenStream);
+    return tokensTemp;
+  }
+
+  private BSLParser.FileContext computeAST() {
+    BSLParser parser = new BSLParser(getTokenStream());
     parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
-    ast = parser.file();
+    return parser.file();
   }
 
   private void computeRegions() {
@@ -298,15 +332,38 @@ public class DocumentContext {
     metrics.setNclocData(nclocData);
 
     int lines;
-    if (tokens.isEmpty()) {
+    final List<Token> tokensUnboxed = getTokens();
+    if (tokensUnboxed.isEmpty()) {
       lines = 0;
     } else {
-      lines = tokens.get(tokens.size() - 1).getLine();
+      lines = tokensUnboxed.get(tokensUnboxed.size() - 1).getLine();
     }
     metrics.setLines(lines);
 
-    int statements = Trees.findAllRuleNodes(ast, BSLParser.RULE_statement).size();
+    int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
     metrics.setStatements(statements);
+  }
+
+
+  public static final class Lazy<T> {
+
+    private volatile T value;
+
+    T getOrCompute(Supplier<T> supplier) {
+      final T result = value; // Just one volatile read
+      return result == null ? maybeCompute(supplier) : result;
+    }
+
+    public void clear() {
+      value = null;
+    }
+
+    private synchronized T maybeCompute(Supplier<T> supplier) {
+      if (value == null) {
+        value = requireNonNull(supplier.get());
+      }
+      return value;
+    }
   }
 
 }
