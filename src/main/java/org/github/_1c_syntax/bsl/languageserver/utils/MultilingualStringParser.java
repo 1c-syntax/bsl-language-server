@@ -21,6 +21,7 @@
  */
 package org.github._1c_syntax.bsl.languageserver.utils;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.HashMap;
@@ -73,4 +74,24 @@ public final class MultilingualStringParser {
 
     return true;
   }
+
+  public boolean isParentTemplate() {
+    return hasTemplateInParents(globalMethodCallContext);
+  }
+
+  private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
+    ParserRuleContext parent = globalMethodCallContext.getParent();
+
+    if(parent instanceof BSLParser.FileContext || parent instanceof BSLParser.StatementContext) {
+      return false;
+    }
+
+    if(parent instanceof BSLParser.GlobalMethodCallContext) {
+      // TODO: Проверка что это СтрШаблон
+      return true;
+    }
+
+    return hasTemplateInParents(parent);
+  }
+
 }
