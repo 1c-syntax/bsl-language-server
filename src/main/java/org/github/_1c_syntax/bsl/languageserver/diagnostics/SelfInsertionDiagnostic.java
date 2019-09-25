@@ -45,6 +45,10 @@ public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
+    if(ctx.globalMethodCall() != null) {
+      return ctx;
+    }
+
     String identifier = ctx.IDENTIFIER().getText().trim();
     BSLParser.MethodCallContext methodCall = ctx.accessCall().methodCall();
 
