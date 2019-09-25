@@ -50,7 +50,11 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private static final String FIND_WORD_DEFAULT = "Пароль|Password";
 
   private static final Pattern patternNewExpression = Pattern.compile(
-    "Структура|Structure|Соответствие|Map",
+    "Структура|Structure|Соответствие|Map|FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final Pattern patternNewExpressionConnection = Pattern.compile(
+    "FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern patternMethodInsert = Pattern.compile(
@@ -81,8 +85,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   /**
-   * Проверяется левая часть Assignment на присутствие в ключевых
-   * словах поиска (searchWords) и права часть на непустую строку.
+   * Проверяем переменные, имена которых есть в ключевых словах поиска (searchWords)
+   * на присваивание непустой строки.
    * Пример кода:
    * Пароль = "12345";
    */
@@ -99,6 +103,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   /**
+   * Проверяем строковой индекс в [] на присутствие в ключевых словах поиска (searchWords)
+   * и на присваивание непустой строки.
    * Пример:
    * Структура["Пароль"] = "12345";
    */
@@ -112,9 +118,9 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   /**
-   * Проверяется свойство (AccessProperty) комплексного идентификатора (complexIdentifier) на присутствие
-   * в ключевых словах поиска (searchWords) и значение присваивания на непустую строку.
-   * Обработка поиска в коде:
+   * Проверяем имя свойства объекта на присутствие в ключевых словах поиска (searchWords)
+   * и на присваивание непустой строки.
+   * Пример:
    * Структура.Пароль = "12345";
    */
   @Override
@@ -124,8 +130,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   /**
-   * Проверяется использования метода Вставить с ключом (параметром), который присутствует в ключевых
-   * словах поиска (searchWords) и значение этого параметра на непустую строку.
+   * Проверяем использования метода "Вставить" и имя ключа на присутствие в ключевых словах поиска
+   * (searchWords) и на присваивание непустой строки.
    * Пример:
    * Структура.Вставить("Пароль", "12345");
    */
@@ -143,9 +149,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   /**
-   * Проверяется при объявлении новой структуры наличие параметра, который присутствует в ключевых
-   * словах поиска (searchWords) и значения этого параметра на непустую строку.
-   * Обработка поиска в коде:
+   * Проверяем имя ключа на присутствие в ключевых словах поиска и его значения на непустую строку.
+   * Пример:
    * Структура = Новый Структура("Пароль", "12345");
    */
   @Override
@@ -160,11 +165,23 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       if (doCallContext != null) {
         List<BSLParser.CallParamContext> list = doCallContext.callParamList().callParam();
         if (!list.isEmpty()) {
-          processParameterList(ctx, list);
+          processCheckNewExpression(ctx, list, typeNameContext.getText());
         }
       }
     }
     return super.visitNewExpression(ctx);
+  }
+
+  private void processCheckNewExpression(BSLParser.NewExpressionContext ctx,
+                                         List<BSLParser.CallParamContext> list, String typeName) {
+    Matcher matcherTypeNameConnection = patternNewExpressionConnection.matcher(typeName);
+    if (matcherTypeNameConnection.find()) {
+      if (list.size() >= 4 && isNotEmptyStringByToken(list.get(3).getStart())) {
+        addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
+      }
+    } else {
+      processParameterList(ctx, list);
+    }
   }
 
   private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
