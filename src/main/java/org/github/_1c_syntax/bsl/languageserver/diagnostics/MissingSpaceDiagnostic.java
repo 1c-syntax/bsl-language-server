@@ -52,7 +52,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private static final String default_listForCheckLeft          = "";      // символы, требующие пробелы только слева
   private static final String default_listForCheckRight         = ", ;";   // ... только справа
-  private static final String default_listForCheckLeftAndRight  = "+ - * / = % < > <> <= >="; // ... с обоих сторон
+  private static final String default_listForCheckLeftAndRight  = "+ - * / = % < > <> <= >="; // ... с обеих сторон
   private static final String default_checkSpaceToRightOfUnary  = "false"; // Проверять пробел справа от унарного знака
   private static final String default_allowMultipleCommas       = "false"; // Разрешить несколько запятых подряд
 
