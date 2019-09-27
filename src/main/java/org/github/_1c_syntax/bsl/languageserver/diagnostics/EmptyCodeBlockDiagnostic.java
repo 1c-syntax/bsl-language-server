@@ -47,7 +47,7 @@ import java.util.stream.Stream;
 )
 public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final boolean DEFAULT_COMMENT_AS_CODE = true;
+  private static final boolean DEFAULT_COMMENT_AS_CODE = false;
 
   @DiagnosticParameter(
     type = Boolean.class,
