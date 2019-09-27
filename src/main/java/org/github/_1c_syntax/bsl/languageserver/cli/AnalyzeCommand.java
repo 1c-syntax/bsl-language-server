@@ -77,6 +77,7 @@ public class AnalyzeCommand implements Command {
     }
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), diagnostics);
+    analysisInfo.setSourceDir(srcDirOption);
     ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
     aggregator.report(analysisInfo);
     return 0;

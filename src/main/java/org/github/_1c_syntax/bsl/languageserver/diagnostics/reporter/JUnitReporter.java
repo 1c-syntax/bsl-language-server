@@ -56,7 +56,7 @@ public class JUnitReporter extends AbstractDiagnosticReporter {
     try {
       File reportFile = new File(outputDir.toFile(), "./bsl-junit.xml");
       mapper.writeValue(reportFile, jUnitReport);
-      LOGGER.info("JUnit report saved to {}", reportFile.getAbsolutePath());
+      LOGGER.info("JUnit report saved to {}", reportFile.getCanonicalPath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

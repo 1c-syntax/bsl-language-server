@@ -35,8 +35,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,16 +61,33 @@ class JUnitReporterTest {
   void report() throws IOException {
 
     // given
-    Diagnostic diagnostic = new Diagnostic(
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    diagnostics.add(new Diagnostic(
       RangeHelper.newRange(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
       "test"
-    );
+    ));
 
-    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
-    FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
+    diagnostics.add(new Diagnostic(
+      RangeHelper.newRange(0, 1, 2, 4),
+      "message4",
+      DiagnosticSeverity.Error,
+      "test-source2",
+      "test3"
+    ));
+
+    diagnostics.add(new Diagnostic(
+      RangeHelper.newRange(3, 1, 4, 4),
+      "message4",
+      DiagnosticSeverity.Error,
+      "test-source2",
+      "test3"
+    ));
+
+    DocumentContext documentContext = new DocumentContext(Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri().toString(), "");
+    FileInfo fileInfo = new FileInfo(documentContext, diagnostics);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
 
     AbstractDiagnosticReporter reporter = new JUnitReporter();
