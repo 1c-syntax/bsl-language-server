@@ -22,10 +22,12 @@
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,22 +43,46 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
 
     assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 9));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(18, 4, 18, 14));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(25, 8, 25, 24));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(38, 0, 38, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(39, 0, 39, 21));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(40, 4, 40, 9));
-
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(25, 8, 25, 24));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(32, 4, 32, 21));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(42, 0, 42, 16));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(44, 0, 44, 21));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(45, 4, 45, 9));
   }
 
   @Test
-  void testEmptyCodeBlock() {
+  void testFileEmptyCodeBlock() {
 
     List<Diagnostic> diagnostics = getDiagnostics("EmptyCodeBlockDiagnosticFileCodeBlock");
 
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 4, 3, 16));
-
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 4, 4, 16));
   }
 
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("commentAsCode", "true");
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(32, 4, 32, 21)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(44, 0, 44, 21)));
+  }
+
+  @Test
+  void testConfigureFile() {
+
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("commentAsCode", "true");
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics("EmptyCodeBlockDiagnosticFileCodeBlock");
+
+    assertThat(diagnostics).hasSize(0);
+  }
 }

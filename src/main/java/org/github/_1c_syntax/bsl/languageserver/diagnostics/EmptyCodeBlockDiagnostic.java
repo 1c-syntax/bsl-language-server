@@ -21,17 +21,24 @@
  */
 package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.antlr.v4.runtime.tree.Trees;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.util.Ranges;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -40,13 +47,31 @@ import java.util.stream.Collectors;
 )
 public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final boolean DEFAULT_COMMENT_AS_CODE = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + DEFAULT_COMMENT_AS_CODE,
+    description = "Считать комментарий в блоке кодом"
+  )
+  private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    commentAsCode = Boolean.parseBoolean(configuration.get("commentAsCode").toString());
+  }
+
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
 
     if (ctx.getParent() instanceof BSLParser.FileContext
       || ctx.getParent() instanceof BSLParser.FileCodeBlockBeforeSubContext
       || ctx.getParent() instanceof BSLParser.FileCodeBlockContext
-      || ctx.getParent() instanceof BSLParser.SubCodeBlockContext) {
+      || ctx.getParent() instanceof BSLParser.SubCodeBlockContext
+      || ctx.getParent() instanceof BSLParser.ExceptCodeBlockContext) {
       return super.visitCodeBlock(ctx);
     }
 
@@ -54,11 +79,22 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitCodeBlock(ctx);
     }
 
-    int lineOfstop = ctx.getStop().getLine();
+    if(commentAsCode) {
+      Stream<Token> comments = documentContext.getComments().stream();
+      Range rangeCodeBlock = RangeHelper.newRange(ctx.getStop(), ctx.getStart());
+      if(comments.anyMatch(token ->
+        Ranges.containsRange(
+          rangeCodeBlock,
+          RangeHelper.newRange(token)))) {
+        return super.visitCodeBlock(ctx);
+      }
+    }
+
+    int lineOfStop = ctx.getStop().getLine();
 
     List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
       .filter(node -> node instanceof TerminalNode)
-      .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfstop)
+      .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)
       .collect(Collectors.toList());
 
     if (!list.isEmpty()) {
