@@ -179,6 +179,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
+| [UsingHardcodePathDiagnostic](diagnostics/UsingHardcodePathDiagnostic.md) | Хранение путей к файлам и ip-адресов в коде | Да |
 | [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
