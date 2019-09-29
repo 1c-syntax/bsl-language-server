@@ -23,6 +23,7 @@ package org.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -53,6 +54,9 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 		getDiagnosticInstance().configure(configuration);
 
 		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(3);
+		assertThat(diagnostics).hasSize(2);
+		assertThat(diagnostics)
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 13, 9, 49)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 22, 13, 75)));
 	}
 }

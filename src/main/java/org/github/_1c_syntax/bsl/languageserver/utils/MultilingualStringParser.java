@@ -30,14 +30,22 @@ import java.util.regex.Pattern;
 
 public final class MultilingualStringParser {
 
+  private final static String NSTR_METHOD_NAME = "НСтр|NStr";
+  private final static String TEMPLATE_METHOD_NAME = "СтрШаблон|StrTemplate";
+  private final static Pattern nStrMethodName = Pattern.compile(
+    NSTR_METHOD_NAME,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private final static Pattern templateMethodName = Pattern.compile(
+    TEMPLATE_METHOD_NAME,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private Map<String, String> expandedMultilingualString = new HashMap<>();
 
   public static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    Pattern nStrPattern = Pattern.compile(
-      "НСтр|NStr",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-    return !nStrPattern.matcher(globalMethodCallContext.methodName().getText()).find();
+    return !nStrMethodName.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
   public MultilingualStringParser(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -86,8 +94,10 @@ public final class MultilingualStringParser {
       return false;
     }
 
-    if(parent instanceof BSLParser.GlobalMethodCallContext) {
-      // TODO: Проверка что это СтрШаблон
+    if(
+      parent instanceof BSLParser.GlobalMethodCallContext
+      && templateMethodName.matcher(((BSLParser.GlobalMethodCallContext) parent).methodName().getText()).find()
+    ) {
       return true;
     }
 
