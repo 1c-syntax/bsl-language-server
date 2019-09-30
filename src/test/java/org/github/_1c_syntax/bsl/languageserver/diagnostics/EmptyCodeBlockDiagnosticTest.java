@@ -42,12 +42,12 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 9));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(25, 8, 25, 24));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(32, 4, 32, 21));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(42, 0, 42, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(44, 0, 44, 21));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(45, 4, 45, 9));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(5, 1, 5, 6));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(17, 2, 17, 18));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(24, 4, 24, 21));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(35, 0, 35, 16));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(37, 0, 37, 21));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(38, 4, 38, 9));
   }
 
   @Test
@@ -70,8 +70,8 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(32, 4, 32, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(44, 0, 44, 21)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 4, 24, 21)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(37, 0, 37, 21)));
   }
 
   @Test
