@@ -38,6 +38,7 @@ import org.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolCom
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import org.github._1c_syntax.bsl.languageserver.utils.Lazy;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -53,7 +54,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -367,32 +367,6 @@ public class DocumentContext {
     metricsTemp.setStatements(statements);
 
     return metricsTemp;
-  }
-
-  public static final class Lazy<T> {
-
-    private volatile T value;
-
-    T getOrCompute(Supplier<T> supplier) {
-      final T result = value; // Just one volatile read
-      return result == null ? maybeCompute(supplier) : result;
-    }
-
-    boolean isPresent() {
-      final T result = value;
-      return result != null;
-    }
-
-    public void clear() {
-      value = null;
-    }
-
-    private synchronized T maybeCompute(Supplier<T> supplier) {
-      if (value == null) {
-        value = requireNonNull(supplier.get());
-      }
-      return value;
-    }
   }
 
 }
