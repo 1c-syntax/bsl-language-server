@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -42,8 +43,8 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
     try {
-      diagnostic = diagnosticClass.newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
+      diagnostic = diagnosticClass.getDeclaredConstructor().newInstance();
+    } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
       e.printStackTrace();
       throw new RuntimeException("Diagnostic instantiate error", e);
     }

@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -369,8 +370,8 @@ public final class DiagnosticProvider {
   private static BSLDiagnostic createDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
     BSLDiagnostic diagnostic = null;
     try {
-      diagnostic = diagnosticClass.newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
+      diagnostic = diagnosticClass.getDeclaredConstructor().newInstance();
+    } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
       LOGGER.error("Can't instantiate diagnostic", e);
     }
     return diagnostic;
