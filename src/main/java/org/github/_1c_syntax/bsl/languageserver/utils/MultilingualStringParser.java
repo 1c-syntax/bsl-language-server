@@ -24,12 +24,14 @@ package org.github._1c_syntax.bsl.languageserver.utils;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 public final class MultilingualStringParser {
 
+  private final static Byte VALID_LANG_PARTS = 2;
   private final static String NSTR_METHOD_NAME = "НСтр|NStr";
   private final static String TEMPLATE_METHOD_NAME = "СтрШаблон|StrTemplate";
   private final static Pattern nStrMethodName = Pattern.compile(
@@ -43,6 +45,7 @@ public final class MultilingualStringParser {
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private Map<String, String> expandedMultilingualString = new HashMap<>();
+  private ArrayList<String> missingLanguages = new ArrayList<>();
 
   public static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
     return !nStrMethodName.matcher(globalMethodCallContext.methodName().getText()).find();
@@ -57,7 +60,7 @@ public final class MultilingualStringParser {
     String[] languagesStrings = getMultilingualString().split("';");
     for (String s : languagesStrings) {
       String[] parts = s.split("='");
-      if(parts.length == 2) {
+      if(parts.length == VALID_LANG_PARTS) {
         expandedMultilingualString.put(parts[0].replaceAll("\\W+", ""), parts[1]);
       }
     }
@@ -76,11 +79,15 @@ public final class MultilingualStringParser {
 
     for(String lang : expectedLanguages) {
       if(!expandedMultilingualString.containsKey(lang)) {
-        return false;
+        missingLanguages.add(lang);
       }
     }
 
-    return true;
+    return missingLanguages.isEmpty();
+  }
+
+  public String getMissingLanguages() {
+    return missingLanguages.toString();
   }
 
   public boolean isParentTemplate() {

@@ -66,7 +66,7 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends Abstrac
 
 		MultilingualStringParser parser = new MultilingualStringParser(ctx);
 		if(!parser.hasAllDeclaredLanguages(declaredLanguages) && !parser.isParentTemplate()) {
-			diagnosticStorage.addDiagnostic(ctx);
+			diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(parser.getMissingLanguages()));
 		}
 		return super.visitGlobalMethodCall(ctx);
 	}
