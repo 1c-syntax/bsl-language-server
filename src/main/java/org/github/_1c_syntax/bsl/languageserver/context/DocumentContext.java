@@ -321,8 +321,6 @@ public class DocumentContext {
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
     CognitiveComplexityComputer.Data cognitiveComplexityDataTemp = cognitiveComplexityComputer.compute();
 
-    getMetrics().setCognitiveComplexity(cognitiveComplexityDataTemp.getFileComplexity());
-
     return cognitiveComplexityDataTemp;
   }
 
@@ -365,6 +363,8 @@ public class DocumentContext {
 
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
     metricsTemp.setStatements(statements);
+
+    metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
 
     return metricsTemp;
   }
