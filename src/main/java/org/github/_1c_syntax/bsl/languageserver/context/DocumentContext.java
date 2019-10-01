@@ -38,6 +38,7 @@ import org.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolCom
 import org.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import org.github._1c_syntax.bsl.languageserver.utils.Lazy;
 import org.github._1c_syntax.bsl.parser.BSLLexer;
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -55,26 +56,31 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 import static org.antlr.v4.runtime.Token.EOF;
 
 public class DocumentContext {
 
   private String content;
-  private String[] contentList;
-  private BSLParser.FileContext ast;
-  private List<Token> tokens;
-  private MetricStorage metrics;
-  private CognitiveComplexityComputer.Data cognitiveComplexityData;
-  private List<MethodSymbol> methods;
-  private Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMap = new HashMap<>();
-  private List<RegionSymbol> regions;
-  private List<RegionSymbol> regionsFlat;
+  private Lazy<String[]> contentList = new Lazy<>();
+  private Lazy<CommonTokenStream> tokenStream = new Lazy<>();
+  private Lazy<List<Token>> tokens = new Lazy<>();
+  private Lazy<BSLParser.FileContext> ast = new Lazy<>();
+  private Lazy<MetricStorage> metrics = new Lazy<>();
+  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>();
+  private Lazy<List<MethodSymbol>> methods = new Lazy<>();
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>();
+  private Lazy<List<RegionSymbol>> regions = new Lazy<>();
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>();
+  private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;
 
   public DocumentContext(String uri, String content) {
     this.uri = uri;
+    this.content = content;
+
     FileType fileTypeFromUri;
 
     if (uri == null) {
@@ -87,16 +93,19 @@ public class DocumentContext {
       }
     }
     this.fileType = fileTypeFromUri;
-
-    build(content);
   }
 
   public BSLParser.FileContext getAst() {
-    return ast;
+    return ast.getOrCompute(this::computeAST);
   }
 
   public List<MethodSymbol> getMethods() {
-    return new ArrayList<>(methods);
+    final List<MethodSymbol> methodsUnboxed = methods.getOrCompute(this::computeMethods);
+    if (callAdjustRegionsAfterCalculation) {
+      callAdjustRegionsAfterCalculation = false;
+      adjustRegions();
+    }
+    return new ArrayList<>(methodsUnboxed);
   }
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
@@ -110,27 +119,30 @@ public class DocumentContext {
       methodNode = ctx;
     }
 
-    return Optional.ofNullable(nodeToMethodsMap.get(methodNode));
+    return Optional.ofNullable(getNodeToMethodsMap().get(methodNode));
   }
 
   public List<RegionSymbol> getRegions() {
-    return new ArrayList<>(regions);
+    final List<RegionSymbol> regionsUnboxed = regions.getOrCompute(this::computeRegions);
+    return new ArrayList<>(regionsUnboxed);
   }
 
   public List<RegionSymbol> getRegionsFlat() {
-    return new ArrayList<>(regionsFlat);
+    final List<RegionSymbol> regionsFlatUnboxed = regionsFlat.getOrCompute(this::computeRegionsFlat);
+    return new ArrayList<>(regionsFlatUnboxed);
   }
 
   public List<Token> getTokens() {
-    return new ArrayList<>(tokens);
+    final List<Token> tokensUnboxed = tokens.getOrCompute(this::computeTokens);
+    return new ArrayList<>(tokensUnboxed);
   }
 
   public List<Token> getTokensFromDefaultChannel() {
-    return tokens.stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
+    return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
   }
 
   public List<Token> getComments() {
-    return tokens.stream()
+    return getTokens().stream()
       .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
       .collect(Collectors.toList());
   }
@@ -141,26 +153,27 @@ public class DocumentContext {
 
     StringBuilder sb = new StringBuilder();
 
-    String startString = contentList[start.getLine()];
+    String[] contentListUnboxed = getContentList();
+    String startString = contentListUnboxed[start.getLine()];
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
     } else {
       sb.append(startString.substring(start.getCharacter()));
     }
 
-    for(int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
-      sb.append(contentList[i]);
+    for (int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
+      sb.append(contentListUnboxed[i]);
     }
 
     if (start.getLine() != end.getLine()) {
-      sb.append(contentList[end.getLine()], 0, end.getCharacter());
+      sb.append(contentListUnboxed[end.getLine()], 0, end.getCharacter());
     }
 
     return sb.toString();
   }
 
   public MetricStorage getMetrics() {
-    return metrics;
+    return metrics.getOrCompute(this::computeMetrics);
   }
 
   public String getUri() {
@@ -172,41 +185,62 @@ public class DocumentContext {
   }
 
   public CognitiveComplexityComputer.Data getCognitiveComplexityData() {
-    return cognitiveComplexityData;
+    return cognitiveComplexityData.getOrCompute(this::computeCognitiveComplexity);
   }
 
   public void rebuild(String content) {
-    build(content);
+    clear();
+    this.content = content;
   }
 
   public void clearASTData() {
     content = null;
-    contentList = null;
-    ast = null;
-    tokens = null;
+    contentList.clear();
+    tokenStream.clear();
+    tokens.clear();
+    ast.clear();
 
     nodeToMethodsMap.clear();
 
-    regions.forEach(Symbol::clearASTData);
-    methods.forEach(Symbol::clearASTData);
+    if (regions.isPresent()) {
+      getRegions().forEach(Symbol::clearASTData);
+    }
+    if (methods.isPresent()) {
+      getMethods().forEach(Symbol::clearASTData);
+    }
   }
 
-  private void build(String content) {
-    this.content = content;
-    this.contentList = content.split("\n");
+  private void clear() {
+    clearASTData();
 
-    // order of computing is important
-    computeTokensAndAST();
-
-    computeRegions();
-    computeMethods();
-    adjustRegions();
-
-    computeMetrics();
-    computeCognitiveComplexity();
+    metrics.clear();
+    cognitiveComplexityData.clear();
+    methods.clear();
+    regions.clear();
+    regionsFlat.clear();
   }
 
-  private void computeTokensAndAST() {
+  private String[] getContentList() {
+    return contentList.getOrCompute(this::computeContentList);
+  }
+
+  private CommonTokenStream getTokenStream() {
+    final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute(this::computeTokenStream);
+    tokenStreamUnboxed.seek(0);
+    return tokenStreamUnboxed;
+  }
+
+  private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
+    return nodeToMethodsMap.getOrCompute(this::computeNodeToMethodsMap);
+  }
+
+  private String[] computeContentList() {
+    return content.split("\n");
+  }
+
+  private CommonTokenStream computeTokenStream() {
+    requireNonNull(content);
+
     CharStream input;
 
     try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
@@ -225,25 +259,40 @@ public class DocumentContext {
     lexer.setInputStream(input);
     lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
 
-    CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-    tokenStream.fill();
+    CommonTokenStream tempTokenStream = new CommonTokenStream(lexer);
+    tempTokenStream.fill();
 
-    tokens = new ArrayList<>(tokenStream.getTokens());
-
-    Token lastToken = tokens.get(tokens.size() - 1);
-    if (lastToken.getType() == EOF) {
-      tokens.remove(tokens.size() - 1);
-    }
-
-    BSLParser parser = new BSLParser(tokenStream);
-    parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
-    ast = parser.file();
+    return tempTokenStream;
   }
 
-  private void computeRegions() {
+  private List<Token> computeTokens() {
+    List<Token> tokensTemp = new ArrayList<>(getTokenStream().getTokens());
+
+    Token lastToken = tokensTemp.get(tokensTemp.size() - 1);
+    if (lastToken.getType() == EOF) {
+      tokensTemp.remove(tokensTemp.size() - 1);
+    }
+
+    return tokensTemp;
+  }
+
+  private BSLParser.FileContext computeAST() {
+    BSLParser parser = new BSLParser(getTokenStream());
+    parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
+    return parser.file();
+  }
+
+  private List<RegionSymbol> computeRegions() {
     Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
-    regions = regionSymbolComputer.compute();
-    regionsFlat = regions.stream()
+    final List<RegionSymbol> regionSymbols = regionSymbolComputer.compute();
+    if (!callAdjustRegionsAfterCalculation) {
+      adjustRegions();
+    }
+    return regionSymbols;
+  }
+
+  private List<RegionSymbol> computeRegionsFlat() {
+    return getRegions().stream()
       .map((RegionSymbol regionSymbol) -> {
         List<RegionSymbol> list = new ArrayList<>();
         list.add(regionSymbol);
@@ -255,24 +304,30 @@ public class DocumentContext {
       .collect(Collectors.toList());
   }
 
-  private void computeMethods() {
+  private List<MethodSymbol> computeMethods() {
+    callAdjustRegionsAfterCalculation = true;
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
-    methods = methodSymbolComputer.compute();
-
-    nodeToMethodsMap.clear();
-    methods.forEach(methodSymbol -> nodeToMethodsMap.put(methodSymbol.getNode(), methodSymbol));
+    return methodSymbolComputer.compute();
   }
 
-  private void computeCognitiveComplexity() {
+  private Map<BSLParserRuleContext, MethodSymbol> computeNodeToMethodsMap() {
+    final Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMapTemp = new HashMap<>();
+    getMethods().forEach(methodSymbol -> nodeToMethodsMapTemp.put(methodSymbol.getNode(), methodSymbol));
+
+    return nodeToMethodsMapTemp;
+  }
+
+  private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
-    cognitiveComplexityData = cognitiveComplexityComputer.compute();
+    CognitiveComplexityComputer.Data cognitiveComplexityDataTemp = cognitiveComplexityComputer.compute();
 
-    metrics.setCognitiveComplexity(cognitiveComplexityData.getFileComplexity());
+    getMetrics().setCognitiveComplexity(cognitiveComplexityDataTemp.getFileComplexity());
 
+    return cognitiveComplexityDataTemp;
   }
 
   private void adjustRegions() {
-    methods.forEach((MethodSymbol methodSymbol) -> {
+    getMethods().forEach((MethodSymbol methodSymbol) -> {
       RegionSymbol region = methodSymbol.getRegion();
       if (region != null) {
         region.getMethods().add(methodSymbol);
@@ -280,33 +335,38 @@ public class DocumentContext {
     });
   }
 
-  private void computeMetrics() {
-    metrics = new MetricStorage();
-    metrics.setFunctions(Math.toIntExact(methods.stream().filter(MethodSymbol::isFunction).count()));
-    metrics.setProcedures(methods.size() - metrics.getFunctions());
+  private MetricStorage computeMetrics() {
+    MetricStorage metricsTemp = new MetricStorage();
+    final List<MethodSymbol> methodsUnboxed = getMethods();
+
+    metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
+    metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
 
     int ncloc = (int) getTokensFromDefaultChannel().stream()
       .map(Token::getLine)
       .distinct()
       .count();
 
-    metrics.setNcloc(ncloc);
+    metricsTemp.setNcloc(ncloc);
 
     int[] nclocData = getTokensFromDefaultChannel().stream()
       .mapToInt(Token::getLine)
       .distinct().toArray();
-    metrics.setNclocData(nclocData);
+    metricsTemp.setNclocData(nclocData);
 
     int lines;
-    if (tokens.isEmpty()) {
+    final List<Token> tokensUnboxed = getTokens();
+    if (tokensUnboxed.isEmpty()) {
       lines = 0;
     } else {
-      lines = tokens.get(tokens.size() - 1).getLine();
+      lines = tokensUnboxed.get(tokensUnboxed.size() - 1).getLine();
     }
-    metrics.setLines(lines);
+    metricsTemp.setLines(lines);
 
-    int statements = Trees.findAllRuleNodes(ast, BSLParser.RULE_statement).size();
-    metrics.setStatements(statements);
+    int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
+    metricsTemp.setStatements(statements);
+
+    return metricsTemp;
   }
 
 }

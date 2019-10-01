@@ -22,6 +22,7 @@
 package org.github._1c_syntax.bsl.languageserver.context;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -33,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentContextTest {
 
   @Test
-  void testClearASTData() throws IOException {
+  void testClearASTData() throws IOException, IllegalAccessException {
     // given
     DocumentContext documentContext = getDocumentContext();
 
@@ -41,8 +42,9 @@ class DocumentContextTest {
     documentContext.clearASTData();
 
     // then
-    assertThat(documentContext).extracting(DocumentContext::getAst).isNull();
-
+    final Object lazyAst = FieldUtils.readField(documentContext, "ast", true);
+    final Object ast = FieldUtils.readField(lazyAst, "value", true);
+    assertThat(ast).isNull();
   }
 
   @Test
