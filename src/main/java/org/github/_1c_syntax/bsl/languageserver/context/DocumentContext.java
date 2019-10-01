@@ -73,6 +73,7 @@ public class DocumentContext {
   private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>();
   private Lazy<List<RegionSymbol>> regions = new Lazy<>();
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>();
+  private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;
 
@@ -100,6 +101,10 @@ public class DocumentContext {
 
   public List<MethodSymbol> getMethods() {
     final List<MethodSymbol> methodsUnboxed = methods.getOrCompute(this::computeMethods);
+    if (callAdjustRegionsAfterCalculation) {
+      callAdjustRegionsAfterCalculation = false;
+      adjustRegions();
+    }
     return new ArrayList<>(methodsUnboxed);
   }
 
@@ -156,7 +161,7 @@ public class DocumentContext {
       sb.append(startString.substring(start.getCharacter()));
     }
 
-    for(int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
+    for (int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
       sb.append(contentListUnboxed[i]);
     }
 
@@ -280,7 +285,9 @@ public class DocumentContext {
   private List<RegionSymbol> computeRegions() {
     Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
     final List<RegionSymbol> regionSymbols = regionSymbolComputer.compute();
-    adjustRegions();
+    if (!callAdjustRegionsAfterCalculation) {
+      adjustRegions();
+    }
     return regionSymbols;
   }
 
@@ -298,6 +305,7 @@ public class DocumentContext {
   }
 
   private List<MethodSymbol> computeMethods() {
+    callAdjustRegionsAfterCalculation = true;
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
     return methodSymbolComputer.compute();
   }
