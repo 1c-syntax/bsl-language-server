@@ -70,7 +70,7 @@ class TSLintReporterTest {
 
     DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
     FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 
     TSLintReporter reporter = new TSLintReporter();
 

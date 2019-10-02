@@ -88,7 +88,7 @@ class JUnitReporterTest {
 
     DocumentContext documentContext = new DocumentContext(Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri().toString(), "");
     FileInfo fileInfo = new FileInfo(documentContext, diagnostics);
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo));
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 
     AbstractDiagnosticReporter reporter = new JUnitReporter();
 

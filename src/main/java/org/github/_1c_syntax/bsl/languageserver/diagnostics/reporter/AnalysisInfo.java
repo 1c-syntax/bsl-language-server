@@ -41,5 +41,5 @@ public class AnalysisInfo {
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   private final LocalDateTime date;
   private final List<FileInfo> fileinfos;
-  private String sourceDir = ".";
+  private final String sourceDir;
 }
