@@ -133,7 +133,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     for (Token comment : commentGroup) {
       if (isTextParsedAsCode(comment.getText())) {
-        addIssue(firstComment, lastComment);
+        diagnosticStorage.addDiagnostic(firstComment, lastComment);
         return;
       }
     }
@@ -143,12 +143,4 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     return codeRecognizer.meetsCondition(text);
   }
 
-  private void addIssue(Token first, Token last) {
-    diagnosticStorage.addDiagnostic(
-      first.getLine() - 1,
-      first.getCharPositionInLine(),
-      last.getLine() - 1,
-      last.getCharPositionInLine() + last.getText().length()
-    );
-  }
 }
