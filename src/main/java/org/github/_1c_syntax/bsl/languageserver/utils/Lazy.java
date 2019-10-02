@@ -27,15 +27,25 @@ import static java.util.Objects.requireNonNull;
 
 public final class Lazy<T> {
 
+  private Supplier<T> supplier;
   private volatile T value;
 
   public Lazy() {
     // no need to initialize lazy-value
   }
 
+  public Lazy(Supplier<T> supplier) {
+    // no need to initialize lazy-value
+    this.supplier = supplier;
+  }
+
   public T getOrCompute(Supplier<T> supplier) {
     final T result = value; // Just one volatile read
     return result == null ? maybeCompute(supplier) : result;
+  }
+
+  public T getOrCompute() {
+    return getOrCompute(supplier);
   }
 
   public boolean isPresent() {
@@ -49,6 +59,7 @@ public final class Lazy<T> {
 
   private synchronized T maybeCompute(Supplier<T> supplier) {
     if (value == null) {
+      requireNonNull(supplier);
       value = requireNonNull(supplier.get());
     }
     return value;

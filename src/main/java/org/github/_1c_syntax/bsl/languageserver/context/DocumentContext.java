@@ -63,16 +63,16 @@ import static org.antlr.v4.runtime.Token.EOF;
 public class DocumentContext {
 
   private String content;
-  private Lazy<String[]> contentList = new Lazy<>();
-  private Lazy<CommonTokenStream> tokenStream = new Lazy<>();
-  private Lazy<List<Token>> tokens = new Lazy<>();
-  private Lazy<BSLParser.FileContext> ast = new Lazy<>();
-  private Lazy<MetricStorage> metrics = new Lazy<>();
-  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>();
-  private Lazy<List<MethodSymbol>> methods = new Lazy<>();
-  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>();
-  private Lazy<List<RegionSymbol>> regions = new Lazy<>();
-  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>();
+  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
+  private Lazy<CommonTokenStream> tokenStream = new Lazy<>(this::computeTokenStream);
+  private Lazy<List<Token>> tokens = new Lazy<>(this::computeTokens);
+  private Lazy<BSLParser.FileContext> ast = new Lazy<>(this::computeAST);
+  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics);
+  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>(this::computeCognitiveComplexity);
+  private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods);
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>(this::computeNodeToMethodsMap);
+  private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions);
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
   private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;
@@ -96,11 +96,11 @@ public class DocumentContext {
   }
 
   public BSLParser.FileContext getAst() {
-    return ast.getOrCompute(this::computeAST);
+    return ast.getOrCompute();
   }
 
   public List<MethodSymbol> getMethods() {
-    final List<MethodSymbol> methodsUnboxed = methods.getOrCompute(this::computeMethods);
+    final List<MethodSymbol> methodsUnboxed = methods.getOrCompute();
     if (callAdjustRegionsAfterCalculation) {
       callAdjustRegionsAfterCalculation = false;
       adjustRegions();
@@ -123,17 +123,17 @@ public class DocumentContext {
   }
 
   public List<RegionSymbol> getRegions() {
-    final List<RegionSymbol> regionsUnboxed = regions.getOrCompute(this::computeRegions);
+    final List<RegionSymbol> regionsUnboxed = regions.getOrCompute();
     return new ArrayList<>(regionsUnboxed);
   }
 
   public List<RegionSymbol> getRegionsFlat() {
-    final List<RegionSymbol> regionsFlatUnboxed = regionsFlat.getOrCompute(this::computeRegionsFlat);
+    final List<RegionSymbol> regionsFlatUnboxed = regionsFlat.getOrCompute();
     return new ArrayList<>(regionsFlatUnboxed);
   }
 
   public List<Token> getTokens() {
-    final List<Token> tokensUnboxed = tokens.getOrCompute(this::computeTokens);
+    final List<Token> tokensUnboxed = tokens.getOrCompute();
     return new ArrayList<>(tokensUnboxed);
   }
 
@@ -173,7 +173,7 @@ public class DocumentContext {
   }
 
   public MetricStorage getMetrics() {
-    return metrics.getOrCompute(this::computeMetrics);
+    return metrics.getOrCompute();
   }
 
   public String getUri() {
@@ -185,7 +185,7 @@ public class DocumentContext {
   }
 
   public CognitiveComplexityComputer.Data getCognitiveComplexityData() {
-    return cognitiveComplexityData.getOrCompute(this::computeCognitiveComplexity);
+    return cognitiveComplexityData.getOrCompute();
   }
 
   public void rebuild(String content) {
@@ -221,17 +221,17 @@ public class DocumentContext {
   }
 
   private String[] getContentList() {
-    return contentList.getOrCompute(this::computeContentList);
+    return contentList.getOrCompute();
   }
 
   private CommonTokenStream getTokenStream() {
-    final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute(this::computeTokenStream);
+    final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute();
     tokenStreamUnboxed.seek(0);
     return tokenStreamUnboxed;
   }
 
   private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
-    return nodeToMethodsMap.getOrCompute(this::computeNodeToMethodsMap);
+    return nodeToMethodsMap.getOrCompute();
   }
 
   private String[] computeContentList() {
