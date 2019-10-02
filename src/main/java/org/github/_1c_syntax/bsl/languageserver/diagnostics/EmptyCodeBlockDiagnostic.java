@@ -101,7 +101,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
       TerminalNode first = (TerminalNode) list.get(0);
       TerminalNode last = (TerminalNode) list.get(list.size() - 1);
 
-      diagnosticStorage.addDiagnostic(RangeHelper.newRange(first, last));
+      diagnosticStorage.addDiagnostic(first, last);
     } else {
       diagnosticStorage.addDiagnostic(ctx.getParent().getStop());
     }
