@@ -55,6 +55,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT = "+ - * / = % < > <> <= >="; // ... с обеих сторон
   private static final boolean DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY = false; // Проверять пробел справа от унарного знака
   private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false; // Разрешить несколько запятых подряд
+  private static final String[] sampleMessage = new String[3];
 
   @DiagnosticParameter(
     type = String.class,
@@ -98,6 +99,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+
+    sampleMessage[0] = getResourceString("wordLeft");         // "Слева"
+    sampleMessage[1] = getResourceString("wordRight");        // "Справа"
+    sampleMessage[2] = getResourceString("wordLeftAndRight"); // "Слева и справа"
+
     diagnosticStorage.clearDiagnostics();
 
     List<Token> tokens = documentContext.getTokens();
@@ -110,7 +116,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       foundTokens.stream()
         .filter((Token t) -> noSpaceLeft(tokens, t))
         .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(1, t.getText()))
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(0, t.getText()))
         );
     }
 
@@ -121,7 +127,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       foundTokens.stream()
         .filter((Token t) -> noSpaceRight(tokens, t))
         .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(2, t.getText()))
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(1, t.getText()))
         );
     }
 
@@ -132,19 +138,19 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       foundTokens.stream()
         .filter((Token t) -> noSpaceLeft(tokens, t) && !noSpaceRight(tokens, t))
         .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(1, t.getText()))
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(0, t.getText()))
         );
 
       foundTokens.stream()
         .filter((Token t) -> !noSpaceLeft(tokens, t) && noSpaceRight(tokens, t))
         .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(2, t.getText()))
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(1, t.getText()))
         );
 
       foundTokens.stream()
         .filter((Token t) -> noSpaceLeft(tokens, t) && noSpaceRight(tokens, t))
         .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(3, t.getText()))
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(2, t.getText()))
         );
 
     }
@@ -271,22 +277,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode, String tokenText) {
-
-    String errorKey;
-    String[] sampleMessage = new String[4];
-
-    sampleMessage[0] = getResourceString("wordLeftOrRight");  // "Слева или справа"
-    sampleMessage[1] = getResourceString("wordLeft");         // "Слева"
-    sampleMessage[2] = getResourceString("wordRight");        // "Справа"
-    sampleMessage[3] = getResourceString("wordLeftAndRight"); // "Слева и справа"
-
-    if (errCode == 1 || errCode == 2 || errCode == 3) {
-      errorKey = sampleMessage[errCode];
-    } else {
-      errorKey = sampleMessage[0];
-    }
-
-    return getDiagnosticMessage(errorKey, tokenText);
+    return getDiagnosticMessage(sampleMessage[errCode], tokenText);
   }
 
   @Override
