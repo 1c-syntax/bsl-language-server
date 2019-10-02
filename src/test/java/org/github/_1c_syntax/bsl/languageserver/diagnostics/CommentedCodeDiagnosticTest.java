@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDiagnostic> {
+class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDiagnostic> {
 
   CommentedCodeDiagnosticTest() {
     super(CommentedCodeDiagnostic.class);
@@ -58,7 +58,7 @@ public class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<Commente
   void testConfigure() {
 
     Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    configuration.put("commentedCodeThreshold", 1f);
+    configuration.put("threshold", 1f);
     getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();

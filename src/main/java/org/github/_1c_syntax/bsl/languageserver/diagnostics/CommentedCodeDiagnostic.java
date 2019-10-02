@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
@@ -53,6 +52,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     description = "Порог чуствительности"
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
+
   private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
@@ -64,7 +64,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    threshold = (float) configuration.get("commentedCodeThreshold");
+    threshold = (float) configuration.get("threshold");
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
