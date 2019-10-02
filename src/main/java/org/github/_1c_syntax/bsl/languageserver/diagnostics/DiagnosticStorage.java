@@ -96,6 +96,10 @@ public class DiagnosticStorage {
     addDiagnostic(terminalNode.getSymbol());
   }
 
+  protected void addDiagnostic(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
+    addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
+  }
+
   protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(diagnostic, node, relatedInformation));
   }
