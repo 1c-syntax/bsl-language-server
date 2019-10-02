@@ -143,6 +143,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | --- | --- | :-: |
 | [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
 | [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да |
+| [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да |
 | [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
 | [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
 | [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
