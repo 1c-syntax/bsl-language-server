@@ -47,13 +47,13 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
                         "* `ParamName` - `ParamType` - Param description\n");
 
         createFile("${srcPath}/main/java/${packPath}/${key}Diagnostic.java",
-                "package org.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
+                "package com.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
                         "@DiagnosticMetadata(\n\ttype = DiagnosticType.CODE_SMELL," +
                         "\n\tseverity = DiagnosticSeverity.INFO,\n\tminutesToFix = 1\n)\n" +
                         "public class ${key}Diagnostic implements QuickFixProvider, BSLDiagnostic {\n}\n");
 
         createFile("${srcPath}/test/java/${packPath}/${key}DiagnosticTest.java",
-                "package org.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
+                "package com.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
                         "public class ${key}DiagnosticTest extends AbstractDiagnosticTest<${key}Diagnostic> {\n" +
                         "\t${key}DiagnosticTest() {\n\t\tsuper(${key}Diagnostic.class);\n\t}\n\n" +
                         "\t@Test\n\tvoid test() {\n\t}\n}\n");

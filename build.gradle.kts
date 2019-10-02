@@ -19,7 +19,7 @@ repositories {
     maven { url = URI("https://jitpack.io") }
 }
 
-group = "org.github._1c_syntax"
+group = "com.github.1c_syntax"
 version = gitVersionCalculator.calculateVersion("v")
 
 dependencies {
@@ -52,7 +52,7 @@ dependencies {
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "0.9.1")
+    compile("com.github.1c-syntax", "bsl-parser", "9c494ff988")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
@@ -77,7 +77,7 @@ tasks.withType<JavaCompile> {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "org.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     configurations["compile"].forEach {
