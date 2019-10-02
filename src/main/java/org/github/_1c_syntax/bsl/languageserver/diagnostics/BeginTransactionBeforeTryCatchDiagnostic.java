@@ -29,57 +29,55 @@ import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import org.github._1c_syntax.bsl.parser.BSLParser;
 import org.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
-import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @DiagnosticMetadata(
-	type = DiagnosticType.ERROR,
-	severity = DiagnosticSeverity.MAJOR,
-	minutesToFix = 10
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10
 )
 public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDiagnostic {
-	private Pattern beginTransaction = Pattern.compile(
-		"НачатьТранзакцию|BeginTransaction",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private Pattern beginTransaction = Pattern.compile(
+    "НачатьТранзакцию|BeginTransaction",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private BSLParserRuleContext nodeBeginTransaction = null;
-	private BSLParser.StatementContext nodeEndFile = null;
+  private BSLParserRuleContext nodeBeginTransaction = null;
+  private BSLParser.StatementContext nodeEndFile = null;
 
-	@Override
-	public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-		int ctxType = ctx.getStart().getType();
+  @Override
+  public ParseTree visitStatement(BSLParser.StatementContext ctx) {
+    int ctxType = ctx.getStart().getType();
 
-		if(ctxType == BSLParser.TRY_KEYWORD) {
-			nodeBeginTransaction = null;
-			return super.visitStatement(ctx);
-		}
+    if (ctxType == BSLParser.TRY_KEYWORD) {
+      nodeBeginTransaction = null;
+      return super.visitStatement(ctx);
+    }
 
-		// Это код после НачатьТранзакцию
-		if(nodeBeginTransaction != null) {
-			diagnosticStorage.addDiagnostic(nodeBeginTransaction);
-			nodeBeginTransaction = null;
-		}
+    // Это код после НачатьТранзакцию
+    if (nodeBeginTransaction != null) {
+      diagnosticStorage.addDiagnostic(nodeBeginTransaction);
+      nodeBeginTransaction = null;
+    }
 
-		// Ищем только в идентификаторах
-		if(ctxType == BSLParser.IDENTIFIER && beginTransaction.matcher(ctx.getText()).find()) {
-			nodeBeginTransaction = ctx;
-		}
+    // Ищем только в идентификаторах
+    if (ctxType == BSLParser.IDENTIFIER && beginTransaction.matcher(ctx.getText()).find()) {
+      nodeBeginTransaction = ctx;
+    }
 
-		// Если это код в конце модуля, НачатьТранзакию был/есть тогда фиксируем
-		if(nodeEndFile != null && nodeBeginTransaction != null && nodeEndFile.equals(ctx)) {
-			diagnosticStorage.addDiagnostic(nodeBeginTransaction);
-			nodeBeginTransaction = null;
-		}
-		return super.visitStatement(ctx);
-	}
+    // Если это код в конце модуля, НачатьТранзакию был/есть тогда фиксируем
+    if (nodeEndFile != null && nodeBeginTransaction != null && nodeEndFile.equals(ctx)) {
+      diagnosticStorage.addDiagnostic(nodeBeginTransaction);
+      nodeBeginTransaction = null;
+    }
+    return super.visitStatement(ctx);
+  }
 
-	@Override
-	public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
-		// Находим последний стейт в модуле и запоминаем его
-		Stream<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream();
-		nodeEndFile = (BSLParser.StatementContext) statements.reduce((a, b) -> b).orElse(null);
-		return super.visitFileCodeBlock(ctx);
-	}
+  @Override
+  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    // Находим последний стейт в модуле и запоминаем его
+    Stream<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream();
+    nodeEndFile = (BSLParser.StatementContext) statements.reduce((a, b) -> b).orElse(null);
+    return super.visitFileCodeBlock(ctx);
+  }
 }
