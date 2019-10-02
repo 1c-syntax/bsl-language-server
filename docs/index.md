@@ -141,9 +141,11 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 
 | Ключ | Название | Включена по умолчанию |
 | --- | --- | :-: |
+| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да |
 | [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
 | [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да |
 | [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да |
+| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да |
 | [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
 | [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
 | [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
