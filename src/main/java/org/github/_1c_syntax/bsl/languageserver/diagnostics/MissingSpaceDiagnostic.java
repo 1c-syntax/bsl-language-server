@@ -37,6 +37,7 @@ import org.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,14 +48,13 @@ import java.util.stream.Collectors;
   minutesToFix = 1,
   activatedByDefault = true
 )
-
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT = "";      // символы, требующие пробелы только слева
   private static final String DEFAULT_LIST_FOR_CHECK_RIGHT = ", ;";   // ... только справа
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT = "+ - * / = % < > <> <= >="; // ... с обеих сторон
-  private static final String DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY = "false"; // Проверять пробел справа от унарного знака
-  private static final String DEFAULT_ALLOW_MULTIPLE_COMMAS = "false"; // Разрешить несколько запятых подряд
+  private static final boolean DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY = false; // Проверять пробел справа от унарного знака
+  private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false; // Разрешить несколько запятых подряд
 
   @DiagnosticParameter(
     type = String.class,
@@ -82,14 +82,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     defaultValue = "" + DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY,
     description = "Проверять наличие пробела справа от унарных знаков (+ -)"
   )
-  private Boolean checkSpaceToRightOfUnary = DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY.equals("true");
+  private Boolean checkSpaceToRightOfUnary = DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY;
 
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "" + DEFAULT_ALLOW_MULTIPLE_COMMAS,
     description = "Разрешать несколько запятых подряд"
   )
-  private Boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS.equals("true");
+  private Boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS;
 
   private Pattern patternL = compilePattern(listForCheckLeft);
   private Pattern patternR = compilePattern(listForCheckRight);
@@ -177,16 +177,18 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     }
 
     Boolean enableCheckUnaryParam = (Boolean) configuration.get("checkSpaceToRightOfUnary");
-    if (enableCheckUnaryParam != null)
+    if (enableCheckUnaryParam != null) {
       checkSpaceToRightOfUnary = enableCheckUnaryParam;
+    }
 
     Boolean allowMultipleCommasParam = (Boolean) configuration.get("allowMultipleCommas");
-    if (allowMultipleCommasParam != null)
+    if (allowMultipleCommasParam != null) {
       allowMultipleCommas = allowMultipleCommasParam;
+    }
 
   }
 
-  private List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
+  private static List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
     return tokens
       .parallelStream()
       .filter((Token t) -> pattern.matcher(t.getText()).matches())
@@ -195,8 +197,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private static String getRegularString(String string) {
 
-    if (string.isEmpty())
+    if (string.isEmpty()) {
       return "";
+    }
 
     StringBuilder singleChar = new StringBuilder();
     StringBuilder doubleChar = new StringBuilder();
@@ -216,8 +219,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private static Pattern compilePattern(String string) {
 
-    if (string.isEmpty())
+    if (string.isEmpty()) {
       return null;
+    }
 
     return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
@@ -254,7 +258,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     Pattern checkChar = compilePattern(getRegularString("+ - * / = % < > ( [ , Возврат <> <= >="));
 
-    Integer currentIndex = t.getTokenIndex() - 1;
+    int currentIndex = t.getTokenIndex() - 1;
     while (currentIndex > 0) {
 
       if (patternNotSpace.matcher(tokens.get(currentIndex).getText()).matches()) {
@@ -276,10 +280,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     sampleMessage[2] = getResourceString("wordRight");        // "Справа"
     sampleMessage[3] = getResourceString("wordLeftAndRight"); // "Слева и справа"
 
-    if (errCode == 1 || errCode == 2 || errCode == 3)
+    if (errCode == 1 || errCode == 2 || errCode == 3) {
       errorKey = sampleMessage[errCode];
-    else
+    } else {
       errorKey = sampleMessage[0];
+    }
 
     return getDiagnosticMessage(errorKey, tokenText);
   }
@@ -294,7 +299,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
-      String diagnosticMessage = diagnostic.getMessage().toLowerCase();
+      String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
 
       // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
       Boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
