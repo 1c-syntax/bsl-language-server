@@ -38,6 +38,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -50,14 +52,17 @@ class JUnitTestSuites {
   @Getter
   @JsonProperty("package")
   @JacksonXmlProperty(isAttribute = true)
-  private final String packageName;
+  private final String name;
 
   @Getter
   @JacksonXmlElementWrapper(useWrapping = false)
   private final List<JUnitTestSuite> testsuite;
 
+  private static Path sourceDir;
+
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
-    packageName = "bsl-language-server";
+    name = "bsl-language-server";
+    sourceDir = Paths.get(analysisInfo.getSourceDir()).toAbsolutePath();
 
     testsuite = analysisInfo.getFileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
@@ -66,10 +71,10 @@ class JUnitTestSuites {
   }
 
   public JUnitTestSuites(
-    @JsonProperty("package") String packageName,
+    @JsonProperty("package") String name,
     @JsonProperty("testsuite") List<JUnitTestSuite> testsuite
   ) {
-    this.packageName = packageName;
+    this.name = name;
     this.testsuite = new ArrayList<>(testsuite);
   }
 
@@ -83,7 +88,7 @@ class JUnitTestSuites {
     private final List<JUnitTestCase> testcase;
 
     public JUnitTestSuite(FileInfo fileInfo) {
-      this.name = fileInfo.getPath().toString();
+      this.name = sourceDir.relativize(fileInfo.getPath().toAbsolutePath()).toString();
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
@@ -96,7 +101,7 @@ class JUnitTestSuites {
     }
 
     public JUnitTestSuite(
-      @JsonProperty("name") String  name,
+      @JsonProperty("name") String name,
       @JsonProperty("testcase") List<JUnitTestCase> testcase
     ) {
       this.name = name;
@@ -114,35 +119,38 @@ class JUnitTestSuites {
     private final String classname;
 
     @JacksonXmlElementWrapper(useWrapping = false)
-    private final List<JUnitFailure> failure;
+    private final JUnitFailure failure;
 
     public JUnitTestCase(List<Diagnostic> diagnostics, String name, String classname) {
       this.name = name;
       this.classname = classname;
-      this.failure = new ArrayList<>();
+      List<String> value = new ArrayList<>();
 
-      diagnostics.forEach((Diagnostic diagnostic) -> {
-        String type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
-        String message = diagnostic.getMessage();
-        String value = String.format(
+      String type = "";
+      String message = "";
+
+      for (Diagnostic diagnostic: diagnostics) {
+        type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
+        message = diagnostic.getMessage();
+        value.add(String.format(
           "line: %d, column: %d, text: %s",
           diagnostic.getRange().getStart().getLine() + 1,
           diagnostic.getRange().getStart().getCharacter(),
           diagnostic.getMessage()
-        );
+        ));
+      };
 
-        this.failure.add(new JUnitFailure(type, message, value));
-      });
+      this.failure = new JUnitFailure(type, message, String.join(System.lineSeparator(), value));
     }
 
     public JUnitTestCase(
       @JsonProperty("name") String  name,
       @JsonProperty("classname") String classname,
-      @JsonProperty("failure") List<JUnitFailure> failure
+      @JsonProperty("failure") JUnitFailure failure
     ) {
       this.name = name;
       this.classname = classname;
-      this.failure = new ArrayList<>(failure);
+      this.failure = failure;
     }
   }
 
@@ -174,5 +182,4 @@ class JUnitTestSuites {
       return new JUnitFailure(type, message, value);
     }
   }
-
 }
