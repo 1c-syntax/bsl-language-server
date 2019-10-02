@@ -1,4 +1,3 @@
-
 /*
  * This file is a part of BSL Language Server.
  *
@@ -66,16 +65,15 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     defaultValue = FIND_WORD_DEFAULT,
     description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
   )
-  private String searchWords = FIND_WORD_DEFAULT;
-  private Pattern pattern = getPatternSearch(FIND_WORD_DEFAULT);
+  private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    searchWords = (String) configuration.get("searchWords");
-    pattern = getPatternSearch(searchWords);
+    String searchWordsProperty = (String) configuration.get("searchWords");
+    searchWords = getPatternSearch(searchWordsProperty);
   }
 
   private static Pattern getPatternSearch(String value) {
@@ -92,7 +90,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
-    Matcher matcher = pattern.matcher(ctx.getStart().getText());
+    Matcher matcher = searchWords.matcher(ctx.getStart().getText());
     if (matcher.find()) {
       List<Token> list = ctx.expression().getTokens();
       if (list.size() == 1 && isNotEmptyStringByToken(list.get(0))) {
@@ -140,7 +138,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     Matcher matcherMethod = patternMethodInsert.matcher(ctx.methodName().getText());
     if (matcherMethod.find()) {
       List<BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
-      Matcher matcher = pattern.matcher(getClearString(list.get(0).getText()));
+      Matcher matcher = searchWords.matcher(getClearString(list.get(0).getText()));
       if (matcher.find() && list.size() > 1 && isNotEmptyStringByToken(list.get(1).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_statement);
       }
@@ -185,10 +183,12 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
-    Matcher matcher = pattern.matcher(getClearString(accessText));
+    Matcher matcher = searchWords.matcher(getClearString(accessText));
     if (matcher.find()) {
-      boolean checkBefore = true;
-      ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_assignment);
+      ParserRuleContext assignment = getAncestorByRuleIndex(
+        (ParserRuleContext) ctx.getRuleContext(),
+        BSLParser.RULE_assignment
+      );
       if (assignment != null
         && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
         && isNotEmptyStringByToken(assignment.getStop())) {
@@ -200,7 +200,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void processParameterList(BSLParser.NewExpressionContext ctx, List<BSLParser.CallParamContext> list) {
     String[] arr = list.get(0).getText().split(",");
     for (int index = 0; index < arr.length; index++) {
-      Matcher matcher = pattern.matcher(getClearString(arr[index]));
+      Matcher matcher = searchWords.matcher(getClearString(arr[index]));
       if (matcher.find() && list.size() > index + 1 && isNotEmptyStringByToken(list.get(index + 1).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
         break;
@@ -216,7 +216,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private static boolean isNotEmptyStringByToken(Token token) {
-    return token.getType() == BSLParser.STRING && !(token.getText().length() == 2);
+    return token.getType() == BSLParser.STRING && token.getText().length() != 2;
   }
 
   private static String getClearString(String inputString) {
