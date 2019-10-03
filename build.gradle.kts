@@ -45,7 +45,10 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     compile("com.google.code.findbugs", "jsr305", "3.0.2")
 
-    compile("me.tongfei", "progressbar", "0.7.4")
+    // https://github.com/1c-syntax/bsl-language-server/issues/369
+    // Excude jline and use fixed one.
+    compile("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
+    compile("com.github.nixel2007", "jline3", "fix~npe-pump-SNAPSHOT")
 
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
