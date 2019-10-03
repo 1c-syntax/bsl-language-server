@@ -118,6 +118,7 @@ public final class DocumentSymbolProvider {
     }
 
     return subVariablesContext.subVar().stream()
+      .filter(subVarContext -> subVarContext.subVarsList() != null)
       .flatMap(subVarContext -> subVarContext.subVarsList().subVarDeclaration().stream())
       .map(subVarDeclarationContext -> new DocumentSymbol(
         subVarDeclarationContext.var_name().getText(),
