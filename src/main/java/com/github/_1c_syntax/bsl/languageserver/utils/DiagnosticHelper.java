@@ -26,7 +26,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 
-
 public final class DiagnosticHelper {
 
   private DiagnosticHelper() {
@@ -35,11 +34,8 @@ public final class DiagnosticHelper {
 
   public static boolean equalNodes(Tree leftNode, Tree rightNode) {
 
-    if (leftNode.getChildCount() != rightNode.getChildCount()) {
-      return false;
-    }
-
-    if (!leftNode.getClass().equals(rightNode.getClass())) {
+    if (leftNode.getChildCount() != rightNode.getChildCount()
+      || !leftNode.getClass().equals(rightNode.getClass())) {
       return false;
     }
 
@@ -48,18 +44,13 @@ public final class DiagnosticHelper {
       int leftNodeType = ((TerminalNode) leftNode).getSymbol().getType();
       int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
 
-      if (leftNodeType != rightNodeType) {
+      if (leftNodeType != rightNodeType
+        || (leftNodeType == BSLParser.STRING
+          && !leftNode.toString().equals(rightNode.toString()))
+        || (!leftNode.toString().equalsIgnoreCase(rightNode.toString()))) {
         return false;
       }
 
-      if (leftNodeType == BSLParser.STRING
-        && !leftNode.toString().equals(rightNode.toString())) {
-        return false;
-      }
-
-      if (!leftNode.toString().equalsIgnoreCase(rightNode.toString())) {
-        return false;
-      }
     }
 
     for (int i = 0; i < leftNode.getChildCount(); i++) {
@@ -71,17 +62,12 @@ public final class DiagnosticHelper {
     return true;
   }
 
-  public static boolean isStructureType(ParseTree tnc){
+  public static boolean isStructureType(ParseTree tnc) {
     return "Структура".equalsIgnoreCase(tnc.getText()) || "Structure".equalsIgnoreCase(tnc.getText());
   }
 
-  public static boolean isFixedStructureType(ParseTree tnc){
+  public static boolean isFixedStructureType(ParseTree tnc) {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
   }
 
 }
-
-
-
-
-

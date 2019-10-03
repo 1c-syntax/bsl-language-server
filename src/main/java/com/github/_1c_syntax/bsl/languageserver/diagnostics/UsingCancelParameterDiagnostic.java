@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.Collection;
 import java.util.List;
@@ -75,7 +75,6 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
         if (!rightPartIsValid((BSLParser.AssignmentContext) ident)) {
           diagnosticStorage.addDiagnostic((BSLParserRuleContext) ident.getParent());
         }
-
       }
     );
 
@@ -83,10 +82,8 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean rightPartIsValid(BSLParser.AssignmentContext ident) {
-
     return equalTrue(ident) || orCancel(ident);
   }
-
 
   private static boolean orCancel(BSLParser.AssignmentContext ident) {
 
@@ -94,31 +91,28 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     if (expression == null) {
       return false;
     }
+
     BSLParser.OperationContext logicalOperation = expression.operation(0);
     if (logicalOperation == null) {
       return false;
     }
 
     BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
-    if (boolOperation == null) {
-      return false;
-    }
-    if (boolOperation.OR_KEYWORD() != null) {
+    if (boolOperation != null
+      && boolOperation.OR_KEYWORD() != null) {
 
       return expression
         .member()
         .stream()
         .anyMatch(token -> cancelPattern.matcher(token.getText())
-        .matches());
+          .matches());
 
     }
 
     return false;
-
   }
 
   private static boolean equalTrue(BSLParser.AssignmentContext ident) {
-
     return ident.expression().getStop().getType() == BSLLexer.TRUE;
   }
 
