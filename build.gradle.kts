@@ -7,10 +7,10 @@ plugins {
     maven
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
-    id("org.sonarqube") version "2.7.1"
-    id("io.franzbecker.gradle-lombok") version "3.1.0"
+    id("org.sonarqube") version "2.8"
+    id("io.franzbecker.gradle-lombok") version "3.2.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
-    id("com.github.ben-manes.versions") version "0.22.0"
+    id("com.github.ben-manes.versions") version "0.25.0"
 
 }
 
@@ -24,7 +24,7 @@ version = gitVersionCalculator.calculateVersion("v")
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    compile("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.7.2")
+    compile("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.8.1")
 
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     compile("commons-cli", "commons-cli", "1.4")
@@ -34,9 +34,9 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
     compile("commons-beanutils", "commons-beanutils", "1.9.4")
 
-    compile("com.fasterxml.jackson.core", "jackson-databind", "2.9.9")
-    compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.9.9")
-    compile("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.9.9")
+    compile("com.fasterxml.jackson.core", "jackson-databind", "2.10.0")
+    compile("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.10.0")
+    compile("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.10.0")
 
     // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
     compile("javax.xml.bind", "jaxb-api", "2.3.1")
@@ -56,8 +56,8 @@ dependencies {
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.1")
-    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.1")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.2")
+    testRuntime("org.junit.jupiter", "junit-jupiter-engine", "5.5.2")
 
     testCompile("org.assertj", "assertj-core", "3.13.2")
 
@@ -148,8 +148,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.8"
-    sha256 = "0396952823579b316a0fe85cbd871bbb3508143c2bcbd985dd7800e806cb24fc"
+    version = "1.18.10"
+    sha256 = "2836e954823bfcbad45e78c18896e3d01058e6f643749810c608b7005ee7b2fa"
 }
 
 // custom developers tools
