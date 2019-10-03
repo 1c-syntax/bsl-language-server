@@ -15,6 +15,7 @@
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
 - <a href="#analyze">Run in analyzer mode</a>
+* <a href="#format">Run in formatter mode</a>
 - <a href="#configuration">Configuration file</a>
 - <a href="#reporters">Reporters</a>
 - <a href="#diagnostics">Diagnostics</a>
@@ -31,6 +32,7 @@
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
+* Run formatter engine from command line
 
 <a id="cli"></a>
 
@@ -41,9 +43,10 @@ jar-files run through `java -jar path/to/file.jar`.
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -a,--analyze               Run analysis and get diagnostic info
  -c,--configuration <arg>   Path to language server configuration file
+ -f,--format                Format files in source directory
  -h,--help                  Show help.
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
@@ -74,6 +77,18 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 
 ```sh
 java -Xmx4g -jar bsl-language-server.jar ... other parameters
+```
+
+<a id="format"/>
+
+## Run in formatter mode
+
+To run in formatter mode use parameter `--format` (short `-f`). To set source code folder for formatting use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
+
+Command line example to run formatting:
+
+```sh
+java -jar bsl-language-server.jar --format --srcDir ./src/cf
 ```
 
 <a id="configuration"></a>
