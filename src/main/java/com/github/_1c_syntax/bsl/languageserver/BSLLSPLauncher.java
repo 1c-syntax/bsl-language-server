@@ -21,6 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.Command;
+import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.HelpCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.ParseExceptionCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -28,12 +35,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.Command;
-import com.github._1c_syntax.bsl.languageserver.cli.HelpCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.ParseExceptionCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 
 public class BSLLSPLauncher {
 
@@ -54,6 +55,8 @@ public class BSLLSPLauncher {
         command = new VersionCommand();
       } else if (cmd.hasOption("analyze")) {
         command = new AnalyzeCommand(cmd);
+      } else if (cmd.hasOption("format")) {
+        command = new FormatCommand(cmd);
       } else {
         command = new LanguageServerStartCommand(cmd);
       }
@@ -94,6 +97,13 @@ public class BSLLSPLauncher {
       "Run analysis and get diagnostic info"
     );
 
+    Option format = new Option(
+      "f",
+      "format",
+      false,
+      "Format files in source directory"
+    );
+
     Option srcDir = new Option(
       "s",
       "srcDir",
@@ -123,6 +133,7 @@ public class BSLLSPLauncher {
     );
 
     createdOptions.addOption(analyze);
+    createdOptions.addOption(format);
     createdOptions.addOption(srcDir);
     createdOptions.addOption(outputDir);
     createdOptions.addOption(reporter);
