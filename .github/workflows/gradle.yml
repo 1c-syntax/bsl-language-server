@@ -17,7 +17,7 @@ jobs:
       with:
         java-version: ${{ matrix.java_version }}
     - name: Build with Gradle
-      run: ./gradlew check
+      run: ./gradlew check --stacktrace
     - name: SonarCloud Scan
       if: matrix.java_version == '11' && matrix.os == 'ubuntu-latest'
       run: ./gradlew sonarqube
