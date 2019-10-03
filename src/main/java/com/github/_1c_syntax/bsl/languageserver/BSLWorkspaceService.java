@@ -53,7 +53,6 @@ public class BSLWorkspaceService implements WorkspaceService {
     } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
-//    configuration = (LanguageServerConfiguration) params.getSettings();
   }
 
   @Override

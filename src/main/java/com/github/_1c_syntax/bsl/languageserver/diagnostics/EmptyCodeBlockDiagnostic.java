@@ -67,22 +67,21 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
 
-    if (ctx.getParent() instanceof BSLParser.FileContext
+    boolean isFileBlock = ctx.getParent() instanceof BSLParser.FileContext
       || ctx.getParent() instanceof BSLParser.FileCodeBlockBeforeSubContext
-      || ctx.getParent() instanceof BSLParser.FileCodeBlockContext
+      || ctx.getParent() instanceof BSLParser.FileCodeBlockContext;
+
+    if (ctx.getChildCount() > 0
+      || isFileBlock
       || ctx.getParent() instanceof BSLParser.SubCodeBlockContext
       || ctx.getParent() instanceof BSLParser.ExceptCodeBlockContext) {
       return super.visitCodeBlock(ctx);
     }
 
-    if (ctx.getChildCount() > 0) {
-      return super.visitCodeBlock(ctx);
-    }
-
-    if(commentAsCode) {
+    if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
       Range rangeCodeBlock = RangeHelper.newRange(ctx.getStop(), ctx.getStart());
-      if(comments.anyMatch(token ->
+      if (comments.anyMatch(token ->
         Ranges.containsRange(
           rangeCodeBlock,
           RangeHelper.newRange(token)))) {

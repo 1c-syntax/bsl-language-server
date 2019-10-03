@@ -240,7 +240,7 @@ public final class FormatProvider {
       }
       // Remove additional indent after semicolon or parameter default value.
       if (additionalIndentLevel > 0
-        && (tokenType == BSLLexer.SEMICOLON || parameterDeclarationMode && isPrimitive(tokenType))) {
+          && (tokenType == BSLLexer.SEMICOLON || (parameterDeclarationMode && isPrimitive(tokenType)))) {
         currentIndentLevel--;
         additionalIndentLevel = -1;
       }

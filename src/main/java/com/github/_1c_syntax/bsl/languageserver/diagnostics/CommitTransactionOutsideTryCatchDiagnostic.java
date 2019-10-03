@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -43,8 +43,13 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
     "ЗафиксироватьТранзакцию|CommitTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private BSLParserRuleContext nodeEndTransaction = null;
-  private BSLParser.StatementContext nodeEndFile = null;
+  private BSLParserRuleContext nodeEndTransaction;
+  private BSLParser.StatementContext nodeEndFile;
+
+  public CommitTransactionOutsideTryCatchDiagnostic() {
+    nodeEndTransaction = null;
+    nodeEndFile = null;
+  }
 
   @Override
   public ParseTree visitExceptCodeBlock(BSLParser.ExceptCodeBlockContext ctx) {
