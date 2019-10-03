@@ -111,7 +111,7 @@ tasks.jacocoTestReport {
 tasks.processResources {
     filteringCharset = "UTF-8"
     from("docs/diagnostics") {
-        into("org/github/_1c_syntax/bsl/languageserver/diagnostics")
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics")
     }
 }
 

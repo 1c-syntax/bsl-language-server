@@ -92,11 +92,11 @@ class BSLLSPLauncherTest {
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli"};
 
     // when
-    try {
+    //try {
       BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
+//    } catch (RuntimeException ignored) {
+//      // catch prevented system.exit call
+//    }
 
     // then
     // main-method should runs without exceptions

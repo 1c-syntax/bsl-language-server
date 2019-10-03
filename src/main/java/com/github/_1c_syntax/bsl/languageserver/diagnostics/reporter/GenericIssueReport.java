@@ -29,8 +29,8 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import org.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 
 import java.net.URI;
 import java.nio.file.Paths;
