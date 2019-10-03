@@ -19,21 +19,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-import org.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import org.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,16 +45,21 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1,
-  activatedByDefault = true
+  minutesToFix = 1
 )
 public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final String DEFAULT_LIST_FOR_CHECK_LEFT = "";      // символы, требующие пробелы только слева
-  private static final String DEFAULT_LIST_FOR_CHECK_RIGHT = ", ;";   // ... только справа
-  private static final String DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT = "+ - * / = % < > <> <= >="; // ... с обеих сторон
-  private static final boolean DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY = false; // Проверять пробел справа от унарного знака
-  private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false; // Разрешить несколько запятых подряд
+  // символы, требующие пробелы только слева
+  private static final String DEFAULT_LIST_FOR_CHECK_LEFT = "";
+  // ... только справа
+  private static final String DEFAULT_LIST_FOR_CHECK_RIGHT = ", ;";
+  // ... с обеих сторон
+  private static final String DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT = "+ - * / = % < > <> <= >=";
+  // Проверять пробел справа от унарного знака
+  private static final boolean DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY = false;
+  // Разрешить несколько запятых подряд
+  private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false;
+
   private final String[] sampleMessage = new String[3];
 
   @DiagnosticParameter(
@@ -263,6 +268,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
 
     Pattern checkChar = compilePattern(getRegularString("+ - * / = % < > ( [ , Возврат <> <= >="));
+    if (checkChar == null) {
+      return false;
+    }
 
     int currentIndex = t.getTokenIndex() - 1;
     while (currentIndex > 0) {
