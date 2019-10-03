@@ -108,6 +108,8 @@ public final class DiagnosticProvider {
 
     List<Diagnostic> diagnostics = getDiagnosticInstances(documentContext.getFileType()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+      .filter((Diagnostic diagnostic) ->
+        !documentContext.getDiagnosticIgnorance().diagnosticShouldBeIgnored(diagnostic))
       .collect(Collectors.toList());
 
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
