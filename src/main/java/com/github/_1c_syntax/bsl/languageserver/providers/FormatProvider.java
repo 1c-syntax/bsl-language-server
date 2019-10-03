@@ -141,6 +141,11 @@ public final class FormatProvider {
       return Collections.emptyList();
     }
 
+    List<Token> filteredTokens = filteredTokens(tokens);
+    if (filteredTokens.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     List<TextEdit> edits = new ArrayList<>();
 
     int tabSize = options.getTabSize();
@@ -148,7 +153,6 @@ public final class FormatProvider {
 
     StringBuilder newTextBuilder = new StringBuilder();
 
-    List<Token> filteredTokens = filteredTokens(tokens);
     Token firstToken = filteredTokens.get(0);
     String indentation = insertSpaces ? StringUtils.repeat(' ', tabSize) : "\t";
 

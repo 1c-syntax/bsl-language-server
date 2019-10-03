@@ -48,7 +48,7 @@ dependencies {
     // https://github.com/1c-syntax/bsl-language-server/issues/369
     // Excude jline and use fixed one.
     compile("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
-    compile("com.github.nixel2007", "jline3", "fix~npe-pump-SNAPSHOT")
+    compile("com.github.nixel2007", "jline3", "c31cca7e6b4b48518c6aee5a076b00b67c7be9ea")
 
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")

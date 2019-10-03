@@ -23,6 +23,7 @@
 * Диагностики
 * "Быстрые исправления" (quick fixes) для ряда диагностик
 * Запуск движка диагностик из командной строки
+* Запуск форматирования файлов в каталоге из командной строки
 
 ## Запуск из командной строки
 
@@ -31,9 +32,10 @@
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -a,--analyze               Run analysis and get diagnostic info
  -c,--configuration <arg>   Path to language server configuration file
+ -f,--format                Format files in source directory
  -h,--help                  Show help.
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
@@ -63,6 +65,16 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 
 ```sh
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+```
+
+## Запуск в режиме форматтера
+
+Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`). Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+
+Пример строки запуска анализа:
+
+```sh
+java -jar bsl-language-server.jar --format --srcDir ./src/cf
 ```
 
 ## ToDo
