@@ -55,7 +55,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT = "+ - * / = % < > <> <= >="; // ... с обеих сторон
   private static final boolean DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY = false; // Проверять пробел справа от унарного знака
   private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false; // Разрешить несколько запятых подряд
-  private static final String[] sampleMessage = new String[3];
+  private final String[] sampleMessage = new String[3];
 
   @DiagnosticParameter(
     type = String.class,
