@@ -32,10 +32,12 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import org.eclipse.lsp4j.Position;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -131,14 +133,15 @@ class JUnitTestSuites {
 
       for (Diagnostic diagnostic: diagnostics) {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
+        Position startRange = diagnostic.getRange().getStart();
         message = diagnostic.getMessage();
         value.add(String.format(
           "line: %d, column: %d, text: %s",
-          diagnostic.getRange().getStart().getLine() + 1,
-          diagnostic.getRange().getStart().getCharacter(),
+          startRange.getLine() + 1,
+          startRange.getCharacter(),
           diagnostic.getMessage()
         ));
-      };
+      }
 
       this.failure = new JUnitFailure(type, message, String.join(System.lineSeparator(), value));
     }

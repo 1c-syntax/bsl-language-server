@@ -43,8 +43,8 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
     "ЗафиксироватьТранзакцию|CommitTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private BSLParserRuleContext nodeEndTransaction = null;
-  private BSLParser.StatementContext nodeEndFile = null;
+  private BSLParserRuleContext nodeEndTransaction;
+  private BSLParser.StatementContext nodeEndFile;
 
   @Override
   public ParseTree visitExceptCodeBlock(BSLParser.ExceptCodeBlockContext ctx) {

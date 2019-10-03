@@ -42,8 +42,8 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
     "НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private BSLParserRuleContext nodeBeginTransaction = null;
-  private BSLParser.StatementContext nodeEndFile = null;
+  private BSLParserRuleContext nodeBeginTransaction;
+  private BSLParser.StatementContext nodeEndFile;
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {

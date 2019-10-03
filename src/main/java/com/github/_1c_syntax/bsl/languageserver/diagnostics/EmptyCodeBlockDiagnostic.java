@@ -67,9 +67,10 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
 
-    if (ctx.getParent() instanceof BSLParser.FileContext
+    boolean isFileBlock = ctx.getParent() instanceof BSLParser.FileContext
       || ctx.getParent() instanceof BSLParser.FileCodeBlockBeforeSubContext
-      || ctx.getParent() instanceof BSLParser.FileCodeBlockContext
+      || ctx.getParent() instanceof BSLParser.FileCodeBlockContext;
+    if (isFileBlock
       || ctx.getParent() instanceof BSLParser.SubCodeBlockContext
       || ctx.getParent() instanceof BSLParser.ExceptCodeBlockContext) {
       return super.visitCodeBlock(ctx);

@@ -33,58 +33,58 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-	type = DiagnosticType.CODE_SMELL,
-	severity = DiagnosticSeverity.MAJOR,
-	scope = DiagnosticScope.BSL,
-	minutesToFix = 15,
-	activatedByDefault = false
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 15,
+  activatedByDefault = false
 )
 public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
-	private Pattern modalityMethods = Pattern.compile(
-		"(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
-			"ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
-			"ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
-			"УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|" +
-			"УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private Pattern modalityMethods = Pattern.compile(
+    "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
+      "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
+      "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
+      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|" +
+      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private HashMap<String, String> pairMethods = new HashMap<>();
+  private HashMap<String, String> pairMethods = new HashMap<>();
 
-	public UsingModalWindowsDiagnostic() {
-		pairMethods.put("ВОПРОС", "ПоказатьВопрос");
-		pairMethods.put("DOQUERYBOX", "ShowQueryBox");
-		pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
-		pairMethods.put("OPENFORMMODAL", "OpenForm");
-		pairMethods.put("ОТКРЫТЬЗНАЧЕНИЕ", "ПоказатьЗначение");
-		pairMethods.put("OPENVALUE", "ShowValue");
-		pairMethods.put("ПРЕДУПРЕЖДЕНИЕ", "ПоказатьПредупреждение");
-		pairMethods.put("DOMESSAGEBOX", "ShowMessageBox");
-		pairMethods.put("ВВЕСТИДАТУ", "ПоказатьВводДаты");
-		pairMethods.put("INPUTDATE", "ShowInputDate");
-		pairMethods.put("ВВЕСТИЗНАЧЕНИЕ", "ПоказатьВводЗначения");
-		pairMethods.put("INPUTVALUE", "ShowInputValue");
-		pairMethods.put("ВВЕСТИСТРОКУ", "ПоказатьВводСтроки");
-		pairMethods.put("INPUTSTRING", "ShowInputString");
-		pairMethods.put("ВВЕСТИЧИСЛО", "ПоказатьВводЧисла");
-		pairMethods.put("INPUTNUMBER", "ShowInputNumber");
-		pairMethods.put("УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ", "НачатьУстановкуВнешнейКомпоненты");
-		pairMethods.put("INSTALLADDIN", "BeginInstallAddIn");
-		pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ", "НачатьУстановкуРасширенияРаботыСФайлами");
-		pairMethods.put("INSTALLFILESYSTEMEXTENSION", "BeginInstallFileSystemExtension");
-		pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ", "НачатьУстановкуРасширенияРаботыСКриптографией");
-		pairMethods.put("INSTALLCRYPTOEXTENSION", "BeginInstallCryptoExtension");
-		pairMethods.put("ПОМЕСТИТЬФАЙЛ", "НачатьПомещениеФайла");
-		pairMethods.put("PUTFILE", "BeginPutFile");
-	}
+  public UsingModalWindowsDiagnostic() {
+    pairMethods.put("ВОПРОС", "ПоказатьВопрос");
+    pairMethods.put("DOQUERYBOX", "ShowQueryBox");
+    pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
+    pairMethods.put("OPENFORMMODAL", "OpenForm");
+    pairMethods.put("ОТКРЫТЬЗНАЧЕНИЕ", "ПоказатьЗначение");
+    pairMethods.put("OPENVALUE", "ShowValue");
+    pairMethods.put("ПРЕДУПРЕЖДЕНИЕ", "ПоказатьПредупреждение");
+    pairMethods.put("DOMESSAGEBOX", "ShowMessageBox");
+    pairMethods.put("ВВЕСТИДАТУ", "ПоказатьВводДаты");
+    pairMethods.put("INPUTDATE", "ShowInputDate");
+    pairMethods.put("ВВЕСТИЗНАЧЕНИЕ", "ПоказатьВводЗначения");
+    pairMethods.put("INPUTVALUE", "ShowInputValue");
+    pairMethods.put("ВВЕСТИСТРОКУ", "ПоказатьВводСтроки");
+    pairMethods.put("INPUTSTRING", "ShowInputString");
+    pairMethods.put("ВВЕСТИЧИСЛО", "ПоказатьВводЧисла");
+    pairMethods.put("INPUTNUMBER", "ShowInputNumber");
+    pairMethods.put("УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ", "НачатьУстановкуВнешнейКомпоненты");
+    pairMethods.put("INSTALLADDIN", "BeginInstallAddIn");
+    pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ", "НачатьУстановкуРасширенияРаботыСФайлами");
+    pairMethods.put("INSTALLFILESYSTEMEXTENSION", "BeginInstallFileSystemExtension");
+    pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ", "НачатьУстановкуРасширенияРаботыСКриптографией");
+    pairMethods.put("INSTALLCRYPTOEXTENSION", "BeginInstallCryptoExtension");
+    pairMethods.put("ПОМЕСТИТЬФАЙЛ", "НачатьПомещениеФайла");
+    pairMethods.put("PUTFILE", "BeginPutFile");
+  }
 
-	@Override
-	public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-		String methodName = ctx.methodName().getText();
-		if(modalityMethods.matcher(methodName).matches()) {
-			diagnosticStorage.addDiagnostic(ctx,
-				getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
-		}
-		return super.visitGlobalMethodCall(ctx);
-	}
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    String methodName = ctx.methodName().getText();
+    if (modalityMethods.matcher(methodName).matches()) {
+      diagnosticStorage.addDiagnostic(ctx,
+        getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+    }
+    return super.visitGlobalMethodCall(ctx);
+  }
 }
