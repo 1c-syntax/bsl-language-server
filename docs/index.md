@@ -203,6 +203,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
 | [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
+| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
 | [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
 | [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да |
