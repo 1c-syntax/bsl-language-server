@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -35,7 +36,8 @@ import java.util.regex.Pattern;
 @DiagnosticMetadata(
 	type = DiagnosticType.ERROR,
 	severity = DiagnosticSeverity.CRITICAL,
-	minutesToFix = 30
+	minutesToFix = 30,
+	scope = DiagnosticScope.BSL
 )
 public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagnostic {
 
