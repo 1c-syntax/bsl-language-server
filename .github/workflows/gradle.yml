@@ -18,14 +18,15 @@ jobs:
         java-version: ${{ matrix.java_version }}
     - name: Build with Gradle
       run: ./gradlew check --stacktrace
+    - name: Archive test results
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
+        path: build/reports/tests/test
     - name: SonarCloud Scan
       if: matrix.java_version == '11' && matrix.os == 'ubuntu-latest'
       run: ./gradlew sonarqube
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Archive test results
-      uses: actions/upload-artifact@v1
-      with:
-        name: junit_report_${{ matrix.os }}_${{ matrix.java_version }}
-        path: build/reports/tests/test
