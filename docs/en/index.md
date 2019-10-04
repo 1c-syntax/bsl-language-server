@@ -205,6 +205,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes |
 | [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No |
+| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Using of objects not available in Unix | Yes |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
 | [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No |
 | [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes |
