@@ -170,6 +170,7 @@ Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.y
 | [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да |
 | [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да |
 | [MultilingualStringHasAllDeclaredLanguages](diagnostics/MultilingualStringHasAllDeclaredLanguages.md) | Есть локализованный текст для всех заявленных в конфигурации языков | Да |
+| [MultilingualStringUsingWithTemplate](diagnostics/MultilingualStringUsingWithTemplate.md) | Есть локализованный текст для всех заявленных в конфигурации языков | Да |
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да |
 | [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да |

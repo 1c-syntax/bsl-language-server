@@ -31,29 +31,28 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
-	extends AbstractDiagnosticTest<MultilingualStringHasAllDeclaredLanguagesDiagnostic> {
+class MultilingualStringUsingWithTemplateDiagnosticTest
+  extends AbstractDiagnosticTest<MultilingualStringUsingWithTemplateDiagnostic> {
 
-	MultilingualStringHasAllDeclaredLanguagesDiagnosticTest() {
-		super(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class);
-	}
+  MultilingualStringUsingWithTemplateDiagnosticTest() {
+    super(MultilingualStringUsingWithTemplateDiagnostic.class);
+  }
 
-	@Test
-	void testOnlyRU() {
-		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(1);
-	}
+  @Test
+  void testOnlyRU() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(0);
+  }
 
-	@Test
-	void testRuAndEn() {
-		Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-		configuration.put("declaredLanguages", "ru,en");
-		getDiagnosticInstance().configure(configuration);
+  @Test
+  void testRuAndEn() {
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("declaredLanguages", "ru,en");
+    getDiagnosticInstance().configure(configuration);
 
-		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(2);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 13, 9, 49)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 22, 13, 75)));
-	}
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 23, 11, 74)));
+  }
 }
