@@ -37,7 +37,7 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
         }
         logger.quiet("Creating new diagnostics files with the key '{}'", key);
         val srcPath = File(outputDir.get().asFile.path, "src");
-        val packPath = "org/github/_1c_syntax/bsl/languageserver/diagnostics";
+        val packPath = "com/github/_1c_syntax/bsl/languageserver/diagnostics";
         val docPath = File(outputDir.get().asFile.path, "docs");
         createFile("${docPath}/diagnostics/${key}.md",
                 "# ${nameRu}\n\n<Описание диагностики>\n\n## Параметры\n\n" +
