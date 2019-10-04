@@ -6,6 +6,8 @@ It's forbidden to store in code:
 
 ## Parameters
 
-* `searchWordsExclusion` - `Строка` - Keywords to exclude expressions when searching for IP addresses. Default
+* `searchWordsExclusion` - `string` - Keywords to exclude expressions when searching for IP addresses. Default
 ``Верси|Version``.
-* `enableSearchNetworkAddresses` - `Булево` - Use network address search. Default ``Yes``.
+* `searchWordsStdPathsUnix` - `string` - Keywords to search standard root directory Unix. 
+Default ``bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var``.
+* `enableSearchNetworkAddresses` - `boolean` - Use network address search. Default ``Yes``.

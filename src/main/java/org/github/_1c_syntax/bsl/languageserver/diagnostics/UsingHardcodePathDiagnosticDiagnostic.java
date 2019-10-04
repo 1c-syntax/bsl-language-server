@@ -44,10 +44,10 @@ import java.util.regex.Pattern;
 
 public class UsingHardcodePathDiagnosticDiagnostic extends AbstractVisitorDiagnostic {
 
-	final static String REGEX_PATH = "^(?=\\/).*|(^([a-z]|[A-Z]):(?=\\\\|\\/\\/(?![\0-\37<>:\"\\/\\\\|?*])" +
-		"|\\/(?![\0-\37<>:\"\\/\\\\|?*])|$)|^\\\\(?=[\\\\\\/][^\0-\37<>:\"\\/\\\\|?*]+)|^(?=(\\\\|\\/|\\/\\/)$)" +
-		"^\\.(?=(\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+))((\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+|" +
-		"(\\\\|\\/|\\/\\/)$)*()$";
+	final static String REGEX_PATH = "^(?=\\/).*|^(%.*%)(?=\\\\|\\/|\\/\\/)|^(~)(?=\\\\|\\/|\\/\\/)|(^([a-z]):" +
+		"(?=\\\\|\\/\\/(?![\0-\37<>:\"\\/\\\\|?*])|\\/(?![\0-\37<>:\"\\/\\\\|?*])|$)|^\\\\(?=[\\\\\\/]" +
+		"[^\0-\37<>:\"\\/\\\\|?*]+)|^(?=(\\\\|\\/|\\/\\/)$)^\\.(?=(\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+))" +
+		"((\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+|(\\\\|\\/|\\/\\/)$)*()$";
 
 	final static String REGEX_NETWORK_ADDRESS = "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:" +
 		"|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:)" +
@@ -58,7 +58,11 @@ public class UsingHardcodePathDiagnosticDiagnostic extends AbstractVisitorDiagno
 		"((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" +
 		"|((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
 
+	final static String REGEX_STD_PATHS_UNIX = "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|" +
+		"media|opt|proc|root|run|sbin|tmp|usr|var";
+
 	final static String REGEX_EXCLUSION = "Верси|Version";
+
 	private static final Pattern patternPath = getLocalPattern(REGEX_PATH);
 	private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
 
@@ -69,6 +73,14 @@ public class UsingHardcodePathDiagnosticDiagnostic extends AbstractVisitorDiagno
 	)
 	private String searchWordsExclusion = REGEX_EXCLUSION;
 	private Pattern patternExclusion = getLocalPattern(REGEX_EXCLUSION);
+
+	@DiagnosticParameter(
+		type = String.class,
+		defaultValue = REGEX_EXCLUSION,
+		description = "Ключевые слова поиска стандартных корневых каталогов Unix"
+	)
+	private String searchWordsStdPathsUnix = REGEX_STD_PATHS_UNIX;
+	private Pattern patternStdPathsUnix = getLocalPattern("^\\/(" + searchWordsStdPathsUnix + ")");
 
 	@DiagnosticParameter(
 		type = Boolean.class,
@@ -94,6 +106,10 @@ public class UsingHardcodePathDiagnosticDiagnostic extends AbstractVisitorDiagno
 	 * и IP4 / IP6 сетевые адреса.
 	 * Пример:
 	 * КаталогПрограмм = "C:\Program Files (x86)\";
+	 *
+	 * или
+	 *
+	 * СетевойПуть = "127.0.0.1";
 	 */
 	@Override
 	public ParseTree visitString(BSLParser.StringContext ctx) {
@@ -101,12 +117,24 @@ public class UsingHardcodePathDiagnosticDiagnostic extends AbstractVisitorDiagno
 		if (content.length() > 2) {
 			Matcher matcher = patternPath.matcher(content);
 			if (matcher.find()) {
-				diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+				processSearchingPath(ctx, content);
 			} else if (enableSearchNetworkAddresses) {
 				processSearchingNetworkAddress(ctx, content);
 			}
 		}
 		return super.visitString(ctx);
+	}
+
+	private void processSearchingPath(BSLParser.StringContext ctx, String content) {
+		// Проверим пути с / на стандартные корневые каталоги и обработаем их отдельно
+		if (content.startsWith("/")) {
+			Matcher matcher = patternStdPathsUnix.matcher(content);
+			if (matcher.find()) {
+				diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+			}
+		} else {
+			diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+		}
 	}
 
 	private void processSearchingNetworkAddress(BSLParser.StringContext ctx, String content) {

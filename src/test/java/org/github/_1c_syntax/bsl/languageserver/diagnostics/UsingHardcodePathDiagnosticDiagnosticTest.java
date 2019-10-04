@@ -40,7 +40,7 @@ public class UsingHardcodePathDiagnosticDiagnosticTest extends AbstractDiagnosti
 		List<Diagnostic> diagnostics = getDiagnostics();
 
 		// when
-		assertThat(diagnostics).hasSize(22);
+		assertThat(diagnostics).hasSize(26);
 
 		// then
 		assertThat(diagnostics)
@@ -53,19 +53,23 @@ public class UsingHardcodePathDiagnosticDiagnosticTest extends AbstractDiagnosti
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 16, 11, 27)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 16, 12, 27)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 16, 13, 28)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(14, 16, 14, 38)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(15, 16, 15, 41)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 16, 16, 44)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(18, 16, 18, 27)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 16, 19, 36)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 7, 22, 17)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(27, 15, 27, 31)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 23, 31, 39)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(32, 23, 32, 34)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(34, 23, 34, 64)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(35, 23, 35, 64)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(37, 44, 37, 85)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(45, 18, 45, 29)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 16, 20, 37)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 16, 21, 38)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 15, 31, 31)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(35, 23, 35, 39)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(36, 23, 36, 34)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(38, 23, 38, 64)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(39, 23, 39, 64)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(41, 44, 41, 85)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 18, 49, 29)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(52, 10, 52, 27)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(53, 23, 53, 60)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(57, 15, 57, 30)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(59, 22, 59, 48)));
 
 	}
 }
