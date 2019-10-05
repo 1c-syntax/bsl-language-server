@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -43,19 +43,19 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   private static final String ALL_DIAGNOSTICS_KEY = "all";
 
   private static final Pattern IGNORE_ALL_ON = Pattern.compile(
-    "(?:АПК-вкл)|(?:ACC-on)"
+    "(?:BSLLS-вкл)|(?:BSLLS-on)"
   );
 
   private static final Pattern IGNORE_ALL_OFF = Pattern.compile(
-    "(?:АПК-выкл)|(?:ACC-off)"
+    "(?:BSLLS-выкл)|(?:BSLLS-off)"
   );
 
   private static final Pattern IGNORE_DIAGNOSTIC_ON = Pattern.compile(
-    "(?:АПК:(\\w+)-вкл)|(?:ACC:(\\w+)-on)"
+    "(?:BSLLS:(\\w+)-вкл)|(?:BSLLS:(\\w+)-on)"
   );
 
   private static final Pattern IGNORE_DIAGNOSTIC_OFF = Pattern.compile(
-    "(?:АПК:(\\w+)-выкл)|(?:ACC:(\\w+)-off)"
+    "(?:BSLLS:(\\w+)-выкл)|(?:BSLLS:(\\w+)-off)"
   );
 
   private final DocumentContext documentContext;

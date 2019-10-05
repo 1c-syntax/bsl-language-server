@@ -1,24 +1,24 @@
-// ACC-off
+// BSLLS-off
 
 Если Истина Тогда
 	//а
 	А = 0
 КонецЕсли;
 
-// ACC-on
+// BSLLS-on
 
-// АПК:SemicolonPresence-выкл Проверка
+// BSLLS:SemicolonPresence-выкл Проверка
 Если Истина Тогда
 	//а
 	А = 0
 КонецЕсли;
-// АПК:SemicolonPresence-вкл
+// BSLLS:SemicolonPresence-вкл
 
-// АПК:SemicolonPresence-выкл
-// АПК:SpaceAtStartComment-выкл Проверка вложенности
+// BSLLS:SemicolonPresence-выкл
+// BSLLS:SpaceAtStartComment-выкл Проверка вложенности
 Если Истина Тогда
 	//а
 	А = 0
 КонецЕсли;
-// АПК:SpaceAtStartComment-вкл
-// АПК:SemicolonPresence-вкл
+// BSLLS:SpaceAtStartComment-вкл
+// BSLLS:SemicolonPresence-вкл
