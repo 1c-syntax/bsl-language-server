@@ -252,7 +252,12 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return false;
     }
 
-    Token nextToken = tokens.get(t.getTokenIndex() + 1);
+    Token nextToken;
+    if (tokens.size() > t.getTokenIndex() + 1){
+      nextToken = tokens.get(t.getTokenIndex() + 1);
+    } else {
+      return false;
+    }
 
     // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
     if (Boolean.TRUE.equals(allowMultipleCommas)
