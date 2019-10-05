@@ -54,7 +54,7 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
 
         createFile("${srcPath}/test/java/${packPath}/${key}DiagnosticTest.java",
                 "package com.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
-                        "public class ${key}DiagnosticTest extends AbstractDiagnosticTest<${key}Diagnostic> {\n" +
+                        "class ${key}DiagnosticTest extends AbstractDiagnosticTest<${key}Diagnostic> {\n" +
                         "\t${key}DiagnosticTest() {\n\t\tsuper(${key}Diagnostic.class);\n\t}\n\n" +
                         "\t@Test\n\tvoid test() {\n\t}\n}\n");
 
