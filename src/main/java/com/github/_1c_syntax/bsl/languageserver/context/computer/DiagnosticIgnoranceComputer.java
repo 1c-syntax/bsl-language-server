@@ -192,6 +192,10 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     private final Map<String, List<Range<Integer>>> diagnosticIgnorance;
 
     public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
+      if (diagnosticIgnorance.isEmpty()) {
+        return false;
+      }
+
       int line = diagnostic.getRange().getStart().getLine();
 
       Predicate<Map.Entry<String, List<Range<Integer>>>> ignoreAll =
