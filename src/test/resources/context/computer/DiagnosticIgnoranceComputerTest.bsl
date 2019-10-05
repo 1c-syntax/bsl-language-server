@@ -22,3 +22,6 @@
 КонецЕсли;
 // BSLLS:SpaceAtStartComment-вкл
 // BSLLS:SemicolonPresence-вкл
+
+// BSLLS:SpaceAtStartComment-выкл
+//а;

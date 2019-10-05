@@ -83,6 +83,12 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment);
     }
 
+    List<Token> tokens = documentContext.getTokens();
+    int lastTokenLine = tokens.get(tokens.size() - 1).getLine();
+    ignoranceStack.forEach((String diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
+      ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
+    );
+
     return new Data(diagnosticIgnorance);
   }
 
@@ -122,10 +128,13 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     int ignoreRangeStart = stack.pop();
     int ignoreRangeEnd = comment.getLine();
 
-    Range<Integer> ignoreRange = Range.between(ignoreRangeStart, ignoreRangeEnd);
-    final List<Range<Integer>> ranges = diagnosticIgnorance.computeIfAbsent(key, s -> new ArrayList<>());
-    ranges.add(ignoreRange);
+    addIgnoredRange(key, ignoreRangeStart, ignoreRangeEnd);
+  }
 
+  private void addIgnoredRange(String diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
+    Range<Integer> ignoreRange = Range.between(ignoreRangeStart, ignoreRangeEnd);
+    final List<Range<Integer>> ranges = diagnosticIgnorance.computeIfAbsent(diagnosticKey, s -> new ArrayList<>());
+    ranges.add(ignoreRange);
   }
 
   private static String getKey(Matcher matcher) {
