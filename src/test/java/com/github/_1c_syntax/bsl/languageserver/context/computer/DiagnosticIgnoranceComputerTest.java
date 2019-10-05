@@ -44,17 +44,18 @@ class DiagnosticIgnoranceComputerTest {
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 
-    ignoredDiagnostics.add(createDiagnostic("SemicolonPresence", 12));
-    ignoredDiagnostics.add(createDiagnostic("SemicolonPresence", 20));
-    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 20));
-    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 27));
+    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 4));
     ignoredDiagnostics.add(createDiagnostic("SemicolonPresence", 5));
-    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 5));
-    ignoredDiagnostics.add(createDiagnostic("RandomDiagnostic", 5));
+    ignoredDiagnostics.add(createDiagnostic("RandomDiagnostic", 6));
+    ignoredDiagnostics.add(createDiagnostic("SemicolonPresence", 13));
+    ignoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 20));
+    ignoredDiagnostics.add(createDiagnostic("SemicolonPresence", 21));
+    ignoredDiagnostics.add(createDiagnostic("SemicolonPresence", 27));
 
     List<Diagnostic> notIgnoredDiagnostics = new ArrayList<>();
-    notIgnoredDiagnostics.add(createDiagnostic("RandomDiagnostic", 20));
     notIgnoredDiagnostics.add(createDiagnostic("SpaceAtStartComment", 12));
+    notIgnoredDiagnostics.add(createDiagnostic("RandomDiagnostic", 20));
+    notIgnoredDiagnostics.add(createDiagnostic("SemicolonPresence", 29));
 
     // when
     Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer =

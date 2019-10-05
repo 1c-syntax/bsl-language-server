@@ -27,6 +27,7 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
 
+import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,9 +35,11 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
 
@@ -73,18 +76,28 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     diagnosticIgnorance.clear();
     ignoranceStack.clear();
 
+    List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
+    if (codeTokens.isEmpty()) {
+      return new Data(diagnosticIgnorance);
+    }
+    Set<Integer> codeLines = codeTokens.stream().map(Token::getLine).collect(Collectors.toSet());
+
     List<Token> comments = documentContext.getComments();
 
     for (Token comment : comments) {
-      checkIgnoreOff(IGNORE_ALL_OFF, comment);
-      checkIgnoreOn(IGNORE_ALL_ON, comment);
 
-      checkIgnoreOff(IGNORE_DIAGNOSTIC_OFF, comment);
-      checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment);
+      // Variable is used for short circuit evaluation.
+      //noinspection unused
+      boolean ignored = checkTrailingComment(codeLines, comment)
+        || checkIgnoreOff(IGNORE_ALL_OFF, comment) != null
+        || checkIgnoreOn(IGNORE_ALL_ON, comment)
+        || checkIgnoreOff(IGNORE_DIAGNOSTIC_OFF, comment) != null
+        || checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment)
+        ;
+
     }
 
-    List<Token> tokens = documentContext.getTokens();
-    int lastTokenLine = tokens.get(tokens.size() - 1).getLine();
+    int lastTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
     ignoranceStack.forEach((String diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
       ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
     );
@@ -92,13 +105,37 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     return new Data(diagnosticIgnorance);
   }
 
-  private void checkIgnoreOff(
+  private boolean checkTrailingComment(Set<Integer> codeLines, Token comment) {
+    int commentLine = comment.getLine();
+    if (!codeLines.contains(commentLine)) {
+      return false;
+    }
+
+    String key = checkIgnoreOff(IGNORE_ALL_OFF, comment);
+    if (key == null) {
+      key = checkIgnoreOff(IGNORE_DIAGNOSTIC_OFF, comment);
+    }
+    if (key == null) {
+      return false;
+    }
+
+    Deque<Integer> stack = ignoranceStack.get(key);
+    stack.pop();
+
+    addIgnoredRange(key, commentLine, commentLine);
+
+    return true;
+  }
+
+  @CheckForNull
+  private String checkIgnoreOff(
     Pattern ignoreOff,
-    Token comment) {
+    Token comment
+  ) {
 
     Matcher matcher = ignoreOff.matcher(comment.getText());
     if (!matcher.find()) {
-      return;
+      return null;
     }
 
     String key = getKey(matcher);
@@ -106,29 +143,32 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
     stack.push(comment.getLine());
 
+    return key;
   }
 
-  private void checkIgnoreOn(
+  private boolean checkIgnoreOn(
     Pattern ignoreOn,
     Token comment
   ) {
 
     Matcher matcher = ignoreOn.matcher(comment.getText());
     if (!matcher.find()) {
-      return;
+      return false;
     }
 
     String key = getKey(matcher);
 
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
     if (stack.isEmpty()) {
-      return;
+      return false;
     }
 
     int ignoreRangeStart = stack.pop();
     int ignoreRangeEnd = comment.getLine();
 
     addIgnoredRange(key, ignoreRangeStart, ignoreRangeEnd);
+
+    return true;
   }
 
   private void addIgnoredRange(String diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {

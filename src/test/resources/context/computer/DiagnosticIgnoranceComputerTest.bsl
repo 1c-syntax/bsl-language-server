@@ -23,5 +23,10 @@
 // BSLLS:SpaceAtStartComment-вкл
 // BSLLS:SemicolonPresence-вкл
 
+Если Истина Тогда
+	А = 0 // BSLLS:SemicolonPresence-выкл Проверка висячего комментария
+КонецЕсли;
+А = 0
+
 // BSLLS:SpaceAtStartComment-выкл
 //а;
