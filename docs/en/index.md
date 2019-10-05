@@ -202,7 +202,7 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Using "Cancel" parameter | Yes |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes |
-| [UsingHardcodePathDiagnostic](diagnostics/UsingHardcodePathDiagnostic.md) | Detected storage of file path or ip address in code | Yes |
+| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Detected storage of file path or ip address in code | Yes |
 | [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes |
 | [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No |
