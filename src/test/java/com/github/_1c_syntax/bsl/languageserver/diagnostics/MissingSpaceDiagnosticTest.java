@@ -44,7 +44,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(25);
+    assertThat(diagnostics).hasSize(27);
     assertThat(diagnostics)
       // на +
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 18, 4, 19)))
@@ -84,6 +84,9 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 9, 23, 11)))
       // на <>
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 8, 25, 10)))
+      // проверка на отсутствие ошибки
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(38, 3, 38, 4)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(38, 5, 38, 6)))
     ;
   }
 
