@@ -21,21 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodeSecretInformationDiagnostic> {
+class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodeSecretInformationDiagnostic> {
 	UsingHardcodeSecretInformationDiagnosticTest() {
 		super(UsingHardcodeSecretInformationDiagnostic.class);
 	}
 
 	@Test
-	public void test() {
+	void test() {
 
 		// when
 		List<Diagnostic> diagnostics = getDiagnostics();
