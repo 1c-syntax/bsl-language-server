@@ -29,9 +29,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UsingHardcodePathDiagnosticDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodePathDiagnosticDiagnostic> {
-	UsingHardcodePathDiagnosticDiagnosticTest() {
-		super(UsingHardcodePathDiagnosticDiagnostic.class);
+public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodePathDiagnostic> {
+	UsingHardcodePathDiagnosticTest() {
+		super(UsingHardcodePathDiagnostic.class);
 	}
 
 	@Test

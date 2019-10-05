@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL,
   minutesToFix = 15
 )
-public class UsingHardcodePathDiagnosticDiagnostic extends AbstractVisitorDiagnostic {
+public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
   final static String REGEX_PATH = "^(?=\\/).*|^(%.*%)(?=\\\\|\\/|\\/\\/)|^(~)(?=\\\\|\\/|\\/\\/)|(^([a-z]):" +
     "(?=\\\\|\\/\\/(?![\0-\37<>:\"\\/\\\\|?*])|\\/(?![\0-\37<>:\"\\/\\\\|?*])|$)|^\\\\(?=[\\\\\\/]" +
