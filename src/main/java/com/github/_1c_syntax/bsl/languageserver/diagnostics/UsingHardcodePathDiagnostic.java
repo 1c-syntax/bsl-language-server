@@ -73,16 +73,14 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = REGEX_EXCLUSION,
     description = "Ключевые слова поиска для исключения выражений при поиске IP адресов"
   )
-  private String searchWordsExclusion = REGEX_EXCLUSION;
-  private Pattern patternExclusion = getLocalPattern(REGEX_EXCLUSION);
+  private Pattern searchWordsExclusion = getLocalPattern(REGEX_EXCLUSION);
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = REGEX_EXCLUSION,
+    defaultValue = REGEX_STD_PATHS_UNIX,
     description = "Ключевые слова поиска стандартных корневых каталогов Unix"
   )
-  private String searchWordsStdPathsUnix = REGEX_STD_PATHS_UNIX;
-  private Pattern patternStdPathsUnix = getLocalPattern("^\\/(" + searchWordsStdPathsUnix + ")");
+  private Pattern searchWordsStdPathsUnix = getLocalPattern("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -100,12 +98,12 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     enableSearchNetworkAddresses = (boolean) configuration.get("enableSearchNetworkAddresses");
 
     // Слова исключения, при поиске IP адресов
-    searchWordsExclusion = (String) configuration.get("searchWordsExclusion");
-    patternExclusion = getLocalPattern(searchWordsExclusion);
+    String searchWordsExclusionProperty = (String) configuration.get("searchWordsExclusion");
+    searchWordsExclusion = getLocalPattern(searchWordsExclusionProperty);
 
     // Слова поиска стандартных корневых каталогов Unix
-    searchWordsStdPathsUnix = (String) configuration.get("searchWordsStdPathsUnix");
-    patternStdPathsUnix = getLocalPattern(searchWordsStdPathsUnix);
+    String searchWordsStdPathsUnixProperty = (String) configuration.get("searchWordsStdPathsUnix");
+    searchWordsStdPathsUnix = getLocalPattern(searchWordsStdPathsUnixProperty);
 
   }
 
@@ -136,7 +134,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   private void processSearchingPath(BSLParser.StringContext ctx, String content) {
     // Проверим пути с / на стандартные корневые каталоги и обработаем их отдельно
     if (content.startsWith("/")) {
-      Matcher matcher = patternStdPathsUnix.matcher(content);
+      Matcher matcher = searchWordsStdPathsUnix.matcher(content);
       if (matcher.find()) {
         diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
       }
@@ -152,7 +150,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
       if (parent == null) {
         diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
       } else {
-        matcher = patternExclusion.matcher(parent.getText());
+        matcher = searchWordsExclusion.matcher(parent.getText());
         if (!matcher.find()) {
           diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
         }
