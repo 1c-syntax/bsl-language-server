@@ -21,11 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -70,6 +72,43 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(53, 23, 53, 60)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(57, 15, 57, 30)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(59, 22, 59, 48)));
+
+	}
+
+	@Test
+	void testConfigure() {
+
+		List<Diagnostic> diagnostics;
+		Map<String, Object> configuration;
+
+		// when
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+		getDiagnosticInstance().configure(configuration);
+
+		//then
+		diagnostics = getDiagnostics();
+		assertThat(diagnostics).hasSize(26);
+
+		configuration.put("enableSearchNetworkAddresses", false);
+		getDiagnosticInstance().configure(configuration);
+
+		diagnostics = getDiagnostics();
+		assertThat(diagnostics).hasSize(19);
+
+		// when
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+		configuration.put("searchWordsExclusion", "Version");
+		getDiagnosticInstance().configure(configuration);
+
+		diagnostics = getDiagnostics();
+		assertThat(diagnostics).hasSize(28);
+
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+		configuration.put("searchWordsStdPathsUnix", "home|lib");
+		getDiagnosticInstance().configure(configuration);
+
+		diagnostics = getDiagnostics();
+		assertThat(diagnostics).hasSize(23);
 
 	}
 }
