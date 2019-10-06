@@ -102,6 +102,11 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     // Слова исключения, при поиске IP адресов
     searchWordsExclusion = (String) configuration.get("searchWordsExclusion");
     patternExclusion = getLocalPattern(searchWordsExclusion);
+
+    // Слова поиска стандартных корневых каталогов Unix
+    searchWordsStdPathsUnix = (String) configuration.get("searchWordsStdPathsUnix");
+    patternStdPathsUnix = getLocalPattern(searchWordsStdPathsUnix);
+
   }
 
   /**
