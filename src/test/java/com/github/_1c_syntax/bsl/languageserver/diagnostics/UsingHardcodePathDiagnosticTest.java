@@ -81,32 +81,41 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		List<Diagnostic> diagnostics;
 		Map<String, Object> configuration;
 
+		// Проверяем количество срабатываний без изменения параметров
 		// when
 		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
 		getDiagnosticInstance().configure(configuration);
-
-		//then
 		diagnostics = getDiagnostics();
+
+		// then
 		assertThat(diagnostics).hasSize(26);
 
+		// Выключаем поиск IP адресов
+		// when
 		configuration.put("enableSearchNetworkAddresses", false);
 		getDiagnosticInstance().configure(configuration);
-
 		diagnostics = getDiagnostics();
+
+		// then
 		assertThat(diagnostics).hasSize(19);
 
+		// Изменяем ключевые слова исключения для поиска IP адресов
 		// when
 		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
 		configuration.put("searchWordsExclusion", "Version");
 		getDiagnosticInstance().configure(configuration);
-
 		diagnostics = getDiagnostics();
+
+		// then
 		assertThat(diagnostics).hasSize(28);
 
+		// Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
+		// when
 		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
 		configuration.put("searchWordsStdPathsUnix", "home|lib");
 		getDiagnosticInstance().configure(configuration);
 
+		// then
 		diagnostics = getDiagnostics();
 		assertThat(diagnostics).hasSize(23);
 
