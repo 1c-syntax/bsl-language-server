@@ -21,11 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,4 +59,31 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 
 
 	}
+
+	@Test
+	void testConfigure() {
+
+		List<Diagnostic> diagnostics;
+		Map<String, Object> configuration;
+
+		// без изменения параметра
+		// when
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+		getDiagnosticInstance().configure(configuration);
+		diagnostics = getDiagnostics();
+
+		// then
+		assertThat(diagnostics).hasSize(9);
+
+		// с изменением параметра searchWords
+		// when
+		configuration.put("searchWords", "Password");
+		getDiagnosticInstance().configure(configuration);
+		diagnostics = getDiagnostics();
+
+		// then
+		assertThat(diagnostics).hasSize(4);
+
+	}
+
 }
