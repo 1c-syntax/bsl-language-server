@@ -118,4 +118,15 @@ class DiagnosticProviderTest {
     assertThat(lineLengthParams.get("maxLineLength").defaultValue()).isEqualTo("120");
 
   }
+
+  @Test
+  void testAllDiagnosticsHaveTags() {
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
+
+    // then
+    assertThat(diagnosticClasses)
+      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
+        DiagnosticProvider.getDiagnosticTags(diagnosticClass).size() != 0);
+  }
 }
