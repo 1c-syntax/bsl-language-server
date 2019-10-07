@@ -21,18 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DiagnosticMetadata {
-  DiagnosticType type() default DiagnosticType.ERROR;
-  DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
-  DiagnosticScope scope() default DiagnosticScope.ALL;
-  int minutesToFix() default 0;
-  boolean activatedByDefault() default true;
-  DiagnosticTag[] tags() default {};
+public enum DiagnosticTag {
+  ONLYLINUX,    // Только для Linux
+  STANDARD,     // Стандарт разработки 1С
+  SQL,          // Запросы
+  NOEDT,        // Не имеет смысла для EDT
+  PERFORMANCE   // Производительность
 }
