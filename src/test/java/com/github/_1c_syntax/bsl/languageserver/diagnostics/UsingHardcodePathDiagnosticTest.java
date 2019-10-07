@@ -42,7 +42,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		List<Diagnostic> diagnostics = getDiagnostics();
 
 		// when
-		assertThat(diagnostics).hasSize(26);
+		assertThat(diagnostics).hasSize(30);
 
 		// then
 		assertThat(diagnostics)
@@ -71,7 +71,11 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(52, 10, 52, 27)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(53, 23, 53, 60)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(57, 15, 57, 30)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(59, 22, 59, 48)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(59, 22, 59, 48)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(61, 7, 61, 145)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(62, 7, 62, 119)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(63, 7, 63, 39)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(65, 59, 65, 77)));
 
 	}
 
@@ -88,7 +92,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(26);
+		assertThat(diagnostics).hasSize(30);
 
 		// Выключаем поиск IP адресов
 		// when
@@ -107,7 +111,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(28);
+		assertThat(diagnostics).hasSize(34);
 
 		// Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
 		// when
@@ -117,7 +121,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 
 		// then
 		diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(23);
+		assertThat(diagnostics).hasSize(27);
 
 	}
 }
