@@ -124,10 +124,10 @@ class DiagnosticProviderTest {
     // when
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
 
-    // then 
+    // then
     assertThat(diagnosticClasses)
       .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
         DiagnosticProvider.getDiagnosticTags(diagnosticClass).size() > 0
-          && DiagnosticProvider.getDiagnosticTags(diagnosticClass).size() < 3);
+          && DiagnosticProvider.getDiagnosticTags(diagnosticClass).size() <= 3);
   }
 }
