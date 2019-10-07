@@ -22,9 +22,20 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 public enum DiagnosticTag {
-  ONLYLINUX,    // Только для Linux
-  STANDARD,     // Стандарт разработки 1С
-  SQL,          // Запросы
-  NOEDT,        // Не имеет смысла для EDT
-  PERFORMANCE   // Производительность
+  STANDARD("Нарушение стандартов 1С"),
+  LOCKINOS("Не будет работать в другой ОС"),
+  SQL("Проблема с запросом"),
+  PERFORMANCE("Проблема производительности"),
+  BRAINOVERLOAD("Непонятный код"),
+  BADPRACTICE("Плохая практика программирования"),
+  CLUMSY("Излишние действия"),
+  DESIGN("Ошибка в проектировании"),
+  SUSPICIOUS("Подозрительный код"),
+  UNPREDICTABLE("Непредсказуемо работающий код"),
+  DEPRECATED("Устаревшая функциональность"),
+  ERROR("Ошибочная конструкция")
+  ;
+
+  DiagnosticTag(String ru) {
+  }
 }

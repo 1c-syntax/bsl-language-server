@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -36,8 +37,12 @@ import java.util.regex.Pattern;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
+  minutesToFix = 30,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 30
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.LOCKINOS
+  }
 )
 public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagnostic {
 
