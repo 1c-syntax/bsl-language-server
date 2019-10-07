@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagnostic {
 
 	private static final Pattern patternNewExpression = Pattern.compile(
-		"COMОбъект|COMObject|Почта|Mail",
+		"^(COMОбъект|COMObject|Почта|Mail)",
 		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 	private static final Pattern patternTypePlatform = Pattern.compile(

@@ -63,10 +63,13 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|" +
     "media|opt|proc|root|run|sbin|tmp|usr|var";
 
-  private static final  String REGEX_EXCLUSION = "Верси|Version";
+  private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
+
+  private static final  String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace";
 
   private static final Pattern patternPath = getLocalPattern(REGEX_PATH);
   private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
+  private static final Pattern patternURL = getLocalPattern(REGEX_URL);
 
   @DiagnosticParameter(
     type = String.class,
@@ -122,7 +125,8 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     String content = ctx.getText().replace("\"", "");
     if (content.length() > 2) {
       Matcher matcher = patternPath.matcher(content);
-      if (matcher.find()) {
+      Matcher matcherURL = patternURL.matcher(content);
+      if (matcher.find() && !matcherURL.find()) {
         processSearchingPath(ctx, content);
       } else if (enableSearchNetworkAddresses) {
         processSearchingNetworkAddress(ctx, content);

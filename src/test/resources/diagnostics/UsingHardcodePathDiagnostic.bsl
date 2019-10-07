@@ -58,3 +58,10 @@
 ДоменныйПуть = "\\domain\user"; // <-- ошибка
 
 ПутьОтКаталогаЮзера = "%UserProfile%/что/то/там"; // <-- ошибка
+
+Тест = "(.*<transportConnector name=\"")(.*)(\"" uri=\""tcp://0.0.0.0:61616\?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600\""/>)"; // <-- ошибка
+Тест = "_to_SRVMIX"" uri=""static:(tcp://10.1.4.55:61616)"" duplex=""true"" UserName=""system"" Password=""manager""/>"; // <-- ошибка
+Тест = "              // dana 6.0.23.1"; // <-- ошибка
+URIПространстваИмен = "http://www.1c.ru/EquipmentService/1.0.0.6";
+Команда = "ping -n " + Формат(Секунды + 1, "ЧДЦ=0; ЧГ=") + " -w 2000 0.0.0.1"; // <-- ошибка
+ЗапуститьПриложение("ping -n 60 127.0.0.1 >nul", , Истина);
