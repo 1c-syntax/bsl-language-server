@@ -11,5 +11,6 @@
   - [Пример разработки диагностики](DiagnosticExample.md)
   - [Процесс (workflow) разработки диагностики](DiagnosticDevWorkFlow.md)
   - [Описание типов и важности диагностик](DiagnosticTypeAndSeverity.md)
+  - [Тэги диагностик](DiagnosticTag.md)
   - [Добавление параметров диагностике](DiagnostcAddSettings.md)
   - [Добавление быстрых исправлений диагностике](DiagnosticQuickFix.md)
