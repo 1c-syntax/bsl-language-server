@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -106,8 +107,12 @@ public final class DiagnosticProvider {
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
 
+    DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
+
     List<Diagnostic> diagnostics = getDiagnosticInstances(documentContext.getFileType()).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+      .filter((Diagnostic diagnostic) ->
+        !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
       .collect(Collectors.toList());
 
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));

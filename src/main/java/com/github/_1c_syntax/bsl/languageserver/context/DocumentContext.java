@@ -21,18 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ConsoleErrorListener;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.Trees;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -43,6 +34,16 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ConsoleErrorListener;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.Trees;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,6 +74,7 @@ public class DocumentContext {
   private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>(this::computeNodeToMethodsMap);
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions);
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
+  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
   private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;
@@ -186,6 +188,10 @@ public class DocumentContext {
 
   public CognitiveComplexityComputer.Data getCognitiveComplexityData() {
     return cognitiveComplexityData.getOrCompute();
+  }
+
+  public DiagnosticIgnoranceComputer.Data getDiagnosticIgnorance() {
+    return diagnosticIgnoranceData.getOrCompute();
   }
 
   public void rebuild(String content) {
@@ -369,4 +375,8 @@ public class DocumentContext {
     return metricsTemp;
   }
 
+  private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
+    Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
+    return diagnosticIgnoranceComputer.compute();
+  }
 }
