@@ -32,11 +32,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import org.eclipse.lsp4j.Position;
 
 import java.io.IOException;

@@ -325,9 +325,7 @@ public class DocumentContext {
 
   private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
-    CognitiveComplexityComputer.Data cognitiveComplexityDataTemp = cognitiveComplexityComputer.compute();
-
-    return cognitiveComplexityDataTemp;
+    return cognitiveComplexityComputer.compute();
   }
 
   private void adjustRegions() {

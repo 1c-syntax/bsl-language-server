@@ -25,7 +25,11 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import javax.annotation.CheckForNull;
 
-public class Trees {
+public final class Trees {
+
+  private Trees() {
+    // only statics
+  }
 
   /** Ищем предка элемента по указанному типу BSLParser
    * Пример:

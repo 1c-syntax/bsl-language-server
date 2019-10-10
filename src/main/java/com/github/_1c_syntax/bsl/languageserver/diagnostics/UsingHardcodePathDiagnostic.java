@@ -59,6 +59,8 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" +
     "|((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
 
+  private static final int DOTS_IN_IPV4 = 3;
+
   private static final String REGEX_STD_PATHS_UNIX =
     "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|" +
     "media|opt|proc|root|run|sbin|tmp|usr|var";
@@ -157,10 +159,8 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
       // для исключения классификаторов в строке (т.к. не можем искать по ^ и $
       // считаем количество точек, если в строке нет символов алфавита ru и en
       matcher = patternAlphabet.matcher(content);
-      if (!matcher.find()) {
-        if (content.chars().filter(num -> num == '.').count() > 3) {
-          return;
-        }
+      if (!matcher.find() && (content.chars().filter(num -> num == '.').count() > DOTS_IN_IPV4)) {
+        return;
       }
 
       ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);

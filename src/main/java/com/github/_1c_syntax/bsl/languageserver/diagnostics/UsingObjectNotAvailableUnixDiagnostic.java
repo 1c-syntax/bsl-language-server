@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,72 +30,57 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
-	type = DiagnosticType.ERROR,
-	severity = DiagnosticSeverity.CRITICAL,
-	minutesToFix = 30,
-	scope = DiagnosticScope.BSL
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.CRITICAL,
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 30
 )
 public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagnostic {
 
-	private static final Pattern patternNewExpression = Pattern.compile(
-		"^(COMОбъект|COMObject|Почта|Mail)",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern patternNewExpression = Pattern.compile(
+    "^(COMОбъект|COMObject|Почта|Mail)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	private static final Pattern patternTypePlatform = Pattern.compile(
-		"Linux_x86",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern patternTypePlatform = Pattern.compile(
+    "Linux_x86",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-	/**
-	 * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся
-	 * цепочка) с проверкой ТипПлатформы = Linux не найдено в методе, то диагностика срабатывает.
-	 * Пример:
-	 * Компонента = Новый COMОбъект("System.Text.UTF8Encoding");
-	 */
-	@Override
-	public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-		BSLParser.TypeNameContext typeNameContext = ctx.typeName();
-		if (typeNameContext == null) {
-			return super.visitNewExpression(ctx);
-		}
-		Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
-		if (matcherTypeName.find()) {
-			// ищем условие выше, пока не дойдем до null
-			if (!isFindIfBranchWithLinuxCondition(ctx)) {
-				diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(typeNameContext.getText()));
-			}
-		}
-		return super.visitNewExpression(ctx);
-	}
+  /**
+   * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся
+   * цепочка) с проверкой ТипПлатформы = Linux не найдено в методе, то диагностика срабатывает.
+   * Пример:
+   * Компонента = Новый COMОбъект("System.Text.UTF8Encoding");
+   */
+  @Override
+  public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    BSLParser.TypeNameContext typeNameContext = ctx.typeName();
+    if (typeNameContext == null) {
+      return super.visitNewExpression(ctx);
+    }
+    Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
+    // ищем условие выше, пока не дойдем до null
 
-	private boolean isFindIfBranchWithLinuxCondition(ParserRuleContext element) {
-		ParserRuleContext ancestor = getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
-		if (ancestor == null) {
-			return false;
-		}
-		String content = ancestor.getText();
-		Matcher matcher = patternTypePlatform.matcher(content);
-		if (!matcher.find()) {
-			return false;
-		}
-		return isFindIfBranchWithLinuxCondition(ancestor);
-	}
+    if (matcherTypeName.find() && !isFindIfBranchWithLinuxCondition(ctx)) {
+      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(typeNameContext.getText()));
+    }
+    return super.visitNewExpression(ctx);
+  }
 
-	// TODO: должно быть в Tree
-	@CheckForNull
-	private static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
-		ParserRuleContext parent = element.getParent();
-		if (parent == null) {
-			return null;
-		}
-		if (parent.getRuleIndex() == type) {
-			return parent;
-		}
-		return getAncestorByRuleIndex(parent, type);
-	}
+  private static boolean isFindIfBranchWithLinuxCondition(ParserRuleContext element) {
+    ParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
+    if (ancestor == null) {
+      return false;
+    }
+    String content = ancestor.getText();
+    Matcher matcher = patternTypePlatform.matcher(content);
+    if (!matcher.find()) {
+      return false;
+    }
+    return isFindIfBranchWithLinuxCondition(ancestor);
+  }
 
 }
