@@ -1,17 +1,17 @@
-# Ошибочное указание нескольких директив компиляции
+# Erroneous indication of several compilation directives
 
-Указание нескольких директив компиляции методу или переменной модуля яявляется ошибкой
+Indication of several compilation directives for a method or a variable is an error. Besides, indication of several complilation directives adduce to uncertaint. Will be the code is compiled? If so, then what context?
 
-Неправильно
+Incorrect
 
 ```Bsl
-&НаСервере
-&НаКлиенте
-Перем МояПеременная;
+&AtServer
+&AtClient
+Var MyVariable;
 
-&НаСервере
-&НаКлиенте
-Процедура МояПроцедура()
+&AtServer
+&AtClient
+Procedure MyProcedure()
 
-КонецПроцедуры
+EndProcedure
 ```
