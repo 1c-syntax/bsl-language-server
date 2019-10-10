@@ -7,7 +7,7 @@
 ## Параметры
 
 * `searchWordsExclusion` - `Строка` - Ключевые слова поиска для исключения выражений при поиске IP адресов. 
-По умолчанию ``Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace``.
+По умолчанию ``Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver``.
 * `searchWordsStdPathsUnix` - `Строка` - Ключевые слова поиска стандартных корневых каталогов Unix. 
 По умолчанию ``bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var``.
 * `enableSearchNetworkAddresses` - `Булево` - Использовать поиск сетевых адресов. По умолчанию ``Да``.

@@ -68,7 +68,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
 
   private static final  String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|" +
-    "Namespace|Драйвер";
+    "Namespace|Драйвер|Driver";
 
   private static final Pattern patternPath = getLocalPattern(REGEX_PATH);
   private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
@@ -92,7 +92,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "true",
-    description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
+    description = "Использовать поиск сетевых адресов"
   )
   private boolean enableSearchNetworkAddresses = true;
 
