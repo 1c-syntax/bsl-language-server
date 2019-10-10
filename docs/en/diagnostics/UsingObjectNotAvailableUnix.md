@@ -3,10 +3,10 @@
 In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.
 For external components, using COM, it is recommended to change them to NativeAPI AddIn.
 
-Отслеживаемые механизмы, недоступные в Linux:
+Checked the use of unavailable in :
 
-- COMОбъект
-- Почта
+- COMObject
+- Mail
 
 Example:
 
@@ -14,31 +14,30 @@ Example:
 Component = New COMObject("System.Text.UTF8Encoding");
 ```
 
-или
+or
 
 ```bsl
-Почта = Новый Почта;
+Mail = New Mail;
 ```
 
-Вместо этого можно использовать `ЗапуститьПриложение()`.
+Instead of this you can use `StartApplication()`.
 
-## Дополнительно
+## Addition
 
-При проверке использования недоступных объектов в Linux учитываются условия в рамках метода, где проверяется
-проверка на ТипПлатформы = Linux_x86 или Linux_x86_64.
+When found unavailable in Linux objects, the method is checked to include condition flow for platform type.
 
 Например:
 
 ```bsl
-СистемнаяИнформация = Новый СистемнаяИнформация();
-Если Не СистемнаяИнформация.ТипПлатформы = ТипПлатформы.Linux_x86 Или ТипПлатформы.Linux_x86_64 Тогда
-	Почта = Новый Почта;
-КонецЕсли
+SystemInformation = New SystemInformation();
+If Not SystemInformation.PlatformType = PlatformType.Linux_x86 OR PlatformType.Linux_x86_64 Then
+	Mail = New Mail;
+EndIf;
 ```
 
-## Ссылки
+## Reference
 
-Более подробную информацию можно изучить на ИТС:
+More information is available on ITS:
 
 - [Особенности разработки кроссплатформенных прикладных решений](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001208)
 - [Особенности работы клиентского приложения под управлением ОС Linux](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001283)
