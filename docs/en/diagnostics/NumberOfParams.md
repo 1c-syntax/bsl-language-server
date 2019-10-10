@@ -1,31 +1,32 @@
-# Number of method parameters restriction
+# Number of parameters in method
 
+1. It is not recommended to declare many parameters in functions (best practice to use not more than seven parameters). In So doing there should not be many parameters with default values set (best practice to have not more than three such parameters). Otherwise code readability decreases. For example it is easy to make a mistake in number of commas passing optional parameters.
 
-1. Не рекомендуется объявлять в функциях много параметров (нужно ориентироваться на количество не более семи параметров), при этом не должно быть много параметров со значениями по умолчанию (нужно ориентироваться на количество не более трех таких параметров). В противном случае, читаемость вызывающего кода сильно снижается. Например, можно легко ошибиться в количестве запятых при передаче необязательных параметров. 
-    
-При необходимости передавать в функцию большое число параметров рекомендуется группировать однотипные параметры в один или несколько составных параметров типа Структура. 
+If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.
 
-#### Пример 
-Неправильно:
+#### Example
+
+Incorrect:
 
 ```
-// Создает элемент справочника "Номенклатура"
+// Create item in catalog "Goods"
 Процедура СоздатьЭлементНоменклатуры(Наименование, ТоварУслуга, ЕдиницаИзмерения, ВесНетто, ПроверятьУникальность = Истина)
 
 КонецПроцедуры
 ```
 
-Правильно:  
-Cгруппировать параметры, описывающие значения реквизитов номенклатуры, в структуру ЗначенияРеквизитов.
+Correct:
+
+Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
 ```
-// Создает элемент справочника "Номенклатура"
+// Create item in catalog "Goods"
 Процедура СоздатьЭлементНоменклатуры(ЗначенияРеквизитов, ПроверятьУникальность = Истина)
 КонецПроцедуры
 ```
 
-Источник: [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
+Reference: [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
 
-## Параметры
+## Parameters
 
-* `maxParamsCount` - `Число` - Допустимое количество параметров метода. По умолчанию - 7.
+- `maxOptionalParamsCount` - `Integer` - Max number of optional parameters in method. By default set to 3.
