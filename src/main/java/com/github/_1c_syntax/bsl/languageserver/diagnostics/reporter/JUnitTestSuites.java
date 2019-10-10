@@ -60,7 +60,7 @@ class JUnitTestSuites {
   @JacksonXmlElementWrapper(useWrapping = false)
   private final List<JUnitTestSuite> testsuite;
 
-  private static Path sourceDir;
+  private static Path sourceDir = Paths.get(".");
 
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
     name = "bsl-language-server";
