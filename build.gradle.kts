@@ -6,6 +6,7 @@ plugins {
     java
     maven
     jacoco
+    `maven-publish`
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
     id("io.franzbecker.gradle-lombok") version "3.2.0"
@@ -16,6 +17,24 @@ plugins {
 repositories {
     mavenCentral()
     maven { url = URI("https://jitpack.io") }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/1c-syntax/bsl-language-server")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USER")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_DEPLOY_KEY")
+            }
+        }
+    }
+    publications {
+        register("gpr", MavenPublication::class) {
+            from(components["java"])
+        }
+    }
 }
 
 group = "com.github.1c-syntax"

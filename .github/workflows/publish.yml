@@ -1,0 +1,19 @@
+name: Publish to m2
+
+on: push
+
+jobs:
+  gpr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Github Package Registry publish
+        run: ./gradlew publish --debug --stacktrace
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPR_DEPLOY_KEY: ${{ secrets.GPR_DEPLOY_KEY }}
+          GPR_USER: ${{ github.actor }}
