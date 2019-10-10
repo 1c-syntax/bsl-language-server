@@ -26,7 +26,7 @@ Instead of this you can use `StartApplication()`.
 
 When found unavailable in Linux objects, the method is checked to include condition flow for platform type.
 
-Например:
+For example:
 
 ```bsl
 SystemInformation = New SystemInformation();
@@ -39,5 +39,5 @@ EndIf;
 
 More information is available on ITS:
 
-- [Особенности разработки кроссплатформенных прикладных решений](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001208)
-- [Особенности работы клиентского приложения под управлением ОС Linux](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001283)
+- [Features of the development of cross-platform applied solutions](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001208)
+- [Features of the client application running Linux](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001283)
