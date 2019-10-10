@@ -59,17 +59,21 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" +
     "|((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
 
-  private static final  String REGEX_STD_PATHS_UNIX =
+  private static final String REGEX_STD_PATHS_UNIX =
     "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|" +
     "media|opt|proc|root|run|sbin|tmp|usr|var";
 
+  private static final String REGEX_ALPHABET = "[A-zА-я]";
+
   private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
 
-  private static final  String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace";
+  private static final  String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|" +
+    "Namespace|Драйвер|Driver";
 
   private static final Pattern patternPath = getLocalPattern(REGEX_PATH);
   private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
   private static final Pattern patternURL = getLocalPattern(REGEX_URL);
+  private static final Pattern patternAlphabet = getLocalPattern(REGEX_ALPHABET);
 
   @DiagnosticParameter(
     type = String.class,
@@ -88,7 +92,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "true",
-    description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
+    description = "Использовать поиск сетевых адресов"
   )
   private boolean enableSearchNetworkAddresses = true;
 
@@ -106,7 +110,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty = (String) configuration.get("searchWordsStdPathsUnix");
-    searchWordsStdPathsUnix = getLocalPattern(searchWordsStdPathsUnixProperty);
+    searchWordsStdPathsUnix = getLocalPattern("^\\/(" + searchWordsStdPathsUnixProperty + ")");
 
   }
 
@@ -150,6 +154,15 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   private void processSearchingNetworkAddress(BSLParser.StringContext ctx, String content) {
     Matcher matcher = patternNetworkAddress.matcher(content);
     if (matcher.find()) {
+      // для исключения классификаторов в строке (т.к. не можем искать по ^ и $
+      // считаем количество точек, если в строке нет символов алфавита ru и en
+      matcher = patternAlphabet.matcher(content);
+      if (!matcher.find()) {
+        if (content.chars().filter(num -> num == '.').count() > 3) {
+          return;
+        }
+      }
+
       ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
       if (parent == null) {
         diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());

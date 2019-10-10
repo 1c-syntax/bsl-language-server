@@ -42,7 +42,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		List<Diagnostic> diagnostics = getDiagnostics();
 
 		// when
-		assertThat(diagnostics).hasSize(30);
+		assertThat(diagnostics).hasSize(31);
 
 		// then
 		assertThat(diagnostics)
@@ -75,7 +75,8 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(61, 7, 61, 145)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(62, 7, 62, 119)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(63, 7, 63, 39)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(65, 59, 65, 77)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(65, 59, 65, 77)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(79, 2, 79, 70)));
 
 	}
 
@@ -92,7 +93,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(30);
+		assertThat(diagnostics).hasSize(31);
 
 		// Выключаем поиск IP адресов
 		// when
@@ -111,7 +112,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(34);
+		assertThat(diagnostics).hasSize(36);
 
 		// Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
 		// when
@@ -121,7 +122,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 
 		// then
 		diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(27);
+		assertThat(diagnostics).hasSize(28);
 
 	}
 }
