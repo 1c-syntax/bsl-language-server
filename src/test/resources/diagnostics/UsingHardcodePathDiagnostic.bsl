@@ -77,7 +77,7 @@ URIПространстваИмен = "http://www.1c.ru/EquipmentService/1.0.0.6
 
 Разрешение = ФабрикаXDTO.Создать(
 	ФабрикаXDTO.Тип(
-		"http://www.1c.ru/1cFresh/ApplicationExtensions/Permissions/1.0.0.1",
+		"http://www.1c.ru/1cFresh/ApplicationExtensions/Permissions/1.0.0.1", // <-- ошибка
 		РазрешениеВДанных.ВидРазрешения
 	)
 );

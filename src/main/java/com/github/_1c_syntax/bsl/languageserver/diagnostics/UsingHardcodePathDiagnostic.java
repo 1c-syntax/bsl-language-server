@@ -110,7 +110,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty = (String) configuration.get("searchWordsStdPathsUnix");
-    searchWordsStdPathsUnix = getLocalPattern(searchWordsStdPathsUnixProperty);
+    searchWordsStdPathsUnix = getLocalPattern("^\\/(" + searchWordsStdPathsUnixProperty + ")");
 
   }
 
