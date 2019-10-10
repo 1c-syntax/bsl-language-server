@@ -93,7 +93,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(32);
+		assertThat(diagnostics).hasSize(31);
 
 		// Выключаем поиск IP адресов
 		// when
@@ -102,7 +102,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(20);
+		assertThat(diagnostics).hasSize(19);
 
 		// Изменяем ключевые слова исключения для поиска IP адресов
 		// when
@@ -112,7 +112,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(37);
+		assertThat(diagnostics).hasSize(36);
 
 		// Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
 		// when
