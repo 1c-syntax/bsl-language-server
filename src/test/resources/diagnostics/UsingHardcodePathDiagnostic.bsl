@@ -73,7 +73,7 @@ URIПространстваИмен = "http://www.1c.ru/EquipmentService/1.0.0.6
 	Перечисления.ОбработчикиДрайверовПодключаемогоОборудования.ОбработчикККСДисплеиПокупателя, 
 	"AddIn.VFCD220E", "ДрайверККСДисплеиПокупателя", Ложь, "1.0.1.1");
 
-КомандаЗапуска.Добавить("LoadExternalDataProcessorOrReportFromFile");
+КомандаЗапуска.Добавить("/LoadExternalDataProcessorOrReportFromFile");
 
 Разрешение = ФабрикаXDTO.Создать(
 	ФабрикаXDTO.Тип(
