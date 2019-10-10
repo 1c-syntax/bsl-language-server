@@ -1,5 +1,5 @@
-# Method size restriction
+# Method size limit
 
-## Параметры
+## Parameters
 
-* `maxMethodSize` - `Число` - максимальная длина метода в строках. По умолчанию - 200.
+- `maxMethodSize` - `Integer` - max method size in lines. By default set to 200.
