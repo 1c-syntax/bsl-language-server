@@ -1,30 +1,30 @@
 # Unreachable Code
 
-Код, расположенный после операторов "Возврат", "Перейти", "ВызватьИсключение", "Прервать", "Продолжить", никогда не будет исполнен.
+Code located after operators "Return", "GoTo", "Raise", "Break", "Continue" never will be executed.
 
-Ошибки недостижимого кода могут возникать в результате невнимательности разработчика, при редактировании "чужого кода".
+Errors of unreachable code can be caused by developer carelessness when editing another's code.
 
 ## Examples
 
 ```bsl
-Процедура Пример()
-    Возврат;
-    // Код ниже оператора Возврат никогда не будет исполнен
-    Для каждого Строка Из Строки Цикл   
-        Если Условие2 Тогда
-            Метод();
-        КонецЕсли;
-    КонецЦикла;
-КонецПроцедуры
+Procedure Example()
+    Return;
+    // Code below operator Return will never be executed
+    For each Line from Lines Do
+        If Condition2 Then
+            Method();
+        EndIf;
+    EndDo;
+EndProcedure
 ```
 
 ```bsl
-Функция Пример(Параметр1, Параметр2)
-    Если Ошибка Тогда
-        ВызватьИсключение "Возникла ошибка";
-        // После вызова исключения код будет проигнорирован
-        Параметр1 = Параметр2;        
-    КонецЕсли; 
-    Возврат Параметр1;
-КонецПроцедуры
+Function Example(Parameter1, Parameter2)
+    If Error Then
+        Raise "Error occurred";
+        // After rise exception the code bellow will be ignored
+        Parameter1 = Parameter2;        
+    EndIf; 
+    Return Parameter1;
+EndFunction
 ```
