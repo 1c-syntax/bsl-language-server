@@ -104,14 +104,17 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
     // Включение поиска ip адресов
-    enableSearchNetworkAddresses = (boolean) configuration.get("enableSearchNetworkAddresses");
+    enableSearchNetworkAddresses =
+      (boolean) configuration.getOrDefault("enableSearchNetworkAddresses", enableSearchNetworkAddresses);
 
     // Слова исключения, при поиске IP адресов
-    String searchWordsExclusionProperty = (String) configuration.get("searchWordsExclusion");
+    String searchWordsExclusionProperty =
+      (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);
     searchWordsExclusion = getLocalPattern(searchWordsExclusionProperty);
 
     // Слова поиска стандартных корневых каталогов Unix
-    String searchWordsStdPathsUnixProperty = (String) configuration.get("searchWordsStdPathsUnix");
+    String searchWordsStdPathsUnixProperty =
+      (String) configuration.getOrDefault("searchWordsStdPathsUnix", REGEX_STD_PATHS_UNIX);
     searchWordsStdPathsUnix = getLocalPattern("^\\/(" + searchWordsStdPathsUnixProperty + ")");
 
   }

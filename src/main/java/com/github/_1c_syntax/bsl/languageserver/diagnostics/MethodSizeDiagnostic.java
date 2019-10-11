@@ -52,7 +52,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    maxMethodSize = (Integer) configuration.get("maxMethodSize");
+    maxMethodSize = (int) configuration.getOrDefault("maxMethodSize", maxMethodSize);
   }
 
   @Override

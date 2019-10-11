@@ -57,7 +57,7 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
     if (configuration == null) {
       return;
     }
-    maxValuesCount = (Integer) configuration.get("maxValuesCount");
+    maxValuesCount = (int) configuration.getOrDefault("maxValuesCount", maxValuesCount);
   }
 
   @Override

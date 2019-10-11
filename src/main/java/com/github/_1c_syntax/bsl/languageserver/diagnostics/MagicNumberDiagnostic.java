@@ -70,7 +70,8 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    String authorizedNumbersString = (String) configuration.get("authorizedNumbers");
+    String authorizedNumbersString =
+      (String) configuration.getOrDefault("authorizedNumbers", DEFAULT_AUTHORIZED_NUMBERS);
     for (String s : authorizedNumbersString.split(",")) {
       this.authorizedNumbers.add(s.trim());
     }

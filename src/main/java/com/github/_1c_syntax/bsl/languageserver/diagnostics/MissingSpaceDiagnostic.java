@@ -169,34 +169,26 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return;
     }
 
-    String listLParam = (String) configuration.get("listForCheckLeft");
-    if (listLParam != null) {
-      listForCheckLeft = getRegularString(listLParam);
-      patternL = compilePattern(listForCheckLeft);
-    }
+    String listLParam =
+      (String) configuration.getOrDefault("listForCheckLeft", DEFAULT_LIST_FOR_CHECK_LEFT);
+    listForCheckLeft = getRegularString(listLParam);
+    patternL = compilePattern(listForCheckLeft);
 
-    String listRParam = (String) configuration.get("listForCheckRight");
-    if (listRParam != null) {
-      listForCheckRight = getRegularString(listRParam);
-      patternR = compilePattern(listForCheckRight);
-    }
+    String listRParam =
+      (String) configuration.getOrDefault("listForCheckRight", DEFAULT_LIST_FOR_CHECK_RIGHT);
+    listForCheckRight = getRegularString(listRParam);
+    patternR = compilePattern(listForCheckRight);
 
-    String listLRParam = (String) configuration.get("listForCheckLeftAndRight");
-    if (listLRParam != null) {
-      listForCheckLeftAndRight = getRegularString(listLRParam);
-      patternLr = compilePattern(listForCheckLeftAndRight);
-    }
+    String listLRParam =
+      (String) configuration.getOrDefault("listForCheckLeftAndRight", DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
+    listForCheckLeftAndRight = getRegularString(listLRParam);
+    patternLr = compilePattern(listForCheckLeftAndRight);
 
-    Boolean enableCheckUnaryParam = (Boolean) configuration.get("checkSpaceToRightOfUnary");
-    if (enableCheckUnaryParam != null) {
-      checkSpaceToRightOfUnary = enableCheckUnaryParam;
-    }
+    checkSpaceToRightOfUnary =
+      (boolean) configuration.getOrDefault("checkSpaceToRightOfUnary", checkSpaceToRightOfUnary);
 
-    Boolean allowMultipleCommasParam = (Boolean) configuration.get("allowMultipleCommas");
-    if (allowMultipleCommasParam != null) {
-      allowMultipleCommas = allowMultipleCommasParam;
-    }
-
+    allowMultipleCommas =
+      (boolean) configuration.getOrDefault("allowMultipleCommas", allowMultipleCommas);
   }
 
   private static List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
@@ -253,7 +245,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     }
 
     Token nextToken;
-    if (tokens.size() > t.getTokenIndex() + 1){
+    if (tokens.size() > t.getTokenIndex() + 1) {
       nextToken = tokens.get(t.getTokenIndex() + 1);
     } else {
       return false;

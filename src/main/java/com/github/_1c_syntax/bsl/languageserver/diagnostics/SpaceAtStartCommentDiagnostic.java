@@ -71,7 +71,8 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
       return;
     }
 
-    String commentsAnnotationString = (String) configuration.get("commentsAnnotation");
+    String commentsAnnotationString =
+      (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION);
     this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));
   }
 

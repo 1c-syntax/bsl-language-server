@@ -72,7 +72,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (configuration == null) {
       return;
     }
-    String searchWordsProperty = (String) configuration.get("searchWords");
+    String searchWordsProperty = (String) configuration.getOrDefault("searchWords", FIND_WORD_DEFAULT);
     searchWords = getPatternSearch(searchWordsProperty);
   }
 
