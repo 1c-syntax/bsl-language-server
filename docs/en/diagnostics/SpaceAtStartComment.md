@@ -1,11 +1,11 @@
 # Space at the beginning of the comment
 
-Между символами комментария "//" и текстом комментария должен быть пробел.  
+Between comment symbols "//" and comment text has to be a space.
 
-**Источник**: [Стандарт: Тексты модулей, пункт 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
-  
-Исключением из правила являются _**комментарии-аннотации**_, т.е. комментарии начинающиеся с определенной последовательности символов.
+**Reference**: [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
 
-## Параметры
+Exception from the rule is ***comments-annotations***, comments starting with special symbols sequence.
 
-* `commentsAnnotation` - `Строка` - Пропускать комментарии, начинающиеся с указанных подстрок. Список через запятую. Значение по-умолчанию: `//@,//(c),//©`.
+## Parameters
+
+- `commentsAnnotation` - `String` - Ignore comments starting with defined sub-strings. The list separated with comma. By default: `//@,//(c),//©`.
