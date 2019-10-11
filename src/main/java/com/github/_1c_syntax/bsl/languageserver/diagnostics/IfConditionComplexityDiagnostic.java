@@ -56,7 +56,7 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
     maxIfConditionComplexity =
-      (Integer) configuration.get("maxIfConditionComplexity");
+      (int) configuration.getOrDefault("maxIfConditionComplexity", maxIfConditionComplexity);
   }
 
   @Override

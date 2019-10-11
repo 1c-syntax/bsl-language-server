@@ -51,7 +51,7 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    maxParamsCount = (Integer) configuration.get("maxParamsCount");
+    maxParamsCount = (int) configuration.getOrDefault("maxParamsCount", maxParamsCount);
   }
 
   @Override

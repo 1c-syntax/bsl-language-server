@@ -64,7 +64,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    threshold = (float) configuration.get("threshold");
+    threshold = (float) configuration.getOrDefault("threshold", threshold);
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 

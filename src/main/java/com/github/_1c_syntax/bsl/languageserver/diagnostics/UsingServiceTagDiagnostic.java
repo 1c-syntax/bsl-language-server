@@ -58,7 +58,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    serviceTags = (String) configuration.get("serviceTags");
+    serviceTags = (String) configuration.getOrDefault("serviceTags", serviceTags);
     pattern = getPatternSearch(serviceTags);
   }
 

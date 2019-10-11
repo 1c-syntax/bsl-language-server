@@ -70,8 +70,8 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    complexityThreshold = (Integer) configuration.get("complexityThreshold");
-    checkModuleBody = (Boolean) configuration.get("checkModuleBody");
+    complexityThreshold = (int) configuration.getOrDefault("complexityThreshold", complexityThreshold);
+    checkModuleBody = (boolean) configuration.getOrDefault("checkModuleBody", checkModuleBody);
   }
 
   @Override

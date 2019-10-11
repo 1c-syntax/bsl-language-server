@@ -52,7 +52,7 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
       return;
     }
     maxOptionalParamsCount =
-      (Integer) configuration.get("maxOptionalParamsCount");
+      (int) configuration.getOrDefault("maxOptionalParamsCount", maxOptionalParamsCount);
   }
 
   @Override

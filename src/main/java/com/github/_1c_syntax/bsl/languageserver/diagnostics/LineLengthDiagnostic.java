@@ -57,7 +57,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     if (configuration == null) {
       return;
     }
-    maxLineLength = (Integer) configuration.get("maxLineLength");
+    maxLineLength = (int) configuration.getOrDefault("maxLineLength", maxLineLength);
   }
 
   @Override

@@ -61,7 +61,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    commentAsCode = Boolean.parseBoolean(configuration.get("commentAsCode").toString());
+    commentAsCode = (boolean) configuration.getOrDefault("commentAsCode", commentAsCode);
   }
 
   @Override
