@@ -210,4 +210,5 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
 | [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
 | [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да |
+| [WorkingTimeoutWithExternalResources](diagnostics/WorkingTimeoutWithExternalResources.md) | Таймауты при работе с внешними ресурсами | Да |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |

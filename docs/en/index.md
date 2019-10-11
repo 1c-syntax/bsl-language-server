@@ -210,4 +210,5 @@ Some of diagnostics are disabled by default. Use <a href="#configuration">config
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
 | [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No |
 | [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes |
+| [WorkingTimeoutWithExternalResources](diagnostics/WorkingTimeoutWithExternalResources.md) | Timeouts working with external resources | Yes |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |
