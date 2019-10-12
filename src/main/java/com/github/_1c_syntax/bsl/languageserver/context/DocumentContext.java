@@ -44,7 +44,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -75,6 +77,8 @@ public class DocumentContext {
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions);
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
+  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
+  private ServerContext context; // TODO: или установить нужное из ServerContext
   private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;
@@ -95,6 +99,11 @@ public class DocumentContext {
       }
     }
     this.fileType = fileTypeFromUri;
+  }
+
+  // TODO: переделать
+  public void setServerContext(ServerContext context) {
+    this.context = context;
   }
 
   public BSLParser.FileContext getAst() {
@@ -192,6 +201,10 @@ public class DocumentContext {
 
   public DiagnosticIgnoranceComputer.Data getDiagnosticIgnorance() {
     return diagnosticIgnoranceData.getOrCompute();
+  }
+
+  public ModuleType getModuleType() {
+    return moduleType.getOrCompute();
   }
 
   public void rebuild(String content) {
@@ -321,6 +334,14 @@ public class DocumentContext {
     getMethods().forEach(methodSymbol -> nodeToMethodsMapTemp.put(methodSymbol.getNode(), methodSymbol));
 
     return nodeToMethodsMapTemp;
+  }
+
+  private ModuleType computeModuleType() {
+    ModuleType type = ModuleType.ObjectModule; // или какой нибудь NONE
+    if (context != null) {
+      type = context.getConfiguration().getModuleType(new File(uri).toURI()); //new File(uri).toURI());
+    }
+    return type;
   }
 
   private CognitiveComplexityComputer.Data computeCognitiveComplexity() {

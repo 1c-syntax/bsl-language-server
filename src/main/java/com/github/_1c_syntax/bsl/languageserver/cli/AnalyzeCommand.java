@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
@@ -65,6 +66,7 @@ public class AnalyzeCommand implements Command {
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
     diagnosticProvider = new DiagnosticProvider(configuration);
+    diagnosticProvider.setSrcDirForServerContext(srcDir); // TODO: переделать
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
@@ -89,7 +91,9 @@ public class AnalyzeCommand implements Command {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    DocumentContext documentContext = new DocumentContext(file.toURI().toString(), textDocumentContent);
+
+    ServerContext context = diagnosticProvider.getContext();
+    DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
 
     return new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
   }

@@ -21,15 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.github._1c_syntax.mdclasses.metadata.Configuration;
+import org.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
+import org.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 
 import javax.annotation.CheckForNull;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServerContext {
   private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private Path pathToConfigurationMetadata;
+  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
 
   public Map<String, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
@@ -45,6 +53,8 @@ public class ServerContext {
     DocumentContext documentContext = documents.get(uri);
     if (documentContext == null) {
       documentContext = new DocumentContext(uri, content);
+      // TODO: или точечно, то что нужно
+      documentContext.setServerContext(this);
       documents.put(uri, documentContext);
     } else {
       documentContext.rebuild(content);
@@ -59,6 +69,28 @@ public class ServerContext {
 
   public void clear() {
     documents.clear();
+  }
+
+  public void setPathToConfigurationMetadata(Path pathToConfigurationMetadata) {
+    this.pathToConfigurationMetadata = pathToConfigurationMetadata;
+  }
+
+  public Configuration getConfiguration () {
+    return configurationMetadata.getOrCompute();
+  }
+
+  private Configuration computeConfigurationMetadata() {
+    // TODO: для примера только конфигуратор
+    ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(ConfigurationSource.DESIGNER, pathToConfigurationMetadata);
+    Configuration configuration;
+    try {
+      configuration = configurationBuilder.build();
+    }
+    catch (Exception e) {
+      configuration = null;
+      // TODO: нужно вывести в лог
+    }
+    return configuration;
   }
 
 }
