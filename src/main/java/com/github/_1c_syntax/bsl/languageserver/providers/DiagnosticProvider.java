@@ -161,11 +161,10 @@ public final class DiagnosticProvider {
     return getDiagnosticName(diagnostic.getClass());
   }
 
-  public static String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) {
-    return getDiagnosticDescription(diagnosticClass, "ru");
-  }
+  public String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) {
 
-  public static String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass, String langCode) {
+    String langCode = configuration.getDiagnosticLanguage().getLanguageCode();
+    
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(langCode + "/" + diagnosticCode + ".md");
 
@@ -180,7 +179,7 @@ public final class DiagnosticProvider {
     }
   }
 
-  public static String getDiagnosticDescription(BSLDiagnostic diagnostic) {
+  public String getDiagnosticDescription(BSLDiagnostic diagnostic) {
     return getDiagnosticDescription(diagnostic.getClass());
   }
 

@@ -98,11 +98,13 @@ class DiagnosticProviderTest {
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
 
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
     // when
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
 
     // then
-    assertThat(diagnosticClasses).allMatch(diagnosticClass -> !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
+    assertThat(diagnosticClasses)
+      .allMatch(diagnosticClass -> !"".equals(diagnosticProvider.getDiagnosticDescription(diagnosticClass)));
 
   }
 
