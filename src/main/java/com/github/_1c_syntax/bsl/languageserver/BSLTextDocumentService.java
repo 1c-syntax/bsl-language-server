@@ -91,8 +91,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     context = diagnosticProvider.getContext();
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
     codeLensProvider = new CodeLensProvider(this.configuration);
-    // прокинем рабочий каталог
-    int as = 1;
   }
 
   public void setPathRoot(String uri) {
