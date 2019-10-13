@@ -70,6 +70,11 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
     InitializeResult result = new InitializeResult(capabilities);
 
+    // прокинем uri root в ServerContext
+    if (params.getRootUri() != null) {
+      textDocumentService.setPathRoot(params.getRootUri());
+    }
+
     return CompletableFuture.completedFuture(result);
   }
 

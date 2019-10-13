@@ -68,6 +68,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 
 import javax.annotation.CheckForNull;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -75,7 +76,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
-  private final ServerContext context = new ServerContext();
+  private final ServerContext context;
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
@@ -87,8 +88,15 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public BSLTextDocumentService(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     diagnosticProvider = new DiagnosticProvider(this.configuration);
+    context = diagnosticProvider.getContext();
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
     codeLensProvider = new CodeLensProvider(this.configuration);
+    // прокинем рабочий каталог
+    int as = 1;
+  }
+
+  public void setPathRoot(String uri) {
+    context.setPathToConfigurationMetadata(new File(uri).toPath());
   }
 
   @Override
