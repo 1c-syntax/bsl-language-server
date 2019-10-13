@@ -41,7 +41,12 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 	@Test
 	void testOnlyRU() {
 		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(1);
+		assertThat(diagnostics).hasSize(4);
+		assertThat(diagnostics)
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 16, 12, 22)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 30, 13, 86)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 30, 16, 66)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 30, 24, 81)));
 	}
 
 	@Test
@@ -51,9 +56,13 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 		getDiagnosticInstance().configure(configuration);
 
 		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(2);
+		assertThat(diagnostics).hasSize(6);
 		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 13, 9, 49)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 22, 13, 75)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 16, 12, 22)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 30, 13, 86)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(15, 27, 15, 65)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 30, 16, 66)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 27, 21, 78)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 30, 24, 81)));
 	}
 }

@@ -41,7 +41,9 @@ class MultilingualStringUsingWithTemplateDiagnosticTest
   @Test
   void testOnlyRU() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 38, 19, 89)));
   }
 
   @Test
@@ -51,8 +53,9 @@ class MultilingualStringUsingWithTemplateDiagnosticTest
     getDiagnosticInstance().configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 23, 11, 74)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(18, 38, 18, 89)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 38, 19, 89)));
   }
 }
