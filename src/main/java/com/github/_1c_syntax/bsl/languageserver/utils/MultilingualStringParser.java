@@ -25,6 +25,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -44,16 +45,45 @@ public final class MultilingualStringParser {
   );
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
+  private boolean isParentTemplate;
+  private ArrayList<String> expectedLanguages;
   private Map<String, String> expandedMultilingualString = new HashMap<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
-  public static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+  public MultilingualStringParser(BSLParser.GlobalMethodCallContext globalMethodCallContext, String declaredLanguages)
+    throws IllegalArgumentException {
+
+    if(isNotMultilingualString(globalMethodCallContext)) {
+      throw new IllegalArgumentException("Method not multilingual string");
+    }
+
+    this.globalMethodCallContext = globalMethodCallContext;
+    this.isParentTemplate = hasTemplateInParents(globalMethodCallContext);
+    this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
+    expandMultilingualString();
+    checkDeclaredLanguages();
+
+  }
+
+  private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
     return !nStrMethodName.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
-  public MultilingualStringParser(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    this.globalMethodCallContext = globalMethodCallContext;
-    expandMultilingualString();
+  private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
+    ParserRuleContext parent = globalMethodCallContext.getParent();
+
+    if(parent instanceof BSLParser.FileContext || parent instanceof BSLParser.StatementContext) {
+      return false;
+    }
+
+    if(
+      parent instanceof BSLParser.GlobalMethodCallContext
+        && templateMethodName.matcher(((BSLParser.GlobalMethodCallContext) parent).methodName().getText()).find()
+    ) {
+      return true;
+    }
+
+    return hasTemplateInParents(parent);
   }
 
   private void expandMultilingualString() {
@@ -70,20 +100,21 @@ public final class MultilingualStringParser {
     return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
   }
 
-  public boolean hasAllDeclaredLanguages(String languages) {
+  private void checkDeclaredLanguages() {
     if(expandedMultilingualString.isEmpty()) {
-      return true;
+      missingLanguages = expectedLanguages;
+      return;
     }
-
-    String[] expectedLanguages = languages.replaceAll("\\s", "").split(",");
 
     for(String lang : expectedLanguages) {
       if(!expandedMultilingualString.containsKey(lang)) {
         missingLanguages.add(lang);
       }
     }
+  }
 
-    return missingLanguages.isEmpty();
+  public boolean hasNotAllDeclaredLanguages() {
+    return !missingLanguages.isEmpty();
   }
 
   public String getMissingLanguages() {
@@ -91,24 +122,7 @@ public final class MultilingualStringParser {
   }
 
   public boolean isParentTemplate() {
-    return hasTemplateInParents(globalMethodCallContext);
-  }
-
-  private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
-    ParserRuleContext parent = globalMethodCallContext.getParent();
-
-    if(parent instanceof BSLParser.FileContext || parent instanceof BSLParser.StatementContext) {
-      return false;
-    }
-
-    if(
-      parent instanceof BSLParser.GlobalMethodCallContext
-      && templateMethodName.matcher(((BSLParser.GlobalMethodCallContext) parent).methodName().getText()).find()
-    ) {
-      return true;
-    }
-
-    return hasTemplateInParents(parent);
+    return this.isParentTemplate;
   }
 
 }

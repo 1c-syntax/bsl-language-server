@@ -21,16 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringParser;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-
-import java.util.Map;
 
 @DiagnosticMetadata(
 	type = DiagnosticType.ERROR,
@@ -38,37 +32,11 @@ import java.util.Map;
 	scope = DiagnosticScope.BSL,
 	minutesToFix = 2
 )
-public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends AbstractVisitorDiagnostic {
-
-	private static final String DECLARED_LANGUAGES_DEFAULT = "ru";
-
-	@DiagnosticParameter(
-		type = String.class,
-		defaultValue = "" + DECLARED_LANGUAGES_DEFAULT,
-		description = "Заявленные языки"
-	)
-	private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
+public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends AbstractMultilingualStringDiagnostic {
 
 	@Override
-	public void configure(Map<String, Object> configuration) {
-		if (configuration == null) {
-			return;
-		}
-
-		declaredLanguages = (String) configuration.get("declaredLanguages");
-	}
-
-	@Override
-	public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-		if(MultilingualStringParser.isNotMultilingualString(ctx)) {
-			return super.visitGlobalMethodCall(ctx);
-		}
-
-		MultilingualStringParser parser = new MultilingualStringParser(ctx);
-		if(!parser.hasAllDeclaredLanguages(declaredLanguages) && !parser.isParentTemplate()) {
-			diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(parser.getMissingLanguages()));
-		}
-		return super.visitGlobalMethodCall(ctx);
+	protected boolean check() {
+		return parser.hasNotAllDeclaredLanguages() && !parser.isParentTemplate();
 	}
 
 }
