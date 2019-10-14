@@ -4,7 +4,7 @@ Software modules should not have commented out code fragments, as well as fragme
 which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.)
 and with specific developers of this code.
 
-Например, недопустимо оставлять подобные фрагменты в коде после завершения отладки или рефакторинга:
+For example, it is unacceptable to leave such fragments in the code after debugging or refactoring is completed:
 
 ```bls
 Процедура ПередУдалением(Отказ)
@@ -14,7 +14,7 @@ and with specific developers of this code.
 КонецПроцедуры
 ```
 
-также неправильно:
+also wrong:
 
 ```bls
 Процедура ПередУдалением(Отказ)
@@ -26,11 +26,11 @@ and with specific developers of this code.
 
 Правильно: после завершения отладки или рефакторинга удалить обработчик ПередУдалением из кода.
 
-[Источник](https://its.1c.ru/db/v8std/content/456/hdoc)
+[Source](https://its.1c.ru/db/v8std/content/456/hdoc)
 
-**Параметры**:
+**Parameters** :
 
-- *commentedCodeThreshold* - порог чуствительности свыше значения которого закомментированный текст считается кодом.Указывается в диапазоне от 0 до 1. Значение для каждого закомментированого участка заполняется по налицию ключивых слов в тексте.
+- *commentedCodeThreshold* - sensitivity threshold above the value of which commented text is considered a code.It is indicated in the range from 0 to 1. The value for each commented section is filled in by the key words in the text.
 
 **ВНИМАНИЕ**:
 
