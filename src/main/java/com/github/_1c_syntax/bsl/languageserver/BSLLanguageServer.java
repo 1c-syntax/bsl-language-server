@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
@@ -33,6 +34,8 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,6 +45,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   private BSLTextDocumentService textDocumentService;
   private BSLWorkspaceService workspaceService;
   private boolean shutdownWasCalled;
+  private ServerContext context;
 
   public BSLLanguageServer(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
@@ -49,8 +53,9 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     Locale currentLocale = Locale.forLanguageTag(this.configuration.getDiagnosticLanguage().getLanguageCode());
     Locale.setDefault(currentLocale);
 
+    context = new ServerContext();
     workspaceService = new BSLWorkspaceService(configuration);
-    textDocumentService = new BSLTextDocumentService(configuration);
+    textDocumentService = new BSLTextDocumentService(configuration, context);
   }
 
   public BSLLanguageServer() {
@@ -59,6 +64,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
     capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
@@ -70,9 +76,12 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
     InitializeResult result = new InitializeResult(capabilities);
 
-    // прокинем uri root в ServerContext
+    // configurationRoot для ServerContext
     if (params.getRootUri() != null) {
-      textDocumentService.setPathRoot(params.getRootUri());
+      Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
+        configuration,
+        new File(params.getRootUri()).getAbsoluteFile().toPath());
+      context.setPathToConfigurationMetadata(configurationRoot);
     }
 
     return CompletableFuture.completedFuture(result);

@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -81,6 +82,9 @@ class LanguageServerConfigurationTest {
     Either<Boolean, Map<String, Object>> methodSize = diagnostics.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
     assertThat(methodSize.getLeft()).isEqualTo(false);
+
+    Path configurationRoot = configuration.getConfigurationRoot();
+    assertThat(configurationRoot).isNotEqualTo(null);
 
   }
 }

@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,6 +61,7 @@ public final class LanguageServerConfiguration {
   @Nullable
   private File traceLog;
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
+  private Path configurationRoot;
 
   private LanguageServerConfiguration() {
     this(
@@ -67,7 +69,8 @@ public final class LanguageServerConfiguration {
       DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
       DEFAULT_COMPUTE_DIAGNOSTICS,
       null,
-      new HashMap<>()
+      new HashMap<>(),
+      null
     );
   }
 
@@ -103,13 +106,15 @@ public final class LanguageServerConfiguration {
       ComputeDiagnosticsTrigger computeDiagnostics = getComputeDiagnostics(node);
       File traceLog = getTraceLog(node);
       Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
+      Path configurationRoot = getConfigurationRoot(node);
 
       return new LanguageServerConfiguration(
         diagnosticLanguage,
         showCognitiveComplexityCodeLens,
         computeDiagnostics,
         traceLog,
-        diagnosticsMap
+        diagnosticsMap,
+        configurationRoot
       );
     }
 
@@ -190,5 +195,34 @@ public final class LanguageServerConfiguration {
       }
       return traceLog;
     }
+
+    private static Path getConfigurationRoot(JsonNode node) {
+      Path configurationRoot = null;
+      if (node.get("configurationRoot") != null) {
+        String configurationRootValue = node.get("configurationRoot").asText();
+        configurationRoot = new File(configurationRootValue).getAbsoluteFile().toPath();
+      }
+      return configurationRoot;
+    }
   }
+
+  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+    Path rootPath = null;
+
+    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    if (pathFromConfiguration == null) {
+      rootPath = srcDir;
+    } else {
+      // TODO: проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
+      rootPath = pathFromConfiguration;
+    }
+
+    if (rootPath != null){
+      // TODO: ищем рекурсивно вниз по дереву каталогов, где лежим Configuration.xml(mdo)
+      // если не нашли rootPath = null
+    }
+
+    return rootPath;
+  }
+
 }

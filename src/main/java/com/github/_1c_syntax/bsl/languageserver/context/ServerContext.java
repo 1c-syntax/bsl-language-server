@@ -39,6 +39,14 @@ public class ServerContext {
   private Path pathToConfigurationMetadata;
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
 
+  public ServerContext () {
+    this(null);
+  }
+
+  public ServerContext(Path pathToConfigurationMetadata) {
+    this.pathToConfigurationMetadata = pathToConfigurationMetadata;
+  }
+
   public Map<String, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
   }
@@ -80,6 +88,9 @@ public class ServerContext {
   }
 
   private Configuration computeConfigurationMetadata() {
+    if (pathToConfigurationMetadata == null) {
+      return null;
+    }
     // TODO: для примера только конфигуратор
     ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(ConfigurationSource.DESIGNER, pathToConfigurationMetadata);
     Configuration configuration;

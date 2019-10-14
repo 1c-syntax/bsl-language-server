@@ -33,6 +33,8 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -40,6 +42,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -51,7 +59,6 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -88,13 +95,13 @@ public final class DiagnosticProvider {
   private final Map<String, Set<Diagnostic>> computedDiagnostics;
 
   public DiagnosticProvider() {
-    this(LanguageServerConfiguration.create());
+    this(LanguageServerConfiguration.create(), new ServerContext());
   }
 
-  public DiagnosticProvider(LanguageServerConfiguration configuration) {
+  public DiagnosticProvider(LanguageServerConfiguration configuration, ServerContext context) {
     this.configuration = configuration;
     computedDiagnostics = new HashMap<>();
-    context = new ServerContext();
+    this.context = context;
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
@@ -124,6 +131,10 @@ public final class DiagnosticProvider {
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
 
     return diagnostics;
+  }
+
+  public ServerContext getContext() {
+    return context;
   }
 
   public Set<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
@@ -433,11 +444,4 @@ public final class DiagnosticProvider {
       || enabledDirectly;
   }
 
-  public void setSrcDirForServerContext(Path srvDir) {
-    context.setPathToConfigurationMetadata(srvDir);
-  }
-
-  public ServerContext getContext() {
-    return context;
-  }
 }

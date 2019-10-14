@@ -48,6 +48,7 @@ public class AnalyzeCommand implements Command {
 
   private CommandLine cmd;
   private DiagnosticProvider diagnosticProvider;
+  private ServerContext context;
 
   public AnalyzeCommand(CommandLine cmd) {
     this.cmd = cmd;
@@ -65,8 +66,10 @@ public class AnalyzeCommand implements Command {
     File configurationFile = new File(configurationOption);
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-    diagnosticProvider = new DiagnosticProvider(configuration);
-    diagnosticProvider.setSrcDirForServerContext(srcDir); // TODO: переделать
+
+    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+    context = new ServerContext(configurationPath);
+    diagnosticProvider = new DiagnosticProvider(configuration, context);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
@@ -92,11 +95,8 @@ public class AnalyzeCommand implements Command {
       throw new RuntimeException(e);
     }
 
-    ServerContext context = diagnosticProvider.getContext();
     DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
-
     return new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
   }
-
 
 }

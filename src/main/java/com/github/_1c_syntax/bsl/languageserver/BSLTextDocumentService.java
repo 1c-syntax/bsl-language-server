@@ -85,16 +85,12 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @CheckForNull
   private LanguageClient client;
 
-  public BSLTextDocumentService(LanguageServerConfiguration configuration) {
+  public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
     this.configuration = configuration;
-    diagnosticProvider = new DiagnosticProvider(this.configuration);
-    context = diagnosticProvider.getContext();
+    this.context = context;
+    diagnosticProvider = new DiagnosticProvider(this.configuration, context);
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
     codeLensProvider = new CodeLensProvider(this.configuration);
-  }
-
-  public void setPathRoot(String uri) {
-    context.setPathToConfigurationMetadata(new File(uri).toPath());
   }
 
   @Override
