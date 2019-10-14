@@ -122,7 +122,11 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
 	}
 
 	private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
-		List<BSLParser.ModifierContext> listModifer = localStatement.assignment().complexIdentifier().modifier();
+		BSLParser.ComplexIdentifierContext complexIdentifier = localStatement.assignment().complexIdentifier();
+		if (complexIdentifier.isEmpty()) {
+			return false;
+		}
+		List<BSLParser.ModifierContext> listModifer = complexIdentifier.modifier();
 		if (listModifer.isEmpty()) {
 			return false;
 		}
