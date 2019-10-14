@@ -16,7 +16,7 @@ Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/met
 
 ## Diagnostic restrictions
 
-На данный момент диагностируется **только использование методов глобального контекста**.
+Currently, **only the use of global context methods** is diagnosed.
 
 Method list:
 
