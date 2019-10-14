@@ -15,6 +15,7 @@
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>
+* <a href="#format">Запуск в режиме форматтера</a>
 * <a href="#configuration">Конфигурационный файл</a>
 * <a href="#reporters">Репортеры</a>
 * <a href="#diagnostics">Диагностики</a>
@@ -31,6 +32,7 @@
 * Диагностики
 * "Быстрые исправления" (quick fixes) для ряда диагностик
 * Запуск движка диагностик из командной строки
+* Запуск форматирования файлов в каталоге из командной строки
 
 <a id="cli"/>
 
@@ -41,9 +43,10 @@
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -a,--analyze               Run analysis and get diagnostic info
  -c,--configuration <arg>   Path to language server configuration file
+ -f,--format                Format files in source directory
  -h,--help                  Show help.
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
@@ -73,6 +76,18 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 
 ```sh
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+```
+
+<a id="format"/>
+
+## Запуск в режиме форматтера
+
+Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`). Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+
+Пример строки запуска форматирования:
+
+```sh
+java -jar bsl-language-server.jar --format --srcDir ./src/cf
 ```
 
 <a id="configuration"/>
@@ -137,12 +152,17 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 
 Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="#configuration">конфигурационный файл</a>.
 
+Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида `// BSLLS:КлючДиагностики-выкл`. Более подробно данная функциональность описана в [Экранирование участков кода](features/DiagnosticIgnorance.md).
+
 ### Список реализованных диагностик
 
 | Ключ | Название | Включена по умолчанию |
 | --- | --- | :-: |
+| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да |
 | [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
 | [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да |
+| [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да |
+| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да |
 | [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
 | [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
 | [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
@@ -158,6 +178,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [MagicNumber](diagnostics/MagicNumber.md) | Использование магического числа | Да |
 | [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да |
 | [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да |
+| [MissingSpace](diagnostics/MissingSpace.md) | Пропущен пробел | Да |
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да |
 | [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да |
@@ -170,15 +191,23 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [ParseError](diagnostics/ParseError.md) | Ошибка разбора исходного кода | Да |
 | [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да |
 | [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да |
+| [SelfInsertion](diagnostics/SelfInsertion.md) | Вставка коллекции в саму себя | Да |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да |
 | [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет |
 | [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да |
 | [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да |
+| [UnreachableCode](diagnostics/UnreachableCode.md) | Недостижимый код | Да |
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
-| [UsingGoto](diagnostics/UsingGoto.md) | Using "goto" | Да |
+| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да |
+| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
+| [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да |
+| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
+| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да |
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
+| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |

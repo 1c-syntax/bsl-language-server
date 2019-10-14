@@ -11,6 +11,7 @@
 ```json
 {
     "date": "2019-01-21 01:29:27",
+    "sourceDir": "file:///tmp/src",
     "fileinfos": [
         {
             "diagnostics": [

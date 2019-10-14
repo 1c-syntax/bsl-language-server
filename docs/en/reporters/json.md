@@ -11,6 +11,7 @@ Output the analize result to file  `bsl-json.json` in the current workspace dire
 ```json
 {
     "date": "2019-01-21 01:29:27",
+    "sourceDir": "file:///tmp/src",
     "fileinfos": [
         {
             "diagnostics": [

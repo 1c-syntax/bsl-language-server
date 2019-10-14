@@ -29,9 +29,12 @@
 - Файл описания диагностики на русском языке.   Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
 - Файл ресурса диагностики на английском языке. Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
 
+**Примечание:**  
+Для создания нужных файлов в нужных местах, необходимо выполнить команду `gradlew newDiagnostic --key="KeyDiagnostic"`, вместо `KeyDiagnostic` необходимо указть ключ своей диагностики. Подробная информация в справке `gradlew -q help --task newDiagnostic`.
+
 ## Класс реализации диагностики
 
-Диагностика реализуется посредством добавления java-класса в пакет `org.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/main/java`.  
+Диагностика реализуется посредством добавления java-класса в пакет `com.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/main/java`.  
 
 В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(при использовании ide список импорта обновляется автоматически)_. Необходимо следить за тем, чтобы импортировались **только** то, что необходимо для реализации, все неиспользуемое должно быть **удалено** _(если [настройки](EnvironmentSetting.md) выполнены верно, то ide сделает все автоматически)_.
 
@@ -162,7 +165,7 @@ _**<В разработке>**_
 
 При написании тестов используется фреймворк [JUnit5](https://junit.org/junit5/), для утверждений используется библиотека [AssertJ](https://joel-costigliola.github.io/assertj/), предоставляющая [текучий/fluent-интерфейс](https://ru.wikipedia.org/wiki/Fluent_interface) "ожиданий", подобно привычной многим библиотеке [asserts](https://github.com/oscript-library/asserts) для [OneScript](http://oscript.io/).
 
-Теста реализуется посредством добавления java-класса в пакет `org.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/test/java`.  
+Теста реализуется посредством добавления java-класса в пакет `com.github._1c_syntax.bsl.languageserver.diagnostics` в каталоге `src/test/java`.  
 
 В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(аналогично классу реализации диагностики)_.  
 В файле необходимо создать одноименный файлу класс, унаследованый от класса `AbstractDiagnosticTest` для созданного класса диагностики.
@@ -170,10 +173,10 @@ _**<В разработке>**_
 Пример тестового класса
 
 ```java
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -258,7 +261,7 @@ _**<В разработке>**_
 
 ## Ресурсы диагностики
 
-BSL LS поддерживает два языка в диагностиках: русский и английский, поэтому в состав диагностики входит два файла ресурсов, располагаемых в каталоге `src/main/resources` в пакете `org.github._1c_syntax.bsl.languageserver.diagnostics`, по одному для каждого языка. Структура файлов одинакова: это текстовый файл в UTF-8 кодировки, каждая строка которого содержит пару "Ключ=Значение".
+BSL LS поддерживает два языка в диагностиках: русский и английский, поэтому в состав диагностики входит два файла ресурсов, располагаемых в каталоге `src/main/resources` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics`, по одному для каждого языка. Структура файлов одинакова: это текстовый файл в UTF-8 кодировки, каждая строка которого содержит пару "Ключ=Значение".
 
 Обязательные параметры, используемые при добавлении замечания по диагностике методам `diagnosticStorage.addDiagnostic`
 
