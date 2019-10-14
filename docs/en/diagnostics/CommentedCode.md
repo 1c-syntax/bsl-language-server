@@ -7,24 +7,24 @@ and with specific developers of this code.
 For example, it is unacceptable to leave such fragments in the code after debugging or refactoring is completed:
 
 ```bls
-Процедура ПередУдалением(Отказ)
-//    Если Истина Тогда
-//        Сообщение("Для отладки");
-//    КонецЕсли;
-КонецПроцедуры
+Procedure BeforeDelete(Failure)
+	//If True Then
+	//	Message("For debugging");
+	//EndIf;
+EndProcedure
 ```
 
 also wrong:
 
 ```bls
-Процедура ПередУдалением(Отказ)
-    Если Истина Тогда
-        // Иванов: доделать 
-    КонецЕсли;
-КонецПроцедуры
+Procedure BeforeDelete(Failure)
+	If True Then
+		// Ivanov: need fix
+	EndIf;
+EndProcedure
 ```
 
-Правильно: после завершения отладки или рефакторинга удалить обработчик ПередУдалением из кода.
+Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.
 
 [Source](https://its.1c.ru/db/v8std/content/456/hdoc)
 
@@ -32,6 +32,6 @@ also wrong:
 
 - *commentedCodeThreshold* - sensitivity threshold above the value of which commented text is considered a code.It is indicated in the range from 0 to 1. The value for each commented section is filled in by the key words in the text.
 
-**ВНИМАНИЕ**:
+**ATTENTION** : 
 
-Блок комментарием считается кодом, если хотя бы одна строка внутри блока определяется как код.
+A code block is considered commented , if at least one line inside the block is defined as code.
