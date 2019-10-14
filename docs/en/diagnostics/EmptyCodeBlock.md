@@ -1,11 +1,11 @@
 # Empty code block
 
-Пустые блоки являются признаком возможной ошибки:
+Empty blocks are a sign of a possible error:
 
-- Забыли реализовать
-- Удалили содержимое
+- Forgot to implement
+- Deleted content
 
-Пустые блоки кода должны быть наполнены либо удалены.
+Empty blocks of code must be filled or removed.
 
 ## Parameters
 
