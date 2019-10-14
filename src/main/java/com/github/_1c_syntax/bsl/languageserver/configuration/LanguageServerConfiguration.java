@@ -61,6 +61,7 @@ public final class LanguageServerConfiguration {
   @Nullable
   private File traceLog;
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
+  @Nullable
   private Path configurationRoot;
 
   private LanguageServerConfiguration() {
