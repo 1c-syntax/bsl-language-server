@@ -2,7 +2,7 @@
 
 It is unacceptable to catch any exceptions without a trace for the system administrator
 
-*Неправильно*
+*Wrong*
 
 ```
 Попытка 
@@ -13,9 +13,9 @@ It is unacceptable to catch any exceptions without a trace for the system admini
 
 ```
 
-Как правило, подобная конструкция скрывает реальную проблему, которую впоследствии невозможно диагностировать.
+As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.
 
-*Правильно*
+*Right*
 
 ```
 Попытка 
