@@ -1,6 +1,6 @@
 # Missing code in Raise block in "Try ... Raise ... EndTry"
 
-Недопустимо перехватывать любые исключения, бесследно для системного администратора
+It is unacceptable to catch any exceptions without a trace for the system administrator
 
 *Неправильно*
 
@@ -13,7 +13,7 @@
 
 ```
 
-Как правило, подобная конструкция скрывает реальную проблему, которую впоследствии невозможно диагностировать. 
+Как правило, подобная конструкция скрывает реальную проблему, которую впоследствии невозможно диагностировать.
 
 *Правильно*
 
@@ -31,8 +31,8 @@
 КонецПопытки;
 ```
 
-Источник: [Перехват исключений в коде](https://its.1c.ru/db/v8std#content:499:hdoc)
+Source: [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
 
-## Параметры
+## Parameters
 
-* `commentAsCode` - `Булево` - Считать комментарий в исключении кодом
+- `commentAsCode` - `Boolean` - Consider the comment in the exception as code
