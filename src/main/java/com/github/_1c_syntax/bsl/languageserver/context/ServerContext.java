@@ -28,7 +28,6 @@ import org.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
 import org.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 
 import javax.annotation.CheckForNull;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
