@@ -57,7 +57,7 @@ dependencies {
 
     compile("com.github.1c-syntax", "bsl-parser", "0.10.0")
 
-    compile("com.github.1c-syntax:mdclasses:6374a16b339dd9605d73b05ad8edbf0f88a2822c")
+    compile("com.github.1c-syntax:mdclasses:0069ada47a2d428c3b0b725fa178725862223617")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
