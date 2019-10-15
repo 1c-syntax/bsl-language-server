@@ -110,7 +110,7 @@ Configuration file is a file in JSON format. The file can contain the following 
 You may use this JSON-schema to simplify file editing:
 
 ```
-https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json
+https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json
 ```
 
 Configuration file example, setting:
@@ -121,7 +121,7 @@ Configuration file example, setting:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
+  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
   "diagnosticLanguage": "en",
   "diagnostics": {
     "LineLength": {

@@ -109,7 +109,7 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 Вы можете использовать следующую JSON-схему для упрощения редактирования файла:
 
 ```
-https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json
+https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json
 ```
 
 Ниже приведен пример настройки, устанавливающий:
@@ -119,7 +119,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
+  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
   "diagnosticLanguage": "ru",
   "diagnostics": {
     "LineLength": {
