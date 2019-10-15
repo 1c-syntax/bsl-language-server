@@ -96,8 +96,7 @@ public class ServerContext {
       configuration = configurationBuilder.build();
     }
     catch (Exception e) {
-      configuration = null;
-      // TODO: нужно вывести в лог
+      configuration = new Configuration(ConfigurationSource.DESIGNER);
     }
     return configuration;
   }

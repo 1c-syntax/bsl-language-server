@@ -62,4 +62,16 @@ public class ServerContextTest {
 
   }
 
+  @Test
+  void testErrorConfigurationMetadata() {
+    Path path = Paths.get(PATH_TO_METADATA, "test").toAbsolutePath();
+
+    ServerContext serverContext = new ServerContext();
+    serverContext.setPathToConfigurationMetadata(path);
+    Configuration configurationMetadata = serverContext.getConfiguration();
+
+    assertThat(configurationMetadata).isNotNull();
+    assertThat(configurationMetadata.getModulesByType()).hasSize(0);
+  }
+
 }
