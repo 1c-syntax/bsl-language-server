@@ -66,6 +66,7 @@ import static org.antlr.v4.runtime.Token.EOF;
 public class DocumentContext {
 
   private String content;
+  private ServerContext context;
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
   private Lazy<CommonTokenStream> tokenStream = new Lazy<>(this::computeTokenStream);
   private Lazy<List<Token>> tokens = new Lazy<>(this::computeTokens);
@@ -78,7 +79,6 @@ public class DocumentContext {
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
-  private ServerContext context; // TODO: или установить нужное из ServerContext
   private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;

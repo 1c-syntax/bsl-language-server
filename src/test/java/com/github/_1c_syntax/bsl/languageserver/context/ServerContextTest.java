@@ -22,24 +22,43 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import org.github._1c_syntax.mdclasses.metadata.Configuration;
+import org.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
+import org.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ServerContextTest {
 
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+
   @Test
   void testConfigurationMetadata() {
 
-    Path path = new File("src/test/resources/metadata").toPath();
+    Path path = Paths.get(PATH_TO_METADATA).toAbsolutePath();
     ServerContext serverContext = new ServerContext();
     serverContext.setPathToConfigurationMetadata(path);
     Configuration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotEqualTo(null);
+
+    assertThat(configurationMetadata.getScriptVariant()).isEqualTo(ScriptVariant.RUSSIAN);
+
+    assertThat(configurationMetadata.getConfigurationSource()).isEqualTo(ConfigurationSource.DESIGNER);
+
+    assertThat(configurationMetadata.getCompatibilityMode().getMajor()).isEqualTo(8);
+    assertThat(configurationMetadata.getCompatibilityMode().getMinor()).isEqualTo(3);
+    assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
+
+    File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    ModuleType type = configurationMetadata.getModuleType(file.toURI());
+    assertThat(type).isEqualTo(ModuleType.CommonModule);
 
   }
 
