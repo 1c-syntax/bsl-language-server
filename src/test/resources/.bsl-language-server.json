@@ -3,7 +3,7 @@
   "showCognitiveComplexityCodeLens": true,
   "computeDiagnostics": "onType",
   "traceLog": "build/.trace.log",
-  "configurationRoot": "./src/test/resources/metadata",
+  "configurationRoot": "src/test/resources/metadata",
   "diagnostics": {
     "LineLength": {
       "maxLineLength": 140

@@ -38,13 +38,17 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
@@ -210,21 +214,43 @@ public final class LanguageServerConfiguration {
 
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
     Path rootPath = null;
-
     Path pathFromConfiguration = configuration.getConfigurationRoot();
     if (pathFromConfiguration == null) {
       rootPath = srcDir;
     } else {
-      // TODO: проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
-      rootPath = pathFromConfiguration;
+      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
+      if (pathFromConfiguration.startsWith(srcDir.toAbsolutePath())) {
+        rootPath = pathFromConfiguration;
+      }
     }
-
     if (rootPath != null){
-      // TODO: ищем рекурсивно вниз по дереву каталогов, где лежим Configuration.xml(mdo)
-      // если не нашли rootPath = null
+      File fileConfiguration = getConfigurationFile(rootPath);
+      if (fileConfiguration != null) {
+        rootPath = Paths.get(fileConfiguration.getParent());
+      }
     }
-
     return rootPath;
+  }
+
+
+  public static File getConfigurationFile(Path rootPath) {
+    File configurationFile = null;
+    List<Path> listPath = new ArrayList<>();
+    try {
+      listPath =
+        Files
+          .find(
+            rootPath,
+            50,
+            (p, bfa) -> bfa.isRegularFile() && p.getFileName().toString().matches("Configuration.(xml|mdo)$"))
+          .collect(Collectors.toList());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    if (!listPath.isEmpty()) {
+      configurationFile = listPath.get(0).toFile();
+    }
+    return configurationFile;
   }
 
 }
