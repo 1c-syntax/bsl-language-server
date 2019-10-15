@@ -133,10 +133,6 @@ public final class DiagnosticProvider {
     return diagnostics;
   }
 
-  public ServerContext getContext() {
-    return context;
-  }
-
   public Set<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
     return computedDiagnostics.getOrDefault(documentContext.getUri(), new LinkedHashSet<>());
   }

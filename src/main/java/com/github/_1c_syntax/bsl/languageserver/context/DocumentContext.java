@@ -84,8 +84,13 @@ public class DocumentContext {
   private final FileType fileType;
 
   public DocumentContext(String uri, String content) {
+    this(uri, content, new ServerContext());
+  }
+
+  public DocumentContext(String uri, String content, ServerContext context) {
     this.uri = uri;
     this.content = content;
+    this.context = context;
 
     FileType fileTypeFromUri;
 
@@ -99,11 +104,6 @@ public class DocumentContext {
       }
     }
     this.fileType = fileTypeFromUri;
-  }
-
-  // TODO: переделать
-  public void setServerContext(ServerContext context) {
-    this.context = context;
   }
 
   public BSLParser.FileContext getAst() {
@@ -337,9 +337,9 @@ public class DocumentContext {
   }
 
   private ModuleType computeModuleType() {
-    ModuleType type = ModuleType.ObjectModule; // или какой нибудь NONE
-    if (context != null) {
-      type = context.getConfiguration().getModuleType(new File(uri).toURI()); //new File(uri).toURI());
+    ModuleType type = context.getConfiguration().getModuleType(new File(uri).toURI());
+    if (type == null) {
+      type = ModuleType.ObjectModule;
     }
     return type;
   }

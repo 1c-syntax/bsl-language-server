@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -201,7 +202,7 @@ public final class LanguageServerConfiguration {
       Path configurationRoot = null;
       if (node.get("configurationRoot") != null) {
         String configurationRootValue = node.get("configurationRoot").asText();
-        configurationRoot = new File(configurationRootValue).getAbsoluteFile().toPath();
+        configurationRoot = Paths.get(configurationRootValue).toAbsolutePath();
       }
       return configurationRoot;
     }

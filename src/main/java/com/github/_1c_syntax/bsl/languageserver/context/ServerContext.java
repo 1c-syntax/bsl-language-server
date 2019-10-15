@@ -60,9 +60,7 @@ public class ServerContext {
 
     DocumentContext documentContext = documents.get(uri);
     if (documentContext == null) {
-      documentContext = new DocumentContext(uri, content);
-      // TODO: или точечно, то что нужно
-      documentContext.setServerContext(this);
+      documentContext = new DocumentContext(uri, content, this);
       documents.put(uri, documentContext);
     } else {
       documentContext.rebuild(content);
@@ -77,6 +75,7 @@ public class ServerContext {
 
   public void clear() {
     documents.clear();
+    configurationMetadata.clear();
   }
 
   public void setPathToConfigurationMetadata(Path pathToConfigurationMetadata) {
@@ -103,5 +102,7 @@ public class ServerContext {
     }
     return configuration;
   }
+
+
 
 }
