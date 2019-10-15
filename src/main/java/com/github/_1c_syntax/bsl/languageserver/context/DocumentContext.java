@@ -83,6 +83,7 @@ public class DocumentContext {
   private final String uri;
   private final FileType fileType;
 
+  @Deprecated
   public DocumentContext(String uri, String content) {
     this(uri, content, new ServerContext());
   }
