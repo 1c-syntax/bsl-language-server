@@ -87,7 +87,7 @@ public class ServerContext {
 
   private Configuration computeConfigurationMetadata() {
     if (pathToConfigurationMetadata == null) {
-      return null;
+      return new Configuration(ConfigurationSource.DESIGNER);
     }
     // TODO: для примера только конфигуратор
     ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(ConfigurationSource.DESIGNER, pathToConfigurationMetadata);
