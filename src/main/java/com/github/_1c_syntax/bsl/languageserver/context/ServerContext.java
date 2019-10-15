@@ -28,6 +28,7 @@ import org.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
 import org.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 
 import javax.annotation.CheckForNull;
+import javax.xml.bind.JAXBException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -89,15 +90,11 @@ public class ServerContext {
     if (pathToConfigurationMetadata == null) {
       return new Configuration(ConfigurationSource.DESIGNER);
     }
-    // TODO: для примера только конфигуратор
-    ConfigurationBuilder configurationBuilder = new ConfigurationBuilder(ConfigurationSource.DESIGNER, pathToConfigurationMetadata);
-    Configuration configuration;
-    try {
-      configuration = configurationBuilder.build();
-    }
-    catch (Exception e) {
-      configuration = new Configuration(ConfigurationSource.DESIGNER);
-    }
+
+    ConfigurationBuilder configurationBuilder =
+      new ConfigurationBuilder(ConfigurationSource.DESIGNER, pathToConfigurationMetadata);
+    Configuration configuration = configurationBuilder.build();
+
     return configuration;
   }
 

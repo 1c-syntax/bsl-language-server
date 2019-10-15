@@ -42,13 +42,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @AllArgsConstructor
@@ -59,6 +62,8 @@ public final class LanguageServerConfiguration {
   private static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
   private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
+
+  private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
 
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
@@ -236,16 +241,18 @@ public final class LanguageServerConfiguration {
   public static File getConfigurationFile(Path rootPath) {
     File configurationFile = null;
     List<Path> listPath = new ArrayList<>();
+    Stream<Path> stream = null;
     try {
-      listPath =
-        Files
-          .find(
-            rootPath,
-            50,
-            (p, bfa) -> bfa.isRegularFile() && p.getFileName().toString().matches("Configuration.(xml|mdo)$"))
-          .collect(Collectors.toList());
+      stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
+        basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find());
+      listPath = stream.collect(Collectors.toList());
     } catch (IOException e) {
-      e.printStackTrace();
+      LOGGER.error(Arrays.toString(e.getStackTrace()));
+    }
+    finally {
+      if (stream != null) {
+        stream.close();
+      }
     }
     if (!listPath.isEmpty()) {
       configurationFile = listPath.get(0).toFile();
