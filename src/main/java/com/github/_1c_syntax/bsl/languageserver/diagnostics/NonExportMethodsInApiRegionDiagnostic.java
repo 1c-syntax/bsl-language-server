@@ -69,7 +69,7 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
       .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
       .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
       .findFirst()
-      .ifPresent(regionSymbol -> {
+      .ifPresent((RegionSymbol regionSymbol) -> {
         String message = getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
         diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
       });
