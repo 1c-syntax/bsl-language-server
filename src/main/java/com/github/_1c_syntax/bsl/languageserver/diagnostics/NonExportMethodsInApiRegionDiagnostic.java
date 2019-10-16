@@ -18,54 +18,50 @@ import java.util.regex.Pattern;
 )
 public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagnostic {
 
-	private static final Pattern REGION_NAME = Pattern.compile(
-		"^(?:ПрограммныйИнтерфейс|СлужебныйПрограмныйИнтерфейс|Public|Internal)$",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-	);
+  private static final Pattern REGION_NAME = Pattern.compile(
+    "^(?:ПрограммныйИнтерфейс|СлужебныйПрограмныйИнтерфейс|Public|Internal)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
-	@Override
-	public ParseTree visitSub(BSLParser.SubContext ctx) {
+  @Override
+  public ParseTree visitSub(BSLParser.SubContext ctx) {
 
-		Optional<MethodSymbol> methodSymbolOption = documentContext.getMethodSymbol(ctx);
+    Optional<MethodSymbol> methodSymbolOption = documentContext.getMethodSymbol(ctx);
 
-		if(!methodSymbolOption.isPresent()) {
-			return ctx;
-		}
+    if (!methodSymbolOption.isPresent()) {
+      return ctx;
+    }
 
-		MethodSymbol methodSymbol = methodSymbolOption.get();
+    MethodSymbol methodSymbol = methodSymbolOption.get();
 
-		if(methodSymbol.isExport()) {
-			return ctx;
-		}
+    if (methodSymbol.isExport()) {
+      return ctx;
+    }
 
-		RegionSymbol methodRegion = methodSymbol.getRegion();
-		if(methodRegion == null) {
-			return ctx;
-		}
+    RegionSymbol methodRegion = methodSymbol.getRegion();
+    if (methodRegion == null) {
+      return ctx;
+    }
 
-		RegionSymbol topLevelRegion = null;
-		for (RegionSymbol reg : documentContext.getRegions()) {
+    documentContext.getRegions()
+      .stream()
+      .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
+      .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
+      .findFirst()
+      .ifPresent(regionSymbol -> {
+        String message = getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
+        diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
+      });
 
-			if(findRecursivelyRegion(reg, methodRegion)){
-				topLevelRegion = methodRegion;
+    return ctx;
+  }
 
-				String name = topLevelRegion.getName();
-				if(REGION_NAME.matcher(name).matches())
-				{
-					diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
-				}
-			}
-		}
+  private boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
+    if (parent.equals(toFind)) {
+      return true;
+    }
 
-		return ctx;
-	}
-
-	private boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
-		if(parent.equals(toFind)){
-			return true;
-		}
-
-		return parent.getChildren().stream().anyMatch(regionSymbol -> findRecursivelyRegion(regionSymbol, (toFind)));
-	}
+    return parent.getChildren().stream().anyMatch(regionSymbol -> findRecursivelyRegion(regionSymbol, (toFind)));
+  }
 
 }
