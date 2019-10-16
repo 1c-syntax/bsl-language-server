@@ -77,7 +77,7 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
     return ctx;
   }
 
-  private boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
+  private static boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
     if (parent.equals(toFind)) {
       return true;
     }
