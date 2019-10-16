@@ -43,7 +43,7 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 		List<Diagnostic> diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(9);
+		assertThat(diagnostics).hasSize(12);
 
 		assertThat(diagnostics)
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 4, 8, 49)))
@@ -55,8 +55,10 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(33, 4, 33, 31)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(44, 4, 44, 82)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(45, 4, 45, 79)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(48, 4, 48, 22)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 4, 49, 21)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(50, 4, 50, 21)))
 		;
-
 
 	}
 
@@ -73,7 +75,7 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 		diagnostics = getDiagnostics();
 
 		// then
-		assertThat(diagnostics).hasSize(9);
+		assertThat(diagnostics).hasSize(12);
 
 		// с изменением параметра searchWords
 		// when
