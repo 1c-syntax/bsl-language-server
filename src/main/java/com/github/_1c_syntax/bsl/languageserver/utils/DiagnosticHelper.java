@@ -21,10 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 
 public final class DiagnosticHelper {
 
@@ -46,7 +47,7 @@ public final class DiagnosticHelper {
 
       if (leftNodeType != rightNodeType
         || (leftNodeType == BSLParser.STRING
-          && !leftNode.toString().equals(rightNode.toString()))
+        && !leftNode.toString().equals(rightNode.toString()))
         || (!leftNode.toString().equalsIgnoreCase(rightNode.toString()))) {
         return false;
       }
@@ -70,4 +71,18 @@ public final class DiagnosticHelper {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
   }
 
+  public static boolean findErrorNode(ParseTree tnc) {
+
+    if (tnc instanceof TerminalNode
+      && tnc.getClass() == ErrorNodeImpl.class) {
+      return true;
+    }
+
+    for (int i = 0; i < tnc.getChildCount(); i++) {
+      if (findErrorNode(tnc.getChild(i))) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
