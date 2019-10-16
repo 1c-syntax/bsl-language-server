@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern REGION_NAME = Pattern.compile(
-    "^(?:Программный�?нтерфейс|СлужебныйПрограмный�?нтерфейс|Public|Internal)$",
+    "^(?:ПрограммныйИнтерфейс|СлужебныйПрограмныйИнтерфейс|Public|Internal)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
