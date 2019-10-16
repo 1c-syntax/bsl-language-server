@@ -40,6 +40,8 @@ public class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosti
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    assertThat(diagnostics).hasSize(3);
+
     // then
     assertThat(diagnostics)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 11, 3, 54)))
