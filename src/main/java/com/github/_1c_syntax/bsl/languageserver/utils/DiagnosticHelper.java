@@ -74,7 +74,7 @@ public final class DiagnosticHelper {
   public static boolean findErrorNode(ParseTree tnc) {
 
     if (tnc instanceof TerminalNode
-      && tnc.getClass() == ErrorNodeImpl.class) {
+      && tnc.getClass().equals(ErrorNodeImpl.class)) {
       return true;
     }
 
