@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import org.github._1c_syntax.mdclasses.metadata.Configuration;
-import org.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
-import org.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import org.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
+import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
+import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -44,7 +44,7 @@ public class ServerContextTest {
     Path path = Paths.get(PATH_TO_METADATA).toAbsolutePath();
     ServerContext serverContext = new ServerContext();
     serverContext.setPathToConfigurationMetadata(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotEqualTo(null);
 
@@ -68,7 +68,7 @@ public class ServerContextTest {
 
     ServerContext serverContext = new ServerContext();
     serverContext.setPathToConfigurationMetadata(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
     assertThat(configurationMetadata.getModulesByType()).hasSize(0);

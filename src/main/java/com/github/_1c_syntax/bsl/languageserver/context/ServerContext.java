@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
+import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
+import com.github._1c_syntax.mdclasses.metadata.configurations.EmptyConfiguration;
 import org.eclipse.lsp4j.TextDocumentItem;
-import org.github._1c_syntax.mdclasses.metadata.Configuration;
-import org.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
-import org.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 
 import javax.annotation.CheckForNull;
-import javax.xml.bind.JAXBException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,9 +36,9 @@ import java.util.Map;
 public class ServerContext {
   private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private Path pathToConfigurationMetadata;
-  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Lazy<AbstractConfiguration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
 
-  public ServerContext () {
+  public ServerContext() {
     this(null);
   }
 
@@ -82,22 +81,22 @@ public class ServerContext {
     this.pathToConfigurationMetadata = pathToConfigurationMetadata;
   }
 
-  public Configuration getConfiguration () {
+  public AbstractConfiguration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
-  private Configuration computeConfigurationMetadata() {
+  private AbstractConfiguration computeConfigurationMetadata() {
+
     if (pathToConfigurationMetadata == null) {
-      return new Configuration(ConfigurationSource.DESIGNER);
+      return new EmptyConfiguration();
     }
 
     ConfigurationBuilder configurationBuilder =
-      new ConfigurationBuilder(ConfigurationSource.DESIGNER, pathToConfigurationMetadata);
-    Configuration configuration = configurationBuilder.build();
+      new ConfigurationBuilder(pathToConfigurationMetadata);
+    AbstractConfiguration configuration = configurationBuilder.build();
 
     return configuration;
   }
-
 
 
 }
