@@ -48,15 +48,15 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
 
         createFile("${srcPath}/main/java/${packPath}/${key}Diagnostic.java",
                 "package com.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
-                        "@DiagnosticMetadata(\n\ttype = DiagnosticType.CODE_SMELL," +
-                        "\n\tseverity = DiagnosticSeverity.INFO,\n\tminutesToFix = 1\n)\n" +
+                        "@DiagnosticMetadata(\n    type = DiagnosticType.CODE_SMELL," +
+                        "\n    severity = DiagnosticSeverity.INFO,\n    minutesToFix = 1\n)\n" +
                         "public class ${key}Diagnostic implements QuickFixProvider, BSLDiagnostic {\n}\n");
 
         createFile("${srcPath}/test/java/${packPath}/${key}DiagnosticTest.java",
                 "package com.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
                         "class ${key}DiagnosticTest extends AbstractDiagnosticTest<${key}Diagnostic> {\n" +
-                        "\t${key}DiagnosticTest() {\n\t\tsuper(${key}Diagnostic.class);\n\t}\n\n" +
-                        "\t@Test\n\tvoid test() {\n\t}\n}\n");
+                        "    ${key}DiagnosticTest() {\n        super(${key}Diagnostic.class);\n    }\n\n" +
+                        "    @Test\n    void test() {\n    }\n}\n");
 
         createFile("${srcPath}/main/resources/${packPath}/${key}Diagnostic_ru.properties",
                 "diagnosticMessage=<Сообщение>\ndiagnosticName=${nameRu}\n");
