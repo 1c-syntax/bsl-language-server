@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescriptionSymbol;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -72,6 +74,7 @@ public final class MethodSymbolComputer
       .region(findRegion(startNode, stopNode))
       .range(RangeHelper.newRange(startNode, stopNode))
       .subNameRange(RangeHelper.newRange(declaration.subName()))
+      .description(findMethodDescription(ctx.getStart()))
       .build();
 
     methods.add(methodSymbol);
@@ -98,6 +101,7 @@ public final class MethodSymbolComputer
       .region(findRegion(startNode, stopNode))
       .range(RangeHelper.newRange(startNode, stopNode))
       .subNameRange(RangeHelper.newRange(declaration.subName()))
+      .description(findMethodDescription(ctx.getStart()))
       .build();
 
     methods.add(methodSymbol);
@@ -120,5 +124,63 @@ public final class MethodSymbolComputer
 
     return region.orElse(null);
 
+  }
+
+  private MethodDescriptionSymbol findMethodDescription(Token start) {
+    if(start == null) {
+      return null;
+    }
+
+    List<Token> comments = getMethodComments(start, null);
+    if(comments.size() == 0) {
+      return null;
+    }
+
+    return new MethodDescriptionSymbol(comments);
+  }
+
+  private List<Token> getMethodComments(Token start, List<Token> lines) {
+    int index = start.getTokenIndex();
+
+    if(index == 0) {
+      return lines;
+    }
+
+    Token token = documentContext.getTokens().get(index - 1);
+
+    if(lines == null) {
+      lines = new ArrayList<>();
+    }
+
+    if(abortSearch(token)){
+      return lines;
+    }
+
+    lines = getMethodComments(token, lines);
+    int type = token.getType();
+    if(type == BSLParser.LINE_COMMENT) {
+      lines.add(token);
+    }
+    return lines;
+  }
+
+  private boolean abortSearch(Token token) {
+    int type = token.getType();
+    return (type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
+      && type != BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+      && type != BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
+      && type != BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
+      && type != BSLParser.ANNOTATION_ATSERVER_SYMBOL
+      && type != BSLParser.ANNOTATION_CUSTOM_SYMBOL
+      && type != BSLParser.ANNOTATION_UKNOWN
+      && type != BSLParser.LINE_COMMENT
+      && type != BSLParser.WHITE_SPACE)
+        || isBlankLine(token);
+  }
+
+  private boolean isBlankLine(Token token) {
+    return token.getType() == BSLParser.WHITE_SPACE
+      && (token.getTokenIndex() == 0
+        || documentContext.getTokens().get(token.getTokenIndex() - 1).getLine() != token.getLine());
   }
 }

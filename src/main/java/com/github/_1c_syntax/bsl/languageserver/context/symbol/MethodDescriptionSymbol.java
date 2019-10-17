@@ -21,32 +21,33 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import lombok.Builder;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
-import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.Token;
 
-@Value
-@Builder
-public class MethodSymbol implements Symbol {
-  private final String name;
-  private final boolean export;
-  private final boolean function;
-  private final MethodDescriptionSymbol description;
+import java.util.List;
 
-  @ToString.Exclude
-  private final RegionSymbol region;
+public class MethodDescriptionSymbol {
 
-  @NonFinal
-  private BSLParserRuleContext node;
+  private final int startLine;
+  private final int endLine;
+  private final List<Token> comments;
 
-  private final Range range;
-  private final Range subNameRange;
-  
-  @Override
-  public void clearASTData() {
-    node = null;
+  public MethodDescriptionSymbol(List<Token> comments) {
+    this.comments = comments;
+
+    if(comments == null || comments.size() == 0) {
+      startLine = 0;
+      endLine = 0;
+      return;
+    }
+
+    this.startLine = comments.get(0).getLine();
+    this.endLine = comments.get(comments.size() - 1).getLine();
   }
+
+  public boolean contains(Token first, Token last) {
+    int firstLine = first.getLine();
+    int lastLine = last.getLine();
+    return (firstLine >= startLine && lastLine <= endLine);
+  }
+
 }
