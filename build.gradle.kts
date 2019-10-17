@@ -19,7 +19,7 @@ repositories {
     maven { url = URI("https://jitpack.io") }
 }
 
-group = "com.github.1c_syntax"
+group = "com.github.1c-syntax"
 version = gitVersionCalculator.calculateVersion("v")
 
 dependencies {
