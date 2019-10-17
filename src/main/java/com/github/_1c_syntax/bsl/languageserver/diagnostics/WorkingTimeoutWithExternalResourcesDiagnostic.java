@@ -61,20 +61,36 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
 		if (isWSDefinitions(newExpression)) {
 			numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1;
 		}
+
 		BSLParser.DoCallContext doCallContext = newExpression.doCall();
-		if(doCallContext != null) {
-			List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
-			if (listParams.size() > numberTimeout) {
-				BSLParser.CallParamContext param = listParams.get(numberTimeout);
-				if (param.expression() != null && !param.expression().member().isEmpty()) {
-					BSLParser.MemberContext memberContext = param.expression().member().get(0);
-					if (isNumberOrVariable(memberContext)) {
-						needContinue = false;
-						isContact.set(false);
-					}
-				}
-			}
+		if (doCallContext == null) {
+			return true;
 		}
+
+		List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
+		if (listParams == null) {
+			return true;
+		}
+
+		if (listParams.size() > numberTimeout) {
+			BSLParser.CallParamContext param = listParams.get(numberTimeout);
+			BSLParser.ExpressionContext expression = param.expression();
+			if (expression == null) {
+				return true;
+			}
+
+			if (expression.member().isEmpty()) {
+				return true;
+			}
+
+			BSLParser.MemberContext memberContext = expression.member().get(0);
+			if (isNumberOrVariable(memberContext)) {
+				needContinue = false;
+				isContact.set(false);
+			}
+
+		}
+
 		return needContinue;
 	}
 
