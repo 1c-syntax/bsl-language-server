@@ -51,8 +51,8 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
     assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(76, 0, 80, 18));
     assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(82, 0, 82, 23));
     assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(84, 0, 85, 38));
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(87, 0, 106, 2));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(117, 0, 118, 24));
+    assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(117, 0, 118, 24));
+    assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(203, 0, 203, 32));
   }
 
   @Test

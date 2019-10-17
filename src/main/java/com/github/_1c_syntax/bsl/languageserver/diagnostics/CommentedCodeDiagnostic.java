@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescriptionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
@@ -37,6 +39,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -58,6 +62,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
 
+  private List<MethodDescriptionSymbol> methodsDescription;
   private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
@@ -77,8 +82,18 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
-    List<List<Token>> commentGroups = groupComments(documentContext.getComments());
-    commentGroups.forEach(this::checkCommentGroup);
+
+    methodsDescription = documentContext.getMethods()
+      .stream()
+      .map(MethodSymbol::getDescription)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
+
+    groupComments(documentContext.getComments())
+      .stream()
+      .filter(this::isCommentGroupNotMethodDescription)
+      .forEach(this::checkCommentGroup);
+
     return diagnosticStorage.getDiagnostics();
   }
 
@@ -115,6 +130,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     Token last = currentGroup.get(currentGroup.size() - 1);
     return last.getLine() + 1 == comment.getLine()
       && onlyEmptyDelimiters(last.getTokenIndex(), comment.getTokenIndex());
+
   }
 
   private boolean onlyEmptyDelimiters(int firstTokenIndex, int lastTokenIndex) {
@@ -125,6 +141,20 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     for (int index = firstTokenIndex + 1; index < lastTokenIndex; index++) {
       int tokenType = documentContext.getTokens().get(index).getType();
       if (tokenType != BSLParser.WHITE_SPACE) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean isCommentGroupNotMethodDescription(List<Token> commentGroup) {
+    if(methodsDescription.size() == 0){
+      return true;
+    }
+
+    for(MethodDescriptionSymbol methodDescription: methodsDescription) {
+      if(methodDescription.contains(commentGroup.get(0), commentGroup.get(commentGroup.size() - 1))) {
         return false;
       }
     }
