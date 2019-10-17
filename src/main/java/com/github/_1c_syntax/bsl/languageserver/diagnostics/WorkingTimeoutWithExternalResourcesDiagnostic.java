@@ -93,11 +93,11 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
 							com.github._1c_syntax.bsl.languageserver.context.Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
 						String variableName = getVariableName(statementContext);
 						int filterLine = newExpression.getStart().getLine();
-						Collection<ParseTree> listNextStatments = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+						Collection<ParseTree> listNextStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
 							.stream()
 							.filter(node -> ((BSLParser.StatementContext) node).getStart().getLine() > filterLine)
 							.collect(Collectors.toList());
-						checkNextStatement(listNextStatments, variableName, isContact);
+						checkNextStatement(listNextStatements, variableName, isContact);
 					}
 					if (isContact.get()) {
 						diagnosticStorage.addDiagnostic(newExpression, getDiagnosticMessage());
@@ -112,11 +112,12 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
 		listNextStatments.forEach(element -> {
 			BSLParser.StatementContext localStatement = (BSLParser.StatementContext) element;
 			String thisVariableName = getVariableName(localStatement);
-			if (thisVariableName.equalsIgnoreCase(variableName)) {
-				if (isTimeoutModifer(localStatement)
-					&& isNumberOrVariable(localStatement.assignment().expression().member(0))) {
-					isContact.set(false);
-				}
+			if (thisVariableName.equalsIgnoreCase(variableName)
+				&& isTimeoutModifer(localStatement)
+				&& isNumberOrVariable(localStatement.assignment().expression().member(0))) {
+
+				isContact.set(false);
+
 			}
 		});
 	}
@@ -130,8 +131,8 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
 		if (listModifer.isEmpty()) {
 			return false;
 		}
-		BSLParser.ModifierContext modifer = listModifer.get(0);
-		Matcher matcher = patternTimeout.matcher(modifer.getText());
+		BSLParser.ModifierContext modifier = listModifer.get(0);
+		Matcher matcher = patternTimeout.matcher(modifier.getText());
 		return matcher.find();
 	}
 
