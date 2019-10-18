@@ -19,5 +19,5 @@ HTTPConnection = New HTTPConnection("zabbix.localhost", 80);
 HTTPConnection.Timeout = 1;
 ```
 
-##Ссылка на источники
+## References
 [Таймауты при работе с внешними ресурсами](https://its.1c.ru/db/v8std#content:748:hdoc)
