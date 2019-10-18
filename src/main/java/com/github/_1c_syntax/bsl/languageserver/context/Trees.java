@@ -53,6 +53,7 @@ public final class Trees {
 
   /**
    * Проверяет среди дочерних элементов наличие ноды с ошибкой
+   *
    * @return true - если есть нода с ошибкой
    */
   public static boolean findErrorNode(ParseTree tnc) {
@@ -73,8 +74,9 @@ public final class Trees {
 
   /**
    * Выполняет поиск предыдущей ноды нужного типа
-   * @param parent - родительская нода, среди дочерних которой производится поиск
-   * @param tnc - нода, для которой ищем предыдущую
+   *
+   * @param parent    - родительская нода, среди дочерних которой производится поиск
+   * @param tnc       - нода, для которой ищем предыдущую
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если предыдущая нода не найдена, вернет текущую
    */
@@ -92,7 +94,7 @@ public final class Trees {
    * Рекурсивно находит самого верхнего родителя текущей ноды
    */
   public static ParseTree getRootParent(ParseTree tnc) {
-    if(tnc.getParent() != null) {
+    if (tnc.getParent() != null) {
       return getRootParent(tnc.getParent());
     }
 
