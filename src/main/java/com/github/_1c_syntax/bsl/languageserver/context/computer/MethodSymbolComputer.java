@@ -132,7 +132,7 @@ public final class MethodSymbolComputer
     }
 
     List<Token> comments = getMethodComments(start, null);
-    if(comments.size() == 0) {
+    if(comments == null || comments.size() == 0) {
       return null;
     }
 
