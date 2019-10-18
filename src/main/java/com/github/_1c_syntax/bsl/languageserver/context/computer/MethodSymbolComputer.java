@@ -74,7 +74,7 @@ public final class MethodSymbolComputer
       .region(findRegion(startNode, stopNode))
       .range(RangeHelper.newRange(startNode, stopNode))
       .subNameRange(RangeHelper.newRange(declaration.subName()))
-      .description(findMethodDescription(ctx.getStart()))
+      .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
       .build();
 
     methods.add(methodSymbol);
@@ -101,7 +101,7 @@ public final class MethodSymbolComputer
       .region(findRegion(startNode, stopNode))
       .range(RangeHelper.newRange(startNode, stopNode))
       .subNameRange(RangeHelper.newRange(declaration.subName()))
-      .description(findMethodDescription(ctx.getStart()))
+      .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
       .build();
 
     methods.add(methodSymbol);
@@ -126,12 +126,8 @@ public final class MethodSymbolComputer
 
   }
 
-  private MethodDescriptionSymbol findMethodDescription(Token start) {
-    if(start == null) {
-      return null;
-    }
-
-    List<Token> comments = getMethodComments(start, null);
+  private MethodDescriptionSymbol findMethodDescription(int startIndex) {
+    List<Token> comments = getMethodComments(startIndex, null);
     if(comments == null || comments.size() == 0) {
       return null;
     }
@@ -139,9 +135,7 @@ public final class MethodSymbolComputer
     return new MethodDescriptionSymbol(comments);
   }
 
-  private List<Token> getMethodComments(Token start, List<Token> lines) {
-    int index = start.getTokenIndex();
-
+  private List<Token> getMethodComments(int index, List<Token> lines) {
     if(index == 0) {
       return lines;
     }
@@ -156,7 +150,7 @@ public final class MethodSymbolComputer
       return lines;
     }
 
-    lines = getMethodComments(token, lines);
+    lines = getMethodComments(token.getTokenIndex(), lines);
     int type = token.getType();
     if(type == BSLParser.LINE_COMMENT) {
       lines.add(token);
@@ -166,16 +160,19 @@ public final class MethodSymbolComputer
 
   private boolean abortSearch(Token token) {
     int type = token.getType();
-    return (type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
-      && type != BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
-      && type != BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
-      && type != BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
-      && type != BSLParser.ANNOTATION_ATSERVER_SYMBOL
-      && type != BSLParser.ANNOTATION_CUSTOM_SYMBOL
-      && type != BSLParser.ANNOTATION_UKNOWN
-      && type != BSLParser.LINE_COMMENT
-      && type != BSLParser.WHITE_SPACE)
-        || isBlankLine(token);
+    return (
+        type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
+        && type != BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+        && type != BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
+        && type != BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
+        && type != BSLParser.ANNOTATION_ATSERVER_SYMBOL
+        && type != BSLParser.ANNOTATION_CUSTOM_SYMBOL
+        && type != BSLParser.ANNOTATION_UKNOWN
+        && type != BSLParser.LINE_COMMENT
+        && type != BSLParser.WHITE_SPACE
+        && type != BSLParser.RULE_annotationParams
+      )
+      || isBlankLine(token);
   }
 
   private boolean isBlankLine(Token token) {
