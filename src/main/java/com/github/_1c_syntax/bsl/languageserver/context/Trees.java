@@ -21,9 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.CheckForNull;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Trees {
 
@@ -47,4 +51,51 @@ public final class Trees {
     return getAncestorByRuleIndex(parent, type);
   }
 
+  /**
+   * Проверяет среди дочерних элементов наличие ноды с ошибкой
+   * @return true - если есть нода с ошибкой
+   */
+  public static boolean findErrorNode(ParseTree tnc) {
+
+    if (tnc instanceof BSLParserRuleContext) {
+      if (((BSLParserRuleContext) tnc).exception != null) {
+        return true;
+      }
+
+      for (int i = 0; i < tnc.getChildCount(); i++) {
+        if (findErrorNode(tnc.getChild(i))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Выполняет поиск предыдущей ноды нужного типа
+   * @param parent - родительская нода, среди дочерних которой производится поиск
+   * @param tnc - нода, для которой ищем предыдущую
+   * @param ruleindex - BSLParser.RULE_*
+   * @return tnc - если предыдущая нода не найдена, вернет текущую
+   */
+  public static ParseTree getPreviousNode(ParseTree parent, ParseTree tnc, int ruleindex) {
+    List<ParseTree> statements = new ArrayList<>(org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(parent, ruleindex));
+
+    int pos = statements.indexOf(tnc);
+    if ((pos - 1) > -1) {
+      return statements.get(pos - 1);
+    }
+    return tnc;
+  }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды
+   */
+  public static ParseTree getRootParent(ParseTree tnc) {
+    if(tnc.getParent() != null) {
+      return getRootParent(tnc.getParent());
+    }
+
+    return tnc;
+  }
 }

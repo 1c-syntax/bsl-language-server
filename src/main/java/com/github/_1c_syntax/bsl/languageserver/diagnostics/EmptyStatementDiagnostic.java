@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.context.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -54,9 +54,9 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
     if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-      if (!DiagnosticHelper.findErrorNode(
-        DiagnosticHelper.getPreviousNode(
-          DiagnosticHelper.getRootParent(ctx),
+      if (!Trees.findErrorNode(
+        Trees.getPreviousNode(
+          Trees.getRootParent(ctx),
           ctx,
           BSLParser.RULE_statement))) {
         diagnosticStorage.addDiagnostic(ctx);

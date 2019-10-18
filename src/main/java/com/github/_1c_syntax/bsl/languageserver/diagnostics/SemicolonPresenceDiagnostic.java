@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -55,7 +56,7 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (DiagnosticHelper.findErrorNode(ctx)) {
+    if (Trees.findErrorNode(ctx)) {
       return ctx;
     }
 
