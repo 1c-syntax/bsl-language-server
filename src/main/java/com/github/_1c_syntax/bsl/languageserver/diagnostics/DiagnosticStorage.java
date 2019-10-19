@@ -68,6 +68,13 @@ public class DiagnosticStorage {
       diagnostic.getDiagnosticMessage()));
   }
 
+  protected void addDiagnostic(Range range, String diagnosticMessage) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      range,
+      diagnosticMessage));
+  }
+
   protected void addDiagnostic(Token token) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,

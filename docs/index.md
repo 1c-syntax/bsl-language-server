@@ -182,6 +182,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да |
 | [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да |
+| [NonExportMethodsInApiRegion](diagnostics/NonExportMethodsInApiRegion.md) | Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс | Да |
 | [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да |
 | [NumberOfParams](diagnostics/NumberOfParams.md) | Ограничение на количество параметров метода | Да |
 | [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да |
@@ -202,8 +203,8 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
 | [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
 | [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
-| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да |
 | [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
+| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да |
 | [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да |
 | [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
 | [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да |
