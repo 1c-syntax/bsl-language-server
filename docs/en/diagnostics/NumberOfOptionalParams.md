@@ -10,7 +10,7 @@ If need to pass many parameters to a function, it is recommended to group same-t
 Incorrect:
 
 ```
-// Create item in catalog "Goods"
+// Create an item in catalog "Goods"
 Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
 ...
 EndProcedure
@@ -21,7 +21,7 @@ Correct:
 Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
 ```
-// Create item in the catalog "Goods"
+// Create an item in the catalog "Goods"
 Procedure CreateSKU(ParamsValue, Check = Истина)
 ...
 EndProcedure
