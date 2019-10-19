@@ -20,7 +20,7 @@
 * <a href="#reporters">Репортеры</a>
 * <a href="#diagnostics">Диагностики</a>
 
-<a id="capabilities"/>
+<a id="capabilities"></a>
 
 ## Возможности
 
@@ -34,7 +34,7 @@
 * Запуск движка диагностик из командной строки
 * Запуск форматирования файлов в каталоге из командной строки
 
-<a id="cli"/>
+<a id="cli"></a>
 
 ## Запуск из командной строки
 
@@ -58,7 +58,7 @@ usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <
 
 По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `diagnosticLanguage` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
-<a id="analyze"/>
+<a id="analyze"></a>
 
 ## Запуск в режиме анализатора
 
@@ -78,7 +78,7 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
 
-<a id="format"/>
+<a id="format"></a>
 
 ## Запуск в режиме форматтера
 
@@ -90,7 +90,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 java -jar bsl-language-server.jar --format --srcDir ./src/cf
 ```
 
-<a id="configuration"/>
+<a id="configuration"></a>
 
 ## Конфигурационный файл
 
@@ -130,7 +130,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 }
 ```
 
-<a id="reporters"/>
+<a id="reporters"></a>
 
 ## Репортеры
 
@@ -144,7 +144,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 * [tslint](reporters/tslint.md);
 * [console](reporters/console.md).
 
-<a id="diagnostics"/>
+<a id="diagnostics"></a>
 
 ## Диагностики
 
