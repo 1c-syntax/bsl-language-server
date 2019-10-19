@@ -11,9 +11,9 @@ Incorrect:
 
 ```
 // Create item in catalog "Goods"
-Процедура СоздатьЭлементНоменклатуры(Наименование, ТоварУслуга, ЕдиницаИзмерения, ВесНетто, ПроверятьУникальность = Истина)
-
-КонецПроцедуры
+Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
+...
+EndProcedure
 ```
 
 Correct:
@@ -21,9 +21,10 @@ Correct:
 Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
 ```
-// Create item in catalog "Goods"
-Процедура СоздатьЭлементНоменклатуры(ЗначенияРеквизитов, ПроверятьУникальность = Истина)
-КонецПроцедуры
+// Create item in the catalog "Goods"
+Procedure CreateSKU(ParamsValue, Check = Истина)
+...
+EndProcedure
 ```
 
 Reference: [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
