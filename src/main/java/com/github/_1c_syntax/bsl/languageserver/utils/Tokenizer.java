@@ -65,7 +65,7 @@ public class Tokenizer {
     return tokensTemp;
   }
 
-  private CommonTokenStream getTokenStream() {
+  public CommonTokenStream getTokenStream() {
     final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute();
     tokenStreamUnboxed.seek(0);
     return tokenStreamUnboxed;
@@ -96,6 +96,11 @@ public class Tokenizer {
     tempTokenStream.fill();
 
     return tempTokenStream;
+  }
+
+  public void clear(){
+    tokenStream.clear();
+    tokens.clear();
   }
 
 }

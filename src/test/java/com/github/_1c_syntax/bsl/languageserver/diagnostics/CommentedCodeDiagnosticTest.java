@@ -42,7 +42,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(11);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 0, 6, 81));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 4, 34, 16));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(36, 4, 42, 156));
@@ -53,6 +53,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
     assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(84, 0, 85, 38));
     assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(117, 0, 118, 24));
     assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(203, 0, 203, 32));
+    assertThat(diagnostics.get(10).getRange()).isEqualTo(RangeHelper.newRange(244, 0, 264, 152));
   }
 
   @Test

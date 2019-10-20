@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescriptionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
@@ -175,7 +176,38 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isTextParsedAsCode(String text) {
-    return codeRecognizer.meetsCondition(text);
+    if(codeRecognizer.meetsCondition(text)) {
+      Tokenizer tokenizer = new Tokenizer(uncomment(text));
+      final List<Token> tokens = tokenizer.getTokens();
+
+      // Если меньше двух токенов нет смысла анализировать - это код
+      if(tokens.size() < 2) {
+        return true;
+      }
+
+      List<Integer> tokenTypes = tokens.stream()
+        .map(t -> t.getType())
+        .filter(t -> t != BSLParser.WHITE_SPACE)
+        .collect(Collectors.toList());
+
+      // Если два идентификатора идут подряд - это не код
+      for (int i = 0; i < tokenTypes.size() - 1; i++) {
+        if (tokenTypes.get(i) == BSLParser.IDENTIFIER && tokenTypes.get(i + 1) == BSLParser.IDENTIFIER) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private static String uncomment(String comment) {
+    if(comment.startsWith("//")) {
+      return uncomment(comment.substring(2));
+    }
+    return comment;
   }
 
 }
