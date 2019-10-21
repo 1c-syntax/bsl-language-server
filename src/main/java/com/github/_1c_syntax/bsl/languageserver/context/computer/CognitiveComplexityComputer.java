@@ -275,7 +275,7 @@ public class CognitiveComplexityComputer
     int emptyTokenType = -1;
     AtomicInteger lastOperationType = new AtomicInteger(emptyTokenType);
 
-    flattenExpression.forEach(token -> {
+    flattenExpression.forEach((Token token) -> {
       int currentOperationType = token.getType();
       if (lastOperationType.get() != currentOperationType) {
         lastOperationType.set(currentOperationType);
