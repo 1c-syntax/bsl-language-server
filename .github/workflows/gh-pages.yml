@@ -1,0 +1,58 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.6'
+        architecture: 'x64'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install mkdocs mkdocs-material pygments-bsl
+    - name: Prepare
+      run: |
+        mkdir public
+        mkdir public/en
+    - name: Build Russian
+      run: |
+        mkdir temp
+        cp mkdocs.yml temp
+        cp -R docs/. temp/docs
+        rm -rf temp/docs/en
+        cd temp
+        mkdocs build
+        cd ..
+        cp -R temp/site/. public
+    - name: Clean temp
+      run: rm -rf temp
+
+    - name: Build English
+      run: |
+        mkdir temp
+        cp mkdocs.en.yml temp/mkdocs.yml
+        mkdir temp/docs
+        cp -R docs/en/. temp/docs
+        mkdir temp/docs/assets
+        cp -R docs/assets/. temp/docs/assets
+        cd temp
+        mkdocs build
+        cd ..
+        cp -R temp/site/. public/en
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v2.5.0
+      env:
+        ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+        PUBLISH_BRANCH: gh-pages
+        PUBLISH_DIR: ./public
