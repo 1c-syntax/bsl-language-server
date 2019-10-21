@@ -181,6 +181,7 @@ To escape individual sections of code or files from triggering diagnostics, you 
 | [MethodSize](diagnostics/MethodSize.md) | Method size restriction | Yes |
 | [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes |
 | [MissingSpace](diagnostics/MissingSpace.md) | Missing space | Yes |
+| [MissingTemporaryFileDeletion](diagnostics/MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes |
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes |
 | [NestedStatements](diagnostics/NestedStatements.md) | Control flow statements should not be nested too deep | Yes |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Nested ternary operator | Yes |
