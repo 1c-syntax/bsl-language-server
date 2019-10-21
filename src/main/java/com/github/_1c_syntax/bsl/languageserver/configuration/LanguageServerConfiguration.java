@@ -38,11 +38,19 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @AllArgsConstructor
@@ -54,12 +62,16 @@ public final class LanguageServerConfiguration {
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
   private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
 
+  private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
+
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
   private ComputeDiagnosticsTrigger computeDiagnostics;
   @Nullable
   private File traceLog;
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
+  @Nullable
+  private Path configurationRoot;
 
   private LanguageServerConfiguration() {
     this(
@@ -67,7 +79,8 @@ public final class LanguageServerConfiguration {
       DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
       DEFAULT_COMPUTE_DIAGNOSTICS,
       null,
-      new HashMap<>()
+      new HashMap<>(),
+      null
     );
   }
 
@@ -103,13 +116,15 @@ public final class LanguageServerConfiguration {
       ComputeDiagnosticsTrigger computeDiagnostics = getComputeDiagnostics(node);
       File traceLog = getTraceLog(node);
       Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
+      Path configurationRoot = getConfigurationRoot(node);
 
       return new LanguageServerConfiguration(
         diagnosticLanguage,
         showCognitiveComplexityCodeLens,
         computeDiagnostics,
         traceLog,
-        diagnosticsMap
+        diagnosticsMap,
+        configurationRoot
       );
     }
 
@@ -190,5 +205,51 @@ public final class LanguageServerConfiguration {
       }
       return traceLog;
     }
+
+    private static Path getConfigurationRoot(JsonNode node) {
+      Path configurationRoot = null;
+      if (node.get("configurationRoot") != null) {
+        String configurationRootValue = node.get("configurationRoot").asText();
+        configurationRoot = Paths.get(configurationRootValue).toAbsolutePath();
+      }
+      return configurationRoot;
+    }
   }
+
+  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+    Path rootPath = null;
+    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    if (pathFromConfiguration == null) {
+      rootPath = srcDir;
+    } else {
+      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
+      if (pathFromConfiguration.startsWith(srcDir.toAbsolutePath())) {
+        rootPath = pathFromConfiguration;
+      }
+    }
+    if (rootPath != null){
+      File fileConfiguration = getConfigurationFile(rootPath);
+      if (fileConfiguration != null) {
+        rootPath = Paths.get(fileConfiguration.getParent());
+      }
+    }
+    return rootPath;
+  }
+
+
+  private static File getConfigurationFile(Path rootPath) {
+    File configurationFile = null;
+    List<Path> listPath = new ArrayList<>();
+    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
+      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
+      listPath = stream.collect(Collectors.toList());
+    } catch (IOException e) {
+      LOGGER.error("Error on read configuration file", e);
+    }
+    if (!listPath.isEmpty()) {
+      configurationFile = listPath.get(0).toFile();
+    }
+    return configurationFile;
+  }
+
 }

@@ -44,7 +44,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -64,6 +66,7 @@ import static org.antlr.v4.runtime.Token.EOF;
 public class DocumentContext {
 
   private String content;
+  private ServerContext context;
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
   private Lazy<CommonTokenStream> tokenStream = new Lazy<>(this::computeTokenStream);
   private Lazy<List<Token>> tokens = new Lazy<>(this::computeTokens);
@@ -75,13 +78,20 @@ public class DocumentContext {
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions);
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
+  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
   private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
   private final FileType fileType;
 
+  @Deprecated
   public DocumentContext(String uri, String content) {
+    this(uri, content, new ServerContext());
+  }
+
+  public DocumentContext(String uri, String content, ServerContext context) {
     this.uri = uri;
     this.content = content;
+    this.context = context;
 
     FileType fileTypeFromUri;
 
@@ -192,6 +202,10 @@ public class DocumentContext {
 
   public DiagnosticIgnoranceComputer.Data getDiagnosticIgnorance() {
     return diagnosticIgnoranceData.getOrCompute();
+  }
+
+  public ModuleType getModuleType() {
+    return moduleType.getOrCompute();
   }
 
   public void rebuild(String content) {
@@ -321,6 +335,14 @@ public class DocumentContext {
     getMethods().forEach(methodSymbol -> nodeToMethodsMapTemp.put(methodSymbol.getNode(), methodSymbol));
 
     return nodeToMethodsMapTemp;
+  }
+
+  private ModuleType computeModuleType() {
+    ModuleType type = context.getConfiguration().getModuleType(new File(uri).toURI());
+    if (type == null) {
+      type = ModuleType.ObjectModule;
+    }
+    return type;
   }
 
   private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
