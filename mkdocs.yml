@@ -4,7 +4,7 @@ nav:
   - Руководство контрибьютора: contributing/index.md
   - Репортеры: reporters/index.md
   - Диагностики: diagnostics/index.md
-  - English: https://zeegin.github.io/bsl-language-server/en
+  - English: https://1c-syntax.github.io/bsl-language-server/en
 theme: 
   name: material
   language: ru
@@ -27,3 +27,4 @@ markdown_extensions:
       
 repo_name: '1c-syntax/bsl-language-server'
 repo_url: 'https://github.com/1c-syntax/bsl-language-server'
+edit_uri: 'edit/develop/docs'
