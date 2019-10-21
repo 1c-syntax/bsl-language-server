@@ -4,6 +4,7 @@ nav:
   - Руководство контрибьютора: contributing/index.md
   - Репортеры: reporters/index.md
   - Диагностики: diagnostics/index.md
+  - English: https://zeegin.github.io/bsl-language-server/en
 theme: 
   name: material
   language: ru
