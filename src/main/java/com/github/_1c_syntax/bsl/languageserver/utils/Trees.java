@@ -84,7 +84,7 @@ public final class Trees {
     List<ParseTree> statements = new ArrayList<>(org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(parent, ruleindex));
 
     int pos = statements.indexOf(tnc);
-    if ((pos - 1) > -1) {
+    if (pos > 0) {
       return statements.get(pos - 1);
     }
     return tnc;
