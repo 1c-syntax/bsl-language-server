@@ -9,8 +9,6 @@
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
-[Russian version](/)
-
 - [Contributing guidelines](contributing/index.md)
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
