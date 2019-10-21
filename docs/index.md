@@ -128,4 +128,3 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
     "MethodSize": false
   }
 }
-```

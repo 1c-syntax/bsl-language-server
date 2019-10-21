@@ -130,4 +130,3 @@ Configuration file example, setting:
     "MethodSize": false
   }
 }
-```

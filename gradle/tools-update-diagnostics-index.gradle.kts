@@ -2,7 +2,7 @@ import java.io.File
 
 open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
-    private var pathPack = "org/github/_1c_syntax/bsl/languageserver/diagnostics";
+    private var pathPack = "com/github/_1c_syntax/bsl/languageserver/diagnostics";
     private var namePattern = Regex("^diagnosticName\\s*=\\s*(.*)$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
 
