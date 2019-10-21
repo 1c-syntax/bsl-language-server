@@ -1,12 +1,12 @@
 site_name: BSL Language Server
 nav:
-  - Домашняя: index.md
-  - Руководство контрибьютора: contributing/index.md
-  - Репортеры: reporters/index.md
-  - Диагностики: diagnostics/index.md
+  - Home: index.md
+  - Contributing: contributing/index.md
+  - Reporters: reporters/index.md
+  - Diagnostics: diagnostics/index.md
 theme: 
   name: material
-  language: ru
+  language: en
   logo: 'assets/images/logo.png'
   favicon: 'assets/images/logo.png'
   palette:

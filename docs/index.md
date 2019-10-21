@@ -9,7 +9,7 @@
 
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
 
-[English version](en/index.md)
+[English version](en)
 
 * [Руководство контрибьютора](contributing/index.md)
 * <a href="#capabilities">Возможности</a>
@@ -17,8 +17,8 @@
 * <a href="#analyze">Запуск в режиме анализатора</a>
 * <a href="#format">Запуск в режиме форматтера</a>
 * <a href="#configuration">Конфигурационный файл</a>
-* <a href="#reporters">Репортеры</a>
-* <a href="#diagnostics">Диагностики</a>
+* <a href="reporters">Репортеры</a>
+* <a href="diagnostics">Диагностики</a>
 
 <a id="capabilities"></a>
 
@@ -129,85 +129,3 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
   }
 }
 ```
-
-<a id="reporters"></a>
-
-## Репортеры
-
-Используются для получения результатов анализа.
-
-### Список реализованных репортеров
-
-* [json](reporters/json.md) - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
-* [generic](reporters/generic.md) - вывод результата анализа в формате [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/) для SonarQube;
-* [junit](reporters/junit.md);
-* [tslint](reporters/tslint.md);
-* [console](reporters/console.md).
-
-<a id="diagnostics"></a>
-
-## Диагностики
-
-Используются для проверки кода на соответствие стандартам кодирования и для поиска возможных ошибок.
-
-Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="#configuration">конфигурационный файл</a>.
-
-Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида `// BSLLS:КлючДиагностики-выкл`. Более подробно данная функциональность описана в [Экранирование участков кода](features/DiagnosticIgnorance.md).
-
-### Список реализованных диагностик
-
-| Ключ | Название | Включена по умолчанию |
-| --- | --- | :-: |
-| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да |
-| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
-| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да |
-| [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да |
-| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да |
-| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
-| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
-| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
-| [EmptyStatement](diagnostics/EmptyStatement.md) | Пустой оператор | Да |
-| [ExtraCommas](diagnostics/ExtraCommas.md) | Лишние запятые при вызове метода | Да |
-| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да |
-| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да |
-| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | Слишком сложное условие оператора Если | Да |
-| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да |
-| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да |
-| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да |
-| [LineLength](diagnostics/LineLength.md) | Ограничение на длину строки | Да |
-| [MagicNumber](diagnostics/MagicNumber.md) | Использование магического числа | Да |
-| [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да |
-| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да |
-| [MissingSpace](diagnostics/MissingSpace.md) | Пропущен пробел | Да |
-| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да |
-| [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да |
-| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да |
-| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да |
-| [NumberOfParams](diagnostics/NumberOfParams.md) | Ограничение на количество параметров метода | Да |
-| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да |
-| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | Одно выражение в одной строке | Да |
-| [OrderOfParams](diagnostics/OrderOfParams.md) | Порядок параметров метода | Да |
-| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да |
-| [ParseError](diagnostics/ParseError.md) | Ошибка разбора исходного кода | Да |
-| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да |
-| [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да |
-| [SelfInsertion](diagnostics/SelfInsertion.md) | Вставка коллекции в саму себя | Да |
-| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да |
-| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да |
-| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да |
-| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет |
-| [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да |
-| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да |
-| [UnreachableCode](diagnostics/UnreachableCode.md) | Недостижимый код | Да |
-| [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
-| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
-| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
-| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да |
-| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
-| [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да |
-| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
-| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да |
-| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
-| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
-| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да |
-| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |
