@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -50,6 +51,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -139,7 +141,6 @@ public final class DiagnosticProvider {
       .findAny();
   }
 
-
   public static String getDiagnosticCode(Class<? extends BSLDiagnostic> diagnosticClass) {
     String simpleName = diagnosticClass.getSimpleName();
     if (simpleName.endsWith("Diagnostic")) {
@@ -216,6 +217,14 @@ public final class DiagnosticProvider {
 
   public static boolean isActivatedByDefault(BSLDiagnostic diagnostic) {
     return isActivatedByDefault(diagnostic.getClass());
+  }
+
+  public static List<DiagnosticTag> getDiagnosticTags(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return new ArrayList<DiagnosticTag>(Arrays.asList(diagnosticsMetadata.get(diagnosticClass).tags()));
+  }
+
+  public static List<DiagnosticTag> getDiagnosticTags(BSLDiagnostic diagnostic) {
+    return getDiagnosticTags(diagnostic.getClass());
   }
 
   public static Map<String, DiagnosticParameter> getDiagnosticParameters(

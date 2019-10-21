@@ -21,18 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public enum DiagnosticTag {
+  STANDARD("Нарушение стандартов 1С"),
+  LOCKINOS("Не будет работать в другой ОС"),
+  SQL("Проблема с запросом"),
+  PERFORMANCE("Проблема производительности"),
+  BRAINOVERLOAD("Непонятный код"),
+  BADPRACTICE("Плохая практика программирования"),
+  CLUMSY("Излишние действия"),
+  DESIGN("Ошибка в проектировании"),
+  SUSPICIOUS("Подозрительный код"),
+  UNPREDICTABLE("Непредсказуемо работающий код"),
+  DEPRECATED("Устаревшая функциональность"),
+  ERROR("Ошибочная конструкция")
+  ;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DiagnosticMetadata {
-  DiagnosticType type() default DiagnosticType.ERROR;
-  DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
-  DiagnosticScope scope() default DiagnosticScope.ALL;
-  int minutesToFix() default 0;
-  boolean activatedByDefault() default true;
-  DiagnosticTag[] tags() default {};
+  DiagnosticTag(String ru) {
+  }
 }

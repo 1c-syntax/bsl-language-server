@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -30,7 +31,11 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 30
+  minutesToFix = 30,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.DESIGN
+  }
 )
 public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
