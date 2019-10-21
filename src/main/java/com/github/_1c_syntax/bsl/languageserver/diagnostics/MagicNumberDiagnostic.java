@@ -87,20 +87,16 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
     if(checked == null || isExcluded(checked)) {
       return super.visitNumeric(ctx);
+    } else {
+      ParserRuleContext expression = ctx.getParent().getParent().getParent();
+      if (expression instanceof BSLParser.ExpressionContext) {
+        if (isNumericExpression((BSLParser.ExpressionContext) expression)) {
+          return super.visitNumeric(ctx);
+        }
+        diagnosticStorage.addDiagnostic(ctx.stop, getDiagnosticMessage(checked));
+      }
     }
 
-    ParserRuleContext expression = ctx.getParent().getParent().getParent();
-
-    if (!(expression instanceof BSLParser.ExpressionContext)) {
-      return ctx;
-    }
-
-    if (isNumericExpression((BSLParser.ExpressionContext) expression)) {
-      return super.visitNumeric(ctx);
-    }
-
-    diagnosticStorage.addDiagnostic(ctx.stop, getDiagnosticMessage(checked));
     return ctx;
   }
-
 }
