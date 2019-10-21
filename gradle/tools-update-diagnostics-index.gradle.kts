@@ -30,25 +30,26 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
         val docPath = File(outputDir.get().asFile.path, "docs/${lang}diagnostics");
         val readme = File(docPath.path, "${key}.md");
         if(readme.exists()) {
-            return "${docPath.name}/${readme.name}";
+            return "${readme.name}";
         }
         logger.quiet("File '{}' not exist", readme.path);
         return "";
     }
 
     private fun writeIndex(indexText: String, lang: String) {
-        val indexPath = File(outputDir.get().asFile.path, "docs/${lang}index.md");
+        val indexPath = File(outputDir.get().asFile.path, "docs/${lang}diagnostics/index.md");
         val text = indexPath.readText(charset("UTF-8"));
 
-        var header = "### Список реализованных диагностик";
+        var header = "## Список реализованных диагностик";
         var table = "| Ключ | Название | Включена по умолчанию |\n| --- | --- | :-: |";
         if(lang != "") {
-            header = "### Implemented diagnostics";
+            header = "## Implemented diagnostics";
             table = "| Key | Name| Enabled by default |\n| --- | --- | :-: |";
         }
         val indexHeader = text.indexOf(header);
         indexPath.writeText(text.substring(0, indexHeader - 1) + "\n${header}\n\n${table}${indexText}",
                 charset("UTF-8"));
+
     }
 
     @TaskAction
