@@ -21,17 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import me.tongfei.progressbar.ProgressBar;
-import me.tongfei.progressbar.ProgressBarStyle;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.io.FileUtils;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarStyle;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,7 +96,12 @@ public class AnalyzeCommand implements Command {
     }
 
     DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
-    return new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
+    FileInfo fileInfo = new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
+
+    // clean up AST after diagnostic computing to free up RAM.
+    documentContext.clearASTData();
+
+    return fileInfo;
   }
 
 }
