@@ -22,22 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class TestUtils {
 
-  public static DocumentContext getDocumentContext(String filePath) throws IOException {
+  @SneakyThrows
+  public static DocumentContext getDocumentContextFromFile(String filePath) {
 
     String fileContent = FileUtils.readFileToString(
       new File(filePath),
       StandardCharsets.UTF_8
     );
 
-    return new DocumentContext("fake-uri.bsl", fileContent);
+    return new DocumentContext(filePath, fileContent, new ServerContext());
   }
 
+  @SneakyThrows
+  public static DocumentContext getDocumentContext(String fileContent) {
+    return new DocumentContext("file:///fake-uri.bsl", fileContent, new ServerContext());
+  }
 }

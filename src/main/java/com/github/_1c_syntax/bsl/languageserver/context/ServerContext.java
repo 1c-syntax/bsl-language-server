@@ -35,8 +35,8 @@ import java.util.Map;
 
 public class ServerContext {
   private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
-  private Path pathToConfigurationMetadata;
   private final Lazy<AbstractConfiguration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private Path pathToConfigurationMetadata;
 
   public ServerContext() {
     this(null);
@@ -86,16 +86,14 @@ public class ServerContext {
   }
 
   private AbstractConfiguration computeConfigurationMetadata() {
-
     if (pathToConfigurationMetadata == null) {
       return new EmptyConfiguration();
     }
 
     ConfigurationBuilder configurationBuilder =
       new ConfigurationBuilder(pathToConfigurationMetadata);
-    AbstractConfiguration configuration = configurationBuilder.build();
 
-    return configuration;
+    return configurationBuilder.build();
   }
 
 

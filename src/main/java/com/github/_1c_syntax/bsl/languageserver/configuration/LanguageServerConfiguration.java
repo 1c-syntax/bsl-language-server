@@ -42,7 +42,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -238,21 +237,14 @@ public final class LanguageServerConfiguration {
   }
 
 
-  public static File getConfigurationFile(Path rootPath) {
+  private static File getConfigurationFile(Path rootPath) {
     File configurationFile = null;
     List<Path> listPath = new ArrayList<>();
-    Stream<Path> stream = null;
-    try {
-      stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
-        basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find());
+    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
+      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
       listPath = stream.collect(Collectors.toList());
     } catch (IOException e) {
-      LOGGER.error(Arrays.toString(e.getStackTrace()));
-    }
-    finally {
-      if (stream != null) {
-        stream.close();
-      }
+      LOGGER.error("Error on read configuration file", e);
     }
     if (!listPath.isEmpty()) {
       configurationFile = listPath.get(0).toFile();
