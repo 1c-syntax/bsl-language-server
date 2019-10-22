@@ -70,4 +70,8 @@ public final class DiagnosticHelper {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
   }
 
+  public static boolean isWSDefinitionsType(ParseTree tnc) {
+    return "WSОпределения".equalsIgnoreCase(tnc.getText()) || "WSDefinitions".equalsIgnoreCase(tnc.getText());
+  }
+
 }
