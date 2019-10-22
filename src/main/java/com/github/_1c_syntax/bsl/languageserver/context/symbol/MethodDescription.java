@@ -26,6 +26,7 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MethodDescription {
 
@@ -35,11 +36,12 @@ public class MethodDescription {
   private final String description;
 
   public MethodDescription(List<Token> comments) {
-    this.description = comments.stream()
+    description = comments.stream()
       .map(Token::getText)
+      .map(MethodDescription::uncomment)
       .collect(Collectors.joining("\n"));
 
-    if(comments.isEmpty()) {
+    if (comments.isEmpty()) {
       startLine = 0;
       endLine = 0;
       return;
@@ -53,6 +55,14 @@ public class MethodDescription {
     int firstLine = first.getLine();
     int lastLine = last.getLine();
     return (firstLine >= startLine && lastLine <= endLine);
+  }
+
+  private static String uncomment(String text) {
+    String result = text;
+    if (result.startsWith("//")) {
+      result = result.substring(2);
+    }
+    return result;
   }
 
 }
