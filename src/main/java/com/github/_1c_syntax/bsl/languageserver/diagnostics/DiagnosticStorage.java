@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,10 +68,17 @@ public class DiagnosticStorage {
       diagnostic.getDiagnosticMessage()));
   }
 
+  protected void addDiagnostic(Range range, String diagnosticMessage) {
+    diagnosticList.add(BSLDiagnostic.createDiagnostic(
+      diagnostic,
+      range,
+      diagnosticMessage));
+  }
+
   protected void addDiagnostic(Token token) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
-      RangeHelper.newRange(token),
+      Ranges.create(token),
       diagnostic.getDiagnosticMessage()
     ));
   }
@@ -79,7 +86,7 @@ public class DiagnosticStorage {
   protected void addDiagnostic(Token startToken, Token endToken) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
-      RangeHelper.newRange(startToken, endToken),
+      Ranges.create(startToken, endToken),
       diagnostic.getDiagnosticMessage()
     ));
   }
@@ -87,7 +94,7 @@ public class DiagnosticStorage {
   protected void addDiagnostic(Token token, String diagnosticMessage) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
-      RangeHelper.newRange(token),
+      Ranges.create(token),
       diagnosticMessage
     ));
   }
@@ -115,7 +122,7 @@ public class DiagnosticStorage {
   ) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
-      RangeHelper.newRange(node),
+      Ranges.create(node),
       diagnosticMessage,
       relatedInformation
     ));
@@ -128,7 +135,7 @@ public class DiagnosticStorage {
   ) {
     diagnosticList.add(BSLDiagnostic.createDiagnostic(
       diagnostic,
-      RangeHelper.newRange(token),
+      Ranges.create(token),
       diagnosticMessage,
       relatedInformation
     ));

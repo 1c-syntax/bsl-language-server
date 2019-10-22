@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -37,7 +39,6 @@ import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -53,7 +54,9 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 class BSLTextDocumentServiceTest {
 
-  private BSLTextDocumentService textDocumentService = new BSLTextDocumentService(LanguageServerConfiguration.create());
+  private BSLTextDocumentService textDocumentService = new BSLTextDocumentService(
+    LanguageServerConfiguration.create(),
+    new ServerContext());
 
   @Test
   void completion() throws ExecutionException, InterruptedException {

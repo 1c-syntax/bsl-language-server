@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -42,17 +42,18 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 0, 6, 81));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 4, 34, 16));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(36, 4, 42, 156));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(44, 4, 49, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(59, 4, 65, 78));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(76, 0, 80, 18));
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(RangeHelper.newRange(82, 0, 82, 23));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(RangeHelper.newRange(84, 0, 84, 46));
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(RangeHelper.newRange(87, 0, 106, 2));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(RangeHelper.newRange(121, 0, 122, 24));
+    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 0, 6, 81));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(16, 4, 34, 16));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(36, 4, 42, 156));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(44, 4, 49, 16));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(59, 4, 65, 78));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(76, 0, 80, 18));
+    assertThat(diagnostics.get(6).getRange()).isEqualTo(Ranges.create(82, 0, 82, 23));
+    assertThat(diagnostics.get(7).getRange()).isEqualTo(Ranges.create(84, 0, 85, 38));
+    assertThat(diagnostics.get(8).getRange()).isEqualTo(Ranges.create(117, 0, 118, 24));
+    assertThat(diagnostics.get(9).getRange()).isEqualTo(Ranges.create(203, 0, 203, 32));
+    assertThat(diagnostics.get(10).getRange()).isEqualTo(Ranges.create(244, 0, 264, 152));
   }
 
   @Test

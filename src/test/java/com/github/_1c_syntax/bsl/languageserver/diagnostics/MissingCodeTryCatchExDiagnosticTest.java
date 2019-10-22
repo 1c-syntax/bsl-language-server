@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -44,9 +44,9 @@ class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<Missing
 
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 4, 23, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(32, 4, 32, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(50, 8, 50, 18)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 4, 23, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(32, 4, 32, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(50, 8, 50, 18)));
 
   }
 
@@ -61,8 +61,8 @@ class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<Missing
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 4, 23, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(50, 8, 50, 18)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 4, 23, 14)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(50, 8, 50, 18)));
 
   }
 }

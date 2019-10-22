@@ -18,7 +18,7 @@ Symbols (or groups of symbols) to check are set by three lists. Symbols inside t
 
 Incorrect
 
-```Bsl
+```bsl
 Procedure Sum(Param1,Param2)
     If Param1=Param2 Then
         Sum=Price*Quantity;
@@ -28,7 +28,7 @@ EndProcedure
 
 Correct
 
-```Bsl
+```bsl
 Procedure Sum(Param1, Param2)
     If Param1 = Param2 Then
         Sum = Price * Quantity;

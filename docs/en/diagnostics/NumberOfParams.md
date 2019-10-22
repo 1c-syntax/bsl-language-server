@@ -8,7 +8,7 @@ If need to pass many parameters to a function, it is recommended to group same-t
 
 Incorrect:
 
-```
+```bsl
 // Create item in catalog "Goods"
 Процедура СоздатьЭлементНоменклатуры(Наименование, ТоварУслуга, ЕдиницаИзмерения, ВесНетто, ПроверятьУникальность = Истина)
 
@@ -19,7 +19,7 @@ Correct:
 
 Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
-```
+```bsl
 // Create item in catalog "Goods"
 Процедура СоздатьЭлементНоменклатуры(ЗначенияРеквизитов, ПроверятьУникальность = Истина)
 КонецПроцедуры

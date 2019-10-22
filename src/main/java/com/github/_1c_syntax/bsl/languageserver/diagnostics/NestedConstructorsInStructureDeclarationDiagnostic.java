@@ -21,17 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.NewExpressionContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +47,11 @@ import java.util.stream.Collectors;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.ALL,
-  minutesToFix = 10
+  minutesToFix = 10,
+  tags = {
+    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.BRAINOVERLOAD
+  }
 )
 public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -91,17 +97,17 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    relatedInformation.add(RangeHelper.createRelatedInformation(
+    relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
-      RangeHelper.newRange(ctx),
+      Ranges.create(ctx),
       relatedMessage
     ));
 
     nestedNewContext.stream()
       .map(expressionContext ->
-        RangeHelper.createRelatedInformation(
+        RelatedInformation.create(
           documentContext.getUri(),
-          RangeHelper.newRange((BSLParser.NewExpressionContext) expressionContext),
+          Ranges.create((BSLParser.NewExpressionContext) expressionContext),
           relatedMessage
         )
       )

@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
@@ -29,9 +32,7 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -96,19 +97,16 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     return getDocumentContext(diagnostic.getClass().getSimpleName());
   }
 
+  @SneakyThrows
   private DocumentContext getDocumentContext(String SimpleFileName) {
-    String textDocumentContent;
-    try {
-      textDocumentContent = IOUtils.resourceToString(
-        "diagnostics/" + SimpleFileName + ".bsl",
-        StandardCharsets.UTF_8,
-        this.getClass().getClassLoader()
-      );
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    String filePath = "diagnostics/" + SimpleFileName + ".bsl";
+    String textDocumentContent = IOUtils.resourceToString(
+      filePath,
+      StandardCharsets.UTF_8,
+      this.getClass().getClassLoader()
+    );
 
-    return new DocumentContext("file:///fake-uri.bsl", textDocumentContent);
+    return TestUtils.getDocumentContext(textDocumentContent);
   }
 
 }

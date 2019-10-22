@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 @Value
 @Builder
@@ -34,6 +34,7 @@ public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
+  private final MethodDescription description;
 
   @ToString.Exclude
   private final RegionSymbol region;
@@ -43,7 +44,7 @@ public class MethodSymbol implements Symbol {
 
   private final Range range;
   private final Range subNameRange;
-  
+
   @Override
   public void clearASTData() {
     node = null;

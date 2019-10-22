@@ -21,16 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.CheckForNull;
 import java.util.List;
@@ -42,7 +43,10 @@ import java.util.regex.Pattern;
   type = DiagnosticType.VULNERABILITY,
   severity = DiagnosticSeverity.CRITICAL,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 15
+  minutesToFix = 15,
+  tags = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -59,6 +63,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private static final Pattern patternMethodInsert = Pattern.compile(
     "Вставить|Insert",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final Pattern patternCheckPassword = Pattern.compile("^[\\*]+$", Pattern.UNICODE_CASE);
 
   @DiagnosticParameter(
     type = String.class,
@@ -216,7 +222,14 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private static boolean isNotEmptyStringByToken(Token token) {
-    return token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    boolean result = token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    if (result) {
+      boolean foundStars = patternCheckPassword.matcher(token.getText().replace("\"", "")).find();
+      if (foundStars) {
+        result = false;
+      }
+    }
+    return result;
   }
 
   private static String getClearString(String inputString) {

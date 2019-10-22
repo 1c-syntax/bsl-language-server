@@ -21,14 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
+  type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
-  minutesToFix = 5
+  minutesToFix = 5,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.ERROR
+  }
 )
 public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnostic {
 

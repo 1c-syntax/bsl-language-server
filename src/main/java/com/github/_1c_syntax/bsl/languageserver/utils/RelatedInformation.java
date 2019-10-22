@@ -19,32 +19,20 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context;
+package com.github._1c_syntax.bsl.languageserver.utils;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Range;
 
-import javax.annotation.CheckForNull;
+public class RelatedInformation {
 
-public final class Trees {
-
-  private Trees() {
-    // only statics
+  private RelatedInformation() {
+    // Utility class
   }
 
-  /** Ищем предка элемента по указанному типу BSLParser
-   * Пример:
-   * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
-   */
-  @CheckForNull
-  public static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
-    ParserRuleContext parent = element.getParent();
-    if (parent == null) {
-      return null;
-    }
-    if (parent.getRuleIndex() == type) {
-      return parent;
-    }
-    return getAncestorByRuleIndex(parent, type);
+  public static DiagnosticRelatedInformation create(String uri, Range range, String message) {
+    Location location = new Location(uri, range);
+    return new DiagnosticRelatedInformation(location, message);
   }
-
 }

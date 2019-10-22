@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -40,9 +40,9 @@ class TryNumberDiagnosticTest extends AbstractDiagnosticTest<TryNumberDiagnostic
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 12));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 4, 9, 13));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 8, 12, 17));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(8, 4, 8, 12));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(9, 4, 9, 13));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(12, 8, 12, 17));
 
   }
 }

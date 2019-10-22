@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.apache.commons.cli.CommandLine;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
-import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

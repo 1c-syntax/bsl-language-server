@@ -4,7 +4,7 @@ It is unacceptable to catch any exceptions without a trace for the system admini
 
 *Wrong*
 
-```
+```bsl
 Попытка 
     // код, приводящий к вызову исключения
     ....
@@ -17,7 +17,7 @@ As a rule, such a design hides a real problem, which is subsequently impossible 
 
 *Right*
 
-```
+```bsl
 Попытка 
     // код, приводящий к вызову исключения
     ....

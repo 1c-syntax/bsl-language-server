@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DiagnosticIgnoranceComputerTest {
@@ -39,8 +39,8 @@ class DiagnosticIgnoranceComputerTest {
   void testDiagnosticIgnorance() throws IOException {
 
     // given
-    final DocumentContext documentContext =
-      getDocumentContext("./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl");
+    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
+    final DocumentContext documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 
@@ -70,7 +70,7 @@ class DiagnosticIgnoranceComputerTest {
   private static Diagnostic createDiagnostic(String code, int line) {
     Diagnostic diagnostic = new Diagnostic();
     diagnostic.setCode(code);
-    diagnostic.setRange(RangeHelper.newRange(line, 0, line, 0));
+    diagnostic.setRange(Ranges.create(line, 0, line, 0));
 
     return diagnostic;
   }

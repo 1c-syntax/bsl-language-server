@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -40,11 +40,13 @@ public class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosti
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
+    assertThat(diagnostics).hasSize(3);
+
     // then
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 11, 3, 54)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(4, 11, 4, 83)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 9, 20, 20)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 11, 3, 54)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 11, 4, 83)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 9, 20, 20)));
 
   }
 }

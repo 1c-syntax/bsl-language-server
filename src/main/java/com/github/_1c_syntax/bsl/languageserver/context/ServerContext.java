@@ -21,15 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
+import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
+import com.github._1c_syntax.mdclasses.metadata.configurations.EmptyConfiguration;
 import org.eclipse.lsp4j.TextDocumentItem;
 
 import javax.annotation.CheckForNull;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServerContext {
   private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private final Lazy<AbstractConfiguration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private Path pathToConfigurationMetadata;
+
+  public ServerContext() {
+    this(null);
+  }
+
+  public ServerContext(Path pathToConfigurationMetadata) {
+    this.pathToConfigurationMetadata = pathToConfigurationMetadata;
+  }
 
   public Map<String, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
@@ -44,7 +59,7 @@ public class ServerContext {
 
     DocumentContext documentContext = documents.get(uri);
     if (documentContext == null) {
-      documentContext = new DocumentContext(uri, content);
+      documentContext = new DocumentContext(uri, content, this);
       documents.put(uri, documentContext);
     } else {
       documentContext.rebuild(content);
@@ -59,6 +74,27 @@ public class ServerContext {
 
   public void clear() {
     documents.clear();
+    configurationMetadata.clear();
   }
+
+  public void setPathToConfigurationMetadata(Path pathToConfigurationMetadata) {
+    this.pathToConfigurationMetadata = pathToConfigurationMetadata;
+  }
+
+  public AbstractConfiguration getConfiguration() {
+    return configurationMetadata.getOrCompute();
+  }
+
+  private AbstractConfiguration computeConfigurationMetadata() {
+    if (pathToConfigurationMetadata == null) {
+      return new EmptyConfiguration();
+    }
+
+    ConfigurationBuilder configurationBuilder =
+      new ConfigurationBuilder(pathToConfigurationMetadata);
+
+    return configurationBuilder.build();
+  }
+
 
 }

@@ -21,12 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -37,7 +38,10 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
   minutesToFix = 15,
-  activatedByDefault = false
+  activatedByDefault = false,
+  tags = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   private Pattern modalityMethods = Pattern.compile(

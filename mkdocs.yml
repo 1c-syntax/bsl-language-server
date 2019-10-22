@@ -1,0 +1,30 @@
+site_name: BSL Language Server
+nav:
+  - Домашняя: index.md
+  - Руководство контрибьютора: contributing/index.md
+  - Репортеры: reporters/index.md
+  - Диагностики: diagnostics/index.md
+  - English: https://1c-syntax.github.io/bsl-language-server/en
+theme: 
+  name: material
+  language: ru
+  logo: 'assets/images/logo.png'
+  favicon: 'assets/images/logo.png'
+  palette:
+    primary: 'white'
+    accent: 'indigo'
+extra:
+  search:
+    language: 'en, ru'
+  social:
+    - type: 'github'
+      link: 'https://github.com/1c-syntax'
+    - type: 'telegram'
+      link: 'https://t.me/bsl_language_server'
+markdown_extensions:
+  - admonition
+  - codehilite
+      
+repo_name: '1c-syntax/bsl-language-server'
+repo_url: 'https://github.com/1c-syntax/bsl-language-server'
+edit_uri: 'edit/develop/docs'

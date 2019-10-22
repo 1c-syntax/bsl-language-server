@@ -21,6 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -55,17 +66,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
-import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
@@ -75,7 +75,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
-  private final ServerContext context = new ServerContext();
+  private final ServerContext context;
   private final LanguageServerConfiguration configuration;
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
@@ -84,9 +84,10 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @CheckForNull
   private LanguageClient client;
 
-  public BSLTextDocumentService(LanguageServerConfiguration configuration) {
+  public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
     this.configuration = configuration;
-    diagnosticProvider = new DiagnosticProvider(this.configuration);
+    this.context = context;
+    diagnosticProvider = new DiagnosticProvider(this.configuration, this.context);
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
     codeLensProvider = new CodeLensProvider(this.configuration);
   }

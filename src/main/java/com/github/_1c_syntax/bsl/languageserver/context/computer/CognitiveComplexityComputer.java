@@ -21,20 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
-import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -385,7 +385,7 @@ public class CognitiveComplexityComputer
       message = String.format("+%d", increment);
     }
 
-    SecondaryLocation secondaryLocation = new SecondaryLocation(RangeHelper.newRange(token), message);
+    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message);
     List<SecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

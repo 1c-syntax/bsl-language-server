@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -42,12 +42,12 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(5, 1, 5, 6));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(17, 2, 17, 18));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(24, 4, 24, 21));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(35, 0, 35, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(37, 0, 37, 21));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(38, 4, 38, 9));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(5, 1, 5, 6));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(17, 2, 17, 18));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(24, 4, 24, 21));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(35, 0, 35, 16));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(37, 0, 37, 21));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(38, 4, 38, 9));
   }
 
   @Test
@@ -56,7 +56,7 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     List<Diagnostic> diagnostics = getDiagnostics("EmptyCodeBlockDiagnosticFileCodeBlock");
 
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 4, 4, 16));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 4, 4, 16));
   }
 
   @Test
@@ -70,8 +70,8 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 4, 24, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(37, 0, 37, 21)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 4, 24, 21)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(37, 0, 37, 21)));
   }
 
   @Test

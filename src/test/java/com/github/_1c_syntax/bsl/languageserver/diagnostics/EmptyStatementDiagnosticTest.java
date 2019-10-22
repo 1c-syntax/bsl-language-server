@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -42,8 +42,8 @@ class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatement
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 18, 1, 19));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(2, 8, 2, 9));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(1, 18, 1, 19));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(2, 8, 2, 9));
 
   }
 
@@ -53,7 +53,7 @@ class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatement
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
       diagnostics.get(0),
-      RangeHelper.newRange(3, 19, 3, 19)
+      Ranges.create(3, 19, 3, 19)
     );
 
     assertThat(quickFixes)

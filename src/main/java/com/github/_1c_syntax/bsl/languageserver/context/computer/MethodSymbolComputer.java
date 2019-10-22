@@ -21,14 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -70,8 +72,9 @@ public final class MethodSymbolComputer
       .function(true)
       .node(ctx)
       .region(findRegion(startNode, stopNode))
-      .range(RangeHelper.newRange(startNode, stopNode))
-      .subNameRange(RangeHelper.newRange(declaration.subName()))
+      .range(Ranges.create(startNode, stopNode))
+      .subNameRange(Ranges.create(declaration.subName()))
+      .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
       .build();
 
     methods.add(methodSymbol);
@@ -96,8 +99,9 @@ public final class MethodSymbolComputer
       .function(false)
       .node(ctx)
       .region(findRegion(startNode, stopNode))
-      .range(RangeHelper.newRange(startNode, stopNode))
-      .subNameRange(RangeHelper.newRange(declaration.subName()))
+      .range(Ranges.create(startNode, stopNode))
+      .subNameRange(Ranges.create(declaration.subName()))
+      .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
       .build();
 
     methods.add(methodSymbol);
@@ -120,5 +124,56 @@ public final class MethodSymbolComputer
 
     return region.orElse(null);
 
+  }
+
+  private MethodDescription findMethodDescription(int startIndex) {
+    List<Token> comments = getMethodComments(startIndex, new ArrayList<>());
+    if (comments.isEmpty()) {
+      return null;
+    }
+
+    return new MethodDescription(comments);
+  }
+
+  private List<Token> getMethodComments(int index, List<Token> lines) {
+    if (index == 0) {
+      return lines;
+    }
+
+    Token token = documentContext.getTokens().get(index - 1);
+
+    if (abortSearch(token)) {
+      return lines;
+    }
+
+    lines = getMethodComments(token.getTokenIndex(), lines);
+    int type = token.getType();
+    if (type == BSLParser.LINE_COMMENT) {
+      lines.add(token);
+    }
+    return lines;
+  }
+
+  private boolean abortSearch(Token token) {
+    int type = token.getType();
+    return (
+      type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
+        && type != BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+        && type != BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
+        && type != BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
+        && type != BSLParser.ANNOTATION_ATSERVER_SYMBOL
+        && type != BSLParser.ANNOTATION_CUSTOM_SYMBOL
+        && type != BSLParser.ANNOTATION_UKNOWN
+        && type != BSLParser.LINE_COMMENT
+        && type != BSLParser.WHITE_SPACE
+        && type != BSLParser.RULE_annotationParams
+    )
+      || isBlankLine(token);
+  }
+
+  private boolean isBlankLine(Token token) {
+    return token.getType() == BSLParser.WHITE_SPACE
+      && (token.getTokenIndex() == 0
+      || documentContext.getTokens().get(token.getTokenIndex() - 1).getLine() != token.getLine());
   }
 }

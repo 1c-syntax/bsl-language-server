@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -40,8 +40,8 @@ class UnknownPreprocessorSymbolDiagnosticTest extends AbstractDiagnosticTest<Unk
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(0, 6, 0, 11));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(4, 6, 4, 7));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 6, 0, 11));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(4, 6, 4, 7));
   }
 }
 

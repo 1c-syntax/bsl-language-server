@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -42,8 +42,8 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 9));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 6, 3, 7));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 9));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(3, 6, 3, 7));
 
   }
 
@@ -53,7 +53,7 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
       diagnostics.get(0),
-      RangeHelper.newRange(6, 10, 6, 10)
+      Ranges.create(6, 10, 6, 10)
     );
 
     assertThat(quickFixes)
