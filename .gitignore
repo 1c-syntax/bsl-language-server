@@ -63,3 +63,7 @@ gen/
 .idea/sonarlint.xml
 *.bak
 *.orig
+
+# mkdocs
+temp/
+public/

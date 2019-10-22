@@ -9,7 +9,7 @@ If need to pass many parameters to a function, it is recommended to group same-t
 
 Incorrect:
 
-```
+```bsl
 // Create an item in catalog "Goods"
 Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
 ...
@@ -20,7 +20,7 @@ Correct:
 
 Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
-```
+```bsl
 // Create an item in the catalog "Goods"
 Procedure CreateSKU(ParamsValue, Check = Истина)
 ...
