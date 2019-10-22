@@ -25,10 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.Collection;
 import java.util.List;
@@ -106,7 +106,7 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
 					needContinue = checkTimeoutIntoParamList(newExpression, isContact);
 					if (needContinue) {
 						BSLParser.StatementContext statementContext = (BSLParser.StatementContext)
-							com.github._1c_syntax.bsl.languageserver.context.Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
+							Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
 						String variableName = getVariableName(statementContext);
 						int filterLine = newExpression.getStart().getLine();
 						Collection<ParseTree> listNextStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)

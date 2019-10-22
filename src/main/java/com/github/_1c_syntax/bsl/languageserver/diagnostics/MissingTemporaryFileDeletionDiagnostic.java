@@ -25,11 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.google.common.annotations.VisibleForTesting;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.Collection;
 import java.util.List;
@@ -99,7 +98,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       int filterLine = ctx.getStart().getLine();
       BSLParser.CodeBlockContext codeBlockContext = (BSLParser.CodeBlockContext)
-        com.github._1c_syntax.bsl.languageserver.context.Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
+        Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
 
       if (codeBlockContext == null) {
         return super.visitGlobalMethodCall(ctx);
@@ -183,7 +182,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   private String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
 
     BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      com.github._1c_syntax.bsl.languageserver.context.Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment == null) {
       return null;
