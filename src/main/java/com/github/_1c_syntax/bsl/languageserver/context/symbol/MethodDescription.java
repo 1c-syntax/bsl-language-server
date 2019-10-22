@@ -26,7 +26,6 @@ import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MethodDescription {
 

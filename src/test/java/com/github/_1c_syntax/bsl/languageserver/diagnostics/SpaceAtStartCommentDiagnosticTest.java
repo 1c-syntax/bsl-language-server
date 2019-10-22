@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -45,11 +45,11 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 0, 20, 56)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 0, 6, 20)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 12, 8, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(9, 16, 9, 32)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 0, 20, 56)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(22, 0, 22, 40)));
   }
 
   @Test
@@ -63,11 +63,11 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 12, 8, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 32)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(22, 0, 22, 40)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(28, 0, 28, 81)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 0, 6, 20)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 12, 8, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(9, 16, 9, 32)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(22, 0, 22, 40)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(28, 0, 28, 81)));
   }
 
   @Test
@@ -76,7 +76,7 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
       diagnostics.get(0),
-      RangeHelper.newRange(6, 10, 6, 20)
+      Ranges.create(6, 10, 6, 20)
     );
 
     assertThat(quickFixes)
@@ -99,7 +99,7 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
       diagnostics.get(1),
-      RangeHelper.newRange(8, 12, 8, 26)
+      Ranges.create(8, 12, 8, 26)
     );
 
     assertThat(quickFixes)

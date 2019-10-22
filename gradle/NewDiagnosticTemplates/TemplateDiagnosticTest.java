@@ -20,7 +20,7 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 0, 6, 20)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 0, 6, 20)));
 
   }
 }

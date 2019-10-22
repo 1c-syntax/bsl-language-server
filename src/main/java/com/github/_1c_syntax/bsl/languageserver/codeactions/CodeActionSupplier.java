@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
 import java.util.List;
 

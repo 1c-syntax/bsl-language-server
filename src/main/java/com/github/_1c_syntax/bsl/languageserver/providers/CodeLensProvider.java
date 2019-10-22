@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Command;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.Command;
 
 import java.util.ArrayList;
 import java.util.Collections;

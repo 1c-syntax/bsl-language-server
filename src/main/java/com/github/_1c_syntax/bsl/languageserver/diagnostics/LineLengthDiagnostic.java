@@ -21,16 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -91,7 +91,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
       Integer maxCharPosition = max.orElse(0);
       if (maxCharPosition > maxLineLength) {
-        Range range = RangeHelper.newRange(key, 0, key, maxCharPosition);
+        Range range = Ranges.create(key, 0, key, maxCharPosition);
         diagnostics.add(BSLDiagnostic.createDiagnostic(
           this,
           range,

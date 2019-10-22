@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.FoldingRange;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

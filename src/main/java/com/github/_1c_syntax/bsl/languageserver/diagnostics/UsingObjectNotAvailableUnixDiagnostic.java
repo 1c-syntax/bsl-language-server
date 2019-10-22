@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -51,7 +51,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern patternTypePlatform = Pattern.compile(
-    "Linux_x86",
+    "Linux_x86|Windows|MacOS",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   /**
@@ -82,8 +82,8 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     }
     String content = ancestor.getText();
     Matcher matcher = patternTypePlatform.matcher(content);
-    if (!matcher.find()) {
-      return false;
+    if (matcher.find()) {
+      return true;
     }
     return isFindIfBranchWithLinuxCondition(ancestor);
   }

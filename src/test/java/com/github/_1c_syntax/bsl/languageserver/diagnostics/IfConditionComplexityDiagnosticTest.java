@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -44,10 +44,10 @@ public class IfConditionComplexityDiagnosticTest extends AbstractDiagnosticTest<
 
     // then
     assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 5, 10, 51));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(27, 6, 30, 60));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(45, 5, 48, 36));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(51, 10, 57, 37));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(2, 5, 10, 51));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(27, 6, 30, 60));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(45, 5, 48, 36));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(51, 10, 57, 37));
   }
 
   @Test
@@ -63,8 +63,8 @@ public class IfConditionComplexityDiagnosticTest extends AbstractDiagnosticTest<
 
     // then
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(2, 5, 10, 51));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(51, 10, 57, 37));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(2, 5, 10, 51));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(51, 10, 57, 37));
 
   }
 

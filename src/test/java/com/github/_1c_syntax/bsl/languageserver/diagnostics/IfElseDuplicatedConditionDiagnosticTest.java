@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -47,41 +47,41 @@ public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticT
     assertThat(diagnostics).hasSize(4);
 
     List<Range> relatedInformation = new ArrayList<>();
-    relatedInformation.add(RangeHelper.newRange(3, 10, 3, 15));
-    relatedInformation.add(RangeHelper.newRange(5, 10, 5, 15));
-    relatedInformation.add(RangeHelper.newRange(9, 10, 9, 21));
+    relatedInformation.add(Ranges.create(3, 10, 3, 15));
+    relatedInformation.add(Ranges.create(5, 10, 5, 15));
+    relatedInformation.add(Ranges.create(9, 10, 9, 21));
 
     checkDiagnosticContent(
       diagnostics.get(0),
-      RangeHelper.newRange(3, 10, 3, 15),
+      Ranges.create(3, 10, 3, 15),
       relatedInformation);
 
     relatedInformation.clear();
-    relatedInformation.add(RangeHelper.newRange(17, 10, 17, 15));
-    relatedInformation.add(RangeHelper.newRange(27, 10, 27, 15));
+    relatedInformation.add(Ranges.create(17, 10, 17, 15));
+    relatedInformation.add(Ranges.create(27, 10, 27, 15));
 
     checkDiagnosticContent(
       diagnostics.get(1),
-      RangeHelper.newRange(17, 10, 17, 15),
+      Ranges.create(17, 10, 17, 15),
       relatedInformation);
 
     relatedInformation.clear();
-    relatedInformation.add(RangeHelper.newRange(20, 13, 20, 18));
-    relatedInformation.add(RangeHelper.newRange(22, 13, 22, 18));
+    relatedInformation.add(Ranges.create(20, 13, 20, 18));
+    relatedInformation.add(Ranges.create(22, 13, 22, 18));
 
     checkDiagnosticContent(
       diagnostics.get(2),
-      RangeHelper.newRange(20, 13, 20, 18),
+      Ranges.create(20, 13, 20, 18),
       relatedInformation);
 
     relatedInformation.clear();
-    relatedInformation.add(RangeHelper.newRange(41, 5, 41, 17));
-    relatedInformation.add(RangeHelper.newRange(43, 10, 43, 22));
-    relatedInformation.add(RangeHelper.newRange(45, 10, 45, 22));
+    relatedInformation.add(Ranges.create(41, 5, 41, 17));
+    relatedInformation.add(Ranges.create(43, 10, 43, 22));
+    relatedInformation.add(Ranges.create(45, 10, 45, 22));
 
     checkDiagnosticContent(
       diagnostics.get(3),
-      RangeHelper.newRange(41, 5, 41, 17),
+      Ranges.create(41, 5, 41, 17),
       relatedInformation);
 
   }

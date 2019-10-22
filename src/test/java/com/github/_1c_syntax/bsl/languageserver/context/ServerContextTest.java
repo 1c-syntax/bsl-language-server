@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
+import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

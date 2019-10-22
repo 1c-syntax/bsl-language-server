@@ -129,8 +129,8 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics(); // Получение диагностик
 
     assertThat(diagnostics).hasSize(2); // Проверка количества
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 9)); // Проверка конкретного случая
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 6, 3, 7)); // Проверка конкретного случая
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 9)); // Проверка конкретного случая
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(3, 6, 3, 7)); // Проверка конкретного случая
   }
 }
 ```

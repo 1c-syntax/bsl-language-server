@@ -21,18 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +89,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
         List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-        relatedInformation.add(RangeHelper.createRelatedInformation(
+        relatedInformation.add(RelatedInformation.create(
           documentContext.getUri(),
           methodSymbol.getSubNameRange(),
           getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
@@ -99,7 +100,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
         secondaryLocations.stream()
           .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
-            RangeHelper.createRelatedInformation(
+            RelatedInformation.create(
               documentContext.getUri(),
               secondaryLocation.getRange(),
               secondaryLocation.getMessage()
@@ -144,9 +145,9 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
       List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-      relatedInformation.add(RangeHelper.createRelatedInformation(
+      relatedInformation.add(RelatedInformation.create(
         documentContext.getUri(),
-        RangeHelper.newRange(ctx.getStart()),
+        Ranges.create(ctx.getStart()),
         getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold)
       ));
 
@@ -155,7 +156,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
       secondaryLocations.stream()
         .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
-          RangeHelper.createRelatedInformation(
+          RelatedInformation.create(
             documentContext.getUri(),
             secondaryLocation.getRange(),
             secondaryLocation.getMessage()

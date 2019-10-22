@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,7 +43,7 @@ class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorDiagnost
     // then
     assertThat(diagnostics.size()).isBetween(1, 2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(5, 0, 5, 9)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 0, 5, 9)));
     
   }
 }

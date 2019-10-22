@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -69,8 +69,8 @@ public final class DocumentSymbolProvider {
     DocumentSymbol documentSymbol = new DocumentSymbol(
       regionSymbol.getName(),
       SymbolKind.Namespace,
-      RangeHelper.newRange(regionSymbol.getStartNode().getStart(), regionSymbol.getEndNode().getStop()),
-      RangeHelper.newRange(regionSymbol.getNameNode())
+      Ranges.create(regionSymbol.getStartNode().getStart(), regionSymbol.getEndNode().getStop()),
+      Ranges.create(regionSymbol.getNameNode())
     );
 
     List<DocumentSymbol> children = new ArrayList<>();
@@ -123,8 +123,8 @@ public final class DocumentSymbolProvider {
       .map(subVarDeclarationContext -> new DocumentSymbol(
         subVarDeclarationContext.var_name().getText(),
         SymbolKind.Variable,
-        RangeHelper.newRange(subVarDeclarationContext),
-        RangeHelper.newRange(subVarDeclarationContext.var_name())
+        Ranges.create(subVarDeclarationContext),
+        Ranges.create(subVarDeclarationContext.var_name())
       ))
       .collect(Collectors.toList());
   }
@@ -141,8 +141,8 @@ public final class DocumentSymbolProvider {
       .map(moduleVarDeclarationContext -> new DocumentSymbol(
         moduleVarDeclarationContext.var_name().getText(),
         SymbolKind.Variable,
-        RangeHelper.newRange(moduleVarDeclarationContext),
-        RangeHelper.newRange(moduleVarDeclarationContext.var_name())
+        Ranges.create(moduleVarDeclarationContext),
+        Ranges.create(moduleVarDeclarationContext.var_name())
       ))
       .collect(Collectors.toList());
   }

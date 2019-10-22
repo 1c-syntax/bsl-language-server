@@ -25,14 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.util.Ranges;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -101,7 +100,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (!nodes.isEmpty()) {
       BSLParser.PreprocessorContext previous = (BSLParser.PreprocessorContext) nodes.pop();
       preprocessorRanges.add(
-        RangeHelper.newRange(
+        Ranges.create(
           previous.getStop().getLine(),
           previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
           node.getStart().getLine(),
@@ -144,7 +143,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     // если это вложенный в ранее обработанный блок, то исключим из проверки
     Position pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     for (Range range : errorRanges) {
-      if (Ranges.containsPosition(range, pos)) {
+      if (org.eclipse.lsp4j.util.Ranges.containsPosition(range, pos)) {
         return;
       }
     }
@@ -182,7 +181,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       // если последний стейт не текущий, значит он будет недостижим
       if (!ppNode.equals(endCurrentBlockNode)) {
         int indexStart = statements.indexOf(ppNode);
-        Range newRange = RangeHelper.newRange(
+        Range newRange = Ranges.create(
           ((BSLParserRuleContext) statements.get(indexStart - 1)).getStart(),
           endCurrentBlockNode.getStop());
         diagnosticStorage.addDiagnostic(newRange);
@@ -197,7 +196,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
     for (Range range : preprocessorRanges) {
-      if (Ranges.containsPosition(range, pos)) {
+      if (org.eclipse.lsp4j.util.Ranges.containsPosition(range, pos)) {
         preprocRange = range;
       }
     }
@@ -212,7 +211,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
         Position posStatement = new Position(
           ((BSLParserRuleContext) statement).getStart().getLine(),
           ((BSLParserRuleContext) statement).getStart().getCharPositionInLine());
-        if (Ranges.containsPosition(preprocRange, posStatement)) {
+        if (org.eclipse.lsp4j.util.Ranges.containsPosition(preprocRange, posStatement)) {
           endCurrentBlockNode = (BSLParserRuleContext) statement;
           break;
         }

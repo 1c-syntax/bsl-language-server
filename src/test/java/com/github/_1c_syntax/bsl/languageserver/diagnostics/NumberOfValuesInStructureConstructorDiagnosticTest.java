@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -45,10 +45,10 @@ public class NumberOfValuesInStructureConstructorDiagnosticTest
 
     assertThat(diagnostics).hasSize(4);
 
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(18, 12, 18, 119));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(23, 28, 23, 89));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(65, 9, 65, 78));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(70, 28, 70, 88));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(18, 12, 18, 119));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(23, 28, 23, 89));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(65, 9, 65, 78));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(70, 28, 70, 88));
 
   }
 

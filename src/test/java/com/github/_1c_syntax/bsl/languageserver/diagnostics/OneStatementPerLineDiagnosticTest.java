@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -40,8 +40,8 @@ class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatem
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(3, 8, 3, 13));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(8, 18, 8, 32));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 5, 12, 9));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 8, 3, 13));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(8, 18, 8, 32));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(12, 5, 12, 9));
   }
 }

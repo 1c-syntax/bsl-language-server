@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,12 +39,12 @@ public class ExtraCommasDiagnosticTest extends AbstractDiagnosticTest<ExtraComma
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 35, 8, 36));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 35, 9, 36));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(10, 49, 10, 50));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(11, 45, 11, 46));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(13, 31, 13, 32));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(RangeHelper.newRange(17, 38, 17, 39));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(8, 35, 8, 36));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(9, 35, 9, 36));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(10, 49, 10, 50));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(11, 45, 11, 46));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(13, 31, 13, 32));
+    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(17, 38, 17, 39));
 
   }
 

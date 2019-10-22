@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -57,9 +57,9 @@ class DocumentSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Variable))
       .hasSize(3)
       .extracting(Either::getRight)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(0, 6, 0, 7)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(2, 6, 2, 7)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(2, 9, 2, 10)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(0, 6, 0, 7)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 6, 2, 7)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 9, 2, 10)))
       ;
 
     // methods
@@ -67,10 +67,10 @@ class DocumentSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Method))
       .hasSize(4)
       .extracting(Either::getRight)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(4, 0, 5, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(7, 0, 8, 12)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(10, 0, 13, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(RangeHelper.newRange(30, 0, 34, 35)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(4, 0, 5, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(30, 0, 34, 35)))
       .anyMatch(documentSymbol -> documentSymbol.getChildren().size() == 3)
     ;
 
@@ -80,9 +80,9 @@ class DocumentSymbolProviderTest {
       .extracting(Either::getRight)
       .flatExtracting(DocumentSymbol::getChildren)
       .hasSize(3)
-      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(11, 10, 11, 11)))
-      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(12, 10, 12, 11)))
-      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(12, 12, 12, 13)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(11, 10, 11, 11)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 10, 12, 11)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 12, 12, 13)))
       ;
 
     // regions
@@ -100,7 +100,7 @@ class DocumentSymbolProviderTest {
       .flatExtracting(DocumentSymbol::getChildren)
       .hasSize(1)
       .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
-      .anyMatch(subVar -> subVar.getRange().equals(RangeHelper.newRange(23, 0, 25, 14)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(23, 0, 25, 14)))
       ;
 
   }

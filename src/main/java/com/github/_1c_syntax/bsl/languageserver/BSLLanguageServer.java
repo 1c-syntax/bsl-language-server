@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.InitializeParams;
@@ -32,7 +33,6 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 
 import java.io.File;
 import java.nio.file.Path;

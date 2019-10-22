@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import org.apache.commons.io.FileUtils;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;

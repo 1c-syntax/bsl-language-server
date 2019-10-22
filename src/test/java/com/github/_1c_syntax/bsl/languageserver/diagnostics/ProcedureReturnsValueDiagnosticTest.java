@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -44,8 +44,8 @@ public class ProcedureReturnsValueDiagnosticTest extends AbstractDiagnosticTest<
 
     // then
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(8, 4, 8, 16));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(16, 8, 16, 37));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(28, 12, 28, 30));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(8, 4, 8, 16));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(16, 8, 16, 37));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(28, 12, 28, 30));
   }
 }

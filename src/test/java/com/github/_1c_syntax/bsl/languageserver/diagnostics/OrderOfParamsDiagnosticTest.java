@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -41,7 +41,7 @@ class OrderOfParamsDiagnosticTest extends AbstractDiagnosticTest<OrderOfParamsDi
 
     assertThat(diagnostics).hasSize(1);
 
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(14, 52, 14, 102));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(14, 52, 14, 102));
 
   }
 }

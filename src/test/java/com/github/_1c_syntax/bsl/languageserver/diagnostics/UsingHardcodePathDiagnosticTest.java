@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -46,37 +46,37 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 
 		// then
 		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(5, 16, 5, 38)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 16, 6, 50)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(7, 16, 7, 43)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 16, 8, 59)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 16, 9, 38)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(10, 16, 10, 50)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(11, 16, 11, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 16, 12, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 16, 13, 28)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(15, 16, 15, 41)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 16, 16, 44)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(18, 16, 18, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 16, 19, 36)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(20, 16, 20, 37)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 16, 21, 38)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(31, 15, 31, 31)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(35, 23, 35, 39)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(36, 23, 36, 34)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(38, 23, 38, 64)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(39, 23, 39, 64)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(41, 44, 41, 85)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 18, 49, 29)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(52, 10, 52, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(53, 23, 53, 60)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(57, 15, 57, 30)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(59, 22, 59, 48)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(61, 7, 61, 145)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(62, 7, 62, 119)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(63, 7, 63, 39)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(65, 59, 65, 77)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(79, 2, 79, 70)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 16, 5, 38)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 16, 6, 50)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(7, 16, 7, 43)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 16, 8, 59)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(9, 16, 9, 38)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(10, 16, 10, 50)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 16, 11, 27)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 27)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 16, 13, 28)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 16, 15, 41)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 16, 16, 44)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(18, 16, 18, 27)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 16, 19, 36)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 16, 20, 37)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 16, 21, 38)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 15, 31, 31)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(35, 23, 35, 39)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(36, 23, 36, 34)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(38, 23, 38, 64)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(39, 23, 39, 64)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(41, 44, 41, 85)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(49, 18, 49, 29)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(52, 10, 52, 27)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(53, 23, 53, 60)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(57, 15, 57, 30)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(59, 22, 59, 48)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(61, 7, 61, 145)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(62, 7, 62, 119)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(63, 7, 63, 39)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(65, 59, 65, 77)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(79, 2, 79, 70)));
 
 	}
 
