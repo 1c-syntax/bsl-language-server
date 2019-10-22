@@ -1,5 +1,12 @@
 # Missing temporary file deletion after using
 
+## Parameters
+
+* `searchDeleteFileMethod` - `Строка` - Keywords to search methods for move or delete files. 
+Default ``УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``.
+
+## Examples
+
 Incorrect:
 ```bsl
 TempFileName = GetTempFileName("xml");
