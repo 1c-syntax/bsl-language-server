@@ -16,6 +16,33 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
     private var tagsListPattern = Regex("DiagnosticTag\\.\\s*?([\\w]*)[,\\s]*",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
 
+    private var typePattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+type\\s*?=\\s" +
+            "*?DiagnosticType\\.([\\w]*?)[\\s,\\)]\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+    private var severityPattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+severity\\s*?=\\s" +
+            "*?DiagnosticSeverity\\.([\\w]*?)[\\s,\\)]\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+
+    private var typeRuMap = hashMapOf("ERROR" to "Ошибка",
+            "VULNERABILITY" to "Уязвимость",
+            "CODE_SMELL" to "Дефект кода");
+
+    private var typeEnMap = hashMapOf("ERROR" to "Error",
+            "VULNERABILITY" to "Vulnerability",
+            "CODE_SMELL" to "Code smell");
+
+    private var severityRuMap = hashMapOf("BLOCKER" to "Блокирующий",
+            "CRITICAL" to "Критичный",
+            "MAJOR" to "Важный",
+            "MINOR" to "Незначительный",
+            "INFO" to "Информационный");
+
+    private var severityEnMap = hashMapOf("BLOCKER" to "Blocker",
+            "CRITICAL" to "Critical",
+            "MAJOR" to "Major",
+            "MINOR" to "Minor",
+            "INFO" to "Info");
+
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty();
 
@@ -58,10 +85,10 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
         val text = indexPath.readText(charset("UTF-8"));
 
         var header = "## Список реализованных диагностик";
-        var table = "| Ключ | Название | Включена по умолчанию | Тэги |\n| --- | --- | :-: | --- |";
+        var table = "| Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |\n| --- | --- | :-: | --- | --- | --- |";
         if(lang != "") {
             header = "## Implemented diagnostics";
-            table = "| Key | Name| Enabled by default | Tags |\n| --- | --- | :-: | --- |";
+            table = "| Key | Name| Enabled by default | Severity | Type | Tags |\n| --- | --- | :-: | --- | --- | --- |";
         }
         val indexHeader = text.indexOf(header);
         indexPath.writeText(text.substring(0, indexHeader - 1) + "\n${header}\n\n${table}${indexText}",
@@ -87,7 +114,7 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
                         val nameRu = getName(key, "ru");
                         val nameEn = getName(key, "en");
                         var enabled = true;
-                        val match = enabledPattern.find(text);
+                        var match = enabledPattern.find(text);
                         if(match != null && match.groups.isNotEmpty()) {
                             enabled = match.groups[1]?.value?.toBoolean() ?: true;
                         }
@@ -96,8 +123,25 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
                         val readmeRu = getReadme(key, "");
                         val readmeEn = getReadme(key, "en/");
                         val tags = getTags(text);
-                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $tags |";
-                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $tags |";
+                        var typeRu= "";
+                        var typeEn= "";
+                        var severityRu = "";
+                        var severityEn = "";
+                        match = typePattern.find(text);
+                        if(match != null && match.groups.isNotEmpty()) {
+                            val type = match.groups[1]?.value.toString();
+                            typeRu = typeRuMap.getOrDefault(type, "Ошибка");
+                            typeEn = typeEnMap.getOrDefault(type, "Error");
+                        }
+                        match = severityPattern.find(text);
+                        if(match != null && match.groups.isNotEmpty()) {
+                            val severity = match.groups[1]?.value.toString();
+                            severityRu = severityRuMap.getOrDefault(severity, "Блокирующий");
+                            severityEn = severityEnMap.getOrDefault(severity, "Blocker");
+                        }
+
+                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $severityRu | $typeRu | $tags |";
+                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $severityEn | $typeEn | $tags |";
                     }
                 }
         writeIndex(indexRu, "");
