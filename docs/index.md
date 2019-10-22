@@ -180,8 +180,10 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | `standard`<br/>`badpractice` |
 | [MissingSpace](diagnostics/MissingSpace.md) | Пропущен пробел | Да | `badpractice` |
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да | `badpractice`<br/>`brainoverload` |
+| [NestedFunctionsInStructureDeclaration](diagnostics/NestedFunctionsInStructureDeclaration.md) | Ограничение на использовании функций с параметрами при объявлении структуры | Да |  |
 | [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да | `brainoverload` |
+| [NonExportMethodsInApiRegion](diagnostics/NonExportMethodsInApiRegion.md) | Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс | Да | `standard` |
 | [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да | `standard`<br/>`brainoverload` |
 | [NumberOfParams](diagnostics/NumberOfParams.md) | Ограничение на количество параметров метода | Да | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да | `standard`<br/>`brainoverload` |
