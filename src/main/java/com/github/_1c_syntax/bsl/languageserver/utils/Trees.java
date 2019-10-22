@@ -24,15 +24,40 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class Trees {
 
   private Trees() {
     // only statics
+  }
+
+  private static int getRuleIndex(ParseTree node) {
+    if (node instanceof TerminalNode) {
+      return ((TerminalNode) node).getSymbol().getType();
+    } else {
+      return ((BSLParserRuleContext) node).getRuleIndex();
+    }
+  }
+
+  private static List<ParseTree> getDescendantsWithFilter(ParseTree parent, ParseTree tnc, int ruleindex) {
+    List<ParseTree> descendants;
+    if (getRuleIndex(tnc) == ruleindex) {
+      descendants = new ArrayList<>(org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(parent, ruleindex));
+    } else {
+      descendants = org.antlr.v4.runtime.tree.Trees.getDescendants(parent)
+        .stream()
+        .filter(node -> node instanceof BSLParserRuleContext)
+        .filter(node -> (getRuleIndex(node) == getRuleIndex(tnc)
+          || getRuleIndex(node) == ruleindex))
+        .collect(Collectors.toList());
+    }
+    return descendants;
   }
 
   /** Ищем предка элемента по указанному типу BSLParser
@@ -81,21 +106,43 @@ public final class Trees {
    * @return tnc - если предыдущая нода не найдена, вернет текущую
    */
   public static ParseTree getPreviousNode(ParseTree parent, ParseTree tnc, int ruleindex) {
-    List<ParseTree> statements = new ArrayList<>(org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(parent, ruleindex));
 
-    int pos = statements.indexOf(tnc);
+    List<ParseTree> descendants = getDescendantsWithFilter(parent, tnc, ruleindex);
+
+    int pos = descendants.indexOf(tnc);
     if (pos > 0) {
-      return statements.get(pos - 1);
+      return descendants.get(pos - 1);
     }
+
+    return tnc;
+  }
+
+  /**
+   * Выполняет поиск следующей ноды нужного типа
+   *
+   * @param parent    - родительская нода, среди дочерних которой производится поиск
+   * @param tnc       - нода, для которой ищем следующую
+   * @param ruleindex - BSLParser.RULE_*
+   * @return tnc - если следующая нода не найдена, вернет текущую
+   */
+  public static ParseTree getNextNode(ParseTree parent, ParseTree tnc, int ruleindex) {
+
+    List<ParseTree> descendants = getDescendantsWithFilter(parent, tnc, ruleindex);
+
+    int pos = descendants.indexOf(tnc);
+    if (pos + 1 < descendants.size()) {
+      return descendants.get(pos + 1);
+    }
+
     return tnc;
   }
 
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды
    */
-  public static ParseTree getRootParent(ParseTree tnc) {
+  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc) {
     if (tnc.getParent() != null) {
-      return getRootParent(tnc.getParent());
+      return getRootParent((BSLParserRuleContext) tnc.getParent());
     }
 
     return tnc;
