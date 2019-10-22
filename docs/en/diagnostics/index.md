@@ -8,6 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
+Total:**57**
+
+* Error: **20**
+* Code smell: **36**
+* Vulnerability: **1**
+
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
 | [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` |
