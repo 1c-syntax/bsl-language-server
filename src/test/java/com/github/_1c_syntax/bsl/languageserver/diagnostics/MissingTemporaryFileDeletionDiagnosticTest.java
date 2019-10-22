@@ -45,8 +45,8 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
 
     assertThat(diagnostics)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 29, 6, 62)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(17, 30, 17, 63)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 30, 21, 63)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 30, 19, 63)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 30, 25, 63)))
     ;
 
   }
