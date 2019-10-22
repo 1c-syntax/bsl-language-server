@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.google.common.annotations.VisibleForTesting;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Trees;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
 
 public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final String REGEX_DELETION_FILE = "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile";
+  public static final String REGEX_DELETION_FILE = "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile";
 
   private static final Pattern searchGetTempFileName = Pattern.compile(
     "^(ПолучитьИмяВременногоФайла|GetTempFileName)",
