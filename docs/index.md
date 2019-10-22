@@ -156,59 +156,59 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 
 ### Список реализованных диагностик
 
-| Ключ | Название | Включена по умолчанию |
-| --- | --- | :-: |
-| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да |
-| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
-| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да |
-| [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да |
-| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да |
-| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
-| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
-| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
-| [EmptyStatement](diagnostics/EmptyStatement.md) | Пустой оператор | Да |
-| [ExtraCommas](diagnostics/ExtraCommas.md) | Лишние запятые при вызове метода | Да |
-| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да |
-| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да |
-| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | Слишком сложное условие оператора Если | Да |
-| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да |
-| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да |
-| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да |
-| [LineLength](diagnostics/LineLength.md) | Ограничение на длину строки | Да |
-| [MagicNumber](diagnostics/MagicNumber.md) | Использование магического числа | Да |
-| [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да |
-| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да |
-| [MissingSpace](diagnostics/MissingSpace.md) | Пропущен пробел | Да |
-| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да |
-| [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да |
-| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да |
-| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да |
-| [NumberOfParams](diagnostics/NumberOfParams.md) | Ограничение на количество параметров метода | Да |
-| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да |
-| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | Одно выражение в одной строке | Да |
-| [OrderOfParams](diagnostics/OrderOfParams.md) | Порядок параметров метода | Да |
-| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да |
-| [ParseError](diagnostics/ParseError.md) | Ошибка разбора исходного кода | Да |
-| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да |
-| [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да |
-| [SelfInsertion](diagnostics/SelfInsertion.md) | Вставка коллекции в саму себя | Да |
-| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да |
-| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да |
-| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да |
-| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет |
-| [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да |
-| [UnaryPlusInConcatenation](diagnostics/UnaryPlusInConcatenation.md) | Унарный плюс в конкатенации строк | Да |
-| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да |
-| [UnreachableCode](diagnostics/UnreachableCode.md) | Недостижимый код | Да |
-| [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
-| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
-| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
-| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
-| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да |
-| [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да |
-| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
-| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да |
-| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
-| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
-| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да |
-| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |
+| Ключ | Название | Включена по умолчанию | Тэги |
+| --- | --- | :-: | --- |
+| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | `standard` |
+| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | `standard` |
+| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да | `brainoverload` |
+| [CommentedCode](diagnostics/CommentedCode.md) | Закомментированный фрагмент кода | Да | `standard`<br/>`badpractice` |
+| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | `standard` |
+| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да | `standard`<br/>`error` |
+| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | `standard`<br/>`deprecated` |
+| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да | `badpractice`<br/>`suspicious` |
+| [EmptyStatement](diagnostics/EmptyStatement.md) | Пустой оператор | Да | `badpractice` |
+| [ExtraCommas](diagnostics/ExtraCommas.md) | Лишние запятые при вызове метода | Да | `standard`<br/>`badpractice` |
+| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | `suspicious`<br/>`unpredictable` |
+| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да | `suspicious` |
+| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | Слишком сложное условие оператора Если | Да | `brainoverload` |
+| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да | `suspicious` |
+| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да | `suspicious` |
+| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | `badpractice` |
+| [LineLength](diagnostics/LineLength.md) | Ограничение на длину строки | Да | `standard`<br/>`badpractice` |
+| [MagicNumber](diagnostics/MagicNumber.md) | Использование магического числа | Да | `badpractice` |
+| [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да | `badpractice` |
+| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | `standard`<br/>`badpractice` |
+| [MissingSpace](diagnostics/MissingSpace.md) | Пропущен пробел | Да | `badpractice` |
+| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да | `badpractice`<br/>`brainoverload` |
+| [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да | `badpractice`<br/>`brainoverload` |
+| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да | `brainoverload` |
+| [NonExportMethodsInApiRegion](diagnostics/NonExportMethodsInApiRegion.md) | Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс | Да | `standard` |
+| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да | `standard`<br/>`brainoverload` |
+| [NumberOfParams](diagnostics/NumberOfParams.md) | Ограничение на количество параметров метода | Да | `standard`<br/>`brainoverload` |
+| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да | `standard`<br/>`brainoverload` |
+| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | Одно выражение в одной строке | Да | `standard`<br/>`design` |
+| [OrderOfParams](diagnostics/OrderOfParams.md) | Порядок параметров метода | Да | `standard`<br/>`design` |
+| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да | `standard` |
+| [ParseError](diagnostics/ParseError.md) | Ошибка разбора исходного кода | Да | `error` |
+| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | `error` |
+| [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да | `suspicious` |
+| [SelfInsertion](diagnostics/SelfInsertion.md) | Вставка коллекции в саму себя | Да | `standard`<br/>`unpredictable`<br/>`performance` |
+| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да | `standard`<br/>`badpractice` |
+| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да | `unpredictable`<br/>`error` |
+| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да | `standard` |
+| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет | `brainoverload` |
+| [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да | `standard` |
+| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да | `standard`<br/>`error` |
+| [UnreachableCode](diagnostics/UnreachableCode.md) | Недостижимый код | Да | `design`<br/>`suspicious` |
+| [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да | `clumsy` |
+| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да | `standard`<br/>`badpractice` |
+| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да | `standard`<br/>`badpractice`<br/>`performance` |
+| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да | `standard`<br/>`badpractice` |
+| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да | `standard` |
+| [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да | `standard` |
+| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет | `standard` |
+| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да | `standard`<br/>`lockinos` |
+| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да | `badpractice` |
+| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет | `standard` |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да | `standard`<br/>`deprecated` |
+| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да | `standard` |

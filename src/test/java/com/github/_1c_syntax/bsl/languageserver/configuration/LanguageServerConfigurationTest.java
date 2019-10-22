@@ -29,12 +29,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerConfigurationTest {
+
+  private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   @BeforeEach
   void startUp() throws IOException {
@@ -59,7 +63,7 @@ class LanguageServerConfigurationTest {
   void createFromFile() {
 
     // given
-    File configurationFile = new File("./src/test/resources/.bsl-language-server.json");
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
 
     // when
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
@@ -82,5 +86,24 @@ class LanguageServerConfigurationTest {
     assertThat(methodSize.isLeft()).isTrue();
     assertThat(methodSize.getLeft()).isEqualTo(false);
 
+    Path configurationRoot = configuration.getConfigurationRoot();
+    assertThat(configurationRoot).isNotEqualTo(null);
+
   }
+
+  @Test
+  void test_GetCustomConfigurationRoot() {
+
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
+    Path path = Paths.get(PATH_TO_METADATA);
+    Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
+    assertThat(configurationRoot.toAbsolutePath()).isEqualTo(path.toAbsolutePath());
+
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
+    configuration = LanguageServerConfiguration.create(configurationFile);
+    configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
+    assertThat(configurationRoot.toAbsolutePath()).isEqualTo(path.toAbsolutePath());
+
+  }
+
 }
