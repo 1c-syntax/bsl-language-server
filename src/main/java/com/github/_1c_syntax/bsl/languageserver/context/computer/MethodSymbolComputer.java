@@ -127,8 +127,8 @@ public final class MethodSymbolComputer
   }
 
   private MethodDescriptionSymbol findMethodDescription(int startIndex) {
-    List<Token> comments = getMethodComments(startIndex, null);
-    if(comments == null || comments.size() == 0) {
+    List<Token> comments = getMethodComments(startIndex, new ArrayList<>());
+    if (comments.isEmpty()) {
       return null;
     }
 
@@ -136,23 +136,19 @@ public final class MethodSymbolComputer
   }
 
   private List<Token> getMethodComments(int index, List<Token> lines) {
-    if(index == 0) {
+    if (index == 0) {
       return lines;
     }
 
     Token token = documentContext.getTokens().get(index - 1);
 
-    if(lines == null) {
-      lines = new ArrayList<>();
-    }
-
-    if(abortSearch(token)){
+    if (abortSearch(token)) {
       return lines;
     }
 
     lines = getMethodComments(token.getTokenIndex(), lines);
     int type = token.getType();
-    if(type == BSLParser.LINE_COMMENT) {
+    if (type == BSLParser.LINE_COMMENT) {
       lines.add(token);
     }
     return lines;
@@ -161,7 +157,7 @@ public final class MethodSymbolComputer
   private boolean abortSearch(Token token) {
     int type = token.getType();
     return (
-        type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
+      type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
         && type != BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
         && type != BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
         && type != BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
@@ -171,13 +167,13 @@ public final class MethodSymbolComputer
         && type != BSLParser.LINE_COMMENT
         && type != BSLParser.WHITE_SPACE
         && type != BSLParser.RULE_annotationParams
-      )
+    )
       || isBlankLine(token);
   }
 
   private boolean isBlankLine(Token token) {
     return token.getType() == BSLParser.WHITE_SPACE
       && (token.getTokenIndex() == 0
-        || documentContext.getTokens().get(token.getTokenIndex() - 1).getLine() != token.getLine());
+      || documentContext.getTokens().get(token.getTokenIndex() - 1).getLine() != token.getLine());
   }
 }

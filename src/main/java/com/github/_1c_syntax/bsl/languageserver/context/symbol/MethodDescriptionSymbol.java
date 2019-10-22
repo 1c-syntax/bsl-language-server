@@ -21,20 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import lombok.Getter;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MethodDescriptionSymbol {
 
   private final int startLine;
   private final int endLine;
-  private final List<Token> comments;
+  @Getter
+  private final String description;
 
   public MethodDescriptionSymbol(List<Token> comments) {
-    this.comments = comments;
+    this.description = comments.stream()
+      .map(Token::getText)
+      .collect(Collectors.joining("\n"));
 
-    if(comments == null || comments.size() == 0) {
+    if(comments.isEmpty()) {
       startLine = 0;
       endLine = 0;
       return;

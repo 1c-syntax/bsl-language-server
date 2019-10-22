@@ -72,7 +72,7 @@ public class DocumentContext {
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
   private boolean callAdjustRegionsAfterCalculation;
   private final String uri;
-  private FileType fileType;
+  private final FileType fileType;
 
   @Deprecated
   public DocumentContext(String uri, String content) {
@@ -84,20 +84,15 @@ public class DocumentContext {
     this.content = content;
     this.context = context;
     this.tokenizer = new Tokenizer(content);
-    parseURI();
-  }
 
-  private void parseURI() {
-    if(uri == null) {
-      fileType = FileType.BSL;
-      return;
-    }
-
+    FileType fileTypeFromUri;
     try {
-      fileType = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
-    } catch (IllegalArgumentException e) {
-      fileType = FileType.BSL;
+      fileTypeFromUri = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
+    } catch (IllegalArgumentException ignored) {
+      fileTypeFromUri = FileType.BSL;
     }
+
+    fileType = fileTypeFromUri;
   }
 
   public BSLParser.FileContext getAst() {

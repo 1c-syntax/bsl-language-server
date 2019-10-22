@@ -102,7 +102,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     List<List<Token>> groups = new ArrayList<>();
     List<Token> currentGroup = null;
 
-    for(Token comment : comments) {
+    for (Token comment : comments) {
       if (currentGroup == null) {
         currentGroup = initNewGroup(comment);
       } else if (isAdjacent(comment, currentGroup)) {
@@ -150,17 +150,14 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isCommentGroupNotMethodDescription(List<Token> commentGroup) {
-    if(methodsDescription.size() == 0){
+    if (methodsDescription.isEmpty()) {
       return true;
     }
 
-    for(MethodDescriptionSymbol methodDescription: methodsDescription) {
-      if(methodDescription.contains(commentGroup.get(0), commentGroup.get(commentGroup.size() - 1))) {
-        return false;
-      }
-    }
+    final Token first = commentGroup.get(0);
+    final Token last = commentGroup.get(commentGroup.size() - 1);
 
-    return true;
+    return methodsDescription.stream().noneMatch(methodDescription -> methodDescription.contains(first, last));
   }
 
   private void checkCommentGroup(List<Token> commentGroup) {
@@ -176,17 +173,17 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isTextParsedAsCode(String text) {
-    if(codeRecognizer.meetsCondition(text)) {
+    if (codeRecognizer.meetsCondition(text)) {
       Tokenizer tokenizer = new Tokenizer(uncomment(text));
       final List<Token> tokens = tokenizer.getTokens();
 
       // Если меньше двух токенов нет смысла анализировать - это код
-      if(tokens.size() < 2) {
+      if (tokens.size() < 2) {
         return true;
       }
 
       List<Integer> tokenTypes = tokens.stream()
-        .map(t -> t.getType())
+        .map(Token::getType)
         .filter(t -> t != BSLParser.WHITE_SPACE)
         .collect(Collectors.toList());
 
@@ -204,7 +201,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static String uncomment(String comment) {
-    if(comment.startsWith("//")) {
+    if (comment.startsWith("//")) {
       return uncomment(comment.substring(2));
     }
     return comment;
