@@ -39,7 +39,7 @@ jobs:
       if: github.ref == 'refs/heads/develop'
       run: |
         mkdir public
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public || true
         rm -rf public/dev || true
         mkdir public/dev
             
