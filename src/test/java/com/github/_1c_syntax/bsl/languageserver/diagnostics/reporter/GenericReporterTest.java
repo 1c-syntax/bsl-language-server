@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -69,7 +70,7 @@ class GenericReporterTest {
     Location location = new Location("file:///fake-uri.bsl", RangeHelper.newRange(0, 2, 2, 3));
     diagnostic.setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
-    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
+    DocumentContext documentContext = TestUtils.getDocumentContext("");
     FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 

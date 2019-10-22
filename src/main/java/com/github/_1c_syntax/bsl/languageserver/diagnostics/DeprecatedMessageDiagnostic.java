@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -34,7 +35,11 @@ import java.util.regex.Pattern;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 2
+  minutesToFix = 2,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.DEPRECATED
+  }
 )
 public class DeprecatedMessageDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(

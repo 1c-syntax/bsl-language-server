@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -40,7 +41,10 @@ import java.util.stream.Collectors;
  */
 @DiagnosticMetadata(
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 10
+  minutesToFix = 10,
+  tags = {
+    DiagnosticTag.SUSPICIOUS
+  }
 )
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
