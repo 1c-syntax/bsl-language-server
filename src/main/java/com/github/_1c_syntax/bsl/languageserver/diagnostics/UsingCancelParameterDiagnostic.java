@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 
 import java.util.Collection;
 import java.util.List;

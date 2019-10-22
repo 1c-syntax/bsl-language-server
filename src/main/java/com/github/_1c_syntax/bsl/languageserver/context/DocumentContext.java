@@ -37,7 +37,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;

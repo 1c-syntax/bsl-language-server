@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Tree;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,30 @@ public final class Trees {
   private Trees() {
     // only statics
   }
+
+  /**
+   * Обертки Trees
+   */
+
+  public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
+    return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
+  }
+
+  public static List<Tree> getChildren(Tree t) {
+    return org.antlr.v4.runtime.tree.Trees.getChildren(t);
+  }
+
+  public static Collection<ParseTree> findAllTokenNodes(ParseTree t, int ttype) {
+    return org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(t, ttype);
+  }
+
+  public static List<ParseTree> getDescendants(ParseTree t) {
+    return org.antlr.v4.runtime.tree.Trees.getDescendants(t);
+  }
+
+  /**
+   * Собственная реализация
+   */
 
   private static int getRuleIndex(ParseTree node) {
     if (node instanceof TerminalNode) {
@@ -60,7 +86,8 @@ public final class Trees {
     return descendants;
   }
 
-  /** Ищем предка элемента по указанному типу BSLParser
+  /**
+   * Ищем предка элемента по указанному типу BSLParser
    * Пример:
    * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
