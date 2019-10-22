@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -45,7 +46,10 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1
+  minutesToFix = 1,
+  tags = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, QuickFixProvider {
 

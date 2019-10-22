@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -31,7 +32,10 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
   minutesToFix = 3,
-  activatedByDefault = false
+  activatedByDefault = false,
+  tags = {
+    DiagnosticTag.BRAINOVERLOAD
+  }
 )
 
 public class TernaryOperatorUsageDiagnostic extends AbstractVisitorDiagnostic {

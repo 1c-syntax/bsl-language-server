@@ -19,32 +19,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+public enum DiagnosticTag {
+  STANDARD("Нарушение стандартов 1С"),
+  LOCKINOS("Не будет работать в другой ОС"),
+  SQL("Проблема с запросом"),
+  PERFORMANCE("Проблема производительности"),
+  BRAINOVERLOAD("Непонятный код"),
+  BADPRACTICE("Плохая практика программирования"),
+  CLUMSY("Излишние действия"),
+  DESIGN("Ошибка в проектировании"),
+  SUSPICIOUS("Подозрительный код"),
+  UNPREDICTABLE("Непредсказуемо работающий код"),
+  DEPRECATED("Устаревшая функциональность"),
+  ERROR("Ошибочная конструкция")
+  ;
 
-import javax.annotation.CheckForNull;
-
-public final class Trees {
-
-  private Trees() {
-    // only statics
+  DiagnosticTag(String ru) {
   }
-
-  /** Ищем предка элемента по указанному типу BSLParser
-   * Пример:
-   * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
-   */
-  @CheckForNull
-  public static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
-    ParserRuleContext parent = element.getParent();
-    if (parent == null) {
-      return null;
-    }
-    if (parent.getRuleIndex() == type) {
-      return parent;
-    }
-    return getAncestorByRuleIndex(parent, type);
-  }
-
 }

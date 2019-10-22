@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -42,7 +43,10 @@ import java.util.regex.Pattern;
   type = DiagnosticType.VULNERABILITY,
   severity = DiagnosticSeverity.CRITICAL,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 15
+  minutesToFix = 15,
+  tags = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDiagnostic {
 

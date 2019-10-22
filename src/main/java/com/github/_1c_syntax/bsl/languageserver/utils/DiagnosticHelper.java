@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -72,19 +70,4 @@ public final class DiagnosticHelper {
     return "ФиксированнаяСтруктура".equalsIgnoreCase(tnc.getText()) || "FixedStructure".equalsIgnoreCase(tnc.getText());
   }
 
-  public static boolean findErrorNode(ParseTree tnc) {
-
-    if (tnc instanceof BSLParserRuleContext) {
-      if (((BSLParserRuleContext) tnc).exception != null) {
-        return true;
-      }
-
-      for (int i = 0; i < tnc.getChildCount(); i++) {
-        if (findErrorNode(tnc.getChild(i))) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
 }

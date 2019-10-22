@@ -57,6 +57,8 @@ dependencies {
 
     compile("com.github.1c-syntax", "bsl-parser", "0.10.0")
 
+    compile("com.github.1c-syntax:mdclasses:13a6833e56de3d15a94a120d27906b4013f2a132")
+
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.2")

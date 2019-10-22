@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -34,7 +35,10 @@ import java.util.Collection;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 5
+  minutesToFix = 5,
+  tags = {
+    DiagnosticTag.BRAINOVERLOAD
+  }
 )
 public class NestedTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic {
 
