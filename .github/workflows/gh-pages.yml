@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - master
+    - develop
 
 jobs:
   build-deploy:
@@ -21,10 +22,35 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install mkdocs mkdocs-material pygments-bsl
-    - name: Prepare
+    
+    - name: Dowload latest GitHub Pages
+      run: |
+        wget https://github.com/${{ github.repository }}/archive/gh-pages.zip || true
+        unzip gh-pages.zip || true
+    
+    - name: Save latest Develop
+      if: github.ref == 'refs/heads/master'
       run: |
         mkdir public
-        mkdir public/en
+        mkdir public/dev
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev. public/dev || true
+        
+    - name: Save latest Master
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        mkdir public
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public
+        rm -rf public/dev || true
+        mkdir public/dev
+            
+    - name: Patch Develop
+      if: github.ref == 'refs/heads/develop'
+      run: |         
+        sed -i "s%BSL Language Server%BSL Language Server Dev%g" mkdocs.yml
+        sed -i "s%BSL Language Server%BSL Language Server Dev%g" mkdocs.en.yml
+        sed -i "s%https://1c-syntax.github.io/bsl-language-server/en%https://1c-syntax.github.io/bsl-language-server/dev/en%g" mkdocs.yml
+        sed -i "s%https://1c-syntax.github.io/bsl-language-server/%https://1c-syntax.github.io/bsl-language-server/dev/%g" mkdocs.en.yml
+    
     - name: Build Russian
       run: |
         mkdir temp
@@ -33,8 +59,17 @@ jobs:
         rm -rf temp/docs/en
         cd temp
         mkdocs build
-        cd ..
+    
+    - name: Public Russian Master
+      if: github.ref == 'refs/heads/master'
+      run: |
         cp -R temp/site/. public
+    
+    - name: Public Russian Develop
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        cp -R temp/site/. public/dev
+    
     - name: Clean temp
       run: rm -rf temp
 
@@ -48,8 +83,18 @@ jobs:
         cp -R docs/assets/. temp/docs/assets
         cd temp
         mkdocs build
-        cd ..
+        
+    - name: Public English Master
+      if: github.ref == 'refs/heads/master'
+      run: |
+        mkdir public/en
         cp -R temp/site/. public/en
+    
+    - name: Public English Develop
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        mkdir public/dev/en
+        cp -R temp/site/. public/dev/en
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v2.5.0
       env:
