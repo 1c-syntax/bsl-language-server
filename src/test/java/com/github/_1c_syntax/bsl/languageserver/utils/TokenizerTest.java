@@ -19,34 +19,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.utils;
 
-import lombok.Builder;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
-import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.junit.jupiter.api.Test;
 
-@Value
-@Builder
-public class MethodSymbol implements Symbol {
-  private final String name;
-  private final boolean export;
-  private final boolean function;
-  private final MethodDescription description;
+import java.util.List;
 
-  @ToString.Exclude
-  private final RegionSymbol region;
+import static org.assertj.core.api.Assertions.assertThat;
 
-  @NonFinal
-  private BSLParserRuleContext node;
-
-  private final Range range;
-  private final Range subNameRange;
-
-  @Override
-  public void clearASTData() {
-    node = null;
+class TokenizerTest
+{
+  @Test
+  void checkTokenizer()
+  {
+    Tokenizer tokenizer = new Tokenizer("Если Условие() Тогда");
+    final List<Token> tokens = tokenizer.getTokens();
+    assertThat(tokens).hasSize(7);
   }
 }

@@ -30,26 +30,20 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.Trees;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -59,17 +53,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
-import static org.antlr.v4.runtime.Token.EOF;
 
 public class DocumentContext {
 
   private String content;
   private ServerContext context;
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
-  private Lazy<CommonTokenStream> tokenStream = new Lazy<>(this::computeTokenStream);
-  private Lazy<List<Token>> tokens = new Lazy<>(this::computeTokens);
+  private Tokenizer tokenizer;
   private Lazy<BSLParser.FileContext> ast = new Lazy<>(this::computeAST);
   private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics);
   private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>(this::computeCognitiveComplexity);
@@ -92,19 +83,16 @@ public class DocumentContext {
     this.uri = uri;
     this.content = content;
     this.context = context;
+    this.tokenizer = new Tokenizer(content);
 
     FileType fileTypeFromUri;
-
-    if (uri == null) {
+    try {
+      fileTypeFromUri = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
+    } catch (IllegalArgumentException ignored) {
       fileTypeFromUri = FileType.BSL;
-    } else {
-      try {
-        fileTypeFromUri = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
-      } catch (IllegalArgumentException e) {
-        fileTypeFromUri = FileType.BSL;
-      }
     }
-    this.fileType = fileTypeFromUri;
+
+    fileType = fileTypeFromUri;
   }
 
   public BSLParser.FileContext getAst() {
@@ -145,8 +133,7 @@ public class DocumentContext {
   }
 
   public List<Token> getTokens() {
-    final List<Token> tokensUnboxed = tokens.getOrCompute();
-    return new ArrayList<>(tokensUnboxed);
+    return tokenizer.getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
@@ -216,8 +203,7 @@ public class DocumentContext {
   public void clearASTData() {
     content = null;
     contentList.clear();
-    tokenStream.clear();
-    tokens.clear();
+    tokenizer.clear();
     ast.clear();
 
     nodeToMethodsMap.clear();
@@ -245,9 +231,7 @@ public class DocumentContext {
   }
 
   private CommonTokenStream getTokenStream() {
-    final CommonTokenStream tokenStreamUnboxed = tokenStream.getOrCompute();
-    tokenStreamUnboxed.seek(0);
-    return tokenStreamUnboxed;
+    return tokenizer.getTokenStream();
   }
 
   private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
@@ -256,44 +240,6 @@ public class DocumentContext {
 
   private String[] computeContentList() {
     return content.split("\n");
-  }
-
-  private CommonTokenStream computeTokenStream() {
-    requireNonNull(content);
-
-    CharStream input;
-
-    try (InputStream inputStream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
-         UnicodeBOMInputStream ubis = new UnicodeBOMInputStream(inputStream)
-    ) {
-
-      ubis.skipBOM();
-
-      input = CharStreams.fromStream(ubis, StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    BSLLexer lexer = new BSLLexer(input);
-
-    lexer.setInputStream(input);
-    lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
-
-    CommonTokenStream tempTokenStream = new CommonTokenStream(lexer);
-    tempTokenStream.fill();
-
-    return tempTokenStream;
-  }
-
-  private List<Token> computeTokens() {
-    List<Token> tokensTemp = new ArrayList<>(getTokenStream().getTokens());
-
-    Token lastToken = tokensTemp.get(tokensTemp.size() - 1);
-    if (lastToken.getType() == EOF) {
-      tokensTemp.remove(tokensTemp.size() - 1);
-    }
-
-    return tokensTemp;
   }
 
   private BSLParser.FileContext computeAST() {
