@@ -184,7 +184,8 @@ To escape individual sections of code or files from triggering diagnostics, you 
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes | `badpractice`<br/>`brainoverload` |
 | [NestedStatements](diagnostics/NestedStatements.md) | Control flow statements should not be nested too deep | Yes | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Nested ternary operator | Yes | `brainoverload` |
-| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Number of optional method parameters restriction | Yes | `standard`<br/>`brainoverload` |
+| [NonExportMethodsInApiRegion](diagnostics/NonExportMethodsInApiRegion.md) | Non export methods in API regions | Yes | `standard` |
+| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Limit number of optional parameters in method | Yes | `standard`<br/>`brainoverload` |
 | [NumberOfParams](diagnostics/NumberOfParams.md) | Number of method parameters restriction | Yes | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Number of values in structure constructor restriction | Yes | `standard`<br/>`brainoverload` |
 | [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | One statement per line | Yes | `standard`<br/>`design` |
@@ -195,7 +196,7 @@ To escape individual sections of code or files from triggering diagnostics, you 
 | [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes | `suspicious` |
 | [SelfInsertion](diagnostics/SelfInsertion.md) | Insert a collection into itself | Yes | `standard`<br/>`unpredictable`<br/>`performance` |
 | [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes | `standard`<br/>`badpractice` |
-| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Misuse of multiple compilation directives | Yes | `unpredictable`<br/>`error` |
+| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | `unpredictable`<br/>`error` |
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | `standard` |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No | `brainoverload` |
 | [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes | `standard` |
