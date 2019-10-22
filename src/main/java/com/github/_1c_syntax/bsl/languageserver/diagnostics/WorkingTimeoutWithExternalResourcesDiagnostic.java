@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -40,7 +41,11 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
 	type = DiagnosticType.ERROR,
 	severity = DiagnosticSeverity.CRITICAL,
-	minutesToFix = 5
+	minutesToFix = 5,
+	tags = {
+		DiagnosticTag.UNPREDICTABLE,
+		DiagnosticTag.STANDARD
+	}
 )
 public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
