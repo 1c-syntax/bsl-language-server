@@ -51,7 +51,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern patternTypePlatform = Pattern.compile(
-    "Linux_x86",
+    "Linux_x86|Windows|MacOS",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   /**
@@ -82,8 +82,8 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     }
     String content = ancestor.getText();
     Matcher matcher = patternTypePlatform.matcher(content);
-    if (!matcher.find()) {
-      return false;
+    if (matcher.find()) {
+      return true;
     }
     return isFindIfBranchWithLinuxCondition(ancestor);
   }
