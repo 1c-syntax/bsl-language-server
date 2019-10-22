@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescriptionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -126,13 +126,13 @@ public final class MethodSymbolComputer
 
   }
 
-  private MethodDescriptionSymbol findMethodDescription(int startIndex) {
+  private MethodDescription findMethodDescription(int startIndex) {
     List<Token> comments = getMethodComments(startIndex, new ArrayList<>());
     if (comments.isEmpty()) {
       return null;
     }
 
-    return new MethodDescriptionSymbol(comments);
+    return new MethodDescription(comments);
   }
 
   private List<Token> getMethodComments(int index, List<Token> lines) {

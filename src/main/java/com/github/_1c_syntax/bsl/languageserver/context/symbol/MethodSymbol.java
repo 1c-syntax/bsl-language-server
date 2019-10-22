@@ -34,7 +34,7 @@ public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
-  private final MethodDescriptionSymbol description;
+  private final MethodDescription description;
 
   @ToString.Exclude
   private final RegionSymbol region;
@@ -44,7 +44,7 @@ public class MethodSymbol implements Symbol {
 
   private final Range range;
   private final Range subNameRange;
-  
+
   @Override
   public void clearASTData() {
     node = null;

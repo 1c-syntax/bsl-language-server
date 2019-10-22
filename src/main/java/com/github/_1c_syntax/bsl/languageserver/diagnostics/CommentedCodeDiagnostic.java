@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescriptionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -63,7 +63,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
 
-  private List<MethodDescriptionSymbol> methodsDescription;
+  private List<MethodDescription> methodDescriptions;
   private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
@@ -84,7 +84,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
 
-    methodsDescription = documentContext.getMethods()
+    methodDescriptions = documentContext.getMethods()
       .stream()
       .map(MethodSymbol::getDescription)
       .filter(Objects::nonNull)
@@ -150,14 +150,14 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isCommentGroupNotMethodDescription(List<Token> commentGroup) {
-    if (methodsDescription.isEmpty()) {
+    if (methodDescriptions.isEmpty()) {
       return true;
     }
 
     final Token first = commentGroup.get(0);
     final Token last = commentGroup.get(commentGroup.size() - 1);
 
-    return methodsDescription.stream().noneMatch(methodDescription -> methodDescription.contains(first, last));
+    return methodDescriptions.stream().noneMatch(methodDescription -> methodDescription.contains(first, last));
   }
 
   private void checkCommentGroup(List<Token> commentGroup) {

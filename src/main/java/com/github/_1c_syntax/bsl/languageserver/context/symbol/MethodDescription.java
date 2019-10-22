@@ -27,14 +27,14 @@ import org.antlr.v4.runtime.Token;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MethodDescriptionSymbol {
+public class MethodDescription {
 
   private final int startLine;
   private final int endLine;
   @Getter
   private final String description;
 
-  public MethodDescriptionSymbol(List<Token> comments) {
+  public MethodDescription(List<Token> comments) {
     this.description = comments.stream()
       .map(Token::getText)
       .collect(Collectors.joining("\n"));
