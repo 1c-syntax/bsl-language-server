@@ -27,7 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.NewExpressionContext;
@@ -96,17 +97,17 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    relatedInformation.add(RangeHelper.createRelatedInformation(
+    relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
-      RangeHelper.newRange(ctx),
+      Ranges.create(ctx),
       relatedMessage
     ));
 
     nestedNewContext.stream()
       .map(expressionContext ->
-        RangeHelper.createRelatedInformation(
+        RelatedInformation.create(
           documentContext.getUri(),
-          RangeHelper.newRange((BSLParser.NewExpressionContext) expressionContext),
+          Ranges.create((BSLParser.NewExpressionContext) expressionContext),
           relatedMessage
         )
       )

@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -41,10 +41,10 @@ class SeveralCompilerDirectivesDiagnosticTest extends AbstractDiagnosticTest<Sev
 
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(15, 6, 15, 30)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 6, 19, 30)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 6, 25, 30)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 10, 40, 34)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(49, 10, 49, 34)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 6, 15, 30)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 6, 19, 30)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(25, 6, 25, 30)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 10, 40, 34)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(49, 10, 49, 34)));
   }
 }

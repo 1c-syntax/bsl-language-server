@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -44,8 +44,8 @@ class MethodSizeDiagnosticTest extends AbstractDiagnosticTest<MethodSizeDiagnost
 
     // then
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(6, 10, 6, 28));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(419, 8, 419, 24));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(6, 10, 6, 28));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(419, 8, 419, 24));
   }
 
   @Test

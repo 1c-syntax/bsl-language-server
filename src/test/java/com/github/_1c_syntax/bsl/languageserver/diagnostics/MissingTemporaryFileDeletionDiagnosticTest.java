@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -44,9 +44,9 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     assertThat(diagnostics).hasSize(3);
 
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(6, 29, 6, 62)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 30, 19, 63)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(25, 30, 25, 63)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 29, 6, 62)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 30, 19, 63)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(25, 30, 25, 63)))
     ;
 
   }

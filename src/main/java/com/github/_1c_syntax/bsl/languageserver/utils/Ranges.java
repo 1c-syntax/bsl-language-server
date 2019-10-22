@@ -24,26 +24,24 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-public final class RangeHelper {
+public final class Ranges {
 
-  private RangeHelper() {
+  private Ranges() {
     // Utility class
   }
 
-  public static Range newRange(int startLine, int startChar, int endLine, int endChar) {
+  public static Range create(int startLine, int startChar, int endLine, int endChar) {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
   }
 
-  public static Range newRange(ParserRuleContext ruleContext) {
-    return newRange(ruleContext.getStart(), ruleContext.getStop());
+  public static Range create(ParserRuleContext ruleContext) {
+    return create(ruleContext.getStart(), ruleContext.getStop());
   }
 
-  public static Range newRange(Token startToken, Token endToken) {
+  public static Range create(Token startToken, Token endToken) {
     int startLine = startToken.getLine() - 1;
     int startChar = startToken.getCharPositionInLine();
     int endLine = endToken.getLine() - 1;
@@ -54,28 +52,24 @@ public final class RangeHelper {
       endChar = endToken.getCharPositionInLine() + endToken.getText().length();
     }
 
-    return newRange(startLine, startChar, endLine, endChar);
+    return create(startLine, startChar, endLine, endChar);
   }
 
-  public static Range newRange(TerminalNode terminalNode) {
-    return newRange(terminalNode.getSymbol());
+  public static Range create(TerminalNode terminalNode) {
+    return create(terminalNode.getSymbol());
   }
 
-  public static Range newRange(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
-    return newRange(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
+  public static Range create(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
+    return create(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
 
-  public static Range newRange(Token token) {
+  public static Range create(Token token) {
     int startLine = token.getLine() - 1;
     int startChar = token.getCharPositionInLine();
     int endLine = token.getLine() - 1;
     int endChar = token.getCharPositionInLine() + token.getText().length();
 
-    return newRange(startLine, startChar, endLine, endChar);
+    return create(startLine, startChar, endLine, endChar);
   }
 
-  public static DiagnosticRelatedInformation createRelatedInformation(String uri, Range range, String message) {
-    Location location = new Location(uri, range);
-    return new DiagnosticRelatedInformation(location, message);
-  }
 }

@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
@@ -61,7 +61,7 @@ public class YoLetterUsageDiagnostic implements BSLDiagnostic {
     for (Token token : wrongIdentifiers) {
       diagnostics.add(BSLDiagnostic.createDiagnostic(
         this,
-        RangeHelper.newRange(token),
+        Ranges.create(token),
         getDiagnosticMessage()));
     }
 

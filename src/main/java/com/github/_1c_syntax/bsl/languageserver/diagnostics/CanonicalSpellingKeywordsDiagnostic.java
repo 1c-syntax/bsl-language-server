@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -596,7 +596,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
     for (Token token : keywords) {
       diagnostics.add(BSLDiagnostic.createDiagnostic(
         this,
-        RangeHelper.newRange(token),
+        Ranges.create(token),
         getDiagnosticMessage(token.getText())));
     }
 

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -63,7 +63,7 @@ class JUnitReporterTest {
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
     diagnostics.add(new Diagnostic(
-      RangeHelper.newRange(0, 1, 2, 3),
+      Ranges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
@@ -71,7 +71,7 @@ class JUnitReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      RangeHelper.newRange(0, 1, 2, 4),
+      Ranges.create(0, 1, 2, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
@@ -79,7 +79,7 @@ class JUnitReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      RangeHelper.newRange(3, 1, 4, 4),
+      Ranges.create(3, 1, 4, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",

@@ -25,7 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -94,17 +95,17 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    relatedInformation.add(RangeHelper.createRelatedInformation(
+    relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
-      RangeHelper.newRange(currentExpression),
+      Ranges.create(currentExpression),
       relatedMessage
     ));
 
     identicalExpressions.stream()
       .map(expressionContext ->
-        RangeHelper.createRelatedInformation(
+        RelatedInformation.create(
           documentContext.getUri(),
-          RangeHelper.newRange(expressionContext),
+          Ranges.create(expressionContext),
           relatedMessage
         )
       )

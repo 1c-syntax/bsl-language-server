@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 
@@ -83,7 +83,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
         matcher.find();
         return BSLDiagnostic.createDiagnostic(
           this,
-          RangeHelper.newRange(token),
+          Ranges.create(token),
           getDiagnosticMessage(matcher.group(0)));
       })
       .collect((Collectors.toList()));

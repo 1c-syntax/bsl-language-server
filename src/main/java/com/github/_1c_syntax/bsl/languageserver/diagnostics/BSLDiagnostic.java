@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -55,7 +55,7 @@ public interface BSLDiagnostic {
   default void configure(Map<String, Object> configuration) {}
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
-    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), bslDiagnostic.getDiagnosticMessage());
+    return createDiagnostic(bslDiagnostic, Ranges.create(node), bslDiagnostic.getDiagnosticMessage());
   }
 
   static Diagnostic createDiagnostic(
@@ -65,7 +65,7 @@ public interface BSLDiagnostic {
   ) {
     return createDiagnostic(
       bslDiagnostic,
-      RangeHelper.newRange(node),
+      Ranges.create(node),
       bslDiagnostic.getDiagnosticMessage(),
       relatedInformation
     );
@@ -78,14 +78,14 @@ public interface BSLDiagnostic {
   ) {
     return createDiagnostic(
       bslDiagnostic,
-      RangeHelper.newRange(token),
+      Ranges.create(token),
       bslDiagnostic.getDiagnosticMessage(),
       relatedInformation
     );
   }
 
   static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, String diagnosticMessage, BSLParserRuleContext node) {
-    return createDiagnostic(bslDiagnostic, RangeHelper.newRange(node), diagnosticMessage);
+    return createDiagnostic(bslDiagnostic, Ranges.create(node), diagnosticMessage);
   }
 
   static Diagnostic createDiagnostic(
@@ -97,7 +97,7 @@ public interface BSLDiagnostic {
   ) {
     return createDiagnostic(
       bslDiagnostic,
-      RangeHelper.newRange(startLine, startChar, endLine, endChar),
+      Ranges.create(startLine, startChar, endLine, endChar),
       bslDiagnostic.getDiagnosticMessage()
     );
   }

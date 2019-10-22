@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
@@ -385,7 +385,7 @@ public class CognitiveComplexityComputer
       message = String.format("+%d", increment);
     }
 
-    SecondaryLocation secondaryLocation = new SecondaryLocation(RangeHelper.newRange(token), message);
+    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message);
     List<SecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

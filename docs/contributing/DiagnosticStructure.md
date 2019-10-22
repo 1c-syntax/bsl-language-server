@@ -180,7 +180,7 @@ _**<В разработке>**_
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -227,8 +227,8 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 
     // проверка частных случаев
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(27, 4, 27, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 4, 40, 29)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 4, 40, 29)));
     }
 ```
 
@@ -254,8 +254,8 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
 
     // проверка частных случаев
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(27, 4, 27, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(40, 4, 40, 29)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 4, 40, 29)));
     }
 ```
 

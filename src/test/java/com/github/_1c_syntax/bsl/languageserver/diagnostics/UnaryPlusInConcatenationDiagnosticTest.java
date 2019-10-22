@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -44,9 +44,9 @@ class UnaryPlusInConcatenationDiagnosticTest extends AbstractDiagnosticTest<Unar
         assertThat(diagnostics).hasSize(3);
         assertThat(diagnostics)
           // на +
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(5, 18, 5, 19)))
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 31, 8, 32)))
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 19, 23, 20)));
+          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 18, 5, 19)))
+          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 31, 8, 32)))
+          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 19, 23, 20)));
 
     }
 }

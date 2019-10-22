@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -41,11 +41,11 @@ public class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTe
 
     // then
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(7, 38, 7, 78));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(9, 40, 9, 61));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(13, 27, 13, 59));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(24, 35, 24, 53));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(RangeHelper.newRange(27, 35, 27, 51));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(7, 38, 7, 78));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(9, 40, 9, 61));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(13, 27, 13, 59));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(24, 35, 24, 53));
+    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(27, 35, 27, 51));
 
   }
 

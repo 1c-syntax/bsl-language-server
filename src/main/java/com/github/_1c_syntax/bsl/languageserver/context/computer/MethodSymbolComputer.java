@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
@@ -72,8 +72,8 @@ public final class MethodSymbolComputer
       .function(true)
       .node(ctx)
       .region(findRegion(startNode, stopNode))
-      .range(RangeHelper.newRange(startNode, stopNode))
-      .subNameRange(RangeHelper.newRange(declaration.subName()))
+      .range(Ranges.create(startNode, stopNode))
+      .subNameRange(Ranges.create(declaration.subName()))
       .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
       .build();
 
@@ -99,8 +99,8 @@ public final class MethodSymbolComputer
       .function(false)
       .node(ctx)
       .region(findRegion(startNode, stopNode))
-      .range(RangeHelper.newRange(startNode, stopNode))
-      .subNameRange(RangeHelper.newRange(declaration.subName()))
+      .range(Ranges.create(startNode, stopNode))
+      .subNameRange(Ranges.create(declaration.subName()))
       .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
       .build();
 

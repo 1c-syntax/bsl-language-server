@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -41,10 +41,10 @@ public class TernaryOperatorUsageDiagnosticTest extends AbstractDiagnosticTest<T
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(1, 11, 10, 13));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 13, 9, 14));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(RangeHelper.newRange(12, 9, 12, 85));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(RangeHelper.newRange(14, 5, 14, 60));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(1, 11, 10, 13));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(3, 13, 9, 14));
+    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(12, 9, 12, 85));
+    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(14, 5, 14, 60));
 
   }
 
