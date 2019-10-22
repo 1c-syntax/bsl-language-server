@@ -35,6 +35,9 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -78,9 +81,18 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
     // configurationRoot для ServerContext
     if (params.getRootUri() != null) {
+      Path fileUri;
+      try {
+        fileUri = new File(new URI(params.getRootUri()).getPath()).getCanonicalFile().toPath();
+      } catch (URISyntaxException e) {
+        fileUri = null;
+      } catch (IOException e) {
+        fileUri = null;
+      }
+
       Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
         configuration,
-        new File(params.getRootUri()).getAbsoluteFile().toPath());
+        fileUri);
       context.setPathToConfigurationMetadata(configurationRoot);
     }
 
