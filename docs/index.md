@@ -179,6 +179,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да | `badpractice` |
 | [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | `standard`<br/>`badpractice` |
 | [MissingSpace](diagnostics/MissingSpace.md) | Пропущен пробел | Да | `badpractice` |
+| [MissingTemporaryFileDeletion](diagnostics/MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да |  |
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да | `badpractice`<br/>`brainoverload` |
 | [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да | `brainoverload` |
@@ -198,6 +199,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да | `standard` |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет | `brainoverload` |
 | [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да | `standard` |
+| [UnaryPlusInConcatenation](diagnostics/UnaryPlusInConcatenation.md) | Унарный плюс в конкатенации строк | Да |  |
 | [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да | `standard`<br/>`error` |
 | [UnreachableCode](diagnostics/UnreachableCode.md) | Недостижимый код | Да | `design`<br/>`suspicious` |
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да | `clumsy` |
@@ -211,4 +213,5 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да | `badpractice` |
 | [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет | `standard` |
 | [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да | `standard`<br/>`deprecated` |
+| [WorkingTimeoutWithExternalResources](diagnostics/WorkingTimeoutWithExternalResources.md) | Таймауты при работе с внешними ресурсами | Да |  |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да | `standard` |

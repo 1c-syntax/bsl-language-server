@@ -181,6 +181,7 @@ To escape individual sections of code or files from triggering diagnostics, you 
 | [MethodSize](diagnostics/MethodSize.md) | Method size restriction | Yes | `badpractice` |
 | [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | `standard`<br/>`badpractice` |
 | [MissingSpace](diagnostics/MissingSpace.md) | Missing space | Yes | `badpractice` |
+| [MissingTemporaryFileDeletion](diagnostics/MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes |  |
 | [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes | `badpractice`<br/>`brainoverload` |
 | [NestedStatements](diagnostics/NestedStatements.md) | Control flow statements should not be nested too deep | Yes | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Nested ternary operator | Yes | `brainoverload` |
@@ -200,6 +201,7 @@ To escape individual sections of code or files from triggering diagnostics, you 
 | [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | `standard` |
 | [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No | `brainoverload` |
 | [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes | `standard` |
+| [UnaryPlusInConcatenation](diagnostics/UnaryPlusInConcatenation.md) | Unary Plus sign in string concatenation | Yes |  |
 | [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes | `standard`<br/>`error` |
 | [UnreachableCode](diagnostics/UnreachableCode.md) | Unreachable Code | Yes | `design`<br/>`suspicious` |
 | [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes | `clumsy` |
@@ -213,4 +215,5 @@ To escape individual sections of code or files from triggering diagnostics, you 
 | [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes | `badpractice` |
 | [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No | `standard` |
 | [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes | `standard`<br/>`deprecated` |
+| [WorkingTimeoutWithExternalResources](diagnostics/WorkingTimeoutWithExternalResources.md) | Timeouts working with external resources | Yes |  |
 | [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes | `standard` |
