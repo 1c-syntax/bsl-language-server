@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -42,7 +43,10 @@ import java.util.regex.Pattern;
   type = DiagnosticType.VULNERABILITY,
   severity = DiagnosticSeverity.CRITICAL,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 15
+  minutesToFix = 15,
+  tags = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -60,6 +64,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     "Вставить|Insert",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  private static final Pattern patternCheckPassword = Pattern.compile("^[\\*]+$", Pattern.UNICODE_CASE);
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = FIND_WORD_DEFAULT,
@@ -72,7 +78,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (configuration == null) {
       return;
     }
-    String searchWordsProperty = (String) configuration.get("searchWords");
+    String searchWordsProperty = (String) configuration.getOrDefault("searchWords", FIND_WORD_DEFAULT);
     searchWords = getPatternSearch(searchWordsProperty);
   }
 
@@ -216,7 +222,14 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private static boolean isNotEmptyStringByToken(Token token) {
-    return token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    boolean result = token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    if (result) {
+      boolean foundStars = patternCheckPassword.matcher(token.getText().replace("\"", "")).find();
+      if (foundStars) {
+        result = false;
+      }
+    }
+    return result;
   }
 
   private static String getClearString(String inputString) {

@@ -60,4 +60,15 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
 
     assertThat(diagnostics).hasSize(2);
   }
+
+  @Test
+  void testConfigureOneProperty() {
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration.put("checkModuleBody", true);
+    getDiagnosticInstance().configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+  }
 }

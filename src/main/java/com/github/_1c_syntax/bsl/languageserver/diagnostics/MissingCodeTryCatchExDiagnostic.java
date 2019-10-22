@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -38,7 +39,11 @@ import java.util.stream.Stream;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 15
+  minutesToFix = 15,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.BADPRACTICE
+  }
 )
 public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -56,7 +61,7 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    commentAsCode = Boolean.parseBoolean(configuration.get("commentAsCode").toString());
+    commentAsCode = (boolean) configuration.getOrDefault("commentAsCode", commentAsCode);
   }
 
   @Override

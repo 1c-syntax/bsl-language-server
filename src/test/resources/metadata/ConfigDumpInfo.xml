@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.6">
+	<ConfigVersions>
+		<Metadata name="Catalog.Справочник1" id="005c0536-aea1-4625-aa3f-02e8e8284e4a" configVersion="a7e20a157db7564b9c300de2cf6d8f3200000000"/>
+		<Metadata name="Catalog.Справочник1.Form.ФормаЭлемента" id="f7c2e745-0aed-46a7-ab6e-576791d6acd7" configVersion="8040c97e20103847ba9066dcf5ce0e0600000000"/>
+		<Metadata name="Catalog.Справочник1.Form.ФормаЭлемента.Form" id="f7c2e745-0aed-46a7-ab6e-576791d6acd7.0" configVersion="70e3e574174a4d4c8014cfe704deaec800000000"/>
+		<Metadata name="Catalog.Справочник1.ManagerModule" id="005c0536-aea1-4625-aa3f-02e8e8284e4a.3" configVersion="c6fa900326510b48aea808d4b727002200000000"/>
+		<Metadata name="Catalog.Справочник1.ObjectModule" id="005c0536-aea1-4625-aa3f-02e8e8284e4a.0" configVersion="449544185c47e148b7f6a7b77bbeb08100000000"/>
+		<Metadata name="CommonModule.ПервыйОбщийМодуль" id="90fca572-d17c-40c6-baad-9a28bd370cfc" configVersion="c9f5c23527803b4ba5f56b6f682ee0f900000000"/>
+		<Metadata name="CommonModule.ПервыйОбщийМодуль.Module" id="90fca572-d17c-40c6-baad-9a28bd370cfc.0" configVersion="5149936e6e44ba45827a123ead8a94e100000000"/>
+		<Metadata name="Configuration.Конфигурация" id="66129db7-a6d9-4860-ba20-0e61f65ace6f" configVersion="847e694c610cc4429fdf4f9b0ef391f500000000"/>
+		<Metadata name="InformationRegister.РегистрСведений1" id="59f8d329-f39c-4999-b470-ae9fc74511ac" configVersion="b2f031e296a9f048bff7784c2f8af0ae00000000">
+			<Metadata name="InformationRegister.РегистрСведений1.Dimension.Справочник1" id="532f2a7f-4c1e-4a49-8281-3c21232da2d7"/>
+		</Metadata>
+		<Metadata name="InformationRegister.РегистрСведений1.RecordSetModule" id="59f8d329-f39c-4999-b470-ae9fc74511ac.1" configVersion="f50aed28f5b8924baf0ad4ede96883d900000000"/>
+		<Metadata name="Language.Русский" id="25fc0fbb-4f5a-4c96-b67b-21cda9c17a1d" configVersion="a60bcd0f951cab4486c5e255cefd1a9000000000"/>
+	</ConfigVersions>
+</ConfigDumpInfo>

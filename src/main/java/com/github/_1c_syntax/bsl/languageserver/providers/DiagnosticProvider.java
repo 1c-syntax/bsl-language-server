@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -31,6 +33,8 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -38,6 +42,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.io.IOUtils;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -50,6 +60,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -80,15 +91,17 @@ public final class DiagnosticProvider {
     = createDiagnosticsCodes(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
+  private final ServerContext context;
   private final Map<String, Set<Diagnostic>> computedDiagnostics;
 
   public DiagnosticProvider() {
-    this(LanguageServerConfiguration.create());
+    this(LanguageServerConfiguration.create(), new ServerContext());
   }
 
-  public DiagnosticProvider(LanguageServerConfiguration configuration) {
+  public DiagnosticProvider(LanguageServerConfiguration configuration, ServerContext context) {
     this.configuration = configuration;
     computedDiagnostics = new HashMap<>();
+    this.context = context;
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
@@ -138,7 +151,6 @@ public final class DiagnosticProvider {
       .filter(bslDiagnosticClass -> DiagnosticProvider.getDiagnosticCode(bslDiagnosticClass).equals(diagnosticCode))
       .findAny();
   }
-
 
   public static String getDiagnosticCode(Class<? extends BSLDiagnostic> diagnosticClass) {
     String simpleName = diagnosticClass.getSimpleName();
@@ -216,6 +228,14 @@ public final class DiagnosticProvider {
 
   public static boolean isActivatedByDefault(BSLDiagnostic diagnostic) {
     return isActivatedByDefault(diagnostic.getClass());
+  }
+
+  public static List<DiagnosticTag> getDiagnosticTags(Class<? extends BSLDiagnostic> diagnosticClass) {
+    return new ArrayList<DiagnosticTag>(Arrays.asList(diagnosticsMetadata.get(diagnosticClass).tags()));
+  }
+
+  public static List<DiagnosticTag> getDiagnosticTags(BSLDiagnostic diagnostic) {
+    return getDiagnosticTags(diagnostic.getClass());
   }
 
   public static Map<String, DiagnosticParameter> getDiagnosticParameters(
@@ -419,4 +439,5 @@ public final class DiagnosticProvider {
       || hasCustomConfiguration
       || enabledDirectly;
   }
+
 }

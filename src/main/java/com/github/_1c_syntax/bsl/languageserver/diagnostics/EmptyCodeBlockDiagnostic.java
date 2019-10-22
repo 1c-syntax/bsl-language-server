@@ -21,11 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
-import org.antlr.v4.runtime.tree.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.util.Ranges;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -43,7 +44,11 @@ import java.util.stream.Stream;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 5
+  minutesToFix = 5,
+  tags = {
+    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.SUSPICIOUS
+  }
 )
 public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -61,7 +66,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    commentAsCode = Boolean.parseBoolean(configuration.get("commentAsCode").toString());
+    commentAsCode = (boolean) configuration.getOrDefault("commentAsCode", commentAsCode);
   }
 
   @Override

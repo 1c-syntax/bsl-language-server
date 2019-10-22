@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
@@ -42,7 +43,10 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.CRITICAL,
-  minutesToFix = 15
+  minutesToFix = 15,
+  tags = {
+    DiagnosticTag.BRAINOVERLOAD
+  }
 )
 public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -70,8 +74,8 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    complexityThreshold = (Integer) configuration.get("complexityThreshold");
-    checkModuleBody = (Boolean) configuration.get("checkModuleBody");
+    complexityThreshold = (int) configuration.getOrDefault("complexityThreshold", complexityThreshold);
+    checkModuleBody = (boolean) configuration.getOrDefault("checkModuleBody", checkModuleBody);
   }
 
   @Override

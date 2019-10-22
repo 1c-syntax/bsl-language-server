@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 
@@ -36,11 +40,17 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1
+  minutesToFix = 1,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.BADPRACTICE
+  }
 )
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -53,6 +63,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
 
+  private List<MethodDescription> methodDescriptions;
   private CodeRecognizer codeRecognizer;
 
   public CommentedCodeDiagnostic() {
@@ -64,7 +75,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    threshold = (float) configuration.get("threshold");
+    threshold = (float) configuration.getOrDefault("threshold", threshold);
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
@@ -72,8 +83,18 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
-    List<List<Token>> commentGroups = groupComments(documentContext.getComments());
-    commentGroups.forEach(this::checkCommentGroup);
+
+    methodDescriptions = documentContext.getMethods()
+      .stream()
+      .map(MethodSymbol::getDescription)
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
+
+    groupComments(documentContext.getComments())
+      .stream()
+      .filter(this::isCommentGroupNotMethodDescription)
+      .forEach(this::checkCommentGroup);
+
     return diagnosticStorage.getDiagnostics();
   }
 
@@ -81,7 +102,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     List<List<Token>> groups = new ArrayList<>();
     List<Token> currentGroup = null;
 
-    for(Token comment : comments) {
+    for (Token comment : comments) {
       if (currentGroup == null) {
         currentGroup = initNewGroup(comment);
       } else if (isAdjacent(comment, currentGroup)) {
@@ -110,6 +131,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     Token last = currentGroup.get(currentGroup.size() - 1);
     return last.getLine() + 1 == comment.getLine()
       && onlyEmptyDelimiters(last.getTokenIndex(), comment.getTokenIndex());
+
   }
 
   private boolean onlyEmptyDelimiters(int firstTokenIndex, int lastTokenIndex) {
@@ -127,6 +149,17 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     return true;
   }
 
+  private boolean isCommentGroupNotMethodDescription(List<Token> commentGroup) {
+    if (methodDescriptions.isEmpty()) {
+      return true;
+    }
+
+    final Token first = commentGroup.get(0);
+    final Token last = commentGroup.get(commentGroup.size() - 1);
+
+    return methodDescriptions.stream().noneMatch(methodDescription -> methodDescription.contains(first, last));
+  }
+
   private void checkCommentGroup(List<Token> commentGroup) {
     Token firstComment = commentGroup.get(0);
     Token lastComment = commentGroup.get(commentGroup.size() - 1);
@@ -140,7 +173,38 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isTextParsedAsCode(String text) {
-    return codeRecognizer.meetsCondition(text);
+    if (codeRecognizer.meetsCondition(text)) {
+      Tokenizer tokenizer = new Tokenizer(uncomment(text));
+      final List<Token> tokens = tokenizer.getTokens();
+
+      // Если меньше двух токенов нет смысла анализировать - это код
+      if (tokens.size() < 2) {
+        return true;
+      }
+
+      List<Integer> tokenTypes = tokens.stream()
+        .map(Token::getType)
+        .filter(t -> t != BSLParser.WHITE_SPACE)
+        .collect(Collectors.toList());
+
+      // Если два идентификатора идут подряд - это не код
+      for (int i = 0; i < tokenTypes.size() - 1; i++) {
+        if (tokenTypes.get(i) == BSLParser.IDENTIFIER && tokenTypes.get(i + 1) == BSLParser.IDENTIFIER) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private static String uncomment(String comment) {
+    if (comment.startsWith("//")) {
+      return uncomment(comment.substring(2));
+    }
+    return comment;
   }
 
 }

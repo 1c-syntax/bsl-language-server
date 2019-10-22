@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -34,7 +35,10 @@ import java.util.Map;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 30
+  minutesToFix = 30,
+  tags = {
+    DiagnosticTag.BADPRACTICE
+  }
 )
 public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -52,7 +56,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
-    maxMethodSize = (Integer) configuration.get("maxMethodSize");
+    maxMethodSize = (int) configuration.getOrDefault("maxMethodSize", maxMethodSize);
   }
 
   @Override

@@ -1,49 +1,48 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
 
-Начало транзакции и ее фиксация (отмена) должны происходить в контексте одного метода.
+Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.
 
-*Правильно*
+*Correct*
 
 ```bsl
-Процедура ЗаписатьДанныеВИБ()
+Procedure WriteDataToIDb()
 
-    НачатьТранзакцию();
+    BeginTransaction();
 
-    Попытка
-        ... // чтение или запись данных
-        ДокументОбъект.Записать()
-        ЗафиксироватьТранзацию();
-    Исключение
-        ОтменитьТранзакцию();
-        ... // дополнительные действия по обработке исключения
-    КонецПопытки;
+    Try
+        ... // reading or writing data
+        DocumentObject.Write()
+        CommitTransaction();
+    Except
+        RollbackTransaction();
+        ... // additional actions to process the exception
+    EndTry;
 
-КонецПроцедуры
+EndProcedure
 ```
 
-*Неправильно*
+*Incorrect*
 
 ```bsl
-Процедура ЗаписатьДанныеВИБ()
+Procedure WriteDataToIDb()
  
-    НачатьТранзакцию();
-    ЗаписатьДокумент();
+    Begintransaction();
+    WriteDocument();
 
-КонецПроцедуры;
+EndProcedure;
 
-Процедура ЗаписатьДокумент()
+Procedure WriteDocument()
 
-    Попытка
-        ... // чтение или запись данных
-        ДокументОбъект.Записать()
-        ЗафиксироватьТранзацию();
-    Исключение
-        ОтменитьТранзакцию();
-    ... // дополнительные действия по обработке исключения
-    КонецПопытки;
+    Try
+        ... // reading or writing data
+        DocumentObject.Write()
+        CommitTransacrion();
+    Except
+        RollbackTransaction();
+    ... // additional actions to process the exception
+    EndTry;
 
-КонецПроцедуры
-
+EndProcedure
 ```
 
-Источник: [Транзакции: правила использования](https://its.1c.ru/db/v8std#content:783:hdoc)
+Reference: [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)

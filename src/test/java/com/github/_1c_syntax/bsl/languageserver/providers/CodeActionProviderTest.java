@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import org.apache.commons.io.FileUtils;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -31,13 +33,9 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,11 +48,8 @@ class CodeActionProviderTest {
   void testGetCodeActions() throws IOException {
 
     // given
-    String fileContent = FileUtils.readFileToString(
-      new File("./src/test/resources/providers/codeAction.bsl"),
-      StandardCharsets.UTF_8
-    );
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+    String filePath = "./src/test/resources/providers/codeAction.bsl";
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
@@ -93,11 +88,8 @@ class CodeActionProviderTest {
   @Test
   void testEmptyDiagnosticList() throws IOException {
     // given
-    String fileContent = FileUtils.readFileToString(
-      new File("./src/test/resources/providers/codeAction.bsl"),
-      StandardCharsets.UTF_8
-    );
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+    String filePath = "./src/test/resources/providers/codeAction.bsl";
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
     CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider);

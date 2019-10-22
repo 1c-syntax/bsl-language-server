@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -43,7 +44,10 @@ import java.util.regex.Pattern;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1
+  minutesToFix = 1,
+  tags = {
+    DiagnosticTag.STANDARD
+  }
 )
 
 public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagnostic {
@@ -71,7 +75,8 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
       return;
     }
 
-    String commentsAnnotationString = (String) configuration.get("commentsAnnotation");
+    String commentsAnnotationString =
+      (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION);
     this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));
   }
 

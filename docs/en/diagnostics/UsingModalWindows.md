@@ -1,6 +1,6 @@
 # Using modal windows
 
-Модальные и всплывающие окна считаются плохим тоном, пользователи привыкли к работе "в одном окне". При разработке конфигураций, предназначенных для работы в веб-клиенте, запрещено использовать модальные формы и диалоги. В противном случае, конфигурация окажется неработоспособной в ряде веб-браузеров, так как модальные окна не входят в стандарт веб-разработки.
+Modal windows and pop-ups are considered bad taste. Users are accustomed to working "in one window." When developing configurations designed to work in the web client, it is forbidden to use modal windows and dialogs. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard.
 
 ```bsl
 // Пример "Плохо"
@@ -10,27 +10,27 @@
 ПоказатьПредупреждение(, НСтр("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 ```
 
-Источник: [Ограничение на использование модальных окон и синхронных вызовов](https://its.1c.ru/db/v8std/content/703/hdoc/)
+Source: [Limit on the use of modal windows and synchronous calls (RU)](https://its.1c.ru/db/v8std/content/703/hdoc/)
 
-Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 
-## Ограничение диагностики
+## Diagnostic restrictions
 
-На данный момент диагностируется **только использование методов глобального контекста**.
+Currently, **only the use of global context methods** is diagnosed.
 
-Список методов:
+Method list:
 
-|Метод|Английский вариант|
-| :-- | :-- |
-|ВОПРОС|DOQUERYBOX|
-|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|
-|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|
-|ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|
-|ВВЕСТИДАТУ|INPUTDATE|
-|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|
-|ВВЕСТИСТРОКУ|INPUTSTRING|
-|ВВЕСТИЧИСЛО|INPUTNUMBER|
-|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|
-|УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|
-|УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|
-|ПОМЕСТИТЬФАЙЛ|PUTFILE|
+Russian variant | English variant
+--- | ---
+ВОПРОС | DOQUERYBOX
+ОТКРЫТЬФОРМУМОДАЛЬНО | OPENFORMMODAL
+ОТКРЫТЬЗНАЧЕНИЕ | OPENVALUE
+ПРЕДУПРЕЖДЕНИЕ | DOMESSAGEBOX
+ВВЕСТИДАТУ | INPUTDATE
+ВВЕСТИЗНАЧЕНИЕ | INPUTVALUE
+ВВЕСТИСТРОКУ | INPUTSTRING
+ВВЕСТИЧИСЛО | INPUTNUMBER
+УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ | INSTALLADDIN
+УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ | INSTALLFILESYSTEMEXTENSION
+УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ | INSTALLCRYPTOEXTENSION
+ПОМЕСТИТЬФАЙЛ | PUTFILE

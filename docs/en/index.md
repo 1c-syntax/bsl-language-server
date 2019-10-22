@@ -9,13 +9,13 @@
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
-[Russian version](../index.md)
+[Russian version](en/index.md)
 
 - [Contributing guidelines](contributing/index.md)
 - <a href="#capabilities">Capabilities</a>
 - <a href="#cli">Run from command line</a>
 - <a href="#analyze">Run in analyzer mode</a>
-* <a href="#format">Run in formatter mode</a>
+- <a href="#format">Run in formatter mode</a>
 - <a href="#configuration">Configuration file</a>
 - <a href="#reporters">Reporters</a>
 - <a href="#diagnostics">Diagnostics</a>
@@ -28,11 +28,11 @@
 - Selected region formatting
 - Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
 - Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
-* Methods "Cognitive Complexity" score
+- Methods "Cognitive Complexity" score
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
-* Run formatter engine from command line
+- Run formatter engine from command line
 
 <a id="cli"></a>
 
@@ -79,7 +79,7 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 java -Xmx4g -jar bsl-language-server.jar ... other parameters
 ```
 
-<a id="format"/>
+<a id="format"></a>
 
 ## Run in formatter mode
 
@@ -97,20 +97,20 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 
 Configuration file is a file in JSON format. The file can contain the following blocks:
 
-* `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
-* `showCognitiveComplexityCodeLens` - `Boolean` - show cognitive complexity score above method definition (codeLens). By default set to `true`.
-* `computeDiagnostics` - `String` - trigger for the computation of diagnostics. Valid values: `onType` (on file edit), `onSave` (on file save), `never`. By default set to `onSave`.
-* `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
-* `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with the structure as following:
-    * object key - `String` - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.
-    * object value
+- `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
+- `showCognitiveComplexityCodeLens` - `Boolean` - show cognitive complexity score above method definition (codeLens). By default set to `true`.
+- `computeDiagnostics` - `String` - trigger for the computation of diagnostics. Valid values: `onType` (on file edit), `onSave` (on file save), `never`. By default set to `onSave`.
+- `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
+- `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with the structure as following:
+    - object key - `String` - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.
+    - object value
         - `Boolean` - `false` to disable diagnostics, `true` - to enable diagnostics without additional settings. By default set to `true`.
         - `Object` - Structure of settings for each diagnostics. Available parameters are give in each diagnostics section.
 
 You may use this JSON-schema to simplify file editing:
 
 ```
-https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json
+https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json
 ```
 
 Configuration file example, setting:
@@ -121,7 +121,7 @@ Configuration file example, setting:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
+  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
   "diagnosticLanguage": "en",
   "diagnostics": {
     "LineLength": {
@@ -154,61 +154,63 @@ Used for code analysis to meet coding standards and search for possible errors.
 
 Some of diagnostics are disabled by default. Use <a href="#configuration">configuration file</a> to enable them.
 
+To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form `// BSLLS:DiagnosticKey-off` . This functionality is described in more detail in [Escaping sections of code](features/DiagnosticIgnorance.md) .
+
 ### Implemented diagnostics
 
-| Key | Name| Enabled by default |
-| --- | --- | :-: |
-| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes |
-| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Canonical spelling of keywords | Yes |
-| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Cognitive complexity | Yes |
-| [CommentedCode](diagnostics/CommentedCode.md) | Commented out code | Yes |
-| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes |
-| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes |
-| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes |
-| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Empty code block | Yes |
-| [EmptyStatement](diagnostics/EmptyStatement.md) | Empty statement | Yes |
-| [ExtraCommas](diagnostics/ExtraCommas.md) | Extra commas when calling a method | Yes |
-| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Function must have Return statement | Yes |
-| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | There are identical sub-expressions to the left and to the right of the "foo" operator | Yes |
-| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | If condition is too complex | Yes |
-| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElsIf... | Yes |
-| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElsIf... | Yes |
-| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Using If...Then...ElsIf... statement | Yes |
-| [LineLength](diagnostics/LineLength.md) | Line length restriction | Yes |
-| [MagicNumber](diagnostics/MagicNumber.md) | Using magic number | Yes |
-| [MethodSize](diagnostics/MethodSize.md) | Method size restriction | Yes |
-| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes |
-| [MissingSpace](diagnostics/MissingSpace.md) | Missing space | Yes |
-| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes |
-| [NestedStatements](diagnostics/NestedStatements.md) | Control flow statements should not be nested too deep | Yes |
-| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Nested ternary operator | Yes |
-| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Number of optional method parameters restriction | Yes |
-| [NumberOfParams](diagnostics/NumberOfParams.md) | Number of method parameters restriction | Yes |
-| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Number of values in structure constructor restriction | Yes |
-| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | One statement per line | Yes |
-| [OrderOfParams](diagnostics/OrderOfParams.md) | Order of method parameters | Yes |
-| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes |
-| [ParseError](diagnostics/ParseError.md) | Error parsing source code | Yes |
-| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Procedure must have no Return value | Yes |
-| [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes |
-| [SelfInsertion](diagnostics/SelfInsertion.md) | Insert a collection into itself | Yes |
-| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes |
-| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Misuse of multiple compilation directives | Yes |
-| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes |
-| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No |
-| [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes |
-| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes |
-| [UnreachableCode](diagnostics/UnreachableCode.md) | Unreachable Code | Yes |
-| [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes |
-| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Using "Cancel" parameter | Yes |
-| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes |
-| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Detected storage of file path or ip address in code | Yes |
-| [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes |
-| [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes |
-| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No |
-| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Using of objects not available in Unix | Yes |
-| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes |
-| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No |
-| [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes |
-| [WorkingTimeoutWithExternalResources](diagnostics/WorkingTimeoutWithExternalResources.md) | Timeouts working with external resources | Yes |
-| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes |
+| Key | Name| Enabled by default | Tags |
+| --- | --- | :-: | --- |
+| [BeginTransactionBeforeTryCatch](diagnostics/BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | `standard` |
+| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Canonical spelling of keywords | Yes | `standard` |
+| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Cognitive complexity | Yes | `brainoverload` |
+| [CommentedCode](diagnostics/CommentedCode.md) | Commented out code | Yes | `standard`<br/>`badpractice` |
+| [CommitTransactionOutsideTryCatch](diagnostics/CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | `standard` |
+| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | `standard`<br/>`error` |
+| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | `standard`<br/>`deprecated` |
+| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Empty code block | Yes | `badpractice`<br/>`suspicious` |
+| [EmptyStatement](diagnostics/EmptyStatement.md) | Empty statement | Yes | `badpractice` |
+| [ExtraCommas](diagnostics/ExtraCommas.md) | Extra commas when calling a method | Yes | `standard`<br/>`badpractice` |
+| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Function must have Return statement | Yes | `suspicious`<br/>`unpredictable` |
+| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | There are identical sub-expressions to the left and to the right of the "foo" operator | Yes | `suspicious` |
+| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | If condition is too complex | Yes | `brainoverload` |
+| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElsIf... | Yes | `suspicious` |
+| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElsIf... | Yes | `suspicious` |
+| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Using If...Then...ElsIf... statement | Yes | `badpractice` |
+| [LineLength](diagnostics/LineLength.md) | Line length restriction | Yes | `standard`<br/>`badpractice` |
+| [MagicNumber](diagnostics/MagicNumber.md) | Using magic number | Yes | `badpractice` |
+| [MethodSize](diagnostics/MethodSize.md) | Method size restriction | Yes | `badpractice` |
+| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | `standard`<br/>`badpractice` |
+| [MissingSpace](diagnostics/MissingSpace.md) | Missing space | Yes | `badpractice` |
+| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes | `badpractice`<br/>`brainoverload` |
+| [NestedStatements](diagnostics/NestedStatements.md) | Control flow statements should not be nested too deep | Yes | `badpractice`<br/>`brainoverload` |
+| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Nested ternary operator | Yes | `brainoverload` |
+| [NonExportMethodsInApiRegion](diagnostics/NonExportMethodsInApiRegion.md) | Non export methods in API regions | Yes | `standard` |
+| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Limit number of optional parameters in method | Yes | `standard`<br/>`brainoverload` |
+| [NumberOfParams](diagnostics/NumberOfParams.md) | Number of method parameters restriction | Yes | `standard`<br/>`brainoverload` |
+| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Number of values in structure constructor restriction | Yes | `standard`<br/>`brainoverload` |
+| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | One statement per line | Yes | `standard`<br/>`design` |
+| [OrderOfParams](diagnostics/OrderOfParams.md) | Order of method parameters | Yes | `standard`<br/>`design` |
+| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes | `standard` |
+| [ParseError](diagnostics/ParseError.md) | Error parsing source code | Yes | `error` |
+| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Procedure must have no Return value | Yes | `error` |
+| [SelfAssign](diagnostics/SelfAssign.md) | Variable self assignment | Yes | `suspicious` |
+| [SelfInsertion](diagnostics/SelfInsertion.md) | Insert a collection into itself | Yes | `standard`<br/>`unpredictable`<br/>`performance` |
+| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Statement should end with ";" | Yes | `standard`<br/>`badpractice` |
+| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | `unpredictable`<br/>`error` |
+| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | `standard` |
+| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Ternary operator usage | No | `brainoverload` |
+| [TryNumber](diagnostics/TryNumber.md) | Cast to number in try catch block | Yes | `standard` |
+| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes | `standard`<br/>`error` |
+| [UnreachableCode](diagnostics/UnreachableCode.md) | Unreachable Code | Yes | `design`<br/>`suspicious` |
+| [UseLessForEach](diagnostics/UseLessForEach.md) | Useless For Each loop | Yes | `clumsy` |
+| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Using "Cancel" parameter | Yes | `standard`<br/>`badpractice` |
+| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Restriction on the use of "FindByDescription" and "FindByCode" methods | Yes | `standard`<br/>`badpractice`<br/>`performance` |
+| [UsingGoto](diagnostics/UsingGoto.md) | "Goto" usage | Yes | `standard`<br/>`badpractice` |
+| [UsingHardcodePath](diagnostics/UsingHardcodePath.md) | Using hardcode file paths and ip addresses in code | Yes | `standard` |
+| [UsingHardcodeSecretInformation](diagnostics/UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes | `standard` |
+| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Using modal windows | No | `standard` |
+| [UsingObjectNotAvailableUnix](diagnostics/UsingObjectNotAvailableUnix.md) | Using of objects not available in Unix | Yes | `standard`<br/>`lockinos` |
+| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Using service tags | Yes | `badpractice` |
+| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Using synchronous calls | No | `standard` |
+| [UsingThisForm](diagnostics/UsingThisForm.md) | Using the "ThisForm" property | Yes | `standard`<br/>`deprecated` |
+| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Using "Ё" letter in code | Yes | `standard` |

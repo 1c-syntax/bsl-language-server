@@ -2,12 +2,18 @@ import java.io.File
 
 open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
-    private var pathPack = "org/github/_1c_syntax/bsl/languageserver/diagnostics";
+    private var pathPack = "com/github/_1c_syntax/bsl/languageserver/diagnostics";
     private var namePattern = Regex("^diagnosticName\\s*=\\s*(.*)$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
 
     private var enabledPattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+activatedByDefault\\s*?=" +
             "\\s*?(true|false)\\s*?[.\\s\\w\\W]*?\\)\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+    private var tagsBodyPattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+tags\\s*=" +
+            "\\s*?\\{([.\\s\\w\\W]*?)\\s*\\}\\s*?[.\\s\\w\\W]*?\\)\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+
+    private var tagsListPattern = Regex("DiagnosticTag\\.\\s*?([\\w]*)[,\\s]*",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
 
     @OutputDirectory
@@ -36,15 +42,26 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
         return "";
     }
 
+    private fun getTags(text: String): String {
+        val matchBody = tagsBodyPattern.find(text);
+        if(matchBody != null && matchBody.groups.isNotEmpty()) {
+            val match = tagsListPattern.findAll(matchBody.groups[1]?.value?: "");
+            return "`" + match.map {
+                it.groupValues[1]
+            }.joinToString("`<br/>`").toLowerCase() + "`";
+        }
+        return "";
+    }
+
     private fun writeIndex(indexText: String, lang: String) {
         val indexPath = File(outputDir.get().asFile.path, "docs/${lang}index.md");
         val text = indexPath.readText(charset("UTF-8"));
 
         var header = "### Список реализованных диагностик";
-        var table = "| Ключ | Название | Включена по умолчанию |\n| --- | --- | :-: |";
+        var table = "| Ключ | Название | Включена по умолчанию | Тэги |\n| --- | --- | :-: | --- |";
         if(lang != "") {
             header = "### Implemented diagnostics";
-            table = "| Key | Name| Enabled by default |\n| --- | --- | :-: |";
+            table = "| Key | Name| Enabled by default | Tags |\n| --- | --- | :-: | --- |";
         }
         val indexHeader = text.indexOf(header);
         indexPath.writeText(text.substring(0, indexHeader - 1) + "\n${header}\n\n${table}${indexText}",
@@ -77,8 +94,9 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
                         val enabledEn = if(enabled) "Yes" else "No";
                         val readmeRu = getReadme(key, "");
                         val readmeEn = getReadme(key, "en/");
-                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu |";
-                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn |";
+                        val tags = getTags(text);
+                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $tags |";
+                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $tags |";
                     }
                 }
         writeIndex(indexRu, "");

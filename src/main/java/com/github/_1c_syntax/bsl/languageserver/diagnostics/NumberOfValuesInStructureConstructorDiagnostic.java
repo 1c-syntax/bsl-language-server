@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import org.antlr.v4.runtime.tree.ParseTree;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -39,7 +40,11 @@ import java.util.Map;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.ALL,
-  minutesToFix = 10
+  minutesToFix = 10,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.BRAINOVERLOAD
+  }
 )
 public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
 
@@ -57,7 +62,7 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
     if (configuration == null) {
       return;
     }
-    maxValuesCount = (Integer) configuration.get("maxValuesCount");
+    maxValuesCount = (int) configuration.getOrDefault("maxValuesCount", maxValuesCount);
   }
 
   @Override
