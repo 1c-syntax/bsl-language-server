@@ -51,6 +51,10 @@ public class MethodDescription {
     this.endLine = comments.get(comments.size() - 1).getLine();
   }
 
+  public boolean isEmpty() {
+    return description.isEmpty();
+  }
+
   public boolean contains(Token first, Token last) {
     int firstLine = first.getLine();
     int lastLine = last.getLine();
