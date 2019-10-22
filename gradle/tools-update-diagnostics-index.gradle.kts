@@ -58,10 +58,10 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
         val text = indexPath.readText(charset("UTF-8"));
 
         var header = "## Список реализованных диагностик";
-        var table = "| Ключ | Название | Включена по умолчанию |\n| --- | --- | :-: |";
+        var table = "| Ключ | Название | Включена по умолчанию | Тэги |\n| --- | --- | :-: | --- |";
         if(lang != "") {
             header = "## Implemented diagnostics";
-            table = "| Key | Name| Enabled by default |\n| --- | --- | :-: |";
+            table = "| Key | Name| Enabled by default | Tags |\n| --- | --- | :-: | --- |";
         }
         val indexHeader = text.indexOf(header);
         indexPath.writeText(text.substring(0, indexHeader - 1) + "\n${header}\n\n${table}${indexText}",
