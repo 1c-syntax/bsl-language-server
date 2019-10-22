@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -29,9 +32,6 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
+import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

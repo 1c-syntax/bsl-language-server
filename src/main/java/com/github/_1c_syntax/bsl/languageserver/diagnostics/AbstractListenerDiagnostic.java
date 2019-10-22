@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
 

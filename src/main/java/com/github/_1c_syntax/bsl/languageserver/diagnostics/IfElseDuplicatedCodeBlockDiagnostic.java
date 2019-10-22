@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayList;
 import java.util.HashSet;

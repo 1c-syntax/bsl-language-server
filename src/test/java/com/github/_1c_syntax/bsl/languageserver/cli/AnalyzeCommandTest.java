@@ -27,8 +27,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.createOptions;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class AnalyzeCommandTest {
 

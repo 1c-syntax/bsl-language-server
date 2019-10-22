@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.createOptions;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerStartCommandTest {
 

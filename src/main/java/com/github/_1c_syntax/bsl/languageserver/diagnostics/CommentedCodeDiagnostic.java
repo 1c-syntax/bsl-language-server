@@ -21,21 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
-
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
+import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.List;

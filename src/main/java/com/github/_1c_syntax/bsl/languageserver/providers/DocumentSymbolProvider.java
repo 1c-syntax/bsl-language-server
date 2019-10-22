@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import org.eclipse.lsp4j.DocumentSymbol;
-import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.SymbolKind;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

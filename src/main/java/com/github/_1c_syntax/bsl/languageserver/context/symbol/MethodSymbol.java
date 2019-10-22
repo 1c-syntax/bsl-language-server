@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 @Value
 @Builder
