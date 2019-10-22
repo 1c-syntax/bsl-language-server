@@ -30,7 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DiagnosticIgnoranceComputerTest {
@@ -39,8 +39,8 @@ class DiagnosticIgnoranceComputerTest {
   void testDiagnosticIgnorance() throws IOException {
 
     // given
-    final DocumentContext documentContext =
-      getDocumentContext("./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl");
+    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
+    final DocumentContext documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 

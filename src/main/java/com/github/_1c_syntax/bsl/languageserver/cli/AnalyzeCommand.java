@@ -21,16 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import me.tongfei.progressbar.ProgressBar;
-import me.tongfei.progressbar.ProgressBarStyle;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.io.FileUtils;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarStyle;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +48,7 @@ public class AnalyzeCommand implements Command {
 
   private CommandLine cmd;
   private DiagnosticProvider diagnosticProvider;
+  private ServerContext context;
 
   public AnalyzeCommand(CommandLine cmd) {
     this.cmd = cmd;
@@ -64,7 +66,10 @@ public class AnalyzeCommand implements Command {
     File configurationFile = new File(configurationOption);
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-    diagnosticProvider = new DiagnosticProvider(configuration);
+
+    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+    context = new ServerContext(configurationPath);
+    diagnosticProvider = new DiagnosticProvider(configuration, context);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
@@ -89,10 +94,14 @@ public class AnalyzeCommand implements Command {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    DocumentContext documentContext = new DocumentContext(file.toURI().toString(), textDocumentContent);
 
-    return new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
+    DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
+    FileInfo fileInfo = new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
+
+    // clean up AST after diagnostic computing to free up RAM.
+    documentContext.clearASTData();
+
+    return fileInfo;
   }
-
 
 }

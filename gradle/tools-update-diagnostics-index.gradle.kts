@@ -9,6 +9,12 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
     private var enabledPattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+activatedByDefault\\s*?=" +
             "\\s*?(true|false)\\s*?[.\\s\\w\\W]*?\\)\$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+    private var tagsBodyPattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+tags\\s*=" +
+            "\\s*?\\{([.\\s\\w\\W]*?)\\s*\\}\\s*?[.\\s\\w\\W]*?\\)\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+
+    private var tagsListPattern = Regex("DiagnosticTag\\.\\s*?([\\w]*)[,\\s]*",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
 
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty();
@@ -33,6 +39,17 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
             return "${readme.name}";
         }
         logger.quiet("File '{}' not exist", readme.path);
+        return "";
+    }
+
+    private fun getTags(text: String): String {
+        val matchBody = tagsBodyPattern.find(text);
+        if(matchBody != null && matchBody.groups.isNotEmpty()) {
+            val match = tagsListPattern.findAll(matchBody.groups[1]?.value?: "");
+            return "`" + match.map {
+                it.groupValues[1]
+            }.joinToString("`<br/>`").toLowerCase() + "`";
+        }
         return "";
     }
 
@@ -78,8 +95,9 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
                         val enabledEn = if(enabled) "Yes" else "No";
                         val readmeRu = getReadme(key, "");
                         val readmeEn = getReadme(key, "en/");
-                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu |";
-                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn |";
+                        val tags = getTags(text);
+                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $tags |";
+                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $tags |";
                     }
                 }
         writeIndex(indexRu, "");

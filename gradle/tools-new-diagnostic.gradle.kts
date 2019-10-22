@@ -24,6 +24,9 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty();
 
+    private var tagPattern = Regex("([\\w]+?)\\(\"([\\W\\w]+?)\"\\)[,\\s]*",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+
     private fun createFile(path: String, text: String) {
         val f = File(path);
         f.writeText(text, charset("UTF-8"));
@@ -35,6 +38,25 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
         if(key.isEmpty()){
             throw Throwable("Empty diagnostic key")
         }
+        val fileP = File(outputDir.get().asFile.path,
+                "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticTag.java");
+
+        if(fileP.exists()) {
+            val match = tagPattern.findAll(fileP.readText(charset("UTF-8")));
+            println("Diagnostic tags: \n" + match.map {
+                it.groupValues[1]
+            }.joinToString("\n")
+            );
+        }
+
+        println("Enter diagnostic tags separated by space (max 3).")
+        val inputStr = readLine();
+        if(inputStr.isNullOrBlank()) {
+            throw Throwable("Empty diagnostic tags")
+        }
+        var diagnosticTags = inputStr.split(' ').joinToString(",\n\t\tDiagnosticTag.");
+        diagnosticTags = "tag = {\n\t\tDiagnosticTag.$diagnosticTags\n\t}\n";
+
         logger.quiet("Creating new diagnostics files with the key '{}'", key);
         val srcPath = File(outputDir.get().asFile.path, "src");
         val packPath = "com/github/_1c_syntax/bsl/languageserver/diagnostics";
@@ -50,7 +72,9 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
 
         createFile("${srcPath}/main/java/${packPath}/${key}Diagnostic.java",
                 (File(templatePath, "TemplateDiagnostic.java"))
-                        .readText(charset("UTF-8")).replace("Template", key));
+                        .readText(charset("UTF-8"))
+                        .replace("Template", key)
+                        .replace("$diagnosticTags", diagnosticTags));
 
         createFile("${srcPath}/test/java/${packPath}/${key}DiagnosticTest.java",
                 (File(templatePath, "TemplateDiagnosticTest.java"))
