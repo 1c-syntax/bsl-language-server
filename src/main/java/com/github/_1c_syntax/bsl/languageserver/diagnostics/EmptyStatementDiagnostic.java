@@ -53,14 +53,14 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-      if (!Trees.findErrorNode(
-        Trees.getPreviousNode(
-          Trees.getRootParent(ctx),
-          ctx,
-          BSLParser.RULE_statement))) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
+    if (ctx.getChildCount() == 1
+      && ctx.SEMICOLON() != null
+      && !Trees.findErrorNode(
+      Trees.getPreviousNode(
+        Trees.getRootParent(ctx),
+        ctx,
+        BSLParser.RULE_statement))) {
+      diagnosticStorage.addDiagnostic(ctx);
     }
 
     return super.visitStatement(ctx);

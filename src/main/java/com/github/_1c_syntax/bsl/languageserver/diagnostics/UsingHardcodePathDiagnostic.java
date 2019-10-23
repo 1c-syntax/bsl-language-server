@@ -152,12 +152,12 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     // Проверим пути с / на стандартные корневые каталоги и обработаем их отдельно
     if (content.startsWith("/")) {
       Matcher matcher = searchWordsStdPathsUnix.matcher(content);
-      if (matcher.find()) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+      if (!matcher.find()) {
+        return;
       }
-    } else {
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
     }
+
+    diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
   }
 
   private void processSearchingNetworkAddress(BSLParser.StringContext ctx, String content) {
@@ -171,14 +171,14 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
       }
 
       ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
-      if (parent == null) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
-      } else {
+      if (parent != null) {
         matcher = searchWordsExclusion.matcher(parent.getText());
-        if (!matcher.find()) {
-          diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+        if (matcher.find()) {
+          return;
         }
       }
+      
+      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
     }
   }
 

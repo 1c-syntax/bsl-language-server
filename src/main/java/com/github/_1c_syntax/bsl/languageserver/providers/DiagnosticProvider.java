@@ -223,7 +223,7 @@ public final class DiagnosticProvider {
   }
 
   public static List<DiagnosticTag> getDiagnosticTags(Class<? extends BSLDiagnostic> diagnosticClass) {
-    return new ArrayList<DiagnosticTag>(Arrays.asList(diagnosticsMetadata.get(diagnosticClass).tags()));
+    return new ArrayList<>(Arrays.asList(diagnosticsMetadata.get(diagnosticClass).tags()));
   }
 
   public static List<DiagnosticTag> getDiagnosticTags(BSLDiagnostic diagnostic) {

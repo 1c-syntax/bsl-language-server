@@ -54,6 +54,10 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   )
   private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
+  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
+    return (expression.getChildCount() <= 1);
+  }
+
   private boolean isExcluded(String s) {
     for (String elem : this.authorizedNumbers) {
       if (s.compareTo(elem) == 0) {
@@ -62,10 +66,6 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     return false;
-  }
-
-  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
   }
 
   @Override
@@ -85,14 +85,10 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
     String checked = ctx.getText();
 
-    if(checked == null || isExcluded(checked)) {
-      return super.visitNumeric(ctx);
-    } else {
+    if (checked != null && !isExcluded(checked)) {
       ParserRuleContext expression = ctx.getParent().getParent().getParent();
-      if (expression instanceof BSLParser.ExpressionContext) {
-        if (isNumericExpression((BSLParser.ExpressionContext) expression)) {
-          return super.visitNumeric(ctx);
-        }
+      if (expression instanceof BSLParser.ExpressionContext
+        && !isNumericExpression((BSLParser.ExpressionContext) expression)) {
         diagnosticStorage.addDiagnostic(ctx.stop, getDiagnosticMessage(checked));
       }
     }

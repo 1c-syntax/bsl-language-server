@@ -37,8 +37,8 @@ import java.util.regex.Pattern;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
-  minutesToFix = 30,
   scope = DiagnosticScope.BSL,
+  minutesToFix = 30,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.LOCKINOS

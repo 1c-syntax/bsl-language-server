@@ -70,7 +70,8 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     if (configuration == null) {
       return;
     }
-    String searchDeleteFileMethodProperty = (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
+    String searchDeleteFileMethodProperty =
+      (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
     searchDeleteFileMethod = Pattern.compile(
       "^(" + searchDeleteFileMethodProperty + ")",
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -105,14 +106,10 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       BSLParser.CodeBlockContext codeBlockContext = (BSLParser.CodeBlockContext)
         Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
 
-      if (codeBlockContext == null) {
-        return super.visitGlobalMethodCall(ctx);
-      }
-
-      if (!foundDeleteFile(codeBlockContext, variableName, filterLine)) {
+      if (codeBlockContext != null
+        && !foundDeleteFile(codeBlockContext, variableName, filterLine)) {
         diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
       }
-
     }
 
     return super.visitGlobalMethodCall(ctx);
@@ -162,8 +159,6 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
   private boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
 
-    boolean result = false;
-
     BSLParser.CallParamListContext callParamListContext = doCallContext.callParamList();
     if (callParamListContext == null) {
       return false;
@@ -174,6 +169,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       return false;
     }
 
+    boolean result = false;
     for (BSLParser.CallParamContext callParamContext : list) {
       if (callParamContext.getText().equalsIgnoreCase(variableName)) {
         result = true;
