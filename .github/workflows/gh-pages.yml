@@ -33,7 +33,7 @@ jobs:
       run: |
         mkdir public
         mkdir public/dev
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev. public/dev || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/. public/dev || true
         
     - name: Save latest Master
       if: github.ref == 'refs/heads/develop'
