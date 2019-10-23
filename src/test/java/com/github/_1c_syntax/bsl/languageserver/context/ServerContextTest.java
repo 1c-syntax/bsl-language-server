@@ -42,8 +42,7 @@ public class ServerContextTest {
   void testConfigurationMetadata() {
 
     Path path = Paths.get(PATH_TO_METADATA).toAbsolutePath();
-    ServerContext serverContext = new ServerContext();
-    serverContext.setPathToConfigurationMetadata(path);
+    ServerContext serverContext = new ServerContext(path);
     AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotEqualTo(null);
@@ -67,7 +66,7 @@ public class ServerContextTest {
     Path path = Paths.get(PATH_TO_METADATA, "test").toAbsolutePath();
 
     ServerContext serverContext = new ServerContext();
-    serverContext.setPathToConfigurationMetadata(path);
+    serverContext.setConfigurationRoot(path);
     AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
