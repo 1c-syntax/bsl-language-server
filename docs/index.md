@@ -17,7 +17,7 @@
 * <a href="#configuration">Конфигурационный файл</a>
 * <a href="reporters">Репортеры</a>
 * <a href="diagnostics">Диагностики</a>
-* <a href="thanks">Благодарности</a>
+* <a href="#thanks">Благодарности</a>
 
 <a id="capabilities"></a>
 
