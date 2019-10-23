@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,7 +43,7 @@ class MultilingualStringUsingWithTemplateDiagnosticTest
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 38, 19, 89)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 38, 19, 89)));
   }
 
   @Test
@@ -55,7 +55,7 @@ class MultilingualStringUsingWithTemplateDiagnosticTest
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(18, 38, 18, 89)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(19, 38, 19, 89)));
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(18, 38, 18, 89)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 38, 19, 89)));
   }
 }

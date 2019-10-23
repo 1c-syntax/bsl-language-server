@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,10 +43,10 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 		List<Diagnostic> diagnostics = getDiagnostics();
 		assertThat(diagnostics).hasSize(4);
 		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 16, 12, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 30, 16, 66)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 30, 24, 81)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 30, 24, 81)));
 	}
 
 	@Test
@@ -58,11 +58,11 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 		List<Diagnostic> diagnostics = getDiagnostics();
 		assertThat(diagnostics).hasSize(6);
 		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(12, 16, 12, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(15, 27, 15, 65)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(16, 30, 16, 66)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(21, 27, 21, 78)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(24, 30, 24, 81)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 27, 15, 65)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 27, 21, 78)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 30, 24, 81)));
 	}
 }
