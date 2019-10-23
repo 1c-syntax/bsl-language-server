@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
+class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 	extends AbstractDiagnosticTest<MultilingualStringHasAllDeclaredLanguagesDiagnostic> {
 
 	MultilingualStringHasAllDeclaredLanguagesDiagnosticTest() {
@@ -41,12 +41,11 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 	@Test
 	void testOnlyRU() {
 		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(4);
+		assertThat(diagnostics).hasSize(3);
 		assertThat(diagnostics)
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 30, 24, 81)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)));
 	}
 
 	@Test
@@ -56,13 +55,11 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 		getDiagnosticInstance().configure(configuration);
 
 		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(6);
+		assertThat(diagnostics).hasSize(4);
 		assertThat(diagnostics)
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 27, 15, 65)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 27, 21, 78)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 30, 24, 81)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)));
 	}
 }

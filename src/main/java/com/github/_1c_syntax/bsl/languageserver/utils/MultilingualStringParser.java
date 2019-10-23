@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public final class MultilingualStringParser {
@@ -46,6 +47,7 @@ public final class MultilingualStringParser {
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
+  private String variableName;
   private ArrayList<String> expectedLanguages;
   private Map<String, String> expandedMultilingualString = new HashMap<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
@@ -56,17 +58,18 @@ public final class MultilingualStringParser {
 
   }
 
-  public void parse(BSLParser.GlobalMethodCallContext globalMethodCallContext) throws IllegalArgumentException {
+  public void parse(BSLParser.GlobalMethodCallContext ctx) throws IllegalArgumentException {
     expandedMultilingualString.clear();
     missingLanguages.clear();
     isParentTemplate = false;
 
-    if (isNotMultilingualString(globalMethodCallContext)) {
+    if (isNotMultilingualString(ctx)) {
       throw new IllegalArgumentException("Method not multilingual string");
     }
 
-    this.globalMethodCallContext = globalMethodCallContext;
-    this.isParentTemplate = hasTemplateInParents(globalMethodCallContext);
+    globalMethodCallContext = ctx;
+    isParentTemplate = hasTemplateInParents(ctx);
+    variableName = getVariableName(ctx);
     expandMultilingualString();
     checkDeclaredLanguages();
   }
@@ -78,18 +81,35 @@ public final class MultilingualStringParser {
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
     ParserRuleContext parent = globalMethodCallContext.getParent();
 
-    if(parent instanceof BSLParser.FileContext || parent instanceof BSLParser.StatementContext) {
+    if (parent instanceof BSLParser.FileContext || parent instanceof BSLParser.StatementContext) {
       return false;
     }
 
-    if(
-      parent instanceof BSLParser.GlobalMethodCallContext
-        && templateMethodName.matcher(((BSLParser.GlobalMethodCallContext) parent).methodName().getText()).find()
-    ) {
+    if (parent instanceof BSLParser.GlobalMethodCallContext && isTemplate((BSLParser.GlobalMethodCallContext) parent)) {
       return true;
     }
 
     return hasTemplateInParents(parent);
+  }
+
+  private static boolean isTemplate(BSLParser.GlobalMethodCallContext parent) {
+    return templateMethodName.matcher(parent.methodName().getText()).find();
+  }
+
+  private String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+    BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
+      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+
+    if (assignment == null) {
+      return null;
+    }
+
+    BSLParser.ComplexIdentifierContext complexIdentifierContext = assignment.complexIdentifier();
+    if (complexIdentifierContext == null) {
+      return null;
+    }
+
+    return complexIdentifierContext.getText();
   }
 
   private void expandMultilingualString() {
@@ -128,7 +148,36 @@ public final class MultilingualStringParser {
   }
 
   public boolean isParentTemplate() {
-    return this.isParentTemplate;
+    return isParentTemplate || istVariableUsingInTemplate();
+  }
+
+  private boolean istVariableUsingInTemplate() {
+    if (variableName == null) {
+      return false;
+    }
+
+    BSLParser.CodeBlockContext codeBlock = getCodeBlock();
+
+    if (codeBlock == null) {
+      return false;
+    }
+
+    return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_globalMethodCall)
+      .stream()
+      .filter(n -> ((BSLParser.GlobalMethodCallContext) n).getStart().getLine() > globalMethodCallContext.getStart().getLine())
+      .filter(n -> isTemplate((BSLParser.GlobalMethodCallContext) n))
+      .map(n -> ((BSLParser.GlobalMethodCallContext) n).doCall().callParamList())
+      .filter(Objects::nonNull)
+      .map(BSLParser.CallParamListContext::callParam)
+      .filter(cp -> !cp.isEmpty())
+      .anyMatch(cp -> cp.stream().anyMatch(p -> p.getText().equalsIgnoreCase(variableName)));
+  }
+
+  private BSLParser.CodeBlockContext getCodeBlock() {
+    return (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(
+      globalMethodCallContext,
+      BSLParser.RULE_codeBlock
+    );
   }
 
 }

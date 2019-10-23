@@ -40,7 +40,8 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends Abstrac
 
 	@Override
 	protected boolean check() {
-		return parser.hasNotAllDeclaredLanguages() && !parser.isParentTemplate();
+		return parser.hasNotAllDeclaredLanguages()
+			&& !parser.isParentTemplate();
 	}
 
 }
