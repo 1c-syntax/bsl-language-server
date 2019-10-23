@@ -33,6 +33,8 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +45,8 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(BSLLanguageServer.class.getSimpleName());
 
   private final LanguageServerConfiguration configuration;
   private BSLTextDocumentService textDocumentService;
@@ -68,6 +72,8 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
+    setConfigurationRoot(params);
+
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
     capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
@@ -79,24 +85,26 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
     InitializeResult result = new InitializeResult(capabilities);
 
-    // configurationRoot для ServerContext
-    if (params.getRootUri() != null) {
-      Path fileUri;
-      try {
-        fileUri = new File(new URI(params.getRootUri()).getPath()).getCanonicalFile().toPath();
-      } catch (URISyntaxException e) {
-        fileUri = null;
-      } catch (IOException e) {
-        fileUri = null;
-      }
+    return CompletableFuture.completedFuture(result);
+  }
 
-      Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
-        configuration,
-        fileUri);
-      context.setPathToConfigurationMetadata(configurationRoot);
+  private void setConfigurationRoot(InitializeParams params) {
+    if (params.getRootUri() == null) {
+      return;
     }
 
-    return CompletableFuture.completedFuture(result);
+    Path rootPath;
+    try {
+      rootPath = new File(new URI(params.getRootUri()).getPath()).getCanonicalFile().toPath();
+    } catch (URISyntaxException | IOException e) {
+      LOGGER.error("Can't read root URI from initialization params.", e);
+      return;
+    }
+
+    Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(
+      configuration,
+      rootPath);
+    context.setConfigurationRoot(configurationRoot);
   }
 
   @Override

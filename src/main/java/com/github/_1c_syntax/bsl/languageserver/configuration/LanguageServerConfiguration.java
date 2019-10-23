@@ -218,9 +218,6 @@ public final class LanguageServerConfiguration {
 
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
     Path rootPath = null;
-    if (srcDir == null) {
-      return null;
-    }
     Path pathFromConfiguration = configuration.getConfigurationRoot();
     if (pathFromConfiguration == null) {
       rootPath = srcDir;
