@@ -6,7 +6,7 @@
 
 В общем виде, для реализации диагностики необходимо создать несколько файлов
 
-* Класс, реализуюий диагностику
+* Класс, реализующий диагностику
 * Два файла ресурсов (для английского и русского языка), содержащих название диагностики и сообщение об ошибке
 * Файл фикстуры, содержащий BSL код, содержимое которого используется для тестирования диагностики
 * Класс теста для диагностики
@@ -25,32 +25,35 @@
 
 ### Класс реализации диагностики
 
-В соответствии с правилами, каталоге `src/main/java` в пакете `org.github._1c_syntax.bsl.languageserver.diagnostics` создадим файл `SemicolonPresenceDiagnostic.java` класса диагностики.  
+В соответствии с правилами, каталоге `src/main/java` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics` создадим файл `SemicolonPresenceDiagnostic.java` класса диагностики.  
 В файле создаем одноименный класс, унаследованный от класса `AbstractVisitorDiagnostic`.  В результате имеем следующее
 
 ```java
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {}
 ```
 
 Каждая диагностика должна иметь аннотацию класса `@DiagnosticMetadata`, содержащую метаданные диагностики. Подробная информация об аннотациях в [статье][DiagnosticStructure].  
-В примере у нас реализуется диагностика, относящаяся к качеству кода (`CODE_SMELL`), низкого приоритета (`MINOR`), и требующая для исправления 1 минуту. Итоговый вид класса с аннотацией
+В примере у нас реализуется диагностика, относящаяся к качеству кода (`CODE_SMELL`), низкого приоритета (`MINOR`), требующая для исправления 1 минуту и относящаяся к стандарту 1С. Итоговый вид класса с аннотацией
 
 ```java
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1
+  minutesToFix = 1,
+  tag = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {}
 ```
 
 ### Ресурсы класса
 
-В соответствии с правилами, в каталоге `src/main/resources` в пакете `org.github._1c_syntax.bsl.languageserver.diagnostics` создаем 2 файла ресурсов диагностики, в нашем примере это будут файлы `SemicolonPresenceDiagnostic_ru.properties` и `SemicolonPresenceDiagnostic_en.properties`.  
+В соответствии с правилами, в каталоге `src/main/resources` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics` создаем 2 файла ресурсов диагностики, в нашем примере это будут файлы `SemicolonPresenceDiagnostic_ru.properties` и `SemicolonPresenceDiagnostic_en.properties`.  
 В созданных файлах сохраним название диагностики (параметр `diagnosticName`) и сообщение замечания (`diagnosticMessage`).  
 В нашем примере содержимое файлов будет следующим
 
@@ -86,12 +89,12 @@ diagnosticName=Statement should end with ";"
 
 ### Написание теста
 
-В каталоге `src/test/java` в пакете `org.github._1c_syntax.bsl.languageserver.diagnostics` создаем файл `SemicolonPresenceDiagnosticTest.java` для тестового класса диагностики.  
+В каталоге `src/test/java` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics` создаем файл `SemicolonPresenceDiagnosticTest.java` для тестового класса диагностики.  
 В файле необходимо создаем одноименный класс, унаследованый от класса `AbstractDiagnosticTest` для созданного класса диагностики.  
 В результате имеем следующее
 
 ```java
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPresenceDiagnostic>{
     SemicolonPresenceDiagnosticTest() {
@@ -126,8 +129,8 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics(); // Получение диагностик
 
     assertThat(diagnostics).hasSize(2); // Проверка количества
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(RangeHelper.newRange(4, 0, 4, 9)); // Проверка конкретного случая
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(RangeHelper.newRange(3, 6, 3, 7)); // Проверка конкретного случая
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 9)); // Проверка конкретного случая
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(3, 6, 3, 7)); // Проверка конкретного случая
   }
 }
 ```
@@ -140,12 +143,15 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
 После реализации проверки, файл примет следующий вид
 
 ```java
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1
+  minutesToFix = 1,
+  tag = {
+    DiagnosticTag.STANDARD
+  }
 )
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
 

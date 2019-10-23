@@ -35,7 +35,7 @@
       return;
     }
 
-    this.commentsAnnotation = (String) configuration.get("commentsAnnotation");
+    this.commentsAnnotation = (String) configuration.getOrDefault("commentsAnnotation", commentsAnnotation);
   }
 
 ```

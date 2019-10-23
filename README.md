@@ -1,6 +1,6 @@
 # BSL Language Server
 
-[![Build Status](https://travis-ci.org/1c-syntax/bsl-language-server.svg?branch=develop)](https://travis-ci.org/1c-syntax/bsl-language-server)
+[![Actions Status](https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg)](https://github.com/1c-syntax/bsl-language-server/actions)
 [![JitPack](https://jitpack.io/v/1c-syntax/bsl-language-server.svg)](https://jitpack.io/#1c-syntax/bsl-language-server)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
@@ -23,6 +23,7 @@
 * Диагностики
 * "Быстрые исправления" (quick fixes) для ряда диагностик
 * Запуск движка диагностик из командной строки
+* Запуск форматирования файлов в каталоге из командной строки
 
 ## Запуск из командной строки
 
@@ -31,9 +32,10 @@
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -a,--analyze               Run analysis and get diagnostic info
  -c,--configuration <arg>   Path to language server configuration file
+ -f,--format                Format files in source directory
  -h,--help                  Show help.
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
@@ -64,6 +66,25 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 ```sh
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
+
+## Запуск в режиме форматтера
+
+Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`). Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+
+Пример строки запуска анализа:
+
+```sh
+java -jar bsl-language-server.jar --format --srcDir ./src/cf
+```
+
+## Благодарности
+
+Огромное спасибо всем [контрибьюторам](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) проекта, всем участвовавшим в обсуждениях, помогавшим с тестированием.
+Вы потрясающие!  
+
+Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
+
+Этот продукт поддерживается [YourKit](https://www.yourkit.com), разработчиком инструментов для мониторинга и профилирования Java и .Net приложений.
 
 ## ToDo
 

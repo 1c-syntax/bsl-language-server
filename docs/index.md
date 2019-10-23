@@ -9,17 +9,17 @@
 
 Реализация протокола [language server protocol](https://microsoft.github.io/language-server-protocol/) для языка 1C (BSL) - языка 1С:Предприятие 8 и [OneScript](http://oscript.io).
 
-[English version](en/index.md)
-
 * [Руководство контрибьютора](contributing/index.md)
 * <a href="#capabilities">Возможности</a>
 * <a href="#cli">Запуск из командной строки</a>
 * <a href="#analyze">Запуск в режиме анализатора</a>
+* <a href="#format">Запуск в режиме форматтера</a>
 * <a href="#configuration">Конфигурационный файл</a>
-* <a href="#reporters">Репортеры</a>
-* <a href="#diagnostics">Диагностики</a>
+* <a href="reporters">Репортеры</a>
+* <a href="diagnostics">Диагностики</a>
+* <a href="#thanks">Благодарности</a>
 
-<a id="capabilities"/>
+<a id="capabilities"></a>
 
 ## Возможности
 
@@ -31,8 +31,9 @@
 * Диагностики
 * "Быстрые исправления" (quick fixes) для ряда диагностик
 * Запуск движка диагностик из командной строки
+* Запуск форматирования файлов в каталоге из командной строки
 
-<a id="cli"/>
+<a id="cli"></a>
 
 ## Запуск из командной строки
 
@@ -41,9 +42,10 @@
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
+usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
  -a,--analyze               Run analysis and get diagnostic info
  -c,--configuration <arg>   Path to language server configuration file
+ -f,--format                Format files in source directory
  -h,--help                  Show help.
  -o,--outputDir <arg>       Output report directory
  -r,--reporter <arg>        Reporter key
@@ -55,7 +57,7 @@ usage: BSL language server [-a] [-c <arg>] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
 
 По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `diagnosticLanguage` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
-<a id="analyze"/>
+<a id="analyze"></a>
 
 ## Запуск в режиме анализатора
 
@@ -75,7 +77,19 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
 
-<a id="configuration"/>
+<a id="format"></a>
+
+## Запуск в режиме форматтера
+
+Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`). Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+
+Пример строки запуска форматирования:
+
+```sh
+java -jar bsl-language-server.jar --format --srcDir ./src/cf
+```
+
+<a id="configuration"></a>
 
 ## Конфигурационный файл
 
@@ -94,7 +108,7 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 Вы можете использовать следующую JSON-схему для упрощения редактирования файла:
 
 ```
-https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json
+https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json
 ```
 
 Ниже приведен пример настройки, устанавливающий:
@@ -104,7 +118,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/org/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
+  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
   "diagnosticLanguage": "ru",
   "diagnostics": {
     "LineLength": {
@@ -115,73 +129,13 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 }
 ```
 
-<a id="reporters"/>
+<a id="thanks"></a>
 
-## Репортеры
+## Благодарности
 
-Используются для получения результатов анализа.
+Огромное спасибо всем [контрибьюторам](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) проекта, всем участвовавшим в обсуждениях, помогавшим с тестированием.
+Вы потрясающие!  
 
-### Список реализованных репортеров
+Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
 
-* [json](reporters/json.md) - вывод результата анализа в собственном формате JSON, поддерживаемым [SonarQube 1C (BSL) Community Plugin](https://github.com/1c-syntax/sonar-bsl-plugin-community);
-* [generic](reporters/generic.md) - вывод результата анализа в формате [Generic issue](https://docs.sonarqube.org/latest/analysis/generic-issue/) для SonarQube;
-* [junit](reporters/junit.md);
-* [tslint](reporters/tslint.md);
-* [console](reporters/console.md).
-
-<a id="diagnostics"/>
-
-## Диагностики
-
-Используются для проверки кода на соответствие стандартам кодирования и для поиска возможных ошибок.
-
-Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="#configuration">конфигурационный файл</a>.
-
-### Список реализованных диагностик
-
-| Ключ | Название | Включена по умолчанию |
-| --- | --- | :-: |
-| [CanonicalSpellingKeywords](diagnostics/CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да |
-| [CognitiveComplexity](diagnostics/CognitiveComplexity.md) | Когнитивная сложность | Да |
-| [DeletingCollectionItem](diagnostics/DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да |
-| [DeprecatedMessage](diagnostics/DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да |
-| [EmptyCodeBlock](diagnostics/EmptyCodeBlock.md) | Пустой блок кода | Да |
-| [EmptyStatement](diagnostics/EmptyStatement.md) | Пустой оператор | Да |
-| [ExtraCommas](diagnostics/ExtraCommas.md) | Лишние запятые при вызове метода | Да |
-| [FunctionShouldHaveReturn](diagnostics/FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да |
-| [IdenticalExpressions](diagnostics/IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да |
-| [IfConditionComplexity](diagnostics/IfConditionComplexity.md) | Слишком сложное условие оператора Если | Да |
-| [IfElseDuplicatedCodeBlock](diagnostics/IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да |
-| [IfElseDuplicatedCondition](diagnostics/IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если…Тогда…ИначеЕсли… | Да |
-| [IfElseIfEndsWithElse](diagnostics/IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да |
-| [LineLength](diagnostics/LineLength.md) | Ограничение на длину строки | Да |
-| [MagicNumber](diagnostics/MagicNumber.md) | Использование магического числа | Да |
-| [MethodSize](diagnostics/MethodSize.md) | Ограничение на размер метода | Да |
-| [MissingCodeTryCatchEx](diagnostics/MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да |
-| [NestedConstructorsInStructureDeclaration](diagnostics/NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да |
-| [NestedStatements](diagnostics/NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да |
-| [NestedTernaryOperator](diagnostics/NestedTernaryOperator.md) | Вложенный тернарный оператор | Да |
-| [NumberOfOptionalParams](diagnostics/NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да |
-| [NumberOfParams](diagnostics/NumberOfParams.md) | Ограничение на количество параметров метода | Да |
-| [NumberOfValuesInStructureConstructor](diagnostics/NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да |
-| [OneStatementPerLine](diagnostics/OneStatementPerLine.md) | Одно выражение в одной строке | Да |
-| [OrderOfParams](diagnostics/OrderOfParams.md) | Порядок параметров метода | Да |
-| [PairingBrokenTransaction](diagnostics/PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да |
-| [ParseError](diagnostics/ParseError.md) | Ошибка разбора исходного кода | Да |
-| [ProcedureReturnsValue](diagnostics/ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да |
-| [SelfAssign](diagnostics/SelfAssign.md) | Присвоение переменной самой себе | Да |
-| [SemicolonPresence](diagnostics/SemicolonPresence.md) | Выражение должно заканчиваться ";" | Да |
-| [SeveralCompilerDirectives](diagnostics/SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да |
-| [SpaceAtStartComment](diagnostics/SpaceAtStartComment.md) | Пробел в начале комментария | Да |
-| [TernaryOperatorUsage](diagnostics/TernaryOperatorUsage.md) | Использование тернарного оператора | Нет |
-| [TryNumber](diagnostics/TryNumber.md) | Приведение к числу в попытке | Да |
-| [UnknownPreprocessorSymbol](diagnostics/UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да |
-| [UseLessForEach](diagnostics/UseLessForEach.md) | Бесполезный перебор коллекции | Да |
-| [UsingCancelParameter](diagnostics/UsingCancelParameter.md) | Работа с параметром "Отказ" | Да |
-| [UsingFindElementByString](diagnostics/UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да |
-| [UsingGoto](diagnostics/UsingGoto.md) | Использование "Перейти" | Да |
-| [UsingModalWindows](diagnostics/UsingModalWindows.md) | Использование модальных окон | Нет |
-| [UsingServiceTag](diagnostics/UsingServiceTag.md) | Использование служебных тегов | Да |
-| [UsingSynchronousCalls](diagnostics/UsingSynchronousCalls.md) | Использование синхронных вызовов | Нет |
-| [UsingThisForm](diagnostics/UsingThisForm.md) | Использование свойства "ЭтаФорма" | Да |
-| [YoLetterUsage](diagnostics/YoLetterUsage.md) | Использование буквы “ё” в текстах модулей | Да |
+Этот продукт поддерживается [YourKit](https://www.yourkit.com), разработчиком инструментов для мониторинга и профилирования Java и .Net приложений.

@@ -24,6 +24,9 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty();
 
+    private var tagPattern = Regex("([\\w]+?)\\(\"([\\W\\w]+?)\"\\)[,\\s]*",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+
     private fun createFile(path: String, text: String) {
         val f = File(path);
         f.writeText(text, charset("UTF-8"));
@@ -35,33 +38,55 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
         if(key.isEmpty()){
             throw Throwable("Empty diagnostic key")
         }
+        val fileP = File(outputDir.get().asFile.path,
+                "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticTag.java");
+
+        if(fileP.exists()) {
+            val match = tagPattern.findAll(fileP.readText(charset("UTF-8")));
+            println("Diagnostic tags: \n" + match.map {
+                it.groupValues[1]
+            }.joinToString("\n")
+            );
+        }
+
+        println("Enter diagnostic tags separated by space (max 3).")
+        val inputStr = readLine();
+        if(inputStr.isNullOrBlank()) {
+            throw Throwable("Empty diagnostic tags")
+        }
+        var diagnosticTags = inputStr.split(' ').joinToString(",\n\t\tDiagnosticTag.");
+        diagnosticTags = "tag = {\n\t\tDiagnosticTag.$diagnosticTags\n\t}\n";
+
         logger.quiet("Creating new diagnostics files with the key '{}'", key);
         val srcPath = File(outputDir.get().asFile.path, "src");
-        val packPath = "org/github/_1c_syntax/bsl/languageserver/diagnostics";
+        val packPath = "com/github/_1c_syntax/bsl/languageserver/diagnostics";
         val docPath = File(outputDir.get().asFile.path, "docs");
+        val templatePath = File(outputDir.get().asFile.path, "gradle/NewDiagnosticTemplates");
         createFile("${docPath}/diagnostics/${key}.md",
-                "# ${nameRu}\n\n<Описание диагностики>\n\n## Параметры\n\n" +
-                        "* `ИмяПараметра` - `ТипПараметра` - Описание параметра\n");
+                (File(templatePath, "Template_ru.md"))
+                        .readText(charset("UTF-8")).replace("<Имя диагностики>", nameRu));
+
         createFile("${docPath}/en/diagnostics/${key}.md",
-                "# ${nameEn}\n\n<Diagnostic description>\n\n## Params\n\n" +
-                        "* `ParamName` - `ParamType` - Param description\n");
+                (File(templatePath, "Template_en.md"))
+                        .readText(charset("UTF-8")).replace("<Diagnostic name>", nameEn));
 
         createFile("${srcPath}/main/java/${packPath}/${key}Diagnostic.java",
-                "package org.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
-                        "@DiagnosticMetadata(\n\ttype = DiagnosticType.CODE_SMELL," +
-                        "\n\tseverity = DiagnosticSeverity.INFO,\n\tminutesToFix = 1\n)\n" +
-                        "public class ${key}Diagnostic implements QuickFixProvider, BSLDiagnostic {\n}\n");
+                (File(templatePath, "TemplateDiagnostic.java"))
+                        .readText(charset("UTF-8"))
+                        .replace("Template", key)
+                        .replace("$diagnosticTags", diagnosticTags));
 
         createFile("${srcPath}/test/java/${packPath}/${key}DiagnosticTest.java",
-                "package org.github._1c_syntax.bsl.languageserver.diagnostics;\n\n" +
-                        "public class ${key}DiagnosticTest extends AbstractDiagnosticTest<${key}Diagnostic> {\n" +
-                        "\t${key}DiagnosticTest() {\n\t\tsuper(${key}Diagnostic.class);\n\t}\n\n" +
-                        "\t@Test\n\tvoid test() {\n\t}\n}\n");
+                (File(templatePath, "TemplateDiagnosticTest.java"))
+                        .readText(charset("UTF-8")).replace("Template", key));
 
         createFile("${srcPath}/main/resources/${packPath}/${key}Diagnostic_ru.properties",
-                "diagnosticMessage=<Сообщение>\ndiagnosticName=${nameRu}\n");
+                (File(templatePath, "TemplateDiagnostic_ru.properties"))
+                        .readText(charset("UTF-8")).replace("<Имя диагностики>", nameRu));
+
         createFile("${srcPath}/main/resources/${packPath}/${key}Diagnostic_en.properties",
-                "diagnosticMessage=<Message>\ndiagnosticName=${nameEn}\n");
+                (File(templatePath, "TemplateDiagnostic_en.properties"))
+                        .readText(charset("UTF-8")).replace("<Diagnostic name>", nameEn));
 
         createFile("${srcPath}/test/resources/diagnostics/${key}Diagnostic.bsl", "\n");
     }
