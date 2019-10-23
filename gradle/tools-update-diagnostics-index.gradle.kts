@@ -1,5 +1,3 @@
-import java.io.File
-
 open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     private var pathPack = "com/github/_1c_syntax/bsl/languageserver/diagnostics";
@@ -16,15 +14,45 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
     private var tagsListPattern = Regex("DiagnosticTag\\.\\s*?([\\w]*)[,\\s]*",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
 
+    private var typePattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+type\\s*?=\\s" +
+            "*?DiagnosticType\\.([\\w]*?)[\\s,\\)]\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+    private var severityPattern = Regex("^\\s*@DiagnosticMetadata\\([.\\s\\w\\W]*?\\s+severity\\s*?=\\s" +
+            "*?DiagnosticSeverity\\.([\\w]*?)[\\s,\\)]\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+
+    private var typeRuMap = hashMapOf("ERROR" to "Ошибка",
+            "VULNERABILITY" to "Уязвимость",
+            "CODE_SMELL" to "Дефект кода");
+
+    private var typeMapRu = hashMapOf("ERROR" to 0);
+    private var typeMapEn = hashMapOf("ERROR" to 0);
+
+    private var typeEnMap = hashMapOf("ERROR" to "Error",
+            "VULNERABILITY" to "Vulnerability",
+            "CODE_SMELL" to "Code smell");
+
+    private var severityRuMap = hashMapOf("BLOCKER" to "Блокирующий",
+            "CRITICAL" to "Критичный",
+            "MAJOR" to "Важный",
+            "MINOR" to "Незначительный",
+            "INFO" to "Информационный");
+
+    private var severityEnMap = hashMapOf("BLOCKER" to "Blocker",
+            "CRITICAL" to "Critical",
+            "MAJOR" to "Major",
+            "MINOR" to "Minor",
+            "INFO" to "Info");
+
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty();
 
     private fun getName(key: String, lang: String): String {
         val fileP = File(outputDir.get().asFile.path,
                 "src/main/resources/${pathPack}/${key}Diagnostic_${lang}.properties");
-        if(fileP.exists()) {
+        if (fileP.exists()) {
             val match = namePattern.find(fileP.readText(charset("UTF-8")));
-            if(match != null && match.groups.isNotEmpty()) {
+            if (match != null && match.groups.isNotEmpty()) {
                 return match.groups[1]?.value.toString();
             }
         }
@@ -35,7 +63,7 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
     private fun getReadme(key: String, lang: String): String {
         val docPath = File(outputDir.get().asFile.path, "docs/${lang}diagnostics");
         val readme = File(docPath.path, "${key}.md");
-        if(readme.exists()) {
+        if (readme.exists()) {
             return "${readme.name}";
         }
         logger.quiet("File '{}' not exist", readme.path);
@@ -44,8 +72,8 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
 
     private fun getTags(text: String): String {
         val matchBody = tagsBodyPattern.find(text);
-        if(matchBody != null && matchBody.groups.isNotEmpty()) {
-            val match = tagsListPattern.findAll(matchBody.groups[1]?.value?: "");
+        if (matchBody != null && matchBody.groups.isNotEmpty()) {
+            val match = tagsListPattern.findAll(matchBody.groups[1]?.value ?: "");
             return "`" + match.map {
                 it.groupValues[1]
             }.joinToString("`<br/>`").toLowerCase() + "`";
@@ -53,55 +81,86 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
         return "";
     }
 
-    private fun writeIndex(indexText: String, lang: String) {
+    private fun writeIndex(indexText: String, lang: String, count: Int, typeMap: HashMap<String, Int>) {
         val indexPath = File(outputDir.get().asFile.path, "docs/${lang}diagnostics/index.md");
         val text = indexPath.readText(charset("UTF-8"));
 
         var header = "## Список реализованных диагностик";
-        var table = "| Ключ | Название | Включена по умолчанию | Тэги |\n| --- | --- | :-: | --- |";
-        if(lang != "") {
+        var total = "Общее количество:";
+        var table = "| Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |";
+        if (lang != "") {
             header = "## Implemented diagnostics";
-            table = "| Key | Name| Enabled by default | Tags |\n| --- | --- | :-: | --- |";
+            total = "Total:";
+            table = "| Key | Name| Enabled by default | Severity | Type | Tags |";
         }
+        table += "\n| --- | --- | :-: | --- | --- | --- |"
+        total += " **$count**\n\n* ${typeMap.toString()
+                .replace("{", "")
+                .replace("}", "")
+                .replace("=", ": **")
+                .replace(",", "**\n*")}**";
         val indexHeader = text.indexOf(header);
-        indexPath.writeText(text.substring(0, indexHeader - 1) + "\n${header}\n\n${table}${indexText}",
+        indexPath.writeText(text.substring(0, indexHeader - 1) + "\n${header}\n\n${total}\n\n${table}${indexText}",
                 charset("UTF-8"));
 
     }
 
     @TaskAction
     fun updateIndex() {
-        logger.quiet("Update diagnostics index");
+        logger.quiet("Update diagnostics index")
+        typeMapRu.clear();
+        typeMapEn.clear();
         var indexRu = "";
         var indexEn = "";
+        var countDiagnostic = 0;
         File(outputDir.get().asFile.path, "src/main/java/${pathPack}")
                 .walkBottomUp()
                 .filter {
                     it.name.endsWith(".java")
                 }.forEach {
                     val text = it.readText(charset("UTF-8"));
-                    if(text.indexOf("@DiagnosticMetadata") == -1) {
+                    if (text.indexOf("@DiagnosticMetadata") == -1) {
                         logger.quiet("File skipped {}", it);
                     } else {
+                        countDiagnostic++;
                         val key = it.name.substring(0, it.name.indexOf("Diagnostic"));
                         val nameRu = getName(key, "ru");
                         val nameEn = getName(key, "en");
                         var enabled = true;
-                        val match = enabledPattern.find(text);
-                        if(match != null && match.groups.isNotEmpty()) {
+                        var match = enabledPattern.find(text);
+                        if (match != null && match.groups.isNotEmpty()) {
                             enabled = match.groups[1]?.value?.toBoolean() ?: true;
                         }
-                        val enabledRu = if(enabled) "Да" else "Нет";
-                        val enabledEn = if(enabled) "Yes" else "No";
+                        val enabledRu = if (enabled) "Да" else "Нет";
+                        val enabledEn = if (enabled) "Yes" else "No";
                         val readmeRu = getReadme(key, "");
                         val readmeEn = getReadme(key, "en/");
                         val tags = getTags(text);
-                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $tags |";
-                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $tags |";
+                        var typeRu = "";
+                        var typeEn = "";
+                        var severityRu = "";
+                        var severityEn = "";
+                        match = typePattern.find(text);
+                        if (match != null && match.groups.isNotEmpty()) {
+                            val type = match.groups[1]?.value.toString();
+                            typeRu = typeRuMap.getOrDefault(type, "Ошибка");
+                            typeEn = typeEnMap.getOrDefault(type, "Error");
+                            typeMapRu[typeRu] = typeMapRu.getOrDefault(typeRu, 0) + 1;
+                            typeMapEn[typeEn] = typeMapEn.getOrDefault(typeEn, 0) + 1;
+                        }
+                        match = severityPattern.find(text);
+                        if (match != null && match.groups.isNotEmpty()) {
+                            val severity = match.groups[1]?.value.toString();
+                            severityRu = severityRuMap.getOrDefault(severity, "Блокирующий");
+                            severityEn = severityEnMap.getOrDefault(severity, "Blocker");
+                        }
+
+                        indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $severityRu | $typeRu | $tags |";
+                        indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $severityEn | $typeEn | $tags |";
                     }
                 }
-        writeIndex(indexRu, "");
-        writeIndex(indexEn, "en/");
+        writeIndex(indexRu, "", countDiagnostic, typeMapRu);
+        writeIndex(indexEn, "en/", countDiagnostic, typeMapEn);
     }
 }
 
