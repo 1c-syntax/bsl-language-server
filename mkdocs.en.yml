@@ -28,3 +28,4 @@ markdown_extensions:
 repo_name: '1c-syntax/bsl-language-server'
 repo_url: 'https://github.com/1c-syntax/bsl-language-server'
 edit_uri: 'edit/develop/docs/en'
+google_analytics: ['UA-150754232-1', '1c-syntax.github.io/bsl-language-server']
