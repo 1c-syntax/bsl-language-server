@@ -50,19 +50,25 @@ public final class MultilingualStringParser {
   private Map<String, String> expandedMultilingualString = new HashMap<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
-  public MultilingualStringParser(BSLParser.GlobalMethodCallContext globalMethodCallContext, String declaredLanguages)
-    throws IllegalArgumentException {
+  public MultilingualStringParser(String declaredLanguages) {
 
-    if(isNotMultilingualString(globalMethodCallContext)) {
+    this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
+
+  }
+
+  public void parse(BSLParser.GlobalMethodCallContext globalMethodCallContext) throws IllegalArgumentException {
+    expandedMultilingualString.clear();
+    missingLanguages.clear();
+    isParentTemplate = false;
+
+    if (isNotMultilingualString(globalMethodCallContext)) {
       throw new IllegalArgumentException("Method not multilingual string");
     }
 
     this.globalMethodCallContext = globalMethodCallContext;
     this.isParentTemplate = hasTemplateInParents(globalMethodCallContext);
-    this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
     expandMultilingualString();
     checkDeclaredLanguages();
-
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -102,7 +108,7 @@ public final class MultilingualStringParser {
 
   private void checkDeclaredLanguages() {
     if(expandedMultilingualString.isEmpty()) {
-      missingLanguages = expectedLanguages;
+      missingLanguages = new ArrayList<>(expectedLanguages);
       return;
     }
 

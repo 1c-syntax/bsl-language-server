@@ -38,7 +38,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
     description = "Заявленные языки"
   )
   private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
-  protected MultilingualStringParser parser;
+  protected MultilingualStringParser parser = new MultilingualStringParser(DECLARED_LANGUAGES_DEFAULT);
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -47,18 +47,21 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
     }
 
     declaredLanguages = (String) configuration.get("declaredLanguages");
+    parser = new MultilingualStringParser(declaredLanguages);
   }
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     try {
-      parser = new MultilingualStringParser(ctx, declaredLanguages);
+      parser.parse(ctx);
     } catch (IllegalArgumentException e) {
       return super.visitGlobalMethodCall(ctx);
     }
+
     if(check()) {
       diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(parser.getMissingLanguages()));
     }
+
     return super.visitGlobalMethodCall(ctx);
   }
 
