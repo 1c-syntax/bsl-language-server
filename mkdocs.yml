@@ -24,7 +24,8 @@ extra:
 markdown_extensions:
   - admonition
   - codehilite
-      
+
+site_url: 'https://1c-syntax.github.io/bsl-language-server'
 repo_name: '1c-syntax/bsl-language-server'
 repo_url: 'https://github.com/1c-syntax/bsl-language-server'
 edit_uri: 'edit/develop/docs'
