@@ -21,10 +21,15 @@ extra:
       link: 'https://github.com/1c-syntax'
     - type: 'telegram'
       link: 'https://t.me/bsl_language_server'
+extra_css:
+  - 'assets/stylesheets/extra.css'
 markdown_extensions:
   - admonition
   - codehilite
-      
+  - toc:
+      permalink: Link
+
+site_url: 'https://1c-syntax.github.io/bsl-language-server'
 repo_name: '1c-syntax/bsl-language-server'
 repo_url: 'https://github.com/1c-syntax/bsl-language-server'
 edit_uri: 'edit/develop/docs/en'
