@@ -17,6 +17,7 @@
 * <a href="#configuration">Конфигурационный файл</a>
 * <a href="reporters">Репортеры</a>
 * <a href="diagnostics">Диагностики</a>
+* <a href="thanks">Благодарности</a>
 
 <a id="capabilities"></a>
 
@@ -127,3 +128,14 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
   }
 }
 ```
+
+<a id="thanks"></a>
+
+## Благодарности
+
+Огромное спасибо всем [контрибьюторам](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) проекта, всем участвовавшим в обсуждениях, помогавшим с тестированием.
+Вы потрясающие!  
+
+Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
+
+Этот продукт поддерживается [YourKit](https://www.yourkit.com), разработчиком инструментов для мониторинга и профилирования Java и .Net приложений.

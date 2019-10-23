@@ -17,6 +17,7 @@
 - <a href="#configuration">Configuration file</a>
 - <a href="reporters">Reporters</a>
 - <a href="diagnostics">Diagnostics</a>
+- <a href="thanks">Special thanks</a>
 
 <a id="capabilities"></a>
 
@@ -129,3 +130,14 @@ Configuration file example, setting:
   }
 }
 ```
+
+<a id="thanks"></a>
+
+## Special thanks
+
+Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) to the project, to all who participated in the discussions, who helped with the testing.
+You are awesome!
+
+Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
+
+This product is supported by [YourKit](https://www.yourkit.com), the developer of tools for monitoring and profiling Java and .NET applications.
