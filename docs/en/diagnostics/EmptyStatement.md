@@ -5,8 +5,6 @@
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `badpractice` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Empty statement

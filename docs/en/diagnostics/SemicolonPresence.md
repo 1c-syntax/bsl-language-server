@@ -5,8 +5,6 @@
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `1` | `standard`<br/>`badpractice` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Statement should end with semicolon symbol ";"

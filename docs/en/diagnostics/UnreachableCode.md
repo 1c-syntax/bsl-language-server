@@ -5,11 +5,9 @@
 | `Error` | `BSL`<br/>`OS` | `Minor` | `Нет` | `10` | `design`<br/>`suspicious` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Unreachable Code
 
 Code located after operators "Return", "GoTo", "Raise", "Break", "Continue" never will be executed.
 
@@ -34,7 +32,7 @@ Function Example(Parameter1, Parameter2)
     If Error Then
         Raise "Error occurred";
         // After rise exception the code bellow will be ignored
-        Parameter1 = Parameter2;        
+        Parameter1 = Parameter2;
     EndIf; 
     Return Parameter1;
 EndFunction

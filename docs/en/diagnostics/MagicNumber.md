@@ -5,13 +5,13 @@
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `1` | `badpractice` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
 
-# Using magic number
-
 Magic numbers are any number in your code that does not immediately become apparent without being immersed in context.
+
+## Examples
 
 Bad
 ```Bsl

@@ -5,11 +5,6 @@
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `1` | `standard` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Non export methods in API regions
-
-<Diagnostic description>
-

@@ -5,11 +5,9 @@
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `0` | `badpractice` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Using service tags
 
 The diagnostic finds use of service tags in comments. Tags list:
 
@@ -26,7 +24,3 @@ The diagnostic finds use of service tags in comments. Tags list:
 - КОНСТРУКТОР_ВВОДА_НА_ОСНОВАНИИ
 
 Tags list can be extended via options.
-
-## Parameters
-
-- `serviceTags` - `String` - keyword for search. Bu default : "todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG".

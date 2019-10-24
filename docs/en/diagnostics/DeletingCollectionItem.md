@@ -5,16 +5,14 @@
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `standard`<br/>`error` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Deleting an item when iterating through collection using the operator "For each ... In ... Do"
 
 Don't delete elements of collection %s when iterating through collection using the 
 operator **For each ... In ... Do**. Because it change index of next element.
 
-Example:
+## Examples
 
 ```bsl
 For each Element In Collection Do
@@ -34,4 +32,6 @@ While IndexOf >= 0 Do
 EndDo;
 ```
 
-Refference: [1С:Программирование для начинающих. Разработка в системе "1С:Предприятие 8.3" (RU)](https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc)
+## Sources
+
+* [1С:Программирование для начинающих. Разработка в системе "1С:Предприятие 8.3" (RU)](https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc)

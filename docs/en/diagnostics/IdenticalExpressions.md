@@ -5,11 +5,9 @@
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `suspicious` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# There are identical sub-expressions to the left and to the right of the 'foo' operator
 
 The analyzer found a code fragment that most probably has a logic error. There is an operator (, <=, >=, =, <>, AND, OR, -, /) in the program text to the left and to the right of which there are identical subexpressions.
 

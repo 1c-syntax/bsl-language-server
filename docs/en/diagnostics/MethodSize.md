@@ -5,12 +5,6 @@
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `30` | `badpractice` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Method size limit
-
-## Parameters
-
-- `maxMethodSize` - `Integer` - max method size in lines. By default set to 200.

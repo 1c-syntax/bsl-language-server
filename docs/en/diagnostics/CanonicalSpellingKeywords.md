@@ -1,15 +1,13 @@
-# Canonical spelling of keywords
+# Canonical keyword writing
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `standard` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Canonical Keyword Writing
 
 A built-in language constructs, keywords must be written canonically.
 
@@ -52,7 +50,6 @@ A built-in language constructs, keywords must be written canonically.
 | Функция            | Function      |
 | Экспорт            | Export        |
 
-
 **Preprocessor Instructions**
 
 | RU                                 | EN                             |
@@ -90,4 +87,6 @@ A built-in language constructs, keywords must be written canonically.
 | НаКлиентеНаСервереБезКонтекста | AtClientAtServerNoContext |
 | НаКлиентеНаСервере             | AtClientAtServer          |
 
-Reference: [Standart: Modules texts (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+## Sources
+
+* [Standart: Modules texts (RU)](https://its.1c.ru/db/v8std#content:456:hdoc)

@@ -5,15 +5,15 @@
 | `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `30` | `badpractice`<br/>`brainoverload` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Control flow statements should not be nested too deep
 
 Nested "If", "For", "ForEach", "While" and "Try" operators are key ingredients for so called "spaghetti-code".
 
 Such code is hard for reading, refactoring and support.
+
+## Examples
 
 Incorrect:
 
@@ -37,8 +37,6 @@ Incorrect:
 
 ```
 
-## Parameters
+## Sources
 
-- `maxAllowedLevel` - `Integer` - Max nesting level for statements. By deafult - 4.
-
-Reference: [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
+* [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)

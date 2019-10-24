@@ -5,27 +5,19 @@
 | `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `15` | `brainoverload` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Cognitive complexity
 
 Cognitive complexity shows how difficult it is to perceive the written code.
 High cognitive complexity clearly indicates the need for refactoring to make future support easier.
 The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
-## Parameters
-
-- `complexityThreshold` - `Integer` - Acceptable cognitive complexity of the method. Default value: 15.
-- `checkModuleBody` - `Boolean` - Check module body. Default value: Yes.
-
-## Cognitive Complexity calculation
+### Cognitive Complexity calculation
 
 Bellow are given code analysis rules, conditions increase cognitive complexity.
-**Reference**: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
 
-### Each next block increases complexity by 1
+#### Each next block increases complexity by 1
 
 ```bsl
 
@@ -84,7 +76,7 @@ Value = A <> B;                                      // +1
 
 ```
 
-### For each nesting level, next blocks get additional 1 to complexity
+#### For each nesting level, next blocks get additional 1 to complexity
 
 ```bsl
 
@@ -118,7 +110,7 @@ EndTry;
 
 ### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
 
-## `Cognitive complexity` examples
+## Examples
 
 Bellow are code examples and their cognitive complexity calculation.
 
@@ -213,3 +205,7 @@ Function Example2(Document)
 EndFunction
 
 ```
+
+## Sources
+
+* [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)

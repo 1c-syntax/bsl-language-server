@@ -5,10 +5,8 @@
 | `Error` | `BSL`<br/>`OS` | `Blocker` | `Нет` | `5` | `error` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Procedure should not return Value
 
 The diagnostics finds procedures with returning Values.

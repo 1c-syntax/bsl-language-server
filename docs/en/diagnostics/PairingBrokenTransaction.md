@@ -5,13 +5,13 @@
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `15` | `standard` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
 
-# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
-
 Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.
+
+## Examples
 
 *Correct*
 
@@ -56,4 +56,6 @@ Procedure WriteDocument()
 EndProcedure
 ```
 
-Reference: [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
+## Sources
+
+* [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)

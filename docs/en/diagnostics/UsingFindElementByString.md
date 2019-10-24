@@ -5,19 +5,13 @@
 | `Code smell` | `BSL` | `Major` | `Нет` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
 
-# Using FindByName and FindByCode
-
-- **Scope:** BSL (BSL only)
-- **Type:** CODE_SMELL
-- **Criticality:** MAJOR
-
 The diagnostic finds use of methods FindByName and FindByCode with hardcoded values.
 
-Example:
+## Examples
 
 ```bsl
 Должность = Справочники.Должности.НайтиПоНаименованию("Ведущий бухгалтер");

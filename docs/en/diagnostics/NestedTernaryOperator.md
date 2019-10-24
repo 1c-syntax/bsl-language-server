@@ -5,13 +5,13 @@
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `brainoverload` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
 
-# Nested Ternary Operator
-
 Use of nested ternary operators decrease code readability.
+
+## Examples
 
 Samples of wrong usage:
 

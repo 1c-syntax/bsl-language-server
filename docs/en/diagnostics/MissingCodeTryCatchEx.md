@@ -5,11 +5,9 @@
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `15` | `standard`<br/>`badpractice` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Missing code in Raise block in "Try ... Raise ... EndTry"
 
 It is unacceptable to catch any exceptions without a trace for the system administrator
 
@@ -42,8 +40,6 @@ As a rule, such a design hides a real problem, which is subsequently impossible 
 КонецПопытки;
 ```
 
-Source: [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
+## Sources
 
-## Parameters
-
-- `commentAsCode` - `Boolean` - Consider the comment in the exception as code
+* [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)

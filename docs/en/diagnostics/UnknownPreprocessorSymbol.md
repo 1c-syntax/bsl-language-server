@@ -5,8 +5,6 @@
 | `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `standard`<br/>`error` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
-
-# Unknown preprocessor symbol

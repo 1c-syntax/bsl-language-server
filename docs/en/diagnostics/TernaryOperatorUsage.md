@@ -5,15 +5,13 @@
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `3` | `brainoverload` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Description
 
-# Ternary operator usage
-
-> Diagnostic is disabled by default.
-
 Use If-Else instead of ternary operator
+
+## Examples
 
 Bad:
 
