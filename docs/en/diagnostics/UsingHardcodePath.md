@@ -1,5 +1,16 @@
 # Using hardcode file paths and ip addresses in code
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL` | `Critical` | `Нет` | `15` | `standard` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Using hardcode file paths and ip addresses in code
+
 It's forbidden to store in code:
 
 - Paths to files and folders (Windows, Unix)

@@ -1,3 +1,14 @@
+# Restriction on the use of "FindByDescription" and "FindByCode" methods
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Нет` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Using FindByName and FindByCode
 
 - **Scope:** BSL (BSL only)

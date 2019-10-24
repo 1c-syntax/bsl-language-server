@@ -1,5 +1,16 @@
 # Missing temporary file deletion after using
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `badpractice`<br/>`standard` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Missing temporary file deletion after using
+
 ## Parameters
 
 * `searchDeleteFileMethod` - `Строка` - Keywords to search methods for move or delete files. 

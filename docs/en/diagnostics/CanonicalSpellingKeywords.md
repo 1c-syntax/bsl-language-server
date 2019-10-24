@@ -1,3 +1,14 @@
+# Canonical spelling of keywords
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `standard` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Canonical Keyword Writing
 
 A built-in language constructs, keywords must be written canonically.

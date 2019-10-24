@@ -1,3 +1,14 @@
+# Cast to number in try catch block
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `2` | `standard` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Cast to number of try catch block
 
 It is incorrect to use exceptions for cast value to type. For such operations use object ОписаниеТипов.

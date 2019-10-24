@@ -1,3 +1,14 @@
+# Nested ternary operator
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `brainoverload` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Nested Ternary Operator
 
 Use of nested ternary operators decrease code readability.

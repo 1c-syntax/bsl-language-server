@@ -1,3 +1,14 @@
+# Restriction on the use of deprecated "Message" method
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Minor` | `Нет` | `2` | `standard`<br/>`deprecated` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Restriction on using of the obsolete method "Message"
 
 To display messages to the user in all cases, you should use the MessageUser object, even when the message is not “bound” to some form control. The Message method should not be used.

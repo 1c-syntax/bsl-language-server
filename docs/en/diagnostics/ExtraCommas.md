@@ -1,3 +1,14 @@
+# Extra commas when calling a method
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `1` | `standard`<br/>`badpractice` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Commas without a parameter at the end of a method call
 
 Do not include a comma at the end of a method call without specifying a parameter. It is difficult to understand and does not carry important information.

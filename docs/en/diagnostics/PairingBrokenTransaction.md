@@ -1,5 +1,16 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `15` | `standard` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
+
 Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.
 
 *Correct*

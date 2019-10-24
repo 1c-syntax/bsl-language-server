@@ -1,3 +1,14 @@
+# Using "Ё" letter in code
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `5` | `standard` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Using Russian character "yo" ("ё") in code
 
 In code it is prohibited to use character "yo" ("ё").

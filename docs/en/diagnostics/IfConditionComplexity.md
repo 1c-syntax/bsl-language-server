@@ -1,3 +1,14 @@
+# If condition is too complex
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `5` | `brainoverload` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Usage of complex expressions in the "If" condition
 
 Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.

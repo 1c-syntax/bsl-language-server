@@ -1,3 +1,14 @@
+# Error parsing source code
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `error` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Source code parse error
 
 An error occurs if the source code of the module is written with a violation of the syntax of the language or if the preprocessor instructions are used incorrectly.

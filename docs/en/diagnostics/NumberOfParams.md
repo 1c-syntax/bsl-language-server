@@ -1,3 +1,14 @@
+# Number of method parameters restriction
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `30` | `standard`<br/>`brainoverload` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Number of parameters in method
 
 1. It is not recommended to declare many parameters in functions (best practice to use not more than seven parameters). In So doing there should not be many parameters with default values set (best practice to have not more than three such parameters). Otherwise code readability decreases. For example it is easy to make a mistake in number of commas passing optional parameters.

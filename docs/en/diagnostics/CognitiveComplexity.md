@@ -1,5 +1,16 @@
 # Cognitive complexity
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `15` | `brainoverload` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Cognitive complexity
+
 Cognitive complexity shows how difficult it is to perceive the written code.
 High cognitive complexity clearly indicates the need for refactoring to make future support easier.
 The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.

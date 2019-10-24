@@ -1,5 +1,16 @@
 # Using service tags
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `0` | `badpractice` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Using service tags
+
 The diagnostic finds use of service tags in comments. Tags list:
 
 - TODO

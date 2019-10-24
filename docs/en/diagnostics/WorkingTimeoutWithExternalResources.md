@@ -1,5 +1,16 @@
 # Timeouts working with external resources
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `unpredictable`<br/>`standard` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Timeouts working with external resources
+
 Incorrect:
 ```bsl
 HTTPConnection = New HTTPConnection("zabbix.localhost", 80);

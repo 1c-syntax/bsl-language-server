@@ -1,3 +1,14 @@
+# Missing space
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `badpractice` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , и ;
 
 To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.

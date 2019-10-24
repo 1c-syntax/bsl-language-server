@@ -1,5 +1,16 @@
 # Storing confidential information in code
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Vulnerability` | `BSL` | `Critical` | `Нет` | `15` | `standard` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Storing confidential information in code
+
 It is prohibited to store any confidential information in the code. The confidential information is:
 
 - Passwords

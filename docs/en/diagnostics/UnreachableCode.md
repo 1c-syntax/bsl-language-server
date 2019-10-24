@@ -1,5 +1,16 @@
 # Unreachable Code
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Minor` | `Нет` | `10` | `design`<br/>`suspicious` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Unreachable Code
+
 Code located after operators "Return", "GoTo", "Raise", "Break", "Continue" never will be executed.
 
 Errors of unreachable code can be caused by developer carelessness when editing another's code.

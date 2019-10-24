@@ -1,5 +1,16 @@
 # Ternary operator usage
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `3` | `brainoverload` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Ternary operator usage
+
 > Diagnostic is disabled by default.
 
 Use If-Else instead of ternary operator

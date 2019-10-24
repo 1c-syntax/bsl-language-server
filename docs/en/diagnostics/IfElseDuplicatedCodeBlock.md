@@ -1,3 +1,14 @@
+# Duplicated code blocks in If...Then...ElsIf...
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `10` | `suspicious` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Duplicated code blocks in If...Then...ElseIf... statements
 
 **If...Then...ElseIf...** statement should not have duplicated code blocks.

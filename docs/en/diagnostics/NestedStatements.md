@@ -1,5 +1,16 @@
 # Control flow statements should not be nested too deep
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `30` | `badpractice`<br/>`brainoverload` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Control flow statements should not be nested too deep
+
 Nested "If", "For", "ForEach", "While" and "Try" operators are key ingredients for so called "spaghetti-code".
 
 Such code is hard for reading, refactoring and support.

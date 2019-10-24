@@ -1,3 +1,14 @@
+# Using "Cancel" parameter
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `10` | `standard`<br/>`badpractice` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Using parameter «Cancel»
 
 1. In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".

@@ -1,3 +1,14 @@
+# Using of objects not available in Unix
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL` | `Critical` | `Нет` | `30` | `standard`<br/>`lockinos` |
+
+
+## TODO PARAMS
+
+## Description
+
 # Using unavailable in Unix objects
 
 In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.

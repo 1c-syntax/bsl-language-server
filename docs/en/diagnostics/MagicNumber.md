@@ -1,5 +1,16 @@
 # Using magic number
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `1` | `badpractice` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Using magic number
+
 Magic numbers are any number in your code that does not immediately become apparent without being immersed in context.
 
 Bad

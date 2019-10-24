@@ -1,5 +1,16 @@
 # Commented out code
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `1` | `standard`<br/>`badpractice` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Commented out code
+
 Software modules should not have commented out code fragments, as well as fragments,
 which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.)
 and with specific developers of this code.

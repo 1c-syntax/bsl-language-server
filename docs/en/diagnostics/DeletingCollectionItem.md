@@ -1,5 +1,16 @@
 # Deleting an item when iterating through collection using the operator "For each ... In ... Do"
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `standard`<br/>`error` |
+
+
+## TODO PARAMS
+
+## Description
+
+# Deleting an item when iterating through collection using the operator "For each ... In ... Do"
+
 Don't delete elements of collection %s when iterating through collection using the 
 operator **For each ... In ... Do**. Because it change index of next element.
 
