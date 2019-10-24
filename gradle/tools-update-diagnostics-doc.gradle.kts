@@ -121,7 +121,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         if(indexHeader < 0) {
             docPath.writeText(addText + header + "\n\n" + text, charset("UTF-8"))
         } else {
-            docPath.writeText(addText + text.substring(indexHeader + header.length + 1),
+            docPath.writeText(addText + text.substring(indexHeader),
                     charset("UTF-8"))
         }
         logger.quiet("File {} updated", docPath)
@@ -176,7 +176,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     }
 
     private fun makeDiagnosticParams(key: String, lang: String, metadata: HashMap<String, String>): String {
-        return "TODO PARAMS"
+        return "<TODO PARAMS>"
     }
 
     private fun loadDefaultValues() {

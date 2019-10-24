@@ -5,8 +5,6 @@
 | `Ошибка` | `BSL`<br/>`OS` | `Важный` | `Нет` | `10` | `suspicious`<br/>`unpredictable` |
 
 
-## TODO PARAMS
+## <TODO PARAMS>
 
 ## Описание диагностики
-
-# Функция должна содержать возврат
