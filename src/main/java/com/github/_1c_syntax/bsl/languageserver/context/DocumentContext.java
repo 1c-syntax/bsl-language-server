@@ -39,6 +39,8 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.antlr.v4.runtime.tree.Tree;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -324,6 +326,8 @@ public class DocumentContext {
       .distinct().toArray();
     metricsTemp.setNclocData(nclocData);
 
+    metricsTemp.setCovlocData(computeCovlocData());
+
     int lines;
     final List<Token> tokensUnboxed = getTokens();
     if (tokensUnboxed.isEmpty()) {
@@ -339,6 +343,22 @@ public class DocumentContext {
     metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
 
     return metricsTemp;
+  }
+
+  private int[] computeCovlocData(){
+
+    return Trees.getDescendants(getAst()).stream()
+      .filter(node -> !(node instanceof TerminalNodeImpl))
+      .filter(this::mustCovered)
+      .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
+      .distinct().toArray();
+
+  }
+
+  private boolean mustCovered(Tree node) {
+
+    return node instanceof BSLParser.StatementContext;
+
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
