@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `15` | `standard` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.

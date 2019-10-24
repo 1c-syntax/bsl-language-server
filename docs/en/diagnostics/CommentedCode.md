@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `1` | `standard`<br/>`badpractice` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `threshold` | `float` | Порог чуствительности |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Software modules should not have commented out code fragments, as well as fragments, which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.) and with specific developers of this code.

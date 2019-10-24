@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `2` | `standard`<br/>`design` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Code should follow principles "one statement per line". Several statements are acceptable in case of same-type assignment operators.

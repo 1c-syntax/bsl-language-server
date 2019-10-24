@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `standard`<br/>`badpractice` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 ```goto``` is an unstructured control flow statement. It makes code less readable and maintainable.  

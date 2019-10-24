@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL` | `Major` | `Нет` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 The diagnostic finds use of methods FindByName and FindByCode with hardcoded values.

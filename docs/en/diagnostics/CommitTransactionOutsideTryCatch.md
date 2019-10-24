@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `10` | `standard` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 The CommitTransaction method should be the last one in the Try block, just before the Exception operator, to ensure that there is no exception after the CommitTransaction.

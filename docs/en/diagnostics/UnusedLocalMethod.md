@@ -4,7 +4,5 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `OS` | `Major` | `Нет` | `1` | `standard`<br/>`suspicious` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

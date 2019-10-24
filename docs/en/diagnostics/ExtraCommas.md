@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `1` | `standard`<br/>`badpractice` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Do not include a comma at the end of a method call without specifying a parameter. It is difficult to understand and does not carry important information.  

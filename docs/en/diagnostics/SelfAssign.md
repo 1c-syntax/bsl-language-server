@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `10` | `suspicious` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 It is meaningless to assign a variable to itself and usually points to an error.

@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `standard` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 A built-in language constructs, keywords must be written canonically.

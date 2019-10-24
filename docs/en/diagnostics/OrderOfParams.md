@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `30` | `standard`<br/>`design` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Optional parameters (parameters with default values) should follow mandatory parameters (the ones without default values).

@@ -4,9 +4,14 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `15` | `brainoverload` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `complexityThreshold` | `int` | Допустимая когнитивная сложность метода |  |
+| `checkModuleBody` | `boolean` | Проверять тело модуля |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Cognitive complexity shows how difficult it is to perceive the written code.

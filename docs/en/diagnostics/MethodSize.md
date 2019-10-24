@@ -4,7 +4,11 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `30` | `badpractice` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `maxMethodSize` | `int` | Максимальная длина метода в строках |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

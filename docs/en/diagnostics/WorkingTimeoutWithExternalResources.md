@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `unpredictable`<br/>`standard` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 ## Examples

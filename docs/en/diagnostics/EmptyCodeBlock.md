@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `badpractice`<br/>`suspicious` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `commentAsCode` | `boolean` | Считать комментарий в блоке кодом |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Empty blocks are a sign of a possible error:

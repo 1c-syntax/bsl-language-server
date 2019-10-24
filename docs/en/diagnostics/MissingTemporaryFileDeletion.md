@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `badpractice`<br/>`standard` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `searchDeleteFileMethod` | `Pattern` | Ключевые слова поиска методов удаления / перемещения файлов |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 ## Examples

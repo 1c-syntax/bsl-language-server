@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `10` | `standard`<br/>`brainoverload` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `maxValuesCount` | `int` | Допустимое количество значений свойств, передаваемых в конструктор структуры |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly.

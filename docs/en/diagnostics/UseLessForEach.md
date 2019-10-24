@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `2` | `clumsy` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 The absence of an iterator in the loop body indicates either a useless iteration of the collection or an error in the loop body.

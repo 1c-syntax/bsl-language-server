@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `standard` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `commentsAnnotation` | `Pattern` | Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c) |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Between comment symbols "//" and comment text has to be a space.

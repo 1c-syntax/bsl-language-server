@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `5` | `brainoverload` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `maxIfConditionComplexity` | `int` | Допустимое количество логических конструкций в условии оператора Если |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.

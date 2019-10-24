@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `error` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 An error occurs if the source code of the module is written with a violation of the syntax of the language or if the preprocessor instructions are used incorrectly.

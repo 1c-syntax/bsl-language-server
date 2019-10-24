@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Minor` | `Нет` | `10` | `design`<br/>`suspicious` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Code located after operators "Return", "GoTo", "Raise", "Break", "Continue" never will be executed.

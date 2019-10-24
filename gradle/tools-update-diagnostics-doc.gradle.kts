@@ -1,3 +1,6 @@
+import org.gradle.plugins.javascript.coffeescript.compile.internal.SerializableCoffeeScriptCompileSpec
+import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
+
 open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     @OutputDirectory
@@ -17,16 +20,26 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var metadataTagsBodyPattern = Regex("DiagnosticTag\\.(\\w+?)(?:[\\s\\W]|\$)",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-
     private var namePattern = Regex("^diagnosticName\\s*=\\s*(.*)$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+    private var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?(\\w+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+    private var paramsDescriptionPattern = Regex("^\\s*?description\\s*?=\\s*?\"([\\s\\w\\W]+)\"",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+
+    private var newlinePattern = Regex("\"\\s*\\+\\s*\"",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     private var srcPath = "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics"
     private var defaultValues = hashMapOf("t" to "t")
-    private var templateDocHeader = "# <Description>\n\n<Metadata>\n\n## <Params>\n\n"
+    private var templateDocHeader = "# <Description>\n\n<Metadata>\n<Params><!-- Блоки выше заполняются автоматически, не трогать -->\n"
     private var templateDocMetadata = "| <TypeHeader> | <ScopeHeader> | <SeverityHeader> | <ActivatedHeader> | <MinutesHeader> | <TagsHeader> |\n" +
             "| :-: | :-: | :-: | :-: | :-: | :-: |\n" +
             "| `<Type>` | `<Scope>` | `<Severity>` | `<Activated>` | `<Minutes>` | <Tags> |\n"
+
+    private var templateDocHeaderParams = "| <NameHeader> | <TypeHeader> | <DescriptionHeader> | <DefHeader> |\n" +
+            "| :-: | :-: | :-: | :-: |\n"
+    private var templateDocLineParams = "| `<Name>` | `<Type>` | <Description> | <Def> |\n"
 
     private var severityRuMap = hashMapOf("BLOCKER" to "Блокирующий",
             "CRITICAL" to "Критичный",
@@ -48,7 +61,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             "VULNERABILITY" to "Vulnerability",
             "CODE_SMELL" to "Code smell");
 
-    private fun getMetadataFromText(text: String, metadata: HashMap<String, String>) {
+    private fun getMetadataFromText(text: String, metadata: HashMap<String, Any>) {
         val match = metadataPattern.find(text)
         if (match != null && match.groups.isNotEmpty()) {
             val metadataText = match.groups[1]?.value.toString()
@@ -60,10 +73,22 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             var tagsString = "`" + metadataTagsBodyPattern.findAll(metadataText).map {
                 it.groupValues[1]
             }.joinToString("`<br/>`").toLowerCase() + "`"
-            if(tagsString.isEmpty()) {
+            if (tagsString.isEmpty()) {
                 tagsString = defaultValues.getOrDefault("tags", "")
             }
             metadata["tags"] = tagsString
+
+            val matches = paramsPattern.findAll(text)
+            val params = arrayListOf<HashMap<String, String>>()
+
+            matches.forEach {
+                val oneParam = hashMapOf("type" to it.groupValues[2], "name" to it.groupValues[3])
+                val body = it.groupValues[1]
+                oneParam["description"] = getValueFromText(body, paramsDescriptionPattern, "")
+                        .replace(newlinePattern, "")
+                params.add(oneParam)
+            }
+            metadata["params"] = params
         }
     }
 
@@ -79,12 +104,9 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         return result
     }
 
-    private fun getDiagnosticsMetadata(): HashMap<String, HashMap<String, String>> {
+    private fun getDiagnosticsMetadata(): HashMap<String, HashMap<String, Any>> {
         val path = File(outputDir.get().asFile.path, srcPath)
-        var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?(\\w+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
-                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-        val result = hashMapOf("t" to hashMapOf("t" to "t"))
-        result.clear()
+        val result = hashMapOf<String, HashMap<String, Any>>()
 
         File(path.toURI())
                 .walkBottomUp()
@@ -93,10 +115,9 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                 }.forEach {
                     val key = it.name.substring(0, it.name.indexOf("Diagnostic"))
                     val text = it.readText(charset("UTF-8"))
-                    val metadata = hashMapOf("t" to "t")
-                    metadata.clear()
+                    val metadata = hashMapOf<String, Any>()
                     getMetadataFromText(text, metadata)
-                    if(metadata.isNotEmpty()) {
+                    if (metadata.isNotEmpty()) {
                         result[key] = metadata
                     }
                 }
@@ -104,7 +125,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         return result
     }
 
-    private fun updateDocFile(lang: String, key: String, metadata: HashMap<String, String>) {
+    private fun updateDocFile(lang: String, key: String, metadata: HashMap<String, Any>) {
         val docPath = File(outputDir.get().asFile.path, "docs/${lang}diagnostics/${key}.md")
         val text = docPath.readText(charset("UTF-8"))
 
@@ -118,7 +139,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                 .replace("<Params>", makeDiagnosticParams(key, lang, metadata))
 
         val indexHeader = text.indexOf(header)
-        if(indexHeader < 0) {
+        if (indexHeader < 0) {
             docPath.writeText(addText + header + "\n\n" + text, charset("UTF-8"))
         } else {
             docPath.writeText(addText + text.substring(indexHeader),
@@ -128,7 +149,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     }
 
     private fun getDiagnosticDescription(key: String, lang: String): String {
-        var langNew = if(lang == "") "ru" else "en"
+        var langNew = if (lang == "") "ru" else "en"
         val fileP = File(outputDir.get().asFile.path,
                 "src/main/resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/${key}Diagnostic_${langNew}.properties");
         if (fileP.exists()) {
@@ -141,13 +162,13 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         return "";
     }
 
-    private fun makeDiagnosticMetadata(lang: String, metadata: HashMap<String, String>): String {
+    private fun makeDiagnosticMetadata(lang: String, metadata: HashMap<String, Any>): String {
         var metadataBody = templateDocMetadata
-                .replace("<Minutes>", metadata.getOrDefault("minutesToFix", ""))
-                .replace("<Tags>", metadata.getOrDefault("tags", ""))
-                .replace("<Scope>", if(metadata.getOrDefault("scope", "") == "ALL") "BSL`<br/>`OS" else metadata.getOrDefault("scope", ""))
+                .replace("<Minutes>", metadata.getOrDefault("minutesToFix", "").toString())
+                .replace("<Tags>", metadata.getOrDefault("tags", "").toString())
+                .replace("<Scope>", if (metadata.getOrDefault("scope", "").toString() == "ALL") "BSL`<br/>`OS" else metadata.getOrDefault("scope", "").toString())
 
-        if(lang == "") {
+        if (lang == "") {
             metadataBody = metadataBody
                     .replace("<TypeHeader>", "Тип")
                     .replace("<ScopeHeader>", "Поддерживаются<br/>языки")
@@ -157,7 +178,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     .replace("<TagsHeader>", "Тэги")
                     .replace("<Type>", typeRuMap.getOrDefault(metadata.getOrDefault("type", ""), ""))
                     .replace("<Severity>", severityRuMap.getOrDefault(metadata.getOrDefault("severity", ""), ""))
-                    .replace("<Activated>", if(metadata.getOrDefault("activatedByDefault", "").toUpperCase() == "YES") "Да" else "Нет")
+                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toUpperCase() == "YES") "Да" else "Нет")
         } else {
             metadataBody = metadataBody
                     .replace("<TypeHeader>", "Type")
@@ -168,15 +189,61 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     .replace("<TagsHeader>", "Tags")
                     .replace("<Type>", typeEnMap.getOrDefault(metadata.getOrDefault("type", ""), ""))
                     .replace("<Severity>", severityEnMap.getOrDefault(metadata.getOrDefault("severity", ""), ""))
-                    .replace("<Activated>", if(metadata.getOrDefault("activatedByDefault", "").toUpperCase() == "YES") "Да" else "Нет")
+                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toUpperCase() == "YES") "Да" else "Нет")
 
         }
 
         return metadataBody;
     }
 
-    private fun makeDiagnosticParams(key: String, lang: String, metadata: HashMap<String, String>): String {
-        return "<TODO PARAMS>"
+    private fun makeDiagnosticParams(key: String, lang: String, metadata: HashMap<String, Any>): String {
+        var params = metadata.getOrDefault("params", arrayListOf<HashMap<String, String>>())
+        if(params is ArrayList<*>) {
+
+            if (params.isEmpty()) {
+                return ""
+            }
+
+            var paramsBody = templateDocHeaderParams
+
+            if (lang == "") {
+                paramsBody = "## Параметры \n\n" + paramsBody
+                        .replace("<NameHeader>", "Имя")
+                        .replace("<TypeHeader>", "Тип")
+                        .replace("<DescriptionHeader>", "Описание")
+                        .replace("<DefHeader>", "Значение по умолчанию")
+
+                params.forEach {
+                    if (it is HashMap<*, *>) {
+                        paramsBody += templateDocLineParams
+                                .replace("<Name>", it.getOrDefault("name", "").toString())
+                                .replace("<Type>", it.getOrDefault("type", "").toString()) // TODO руссифицировать тип
+                                .replace("<Description>", it.getOrDefault("description", "").toString())
+                                .replace("<Def>", "") // TODO реализовать чтение дефолтного значения
+                    }
+                }
+
+            } else {
+                paramsBody = "## Parameters \n\n" + paramsBody
+                        .replace("<NameHeader>", "Name")
+                        .replace("<TypeHeader>", "Type")
+                        .replace("<DescriptionHeader>", "Description")
+                        .replace("<DefHeader>", "Default value")
+
+                params.forEach {
+                    if (it is HashMap<*, *>) {
+                        paramsBody += templateDocLineParams
+                                .replace("<Name>", it.getOrDefault("name", "").toString())
+                                .replace("<Type>", it.getOrDefault("type", "").toString())
+                                .replace("<Description>", it.getOrDefault("description", "").toString())
+                                .replace("<Def>", "") // TODO реализовать чтение дефолтного значения
+                    }
+                }
+            }
+            return paramsBody + "\n"
+        }
+
+        return ""
     }
 
     private fun loadDefaultValues() {
@@ -197,7 +264,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                 setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
         defaultValues["tags"] = "`ERROR`"
     }
-    
+
     @TaskAction
     fun updateDocs() {
         logger.quiet("Update diagnostic docs")
@@ -215,7 +282,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     }
 }
 
-tasks.register<ToolsUpdateDiagnosticDocs> ("updateDiagnosticDocs") {
+tasks.register<ToolsUpdateDiagnosticDocs>("updateDiagnosticDocs") {
     description = "Updates diagnostic docs after changes"
     group = "Developer tools"
     outputDir.set(project.layout.projectDirectory)

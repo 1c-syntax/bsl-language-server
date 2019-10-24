@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Vulnerability` | `BSL` | `Critical` | `Нет` | `15` | `standard` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `searchWords` | `Pattern` | Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях. |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 It is prohibited to store any confidential information in the code. The confidential information is:

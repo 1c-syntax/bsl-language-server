@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `15` | `standard`<br/>`badpractice` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `commentAsCode` | `boolean` | Считать комментарий в исключении кодом |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 It is unacceptable to catch any exceptions without a trace for the system administrator

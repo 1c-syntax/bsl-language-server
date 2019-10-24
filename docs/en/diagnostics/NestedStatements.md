@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `30` | `badpractice`<br/>`brainoverload` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `maxAllowedLevel` | `int` | Максимальный уровень вложенности конструкций |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 Nested "If", "For", "ForEach", "While" and "Try" operators are key ingredients for so called "spaghetti-code".

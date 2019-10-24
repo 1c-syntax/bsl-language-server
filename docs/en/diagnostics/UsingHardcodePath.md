@@ -4,9 +4,15 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL` | `Critical` | `Нет` | `15` | `standard` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `searchWordsExclusion` | `Pattern` | Ключевые слова поиска для исключения выражений при поиске IP адресов |  |
+| `searchWordsStdPathsUnix` | `Pattern` | Ключевые слова поиска стандартных корневых каталогов Unix |  |
+| `enableSearchNetworkAddresses` | `boolean` | Использовать поиск сетевых адресов |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 It's forbidden to store in code:

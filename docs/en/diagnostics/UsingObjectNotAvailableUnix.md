@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL` | `Critical` | `Нет` | `30` | `standard`<br/>`lockinos` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.

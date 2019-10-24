@@ -4,9 +4,13 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `0` | `badpractice` |
 
+## Parameters 
 
-## <TODO PARAMS>
+| Name | Type | Description | Default value |
+| :-: | :-: | :-: | :-: |
+| `serviceTags` | `String` | Служебные теги |  |
 
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 The diagnostic finds use of service tags in comments. Tags list:

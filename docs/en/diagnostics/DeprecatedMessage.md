@@ -4,9 +4,7 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL` | `Minor` | `Нет` | `2` | `standard`<br/>`deprecated` |
 
-
-## <TODO PARAMS>
-
+<!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 To display messages to the user in all cases, you should use the MessageUser object, even when the message is not “bound” to some form control. The Message method should not be used.
