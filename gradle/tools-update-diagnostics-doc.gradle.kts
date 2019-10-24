@@ -38,7 +38,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             "| `<Type>` | `<Scope>` | `<Severity>` | `<Activated>` | `<Minutes>` | <Tags> |\n"
 
     private var templateDocHeaderParams = "| <NameHeader> | <TypeHeader> | <DescriptionHeader> | <DefHeader> |\n" +
-            "| :-: | :-: | :-: | :-: |\n"
+            "| :-: | :-: | :-- | :-: |\n"
     private var templateDocLineParams = "| `<Name>` | `<Type>` | <Description> | <Def> |\n"
 
     private var severityRuMap = hashMapOf("BLOCKER" to "Блокирующий",
