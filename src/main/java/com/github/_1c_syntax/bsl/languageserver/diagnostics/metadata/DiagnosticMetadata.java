@@ -35,4 +35,5 @@ public @interface DiagnosticMetadata {
   int minutesToFix() default 0;
   boolean activatedByDefault() default true;
   DiagnosticTag[] tags() default {};
+  DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
 }
