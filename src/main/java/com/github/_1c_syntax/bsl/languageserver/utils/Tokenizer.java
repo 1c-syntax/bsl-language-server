@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.CaseChangingCharStream;
 import com.github._1c_syntax.bsl.parser.UnicodeBOMInputStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -82,7 +83,9 @@ public class Tokenizer {
 
       ubis.skipBOM();
 
-      input = CharStreams.fromStream(ubis, StandardCharsets.UTF_8);
+      CharStream inputTemp = CharStreams.fromStream(ubis, StandardCharsets.UTF_8);
+      input = new CaseChangingCharStream(inputTemp, true);
+
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
