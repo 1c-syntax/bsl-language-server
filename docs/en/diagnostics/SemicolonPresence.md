@@ -1,4 +1,4 @@
-# Statement should end with ";"
+# Statement should end with semicolon symbol ";"
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

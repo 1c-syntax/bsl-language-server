@@ -1,4 +1,4 @@
-# Using magic number
+# Method size limit
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

@@ -1,4 +1,4 @@
-# Variable self assignment
+# Variable is assigned to itself
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

@@ -1,4 +1,4 @@
-# Using of objects not available in Unix
+# Using unavailable in Unix objects
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

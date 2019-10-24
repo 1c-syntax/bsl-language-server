@@ -1,4 +1,4 @@
-# Procedure must have no Return value
+# Procedure should not return Value
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

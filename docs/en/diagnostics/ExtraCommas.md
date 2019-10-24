@@ -1,4 +1,4 @@
-# Extra commas when calling a method
+# Commas without a parameter at the end of a method call
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

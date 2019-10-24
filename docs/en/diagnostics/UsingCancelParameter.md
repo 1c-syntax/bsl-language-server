@@ -1,4 +1,4 @@
-# Using "Cancel" parameter
+# Using parameter "Cancel"
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

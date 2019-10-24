@@ -1,4 +1,4 @@
-# "Goto" usage
+# "goto" statement should not be used
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

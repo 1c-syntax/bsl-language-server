@@ -1,4 +1,4 @@
-# Using the "ThisForm" property
+# Using deprecated property "ThisForm"
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

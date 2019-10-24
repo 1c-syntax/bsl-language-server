@@ -1,4 +1,4 @@
-# Using "Ё" letter in code
+# Using Russian character "yo" ("ё") in code
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

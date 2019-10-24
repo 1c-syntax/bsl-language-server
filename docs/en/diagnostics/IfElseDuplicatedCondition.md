@@ -1,4 +1,4 @@
-# Duplicated conditions in If...Then...ElsIf...
+# Duplicated conditions in If...Then...ElseIf... statements
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

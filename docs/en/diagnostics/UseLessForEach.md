@@ -1,4 +1,4 @@
-# Useless For Each loop
+# Useless collection iteration
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

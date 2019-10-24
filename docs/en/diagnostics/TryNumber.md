@@ -1,4 +1,4 @@
-# Cast to number in try catch block
+# Cast to number of try catch block
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

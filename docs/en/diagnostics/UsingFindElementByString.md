@@ -1,4 +1,4 @@
-# Restriction on the use of "FindByDescription" and "FindByCode" methods
+# Using FindByName and FindByCode
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
