@@ -206,7 +206,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     .replace("<TagsHeader>", "Tags")
                     .replace("<Type>", typeEnMap.getOrDefault(metadata.getOrDefault("type", ""), ""))
                     .replace("<Severity>", severityEnMap.getOrDefault(metadata.getOrDefault("severity", ""), ""))
-                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toUpperCase() == "YES") "Да" else "Нет")
+                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toUpperCase() == "YES") "Yes" else "No")
 
         }
 

@@ -41,3 +41,39 @@ Procedure Sum(Param1, Param2)
     EndIf;
 EndProcedure
 ```
+
+### Using `checkSpaceToRightOfUnary` parameter
+
+The parameter makes sense only in case the unary operator if listed in one of three base parameters.
+
+If set to `false`
+
+```bsl
+    А = -B;     // Correct
+    А = - B;    // Correct
+```
+
+If set to `true`
+
+```bsl
+    А = -B;     // Incorrect
+    А = - B;    // Correct
+```
+
+### Using `allowMultipleCommas` parameter
+
+The parameter has sense only if `,` is listed in one of three base parameters
+
+If set to `false`
+
+```bsl
+    ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Incorrect
+    ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+```
+
+If set to `true`
+
+```bsl
+    ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Correct
+    ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+```
