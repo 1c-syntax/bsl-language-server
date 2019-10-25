@@ -70,7 +70,10 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
     }
 
     // Ищем только в идентификаторах
-    if (ctxType == BSLParser.IDENTIFIER && beginTransaction.matcher(ctx.getText()).find()) {
+    if (ctxType == BSLParser.IDENTIFIER
+      && ctx.getChild(0).getChildCount() > 0
+      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
+      && beginTransaction.matcher(ctx.getText()).find()) {
       nodeBeginTransaction = ctx;
     }
 
