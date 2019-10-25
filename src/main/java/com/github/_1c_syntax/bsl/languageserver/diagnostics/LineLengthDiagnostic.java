@@ -103,7 +103,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   }
 
   private void putInCollection(Map<Integer, List<Integer>> tokensInOneLine, Token token) {
-    List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine(), new ArrayList<>());
+    List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine() - 1, new ArrayList<>());
     tokenList.add(token.getCharPositionInLine() + token.getText().length());
     tokensInOneLine.put(token.getLine() - 1, tokenList);
   }

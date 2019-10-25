@@ -43,12 +43,15 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 121));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(5, 0, 5, 122));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(8, 0, 8, 127));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(11, 0, 11, 136));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(12, 0, 12, 135));
+    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 0, 4, 121)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 0, 5, 122)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 0, 8, 127)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 0, 11, 136)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 0, 12, 135)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(36, 0, 36, 127)))
+    ;
   }
 
   @Test
@@ -62,13 +65,16 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 0, 3, 120));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(4, 0, 4, 121));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(5, 0, 5, 122));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(8, 0, 8, 127));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(11, 0, 11, 136));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(12, 0, 12, 135));
+    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics)
+
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 0, 3, 120)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 0, 4, 121)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 0, 5, 122)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 0, 8, 127)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 0, 11, 136)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 0, 12, 135)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(36, 0, 36, 127)));
 
   }
 }
