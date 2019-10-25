@@ -26,8 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -40,21 +41,31 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 )
 public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Class<BSLParser.NumericContext> numericNode = BSLParser.NumericContext.class;
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
-
-    boolean expressionHasError = ctx.children.size() == 3 // у выражения должно быть три операнда
-      && ctx.children.get(1).getChildCount() == 1 // второй из них - знак некоторой операции
-      && ctx.children.get(1).getChild(0).toString().equals("+") // а именно "+"
-      && ctx.children.get(2).getChildCount() == 2 // третий - выражение с унарной операцией, должно состоять из двух операндов
-      && ctx.children.get(2).getChild(0).getChild(0).toString().equals("+") // первый из которых - "+"
-      && !numericNode.isAssignableFrom(ctx.children.get(2).getChild(1).getChild(0).getClass()); // а второй не должен быть числом
-    if (expressionHasError) {
-      diagnosticStorage.addDiagnostic((TerminalNode) ctx.children.get(1).getChild(0));
+  public ParseTree visitMember(BSLParser.MemberContext ctx) {
+    ParseTree childZero = ctx.getChild(0);
+    if (
+      (childZero instanceof BSLParser.UnaryModifierContext)
+        && !(ctx.getChild(1).getChild(0) instanceof BSLParser.NumericContext)
+        && childZero.getText().equals("+")
+        && getPreviousTokenText((BSLParser.ExpressionContext) ctx.parent,
+        ((BSLParser.UnaryModifierContext) childZero).start).equals("+")
+    ) {
+      diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).start);
     }
-    return super.visitExpression(ctx);
+
+    return super.visitMember(ctx);
   }
 
+  private String getPreviousTokenText(BSLParser.ExpressionContext expression, Token pointToken) {
+    return
+      expression
+        .getTokens()
+        .stream()
+        .filter(token -> token.getStartIndex() < pointToken.getStartIndex())
+        .reduce((first, second) -> second)
+        .orElse(null)
+        .getText();
+  }
 }
