@@ -7,8 +7,8 @@
 ## Parameters 
 
 | Name | Type | Description | Default value |
-| :-: | :-: | :-: | :-: |
-| `commentAsCode` | `boolean` | Считать комментарий в исключении кодом |  |
+| :-: | :-: | :-- | :-: |
+| `commentAsCode` | `boolean` | Считать комментарий в исключении кодом | `false` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

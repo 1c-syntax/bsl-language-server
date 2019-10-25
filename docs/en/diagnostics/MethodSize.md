@@ -7,8 +7,8 @@
 ## Parameters 
 
 | Name | Type | Description | Default value |
-| :-: | :-: | :-: | :-: |
-| `maxMethodSize` | `int` | Максимальная длина метода в строках |  |
+| :-: | :-: | :-- | :-: |
+| `maxMethodSize` | `int` | Максимальная длина метода в строках | `200` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

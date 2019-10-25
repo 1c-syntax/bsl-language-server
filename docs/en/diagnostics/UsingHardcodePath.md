@@ -7,10 +7,10 @@
 ## Parameters 
 
 | Name | Type | Description | Default value |
-| :-: | :-: | :-: | :-: |
-| `searchWordsExclusion` | `Pattern` | Ключевые слова поиска для исключения выражений при поиске IP адресов |  |
-| `searchWordsStdPathsUnix` | `Pattern` | Ключевые слова поиска стандартных корневых каталогов Unix |  |
-| `enableSearchNetworkAddresses` | `boolean` | Использовать поиск сетевых адресов |  |
+| :-: | :-: | :-- | :-: |
+| `searchWordsExclusion` | `Pattern` | Ключевые слова поиска для исключения выражений при поиске IP адресов | `"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"` |
+| `searchWordsStdPathsUnix` | `Pattern` | Ключевые слова поиска стандартных корневых каталогов Unix | `"bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"` |
+| `enableSearchNetworkAddresses` | `boolean` | Использовать поиск сетевых адресов | `` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

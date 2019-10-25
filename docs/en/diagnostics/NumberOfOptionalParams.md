@@ -7,8 +7,8 @@
 ## Parameters 
 
 | Name | Type | Description | Default value |
-| :-: | :-: | :-: | :-: |
-| `maxOptionalParamsCount` | `int` | Допустимое количество необязательных параметров метода |  |
+| :-: | :-: | :-- | :-: |
+| `maxOptionalParamsCount` | `int` | Допустимое количество необязательных параметров метода | `3` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

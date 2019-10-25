@@ -7,8 +7,8 @@
 ## Parameters 
 
 | Name | Type | Description | Default value |
-| :-: | :-: | :-: | :-: |
-| `serviceTags` | `String` | Служебные теги |  |
+| :-: | :-: | :-- | :-: |
+| `serviceTags` | `String` | Служебные теги | `"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

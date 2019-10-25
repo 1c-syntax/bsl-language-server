@@ -26,6 +26,8 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var paramsDescriptionPattern = Regex("^\\s*?description\\s*?=\\s*?\"([\\s\\w\\W]+)\"",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+    private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),\$",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     private var newlinePattern = Regex("\"\\s*\\+\\s*\"",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
@@ -39,7 +41,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
 
     private var templateDocHeaderParams = "| <NameHeader> | <TypeHeader> | <DescriptionHeader> | <DefHeader> |\n" +
             "| :-: | :-: | :-- | :-: |\n"
-    private var templateDocLineParams = "| `<Name>` | `<Type>` | <Description> | <Def> |\n"
+    private var templateDocLineParams = "| `<Name>` | `<Type>` | <Description> | `<Def>` |\n"
 
     private var severityRuMap = hashMapOf("BLOCKER" to "Блокирующий",
             "CRITICAL" to "Критичный",
@@ -60,6 +62,12 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     private var typeEnMap = hashMapOf("ERROR" to "Error",
             "VULNERABILITY" to "Vulnerability",
             "CODE_SMELL" to "Code smell");
+
+    private var typeParamRuMap = hashMapOf("int" to "Число",
+            "boolean" to "Булево",
+            "String" to "Строка",
+            "Boolean" to "Число",
+            "Pattern" to "Регулярное выражение");
 
     private fun getMetadataFromText(text: String, metadata: HashMap<String, Any>) {
         val match = metadataPattern.find(text)
@@ -86,6 +94,15 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                 val body = it.groupValues[1]
                 oneParam["description"] = getValueFromText(body, paramsDescriptionPattern, "")
                         .replace(newlinePattern, "")
+                var defValue = getValueFromText(body, paramsDefPattern, "")
+                if(defValue.isNotEmpty()) {
+                    val valPattern = Regex("\\s+?${defValue}\\s*=\\s*?([\\w\\W]+?);\$",
+                            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+                    defValue = getValueFromText(text, valPattern, "")
+                            .replace(newlinePattern, "")
+                            .trim()
+                }
+                oneParam["defaultValue"] = defValue
                 params.add(oneParam)
             }
             metadata["params"] = params
@@ -197,7 +214,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     }
 
     private fun makeDiagnosticParams(key: String, lang: String, metadata: HashMap<String, Any>): String {
-        var params = metadata.getOrDefault("params", arrayListOf<HashMap<String, String>>())
+        val params = metadata.getOrDefault("params", arrayListOf<HashMap<String, String>>())
         if(params is ArrayList<*>) {
 
             if (params.isEmpty()) {
@@ -215,11 +232,13 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
 
                 params.forEach {
                     if (it is HashMap<*, *>) {
+                        var typeValue = it.getOrDefault("type", "").toString()
+                        typeValue = typeParamRuMap.getOrDefault(typeValue, typeValue)
                         paramsBody += templateDocLineParams
                                 .replace("<Name>", it.getOrDefault("name", "").toString())
-                                .replace("<Type>", it.getOrDefault("type", "").toString()) // TODO руссифицировать тип
+                                .replace("<Type>", typeValue)
                                 .replace("<Description>", it.getOrDefault("description", "").toString())
-                                .replace("<Def>", "") // TODO реализовать чтение дефолтного значения
+                                .replace("<Def>", it.getOrDefault("defaultValue", "").toString())
                     }
                 }
 
@@ -236,7 +255,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                                 .replace("<Name>", it.getOrDefault("name", "").toString())
                                 .replace("<Type>", it.getOrDefault("type", "").toString())
                                 .replace("<Description>", it.getOrDefault("description", "").toString())
-                                .replace("<Def>", "") // TODO реализовать чтение дефолтного значения
+                                .replace("<Def>", it.getOrDefault("defaultValue", "").toString())
                     }
                 }
             }
