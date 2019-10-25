@@ -70,11 +70,15 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
     }
 
     // Ищем только в идентификаторах
-    if (ctxType == BSLParser.IDENTIFIER
-      && ctx.getChild(0).getChildCount() > 0
-      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
-      && beginTransaction.matcher(ctx.getText()).find()) {
-      nodeBeginTransaction = ctx;
+    if (ctxType == BSLParser.IDENTIFIER) {
+      boolean isGlobalMethod = ctx.getChildCount() > 0
+        && ctx.getChild(0).getChildCount() > 0
+        && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext;
+
+      if (isGlobalMethod
+        && beginTransaction.matcher(ctx.getText()).find()) {
+        nodeBeginTransaction = ctx;
+      }
     }
 
     // Если это код в конце модуля, НачатьТранзакию был/есть тогда фиксируем
