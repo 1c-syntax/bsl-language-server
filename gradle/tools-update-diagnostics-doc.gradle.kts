@@ -33,7 +33,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     private var srcPath = "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics"
-    private var defaultValues = hashMapOf("t" to "t")
+    private var defaultValues = hashMapOf<String, String>()
     private var templateDocHeader = "# <Description>\n\n<Metadata>\n<Params><!-- Блоки выше заполняются автоматически, не трогать -->\n"
     private var templateDocMetadata = "| <TypeHeader> | <ScopeHeader> | <SeverityHeader> | <ActivatedHeader> | <MinutesHeader> | <TagsHeader> |\n" +
             "| :-: | :-: | :-: | :-: | :-: | :-: |\n" +
