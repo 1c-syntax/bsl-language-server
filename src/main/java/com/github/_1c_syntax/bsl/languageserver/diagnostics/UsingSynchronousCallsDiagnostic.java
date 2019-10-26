@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -44,7 +45,7 @@ import java.util.regex.Pattern;
   }
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
-  private Pattern modalityMethods = Pattern.compile(
+  private static final Pattern MODALITY_METHODS = Pattern.compile(
     "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
       "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
       "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
@@ -56,6 +57,10 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "СОЗДАТЬКАТАЛОГ|CREATEDIRECTORY|КАТАЛОГВРЕМЕННЫХФАЙЛОВ|TEMPFILESDIR|КАТАЛОГДОКУМЕНТОВ|DOCUMENTSDIR|" +
       "РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ|USERDATAWORKDIR|ПОЛУЧИТЬФАЙЛЫ|GETFILES|ПОМЕСТИТЬФАЙЛЫ|PUTFILES|" +
       "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final Pattern SERVER_COMPILER_PATTERN = Pattern.compile(
+    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private HashMap<String, String> pairMethods = new HashMap<>();
@@ -118,9 +123,17 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
-    if (modalityMethods.matcher(methodName).matches()) {
-      diagnosticStorage.addDiagnostic(ctx,
-        getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+    if (MODALITY_METHODS.matcher(methodName).matches()) {
+      BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
+      if (rootParent == null
+        || Trees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
+        .stream()
+        .filter(node ->
+          SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {
+
+        diagnosticStorage.addDiagnostic(ctx,
+          getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+      }
     }
     return super.visitGlobalMethodCall(ctx);
   }

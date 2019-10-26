@@ -52,19 +52,19 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private static final String FIND_WORD_DEFAULT = "Пароль|Password";
 
-  private static final Pattern patternNewExpression = Pattern.compile(
+  private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
     "Структура|Structure|Соответствие|Map|FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private static final Pattern patternNewExpressionConnection = Pattern.compile(
+  private static final Pattern PATTERN_NEW_EXPRESSION_CONNECTION = Pattern.compile(
     "FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private static final Pattern patternMethodInsert = Pattern.compile(
+  private static final Pattern PATTERN_METHOD_INSERT = Pattern.compile(
     "Вставить|Insert",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private static final Pattern patternCheckPassword = Pattern.compile("^[\\*]+$", Pattern.UNICODE_CASE);
+  private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile("^[\\*]+$", Pattern.UNICODE_CASE);
 
   @DiagnosticParameter(
     type = String.class,
@@ -141,7 +141,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    Matcher matcherMethod = patternMethodInsert.matcher(ctx.methodName().getText());
+    Matcher matcherMethod = PATTERN_METHOD_INSERT.matcher(ctx.methodName().getText());
     if (matcherMethod.find()) {
       List<BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
       Matcher matcher = searchWords.matcher(getClearString(list.get(0).getText()));
@@ -163,7 +163,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (typeNameContext == null) {
       return super.visitNewExpression(ctx);
     }
-    Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
+    Matcher matcherTypeName = PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText());
     if (matcherTypeName.find()) {
       BSLParser.DoCallContext doCallContext = ctx.doCall();
       if (doCallContext != null) {
@@ -178,7 +178,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private void processCheckNewExpression(BSLParser.NewExpressionContext ctx,
                                          List<BSLParser.CallParamContext> list, String typeName) {
-    Matcher matcherTypeNameConnection = patternNewExpressionConnection.matcher(typeName);
+    Matcher matcherTypeNameConnection = PATTERN_NEW_EXPRESSION_CONNECTION.matcher(typeName);
     if (matcherTypeNameConnection.find()) {
       if (list.size() >= 4 && isNotEmptyStringByToken(list.get(3).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_assignment);
@@ -224,7 +224,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private static boolean isNotEmptyStringByToken(Token token) {
     boolean result = token.getType() == BSLParser.STRING && token.getText().length() != 2;
     if (result) {
-      boolean foundStars = patternCheckPassword.matcher(token.getText().replace("\"", "")).find();
+      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().replace("\"", "")).find();
       if (foundStars) {
         result = false;
       }

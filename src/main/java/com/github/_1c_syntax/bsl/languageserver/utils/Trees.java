@@ -174,4 +174,20 @@ public final class Trees {
 
     return tnc;
   }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды нужно типа
+   */
+  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
+    if(tnc.getParent() == null) {
+      return null;
+    }
+
+    if (getRuleIndex(tnc.getParent()) == ruleindex) {
+      return (BSLParserRuleContext) tnc.getParent();
+    } else {
+      return getRootParent((BSLParserRuleContext) tnc.getParent(), ruleindex);
+    }
+  }
+
 }
