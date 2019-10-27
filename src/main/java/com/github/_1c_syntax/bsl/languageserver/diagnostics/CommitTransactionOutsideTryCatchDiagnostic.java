@@ -80,11 +80,15 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
     }
 
     // Ищем только в идентификаторах
-    if (ctxType == BSLParser.IDENTIFIER
-      && ctx.getChild(0).getChildCount() > 0
-      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
-      && endTransaction.matcher(ctx.getText()).find()) {
-      nodeEndTransaction = ctx;
+    if (ctxType == BSLParser.IDENTIFIER) {
+      boolean isGlobalMethod = ctx.getChildCount() > 0
+        && ctx.getChild(0).getChildCount() > 0
+        && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext;
+
+      if (isGlobalMethod
+        && endTransaction.matcher(ctx.getText()).find()) {
+        nodeEndTransaction = ctx;
+      }
     }
 
     // Если это код в конце модуля, ЗафиксироватьТранзакию был/есть тогда фиксируем
