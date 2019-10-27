@@ -21,12 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -37,7 +50,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
     DiagnosticTag.DESIGN
   }
 )
-public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
+public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+  private final static Pattern NEW_LINE_PATTERN = Pattern.compile(
+    "^(\\s+?)[^\\s]",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private int previousLineNumber;
   private int previousDiagnosticLineNumber;
 
@@ -64,4 +80,39 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitStatement(ctx);
   }
 
+  @Override
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+      Range range = diagnostic.getRange();
+      Range startLineRange = Ranges.create(
+        range.getStart().getLine(),
+        0,
+        range.getStart().getLine(),
+        range.getStart().getCharacter());
+
+      Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getText(startLineRange));
+      String indent = "";
+      if (matcher.find()) {
+        indent = matcher.group(1);
+      }
+
+      TextEdit textEdit = new TextEdit(
+        range, "\n" + indent + documentContext.getText(range)
+      );
+      textEdits.add(textEdit);
+    });
+
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
+    );
+  }
 }
