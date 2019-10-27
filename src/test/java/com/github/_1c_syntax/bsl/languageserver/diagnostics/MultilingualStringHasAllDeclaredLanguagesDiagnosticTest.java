@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
+public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 	extends AbstractDiagnosticTest<MultilingualStringHasAllDeclaredLanguagesDiagnostic> {
 
 	MultilingualStringHasAllDeclaredLanguagesDiagnosticTest() {

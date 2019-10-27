@@ -31,7 +31,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MultilingualStringUsingWithTemplateDiagnosticTest
+public class MultilingualStringUsingWithTemplateDiagnosticTest
   extends AbstractDiagnosticTest<MultilingualStringUsingWithTemplateDiagnostic> {
 
   MultilingualStringUsingWithTemplateDiagnosticTest() {
