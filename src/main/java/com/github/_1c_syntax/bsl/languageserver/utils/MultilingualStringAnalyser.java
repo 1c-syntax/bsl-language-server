@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public final class MultilingualStringParser {
+public final class MultilingualStringAnalyser {
 
   private final static Byte VALID_LANG_PARTS = 2;
   private final static String NSTR_METHOD_NAME = "НСтр|NStr";
@@ -52,7 +52,7 @@ public final class MultilingualStringParser {
   private Map<String, String> expandedMultilingualString = new HashMap<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
-  public MultilingualStringParser(String declaredLanguages) {
+  public MultilingualStringAnalyser(String declaredLanguages) {
 
     this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
 
@@ -116,7 +116,7 @@ public final class MultilingualStringParser {
     String[] languagesStrings = getMultilingualString().split("';");
     for (String s : languagesStrings) {
       String[] parts = s.split("='");
-      if(parts.length == VALID_LANG_PARTS) {
+      if (parts.length == VALID_LANG_PARTS) {
         expandedMultilingualString.put(parts[0].replaceAll("\\W+", ""), parts[1]);
       }
     }
@@ -127,13 +127,13 @@ public final class MultilingualStringParser {
   }
 
   private void checkDeclaredLanguages() {
-    if(expandedMultilingualString.isEmpty()) {
+    if (expandedMultilingualString.isEmpty()) {
       missingLanguages = new ArrayList<>(expectedLanguages);
       return;
     }
 
     for(String lang : expectedLanguages) {
-      if(!expandedMultilingualString.containsKey(lang)) {
+      if (!expandedMultilingualString.containsKey(lang)) {
         missingLanguages.add(lang);
       }
     }

@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringParser;
+import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -38,7 +38,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
     description = "Заявленные языки"
   )
   private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
-  protected MultilingualStringParser parser = new MultilingualStringParser(DECLARED_LANGUAGES_DEFAULT);
+  protected MultilingualStringAnalyser parser = new MultilingualStringAnalyser(DECLARED_LANGUAGES_DEFAULT);
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -47,7 +47,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
     }
 
     declaredLanguages = (String) configuration.get("declaredLanguages");
-    parser = new MultilingualStringParser(declaredLanguages);
+    parser = new MultilingualStringAnalyser(declaredLanguages);
   }
 
   @Override
@@ -58,7 +58,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
       return super.visitGlobalMethodCall(ctx);
     }
 
-    if(check()) {
+    if (check()) {
       diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(parser.getMissingLanguages()));
     }
 
