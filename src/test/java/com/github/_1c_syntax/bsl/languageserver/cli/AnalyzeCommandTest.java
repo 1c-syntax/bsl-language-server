@@ -46,4 +46,21 @@ class AnalyzeCommandTest {
     assertThat(result).isEqualTo(0);
   }
 
+  @Test
+  void testExecuteWithMetadata() throws ParseException {
+
+    Options options = createOptions();
+
+    DefaultParser parser = new DefaultParser();
+    CommandLine commandLine = parser.parse(
+      options, new String[]{"-s", "./src/test/resources/metadata"});
+
+    Command command = new AnalyzeCommand(commandLine);
+
+    int result = command.execute();
+
+    assertThat(result).isEqualTo(0);
+
+  }
+
 }

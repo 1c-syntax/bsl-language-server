@@ -117,7 +117,8 @@ public final class DiagnosticProvider {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
     CompatibilityMode contextCompatibilityMode = context.getConfiguration().getCompatibilityMode();
 
-    List<Diagnostic> diagnostics = getDiagnosticInstances(documentContext.getFileType(), contextCompatibilityMode).parallelStream()
+    List<Diagnostic> diagnostics =
+      getDiagnosticInstances(documentContext.getFileType(), contextCompatibilityMode).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .filter((Diagnostic diagnostic) ->
         !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
@@ -128,7 +129,7 @@ public final class DiagnosticProvider {
     return diagnostics;
   }
 
-  private boolean passedCompatibilityMode(
+  public static boolean passedCompatibilityMode(
     Class<? extends BSLDiagnostic> diagnostic, CompatibilityMode contextCompatibilityMode) {
 
     DiagnosticCompatibilityMode compatibilityMode = getCompatibilityMode(diagnostic);
@@ -406,7 +407,8 @@ public final class DiagnosticProvider {
   private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
-      .filter(element -> inScope(element, fileType) && passedCompatibilityMode(element, compatibilityMode))
+      .filter(element -> inScope(element, fileType))
+      .filter(element -> passedCompatibilityMode(element, compatibilityMode))
       .map(DiagnosticProvider::createDiagnosticInstance)
       .peek(this::configureDiagnostic
       ).collect(Collectors.toList());
