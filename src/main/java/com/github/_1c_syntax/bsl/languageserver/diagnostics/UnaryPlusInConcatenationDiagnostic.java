@@ -65,7 +65,7 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
         .stream()
         .filter(token -> token.getStartIndex() < pointToken.getStartIndex())
         .reduce((first, second) -> second)
-        .orElse(null)
-        .getText();
+        .map(Token::getText)
+        .orElse("");
   }
 }
