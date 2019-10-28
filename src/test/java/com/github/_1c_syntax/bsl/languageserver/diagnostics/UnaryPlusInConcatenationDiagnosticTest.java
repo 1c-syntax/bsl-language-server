@@ -44,9 +44,9 @@ class UnaryPlusInConcatenationDiagnosticTest extends AbstractDiagnosticTest<Unar
         assertThat(diagnostics).hasSize(3);
         assertThat(diagnostics)
           // на +
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(5, 20, 5, 21)))
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(8, 33, 8, 34)))
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(23, 21, 23, 22)));
+          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 20, 5, 21)))
+          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 33, 8, 34)))
+          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 21, 23, 22)));
 
     }
 }
