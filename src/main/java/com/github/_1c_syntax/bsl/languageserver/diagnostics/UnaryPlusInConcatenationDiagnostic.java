@@ -25,8 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 
@@ -45,12 +45,13 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
   @Override
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
     ParseTree childZero = ctx.getChild(0);
+    ParseTree previousNode = Trees.getPreviousNode(ctx.parent, childZero, BSLParser.RULE_operation);
     if (
       (childZero instanceof BSLParser.UnaryModifierContext)
         && !(ctx.getChild(1).getChild(0) instanceof BSLParser.NumericContext)
         && childZero.getText().equals("+")
-        && getPreviousTokenText((BSLParser.ExpressionContext) ctx.parent,
-        ((BSLParser.UnaryModifierContext) childZero).start).equals("+")
+        &! previousNode.equals(childZero)
+        && previousNode.getText().equals("+")
     ) {
       diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).start);
     }
@@ -58,14 +59,4 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
     return super.visitMember(ctx);
   }
 
-  private String getPreviousTokenText(BSLParser.ExpressionContext expression, Token pointToken) {
-    return
-      expression
-        .getTokens()
-        .stream()
-        .filter(token -> token.getStartIndex() < pointToken.getStartIndex())
-        .reduce((first, second) -> second)
-        .map(Token::getText)
-        .orElse("");
-  }
 }
