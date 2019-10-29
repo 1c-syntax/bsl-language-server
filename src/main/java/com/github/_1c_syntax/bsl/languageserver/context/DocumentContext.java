@@ -30,14 +30,12 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
-import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.parser.Tokenizer;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Position;
@@ -53,6 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 public class DocumentContext {
@@ -61,7 +60,6 @@ public class DocumentContext {
   private ServerContext context;
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
   private Tokenizer tokenizer;
-  private Lazy<BSLParser.FileContext> ast = new Lazy<>(this::computeAST);
   private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics);
   private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>(this::computeCognitiveComplexity);
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods);
@@ -100,7 +98,8 @@ public class DocumentContext {
   }
 
   public BSLParser.FileContext getAst() {
-    return ast.getOrCompute();
+    requireNonNull(content);
+    return tokenizer.getAst();
   }
 
   public List<MethodSymbol> getMethods() {
@@ -137,6 +136,7 @@ public class DocumentContext {
   }
 
   public List<Token> getTokens() {
+    requireNonNull(content);
     return tokenizer.getTokens();
   }
 
@@ -202,13 +202,13 @@ public class DocumentContext {
   public void rebuild(String content) {
     clear();
     this.content = content;
+    tokenizer = new Tokenizer(content);
   }
 
   public void clearASTData() {
     content = null;
     contentList.clear();
-    tokenizer.clear();
-    ast.clear();
+    tokenizer = null;
 
     nodeToMethodsMap.clear();
 
@@ -234,22 +234,12 @@ public class DocumentContext {
     return contentList.getOrCompute();
   }
 
-  private CommonTokenStream getTokenStream() {
-    return tokenizer.getTokenStream();
-  }
-
   private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
     return nodeToMethodsMap.getOrCompute();
   }
 
   private String[] computeContentList() {
     return content.split("\n");
-  }
-
-  private BSLParser.FileContext computeAST() {
-    BSLParser parser = new BSLParser(getTokenStream());
-    parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
-    return parser.file();
   }
 
   private List<RegionSymbol> computeRegions() {

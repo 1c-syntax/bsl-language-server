@@ -54,7 +54,7 @@ dependencies {
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "0.10.0")
+    compile("com.github.1c-syntax", "bsl-parser", "3b174c68749a5aa56e668571a89f889246ea58e3")
 
     compile("com.github.1c-syntax:mdclasses:13a6833e56de3d15a94a120d27906b4013f2a132")
 
