@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
@@ -85,17 +84,15 @@ public final class DiagnosticProvider {
     = createDiagnosticsCodes(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
-  private final ServerContext context;
   private final Map<String, Set<Diagnostic>> computedDiagnostics;
 
   public DiagnosticProvider() {
-    this(LanguageServerConfiguration.create(), new ServerContext());
+    this(LanguageServerConfiguration.create());
   }
 
-  public DiagnosticProvider(LanguageServerConfiguration configuration, ServerContext context) {
+  public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     computedDiagnostics = new HashMap<>();
-    this.context = context;
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
@@ -115,7 +112,10 @@ public final class DiagnosticProvider {
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
 
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
-    CompatibilityMode contextCompatibilityMode = context.getConfiguration().getCompatibilityMode();
+    CompatibilityMode contextCompatibilityMode = documentContext
+      .getServerContext()
+      .getConfiguration()
+      .getCompatibilityMode();
 
     List<Diagnostic> diagnostics =
       getDiagnosticInstances(documentContext.getFileType(), contextCompatibilityMode).parallelStream()

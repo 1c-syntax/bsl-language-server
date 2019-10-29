@@ -69,7 +69,7 @@ public class AnalyzeCommand implements Command {
 
     Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context = new ServerContext(configurationPath);
-    diagnosticProvider = new DiagnosticProvider(configuration, context);
+    diagnosticProvider = new DiagnosticProvider(configuration);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
