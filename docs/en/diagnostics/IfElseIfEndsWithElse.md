@@ -1,8 +1,15 @@
-# Else...The...ElseIf... statement should end with Else branch.
+# Else...The...ElseIf... statement should end with Else branch
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `10` | `badpractice` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 **If...Then...ElseIf...** statement should end with  **Else** branch.
 
-Example:
+## Examples
 
 ```bsl
 If x % 15 = 0 Then

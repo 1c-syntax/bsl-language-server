@@ -1,8 +1,23 @@
 # Control flow statements should not be nested too deep
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Нет` | `30` | `badpractice`<br/>`brainoverload` |
+
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `maxAllowedLevel` | `int` | Максимальный уровень вложенности конструкций | `4` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
 Nested "If", "For", "ForEach", "While" and "Try" operators are key ingredients for so called "spaghetti-code".
 
 Such code is hard for reading, refactoring and support.
+
+## Examples
 
 Incorrect:
 
@@ -26,8 +41,6 @@ Incorrect:
 
 ```
 
-## Parameters
+## Sources
 
-- `maxAllowedLevel` - `Integer` - Max nesting level for statements. By deafult - 4.
-
-Reference: [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
+* [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)

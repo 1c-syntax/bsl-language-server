@@ -1,20 +1,26 @@
-# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , и ;
+# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `1` | `badpractice` |
+
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `listForCheckLeft` | `String` | Список символов для проверки слева (разделенные пробелом). Например: ) = | `""` |
+| `listForCheckRight` | `String` | Список символов для проверки справа (разделенные пробелом). Например: ( = | `", ;"` |
+| `listForCheckLeftAndRight` | `String` | Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < > | `"+ - * / = % < > <> <= >="` |
+| `checkSpaceToRightOfUnary` | `Boolean` | Проверять наличие пробела справа от унарных знаков (+ -) | `false` |
+| `allowMultipleCommas` | `Boolean` | Разрешать несколько запятых подряд | `false` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.
 Also, the space should be to the right of `,` и `;`
 
-## Base parameters
-
-Symbols (or groups of symbols) to check are set by three lists. Symbols inside the list are separated by space.
-
-- **`listForCheckLeft`** - `String` - Symbols to check the space exists to the left of them.
-    By default the list is empty.
-
-- **`listForCheckRight`** - `String` - Symbols to check the space exists to the right of them.
-    By default `, ;`
-
-- **`listForCheckLeftAndRight`** - `String` - Symbols to check the space exists to the left and right of them.
-    By default `+ - * / = % < > <> <= >=`
+## Examples
 
 Incorrect
 
@@ -36,38 +42,38 @@ Procedure Sum(Param1, Param2)
 EndProcedure
 ```
 
-###### Additional parameters
+### Using `checkSpaceToRightOfUnary` parameter
 
-- **`checkSpaceToRightOfUnary`** - `Boolean` - Check space to the right of unary operator (+ и -).
-    The parameter makes sense only in case the operator if listed in one of three base parameters. By default `false`
+The parameter makes sense only in case the unary operator if listed in one of three base parameters.
 
-    If set to `false`
+If set to `false`
 
-    ```bsl
+```bsl
     А = -B;     // Correct
     А = - B;    // Correct
-    ```
+```
 
-    If set to `true`
+If set to `true`
 
-    ```bsl
+```bsl
     А = -B;     // Incorrect
     А = - B;    // Correct
-    ```
+```
 
-- **`allowMultipleCommas`** - `Boolean` - Allow multiple commas in a row.
-    The parameter has sense only if `,` is listed in one of three base parameters. By default `false`
+### Using `allowMultipleCommas` parameter
 
-    If set to `false`
+The parameter has sense only if `,` is listed in one of three base parameters
 
-    ```bsl
+If set to `false`
+
+```bsl
     ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Incorrect
     ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
-    ```
+```
 
-    If set to `true`
+If set to `true`
 
-    ```bsl
+```bsl
     ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Correct
     ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
-    ```
+```

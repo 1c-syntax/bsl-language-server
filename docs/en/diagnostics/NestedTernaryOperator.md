@@ -1,6 +1,15 @@
-# Nested Ternary Operator
+# Nested ternary operator
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `brainoverload` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 Use of nested ternary operators decrease code readability.
+
+## Examples
 
 Samples of wrong usage:
 

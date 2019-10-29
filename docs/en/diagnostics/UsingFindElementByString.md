@@ -1,12 +1,15 @@
 # Using FindByName and FindByCode
 
-- **Scope:** BSL (BSL only)
-- **Type:** CODE_SMELL
-- **Criticality:** MAJOR
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Нет` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 The diagnostic finds use of methods FindByName and FindByCode with hardcoded values.
 
-Example:
+## Examples
 
 ```bsl
 Должность = Справочники.Должности.НайтиПоНаименованию("Ведущий бухгалтер");

@@ -1,6 +1,21 @@
 # Usage of complex expressions in the "If" condition
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `5` | `brainoverload` |
+
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `maxIfConditionComplexity` | `int` | Допустимое количество логических конструкций в условии оператора Если | `3` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
 Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.
+
+## Examples
 
 Bad:
 
@@ -42,7 +57,3 @@ Function IsCorrectId(Id)
 
 EndFunction
 ```
-
-## Parameters
-
-- `maxIfConditionComplexity` - `Integer` - Max number of boolean constructs in "If" condition. By default - 3.

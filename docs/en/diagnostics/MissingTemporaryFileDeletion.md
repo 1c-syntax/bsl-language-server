@@ -1,9 +1,17 @@
 # Missing temporary file deletion after using
 
-## Parameters
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Нет` | `5` | `badpractice`<br/>`standard` |
 
-* `searchDeleteFileMethod` - `Строка` - Keywords to search methods for move or delete files. 
-Default ``УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``.
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `searchDeleteFileMethod` | `Pattern` | Ключевые слова поиска методов удаления / перемещения файлов | `"УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 ## Examples
 

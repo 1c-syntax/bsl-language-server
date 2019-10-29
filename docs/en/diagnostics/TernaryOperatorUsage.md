@@ -1,8 +1,15 @@
 # Ternary operator usage
 
-> Diagnostic is disabled by default.
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Нет` | `3` | `brainoverload` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 Use If-Else instead of ternary operator
+
+## Examples
 
 Bad:
 
