@@ -34,6 +34,6 @@ public @interface DiagnosticMetadata {
   DiagnosticScope scope() default DiagnosticScope.ALL;
   int minutesToFix() default 0;
   boolean activatedByDefault() default true;
-  DiagnosticTag[] tags() default {};
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
+  DiagnosticTag[] tags() default {};
 }
