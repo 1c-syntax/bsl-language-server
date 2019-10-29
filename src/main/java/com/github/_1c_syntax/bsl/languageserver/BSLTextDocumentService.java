@@ -87,7 +87,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
     this.configuration = configuration;
     this.context = context;
-    diagnosticProvider = new DiagnosticProvider(this.configuration, this.context);
+    diagnosticProvider = new DiagnosticProvider(this.configuration);
     codeActionProvider = new CodeActionProvider(diagnosticProvider);
     codeLensProvider = new CodeLensProvider(this.configuration);
   }

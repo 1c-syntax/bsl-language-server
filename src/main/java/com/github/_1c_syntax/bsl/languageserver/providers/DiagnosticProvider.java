@@ -24,9 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -83,17 +84,15 @@ public final class DiagnosticProvider {
     = createDiagnosticsCodes(diagnosticClasses);
 
   private final LanguageServerConfiguration configuration;
-  private final ServerContext context;
   private final Map<String, Set<Diagnostic>> computedDiagnostics;
 
   public DiagnosticProvider() {
-    this(LanguageServerConfiguration.create(), new ServerContext());
+    this(LanguageServerConfiguration.create());
   }
 
-  public DiagnosticProvider(LanguageServerConfiguration configuration, ServerContext context) {
+  public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     computedDiagnostics = new HashMap<>();
-    this.context = context;
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
@@ -113,8 +112,13 @@ public final class DiagnosticProvider {
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
 
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
+    CompatibilityMode contextCompatibilityMode = documentContext
+      .getServerContext()
+      .getConfiguration()
+      .getCompatibilityMode();
 
-    List<Diagnostic> diagnostics = getDiagnosticInstances(documentContext.getFileType()).parallelStream()
+    List<Diagnostic> diagnostics =
+      getDiagnosticInstances(documentContext.getFileType(), contextCompatibilityMode).parallelStream()
       .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
       .filter((Diagnostic diagnostic) ->
         !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
@@ -201,6 +205,15 @@ public final class DiagnosticProvider {
 
   public static DiagnosticSeverity getDiagnosticSeverity(BSLDiagnostic diagnostic) {
     return getDiagnosticSeverity(diagnostic.getClass());
+  }
+
+  public static DiagnosticCompatibilityMode getCompatibilityMode(BSLDiagnostic diagnostic) {
+    return getCompatibilityMode(diagnostic.getClass());
+  }
+
+  public static DiagnosticCompatibilityMode getCompatibilityMode(Class<? extends BSLDiagnostic> diagnosticClass) {
+    DiagnosticMetadata diagnosticMetadata = diagnosticsMetadata.get(diagnosticClass);
+    return diagnosticMetadata.compatibilityMode();
   }
 
   public static int getMinutesToFix(Class<? extends BSLDiagnostic> diagnosticClass) {
@@ -378,10 +391,11 @@ public final class DiagnosticProvider {
       ).collect(Collectors.toList());
   }
 
-  private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+  private List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {
     return diagnosticClasses.stream()
       .filter(this::isEnabled)
       .filter(element -> inScope(element, fileType))
+      .filter(element -> passedCompatibilityMode(element, compatibilityMode))
       .map(DiagnosticProvider::createDiagnosticInstance)
       .peek(this::configureDiagnostic
       ).collect(Collectors.toList());
@@ -406,6 +420,22 @@ public final class DiagnosticProvider {
       fileScope = DiagnosticScope.BSL;
     }
     return scope == DiagnosticScope.ALL || scope == fileScope;
+  }
+
+  private static boolean passedCompatibilityMode(
+    Class<? extends BSLDiagnostic> diagnostic,
+    CompatibilityMode contextCompatibilityMode
+  ) {
+    DiagnosticCompatibilityMode compatibilityMode = getCompatibilityMode(diagnostic);
+
+    if (compatibilityMode == DiagnosticCompatibilityMode.UNDEFINED) {
+      return true;
+    }
+    if (contextCompatibilityMode == null) {
+      return false;
+    }
+
+    return CompatibilityMode.compareTo(contextCompatibilityMode, compatibilityMode.getCompatibilityMode()) >= 0;
   }
 
   private void configureDiagnostic(BSLDiagnostic diagnostic) {

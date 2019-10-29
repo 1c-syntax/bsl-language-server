@@ -95,6 +95,10 @@ public class DocumentContext {
     fileType = fileTypeFromUri;
   }
 
+  public ServerContext getServerContext() {
+    return context;
+  }
+
   public BSLParser.FileContext getAst() {
     return ast.getOrCompute();
   }
@@ -345,4 +349,5 @@ public class DocumentContext {
     Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
     return diagnosticIgnoranceComputer.compute();
   }
+
 }
