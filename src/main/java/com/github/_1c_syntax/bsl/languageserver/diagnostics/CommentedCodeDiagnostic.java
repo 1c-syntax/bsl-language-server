@@ -172,14 +172,15 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isTextParsedAsCode(String text) {
-    if (codeRecognizer.meetsCondition(text)) {
-      Tokenizer tokenizer = new Tokenizer(uncomment(text));
-      final List<Token> tokens = tokenizer.getTokens();
+    if (!codeRecognizer.meetsCondition(text)) {
+      return false;
+    }
 
-      // Если меньше двух токенов нет смысла анализировать - это код
-      if (tokens.size() < 2) {
-        return true;
-      }
+    Tokenizer tokenizer = new Tokenizer(uncomment(text));
+    final List<Token> tokens = tokenizer.getTokens();
+
+    // Если меньше двух токенов нет смысла анализировать - это код
+    if (tokens.size() >= 2) {
 
       List<Integer> tokenTypes = tokens.stream()
         .map(Token::getType)
@@ -192,12 +193,10 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
           return false;
         }
       }
-
-      return true;
     }
 
-    return false;
-  }
+    return true;
+}
 
   private static String uncomment(String comment) {
     if (comment.startsWith("//")) {

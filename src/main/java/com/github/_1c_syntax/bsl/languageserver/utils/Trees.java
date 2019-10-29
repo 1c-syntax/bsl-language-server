@@ -79,7 +79,7 @@ public final class Trees {
       descendants = org.antlr.v4.runtime.tree.Trees.getDescendants(parent)
         .stream()
         .filter(node -> node instanceof BSLParserRuleContext)
-        .filter(node -> (getRuleIndex(node) == getRuleIndex(tnc)
+        .filter(node -> (node.equals(tnc)
           || getRuleIndex(node) == ruleindex))
         .collect(Collectors.toList());
     }

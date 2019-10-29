@@ -63,7 +63,7 @@ class JUnitTestSuites {
 
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
     name = "bsl-language-server";
-    sourceDir = Paths.get(analysisInfo.getSourceDir()).toAbsolutePath();
+    setSourceDir(Paths.get(analysisInfo.getSourceDir()).toAbsolutePath());
 
     testsuite = analysisInfo.getFileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
@@ -77,6 +77,10 @@ class JUnitTestSuites {
   ) {
     this.name = name;
     this.testsuite = new ArrayList<>(testsuite);
+  }
+
+  private static void setSourceDir(Path path) {
+    sourceDir = path;
   }
 
   @Value

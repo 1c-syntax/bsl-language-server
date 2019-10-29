@@ -65,33 +65,32 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
 
     // Checking that new context is structure declaration with parameters
     BSLParser.TypeNameContext typeName = ctx.typeName();
-    if (typeName == null) {
-      return ctx;
-    }
-
-    if (!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
+    if (typeName == null
+      || !(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
       return ctx;
     }
 
     BSLParser.DoCallContext structureDoCallContext = ctx.doCall();
-    if (structureDoCallContext == null) {
-      return ctx;
+    boolean abortCheck = true;
+    if (structureDoCallContext != null) {
+
+      // Looking for nested constructors
+      structureDoCallContext.callParamList().callParam().stream()
+        .filter(parseTree -> parseTree.start.getType() == BSLParser.NEW_KEYWORD)
+        .forEach(parseTree -> Trees.findAllRuleNodes(parseTree, BSLParser.RULE_newExpression)
+          .stream()
+          .limit(1)
+          .filter((ParseTree newContext) -> {
+              BSLParser.DoCallContext doCallContext = ((NewExpressionContext) newContext).doCall();
+              return doCallContext != null &&
+                doCallContext.callParamList().callParam().stream().anyMatch(param -> param.getChildCount() > 0);
+            }
+          ).collect(Collectors.toCollection(() -> nestedNewContext)));
+
+      abortCheck = nestedNewContext.isEmpty();
     }
 
-    // Looking for nested constructors
-    structureDoCallContext.callParamList().callParam().stream()
-      .filter(parseTree -> parseTree.start.getType() == BSLParser.NEW_KEYWORD)
-      .forEach(parseTree -> Trees.findAllRuleNodes(parseTree, BSLParser.RULE_newExpression)
-        .stream()
-        .limit(1)
-        .filter((ParseTree newContext) -> {
-            BSLParser.DoCallContext doCallContext = ((NewExpressionContext) newContext).doCall();
-            return doCallContext != null &&
-              doCallContext.callParamList().callParam().stream().anyMatch(param -> param.getChildCount() > 0);
-          }
-        ).collect(Collectors.toCollection(() -> nestedNewContext)));
-
-    if (nestedNewContext.isEmpty()) {
+    if (abortCheck) {
       return ctx;
     }
 

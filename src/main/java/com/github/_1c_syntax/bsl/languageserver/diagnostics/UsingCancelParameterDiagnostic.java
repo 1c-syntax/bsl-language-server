@@ -95,25 +95,22 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean orCancel(BSLParser.AssignmentContext ident) {
 
     BSLParser.ExpressionContext expression = ident.expression();
-    if (expression == null) {
-      return false;
-    }
+    if (expression != null) {
 
-    BSLParser.OperationContext logicalOperation = expression.operation(0);
-    if (logicalOperation == null) {
-      return false;
-    }
+      BSLParser.OperationContext logicalOperation = expression.operation(0);
+      if (logicalOperation != null) {
 
-    BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
-    if (boolOperation != null
-      && boolOperation.OR_KEYWORD() != null) {
+        BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
+        if (boolOperation != null
+          && boolOperation.OR_KEYWORD() != null) {
 
-      return expression
-        .member()
-        .stream()
-        .anyMatch(token -> cancelPattern.matcher(token.getText())
-          .matches());
-
+          return expression
+            .member()
+            .stream()
+            .anyMatch(token -> cancelPattern.matcher(token.getText())
+              .matches());
+        }
+      }
     }
 
     return false;

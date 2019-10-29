@@ -76,9 +76,11 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
     for (Token token : tokens) {
-      if ((token.getType() != BSLLexer.STRINGPART
-        && token.getType() != BSLLexer.STRINGTAIL)
-        && ((prevTokenType != BSLLexer.STRINGPART && prevTokenType != BSLLexer.STRINGTAIL) && token.getType() == BSLLexer.SEMICOLON)) {
+      if (token.getType() != BSLLexer.STRINGPART
+        && token.getType() != BSLLexer.STRINGTAIL
+        && prevTokenType != BSLLexer.STRINGPART
+        && prevTokenType != BSLLexer.STRINGTAIL
+        && token.getType() == BSLLexer.SEMICOLON) {
         putInCollection(tokensInOneLine, token);
       }
       prevTokenType = token.getType();

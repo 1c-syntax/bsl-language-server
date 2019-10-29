@@ -52,31 +52,26 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
     Optional<MethodSymbol> methodSymbolOption = documentContext.getMethodSymbol(ctx);
+    if (methodSymbolOption.isPresent()) {
 
-    if (!methodSymbolOption.isPresent()) {
-      return ctx;
+      MethodSymbol methodSymbol = methodSymbolOption.get();
+      if (!methodSymbol.isExport()) {
+
+        RegionSymbol methodRegion = methodSymbol.getRegion();
+        if (methodRegion != null) {
+
+          documentContext.getRegions()
+            .stream()
+            .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
+            .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
+            .findFirst()
+            .ifPresent((RegionSymbol regionSymbol) -> {
+              String message = getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
+              diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
+            });
+        }
+      }
     }
-
-    MethodSymbol methodSymbol = methodSymbolOption.get();
-
-    if (methodSymbol.isExport()) {
-      return ctx;
-    }
-
-    RegionSymbol methodRegion = methodSymbol.getRegion();
-    if (methodRegion == null) {
-      return ctx;
-    }
-
-    documentContext.getRegions()
-      .stream()
-      .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
-      .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
-      .findFirst()
-      .ifPresent((RegionSymbol regionSymbol) -> {
-        String message = getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
-        diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-      });
 
     return ctx;
   }

@@ -39,162 +39,162 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
-	type = DiagnosticType.ERROR,
-	severity = DiagnosticSeverity.CRITICAL,
-	minutesToFix = 5,
-	tags = {
-		DiagnosticTag.UNPREDICTABLE,
-		DiagnosticTag.STANDARD
-	}
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.CRITICAL,
+  minutesToFix = 5,
+  tags = {
+    DiagnosticTag.UNPREDICTABLE,
+    DiagnosticTag.STANDARD
+  }
 )
 public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
-	private static final Pattern patternNewExpression = Pattern.compile(
-		"^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|" +
-			"WSПрокси|WSProxy|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern patternTimeout = Pattern.compile("^.(Таймаут|Timeout)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern patternNewExpression = Pattern.compile(
+    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|" +
+      "WSПрокси|WSProxy|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final int DEFAULT_NUMBER_TIMEOUT = 5;
 
+  private boolean checkTimeoutIntoParamList(BSLParser.NewExpressionContext newExpression, AtomicBoolean isContact) {
+    int numberTimeout = DEFAULT_NUMBER_TIMEOUT;
+    if (isWSDefinitions(newExpression)) {
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1;
+    }
 
-	public static final Pattern patternTimeout = Pattern.compile("^.(Таймаут|Timeout)",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    BSLParser.DoCallContext doCallContext = newExpression.doCall();
+    if (doCallContext == null) {
+      return true;
+    }
 
-	private static final int DEFAULT_NUMBER_TIMEOUT = 5;
+    List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
+    if (listParams == null) {
+      return true;
+    }
 
-	private boolean checkTimeoutIntoParamList(BSLParser.NewExpressionContext newExpression, AtomicBoolean isContact) {
-		boolean needContinue = true;
-		int numberTimeout = DEFAULT_NUMBER_TIMEOUT;
-		if (isWSDefinitions(newExpression)) {
-			numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1;
-		}
+    boolean needContinue = true;
+    if (listParams.size() > numberTimeout) {
+      BSLParser.CallParamContext param = listParams.get(numberTimeout);
+      BSLParser.ExpressionContext expression = param.expression();
+      if (expression == null) {
+        return true;
+      }
 
-		BSLParser.DoCallContext doCallContext = newExpression.doCall();
-		if (doCallContext == null) {
-			return true;
-		}
+      if (expression.member().isEmpty()) {
+        return true;
+      }
 
-		List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
-		if (listParams == null) {
-			return true;
-		}
+      BSLParser.MemberContext memberContext = expression.member().get(0);
+      if (isNumberOrVariable(memberContext)) {
+        needContinue = false;
+        isContact.set(false);
+      }
 
-		if (listParams.size() > numberTimeout) {
-			BSLParser.CallParamContext param = listParams.get(numberTimeout);
-			BSLParser.ExpressionContext expression = param.expression();
-			if (expression == null) {
-				return true;
-			}
+    }
 
-			if (expression.member().isEmpty()) {
-				return true;
-			}
+    return needContinue;
+  }
 
-			BSLParser.MemberContext memberContext = expression.member().get(0);
-			if (isNumberOrVariable(memberContext)) {
-				needContinue = false;
-				isContact.set(false);
-			}
+  @Override
+  public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
+    Collection<ParseTree> list = Trees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression);
+    list.forEach(
+      (ParseTree e) -> {
+        AtomicBoolean isContact = new AtomicBoolean(true);
+        BSLParser.NewExpressionContext newExpression = (BSLParser.NewExpressionContext) e;
+        if (isSpecificTypeName(newExpression)) {
+          boolean needContinue = checkTimeoutIntoParamList(newExpression, isContact);
+          if (needContinue) {
+            BSLParser.StatementContext statementContext = (BSLParser.StatementContext)
+              Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
+            String variableName = getVariableName(statementContext);
+            int filterLine = newExpression.getStart().getLine();
+            Collection<ParseTree> listNextStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+              .stream()
+              .filter(node -> ((BSLParser.StatementContext) node).getStart().getLine() > filterLine)
+              .collect(Collectors.toList());
+            checkNextStatement(listNextStatements, variableName, isContact);
+          }
+          if (isContact.get()) {
+            diagnosticStorage.addDiagnostic(newExpression, getDiagnosticMessage());
+          }
+        }
+      }
+    );
+    return super.visitCodeBlock(ctx);
+  }
 
-		}
+  private void checkNextStatement(
+    Collection<ParseTree> listNextStatments,
+    String variableName,
+    AtomicBoolean isContact
+  ) {
+    listNextStatments.forEach((ParseTree element) -> {
+      BSLParser.StatementContext localStatement = (BSLParser.StatementContext) element;
+      String thisVariableName = getVariableName(localStatement);
+      if (thisVariableName.equalsIgnoreCase(variableName)
+        && isTimeoutModifer(localStatement)
+        && isNumberOrVariable(localStatement.assignment().expression().member(0))) {
 
-		return needContinue;
-	}
+        isContact.set(false);
 
-	@Override
-	public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
-		Collection<ParseTree> list = Trees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression);
-		list.forEach(
-			e -> {
-				AtomicBoolean isContact = new AtomicBoolean(true);
-				BSLParser.NewExpressionContext newExpression = (BSLParser.NewExpressionContext) e;
-				boolean needContinue = true;
-				if (isSpecificTypeName(newExpression)) {
-					needContinue = checkTimeoutIntoParamList(newExpression, isContact);
-					if (needContinue) {
-						BSLParser.StatementContext statementContext = (BSLParser.StatementContext)
-							Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
-						String variableName = getVariableName(statementContext);
-						int filterLine = newExpression.getStart().getLine();
-						Collection<ParseTree> listNextStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
-							.stream()
-							.filter(node -> ((BSLParser.StatementContext) node).getStart().getLine() > filterLine)
-							.collect(Collectors.toList());
-						checkNextStatement(listNextStatements, variableName, isContact);
-					}
-					if (isContact.get()) {
-						diagnosticStorage.addDiagnostic(newExpression, getDiagnosticMessage());
-					}
-				}
-			}
-		);
-		return super.visitCodeBlock(ctx);
-	}
+      }
+    });
+  }
 
-	private void checkNextStatement(Collection<ParseTree> listNextStatments, String variableName, AtomicBoolean isContact) {
-		listNextStatments.forEach(element -> {
-			BSLParser.StatementContext localStatement = (BSLParser.StatementContext) element;
-			String thisVariableName = getVariableName(localStatement);
-			if (thisVariableName.equalsIgnoreCase(variableName)
-				&& isTimeoutModifer(localStatement)
-				&& isNumberOrVariable(localStatement.assignment().expression().member(0))) {
+  private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
+    BSLParser.ComplexIdentifierContext complexIdentifier = localStatement.assignment().complexIdentifier();
+    if (complexIdentifier.isEmpty()) {
+      return false;
+    }
+    List<BSLParser.ModifierContext> listModifer = complexIdentifier.modifier();
+    if (listModifer.isEmpty()) {
+      return false;
+    }
+    BSLParser.ModifierContext modifier = listModifer.get(0);
+    Matcher matcher = patternTimeout.matcher(modifier.getText());
+    return matcher.find();
+  }
 
-				isContact.set(false);
+  private String getVariableName(BSLParser.StatementContext statement) {
+    String variableName = "";
+    if (statement.assignment() != null) {
+      BSLParser.ComplexIdentifierContext complexIdentifierContext = statement.assignment().complexIdentifier();
+      if (complexIdentifierContext != null) {
+        variableName = complexIdentifierContext.getStart().getText();
+      }
+    }
+    return variableName;
+  }
 
-			}
-		});
-	}
+  private boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
+    boolean result = false;
+    BSLParser.TypeNameContext typeNameContext = newExpression.typeName();
+    if (typeNameContext != null) {
+      Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
+      if (matcherTypeName.find()) {
+        result = true;
+      }
+    }
+    return result;
+  }
 
-	private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
-		BSLParser.ComplexIdentifierContext complexIdentifier = localStatement.assignment().complexIdentifier();
-		if (complexIdentifier.isEmpty()) {
-			return false;
-		}
-		List<BSLParser.ModifierContext> listModifer = complexIdentifier.modifier();
-		if (listModifer.isEmpty()) {
-			return false;
-		}
-		BSLParser.ModifierContext modifier = listModifer.get(0);
-		Matcher matcher = patternTimeout.matcher(modifier.getText());
-		return matcher.find();
-	}
+  private boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
+    return newExpression.typeName() != null && DiagnosticHelper.isWSDefinitionsType(newExpression.typeName());
+  }
 
-	private String getVariableName(BSLParser.StatementContext statement) {
-		String variableName = "";
-		if (statement.assignment() != null){
-			BSLParser.ComplexIdentifierContext complexIdentifierContext = statement.assignment().complexIdentifier();
-			if (complexIdentifierContext != null) {
-				variableName = complexIdentifierContext.getStart().getText();
-			}
-		}
-		return variableName;
-	}
-
-	private boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
-		boolean result = false;
-		BSLParser.TypeNameContext typeNameContext = newExpression.typeName();
-		if (typeNameContext != null) {
-			Matcher matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
-			if (matcherTypeName.find()) {
-				result = true;
-			}
-		}
-		return result;
-	}
-
-	private boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
-		return newExpression.typeName() != null && DiagnosticHelper.isWSDefinitionsType(newExpression.typeName());
-	}
-
-	private boolean isNumberOrVariable(BSLParser.MemberContext member) {
-		boolean result = false;
-		if (member.constValue() != null) {
-			if (member.constValue().numeric() != null) {
-				result = true;
-			}
-		} else {
-			if (member.complexIdentifier() != null) {
-				result = true;
-			}
-		}
-		return result;
-	}
+  private boolean isNumberOrVariable(BSLParser.MemberContext member) {
+    boolean result = false;
+    if (member.constValue() != null) {
+      if (member.constValue().numeric() != null) {
+        result = true;
+      }
+    } else {
+      if (member.complexIdentifier() != null) {
+        result = true;
+      }
+    }
+    return result;
+  }
 }
