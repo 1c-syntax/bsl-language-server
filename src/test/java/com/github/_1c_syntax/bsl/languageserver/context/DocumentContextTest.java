@@ -42,9 +42,8 @@ class DocumentContextTest {
     documentContext.clearASTData();
 
     // then
-    final Object lazyAst = FieldUtils.readField(documentContext, "ast", true);
-    final Object ast = FieldUtils.readField(lazyAst, "value", true);
-    assertThat(ast).isNull();
+    final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
+    assertThat(tokenizer).isNull();
   }
 
   @Test
