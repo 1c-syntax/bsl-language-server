@@ -38,9 +38,9 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
   minutesToFix = 2,
-  tags =  DiagnosticTag.DEPRECATED,
-  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6
-)
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6,
+  tags = {DiagnosticTag.DEPRECATED}
+  )
 public class DeprecatedFind extends AbstractVisitorDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(найти|find)",
