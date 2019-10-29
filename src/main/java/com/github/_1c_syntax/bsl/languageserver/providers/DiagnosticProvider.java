@@ -129,22 +129,6 @@ public final class DiagnosticProvider {
     return diagnostics;
   }
 
-  public static boolean passedCompatibilityMode(
-    Class<? extends BSLDiagnostic> diagnostic, CompatibilityMode contextCompatibilityMode) {
-
-    DiagnosticCompatibilityMode compatibilityMode = getCompatibilityMode(diagnostic);
-
-    if (compatibilityMode == DiagnosticCompatibilityMode.UNDEFINED) {
-      return true;
-    }
-    if (contextCompatibilityMode == null) {
-      return false;
-    }
-
-    return CompatibilityMode.compareTo(contextCompatibilityMode, compatibilityMode.getCompatibilityMode()) >= 0;
-
-  }
-
   public Set<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
     return computedDiagnostics.getOrDefault(documentContext.getUri(), new LinkedHashSet<>());
   }
@@ -433,6 +417,22 @@ public final class DiagnosticProvider {
       fileScope = DiagnosticScope.BSL;
     }
     return scope == DiagnosticScope.ALL || scope == fileScope;
+  }
+
+  private static boolean passedCompatibilityMode(
+    Class<? extends BSLDiagnostic> diagnostic,
+    CompatibilityMode contextCompatibilityMode
+  ) {
+    DiagnosticCompatibilityMode compatibilityMode = getCompatibilityMode(diagnostic);
+
+    if (compatibilityMode == DiagnosticCompatibilityMode.UNDEFINED) {
+      return true;
+    }
+    if (contextCompatibilityMode == null) {
+      return false;
+    }
+
+    return CompatibilityMode.compareTo(contextCompatibilityMode, compatibilityMode.getCompatibilityMode()) >= 0;
   }
 
   private void configureDiagnostic(BSLDiagnostic diagnostic) {
