@@ -58,6 +58,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -83,6 +84,8 @@ public final class DiagnosticProvider {
   private static Map<String, Class<? extends BSLDiagnostic>> diagnosticsCodes
     = createDiagnosticsCodes(diagnosticClasses);
 
+  private static Locale diagnosticLocale = Locale.getDefault();
+
   private final LanguageServerConfiguration configuration;
   private final Map<String, Set<Diagnostic>> computedDiagnostics;
 
@@ -93,6 +96,7 @@ public final class DiagnosticProvider {
   public DiagnosticProvider(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
     computedDiagnostics = new HashMap<>();
+    this.diagnosticLocale = new Locale(configuration.getDiagnosticLanguage().getLanguageCode());
   }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
@@ -119,10 +123,10 @@ public final class DiagnosticProvider {
 
     List<Diagnostic> diagnostics =
       getDiagnosticInstances(documentContext.getFileType(), contextCompatibilityMode).parallelStream()
-      .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
-      .filter((Diagnostic diagnostic) ->
-        !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-      .collect(Collectors.toList());
+        .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+        .filter((Diagnostic diagnostic) ->
+          !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
+        .collect(Collectors.toList());
 
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
 
@@ -172,7 +176,7 @@ public final class DiagnosticProvider {
   public String getDiagnosticDescription(Class<? extends BSLDiagnostic> diagnosticClass) {
 
     String langCode = configuration.getDiagnosticLanguage().getLanguageCode();
-    
+
     String diagnosticCode = getDiagnosticCode(diagnosticClass);
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(langCode + "/" + diagnosticCode + ".md");
 
@@ -185,6 +189,10 @@ public final class DiagnosticProvider {
     } catch (IOException e) {
       return "";
     }
+  }
+
+  public static Locale getDiagnosticLocale() {
+    return diagnosticLocale;
   }
 
   public String getDiagnosticDescription(BSLDiagnostic diagnostic) {
