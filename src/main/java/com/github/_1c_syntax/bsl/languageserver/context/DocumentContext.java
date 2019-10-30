@@ -357,8 +357,9 @@ public class DocumentContext {
 
   private boolean mustCovered(Tree node) {
 
-    return node instanceof BSLParser.StatementContext;
-
+    return node instanceof BSLParser.StatementContext
+            || node instanceof BSLParser.GlobalMethodCallContext
+            || node instanceof BSLParser.Var_nameContext;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
