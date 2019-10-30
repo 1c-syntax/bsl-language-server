@@ -79,7 +79,17 @@ class DocumentContextTest {
       StandardCharsets.UTF_8
     );
 
-    return new DocumentContext("fake-uri.bsl", fileContent);
+    return new DocumentContext("fake-uri.bsl", fileContent, new ServerContext());
+  }
+
+  @Test
+  void testComputeMetricsLocForCover() throws IOException {
+
+    DocumentContext documentContext =
+      getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
+
+    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
+
   }
 
 }

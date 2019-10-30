@@ -37,6 +37,8 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.antlr.v4.runtime.tree.Tree;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -318,6 +320,8 @@ public class DocumentContext {
       .distinct().toArray();
     metricsTemp.setNclocData(nclocData);
 
+    metricsTemp.setCovlocData(computeCovlocData());
+
     int lines;
     final List<Token> tokensUnboxed = getTokens();
     if (tokensUnboxed.isEmpty()) {
@@ -333,6 +337,23 @@ public class DocumentContext {
     metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
 
     return metricsTemp;
+  }
+
+  private int[] computeCovlocData(){
+
+    return Trees.getDescendants(getAst()).stream()
+      .filter(node -> !(node instanceof TerminalNodeImpl))
+      .filter(this::mustCovered)
+      .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
+      .distinct().toArray();
+
+  }
+
+  private boolean mustCovered(Tree node) {
+
+    return node instanceof BSLParser.StatementContext
+            || node instanceof BSLParser.GlobalMethodCallContext
+            || node instanceof BSLParser.Var_nameContext;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
