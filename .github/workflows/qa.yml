@@ -1,0 +1,32 @@
+name: QA
+
+on: 
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Check if user has write access"
+      uses: "lannonbr/repo-permission-check-action@2.0.0"
+      with:
+        permission: "write"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v1
+      if: success()
+    - name: Set up JDK ${{ matrix.java_version }}
+      uses: actions/setup-java@v1
+      if: success()
+      with:
+        java-version: ${{ matrix.java_version }}
+    - name: SonarCloud Scan
+      if: success()
+      run: ./gradlew check sonarqube
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
