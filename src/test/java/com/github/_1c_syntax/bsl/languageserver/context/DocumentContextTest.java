@@ -34,6 +34,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentContextTest {
 
   @Test
+  void testRebuild() throws IOException {
+
+    DocumentContext documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
+    assertThat(documentContext.getTokens()).hasSize(48);
+
+    File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
+    String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    documentContext.rebuild(fileContent);
+    assertThat(documentContext.getTokens()).hasSize(19);
+  }
+
+  @Test
   void testClearASTData() throws IOException, IllegalAccessException {
     // given
     DocumentContext documentContext = getDocumentContext();
