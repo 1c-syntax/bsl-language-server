@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Critical` | `Нет` | `30` | `standard`<br/>`lockinos` |
+| `Error` | `BSL` | `Critical` | `No` | `30` | `standard`<br/>`lockinos` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

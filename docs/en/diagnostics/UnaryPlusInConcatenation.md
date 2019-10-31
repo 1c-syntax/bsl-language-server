@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Blocker` | `Нет` | `1` | `suspicious`<br/>`brainoverload` |
+| `Error` | `BSL`<br/>`OS` | `Blocker` | `No` | `1` | `suspicious`<br/>`brainoverload` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
