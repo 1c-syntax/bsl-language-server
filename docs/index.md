@@ -139,3 +139,5 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
 
 Этот продукт поддерживается [YourKit](https://www.yourkit.com), разработчиком инструментов для мониторинга и профилирования Java и .Net приложений.
+
+Изменение для тестирования
