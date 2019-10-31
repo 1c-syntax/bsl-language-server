@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Vulnerability` | `BSL` | `Critical` | `Нет` | `15` | `standard` |
+| `Vulnerability` | `BSL` | `Critical` | `No` | `15` | `standard` |
 
 ## Parameters 
 

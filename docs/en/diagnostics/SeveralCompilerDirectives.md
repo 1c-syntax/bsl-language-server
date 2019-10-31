@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Critical` | `Нет` | `5` | `unpredictable`<br/>`error` |
+| `Error` | `BSL`<br/>`OS` | `Critical` | `No` | `5` | `unpredictable`<br/>`error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

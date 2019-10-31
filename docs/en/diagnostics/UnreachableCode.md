@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Minor` | `Нет` | `10` | `design`<br/>`suspicious` |
+| `Error` | `BSL`<br/>`OS` | `Minor` | `No` | `10` | `design`<br/>`suspicious` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Info` | `Нет` | `0` | `badpractice` |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `No` | `0` | `badpractice` |
 
 ## Parameters 
 

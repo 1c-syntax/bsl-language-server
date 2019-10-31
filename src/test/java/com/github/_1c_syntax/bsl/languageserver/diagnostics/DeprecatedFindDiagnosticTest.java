@@ -29,9 +29,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DeprecatedFindTest extends AbstractDiagnosticTest<DeprecatedFind> {
+public class DeprecatedFindDiagnosticTest extends AbstractDiagnosticTest<DeprecatedFindDiagnostic> {
 
-  DeprecatedFindTest() { super(DeprecatedFind.class); }
+  DeprecatedFindDiagnosticTest() { super(DeprecatedFindDiagnostic.class); }
 
   @Test
   void runTest()

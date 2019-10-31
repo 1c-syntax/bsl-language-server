@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6,
   tags = {DiagnosticTag.DEPRECATED}
   )
-public class DeprecatedFind extends AbstractVisitorDiagnostic {
+public class DeprecatedFindDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(найти|find)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
