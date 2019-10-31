@@ -42,7 +42,7 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
   @Test
   void runTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 20, 3, 28));
     assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(4, 29, 4, 37));
     assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(5, 4, 5, 12));
@@ -54,7 +54,8 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
     assertThat(diagnostics.get(8).getRange()).isEqualTo(Ranges.create(40, 16, 40, 24));
     assertThat(diagnostics.get(9).getRange()).isEqualTo(Ranges.create(41, 25, 41, 33));
     assertThat(diagnostics.get(10).getRange()).isEqualTo(Ranges.create(42, 0, 42, 8));
-    assertThat(diagnostics.get(11).getRange()).isEqualTo(Ranges.create(43, 8, 43, 16));
+    assertThat(diagnostics.get(11).getRange()).isEqualTo(Ranges.create(44, 76, 44, 84));
+    assertThat(diagnostics.get(12).getRange()).isEqualTo(Ranges.create(45, 8, 45, 16));
 
   }
 

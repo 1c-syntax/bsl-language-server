@@ -29,10 +29,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -79,7 +81,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    if(isMethodInFormModule()) {
+    if (isMethodInFormModule()) {
       return super.visitFile(ctx);
     }
 
@@ -87,6 +89,11 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   private boolean isMethodInFormModule() {
+
+    // todo after metadata test mock
+//    ModuleType type = documentContext.getServerContext().getConfiguration()
+//      .getModuleType(new File(documentContext.getUri()).toURI());
+//    return type == ModuleType.FormModule;
 
     return this.documentContext
       .getTokens()
@@ -120,15 +127,15 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   private static List<BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
     BSLParser.ParamListContext paramList = declaration.getRuleContext(BSLParser.ParamListContext.class, 0);
-    if(paramList == null) {
+    if (paramList == null) {
       return Collections.emptyList();
     }
     return paramList.getRuleContexts(BSLParser.ParamContext.class);
   }
 
   private static boolean hasThisForm(List<BSLParser.ParamContext> params) {
-    for(BSLParser.ParamContext param : params) {
-      if(pattern.matcher(param.getText()).find()) {
+    for (BSLParser.ParamContext param : params) {
+      if (pattern.matcher(param.getText()).find()) {
         return true;
       }
     }
@@ -138,22 +145,26 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
-    if(pattern.matcher(ctx.getText()).find()) {
-      diagnosticStorage.addDiagnostic(ctx.start);
+
+    if (ctx.globalMethodCall() != null
+      && ctx.getStart() == ctx.globalMethodCall().getStart()) {
+      return super.visitCallStatement(ctx);
+    }
+
+    if (pattern.matcher(ctx.getStart().getText()).matches()){
+      diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
     return super.visitCallStatement(ctx);
   }
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
-    for(Token child  : ctx.getTokens()) {
-      if(pattern.matcher(child.getText()).find()) {
-        diagnosticStorage.addDiagnostic(child);
-      }
-    }
+  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
+      .filter(token -> pattern.matcher(token.getText()).matches())
+      .forEach(token -> diagnosticStorage.addDiagnostic((TerminalNode) token));
 
-    return super.visitExpression(ctx);
+    return ctx;
   }
 
   @Override
@@ -165,7 +176,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
     List<TextEdit> newTextEdits = new ArrayList<>();
 
-    for(Diagnostic diagnostic : diagnostics) {
+    for (Diagnostic diagnostic : diagnostics) {
       newTextEdits.add(getQuickFixText(diagnostic, documentContext));
     }
 
@@ -181,7 +192,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     Range range = diagnostic.getRange();
     String currentText = documentContext.getText(range);
 
-    if(onlyRuPattern.matcher(currentText).matches()) {
+    if (onlyRuPattern.matcher(currentText).matches()) {
       return new TextEdit(range, THIS_OBJECT);
     }
 
