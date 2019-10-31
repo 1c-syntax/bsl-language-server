@@ -11,6 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - run: cat $GITHUB_EVENT_PATH
     - name: "Check if user has write access"
       uses: "lannonbr/repo-permission-check-action@2.0.0"
       with:
