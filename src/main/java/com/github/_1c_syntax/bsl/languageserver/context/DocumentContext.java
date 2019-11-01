@@ -230,6 +230,7 @@ public class DocumentContext {
     methods.clear();
     regions.clear();
     regionsFlat.clear();
+    diagnosticIgnoranceData.clear();
   }
 
   private String[] getContentList() {
