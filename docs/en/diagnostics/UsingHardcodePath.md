@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Critical` | `No` | `15` | `standard` |
+| `Error` | `BSL` | `Critical` | `Yes` | `15` | `standard` |
 
 ## Parameters 
 

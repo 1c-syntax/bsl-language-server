@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Major` | `No` | `5` | `badpractice`<br/>`standard` |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `5` | `badpractice`<br/>`standard` |
 
 ## Parameters 
 
