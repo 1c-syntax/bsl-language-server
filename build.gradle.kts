@@ -60,6 +60,7 @@ dependencies {
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotation-processors")
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-testsuite")
         exclude("com.github.nixel2007.antlr4", "antlr4-tool-testsuite")
+        exclude("com.ibm.icu", "*")
     }
 
     compile("com.github.1c-syntax:mdclasses:13a6833e56de3d15a94a120d27906b4013f2a132")
