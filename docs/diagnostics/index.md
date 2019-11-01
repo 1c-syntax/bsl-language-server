@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **59**
+Общее количество: **60**
 
 * Дефект кода: **38**
 * Уязвимость: **1**
-* Ошибка: **20**
+* Ошибка: **21**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
@@ -33,6 +33,7 @@
 | [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` |
 | [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `suspicious` |
 | [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` |
+| [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br/>`standard`<br/>`unpredictable` |
 | [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Использование магического числа | Да | Незначительный | Дефект кода | `badpractice` |
 | [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` |

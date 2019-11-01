@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **59**
+Total: **60**
 
-* Error: **20**
+* Error: **21**
 * Code smell: **38**
 * Vulnerability: **1**
 
@@ -33,6 +33,7 @@ Total: **59**
 | [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` |
 | [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` |
 | [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` |
+| [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br/>`standard`<br/>`unpredictable` |
 | [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Method size limit | Yes | Minor | Code smell | `badpractice` |
 | [MethodSize](MethodSize.md) | Method size restriction | Yes | Major | Code smell | `badpractice` |
