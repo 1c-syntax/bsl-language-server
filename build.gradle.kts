@@ -47,14 +47,20 @@ dependencies {
     // https://github.com/1c-syntax/bsl-language-server/issues/369
     // Excude jline and use fixed one.
     compile("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
-    compile("com.github.nixel2007", "jline3", "c31cca7e6b4b48518c6aee5a076b00b67c7be9ea")
+    compile("org.jline", "jline", "3.13.1")
 
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "3b174c68749a5aa56e668571a89f889246ea58e3")
+    compile("com.github.1c-syntax", "bsl-parser", "3b174c68749a5aa56e668571a89f889246ea58e3") {
+        exclude("com.github.nixel2007.antlr4", "antlr4-maven-plugin")
+        exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotations")
+        exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotation-processors")
+        exclude("com.github.nixel2007.antlr4", "antlr4-runtime-testsuite")
+        exclude("com.github.nixel2007.antlr4", "antlr4-tool-testsuite")
+    }
 
     compile("com.github.1c-syntax:mdclasses:13a6833e56de3d15a94a120d27906b4013f2a132")
 
