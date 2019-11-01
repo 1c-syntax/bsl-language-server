@@ -61,6 +61,10 @@ dependencies {
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-testsuite")
         exclude("com.github.nixel2007.antlr4", "antlr4-tool-testsuite")
         exclude("com.ibm.icu", "*")
+        exclude("org.antlr", "ST4")
+        exclude("org.abego.treelayout", "org.abego.treelayout.core")
+        exclude("org.antlr", "antlr-runtime")
+        exclude("org.glassfish", "javax.json")
     }
 
     compile("com.github.1c-syntax:mdclasses:13a6833e56de3d15a94a120d27906b4013f2a132")
