@@ -64,14 +64,9 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     nestedNewContext.clear();
     BSLParser.TypeNameContext typeName = ctx.typeName();
 
-    if (typeName == null) {
-      return super.visitNewExpression(ctx);
-    }
-
-    boolean isStructureType = DiagnosticHelper.isStructureType(typeName);
-    boolean isFixedStructureType = DiagnosticHelper.isFixedStructureType(typeName);
-
-    if (!isStructureType && !isFixedStructureType) {
+    if (typeName == null
+      || !(DiagnosticHelper.isStructureType(typeName) || DiagnosticHelper.isFixedStructureType(typeName))
+    ) {
       return super.visitNewExpression(ctx);
     }
 
