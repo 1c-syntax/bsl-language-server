@@ -12,9 +12,9 @@
 	//а
 	А = 0
 КонецЕсли;
-// BSLLS:SemicolonPresence-вкл
+// BSLLS:SemicolonPresence-on
 
-// BSLLS:SemicolonPresence-выкл
+// BSLLS:SemicolonPresence-off
 // BSLLS:SpaceAtStartComment-выкл Проверка вложенности
 Если Истина Тогда
 	//а
@@ -28,5 +28,8 @@
 КонецЕсли;
 А = 0
 
-// BSLLS:SpaceAtStartComment-выкл
+// BSLLS:SpaceAtStartComment-off
 //а;
+
+// BSLLS-выкл
+// BSLLS-вкл

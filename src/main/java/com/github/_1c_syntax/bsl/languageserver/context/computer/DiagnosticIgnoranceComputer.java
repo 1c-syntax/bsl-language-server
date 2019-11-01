@@ -46,19 +46,19 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   private static final String ALL_DIAGNOSTICS_KEY = "all";
 
   private static final Pattern IGNORE_ALL_ON = Pattern.compile(
-    "(?:BSLLS-вкл)|(?:BSLLS-on)"
+    "BSLLS-(?:вкл|on)"
   );
 
   private static final Pattern IGNORE_ALL_OFF = Pattern.compile(
-    "(?:BSLLS-выкл)|(?:BSLLS-off)"
+    "BSLLS-(?:выкл|off)"
   );
 
   private static final Pattern IGNORE_DIAGNOSTIC_ON = Pattern.compile(
-    "(?:BSLLS:(\\w+)-вкл)|(?:BSLLS:(\\w+)-on)"
+    "BSLLS:(\\w+)-(?:вкл|on)"
   );
 
   private static final Pattern IGNORE_DIAGNOSTIC_OFF = Pattern.compile(
-    "(?:BSLLS:(\\w+)-выкл)|(?:BSLLS:(\\w+)-off)"
+    "BSLLS:(\\w+)-(?:выкл|off)"
   );
 
   private final DocumentContext documentContext;
