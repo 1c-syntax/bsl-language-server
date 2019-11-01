@@ -55,13 +55,11 @@ import java.util.stream.Collectors;
 )
 public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Collection<ParseTree> nestedNewContext = new ArrayList<>();
   private final String relatedMessage = getResourceString("nestedConstructorRelatedMessage");
 
   @Override
   public ParseTree visitNewExpression(NewExpressionContext ctx) {
 
-    nestedNewContext.clear();
     BSLParser.TypeNameContext typeName = ctx.typeName();
 
     if (typeName == null
