@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Minor` | `No` | `2` | `deprecated` |
+| `Code smell` | `BSL` | `Minor` | `Yes` | `2` | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

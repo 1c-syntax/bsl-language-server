@@ -14,7 +14,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var metadataMinPattern = Regex("^\\s*?minutesToFix\\s*?=\\s*?(\\w+)",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-    private var metadataActivPattern = Regex("^\\s*?activatedByDefault\\s*?=\\s*?(\\w+)",
+    private var metadataActivPattern = Regex("^\\s*?activatedByDefault\\s*?=\\s*?(true|false)\\s*?.*",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var metadataScopePattern = Regex("^\\s*?scope\\s*?=\\s*?DiagnosticScope\\.(\\w+)",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
@@ -115,7 +115,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         if (match != null && match.groups.isNotEmpty()) {
             result = match.groups[1]?.value.toString()
         }
-        if (result.isBlank() && key.isNotEmpty()) {
+        if (result.isEmpty() && key.isNotEmpty()) {
             return defaultValues.getOrDefault(key, "")
         }
         return result
@@ -195,7 +195,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     .replace("<TagsHeader>", "Тэги")
                     .replace("<Type>", typeRuMap.getOrDefault(metadata.getOrDefault("type", ""), ""))
                     .replace("<Severity>", severityRuMap.getOrDefault(metadata.getOrDefault("severity", ""), ""))
-                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toUpperCase() == "YES") "Да" else "Нет")
+                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toLowerCase() == "true") "Да" else "Нет")
         } else {
             metadataBody = metadataBody
                     .replace("<TypeHeader>", "Type")
@@ -206,7 +206,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     .replace("<TagsHeader>", "Tags")
                     .replace("<Type>", typeEnMap.getOrDefault(metadata.getOrDefault("type", ""), ""))
                     .replace("<Severity>", severityEnMap.getOrDefault(metadata.getOrDefault("severity", ""), ""))
-                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toUpperCase() == "YES") "Yes" else "No")
+                    .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toLowerCase() == "true") "Yes" else "No")
 
         }
 
@@ -279,7 +279,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                 setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
         defaultValues["minutesToFix"] = getValueFromText(text, Regex("int\\s+?minutesToFix\\(\\)\\s+?default\\s+?(\\w+)",
                 setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
-        defaultValues["activatedByDefault"] = getValueFromText(text, Regex("boolean\\s+?activatedByDefault\\(\\)\\s+?default\\s+?(\\w+)",
+        defaultValues["activatedByDefault"] = getValueFromText(text, Regex("boolean\\s+?activatedByDefault\\(\\)\\s+?default\\s+?(true|false)\\s*?.*",
                 setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
         defaultValues["tags"] = "`ERROR`"
     }

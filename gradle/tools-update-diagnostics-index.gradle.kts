@@ -25,8 +25,8 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
             "VULNERABILITY" to "Уязвимость",
             "CODE_SMELL" to "Дефект кода");
 
-    private var typeMapRu = hashMapOf("ERROR" to 0);
-    private var typeMapEn = hashMapOf("ERROR" to 0);
+    private var typeMapRu = hashMapOf<String, Int>()
+    private var typeMapEn = hashMapOf<String, Int>()
 
     private var typeEnMap = hashMapOf("ERROR" to "Error",
             "VULNERABILITY" to "Vulnerability",
@@ -44,8 +44,41 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
             "MINOR" to "Minor",
             "INFO" to "Info");
 
+    private var defaultValues = hashMapOf<String, String>()
+
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty();
+
+    private fun loadDefaultValues() {
+        defaultValues.clear()
+        val fileP = File(outputDir.get().asFile.path,
+                "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java");
+        val text = getValueFromText(fileP.readText(charset("UTF-8")), Regex("DiagnosticMetadata\\s*?\\{([\\w\\s\\W]+)\\}",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
+        defaultValues["type"] = getValueFromText(text, Regex("DiagnosticType\\s+?type\\(\\)\\s+?default\\s+?DiagnosticType\\.(\\w+)",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
+        defaultValues["severity"] = getValueFromText(text, Regex("DiagnosticSeverity\\s+?severity\\(\\)\\s+?default\\s+?DiagnosticSeverity\\.(\\w+)",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
+        defaultValues["scope"] = getValueFromText(text, Regex("DiagnosticScope\\s+?scope\\(\\)\\s+?default\\s+?DiagnosticScope\\.(\\w+)",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
+        defaultValues["minutesToFix"] = getValueFromText(text, Regex("int\\s+?minutesToFix\\(\\)\\s+?default\\s+?(\\w+)",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
+        defaultValues["activatedByDefault"] = getValueFromText(text, Regex("boolean\\s+?activatedByDefault\\(\\)\\s+?default\\s+?(true|false)\\s*?.*",
+                setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
+        defaultValues["tags"] = "`ERROR`"
+    }
+
+    private fun getValueFromText(text: String, pattern: Regex, key: String): String {
+        val match = pattern.find(text)
+        var result = ""
+        if (match != null && match.groups.isNotEmpty()) {
+            result = match.groups[1]?.value.toString()
+        }
+        if (result.isEmpty() && key.isNotEmpty()) {
+            return defaultValues.getOrDefault(key, "")
+        }
+        return result
+    }
 
     private fun getName(key: String, lang: String): String {
         val fileP = File(outputDir.get().asFile.path,
@@ -108,8 +141,7 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
     @TaskAction
     fun updateIndex() {
         logger.quiet("Update diagnostics index")
-        typeMapRu.clear();
-        typeMapEn.clear();
+        loadDefaultValues()
         var indexRu = "";
         var indexEn = "";
         var countDiagnostic = 0;
@@ -119,20 +151,15 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
                     it.name.endsWith(".java")
                 }.forEach {
                     val text = it.readText(charset("UTF-8"));
-                    if (text.indexOf("@DiagnosticMetadata") == -1) {
-                        logger.quiet("File skipped {}", it);
-                    } else {
+                    if (text.indexOf("@DiagnosticMetadata") >= 0) {
                         countDiagnostic++;
                         val key = it.name.substring(0, it.name.indexOf("Diagnostic"));
                         val nameRu = getName(key, "ru");
                         val nameEn = getName(key, "en");
-                        var enabled = true;
-                        var match = enabledPattern.find(text);
-                        if (match != null && match.groups.isNotEmpty()) {
-                            enabled = match.groups[1]?.value?.toBoolean() ?: true;
-                        }
-                        val enabledRu = if (enabled) "Да" else "Нет";
-                        val enabledEn = if (enabled) "Yes" else "No";
+                        var enabledStr = getValueFromText(text, enabledPattern, "activatedByDefault");
+
+                        val enabledRu = if (enabledStr == "true") "Да" else "Нет";
+                        val enabledEn = if (enabledStr == "true") "Yes" else "No";
                         val readmeRu = getReadme(key, "");
                         val readmeEn = getReadme(key, "en/");
                         val tags = getTags(text);
@@ -140,20 +167,14 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
                         var typeEn = "";
                         var severityRu = "";
                         var severityEn = "";
-                        match = typePattern.find(text);
-                        if (match != null && match.groups.isNotEmpty()) {
-                            val type = match.groups[1]?.value.toString();
-                            typeRu = typeRuMap.getOrDefault(type, "Ошибка");
-                            typeEn = typeEnMap.getOrDefault(type, "Error");
-                            typeMapRu[typeRu] = typeMapRu.getOrDefault(typeRu, 0) + 1;
-                            typeMapEn[typeEn] = typeMapEn.getOrDefault(typeEn, 0) + 1;
-                        }
-                        match = severityPattern.find(text);
-                        if (match != null && match.groups.isNotEmpty()) {
-                            val severity = match.groups[1]?.value.toString();
-                            severityRu = severityRuMap.getOrDefault(severity, "Блокирующий");
-                            severityEn = severityEnMap.getOrDefault(severity, "Blocker");
-                        }
+                        val typeStr = getValueFromText(text, typePattern, "type");
+                        typeRu = typeRuMap.getOrDefault(typeStr, "Ошибка");
+                        typeEn = typeEnMap.getOrDefault(typeStr, "Error");
+                        typeMapRu[typeRu] = typeMapRu.getOrDefault(typeRu, 0) + 1;
+                        typeMapEn[typeEn] = typeMapEn.getOrDefault(typeEn, 0) + 1;
+                        val severityStr = getValueFromText(text, severityPattern, "severity");
+                        severityRu = severityRuMap.getOrDefault(severityStr, "Блокирующий");
+                        severityEn = severityEnMap.getOrDefault(severityStr, "Blocker");
 
                         indexRu += "\n| [${key}](${readmeRu}) | $nameRu | $enabledRu | $severityRu | $typeRu | $tags |";
                         indexEn += "\n| [${key}](${readmeEn}) | $nameEn | $enabledEn | $severityEn | $typeEn | $tags |";

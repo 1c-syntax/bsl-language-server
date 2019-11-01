@@ -15,14 +15,14 @@ assignees: ''
 
 ## Параметры диагностики
 
-### Тип [Статья на русском](docs/contributing/DiagnosticTypeAndSeverity.md)
+### Тип [Статья на русском](https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticTypeAndSeverity)
 <!-- Можно поставить x (на латинице) либо после сохранения кликнуть мышкой -->
 * [ ] :ant: Ошибка
 * [ ] :cop: Уязвимость
 * [ ] :poop: Качество кода
 * [ ] :trollface: Другое
 
-### Важность [Статья на русском](docs/contributing/DiagnosticTypeAndSeverity.md)
+### Важность [Статья на русском](https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticTypeAndSeverity)
 <!-- Можно поставить x (на латинице) либо после сохранения кликнуть мышкой -->
 * [ ] :broken_heart: Блокирующая / Blocker
 * [ ] :heart: Критическая / Critical
@@ -31,7 +31,7 @@ assignees: ''
 * [ ] :green_heart: Информационная / Info
 * [ ] :revolving_hearts: Другое
 
-### Тэги [Статья на русском](docs/contributing/DiagnosticTag.md)
+### Тэги [Статья на русском](https://1c-syntax.github.io/bsl-language-server/contributing/DiagnosticTag)
 <!-- Можно поставить x (на латинице) либо после сохранения кликнуть мышкой -->
 <!-- Указать можно не более трех тэгов -->
 * [ ] `STANDARD` - "Нарушение стандартов 1С"
