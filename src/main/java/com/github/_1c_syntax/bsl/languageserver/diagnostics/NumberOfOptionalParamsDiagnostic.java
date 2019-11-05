@@ -63,8 +63,9 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
   @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    if (ctx.param().stream().filter(param -> param.defaultValue() != null).count() > maxOptionalParamsCount){
-      diagnosticStorage.addDiagnostic(ctx);
+    int paramCount = (int) ctx.param().stream().filter(param -> param.defaultValue() != null).count();
+    if (paramCount > maxOptionalParamsCount){
+      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(paramCount, maxOptionalParamsCount));
     }
 
     return ctx;
