@@ -99,6 +99,15 @@ public class DocumentContext {
     return context;
   }
 
+  public String getContent() {
+    requireNonNull(content);
+    return content;
+  }
+
+  public String[] getContentList() {
+    return contentList.getOrCompute();
+  }
+
   public BSLParser.FileContext getAst() {
     requireNonNull(content);
     return tokenizer.getAst();
@@ -233,16 +242,12 @@ public class DocumentContext {
     diagnosticIgnoranceData.clear();
   }
 
-  private String[] getContentList() {
-    return contentList.getOrCompute();
-  }
-
   private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
     return nodeToMethodsMap.getOrCompute();
   }
 
   private String[] computeContentList() {
-    return content.split("\n");
+    return getContent().split("\n");
   }
 
   private List<RegionSymbol> computeRegions() {
