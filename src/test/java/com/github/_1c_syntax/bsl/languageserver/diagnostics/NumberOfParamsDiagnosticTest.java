@@ -52,9 +52,9 @@ class NumberOfParamsDiagnosticTest extends AbstractDiagnosticTest<NumberOfParams
   @Test
   void testConfigure() {
     // given
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("maxParamsCount", 1);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();

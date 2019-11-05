@@ -65,9 +65,9 @@ public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingS
   @Test
   void runTestWithConfigure() {
     // conf
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("serviceTags", "todo");
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     //when
     List<Diagnostic> diagnostics = getDiagnostics();

@@ -88,8 +88,8 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 
 		// Проверяем количество срабатываний без изменения параметров
 		// when
-		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-		getDiagnosticInstance().configure(configuration);
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();
 
 		// then
@@ -98,7 +98,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 		// Выключаем поиск IP адресов
 		// when
 		configuration.put("enableSearchNetworkAddresses", false);
-		getDiagnosticInstance().configure(configuration);
+		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();
 
 		// then
@@ -106,9 +106,9 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 
 		// Изменяем ключевые слова исключения для поиска IP адресов
 		// when
-		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
 		configuration.put("searchWordsExclusion", "Version");
-		getDiagnosticInstance().configure(configuration);
+		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();
 
 		// then
@@ -116,9 +116,9 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
 
 		// Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
 		// when
-		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
 		configuration.put("searchWordsStdPathsUnix", "home|lib");
-		getDiagnosticInstance().configure(configuration);
+		diagnosticInstance.configure(configuration);
 
 		// then
 		diagnostics = getDiagnostics();

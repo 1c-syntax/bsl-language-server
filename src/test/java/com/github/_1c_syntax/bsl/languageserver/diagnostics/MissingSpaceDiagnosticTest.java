@@ -119,11 +119,11 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     List<Diagnostic> diagnostics;
 
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("listForCheckLeft", ")");
     configuration.put("listForCheckRight", "(");
     configuration.put("listForCheckLeftAndRight", "");
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(12);
@@ -143,12 +143,12 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     assertThat(diagnostics.get(11).getRange()).isEqualTo(Ranges.create(34, 6, 34, 7));
 
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", "");
     configuration.put("listForCheckLeftAndRight", "-");
     configuration.put("checkSpaceToRightOfUnary", true);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
 
     diagnostics = getDiagnostics();
@@ -157,12 +157,12 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(27, 10, 27, 11));
 
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", ",");
     configuration.put("listForCheckLeftAndRight", "");
     configuration.put("allowMultipleCommas", true);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(4);

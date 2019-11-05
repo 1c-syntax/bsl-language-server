@@ -70,8 +70,8 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 
 		// без изменения параметра
 		// when
-		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-		getDiagnosticInstance().configure(configuration);
+		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();
 
 		// then
@@ -80,7 +80,7 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 		// с изменением параметра searchWords
 		// when
 		configuration.put("searchWords", "Password");
-		getDiagnosticInstance().configure(configuration);
+		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();
 
 		// then

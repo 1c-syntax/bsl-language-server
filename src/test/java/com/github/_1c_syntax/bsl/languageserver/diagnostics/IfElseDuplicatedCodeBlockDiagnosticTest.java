@@ -83,7 +83,7 @@ class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfE
     List<DiagnosticRelatedInformation> relatedInformationList = diagnostic.getRelatedInformation();
     assertThat(relatedInformationList).hasSize(2);
 
-    String relatedMessage = getDiagnosticInstance().getResourceString("identicalCodeBlockRelatedMessage");
+    String relatedMessage = diagnosticInstance.getResourceString("identicalCodeBlockRelatedMessage");
 
     DiagnosticRelatedInformation relatedInformation = relatedInformationList.get(0);
     assertThat(relatedInformation.getMessage()).isEqualTo(relatedMessage);
