@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
@@ -64,12 +65,21 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
 
   @Test
   void runQuickFixTest() {
+    final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0).getRange());
+    final Diagnostic firstDiagnostic = diagnostics.get(0);
+
+    List<CodeAction> quickFixes = getQuickFixes(firstDiagnostic);
 
     assertThat(quickFixes).hasSize(1);
-    Map<String, List<TextEdit>> changes = quickFixes.get(0).getEdit().getChanges();
-    assertThat(changes).hasSize(1);
-    assertThat(changes.get("file:///fake-uri.bsl")).allMatch(t -> t.getNewText().equals(THIS_OBJECT));
+
+    final CodeAction quickFix = quickFixes.get(0);
+
+    assertThat(quickFix).of(diagnosticInstance).in(documentContext)
+      .fixes(firstDiagnostic);
+
+    assertThat(quickFix).in(documentContext)
+      .hasChanges(1)
+      .hasNewText(THIS_OBJECT);
   }
 }

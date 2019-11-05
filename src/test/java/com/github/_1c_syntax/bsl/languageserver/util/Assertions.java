@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticsAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.CodeActionAssert;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
@@ -31,6 +33,10 @@ public class Assertions extends org.assertj.core.api.Assertions {
 
   public static DiagnosticAssert assertThat(Diagnostic actual) {
     return new DiagnosticAssert(actual);
+  }
+
+  public static CodeActionAssert assertThat(CodeAction actual) {
+    return new CodeActionAssert(actual);
   }
 
   public static DiagnosticsAssert assertThat(List<Diagnostic> actual, Object ignored) {
