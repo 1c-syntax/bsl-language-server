@@ -51,9 +51,9 @@ class MethodSizeDiagnosticTest extends AbstractDiagnosticTest<MethodSizeDiagnost
   @Test
   void testConfigure() {
     // given
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("maxMethodSize", 20);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();

@@ -57,17 +57,17 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics;
     Map<String, Object> configuration;
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
-    getDiagnosticInstance().configure(configuration);
+    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put(
       "searchDeleteFileMethod",
       MissingTemporaryFileDeletionDiagnostic.REGEX_DELETION_FILE + "|РаботаСФайламиСлужебныйКлиент.УдалитьФайл");
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);

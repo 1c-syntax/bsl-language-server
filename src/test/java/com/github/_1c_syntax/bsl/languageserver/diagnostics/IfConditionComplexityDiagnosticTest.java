@@ -54,9 +54,9 @@ public class IfConditionComplexityDiagnosticTest extends AbstractDiagnosticTest<
   void testConfigure() {
 
     // given
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("maxIfConditionComplexity", 5);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();

@@ -51,9 +51,9 @@ class NumberOfOptionalParamsDiagnosticTest extends AbstractDiagnosticTest<Number
   @Test
   void testOptionalParamsConfigure() {
     // given
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("maxOptionalParamsCount", 1);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();

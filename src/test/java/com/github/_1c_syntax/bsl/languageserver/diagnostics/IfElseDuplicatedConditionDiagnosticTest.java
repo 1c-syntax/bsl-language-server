@@ -38,7 +38,7 @@ public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticT
     super(IfElseDuplicatedConditionDiagnostic.class);
   }
 
-  private final String relatedMessage = getDiagnosticInstance().getResourceString("identicalConditionRelatedMessage");
+  private final String relatedMessage = diagnosticInstance.getResourceString("identicalConditionRelatedMessage");
 
   @Test
   void test() {

@@ -49,9 +49,9 @@ public class MultilingualStringUsingWithTemplateDiagnosticTest
 
   @Test
   void testRuAndEn() {
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("declaredLanguages", "ru,en");
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(4);

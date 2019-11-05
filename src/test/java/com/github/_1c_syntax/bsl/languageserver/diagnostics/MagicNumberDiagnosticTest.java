@@ -55,9 +55,9 @@ public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumbe
   @Test
   void testConfigure() {
     // conf
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
     configuration.put("authorizedNumbers", "-1,0,1,60,7");
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
