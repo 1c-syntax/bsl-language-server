@@ -21,37 +21,39 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WorkingTimeoutWithExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<WorkingTimeoutWithExternalResourcesDiagnostic> {
-	WorkingTimeoutWithExternalResourcesDiagnosticTest() {
-		super(WorkingTimeoutWithExternalResourcesDiagnostic.class);
-	}
+  WorkingTimeoutWithExternalResourcesDiagnosticTest() {
+    super(WorkingTimeoutWithExternalResourcesDiagnostic.class);
+  }
 
-	@Test
-	void test() {
+  @Test
+  void test() {
 
-		// when
-		List<Diagnostic> diagnostics = getDiagnostics();
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
 
-		// then
-		assertThat(diagnostics).hasSize(7);
+    // then
+    assertThat(diagnostics).hasSize(8);
 
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 20, 3, 75)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 20, 5, 92)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(7, 18, 7, 72)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 16, 11, 80)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 21, 19, 65)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(32, 14, 32, 43)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(66, 10, 66, 39)))
-		;
+    // check ranges
+    assertThat(diagnostics, true)
+      .hasRange(3, 20, 3, 75)
+      .hasRange(5, 20, 5, 92)
+      .hasRange(7, 18, 7, 72)
+      .hasRange(11, 16, 11, 80)
+      .hasRange(19, 21, 19, 65)
+      .hasRange(32, 14, 32, 43)
+      .hasRange(69, 26, 69, 114)
+      .hasRange(76, 10, 76, 39)
+    ;
 
-	}
+  }
 }

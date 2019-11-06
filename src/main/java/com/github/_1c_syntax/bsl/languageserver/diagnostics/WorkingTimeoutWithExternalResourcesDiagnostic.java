@@ -122,7 +122,7 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
         }
       }
     );
-    return super.visitCodeBlock(ctx);
+    return ctx;
   }
 
   private void checkNextStatement(
