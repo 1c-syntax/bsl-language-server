@@ -50,8 +50,8 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitAssignment(ctx);
     }
 
-    if (ctx.complexIdentifier().getText().equalsIgnoreCase(expression.getText())
-      && getDescendantsCount(ctx.complexIdentifier()) == getDescendantsCount(expression)) {
+    if (ctx.lValue().getText().equalsIgnoreCase(expression.getText())
+      && getDescendantsCount(ctx.lValue()) == getDescendantsCount(expression)) {
       diagnosticStorage.addDiagnostic(ctx);
     }
 

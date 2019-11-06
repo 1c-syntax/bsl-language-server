@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -144,25 +145,28 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
   }
 
   private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
-    BSLParser.ComplexIdentifierContext complexIdentifier = localStatement.assignment().complexIdentifier();
-    if (complexIdentifier.isEmpty()) {
+    BSLParser.LValueContext lValue = localStatement.assignment().lValue();
+    if (lValue.isEmpty()) {
       return false;
     }
-    List<BSLParser.ModifierContext> listModifer = complexIdentifier.modifier();
-    if (listModifer.isEmpty()) {
+
+    BSLParser.AcceptorContext acceptor = lValue.acceptor();
+    List<ParseTree> allRuleNodes = new ArrayList<>(Trees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
+
+    if (allRuleNodes.isEmpty()) {
       return false;
     }
-    BSLParser.ModifierContext modifier = listModifer.get(0);
-    Matcher matcher = patternTimeout.matcher(modifier.getText());
+    BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext)allRuleNodes.get(0);
+    Matcher matcher = patternTimeout.matcher(accessProperty.getText());
     return matcher.find();
   }
 
   private String getVariableName(BSLParser.StatementContext statement) {
     String variableName = "";
     if (statement.assignment() != null) {
-      BSLParser.ComplexIdentifierContext complexIdentifierContext = statement.assignment().complexIdentifier();
-      if (complexIdentifierContext != null) {
-        variableName = complexIdentifierContext.getStart().getText();
+      BSLParser.LValueContext lValueContext = statement.assignment().lValue();
+      if (lValueContext != null) {
+        variableName = lValueContext.getStart().getText();
       }
     }
     return variableName;

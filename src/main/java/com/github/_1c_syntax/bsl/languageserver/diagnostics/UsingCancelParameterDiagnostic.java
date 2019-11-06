@@ -72,7 +72,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParseTree> tree = assigns.stream()
       .filter(
-        node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).complexIdentifier()
+        node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
           .getText())
           .matches()
       ).collect(Collectors.toList());

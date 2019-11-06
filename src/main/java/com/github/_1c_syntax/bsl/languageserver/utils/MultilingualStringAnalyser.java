@@ -104,12 +104,12 @@ public final class MultilingualStringAnalyser {
       return null;
     }
 
-    BSLParser.ComplexIdentifierContext complexIdentifierContext = assignment.complexIdentifier();
-    if (complexIdentifierContext == null) {
+    BSLParser.LValueContext lValue = assignment.lValue();
+    if (lValue == null) {
       return null;
     }
 
-    return complexIdentifierContext.getText();
+    return lValue.getText();
   }
 
   private void expandMultilingualString() {
