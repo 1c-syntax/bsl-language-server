@@ -19,22 +19,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import org.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import org.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  scope = DiagnosticScope.BSL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 2
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 1,
+  tags = {DiagnosticTag.BRAINOVERLOAD}
 )
 
 public class YodaStyleDiagnostic extends AbstractVisitorDiagnostic {

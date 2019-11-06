@@ -19,15 +19,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package org.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import org.github._1c_syntax.bsl.languageserver.utils.RangeHelper;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class YodaStyleDiagnosticTest extends AbstractDiagnosticTest<YodaStyleDiagnostic> {
 
@@ -41,11 +40,9 @@ class YodaStyleDiagnosticTest extends AbstractDiagnosticTest<YodaStyleDiagnostic
     List<Diagnostic> diagnostics = getDiagnostics();
     // then
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(3, 0 , 3, 23)));
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(9, 0 , 9, 28)));
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(RangeHelper.newRange(13, 0 , 13, 32)));
+    assertThat(diagnostics, true)
+      .hasRange(3, 0, 3, 23)
+      .hasRange(9, 0, 9, 28)
+      .hasRange(13, 0, 13, 32);
   }
 }
