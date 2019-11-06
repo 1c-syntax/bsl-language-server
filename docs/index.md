@@ -1,8 +1,3 @@
----
-title: Home
-layout: post
----
-
 # BSL Language Server
 
 [![Build Status](https://travis-ci.org/1c-syntax/bsl-language-server.svg?branch=master)](https://travis-ci.org/1c-syntax/bsl-language-server)
