@@ -51,7 +51,7 @@ import java.util.Optional;
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
-  private int prevTokenType;
+  private int prevTokenType = 0;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -59,6 +59,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     description = "Максимальная длина строки в символах"
   )
   private int maxLineLength = MAX_LINE_LENGTH;
+  private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -71,23 +72,18 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
     List<Diagnostic> diagnostics = new ArrayList<>();
-    Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+    tokensInOneLine.clear();
 
-    for (Token token : tokens) {
-      if (token.getType() != BSLLexer.STRINGPART
-        && token.getType() != BSLLexer.STRINGTAIL
-        && prevTokenType != BSLLexer.STRINGPART
-        && prevTokenType != BSLLexer.STRINGTAIL
-        && token.getType() == BSLLexer.SEMICOLON) {
-        putInCollection(tokensInOneLine, token);
+    documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
+        if (mustBePutIn(token)) {
+          putInCollection(token);
+        }
+        prevTokenType = token.getType();
       }
-      prevTokenType = token.getType();
-    }
+    );
 
-    List<Token> comments = documentContext.getComments();
-    comments.forEach((Token token) -> putInCollection(tokensInOneLine, token));
+    documentContext.getComments().forEach(this::putInCollection);
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Optional<Integer> max = value.stream().max(Integer::compareTo);
@@ -104,7 +100,18 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     return diagnostics;
   }
 
-  private void putInCollection(Map<Integer, List<Integer>> tokensInOneLine, Token token) {
+  private boolean mustBePutIn(Token token) {
+
+    boolean isStringPart = token.getType() == BSLLexer.STRINGPART
+      || token.getType() == BSLLexer.STRINGTAIL;
+    boolean prevIsStringPart = prevTokenType == BSLLexer.STRINGPART
+      || prevTokenType == BSLLexer.STRINGTAIL;
+
+    return !isStringPart && !(prevIsStringPart
+      && token.getType() == BSLLexer.SEMICOLON);
+  }
+
+  private void putInCollection(Token token) {
     List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine() - 1, new ArrayList<>());
     tokenList.add(token.getCharPositionInLine() + token.getText().length());
     tokensInOneLine.put(token.getLine() - 1, tokenList);
