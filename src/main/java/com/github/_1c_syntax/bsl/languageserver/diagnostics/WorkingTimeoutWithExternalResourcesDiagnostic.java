@@ -151,6 +151,9 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
     }
 
     BSLParser.AcceptorContext acceptor = lValue.acceptor();
+    if (acceptor == null) {
+      return false;
+    }
     List<ParseTree> allRuleNodes = new ArrayList<>(Trees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
 
     if (allRuleNodes.isEmpty()) {
