@@ -31,13 +31,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -86,14 +84,13 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     documentContext.getComments().forEach(this::putInCollection);
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
-      Optional<Integer> max = value.stream().max(Integer::compareTo);
-      Integer maxCharPosition = max.orElse(0);
+      Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
       if (maxCharPosition > maxLineLength) {
-        Range range = Ranges.create(key, 0, key, maxCharPosition);
         diagnostics.add(BSLDiagnostic.createDiagnostic(
           this,
-          range,
-          getDiagnosticMessage(maxCharPosition, maxLineLength)));
+          Ranges.create(key, 0, key, maxCharPosition),
+          getDiagnosticMessage(maxCharPosition, maxLineLength))
+        );
       }
     });
 
