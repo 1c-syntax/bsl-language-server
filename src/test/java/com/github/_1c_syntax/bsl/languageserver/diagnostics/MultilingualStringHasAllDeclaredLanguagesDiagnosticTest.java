@@ -21,45 +21,50 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
-	extends AbstractDiagnosticTest<MultilingualStringHasAllDeclaredLanguagesDiagnostic> {
+  extends AbstractDiagnosticTest<MultilingualStringHasAllDeclaredLanguagesDiagnostic> {
 
-	MultilingualStringHasAllDeclaredLanguagesDiagnosticTest() {
-		super(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class);
-	}
+  MultilingualStringHasAllDeclaredLanguagesDiagnosticTest() {
+    super(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class);
+  }
 
-	@Test
-	void testOnlyRU() {
-		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(3);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)));
-	}
+  @Test
+  void testOnlyRU() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(3);
 
-	@Test
-	void testRuAndEn() {
-		Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
-		configuration.put("declaredLanguages", "ru,en");
-		diagnosticInstance.configure(configuration);
+    assertThat(diagnostics, true)
+      .hasRange(12, 16, 12, 22)
+      .hasRange(13, 30, 13, 86)
+      .hasRange(16, 30, 16, 66)
+    ;
+  }
 
-		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(4);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 27, 15, 65)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)));
-	}
+  @Test
+  void testRuAndEn() {
+    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    configuration.put("declaredLanguages", "ru,en");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(5);
+
+    assertThat(diagnostics, true)
+      .hasRange(12, 16, 12, 22)
+      .hasRange(13, 30, 13, 86)
+      .hasRange(15, 27, 15, 65)
+      .hasRange(15, 27, 15, 65)
+      .hasRange(27, 37, 27, 75)
+    ;
+  }
 }
