@@ -8,10 +8,10 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **62**
+Общее количество: **63**
 
 * Дефект кода: **38**
-* Уязвимость: **1**
+* Уязвимость: **2**
 * Ошибка: **23**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -69,6 +69,7 @@
 | [UsingCancelParameter](UsingCancelParameter.md) | Работа с параметром "Отказ" | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [UsingFindElementByString](UsingFindElementByString.md) | Использование методов "НайтиПоНаименованию" и "НайтиПоКоду" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`performance` |
 | [UsingGoto](UsingGoto.md) | Оператор "Перейти" не должен использоваться | Да | Критичный | Дефект кода | `standard`<br/>`badpractice` |
+| [UsingHardcodeNetworkAddress](UsingHardcodeNetworkAddress.md) | Хранение ip-адресов в коде | Да | Критичный | Уязвимость | `standard` |
 | [UsingHardcodePath](UsingHardcodePath.md) | Хранение путей к файлам и ip-адресов в коде | Да | Критичный | Ошибка | `standard` |
 | [UsingHardcodeSecretInformation](UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да | Критичный | Уязвимость | `standard` |
 | [UsingModalWindows](UsingModalWindows.md) | Использование модальных окон | Нет | Важный | Дефект кода | `standard` |
