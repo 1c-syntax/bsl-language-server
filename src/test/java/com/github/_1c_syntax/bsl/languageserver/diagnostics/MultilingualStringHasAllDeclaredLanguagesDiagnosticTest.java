@@ -55,11 +55,13 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 		diagnosticInstance.configure(configuration);
 
 		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(4);
+		assertThat(diagnostics).hasSize(5);
 		assertThat(diagnostics)
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
 			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 27, 15, 65)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)));
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)))
+			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 37, 27, 75)))
+		;
 	}
 }

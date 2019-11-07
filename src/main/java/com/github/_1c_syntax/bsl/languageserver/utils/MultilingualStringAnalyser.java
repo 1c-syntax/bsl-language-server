@@ -115,9 +115,9 @@ public final class MultilingualStringAnalyser {
   private void expandMultilingualString() {
     String[] languagesStrings = getMultilingualString().split("';");
     for (String s : languagesStrings) {
-      String[] parts = s.split("='");
+      String[] parts = s.split("=\\s*'");
       if (parts.length == VALID_LANG_PARTS) {
-        expandedMultilingualString.put(parts[0].replaceAll("\\W+", ""), parts[1]);
+        expandedMultilingualString.put(parts[0].replaceAll("\\W+|\\s*", ""), parts[1]);
       }
     }
   }
