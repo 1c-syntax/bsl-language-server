@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **62**
+Total: **63**
 
 * Error: **23**
 * Code smell: **38**
-* Vulnerability: **1**
+* Vulnerability: **2**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
@@ -69,6 +69,7 @@ Total: **62**
 | [UsingCancelParameter](UsingCancelParameter.md) | Using parameter "Cancel" | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [UsingFindElementByString](UsingFindElementByString.md) | Using FindByName and FindByCode | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`performance` |
 | [UsingGoto](UsingGoto.md) | "goto" statement should not be used | Yes | Critical | Code smell | `standard`<br/>`badpractice` |
+| [UsingHardcodeNetworkAddress](UsingHardcodeNetworkAddress.md) | Using hardcode ip addresses in code | Yes | Critical | Vulnerability | `standard` |
 | [UsingHardcodePath](UsingHardcodePath.md) | Using hardcode file paths and ip addresses in code | Yes | Critical | Error | `standard` |
 | [UsingHardcodeSecretInformation](UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes | Critical | Vulnerability | `standard` |
 | [UsingModalWindows](UsingModalWindows.md) | Using modal windows | No | Major | Code smell | `standard` |

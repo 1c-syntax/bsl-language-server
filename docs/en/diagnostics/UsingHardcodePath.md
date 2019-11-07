@@ -1,4 +1,4 @@
-# Using hardcode file paths and ip addresses in code
+# Using hardcode file paths in code
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,9 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWordsExclusion` | `Pattern` | Ключевые слова поиска для исключения выражений при поиске IP адресов | `"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"` |
 | `searchWordsStdPathsUnix` | `Pattern` | Ключевые слова поиска стандартных корневых каталогов Unix | `"bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"` |
-| `enableSearchNetworkAddresses` | `boolean` | Использовать поиск сетевых адресов | `` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -18,7 +16,6 @@
 It's forbidden to store in code:
 
 - Paths to files and folders (Windows, Unix)
-- Network addresses (ip6, ip4)
 
 There are several ways to properly store such information:
 
