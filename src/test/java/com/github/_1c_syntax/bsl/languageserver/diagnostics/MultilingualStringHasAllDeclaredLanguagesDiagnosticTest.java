@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -42,10 +43,12 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 	void testOnlyRU() {
 		List<Diagnostic> diagnostics = getDiagnostics();
 		assertThat(diagnostics).hasSize(3);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)));
+
+		Assertions.assertThat(diagnostics, true)
+			.hasRange(12, 16, 12, 22)
+			.hasRange(13, 30, 13, 86)
+			.hasRange(16, 30, 16, 66)
+		;
 	}
 
 	@Test
@@ -56,12 +59,13 @@ public class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 
 		List<Diagnostic> diagnostics = getDiagnostics();
 		assertThat(diagnostics).hasSize(5);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 16, 12, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 30, 13, 86)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 27, 15, 65)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 30, 16, 66)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 37, 27, 75)))
+
+		Assertions.assertThat(diagnostics, true)
+			.hasRange(12, 16, 12, 22)
+			.hasRange(13, 30, 13, 86)
+			.hasRange(15, 27, 15, 65)
+			.hasRange(15, 27, 15, 65)
+			.hasRange(27, 37, 27, 75)
 		;
 	}
 }
