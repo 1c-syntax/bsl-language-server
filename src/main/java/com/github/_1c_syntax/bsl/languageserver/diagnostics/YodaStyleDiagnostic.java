@@ -46,13 +46,14 @@ public class YodaStyleDiagnostic extends AbstractVisitorDiagnostic {
   );
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+  public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
 
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
+
+    if (messagePattern.matcher(ctx.getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
 
-    return super.visitGlobalMethodCall(ctx);
+    return super.visitIfBranch(ctx);
   }
 
 }
