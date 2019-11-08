@@ -21,38 +21,38 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCodeDiagnostic> {
-	UnreachableCodeDiagnosticTest() {
-		super(UnreachableCodeDiagnostic.class);
-	}
 
-	@Test
-	void test() {
-		List<Diagnostic> diagnostics = getDiagnostics();
+class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCodeDiagnostic> {
+  UnreachableCodeDiagnosticTest() {
+    super(UnreachableCodeDiagnostic.class);
+  }
 
-		assertThat(diagnostics).hasSize(14);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 12, 12, 20)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 12, 21, 20)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(30, 12, 30, 20)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(37, 4, 41, 15)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(46, 4, 51, 15)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(58, 12, 58, 20)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(67, 12, 69, 21)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(82, 16, 84, 25)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(93, 8, 93, 16)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(102, 8, 102, 17)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(108, 16, 112, 26)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(134, 4, 134, 13)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(139, 4, 141, 13)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(145, 0, 145, 9)))		;
-	}
+  @Test
+  void test() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(14);
+    assertThat(diagnostics, true)
+      .hasRange(12, 12, 12, 20)
+      .hasRange(21, 12, 21, 20)
+      .hasRange(30, 12, 30, 20)
+      .hasRange(37, 4, 41, 15)
+      .hasRange(46, 4, 51, 15)
+      .hasRange(58, 12, 58, 20)
+      .hasRange(67, 12, 69, 21)
+      .hasRange(82, 16, 84, 25)
+      .hasRange(93, 8, 93, 16)
+      .hasRange(102, 8, 102, 17)
+      .hasRange(108, 16, 112, 26)
+      .hasRange(134, 4, 134, 13)
+      .hasRange(139, 4, 141, 13)
+      .hasRange(145, 0, 145, 9);
+  }
 }
