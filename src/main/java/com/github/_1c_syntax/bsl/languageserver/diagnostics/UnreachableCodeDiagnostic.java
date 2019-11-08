@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -76,7 +77,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       if (((BSLParser.PreprocessorContext) node).preproc_if() != null) {
         previousNodes.push(node);
       } else if ((((BSLParser.PreprocessorContext) node).preproc_else() != null
-          || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
+        || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
 
         // для веток условия сначала фиксируем блок который уже прошли
         // затем новую ноду добавим
@@ -166,6 +167,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParseTree> statements = Trees.findAllRuleNodes(ppNodeParent, BSLParser.RULE_statement)
       .stream()
+      .filter(node -> ((BSLParser.StatementContext) node).getStart().getType() != BSLLexer.SEMICOLON)
       .filter(node -> node.getParent().equals(ppNodeParent))
       .collect(Collectors.toList());
 
