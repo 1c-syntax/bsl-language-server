@@ -5,6 +5,8 @@ on:
     branches:
     - master
     - develop
+    paths:
+    - 'docs/**'
 
 jobs:
   build-deploy:
