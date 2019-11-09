@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.function.Consumer;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorDiagnostic> {
 
@@ -36,14 +36,16 @@ class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorDiagnost
   @Test
   void runTest()
   {
-
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics.size()).isBetween(1, 2);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 0, 5, 9)));
-    
+
+    Consumer<List<Diagnostic>> onLineFive = diagnosticList -> assertThat(diagnosticList, true).hasRange(5, 0, 5, 9);
+    Consumer<List<Diagnostic>> onLineEight = diagnosticList -> assertThat(diagnosticList, true).hasRange(8, 16, 8, 21);
+
+    assertThat(diagnostics, true).satisfiesAnyOf(onLineFive, onLineEight);
+
   }
 }
