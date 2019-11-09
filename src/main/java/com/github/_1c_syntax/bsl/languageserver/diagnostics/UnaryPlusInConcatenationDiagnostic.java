@@ -45,13 +45,17 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
   @Override
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
     ParseTree childZero = ctx.getChild(0);
+    if (childZero == null) {
+      return super.visitMember(ctx);
+    }
     ParseTree previousNode = Trees.getPreviousNode(ctx.parent, childZero, BSLParser.RULE_operation);
     if (
       (childZero instanceof BSLParser.UnaryModifierContext)
+        && ctx.getChildCount() > 1
         && !(ctx.getChild(1).getChild(0) instanceof BSLParser.NumericContext)
-        && childZero.getText().equals("+")
-        &! previousNode.equals(childZero)
-        && previousNode.getText().equals("+")
+        && "+".equals(childZero.getText())
+        && !previousNode.equals(childZero)
+        && "+".equals(previousNode.getText())
     ) {
       diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).start);
     }
