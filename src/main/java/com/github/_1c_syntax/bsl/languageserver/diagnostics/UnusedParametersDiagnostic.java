@@ -32,6 +32,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -42,6 +43,13 @@ import java.util.stream.Collectors;
 )
 
 public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
+
+  private static final Pattern handlerParam = Pattern.compile(
+    "ОТКАЗ|ЭЛЕМЕНТ|СТАНДАРТНАЯОБРАБОТКА|КОМАНДА|ДОПОЛНИТЕЛЬНЫЕПАРАМЕТРЫ|" +
+      "CANCEL",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
 
   @Override
   public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
@@ -75,12 +83,11 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
     Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
-      .filter(param -> paramsNames.contains(((BSLParser.ParamContext) param).IDENTIFIER().getText().toLowerCase()))
+      .map(param -> ((BSLParser.ParamContext) param).IDENTIFIER())
+      .filter(param -> paramsNames.contains(param.getText().toLowerCase()))
+      .filter(param -> !handlerParam.matcher(param.getText()).matches())
       .forEach(param ->
-        diagnosticStorage.addDiagnostic(
-          ((BSLParser.ParamContext) param).IDENTIFIER(),
-          getDiagnosticMessage(((BSLParser.ParamContext) param).IDENTIFIER().getText())
-        )
+        diagnosticStorage.addDiagnostic(param, getDiagnosticMessage(param.getText()))
       );
 
     return ctx;
