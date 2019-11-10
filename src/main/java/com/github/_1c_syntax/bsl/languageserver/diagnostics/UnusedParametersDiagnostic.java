@@ -27,11 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -51,14 +51,19 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       .collect(Collectors.toList());
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_lValue)
+      .stream()
+      .map(node -> ((BSLParser.LValueContext) node).IDENTIFIER())
+      .filter(Objects::nonNull)
       .forEach(node ->
-        paramsNames.remove(((BSLParser.LValueContext) node).IDENTIFIER().getText().toLowerCase(Locale.getDefault()))
+        paramsNames.remove((node.getText().toLowerCase(Locale.getDefault())))
       );
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_complexIdentifier)
+      .stream()
+      .map(node -> ((BSLParser.ComplexIdentifierContext) node).IDENTIFIER())
+      .filter(Objects::nonNull)
       .forEach(node ->
-        paramsNames.remove(((BSLParser.ComplexIdentifierContext) node)
-          .IDENTIFIER().getText().toLowerCase(Locale.getDefault()))
+        paramsNames.remove(node.getText().toLowerCase(Locale.getDefault()))
       );
 
 
