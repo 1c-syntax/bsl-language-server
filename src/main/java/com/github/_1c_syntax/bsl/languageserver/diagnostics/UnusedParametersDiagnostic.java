@@ -45,6 +45,12 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
+
+    if (ctx.codeBlock().getChildCount() == 0
+      || itsHandler(ctx)) {
+      return ctx;
+    }
+
     List<String> paramsNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
       .map(node -> ((BSLParser.ParamContext) node).IDENTIFIER().getText().toLowerCase(Locale.getDefault()))
@@ -78,6 +84,11 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       );
 
     return ctx;
+  }
+
+  private boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
+    //todo handlers from context
+    return false;
   }
 
 }
