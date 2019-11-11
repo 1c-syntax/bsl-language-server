@@ -100,7 +100,7 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
     }
 
     List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
-    if (listParams == null || listParams.size() > numberTimeout) {
+    if (listParams == null || listParams.size() <= numberTimeout) {
       return true;
     }
 
