@@ -28,20 +28,20 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 
 @DiagnosticMetadata(
-	type = DiagnosticType.ERROR,
-	severity = DiagnosticSeverity.MINOR,
-	scope = DiagnosticScope.BSL,
-	minutesToFix = 2,
-	tags = {
-		DiagnosticTag.ERROR
-	}
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MINOR,
+  scope = DiagnosticScope.BSL,
+  minutesToFix = 2,
+  tags = {
+    DiagnosticTag.ERROR
+  }
 )
 public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends AbstractMultilingualStringDiagnostic {
 
-	@Override
-	protected boolean check() {
-		return parser.hasNotAllDeclaredLanguages()
-			&& !parser.isParentTemplate();
-	}
+  @Override
+  protected boolean check() {
+    return parser.hasNotAllDeclaredLanguages()
+      && !parser.isParentTemplate();
+  }
 
 }

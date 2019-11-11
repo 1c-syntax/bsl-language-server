@@ -79,6 +79,31 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     checkModuleBody = (boolean) configuration.getOrDefault("checkModuleBody", checkModuleBody);
   }
 
+  private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol, Integer methodComplexity) {
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+    relatedInformation.add(RelatedInformation.create(
+      documentContext.getUri(),
+      methodSymbol.getSubNameRange(),
+      getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+    ));
+
+    List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
+      documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
+
+    secondaryLocations.stream()
+      .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
+        RelatedInformation.create(
+          documentContext.getUri(),
+          secondaryLocation.getRange(),
+          secondaryLocation.getMessage()
+        )
+      )
+      .collect(Collectors.toCollection(() -> relatedInformation));
+
+    return relatedInformation;
+  }
+
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> optionalMethodSymbol = documentContext.getMethodSymbol(ctx);
@@ -86,35 +111,12 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       Integer methodComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
-
-        List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-        relatedInformation.add(RelatedInformation.create(
-          documentContext.getUri(),
-          methodSymbol.getSubNameRange(),
-          getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
-        ));
-
-        List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
-          documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
-
-        secondaryLocations.stream()
-          .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
-            RelatedInformation.create(
-              documentContext.getUri(),
-              secondaryLocation.getRange(),
-              secondaryLocation.getMessage()
-            )
-          )
-          .collect(Collectors.toCollection(() -> relatedInformation));
-
         diagnosticStorage.addDiagnostic(
           methodSymbol.getSubNameRange(),
           getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
-          relatedInformation
+          makeRelations(methodSymbol, methodComplexity)
         );
       }
-
     });
     return ctx;
   }

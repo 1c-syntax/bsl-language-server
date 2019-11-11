@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 )
 public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern endTransaction = Pattern.compile(
+  private static final Pattern END_TRANSACTION_PATTERN = Pattern.compile(
     "ЗафиксироватьТранзакцию|CommitTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
@@ -55,6 +55,17 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
     nodeEndFile = null;
   }
 
+  private static boolean isGlobalMethodCommitTransaction(BSLParser.StatementContext ctx) {
+    if (ctx.getStart().getType() != BSLParser.IDENTIFIER) {
+      return false;
+    }
+
+    return ctx.getChildCount() > 0
+      && ctx.getChild(0).getChildCount() > 0
+      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
+      && END_TRANSACTION_PATTERN.matcher(ctx.getText()).find();
+  }
+
   @Override
   public ParseTree visitExceptCodeBlock(BSLParser.ExceptCodeBlockContext ctx) {
     nodeEndTransaction = null;
@@ -63,9 +74,8 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
 
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-    int ctxType = ctx.getStart().getType();
 
-    if (ctxType == BSLParser.TRY_KEYWORD) {
+    if (ctx.getStart().getType() == BSLParser.TRY_KEYWORD) {
       if (nodeEndTransaction != null) {
         diagnosticStorage.addDiagnostic(nodeEndTransaction);
       }
@@ -80,15 +90,8 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
     }
 
     // Ищем только в идентификаторах
-    if (ctxType == BSLParser.IDENTIFIER) {
-      boolean isGlobalMethod = ctx.getChildCount() > 0
-        && ctx.getChild(0).getChildCount() > 0
-        && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext;
-
-      if (isGlobalMethod
-        && endTransaction.matcher(ctx.getText()).find()) {
-        nodeEndTransaction = ctx;
-      }
+    if (isGlobalMethodCommitTransaction(ctx)) {
+      nodeEndTransaction = ctx;
     }
 
     // Если это код в конце модуля, ЗафиксироватьТранзакию был/есть тогда фиксируем

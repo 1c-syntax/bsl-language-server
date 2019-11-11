@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-	scope = DiagnosticScope.OS,
+  scope = DiagnosticScope.OS,
   minutesToFix = 1,
   activatedByDefault = true,
   tags = {
@@ -73,11 +73,11 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private boolean isAttachable(BSLParser.SubNameContext subNameContext) {
+  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
     return attachablePattern.matcher(subNameContext.getText()).matches();
   }
 
-  private boolean isHandler(BSLParser.SubNameContext subNameContext) {
+  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
     // TODO Тут опредлять что это обработчик
     return false;
   }
