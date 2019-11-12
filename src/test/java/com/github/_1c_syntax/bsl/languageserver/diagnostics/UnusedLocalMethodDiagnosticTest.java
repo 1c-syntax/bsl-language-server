@@ -21,29 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocalMethodDiagnostic> {
-	UnusedLocalMethodDiagnosticTest() {
-		super(UnusedLocalMethodDiagnostic.class);
-	}
+  UnusedLocalMethodDiagnosticTest() {
+    super(UnusedLocalMethodDiagnostic.class);
+  }
 
-	@Test
-	void test() {
+  @Test
+  void test() {
 
-		List<Diagnostic> diagnostics = getDiagnostics();
-		assertThat(diagnostics).hasSize(1);
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
 
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(1, 10, 1, 24)))
+    assertThat(diagnostics, true)
+      .hasRange(1, 10, 1, 24)
+    ;
 
-		;
-
-	}
+  }
 }

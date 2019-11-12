@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnostic>{
+
+class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnostic> {
 
   LineLengthDiagnosticTest() {
     super(LineLengthDiagnostic.class);
@@ -44,19 +43,19 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
 
     // then
     assertThat(diagnostics).hasSize(11);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 0, 4, 121)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 0, 5, 122)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 0, 8, 127)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 0, 11, 136)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 0, 12, 135)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(36, 0, 36, 127)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(44, 0, 44, 143)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(47, 0, 47, 139)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(49, 0, 49, 138)))
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(11, 0, 11, 136)
+      .hasRange(12, 0, 12, 135)
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
       // FIXme
-     .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 0, 40, 140)))
-     .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(52, 0, 52, 178)));
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 178);
 
   }
 
@@ -72,21 +71,19 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
 
     // then
     assertThat(diagnostics).hasSize(12);
-    assertThat(diagnostics)
-
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 0, 3, 120)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 0, 4, 121)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 0, 5, 122)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 0, 8, 127)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 0, 11, 136)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 0, 12, 135)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(36, 0, 36, 127)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(44, 0, 44, 143)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(47, 0, 47, 139)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(49, 0, 49, 138)))
-    // FIXme
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 0, 40, 140)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(52, 0, 52, 178)));
-
+    assertThat(diagnostics, true)
+      .hasRange(3, 0, 3, 120)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(11, 0, 11, 136)
+      .hasRange(12, 0, 12, 135)
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      // FIXme
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 178);
   }
 }

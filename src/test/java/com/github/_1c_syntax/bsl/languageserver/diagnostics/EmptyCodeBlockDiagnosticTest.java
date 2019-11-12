@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlockDiagnostic> {
 
@@ -42,12 +42,13 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(5, 1, 5, 6));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(17, 2, 17, 18));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(24, 4, 24, 21));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(35, 0, 35, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(37, 0, 37, 21));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(38, 4, 38, 9));
+    assertThat(diagnostics, true)
+      .hasRange(5, 1, 5, 6)
+      .hasRange(17, 2, 17, 18)
+      .hasRange(24, 4, 24, 21)
+      .hasRange(35, 0, 35, 16)
+      .hasRange(37, 0, 37, 21)
+      .hasRange(38, 4, 38, 9);
   }
 
   @Test
@@ -69,9 +70,9 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 4, 24, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(37, 0, 37, 21)));
+    assertThat(diagnostics, true)
+      .hasRange(24, 4, 24, 21)
+      .hasRange(37, 0, 37, 21);
   }
 
   @Test

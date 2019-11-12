@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class MethodSizeDiagnosticTest extends AbstractDiagnosticTest<MethodSizeDiagnostic>{
+
+class MethodSizeDiagnosticTest extends AbstractDiagnosticTest<MethodSizeDiagnostic> {
 
   MethodSizeDiagnosticTest() {
     super(MethodSizeDiagnostic.class);
@@ -44,8 +43,9 @@ class MethodSizeDiagnosticTest extends AbstractDiagnosticTest<MethodSizeDiagnost
 
     // then
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(6, 10, 6, 28));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(419, 8, 419, 24));
+    assertThat(diagnostics, true)
+      .hasRange(6, 10, 6, 28)
+      .hasRange(419, 8, 419, 24);
   }
 
   @Test

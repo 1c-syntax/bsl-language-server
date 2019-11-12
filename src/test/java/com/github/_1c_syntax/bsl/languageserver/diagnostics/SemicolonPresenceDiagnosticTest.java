@@ -29,7 +29,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPresenceDiagnostic> {
 
@@ -42,8 +43,9 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 9));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(3, 6, 3, 7));
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 9)
+      .hasRange(3, 6, 3, 7);
 
   }
 

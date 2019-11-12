@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -62,23 +61,23 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
   void testConfigure() {
 
     List<Diagnostic> diagnostics;
-		Map<String, Object> configuration;
+    Map<String, Object> configuration;
 
-		// Проверяем количество срабатываний без изменения параметров
-		// when
-		configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
-		diagnosticInstance.configure(configuration);
-		diagnostics = getDiagnostics();
+    // Проверяем количество срабатываний без изменения параметров
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics).hasSize(9);
 
     // Изменяем ключевые слова исключения для поиска IP адресов
-		// when
-		configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
-		configuration.put("searchWordsExclusion", "Version");
-		diagnosticInstance.configure(configuration);
-		diagnostics = getDiagnostics();
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration.put("searchWordsExclusion", "Version");
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics).hasSize(13);

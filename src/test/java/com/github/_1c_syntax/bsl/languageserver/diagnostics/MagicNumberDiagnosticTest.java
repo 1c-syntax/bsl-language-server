@@ -21,19 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagnostic> {
 
-  MagicNumberDiagnosticTest() { super(MagicNumberDiagnostic.class); }
+class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagnostic> {
+
+  MagicNumberDiagnosticTest() {
+    super(MagicNumberDiagnostic.class);
+  }
 
   @Test
   void runTest() {
@@ -42,14 +43,14 @@ public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumbe
 
     // then
     assertThat(diagnostics).hasSize(7);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 18, 3, 20)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 23, 3, 25)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(7, 31, 7, 33)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 20, 11, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 21, 20, 23)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 24, 23, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 34, 27, 35)));
+    assertThat(diagnostics, true)
+      .hasRange(3, 18, 3, 20)
+      .hasRange(3, 23, 3, 25)
+      .hasRange(7, 31, 7, 33)
+      .hasRange(11, 20, 11, 21)
+      .hasRange(20, 21, 20, 23)
+      .hasRange(23, 24, 23, 26)
+      .hasRange(27, 34, 27, 35);
   }
 
   @Test
@@ -64,10 +65,10 @@ public class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumbe
 
     // then
     assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(7, 31, 7, 33)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 20, 11, 21)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 21, 20, 23)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 24, 23, 26)));
+    assertThat(diagnostics, true)
+      .hasRange(7, 31, 7, 33)
+      .hasRange(11, 20, 11, 21)
+      .hasRange(20, 21, 20, 23)
+      .hasRange(23, 24, 23, 26);
   }
 }

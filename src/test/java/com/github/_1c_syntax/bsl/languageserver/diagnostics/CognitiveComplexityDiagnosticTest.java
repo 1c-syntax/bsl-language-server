@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<CognitiveComplexityDiagnostic> {
 
@@ -44,7 +43,8 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
 
     // then
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 8, 0, 32));
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 32);
     assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(35);
   }
 

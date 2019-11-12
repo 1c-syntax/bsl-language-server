@@ -21,29 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class DeprecatedFindDiagnosticTest extends AbstractDiagnosticTest<DeprecatedFindDiagnostic> {
+class DeprecatedFindDiagnosticTest extends AbstractDiagnosticTest<DeprecatedFindDiagnostic> {
 
-  DeprecatedFindDiagnosticTest() { super(DeprecatedFindDiagnostic.class); }
+  DeprecatedFindDiagnosticTest() {
+    super(DeprecatedFindDiagnostic.class);
+  }
 
   @Test
-  void runTest()
-  {
+  void runTest() {
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 8, 3, 13));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(9, 3, 9, 7));
+    assertThat(diagnostics, true)
+      .hasRange(3, 8, 3, 13)
+      .hasRange(9, 3, 9, 7);
 
   }
 }

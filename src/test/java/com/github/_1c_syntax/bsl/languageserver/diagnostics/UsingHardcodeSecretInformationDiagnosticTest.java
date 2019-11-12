@@ -21,71 +21,70 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodeSecretInformationDiagnostic> {
-	UsingHardcodeSecretInformationDiagnosticTest() {
-		super(UsingHardcodeSecretInformationDiagnostic.class);
-	}
+  UsingHardcodeSecretInformationDiagnosticTest() {
+    super(UsingHardcodeSecretInformationDiagnostic.class);
+  }
 
-	@Test
-	void test() {
+  @Test
+  void test() {
 
-		// when
-		List<Diagnostic> diagnostics = getDiagnostics();
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
 
-		// then
-		assertThat(diagnostics).hasSize(12);
+    // then
+    assertThat(diagnostics).hasSize(12);
 
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 4, 8, 49)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 4, 12, 80)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(16, 4, 16, 23)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(17, 4, 17, 23)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 35)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(32, 4, 32, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(33, 4, 33, 31)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(44, 4, 44, 82)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(45, 4, 45, 79)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(48, 4, 48, 22)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(49, 4, 49, 21)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(50, 4, 50, 21)))
-		;
+    assertThat(diagnostics, true)
+      .hasRange(8, 4, 8, 49)
+      .hasRange(12, 4, 12, 80)
+      .hasRange(16, 4, 16, 23)
+      .hasRange(17, 4, 17, 23)
+      .hasRange(27, 4, 27, 35)
+      .hasRange(32, 4, 32, 27)
+      .hasRange(33, 4, 33, 31)
+      .hasRange(44, 4, 44, 82)
+      .hasRange(45, 4, 45, 79)
+      .hasRange(48, 4, 48, 22)
+      .hasRange(49, 4, 49, 21)
+      .hasRange(50, 4, 50, 21)
+    ;
 
-	}
+  }
 
-	@Test
-	void testConfigure() {
+  @Test
+  void testConfigure() {
 
-		List<Diagnostic> diagnostics;
-		Map<String, Object> configuration;
+    List<Diagnostic> diagnostics;
+    Map<String, Object> configuration;
 
-		// без изменения параметра
-		// when
-		configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
-		diagnosticInstance.configure(configuration);
-		diagnostics = getDiagnostics();
+    // без изменения параметра
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
 
-		// then
-		assertThat(diagnostics).hasSize(12);
+    // then
+    assertThat(diagnostics).hasSize(12);
 
-		// с изменением параметра searchWords
-		// when
-		configuration.put("searchWords", "Password");
-		diagnosticInstance.configure(configuration);
-		diagnostics = getDiagnostics();
+    // с изменением параметра searchWords
+    // when
+    configuration.put("searchWords", "Password");
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
 
-		// then
-		assertThat(diagnostics).hasSize(4);
+    // then
+    assertThat(diagnostics).hasSize(4);
 
-	}
+  }
 
 }

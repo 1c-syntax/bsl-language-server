@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<MissingTemporaryFileDeletionDiagnostic> {
   MissingTemporaryFileDeletionDiagnosticTest() {
@@ -42,11 +41,10 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 29, 6, 62)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 30, 19, 63)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(25, 30, 25, 63)))
+    assertThat(diagnostics, true)
+      .hasRange(6, 29, 6, 62)
+      .hasRange(19, 30, 19, 63)
+      .hasRange(25, 30, 25, 63)
     ;
 
   }
