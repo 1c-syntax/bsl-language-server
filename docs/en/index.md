@@ -136,8 +136,21 @@ Configuration file example, setting:
 ## Special thanks
 
 Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) to the project, to all who participated in the discussions, who helped with the testing.
+
 You are awesome!
 
-Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
+Thanks to companies supporting open source projects, and especially to those who supported us: 
 
-This product is supported by [YourKit](https://www.yourkit.com), the developer of tools for monitoring and profiling Java and .NET applications.
+---
+
+[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
+
+[YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license `YourKit Java Profiler` for `BSL Language Server` to improve its performance. 
+
+---
+
+[![JetBrains](../../images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
+
+[JetBrains](https://www.jetbrains.com) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
+
+`IntelliJ IDEA Ultimate` is one of the best tools in its class.
