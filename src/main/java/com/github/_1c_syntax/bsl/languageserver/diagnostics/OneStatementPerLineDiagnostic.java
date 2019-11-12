@@ -51,7 +51,7 @@ import java.util.regex.Pattern;
   }
 )
 public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
-  private final static Pattern NEW_LINE_PATTERN = Pattern.compile(
+  private static final Pattern NEW_LINE_PATTERN = Pattern.compile(
     "^(\\s+?)[^\\s]",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private int previousLineNumber;

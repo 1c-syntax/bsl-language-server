@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +33,14 @@ import java.util.regex.Pattern;
 
 public final class MultilingualStringAnalyser {
 
-  private final static Byte VALID_LANG_PARTS = 2;
-  private final static String NSTR_METHOD_NAME = "НСтр|NStr";
-  private final static String TEMPLATE_METHOD_NAME = "СтрШаблон|StrTemplate";
-  private final static Pattern nStrMethodName = Pattern.compile(
+  private static final Byte VALID_LANG_PARTS = 2;
+  private static final String NSTR_METHOD_NAME = "НСтр|NStr";
+  private static final String TEMPLATE_METHOD_NAME = "СтрШаблон|StrTemplate";
+  private static final Pattern nStrMethodName = Pattern.compile(
     NSTR_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
-  private final static Pattern templateMethodName = Pattern.compile(
+  private static final Pattern TEMPLATE_METHOD_NAME_PATTERN = Pattern.compile(
     TEMPLATE_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
@@ -56,22 +56,6 @@ public final class MultilingualStringAnalyser {
 
     this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
 
-  }
-
-  public void parse(BSLParser.GlobalMethodCallContext ctx) throws IllegalArgumentException {
-    expandedMultilingualString.clear();
-    missingLanguages.clear();
-    isParentTemplate = false;
-
-    if (isNotMultilingualString(ctx)) {
-      throw new IllegalArgumentException("Method not multilingual string");
-    }
-
-    globalMethodCallContext = ctx;
-    isParentTemplate = hasTemplateInParents(ctx);
-    variableName = getVariableName(ctx);
-    expandMultilingualString();
-    checkDeclaredLanguages();
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
@@ -93,23 +77,37 @@ public final class MultilingualStringAnalyser {
   }
 
   private static boolean isTemplate(BSLParser.GlobalMethodCallContext parent) {
-    return templateMethodName.matcher(parent.methodName().getText()).find();
+    return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).find();
   }
 
-  private String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
     BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
       Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
-    if (assignment == null) {
-      return null;
+    if (assignment != null) {
+      BSLParser.LValueContext lValue = assignment.lValue();
+      if (lValue != null) {
+        return lValue.getText();
+      }
     }
 
-    BSLParser.LValueContext lValue = assignment.lValue();
-    if (lValue == null) {
-      return null;
+    return null;
+  }
+
+  public void parse(BSLParser.GlobalMethodCallContext ctx) {
+    expandedMultilingualString.clear();
+    missingLanguages.clear();
+    isParentTemplate = false;
+
+    if (isNotMultilingualString(ctx)) {
+      throw new IllegalArgumentException("Method not multilingual string");
     }
 
-    return lValue.getText();
+    globalMethodCallContext = ctx;
+    isParentTemplate = hasTemplateInParents(ctx);
+    variableName = getVariableName(ctx);
+    expandMultilingualString();
+    checkDeclaredLanguages();
   }
 
   private void expandMultilingualString() {
@@ -132,7 +130,7 @@ public final class MultilingualStringAnalyser {
       return;
     }
 
-    for(String lang : expectedLanguages) {
+    for (String lang : expectedLanguages) {
       if (!expandedMultilingualString.containsKey(lang)) {
         missingLanguages.add(lang);
       }
@@ -164,9 +162,10 @@ public final class MultilingualStringAnalyser {
 
     return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_globalMethodCall)
       .stream()
-      .filter(n -> ((BSLParser.GlobalMethodCallContext) n).getStart().getLine() > globalMethodCallContext.getStart().getLine())
-      .filter(n -> isTemplate((BSLParser.GlobalMethodCallContext) n))
-      .map(n -> ((BSLParser.GlobalMethodCallContext) n).doCall().callParamList())
+      .filter(node ->
+        ((BSLParser.GlobalMethodCallContext) node).getStart().getLine() > globalMethodCallContext.getStart().getLine())
+      .filter(node -> isTemplate((BSLParser.GlobalMethodCallContext) node))
+      .map(node -> ((BSLParser.GlobalMethodCallContext) node).doCall().callParamList())
       .filter(Objects::nonNull)
       .map(BSLParser.CallParamListContext::callParam)
       .filter(cp -> !cp.isEmpty())

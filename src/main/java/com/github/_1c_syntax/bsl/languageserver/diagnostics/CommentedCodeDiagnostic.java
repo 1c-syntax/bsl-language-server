@@ -54,6 +54,8 @@ import java.util.stream.Collectors;
 public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
+  private static final String COMMENT_START = "//";
+  private static final int MINIMAL_TOKEN_COUNT = 2;
 
   @DiagnosticParameter(
     type = Float.class,
@@ -180,7 +182,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
     final List<Token> tokens = tokenizer.getTokens();
 
     // Если меньше двух токенов нет смысла анализировать - это код
-    if (tokens.size() >= 2) {
+    if (tokens.size() >= MINIMAL_TOKEN_COUNT) {
 
       List<Integer> tokenTypes = tokens.stream()
         .map(Token::getType)
@@ -199,10 +201,9 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
 }
 
   private static String uncomment(String comment) {
-    if (comment.startsWith("//")) {
-      return uncomment(comment.substring(2));
+    if (comment.startsWith(COMMENT_START)) {
+      return uncomment(comment.substring(COMMENT_START.length()));
     }
     return comment;
   }
-
 }

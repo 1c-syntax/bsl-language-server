@@ -64,6 +64,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   // Разрешить несколько запятых подряд
   private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false;
 
+  private static final int INDEX_WORD_LEFT = 0;
+  private static final int INDEX_WORD_RIGHT = 1;
+  private static final int INDEX_WORD_LEFT_RIGHT = 2;
+
   private final String[] sampleMessage = new String[3];
 
   @DiagnosticParameter(
@@ -106,95 +110,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private Pattern patternLr = compilePattern(listForCheckLeftAndRight);
   private Pattern patternNotSpace = compilePattern("\\S+");
 
-  @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
-    sampleMessage[0] = getResourceString("wordLeft");         // "Слева"
-    sampleMessage[1] = getResourceString("wordRight");        // "Справа"
-    sampleMessage[2] = getResourceString("wordLeftAndRight"); // "Слева и справа"
-
-    diagnosticStorage.clearDiagnostics();
-
-    List<Token> tokens = documentContext.getTokens();
-    List<Token> foundTokens;
-
-    // проверяем слева
-    if (patternL != null) {
-      foundTokens = findTokensByPattern(tokens, patternL);
-
-      foundTokens.stream()
-        .filter((Token t) -> noSpaceLeft(tokens, t))
-        .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(0, t.getText()))
-        );
-    }
-
-    // проверяем справа
-    if (patternR != null) {
-      foundTokens = findTokensByPattern(tokens, patternR);
-
-      foundTokens.stream()
-        .filter((Token t) -> noSpaceRight(tokens, t))
-        .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(1, t.getText()))
-        );
-    }
-
-    // проверяем слева и справа
-    if (patternLr != null) {
-      foundTokens = findTokensByPattern(tokens, patternLr);
-
-      foundTokens.stream()
-        .filter((Token t) -> noSpaceLeft(tokens, t) && !noSpaceRight(tokens, t))
-        .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(0, t.getText()))
-        );
-
-      foundTokens.stream()
-        .filter((Token t) -> !noSpaceLeft(tokens, t) && noSpaceRight(tokens, t))
-        .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(1, t.getText()))
-        );
-
-      foundTokens.stream()
-        .filter((Token t) -> noSpaceLeft(tokens, t) && noSpaceRight(tokens, t))
-        .forEach((Token t) ->
-          diagnosticStorage.addDiagnostic(t, getErrorMessage(2, t.getText()))
-        );
-
-    }
-
-    return diagnosticStorage.getDiagnostics();
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
-    String listLParam =
-      (String) configuration.getOrDefault("listForCheckLeft", DEFAULT_LIST_FOR_CHECK_LEFT);
-    listForCheckLeft = getRegularString(listLParam);
-    patternL = compilePattern(listForCheckLeft);
-
-    String listRParam =
-      (String) configuration.getOrDefault("listForCheckRight", DEFAULT_LIST_FOR_CHECK_RIGHT);
-    listForCheckRight = getRegularString(listRParam);
-    patternR = compilePattern(listForCheckRight);
-
-    String listLRParam =
-      (String) configuration.getOrDefault("listForCheckLeftAndRight", DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
-    listForCheckLeftAndRight = getRegularString(listLRParam);
-    patternLr = compilePattern(listForCheckLeftAndRight);
-
-    checkSpaceToRightOfUnary =
-      (boolean) configuration.getOrDefault("checkSpaceToRightOfUnary", checkSpaceToRightOfUnary);
-
-    allowMultipleCommas =
-      (boolean) configuration.getOrDefault("allowMultipleCommas", allowMultipleCommas);
-  }
-
   private static List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
     return tokens
       .parallelStream()
@@ -233,6 +148,95 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
+  @Override
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+
+    sampleMessage[INDEX_WORD_LEFT] = getResourceString("wordLeft");               // "Слева"
+    sampleMessage[INDEX_WORD_RIGHT] = getResourceString("wordRight");             // "Справа"
+    sampleMessage[INDEX_WORD_LEFT_RIGHT] = getResourceString("wordLeftAndRight"); // "Слева и справа"
+
+    diagnosticStorage.clearDiagnostics();
+
+    List<Token> tokens = documentContext.getTokens();
+    List<Token> foundTokens;
+
+    // проверяем слева
+    if (patternL != null) {
+      foundTokens = findTokensByPattern(tokens, patternL);
+
+      foundTokens.stream()
+        .filter((Token t) -> noSpaceLeft(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(INDEX_WORD_LEFT, t.getText()))
+        );
+    }
+
+    // проверяем справа
+    if (patternR != null) {
+      foundTokens = findTokensByPattern(tokens, patternR);
+
+      foundTokens.stream()
+        .filter((Token t) -> noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(INDEX_WORD_RIGHT, t.getText()))
+        );
+    }
+
+    // проверяем слева и справа
+    if (patternLr != null) {
+      foundTokens = findTokensByPattern(tokens, patternLr);
+
+      foundTokens.stream()
+        .filter((Token t) -> noSpaceLeft(tokens, t) && !noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(INDEX_WORD_LEFT, t.getText()))
+        );
+
+      foundTokens.stream()
+        .filter((Token t) -> !noSpaceLeft(tokens, t) && noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(INDEX_WORD_RIGHT, t.getText()))
+        );
+
+      foundTokens.stream()
+        .filter((Token t) -> noSpaceLeft(tokens, t) && noSpaceRight(tokens, t))
+        .forEach((Token t) ->
+          diagnosticStorage.addDiagnostic(t, getErrorMessage(INDEX_WORD_LEFT_RIGHT, t.getText()))
+        );
+
+    }
+
+    return diagnosticStorage.getDiagnostics();
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+
+    String listLParam =
+      (String) configuration.getOrDefault("listForCheckLeft", DEFAULT_LIST_FOR_CHECK_LEFT);
+    listForCheckLeft = getRegularString(listLParam);
+    patternL = compilePattern(listForCheckLeft);
+
+    String listRParam =
+      (String) configuration.getOrDefault("listForCheckRight", DEFAULT_LIST_FOR_CHECK_RIGHT);
+    listForCheckRight = getRegularString(listRParam);
+    patternR = compilePattern(listForCheckRight);
+
+    String listLRParam =
+      (String) configuration.getOrDefault("listForCheckLeftAndRight", DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
+    listForCheckLeftAndRight = getRegularString(listLRParam);
+    patternLr = compilePattern(listForCheckLeftAndRight);
+
+    checkSpaceToRightOfUnary =
+      (boolean) configuration.getOrDefault("checkSpaceToRightOfUnary", checkSpaceToRightOfUnary);
+
+    allowMultipleCommas =
+      (boolean) configuration.getOrDefault("allowMultipleCommas", allowMultipleCommas);
+  }
+
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
 
     Token previousToken = tokens.get(t.getTokenIndex() - 1);
@@ -251,16 +255,15 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     Token nextToken;
     if (tokens.size() > t.getTokenIndex() + 1) {
       nextToken = tokens.get(t.getTokenIndex() + 1);
-    } else {
-      return false;
-    }
 
-    // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
-    if (Boolean.TRUE.equals(allowMultipleCommas)
-      && (t.getType() == BSLLexer.COMMA && nextToken.getType() == BSLLexer.COMMA)) {
-      return false;
+      // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
+      if (!Boolean.TRUE.equals(allowMultipleCommas)
+        || t.getType() != BSLLexer.COMMA
+        || nextToken.getType() != BSLLexer.COMMA) {
+        return patternNotSpace.matcher(nextToken.getText()).matches();
+      }
     }
-    return patternNotSpace.matcher(nextToken.getText()).matches();
+    return false;
   }
 
   private boolean isUnaryChar(List<Token> tokens, Token t) {

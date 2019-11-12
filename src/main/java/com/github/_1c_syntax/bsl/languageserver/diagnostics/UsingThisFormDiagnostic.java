@@ -84,22 +84,20 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     if (isMethodInFormModule()) {
       return super.visitFile(ctx);
     }
-
     return ctx;
   }
 
   private boolean isMethodInFormModule() {
 
     // todo after metadata test mock
-//    ModuleType type = documentContext.getServerContext().getConfiguration()
-//      .getModuleType(new File(documentContext.getUri()).toURI());
-//    return type == ModuleType.FormModule;
+    // todo    ModuleType type = documentContext.getServerContext().getConfiguration()
+    // todo      .getModuleType(new File(documentContext.getUri()).toURI());
+    // todo    return type == ModuleType.FormModule;
 
     return this.documentContext
       .getTokens()
       .stream()
       .anyMatch((Token token) -> ANNOTATION.indexOf(token.getType()) >= 0);
-
   }
 
   @Override
@@ -107,7 +105,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     if (needCheck(ctx.procDeclaration())) {
       return super.visitProcedure(ctx);
     }
-
     return ctx;
   }
 
@@ -116,7 +113,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     if (needCheck(ctx.funcDeclaration())) {
       return super.visitFunction(ctx);
     }
-
     return ctx;
   }
 
@@ -135,17 +131,15 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   private static boolean hasThisForm(List<BSLParser.ParamContext> params) {
     for (BSLParser.ParamContext param : params) {
-      if (pattern.matcher(param.getText()).find()) {
+      if(pattern.matcher(param.getText()).find()) {
         return true;
       }
     }
-
     return false;
   }
 
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
-
     if (ctx.globalMethodCall() != null
       && ctx.getStart() == ctx.globalMethodCall().getStart()) {
       return super.visitCallStatement(ctx);

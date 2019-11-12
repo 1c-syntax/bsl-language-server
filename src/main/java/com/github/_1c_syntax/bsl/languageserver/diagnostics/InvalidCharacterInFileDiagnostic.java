@@ -70,7 +70,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    this.documentContext
+    documentContext
       .getTokens()
       .stream()
       .filter((Token token) -> ILLEGAL_DASH_PATTERN.matcher(token.getText()).find())
@@ -78,7 +78,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
         diagnosticStorage.addDiagnostic(token,
           getResourceString("diagnosticMessageDash")));
 
-    this.documentContext
+    documentContext
       .getTokens()
       .stream()
       .filter((Token token) -> ILLEGAL_SPACE_PATTERN.matcher(token.getText()).find())
@@ -100,7 +100,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
 
     diagnostics.stream()
       .filter(diagnostic -> diagnostic.getMessage().equals(getResourceString("diagnosticMessageSpace")))
-      .forEach(diagnostic -> {
+      .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
           ILLEGAL_SPACE_PATTERN.matcher(documentContext.getText(range)).replaceAll(" "));
@@ -110,7 +110,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
 
     diagnostics.stream()
       .filter(diagnostic -> diagnostic.getMessage().equals(getResourceString("diagnosticMessageDash")))
-      .forEach(diagnostic -> {
+      .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
           ILLEGAL_DASH_PATTERN.matcher(documentContext.getText(range)).replaceAll("-"));
