@@ -13,4 +13,4 @@
   - [Описание типов и важности диагностик](DiagnosticTypeAndSeverity.md)
   - [Тэги диагностик](DiagnosticTag.md)
   - [Добавление параметров диагностике](DiagnostcAddSettings.md)
-  - [Добавление быстрых исправлений диагностике](DiagnosticQuickFix.md)
+  - [Добавление быстрых исправлений диагностик](DiagnosticQuickFix.md)

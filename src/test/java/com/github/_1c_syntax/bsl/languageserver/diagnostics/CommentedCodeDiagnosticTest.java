@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -67,5 +69,17 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
 
     assertThat(diagnostics).hasSize(0);
 
+  }
+
+  @Test
+  void testQuickFixRemoveCode(){
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0));
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(fix -> fix.getEdit().getChanges().size() == 1)
+      .matches(fix -> fix.getEdit().getChanges().get(TestUtils.FAKE_DOCUMENT_URI).get(0).getNewText().equals(""));
   }
 }
