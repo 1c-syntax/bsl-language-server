@@ -26,12 +26,16 @@
 ### Класс реализации диагностики
 
 В соответствии с правилами, каталоге `src/main/java` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics` создадим файл `SemicolonPresenceDiagnostic.java` класса диагностики.  
-В файле создаем одноименный класс, унаследованный от класса `AbstractVisitorDiagnostic`.  В результате имеем следующее
+В файле создаем одноименный класс, унаследованный от класса `AbstractVisitorDiagnostic`. Обратите внимание, что для каждого класса диагностики необходимо создать конструктор. В результате имеем следующее
 
 ```java
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {}
+public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
+  public SemicolonPresenceDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+}
 ```
 
 Каждая диагностика должна иметь аннотацию класса `@DiagnosticMetadata`, содержащую метаданные диагностики. Подробная информация об аннотациях в [статье][DiagnosticStructure].  
@@ -48,7 +52,11 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
     DiagnosticTag.STANDARD
   }
 )
-public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {}
+public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
+  public SemicolonPresenceDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+}
 ```
 
 ### Ресурсы класса
@@ -113,7 +121,7 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
 
 * Для получения диагностик по фикстуре используется метод `getDiagnostics()` реализованный в абстрактном классе `AbstractDiagnosticTest`. Он возвращает список сработавших диагностик текущего типа.
 * Для проверки количество срабатываний необходимо проверить размер массива утверждением `hasSize`, куда передать количество ожидаемых элементов.
-* Для проверки каждого обнаруженного элемента, необходимо сравнить найденный диапазон символов с ожидаемым, используя возможности класса `RangeHelper`.
+* Для проверки каждого обнаруженного элемента, необходимо сравнить найденный диапазон символов с ожидаемым.
 
 Полученный класс теста выглядит следующим образом
 
@@ -129,8 +137,9 @@ class SemicolonPresenceDiagnosticTest extends AbstractDiagnosticTest<SemicolonPr
     List<Diagnostic> diagnostics = getDiagnostics(); // Получение диагностик
 
     assertThat(diagnostics).hasSize(2); // Проверка количества
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 9)); // Проверка конкретного случая
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(3, 6, 3, 7)); // Проверка конкретного случая
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 9)  // Проверка конкретного случая
+      .hasRange(3, 6, 3, 7); // Проверка конкретного случая
   }
 }
 ```
@@ -154,6 +163,9 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
   }
 )
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
+    public SemicolonPresenceDiagnostic(DiagnosticInfo info) {
+      super(info);
+    }
 
     @Override
     public ParseTree visitStatement(BSLParser.StatementContext ctx) { // выбранный визитер

@@ -149,7 +149,7 @@ Thanks to companies supporting open source projects, and especially to those who
 
 ---
 
-[![JetBrains](../../images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
+[![JetBrains](../assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
 
 [JetBrains](https://www.jetbrains.com) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
 
