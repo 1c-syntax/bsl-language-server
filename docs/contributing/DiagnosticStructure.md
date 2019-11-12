@@ -278,7 +278,7 @@ class TemplateDiagnosticTest extends AbstractDiagnosticTest<TemplateDiagnostic> 
     @Test
     void testConfigure() {
         // получение настроек диагностики по умолчанию
-        Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+        Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
 
         configuration.put("templateParem", "newValue");     // установка параметру "templateParem" значения "newValue"
         diagnosticInstance.configure(configuration);        // применение настроек
