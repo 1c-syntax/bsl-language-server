@@ -21,13 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class NestedTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<NestedTernaryOperatorDiagnostic> {
 
@@ -40,10 +39,11 @@ class NestedTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<NestedT
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(2, 13, 8, 14));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(13, 5, 13, 50));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(13, 73, 13, 104));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(22, 12, 22, 71));
+    assertThat(diagnostics, true)
+      .hasRange(2, 13, 8, 14)
+      .hasRange(13, 5, 13, 50)
+      .hasRange(13, 73, 13, 104)
+      .hasRange(22, 12, 22, 71);
 
   }
 }

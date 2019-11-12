@@ -29,7 +29,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatementDiagnostic> {
 
@@ -42,8 +43,9 @@ class EmptyStatementDiagnosticTest extends AbstractDiagnosticTest<EmptyStatement
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(1, 18, 1, 19));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(2, 8, 2, 9));
+    assertThat(diagnostics, true)
+      .hasRange(1, 18, 1, 19)
+      .hasRange(2, 8, 2, 9);
 
   }
 

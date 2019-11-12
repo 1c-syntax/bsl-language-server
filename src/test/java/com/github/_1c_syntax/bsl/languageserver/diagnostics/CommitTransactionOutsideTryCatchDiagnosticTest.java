@@ -21,32 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class CommitTransactionOutsideTryCatchDiagnosticTest extends AbstractDiagnosticTest<CommitTransactionOutsideTryCatchDiagnostic> {
-	CommitTransactionOutsideTryCatchDiagnosticTest() {
-		super(CommitTransactionOutsideTryCatchDiagnostic.class);
-	}
 
-	@Test
-	void test() {
-		List<Diagnostic> diagnostics = getDiagnostics();
+class CommitTransactionOutsideTryCatchDiagnosticTest extends AbstractDiagnosticTest<CommitTransactionOutsideTryCatchDiagnostic> {
+  CommitTransactionOutsideTryCatchDiagnosticTest() {
+    super(CommitTransactionOutsideTryCatchDiagnostic.class);
+  }
 
-		assertThat(diagnostics).hasSize(8);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(36, 4, 36, 30)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(45, 12, 45, 38)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(57, 8, 57, 34)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(66, 4, 66, 30)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(74, 8, 74, 34)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(86, 8, 86, 34)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(98, 8, 98, 34)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(106, 0, 106, 26)));
-	}
+  @Test
+  void test() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics, true)
+      .hasRange(36, 4, 36, 30)
+      .hasRange(45, 12, 45, 38)
+      .hasRange(57, 8, 57, 34)
+      .hasRange(66, 4, 66, 30)
+      .hasRange(74, 8, 74, 34)
+      .hasRange(86, 8, 86, 34)
+      .hasRange(98, 8, 98, 34)
+      .hasRange(106, 0, 106, 26);
+  }
 }

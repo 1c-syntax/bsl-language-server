@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<MissingCodeTryCatchExDiagnostic> {
 
@@ -43,10 +42,10 @@ class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<Missing
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 4, 23, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(32, 4, 32, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(50, 8, 50, 18)));
+    assertThat(diagnostics, true)
+      .hasRange(23, 4, 23, 14)
+      .hasRange(32, 4, 32, 14)
+      .hasRange(50, 8, 50, 18);
 
   }
 
@@ -60,9 +59,9 @@ class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<Missing
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 4, 23, 14)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(50, 8, 50, 18)));
+    assertThat(diagnostics, true)
+      .hasRange(23, 4, 23, 14)
+      .hasRange(50, 8, 50, 18);
 
   }
 }

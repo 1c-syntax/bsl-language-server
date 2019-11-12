@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class MultilingualStringUsingWithTemplateDiagnosticTest
+
+class MultilingualStringUsingWithTemplateDiagnosticTest
   extends AbstractDiagnosticTest<MultilingualStringUsingWithTemplateDiagnostic> {
 
   MultilingualStringUsingWithTemplateDiagnosticTest() {
@@ -42,9 +41,9 @@ public class MultilingualStringUsingWithTemplateDiagnosticTest
   void testOnlyRU() {
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 38, 19, 89)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 31, 24, 82)));
+    assertThat(diagnostics, true)
+      .hasRange(19, 38, 19, 89)
+      .hasRange(24, 31, 24, 82);
   }
 
   @Test
@@ -55,10 +54,10 @@ public class MultilingualStringUsingWithTemplateDiagnosticTest
 
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(18, 38, 18, 89)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 38, 19, 89)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 28, 21, 79)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(24, 31, 24, 82)));
+    assertThat(diagnostics, true)
+      .hasRange(18, 38, 18, 89)
+      .hasRange(19, 38, 19, 89)
+      .hasRange(21, 28, 21, 79)
+      .hasRange(24, 31, 24, 82);
   }
 }

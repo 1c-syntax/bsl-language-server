@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class NumberOfOptionalParamsDiagnosticTest extends AbstractDiagnosticTest<NumberOfOptionalParamsDiagnostic>{
+
+class NumberOfOptionalParamsDiagnosticTest extends AbstractDiagnosticTest<NumberOfOptionalParamsDiagnostic> {
 
   NumberOfOptionalParamsDiagnosticTest() {
     super(NumberOfOptionalParamsDiagnostic.class);
@@ -44,8 +43,8 @@ class NumberOfOptionalParamsDiagnosticTest extends AbstractDiagnosticTest<Number
 
     // then
     assertThat(diagnostics).hasSize(1);
-
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(8, 45, 8, 101));
+    assertThat(diagnostics, true)
+      .hasRange(8, 45, 8, 101);
   }
 
   @Test

@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class SeveralCompilerDirectivesDiagnosticTest extends AbstractDiagnosticTest<SeveralCompilerDirectivesDiagnostic> {
 
@@ -40,11 +40,11 @@ class SeveralCompilerDirectivesDiagnosticTest extends AbstractDiagnosticTest<Sev
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(15, 6, 15, 30)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 6, 19, 30)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(25, 6, 25, 30)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 10, 40, 34)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(49, 10, 49, 34)));
+    assertThat(diagnostics, true)
+      .hasRange(15, 6, 15, 30)
+      .hasRange(19, 6, 19, 30)
+      .hasRange(25, 6, 25, 30)
+      .hasRange(40, 10, 40, 34)
+      .hasRange(49, 10, 49, 34);
   }
 }

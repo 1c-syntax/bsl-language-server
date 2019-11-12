@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class NonExportMethodsInApiRegionDiagnosticTest extends AbstractDiagnosticTest<NonExportMethodsInApiRegionDiagnostic> {
 
@@ -43,11 +43,11 @@ class NonExportMethodsInApiRegionDiagnosticTest extends AbstractDiagnosticTest<N
 
     // then
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics)
+    assertThat(diagnostics, true)
       // на +
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 10, 8, 16)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 10, 20, 13)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(25, 14, 25, 27)))
+      .hasRange(8, 10, 8, 16)
+      .hasRange(20, 10, 20, 13)
+      .hasRange(25, 14, 25, 27)
     ;
   }
 }

@@ -21,32 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class UnaryPlusInConcatenationDiagnosticTest extends AbstractDiagnosticTest<UnaryPlusInConcatenationDiagnostic> {
-    UnaryPlusInConcatenationDiagnosticTest() {
-        super(UnaryPlusInConcatenationDiagnostic.class);
-    }
+  UnaryPlusInConcatenationDiagnosticTest() {
+    super(UnaryPlusInConcatenationDiagnostic.class);
+  }
 
-    @Test
-    void test() {
+  @Test
+  void test() {
 
-        // when
-        List<Diagnostic> diagnostics = getDiagnostics();
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
 
-        //then
-        assertThat(diagnostics).hasSize(3);
-        assertThat(diagnostics)
-          // на +
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 20, 5, 21)))
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 33, 8, 34)))
-          .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 21, 23, 22)));
+    //then
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      // на +
+      .hasRange(5, 20, 5, 21)
+      .hasRange(8, 33, 8, 34)
+      .hasRange(23, 21, 23, 22);
 
-    }
+  }
 }
