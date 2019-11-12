@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
 public final class MultilingualStringAnalyser {
 
   private static final Byte VALID_LANG_PARTS = 2;
-  private static final String NSTR_METHOD_NAME = "НСтр|NStr";
-  private static final String TEMPLATE_METHOD_NAME = "СтрШаблон|StrTemplate";
+  private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
+  private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)";
   private static final Pattern nStrMethodName = Pattern.compile(
     NSTR_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
