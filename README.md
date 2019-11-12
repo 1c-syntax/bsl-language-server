@@ -95,7 +95,7 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 
 ---
 
-[![JetBrains](https://upload.wikimedia.org/wikipedia/commons/1/1a/JetBrains_Logo_2016.svg)](https://www.jetbrains.com)  
+[![JetBrains](images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
 
 Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
 

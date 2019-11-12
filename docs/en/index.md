@@ -139,20 +139,18 @@ Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-serv
 
 You are awesome!
 
-Спасибо компаниям, поддерживающим проекты с открытым исходным кодом, а особенно тем, кто поддержали нас: 
+Thanks to companies supporting open source projects, and especially to those who supported us: 
 
 ---
 
 [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
 
-Создатель инновационных и интеллектуальных инструментов для профилирования приложений `Java` и `.NET` [YourKit, LLC](https://www.yourkit.com) любезно предоставил нам лицензии на продукт `YourKit Java Profiler`.
-
-С помощью `YourKit Java Profiler` мы мониторим и улучшаем производительность проекта.
+[YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license `YourKit Java Profiler` for `BSL Language Server` to improve its performance. 
 
 ---
 
-[![JetBrains](https://upload.wikimedia.org/wikipedia/commons/1/1a/JetBrains_Logo_2016.svg)](https://www.jetbrains.com)  
+[![JetBrains](../../images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
 
-Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
+[JetBrains](https://www.jetbrains.com) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
 
-`IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.
+`IntelliJ IDEA Ultimate` is one of the best tools in its class.
