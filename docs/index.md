@@ -149,7 +149,7 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 
 ---
 
-[![JetBrains](../images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
+[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
 
 Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
 
