@@ -56,12 +56,8 @@ public class GenericIssueReport {
   // TODO: пробросить из analyze?
   private static LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
   private static DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-
-  @Getter
-  @JsonProperty("issues")
-  private final List<GenericIssueEntry> issues;
-
   private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
+  private static Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
 
   static {
 
@@ -72,14 +68,16 @@ public class GenericIssueReport {
 
   }
 
-  private static Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
-
   static {
     typeMap.put(DiagnosticSeverity.Error, RULETYPE_BUG);
     typeMap.put(DiagnosticSeverity.Hint, RULETYPE_CODE_SMELL);
     typeMap.put(DiagnosticSeverity.Information, RULETYPE_CODE_SMELL);
     typeMap.put(DiagnosticSeverity.Warning, RULETYPE_CODE_SMELL);
   }
+
+  @Getter
+  @JsonProperty("issues")
+  private final List<GenericIssueEntry> issues;
 
   public GenericIssueReport(
     @JsonProperty("issues") List<GenericIssueEntry> issues
@@ -88,11 +86,11 @@ public class GenericIssueReport {
   }
 
   public GenericIssueReport(AnalysisInfo analysisInfo) {
-
     List<GenericIssueEntry> listGenericIssueEntry = new ArrayList<>();
     for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        GenericIssueEntry entry = new GenericIssueEntry(fileInfo.getPath().toString(), diagnostic);
+        GenericIssueEntry entry = new GenericIssueEntry(
+          analysisInfo.getRelativizePath(fileInfo.getPath()), diagnostic, analysisInfo);
         listGenericIssueEntry.add(entry);
       }
     }
@@ -128,7 +126,7 @@ public class GenericIssueReport {
       this.secondaryLocations = new ArrayList<>(secondaryLocations);
     }
 
-    public GenericIssueEntry(String fileName, Diagnostic diagnostic) {
+    public GenericIssueEntry(String fileName, Diagnostic diagnostic, AnalysisInfo analysisInfo) {
       DiagnosticSeverity localSeverity = diagnostic.getSeverity();
 
 
@@ -152,7 +150,7 @@ public class GenericIssueReport {
         secondaryLocations = new ArrayList<>();
       } else {
         secondaryLocations = relatedInformation.stream()
-          .map(Location::new)
+          .map(diagnosticRelatedInformation -> new Location(diagnosticRelatedInformation, analysisInfo))
           .collect(Collectors.toList());
       }
     }
@@ -181,9 +179,11 @@ public class GenericIssueReport {
       textRange = new TextRange(diagnostic.getRange());
     }
 
-    public Location(DiagnosticRelatedInformation relatedInformation) {
+    public Location(DiagnosticRelatedInformation relatedInformation, AnalysisInfo analysisInfo) {
       message = relatedInformation.getMessage();
-      filePath = Paths.get(URI.create(relatedInformation.getLocation().getUri())).toAbsolutePath().toString();
+      filePath = analysisInfo.getRelativizePath(
+        Paths.get(URI.create(relatedInformation.getLocation().getUri())).toAbsolutePath().toString()
+      );
       textRange = new TextRange(relatedInformation.getLocation().getRange());
     }
   }
