@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
@@ -56,9 +55,6 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   public BSLLanguageServer(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
-
-    Locale currentLocale = Locale.forLanguageTag(this.configuration.getDiagnosticLanguage().getLanguageCode());
-    Locale.setDefault(currentLocale);
 
     context = new ServerContext();
     workspaceService = new BSLWorkspaceService(configuration);

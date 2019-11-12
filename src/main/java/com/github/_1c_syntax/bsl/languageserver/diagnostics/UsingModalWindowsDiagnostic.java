@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -55,7 +56,8 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
   private HashMap<String, String> pairMethods = new HashMap<>();
 
-  public UsingModalWindowsDiagnostic() {
+  public UsingModalWindowsDiagnostic(DiagnosticInfo info) {
+    super(info);
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
     pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
@@ -87,7 +89,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
     String methodName = ctx.methodName().getText();
     if (modalityMethods.matcher(methodName).matches()) {
       diagnosticStorage.addDiagnostic(ctx,
-        getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+        info.getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
     }
     return super.visitGlobalMethodCall(ctx);
   }

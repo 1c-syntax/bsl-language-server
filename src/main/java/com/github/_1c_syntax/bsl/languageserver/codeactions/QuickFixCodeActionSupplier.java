@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.CodeAction;
@@ -31,12 +30,13 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
 
-  public QuickFixCodeActionSupplier(DiagnosticProvider diagnosticProvider) {
-    super(diagnosticProvider);
+  public QuickFixCodeActionSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
+    super(diagnosticProvider, quickFixSupplier);
   }
 
   @Override
@@ -55,13 +55,16 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
     DocumentContext documentContext
   ) {
 
-    Class<? extends BSLDiagnostic> bslDiagnosticClass = DiagnosticProvider.getBSLDiagnosticClass(diagnostic);
-    if (bslDiagnosticClass == null || !QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
+    Optional<Class<? extends QuickFixProvider>> quickFixClass = quickFixSupplier.getQuickFixClass(diagnostic.getCode());
+
+    if (!quickFixClass.isPresent()) {
       return Collections.emptyList();
     }
 
-    BSLDiagnostic diagnosticInstance = diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
-    return ((QuickFixProvider) diagnosticInstance).getQuickFixes(
+    Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
+
+    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixProviderClass);
+    return quickFixInstance.getQuickFixes(
       Collections.singletonList(diagnostic),
       params,
       documentContext

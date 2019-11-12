@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -58,6 +59,12 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   )
   private int maxLineLength = MAX_LINE_LENGTH;
   private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+  private final DiagnosticInfo info;
+  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+
+  public LineLengthDiagnostic(DiagnosticInfo info) {
+    this.info = info;
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -70,7 +77,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Diagnostic> diagnostics = new ArrayList<>();
+    diagnosticStorage.clearDiagnostics();
     tokensInOneLine.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
@@ -86,15 +93,19 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
       Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
       if (maxCharPosition > maxLineLength) {
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
+        diagnosticStorage.addDiagnostic(
           Ranges.create(key, 0, key, maxCharPosition),
-          getDiagnosticMessage(maxCharPosition, maxLineLength))
+          info.getDiagnosticMessage(maxCharPosition, maxLineLength)
         );
       }
     });
 
-    return diagnostics;
+    return diagnosticStorage.getDiagnostics();
+  }
+
+  @Override
+  public DiagnosticInfo getInfo() {
+    return info;
   }
 
   private boolean mustBePutIn(Token token) {

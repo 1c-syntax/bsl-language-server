@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
+import com.github._1c_syntax.bsl.languageserver.util.assertions.CodeActionAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticsAssert;
-import com.github._1c_syntax.bsl.languageserver.util.assertions.CodeActionAssert;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 

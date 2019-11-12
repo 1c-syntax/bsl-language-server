@@ -22,8 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
@@ -38,6 +41,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class GenericIssueReport {
@@ -49,6 +53,9 @@ public class GenericIssueReport {
   private static final String SEVERITY_MAJOR = "MAJOR";
   private static final String SEVERITY_MINOR = "MINOR";
 
+  // TODO: пробросить из analyze?
+  private static LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
+  private static DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
 
   @Getter
   @JsonProperty("issues")
@@ -124,12 +131,21 @@ public class GenericIssueReport {
     public GenericIssueEntry(String fileName, Diagnostic diagnostic) {
       DiagnosticSeverity localSeverity = diagnostic.getSeverity();
 
+
       engineId = diagnostic.getSource();
       ruleId = diagnostic.getCode();
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);
-      effortMinutes = DiagnosticProvider.getMinutesToFix(diagnostic);
+
+      Optional<Class<? extends BSLDiagnostic>> diagnosticClass =
+        diagnosticSupplier.getDiagnosticClass(diagnostic.getCode());
+      if (diagnosticClass.isPresent()) {
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass.get(), configuration);
+        effortMinutes = info.getMinutesToFix();
+      } else {
+        effortMinutes = 0;
+      }
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {

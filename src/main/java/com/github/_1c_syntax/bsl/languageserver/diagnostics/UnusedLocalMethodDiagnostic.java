@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -53,6 +54,10 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
+  public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
@@ -68,7 +73,7 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
       .filter(subNameContext -> !isAttachable(subNameContext))
       .filter(subNameContext -> !isHandler(subNameContext))
       .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase()))
-      .forEach(node -> diagnosticStorage.addDiagnostic(node, getDiagnosticMessage(node.getText())));
+      .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getDiagnosticMessage(node.getText())));
 
     return ctx;
   }

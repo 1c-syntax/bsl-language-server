@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
 import java.util.List;
 import java.util.Map;
+
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodeNetworkAddressDiagnostic> {
   UsingHardcodeNetworkAddressDiagnosticTest() {
@@ -66,7 +66,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
 
 		// Проверяем количество срабатываний без изменения параметров
 		// when
-		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+		configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
 		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();
 
@@ -75,7 +75,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
 
     // Изменяем ключевые слова исключения для поиска IP адресов
 		// when
-		configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+		configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
 		configuration.put("searchWordsExclusion", "Version");
 		diagnosticInstance.configure(configuration);
 		diagnostics = getDiagnostics();

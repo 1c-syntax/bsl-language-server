@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
@@ -69,7 +70,8 @@ public class AnalyzeCommand implements Command {
 
     Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context = new ServerContext(configurationPath);
-    diagnosticProvider = new DiagnosticProvider(configuration);
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
+    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 

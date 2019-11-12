@@ -21,15 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingServiceTagDiagnostic> {
 
@@ -44,28 +42,29 @@ public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingS
 
     // then
     assertThat(diagnostics).hasSize(15);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(1, 0, 1, 36));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(13, 4, 13, 50));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(21, 4, 21, 29));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(25, 0, 25, 26));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(26, 33, 26, 58));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(28, 4, 28, 11));
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(Ranges.create(29, 20, 29, 30));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(Ranges.create(31, 4, 31, 12));
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(Ranges.create(32, 21, 32, 31));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(Ranges.create(34, 8, 34, 21));
-    assertThat(diagnostics.get(10).getRange()).isEqualTo(Ranges.create(42, 4, 42, 51));
-    assertThat(diagnostics.get(11).getRange()).isEqualTo(Ranges.create(61, 4, 61, 51));
-    assertThat(diagnostics.get(12).getRange()).isEqualTo(Ranges.create(65, 0, 65, 11));
-    assertThat(diagnostics.get(13).getRange()).isEqualTo(Ranges.create(67, 0, 67, 11));
-    assertThat(diagnostics.get(14).getRange()).isEqualTo(Ranges.create(71, 4, 71, 36));
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 1, 36)
+      .hasRange(13, 4, 13, 50)
+      .hasRange(21, 4, 21, 29)
+      .hasRange(25, 0, 25, 26)
+      .hasRange(26, 33, 26, 58)
+      .hasRange(28, 4, 28, 11)
+      .hasRange(29, 20, 29, 30)
+      .hasRange(31, 4, 31, 12)
+      .hasRange(32, 21, 32, 31)
+      .hasRange(34, 8, 34, 21)
+      .hasRange(42, 4, 42, 51)
+      .hasRange(61, 4, 61, 51)
+      .hasRange(65, 0, 65, 11)
+      .hasRange(67, 0, 67, 11)
+      .hasRange(71, 4, 71, 36);
 
   }
 
   @Test
   void runTestWithConfigure() {
     // conf
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("serviceTags", "todo");
     diagnosticInstance.configure(configuration);
 
@@ -74,7 +73,8 @@ public class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingS
 
     // then
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(1, 0, 1, 36));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(21, 4, 21, 29));
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 1, 36)
+      .hasRange(21, 4, 21, 29);
   }
 }

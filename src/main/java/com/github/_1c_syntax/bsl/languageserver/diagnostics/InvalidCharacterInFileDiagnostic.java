@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -68,6 +69,10 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
       "])",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  public InvalidCharacterInFileDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     documentContext
@@ -75,16 +80,21 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
       .stream()
       .filter((Token token) -> ILLEGAL_DASH_PATTERN.matcher(token.getText()).find())
       .forEach(token ->
-        diagnosticStorage.addDiagnostic(token,
-          getResourceString("diagnosticMessageDash")));
+        diagnosticStorage.addDiagnostic(
+          token,
+          info.getResourceString("diagnosticMessageDash"))
+      );
 
     documentContext
       .getTokens()
       .stream()
       .filter((Token token) -> ILLEGAL_SPACE_PATTERN.matcher(token.getText()).find())
       .forEach(token ->
-        diagnosticStorage.addDiagnostic(token,
-          getResourceString("diagnosticMessageSpace")));
+        diagnosticStorage.addDiagnostic(
+          token,
+          info.getResourceString("diagnosticMessageSpace")
+        )
+      );
 
     return ctx;
   }
@@ -99,7 +109,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(getResourceString("diagnosticMessageSpace")))
+      .filter(diagnostic -> diagnostic.getMessage().equals(info.getResourceString("diagnosticMessageSpace")))
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
@@ -109,7 +119,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
       });
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(getResourceString("diagnosticMessageDash")))
+      .filter(diagnostic -> diagnostic.getMessage().equals(info.getResourceString("diagnosticMessageDash")))
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
@@ -120,7 +130,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
 
     return CodeActionProvider.createCodeActions(
       textEdits,
-      getResourceString("quickFixMessage"),
+      info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
       diagnostics
     );

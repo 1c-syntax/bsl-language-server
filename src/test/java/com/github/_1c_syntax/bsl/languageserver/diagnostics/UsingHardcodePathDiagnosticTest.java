@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +77,7 @@ public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<Usin
     Map<String, Object> configuration;
     // Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
     // when
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("searchWordsStdPathsUnix", "home|lib");
     diagnosticInstance.configure(configuration);
 

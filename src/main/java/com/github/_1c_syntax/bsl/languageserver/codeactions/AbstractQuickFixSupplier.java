@@ -36,10 +36,12 @@ import java.util.stream.Stream;
 
 public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 
-  protected DiagnosticProvider diagnosticProvider;
+  protected final DiagnosticProvider diagnosticProvider;
+  protected final QuickFixSupplier quickFixSupplier;
 
-  public AbstractQuickFixSupplier(DiagnosticProvider diagnosticProvider) {
+  public AbstractQuickFixSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
     this.diagnosticProvider = diagnosticProvider;
+    this.quickFixSupplier = quickFixSupplier;
   }
 
   @Override

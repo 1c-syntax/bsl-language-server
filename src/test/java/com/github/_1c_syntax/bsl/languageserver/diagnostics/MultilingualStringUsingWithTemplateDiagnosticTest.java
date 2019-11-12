@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -49,7 +49,7 @@ public class MultilingualStringUsingWithTemplateDiagnosticTest
 
   @Test
   void testRuAndEn() {
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("declaredLanguages", "ru,en");
     diagnosticInstance.configure(configuration);
 

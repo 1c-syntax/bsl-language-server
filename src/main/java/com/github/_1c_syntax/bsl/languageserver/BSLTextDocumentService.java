@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -87,8 +89,12 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
     this.configuration = configuration;
     this.context = context;
-    diagnosticProvider = new DiagnosticProvider(this.configuration);
-    codeActionProvider = new CodeActionProvider(diagnosticProvider);
+
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
+    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
+
+    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
+    codeActionProvider = new CodeActionProvider(this.diagnosticProvider, quickFixSupplier);
     codeLensProvider = new CodeLensProvider(this.configuration);
   }
 

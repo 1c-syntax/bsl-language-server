@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -42,6 +43,10 @@ import java.util.stream.Collectors;
   }
 )
 public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
+
+  public UseLessForEachDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {

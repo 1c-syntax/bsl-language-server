@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -119,7 +119,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     List<Diagnostic> diagnostics;
 
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("listForCheckLeft", ")");
     configuration.put("listForCheckRight", "(");
     configuration.put("listForCheckLeftAndRight", "");
@@ -143,7 +143,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     assertThat(diagnostics.get(11).getRange()).isEqualTo(Ranges.create(34, 6, 34, 7));
 
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", "");
     configuration.put("listForCheckLeftAndRight", "-");
@@ -157,7 +157,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(27, 10, 27, 11));
 
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", ",");
     configuration.put("listForCheckLeftAndRight", "");

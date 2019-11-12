@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
@@ -51,15 +55,19 @@ class CodeActionProviderTest {
     String filePath = "./src/test/resources/providers/codeAction.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
+    final LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
+    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
       .filter(diagnostic -> {
-        String diagnosticCode = DiagnosticProvider.getDiagnosticCode(CanonicalSpellingKeywordsDiagnostic.class);
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(CanonicalSpellingKeywordsDiagnostic.class, configuration);
+        String diagnosticCode = diagnosticInfo.getDiagnosticCode();
         return diagnostic.getCode().equals(diagnosticCode);
       })
       .collect(Collectors.toList());
 
-    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider);
+    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());
@@ -91,8 +99,10 @@ class CodeActionProviderTest {
     String filePath = "./src/test/resources/providers/codeAction.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
-    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider);
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
+    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
+    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -50,7 +51,8 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
   private BSLParserRuleContext nodeEndTransaction;
   private BSLParser.StatementContext nodeEndFile;
 
-  public CommitTransactionOutsideTryCatchDiagnostic() {
+  public CommitTransactionOutsideTryCatchDiagnostic(DiagnosticInfo info) {
+    super(info);
     nodeEndTransaction = null;
     nodeEndFile = null;
   }

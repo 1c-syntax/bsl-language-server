@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -53,7 +54,7 @@ import java.util.stream.Collectors;
 )
 public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
-  private final String relatedMessage = getResourceString("parentStatementRelatedMessage");
+  private final String relatedMessage;
   private static final int MAX_ALLOWED_LEVEL = 4;
 
   @DiagnosticParameter(
@@ -66,6 +67,10 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   private ParseTree lastCtx;
   private Deque<ParseTree> nestedParents = new ArrayDeque<>();
 
+  public NestedStatementsDiagnostic(DiagnosticInfo info) {
+    super(info);
+    relatedMessage = this.info.getResourceString("parentStatementRelatedMessage");
+  }
 
   @Override
   public void enterIfStatement(BSLParser.IfStatementContext ctx) {

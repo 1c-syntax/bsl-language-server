@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -48,6 +49,10 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
+  public NonExportMethodsInApiRegionDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
@@ -66,7 +71,7 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
             .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
             .findFirst()
             .ifPresent((RegionSymbol regionSymbol) -> {
-              String message = getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
+              String message = info.getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
               diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
             });
         }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -43,6 +44,10 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   private Pattern pattern = Pattern.compile("число|number",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  public TryNumberDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public ParseTree visitTryCodeBlock(BSLParser.TryCodeBlockContext ctx) {

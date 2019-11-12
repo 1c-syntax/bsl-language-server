@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -49,7 +50,8 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
   private BSLParserRuleContext nodeBeginTransaction;
   private BSLParser.StatementContext nodeEndFile;
 
-  public BeginTransactionBeforeTryCatchDiagnostic() {
+  public BeginTransactionBeforeTryCatchDiagnostic(DiagnosticInfo info) {
+    super(info);
     nodeBeginTransaction = null;
     nodeEndFile = null;
   }

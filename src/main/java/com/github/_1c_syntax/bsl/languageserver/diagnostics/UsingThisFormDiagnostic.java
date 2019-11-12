@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -78,6 +79,10 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
     BSLParser.ANNOTATION_ATSERVER_SYMBOL
   );
+
+  public UsingThisFormDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -176,7 +181,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
     return CodeActionProvider.createCodeActions(
       newTextEdits,
-      getResourceString("quickFixMessage"),
+      info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
       diagnostics
     );
