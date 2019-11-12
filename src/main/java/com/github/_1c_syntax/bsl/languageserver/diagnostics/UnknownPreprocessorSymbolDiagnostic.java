@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -39,9 +40,13 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnostic {
 
+  public UnknownPreprocessorSymbolDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitPreproc_unknownSymbol(BSLParser.Preproc_unknownSymbolContext ctx) {
-    diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(ctx.getText()));
+    diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(ctx.getText()));
     return super.visitPreproc_unknownSymbol(ctx);
   }
 

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
@@ -42,40 +43,37 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   protected final T diagnosticInstance;
 
+  @SuppressWarnings("unchecked")
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
-    try {
-      diagnosticInstance = diagnosticClass.getDeclaredConstructor().newInstance();
-    } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-      e.printStackTrace();
-      throw new RuntimeException("Diagnostic instantiate error", e);
-    }
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
+    diagnosticInstance = (T) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
   }
 
-  List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     return diagnosticInstance.getDiagnostics(documentContext);
   }
 
-  List<Diagnostic> getDiagnostics() {
+  protected List<Diagnostic> getDiagnostics() {
     DocumentContext documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
-  List<Diagnostic> getDiagnostics(String simpleFileName) {
+  protected List<Diagnostic> getDiagnostics(String simpleFileName) {
     DocumentContext documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
-  List<CodeAction> getQuickFixes(Diagnostic diagnostic) {
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic) {
     DocumentContext documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
   }
 
-  List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
     DocumentContext documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
-  List<CodeAction> getQuickFixes(Range range) {
+  protected List<CodeAction> getQuickFixes(Range range) {
     DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 

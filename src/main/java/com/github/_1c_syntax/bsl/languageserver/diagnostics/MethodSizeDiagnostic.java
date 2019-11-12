@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -51,6 +52,10 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
   )
   private int maxMethodSize = MAX_METHOD_SIZE;
 
+  public MethodSizeDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -66,7 +71,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (methodSizeExceedsLimit(methodSize)) {
       diagnosticStorage.addDiagnostic(
         ctx.procDeclaration().subName(),
-        getDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
+        info.getDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;
@@ -79,7 +84,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (methodSizeExceedsLimit(methodSize)) {
       diagnosticStorage.addDiagnostic(
         ctx.funcDeclaration().subName(),
-        getDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
+        info.getDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;

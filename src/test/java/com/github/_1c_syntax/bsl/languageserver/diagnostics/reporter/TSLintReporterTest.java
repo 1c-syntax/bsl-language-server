@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -68,7 +69,7 @@ class TSLintReporterTest {
       "test"
     );
 
-    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
+    DocumentContext documentContext = TestUtils.getDocumentContext("");
     FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 
@@ -79,7 +80,11 @@ class TSLintReporterTest {
 
     // then
     ObjectMapper mapper = new ObjectMapper();
-    List<TSLintReportEntry> report = mapper.readValue(file, new TypeReference<ArrayList<TSLintReportEntry>>(){});
+    List<TSLintReportEntry> report = mapper.readValue(
+      file,
+      new TypeReference<ArrayList<TSLintReportEntry>>() {
+      }
+    );
 
     assertThat(report).hasSize(1);
 

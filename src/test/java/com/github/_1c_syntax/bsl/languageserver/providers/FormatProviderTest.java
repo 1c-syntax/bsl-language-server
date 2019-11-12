@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -66,7 +67,7 @@ class FormatProviderTest {
 
     formattedFileContent = joiner.toString();
 
-    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
+    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent, new ServerContext());
 
     // when
     List<TextEdit> textEdits = FormatProvider.getRangeFormatting(params, documentContext);
@@ -88,7 +89,7 @@ class FormatProviderTest {
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
     String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
 
-    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent);
+    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent, new ServerContext());
 
     // when
     List<TextEdit> textEdits = FormatProvider.getFormatting(params, documentContext);

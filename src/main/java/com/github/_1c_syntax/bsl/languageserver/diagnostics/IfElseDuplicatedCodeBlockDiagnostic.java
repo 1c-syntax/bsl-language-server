@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -51,8 +52,13 @@ import java.util.stream.Collectors;
 )
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final String relatedMessage = getResourceString("identicalCodeBlockRelatedMessage");
+  private final String relatedMessage;
   private Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
+
+  public IfElseDuplicatedCodeBlockDiagnostic(DiagnosticInfo info) {
+    super(info);
+    relatedMessage = this.info.getResourceString("identicalCodeBlockRelatedMessage");
+  }
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {

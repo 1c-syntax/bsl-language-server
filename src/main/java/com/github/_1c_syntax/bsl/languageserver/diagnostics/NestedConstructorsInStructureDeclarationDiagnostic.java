@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -54,7 +55,12 @@ import java.util.stream.Collectors;
 )
 public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final String relatedMessage = getResourceString("nestedConstructorRelatedMessage");
+  private final String relatedMessage;
+
+  public NestedConstructorsInStructureDeclarationDiagnostic(DiagnosticInfo info) {
+    super(info);
+    relatedMessage = this.info.getResourceString("nestedConstructorRelatedMessage");
+  }
 
   @Override
   public ParseTree visitNewExpression(NewExpressionContext ctx) {

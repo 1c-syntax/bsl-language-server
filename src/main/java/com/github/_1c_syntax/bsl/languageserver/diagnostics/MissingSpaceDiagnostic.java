@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -110,6 +111,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private Pattern patternLr = compilePattern(listForCheckLeftAndRight);
   private Pattern patternNotSpace = compilePattern("\\S+");
 
+  public MissingSpaceDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   private static List<Token> findTokensByPattern(List<Token> tokens, Pattern pattern) {
     return tokens
       .parallelStream()
@@ -151,9 +156,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    sampleMessage[INDEX_WORD_LEFT] = getResourceString("wordLeft");               // "Слева"
-    sampleMessage[INDEX_WORD_RIGHT] = getResourceString("wordRight");             // "Справа"
-    sampleMessage[INDEX_WORD_LEFT_RIGHT] = getResourceString("wordLeftAndRight"); // "Слева и справа"
+    sampleMessage[INDEX_WORD_LEFT] = info.getResourceString("wordLeft");               // "Слева"
+    sampleMessage[INDEX_WORD_RIGHT] = info.getResourceString("wordRight");             // "Справа"
+    sampleMessage[INDEX_WORD_LEFT_RIGHT] = info.getResourceString("wordLeftAndRight"); // "Слева и справа"
 
     diagnosticStorage.clearDiagnostics();
 
@@ -289,7 +294,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode, String tokenText) {
-    return getDiagnosticMessage(sampleMessage[errCode], tokenText);
+    return info.getDiagnosticMessage(sampleMessage[errCode], tokenText);
   }
 
   @Override
@@ -326,7 +331,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     return CodeActionProvider.createCodeActions(
       textEdits,
-      getResourceString("quickFixMessage"),
+      info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
       diagnostics
     );

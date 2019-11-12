@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -64,7 +65,7 @@ class JsonReporterTest {
       "test"
     );
 
-    DocumentContext documentContext = new DocumentContext("file:///fake-uri.bsl", "");
+    DocumentContext documentContext = TestUtils.getDocumentContext("");
     FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 

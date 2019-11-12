@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -51,6 +52,10 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     "отказ|cancel",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+
+  public UsingCancelParameterDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {

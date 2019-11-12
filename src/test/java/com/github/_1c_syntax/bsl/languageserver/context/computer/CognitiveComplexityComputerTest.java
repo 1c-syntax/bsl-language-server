@@ -23,12 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import org.apache.commons.io.FileUtils;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,11 +37,8 @@ class CognitiveComplexityComputerTest {
   void compute() throws IOException {
 
     // given
-    String fileContent = FileUtils.readFileToString(
-      new File("./src/test/resources/context/computer/CognitiveComplexityComputerTest.bsl"),
-      StandardCharsets.UTF_8
-    );
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+    DocumentContext documentContext
+      = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CognitiveComplexityComputerTest.bsl");
 
     // when
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer =

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -86,7 +87,11 @@ class JUnitReporterTest {
       "test3"
     ));
 
-    DocumentContext documentContext = new DocumentContext(Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri().toString(), "");
+    DocumentContext documentContext = new DocumentContext(
+      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri().toString(),
+      "",
+      new ServerContext()
+    );
     FileInfo fileInfo = new FileInfo(documentContext, diagnostics);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 

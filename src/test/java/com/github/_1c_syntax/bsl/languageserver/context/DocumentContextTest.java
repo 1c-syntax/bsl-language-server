@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
@@ -79,19 +80,12 @@ class DocumentContextTest {
 
   public DocumentContext getDocumentContext() throws IOException {
 
-    String filePath = "./src/test/resources/context/DocumentContextTest.bsl";
-    return getDocumentContext(filePath);
+    return getDocumentContext("./src/test/resources/context/DocumentContextTest.bsl");
   }
 
   private DocumentContext getDocumentContext(String filePath) throws IOException {
 
-    // given
-    String fileContent = FileUtils.readFileToString(
-      new File(filePath),
-      StandardCharsets.UTF_8
-    );
-
-    return new DocumentContext("fake-uri.bsl", fileContent, new ServerContext());
+    return TestUtils.getDocumentContextFromFile(filePath);
   }
 
   @Test

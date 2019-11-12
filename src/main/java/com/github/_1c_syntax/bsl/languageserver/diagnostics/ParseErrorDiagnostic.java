@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -38,7 +39,6 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
-
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
@@ -50,13 +50,17 @@ import java.util.stream.IntStream;
 )
 public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
+  public ParseErrorDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void visitErrorNode(ErrorNode node) {
 
     if (((ErrorNodeImpl) node).symbol.getTokenIndex() == -1) {
       diagnosticStorage.addDiagnostic(
         ((BSLParserRuleContext) node.getParent()).getStart(),
-        getDiagnosticMessage(node.getText())
+        info.getDiagnosticMessage(node.getText())
       );
     }
   }
@@ -64,7 +68,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
   @Override
   public void enterFile(BSLParser.FileContext ctx) {
     BSLParser.FileContext ast = this.documentContext.getAst();
-    String initialExpectedString = getResourceString("expectedTokens") + " ";
+    String initialExpectedString = info.getResourceString("expectedTokens") + " ";
 
     Trees.getDescendants(ast).stream()
       .filter(parseTree -> !(parseTree instanceof TerminalNodeImpl))
@@ -80,7 +84,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
         diagnosticStorage.addDiagnostic(
           node.exception.getOffendingToken(),
-          getDiagnosticMessage(initialExpectedString + sj.toString())
+          info.getDiagnosticMessage(initialExpectedString + sj.toString())
         );
       });
   }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -54,6 +55,10 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     "Linux_x86|Windows|MacOS",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  public UsingObjectNotAvailableUnixDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   /**
    * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся
    * цепочка) с проверкой ТипПлатформы = Linux не найдено в методе, то диагностика срабатывает.
@@ -70,7 +75,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     // ищем условие выше, пока не дойдем до null
 
     if (matcherTypeName.find() && !isFindIfBranchWithLinuxCondition(ctx)) {
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(typeNameContext.getText()));
+      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(typeNameContext.getText()));
     }
     return super.visitNewExpression(ctx);
   }

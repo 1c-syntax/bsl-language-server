@@ -39,7 +39,7 @@ public class NestedConstructorsInStructureDeclarationDiagnosticTest
     super(NestedConstructorsInStructureDeclarationDiagnostic.class);
   }
 
-  private final String relatedMessage = diagnosticInstance.getResourceString("nestedConstructorRelatedMessage");
+  private final String relatedMessage = diagnosticInstance.getInfo().getResourceString("nestedConstructorRelatedMessage");
 
   @Test
   void test() {

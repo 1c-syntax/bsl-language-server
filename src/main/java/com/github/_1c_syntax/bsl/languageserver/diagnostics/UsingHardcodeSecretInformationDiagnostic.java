@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -73,6 +74,10 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   )
   private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
+  public UsingHardcodeSecretInformationDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -100,7 +105,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (matcher.find()) {
       List<Token> list = ctx.expression().getTokens();
       if (list.size() == 1 && isNotEmptyStringByToken(list.get(0))) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic(ctx);
       }
     }
     return super.visitAssignment(ctx);
@@ -198,7 +203,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       if (assignment != null
         && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
         && isNotEmptyStringByToken(assignment.getStop())) {
-        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getDiagnosticMessage());
       }
     }
   }
@@ -217,7 +222,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
     ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
     if (assignment != null) {
-      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, getDiagnosticMessage());
+      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getDiagnosticMessage());
     }
   }
 

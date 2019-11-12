@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.CodeAction;
@@ -41,8 +40,8 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 
   private static final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;
 
-  public FixAllCodeActionSupplier(DiagnosticProvider diagnosticProvider) {
-    super(diagnosticProvider);
+  public FixAllCodeActionSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
+    super(diagnosticProvider, quickFixSupplier);
   }
 
   @Override
@@ -63,17 +62,13 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
     DocumentContext documentContext
   ) {
 
-    Optional<Class<? extends BSLDiagnostic>> diagnosticClass = DiagnosticProvider.getDiagnosticClass(diagnosticCode);
+    Optional<Class<? extends QuickFixProvider>> quickFixClass = quickFixSupplier.getQuickFixClass(diagnosticCode);
 
-    if (!diagnosticClass.isPresent()) {
+    if (!quickFixClass.isPresent()) {
       return Collections.emptyList();
     }
 
-    Class<? extends BSLDiagnostic> bslDiagnosticClass = diagnosticClass.get();
-
-    if (!QuickFixProvider.class.isAssignableFrom(bslDiagnosticClass)) {
-      return Collections.emptyList();
-    }
+    Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
 
     List<Diagnostic> suitableDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext).stream()
       .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
@@ -94,10 +89,9 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
     fixAllParams.setRange(params.getRange());
     fixAllParams.setContext(fixAllContext);
 
-    QuickFixProvider diagnosticInstance =
-      (QuickFixProvider) diagnosticProvider.getDiagnosticInstance(bslDiagnosticClass);
+    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixProviderClass);
 
-    return diagnosticInstance.getQuickFixes(
+    return quickFixInstance.getQuickFixes(
       suitableDiagnostics,
       fixAllParams,
       documentContext

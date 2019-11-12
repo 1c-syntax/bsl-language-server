@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -51,6 +52,10 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
   )
   private int maxOptionalParamsCount = MAX_OPTIONAL_PARAMS_COUNT;
 
+  public NumberOfOptionalParamsDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -65,7 +70,7 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
 
     int paramCount = (int) ctx.param().stream().filter(param -> param.defaultValue() != null).count();
     if (paramCount > maxOptionalParamsCount){
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage(paramCount, maxOptionalParamsCount));
+      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(paramCount, maxOptionalParamsCount));
     }
 
     return ctx;

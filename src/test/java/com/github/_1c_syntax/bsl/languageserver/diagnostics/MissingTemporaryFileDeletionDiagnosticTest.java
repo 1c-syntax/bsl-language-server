@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -57,13 +57,13 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics;
     Map<String, Object> configuration;
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
 
-    configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put(
       "searchDeleteFileMethod",
       MissingTemporaryFileDeletionDiagnostic.REGEX_DELETION_FILE + "|РаботаСФайламиСлужебныйКлиент.УдалитьФайл");

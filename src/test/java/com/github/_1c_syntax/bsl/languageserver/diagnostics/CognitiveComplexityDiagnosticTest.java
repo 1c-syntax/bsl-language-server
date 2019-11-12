@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("complexityThreshold", 0);
     configuration.put("checkModuleBody", true);
     diagnosticInstance.configure(configuration);
@@ -63,7 +63,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
 
   @Test
   void testConfigureOneProperty() {
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(diagnosticInstance);
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("checkModuleBody", true);
     diagnosticInstance.configure(configuration);
 

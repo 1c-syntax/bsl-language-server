@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
@@ -30,8 +31,13 @@ import java.util.List;
 
 public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
 
+  protected final DiagnosticInfo info;
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
   protected DocumentContext documentContext;
+
+  public AbstractVisitorDiagnostic(DiagnosticInfo info) {
+    this.info = info;
+  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -39,6 +45,11 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
     diagnosticStorage.clearDiagnostics();
     this.visitFile(documentContext.getAst());
     return diagnosticStorage.getDiagnostics();
+  }
+
+  @Override
+  public DiagnosticInfo getInfo() {
+    return info;
   }
 
 }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -76,6 +77,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   )
   private Pattern searchWordsExclusion = getLocalPattern(REGEX_EXCLUSION);
 
+  public UsingHardcodeNetworkAddressDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
 
@@ -130,7 +135,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
         }
       }
 
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+      diagnosticStorage.addDiagnostic(ctx);
     }
   }
 

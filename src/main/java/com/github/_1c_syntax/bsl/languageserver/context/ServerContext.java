@@ -73,6 +73,10 @@ public class ServerContext {
     return addDocument(textDocumentItem.getUri(), textDocumentItem.getText());
   }
 
+  public void removeDocument(String uri) {
+    documents.remove(uri);
+  }
+
   public void clear() {
     documents.clear();
     configurationMetadata.clear();
@@ -96,6 +100,5 @@ public class ServerContext {
 
     return configurationBuilder.build();
   }
-
 
 }

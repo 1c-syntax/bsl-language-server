@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -65,6 +66,10 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     "^(" + REGEX_DELETION_FILE + ")",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  public MissingTemporaryFileDeletionDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -98,7 +103,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       String variableName = getVariableName(ctx);
       if (variableName == null) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic(ctx);
         return super.visitGlobalMethodCall(ctx);
       }
 
@@ -108,7 +113,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       if (codeBlockContext != null
         && !foundDeleteFile(codeBlockContext, variableName, filterLine)) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic(ctx);
       }
     }
 

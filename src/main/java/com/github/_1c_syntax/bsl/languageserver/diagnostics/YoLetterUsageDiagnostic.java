@@ -22,19 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -46,26 +44,30 @@ import java.util.stream.Collectors;
 )
 public class YoLetterUsageDiagnostic implements BSLDiagnostic {
 
+  private final DiagnosticInfo info;
+  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+
+  public YoLetterUsageDiagnostic(DiagnosticInfo info) {
+    this.info = info;
+  }
+
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> wrongIdentifiers = documentContext.getTokensFromDefaultChannel()
+    diagnosticStorage.clearDiagnostics();
+
+    documentContext.getTokensFromDefaultChannel()
       .parallelStream()
       .filter((Token t) ->
         t.getType() == BSLParser.IDENTIFIER &&
           t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
-      .collect((Collectors.toList()));
+      .forEach(token -> diagnosticStorage.addDiagnostic(token));
 
-    List<Diagnostic> diagnostics = new ArrayList<>();
+    return diagnosticStorage.getDiagnostics();
+  }
 
-    for (Token token : wrongIdentifiers) {
-      diagnostics.add(BSLDiagnostic.createDiagnostic(
-        this,
-        Ranges.create(token),
-        getDiagnosticMessage()));
-    }
-
-    return diagnostics;
-
+  @Override
+  public DiagnosticInfo getInfo() {
+    return info;
   }
 }

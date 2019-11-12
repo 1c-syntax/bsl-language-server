@@ -22,16 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLExtendedParser;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,9 +43,7 @@ class HoverProviderTest {
     TextDocumentPositionParams params = new TextDocumentPositionParams();
     params.setPosition(new Position(0, 0));
 
-    String fileContent = FileUtils.readFileToString(new File("./src/test/resources/providers/hover.bsl"), StandardCharsets.UTF_8);
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
-
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
     Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
 
     assertThat(optionalHover.isPresent()).isFalse();
@@ -58,8 +54,7 @@ class HoverProviderTest {
     TextDocumentPositionParams params = new TextDocumentPositionParams();
     params.setPosition(new Position(0, 20));
 
-    String fileContent = FileUtils.readFileToString(new File("./src/test/resources/providers/hover.bsl"), StandardCharsets.UTF_8);
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
 
     Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
 
