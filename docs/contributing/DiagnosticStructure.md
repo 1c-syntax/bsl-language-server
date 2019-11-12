@@ -109,10 +109,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic implements Qu
 
 ### Класс диагностики, реализующий интерфейс BSLDiagnostic
 
-В классе необходимо определить защищенное поле `diagnosticStorage` типа `DiagnosticStorage`, которое будет хранилищем обнаруженных замечний, и приватное свойство `info` типа `DiagnosticInfo`, которое будет предоставлять доступ к данным диагностики.
+В классе необходимо определить приватное поле `diagnosticStorage` типа `DiagnosticStorage`, которое будет хранилищем обнаруженных замечний, и приватное свойство `info` типа `DiagnosticInfo`, которое будет предоставлять доступ к данным диагностики.
 
 ```java
-protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+ private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
 private final DiagnosticInfo info;
 ```
 
