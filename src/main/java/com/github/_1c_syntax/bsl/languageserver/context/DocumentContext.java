@@ -221,6 +221,9 @@ public class DocumentContext {
     if (regions.isPresent()) {
       getRegions().forEach(Symbol::clearASTData);
     }
+    if (regionsFlat.isPresent()) {
+      getRegionsFlat().forEach(Symbol::clearASTData);
+    }
     if (methods.isPresent()) {
       getMethods().forEach(Symbol::clearASTData);
     }

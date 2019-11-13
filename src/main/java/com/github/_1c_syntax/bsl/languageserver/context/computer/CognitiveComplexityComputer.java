@@ -384,8 +384,7 @@ public class CognitiveComplexityComputer
     } else {
       message = String.format("+%d", increment);
     }
-
-    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message);
+    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message.intern());
     List<SecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(
