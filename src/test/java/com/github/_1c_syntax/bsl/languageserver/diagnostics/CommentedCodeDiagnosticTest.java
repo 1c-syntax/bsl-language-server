@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
@@ -31,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDiagnostic> {
 
@@ -77,9 +76,10 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
     List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0));
 
     assertThat(quickFixes)
-      .hasSize(1)
-      .first()
-      .matches(fix -> fix.getEdit().getChanges().size() == 1)
-      .matches(fix -> fix.getEdit().getChanges().get(TestUtils.FAKE_DOCUMENT_URI).get(0).getNewText().equals(""));
+      .hasSize(1);
+
+    final CodeAction fix = quickFixes.get(0);
+    assertThat(fix).of(diagnosticInstance).in(getDocumentContext()).fixes(diagnostics.get(0));
+
   }
 }
