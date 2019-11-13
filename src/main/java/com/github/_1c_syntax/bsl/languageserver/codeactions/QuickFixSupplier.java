@@ -55,7 +55,13 @@ public class QuickFixSupplier {
     if (!diagnosticClass.isPresent()) {
       return Optional.empty();
     }
-    Class<? extends QuickFixProvider> quickFixClass = (Class<? extends QuickFixProvider>) diagnosticClass.get();
+
+    final Class<? extends BSLDiagnostic> bslDiagnosticClass = diagnosticClass.get();
+    if (!quickFixClasses.contains(bslDiagnosticClass)) {
+      return Optional.empty();
+    }
+
+    Class<? extends QuickFixProvider> quickFixClass = (Class<? extends QuickFixProvider>) bslDiagnosticClass;
     return Optional.of(quickFixClass);
   }
 
