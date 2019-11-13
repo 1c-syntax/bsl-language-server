@@ -1,4 +1,4 @@
-# There is a localized text for all languages declared in the configuration
+# Partially localized text is used in the StrTemplate function
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
