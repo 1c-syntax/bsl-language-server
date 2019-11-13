@@ -31,6 +31,8 @@ import java.nio.charset.StandardCharsets;
 
 public class TestUtils {
 
+  public static final String FAKE_DOCUMENT_URI = "file:///fake-uri.bsl";
+
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
 
@@ -44,6 +46,6 @@ public class TestUtils {
 
   @SneakyThrows
   public static DocumentContext getDocumentContext(String fileContent) {
-    return new DocumentContext("file:///fake-uri.bsl", fileContent, new ServerContext());
+    return new DocumentContext(FAKE_DOCUMENT_URI, fileContent, new ServerContext());
   }
 }

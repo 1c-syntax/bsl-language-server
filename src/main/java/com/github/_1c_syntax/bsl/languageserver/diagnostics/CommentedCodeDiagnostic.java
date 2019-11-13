@@ -30,12 +30,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +56,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
+public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
   private static final String COMMENT_START = "//";
@@ -207,5 +211,22 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
       return uncomment(comment.substring(COMMENT_START.length()));
     }
     return comment;
+  }
+
+  @Override
+  public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach(diagnostic -> {
+      textEdits.add(new TextEdit(diagnostic.getRange(), ""));
+    });
+
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      info.getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
+    );
   }
 }
