@@ -102,13 +102,13 @@ public class DiagnosticInfo {
   }
 
   public String getDiagnosticMessage(Object... args) {
-    return String.format(getDiagnosticMessage(), args);
+    return String.format(getDiagnosticMessage(), args).intern();
   }
 
   public String getResourceString(String key) {
     String languageCode = configuration.getDiagnosticLanguage().getLanguageCode();
     Locale locale = Locale.forLanguageTag(languageCode);
-    return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key);
+    return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key).intern();
   }
 
   public DiagnosticType getDiagnosticType() {
