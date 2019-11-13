@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class FunctionShouldHaveReturnDiagnosticTest extends AbstractDiagnosticTest<FunctionShouldHaveReturnDiagnostic>{
+
+class FunctionShouldHaveReturnDiagnosticTest extends AbstractDiagnosticTest<FunctionShouldHaveReturnDiagnostic> {
 
   FunctionShouldHaveReturnDiagnosticTest() {
     super(FunctionShouldHaveReturnDiagnostic.class);
@@ -40,6 +40,7 @@ class FunctionShouldHaveReturnDiagnosticTest extends AbstractDiagnosticTest<Func
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 8, 0, 26));
+    assertThat(diagnostics, true)
+      .hasRange(0, 8, 0, 26);
   }
 }

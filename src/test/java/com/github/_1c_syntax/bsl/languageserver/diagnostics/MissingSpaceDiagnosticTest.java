@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -31,7 +30,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiagnostic> {
 
@@ -45,48 +45,48 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(27);
-    assertThat(diagnostics)
+    assertThat(diagnostics, true)
       // на +
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 18, 4, 19)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(7, 12, 7, 13)))
+      .hasRange(4, 18, 4, 19)
+      .hasRange(7, 12, 7, 13)
       // на =
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 15, 4, 16)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(7, 5, 7, 6)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 5, 8, 6)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(9, 5, 9, 6)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(10, 6, 10, 7)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 6, 11, 7)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 5, 13, 6)))
+      .hasRange(4, 15, 4, 16)
+      .hasRange(7, 5, 7, 6)
+      .hasRange(8, 5, 8, 6)
+      .hasRange(9, 5, 9, 6)
+      .hasRange(10, 6, 10, 7)
+      .hasRange(11, 6, 11, 7)
+      .hasRange(13, 5, 13, 6)
       // на ,
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 9, 4, 10)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(17, 18, 17, 19)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 9, 31, 10)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 27, 31, 28)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 28, 31, 29)))
+      .hasRange(4, 9, 4, 10)
+      .hasRange(17, 18, 17, 19)
+      .hasRange(31, 9, 31, 10)
+      .hasRange(31, 27, 31, 28)
+      .hasRange(31, 28, 31, 29)
       // на ;
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 12, 4, 13)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 13, 31, 14)))
+      .hasRange(4, 12, 4, 13)
+      .hasRange(31, 13, 31, 14)
       // на -
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 12, 8, 13)))
+      .hasRange(8, 12, 8, 13)
       // на *
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(10, 13, 10, 14)))
+      .hasRange(10, 13, 10, 14)
       // на /
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(11, 14, 11, 15)))
+      .hasRange(11, 14, 11, 15)
       // на %
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(13, 13, 13, 14)))
+      .hasRange(13, 13, 13, 14)
       // на >
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(18, 8, 18, 9)))
+      .hasRange(18, 8, 18, 9)
       // на <
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(19, 9, 19, 10)))
+      .hasRange(19, 9, 19, 10)
       // на >=
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(22, 8, 22, 10)))
+      .hasRange(22, 8, 22, 10)
       // на <=
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(23, 9, 23, 11)))
+      .hasRange(23, 9, 23, 11)
       // на <>
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(25, 8, 25, 10)))
+      .hasRange(25, 8, 25, 10)
       // проверка на отсутствие ошибки
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(38, 3, 38, 4)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(38, 5, 38, 6)))
+      .hasRange(38, 3, 38, 4)
+      .hasRange(38, 5, 38, 6)
     ;
   }
 
@@ -128,19 +128,20 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(12);
     // на )
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 31, 3, 32));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(17, 26, 17, 27));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(31, 12, 31, 13));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(31, 31, 31, 32));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(33, 17, 33, 18));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(36, 4, 36, 5));
-    // на (
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(Ranges.create(3, 16, 3, 17));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(Ranges.create(17, 16, 17, 17));
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(Ranges.create(31, 6, 31, 7));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(Ranges.create(31, 20, 31, 21));
-    assertThat(diagnostics.get(10).getRange()).isEqualTo(Ranges.create(33, 6, 33, 7));
-    assertThat(diagnostics.get(11).getRange()).isEqualTo(Ranges.create(34, 6, 34, 7));
+    assertThat(diagnostics, true)
+      .hasRange(3, 31, 3, 32)
+      .hasRange(17, 26, 17, 27)
+      .hasRange(31, 12, 31, 13)
+      .hasRange(31, 31, 31, 32)
+      .hasRange(33, 17, 33, 18)
+      .hasRange(36, 4, 36, 5)
+      // на (
+      .hasRange(3, 16, 3, 17)
+      .hasRange(17, 16, 17, 17)
+      .hasRange(31, 6, 31, 7)
+      .hasRange(31, 20, 31, 21)
+      .hasRange(33, 6, 33, 7)
+      .hasRange(34, 6, 34, 7);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
@@ -153,8 +154,9 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(8, 12, 8, 13));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(27, 10, 27, 11));
+    assertThat(diagnostics, true)
+      .hasRange(8, 12, 8, 13)
+      .hasRange(27, 10, 27, 11);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
@@ -166,9 +168,10 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(4);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 9, 4, 10));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(17, 18, 17, 19));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(31, 9, 31, 10));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(31, 28, 31, 29));
+    assertThat(diagnostics, true)
+      .hasRange(4, 9, 4, 10)
+      .hasRange(17, 18, 17, 19)
+      .hasRange(31, 9, 31, 10)
+      .hasRange(31, 28, 31, 29);
   }
 }

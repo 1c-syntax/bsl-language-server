@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosticTest<UsingObjectNotAvailableUnixDiagnostic> {
+
+class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosticTest<UsingObjectNotAvailableUnixDiagnostic> {
   UsingObjectNotAvailableUnixDiagnosticTest() {
     super(UsingObjectNotAvailableUnixDiagnostic.class);
   }
@@ -43,10 +43,10 @@ public class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosti
     assertThat(diagnostics).hasSize(3);
 
     // then
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 11, 3, 54)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 11, 4, 83)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 9, 20, 20)));
+    assertThat(diagnostics, true)
+      .hasRange(3, 11, 3, 54)
+      .hasRange(4, 11, 4, 83)
+      .hasRange(20, 9, 20, 20);
 
   }
 }

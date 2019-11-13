@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class UnknownPreprocessorSymbolDiagnosticTest extends AbstractDiagnosticTest<UnknownPreprocessorSymbolDiagnostic> {
 
@@ -40,8 +40,9 @@ class UnknownPreprocessorSymbolDiagnosticTest extends AbstractDiagnosticTest<Unk
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 6, 0, 11));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(4, 6, 4, 7));
+    assertThat(diagnostics, true)
+      .hasRange(0, 6, 0, 11)
+      .hasRange(4, 6, 4, 7);
   }
 }
 

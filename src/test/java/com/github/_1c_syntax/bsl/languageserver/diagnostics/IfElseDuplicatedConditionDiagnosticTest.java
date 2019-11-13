@@ -32,7 +32,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticTest<IfElseDuplicatedConditionDiagnostic> {
+class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticTest<IfElseDuplicatedConditionDiagnostic> {
 
   IfElseDuplicatedConditionDiagnosticTest() {
     super(IfElseDuplicatedConditionDiagnostic.class);
@@ -96,12 +96,12 @@ public class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticT
     List<DiagnosticRelatedInformation> relatedInformationList = diagnostic.getRelatedInformation();
     assertThat(relatedInformationList).hasSize(diagnosticRelatedInformation.size());
 
-    for (int i = 0; i<relatedInformationList.size(); i++) {
+    for (int i = 0; i < relatedInformationList.size(); i++) {
       DiagnosticRelatedInformation relatedInformation = relatedInformationList.get(i);
       assertThat(relatedInformation.getMessage()).isEqualTo(relatedMessage);
       Range range = relatedInformation.getLocation().getRange();
       assertThat(diagnosticRelatedInformation).contains(range);
-      if(i==0)
+      if (i == 0)
         assertThat(range).isEqualTo(diagnosticRange);
     }
 

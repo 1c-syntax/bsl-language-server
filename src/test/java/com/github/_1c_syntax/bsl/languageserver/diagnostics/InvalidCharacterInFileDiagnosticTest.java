@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
@@ -29,7 +28,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<InvalidCharacterInFileDiagnostic> {
   InvalidCharacterInFileDiagnosticTest() {
@@ -42,16 +42,15 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(8);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(1, 14, 1, 17)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(2, 15, 2, 18)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(3, 14, 3, 17)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(4, 22, 4, 25)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(5, 20, 5, 23)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 0, 6, 33)))
-
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(12, 0, 12, 32)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(14, 15, 14, 18)))
+    assertThat(diagnostics, true)
+      .hasRange(1, 14, 1, 17)
+      .hasRange(2, 15, 2, 18)
+      .hasRange(3, 14, 3, 17)
+      .hasRange(4, 22, 4, 25)
+      .hasRange(5, 20, 5, 23)
+      .hasRange(6, 0, 6, 33)
+      .hasRange(12, 0, 12, 32)
+      .hasRange(14, 15, 14, 18)
     ;
 
   }

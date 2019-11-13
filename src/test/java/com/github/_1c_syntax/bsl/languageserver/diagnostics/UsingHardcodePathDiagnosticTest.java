@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +29,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodePathDiagnostic> {
+class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<UsingHardcodePathDiagnostic> {
   UsingHardcodePathDiagnosticTest() {
     super(UsingHardcodePathDiagnostic.class);
   }

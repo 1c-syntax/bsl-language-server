@@ -21,24 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class SelfInsertionDiagnosticTest extends AbstractDiagnosticTest<SelfInsertionDiagnostic> {
 
-  SelfInsertionDiagnosticTest() { super(SelfInsertionDiagnostic.class); }
+  SelfInsertionDiagnosticTest() {
+    super(SelfInsertionDiagnostic.class);
+  }
 
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(2, 0, 2, 53));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(8, 0, 8, 23));
+    assertThat(diagnostics, true)
+      .hasRange(2, 0, 2, 53)
+      .hasRange(8, 0, 8, 23);
   }
 
 }
