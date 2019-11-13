@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
+import org.apache.commons.collections.map.MultiKeyMap;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -64,6 +65,8 @@ public class CognitiveComplexityComputer
   private int complexity;
   private int nestedLevel;
   private Set<BSLParserRuleContext> ignoredContexts;
+
+  private static MultiKeyMap formattedMessagesPool = new MultiKeyMap();
 
   public CognitiveComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -378,12 +381,7 @@ public class CognitiveComplexityComputer
   }
 
   private void addSecondaryLocation(Token token, int increment, int nested) {
-    String message;
-    if (nested > 0) {
-      message = String.format("+%d (nesting = %d)", increment, nested);
-    } else {
-      message = String.format("+%d", increment);
-    }
+    String message = getFormattedMessage(increment, nested);
 
     SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message);
     List<SecondaryLocation> locations;
@@ -397,6 +395,20 @@ public class CognitiveComplexityComputer
     }
 
     locations.add(secondaryLocation);
+  }
+
+  private static String getFormattedMessage(int increment, int nested) {
+    String message = (String) formattedMessagesPool.get(increment, nested);
+    if (message == null) {
+      if (nested > 0) {
+        message = String.format("+%d (nesting = %d)", increment, nested);
+      } else {
+        message = String.format("+%d", increment);
+      }
+      formattedMessagesPool.put(increment, nested, message);
+    }
+
+    return message;
   }
 
   @Value
