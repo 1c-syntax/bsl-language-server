@@ -38,13 +38,15 @@ import java.util.List;
 @EqualsAndHashCode(exclude="methods")
 public class RegionSymbol implements Symbol {
   private final String name;
-  private final BSLParser.RegionNameContext nameNode;
-
-  private final BSLParser.RegionStartContext startNode;
   private final int startLine;
-
-  private final BSLParser.RegionEndContext endNode;
   private final int endLine;
+
+  @NonFinal
+  private BSLParser.RegionNameContext nameNode;
+  @NonFinal
+  private BSLParser.RegionStartContext startNode;
+  @NonFinal
+  private BSLParser.RegionEndContext endNode;
 
   @Singular
   private final List<RegionSymbol> children;
@@ -56,5 +58,8 @@ public class RegionSymbol implements Symbol {
   @Override
   public void clearASTData() {
     node = null;
+    nameNode = null;
+    startNode = null;
+    endNode = null;
   }
 }
