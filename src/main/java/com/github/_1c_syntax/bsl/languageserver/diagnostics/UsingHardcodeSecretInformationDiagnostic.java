@@ -119,6 +119,11 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitAccessIndex(BSLParser.AccessIndexContext ctx) {
+
+    if (parentIsModifierContext(ctx)) {
+      return super.visitAccessIndex(ctx);
+    }
+
     List<Token> list = ctx.getTokens();
     if (list.size() == 1) {
       processCheckAssignmentKey(ctx, list.get(0).getText());
@@ -134,6 +139,11 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
    */
   @Override
   public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
+
+    if (parentIsModifierContext(ctx)) {
+      return super.visitAccessProperty(ctx);
+    }
+
     processCheckAssignmentKey(ctx, ctx.getStop().getText());
     return super.visitAccessProperty(ctx);
   }
@@ -252,6 +262,10 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       return parent;
     }
     return getAncestorByRuleIndex(parent, type);
+  }
+
+  private boolean parentIsModifierContext(ParserRuleContext ctx) {
+    return ctx.getParent() instanceof BSLParser.ModifierContext;
   }
 
 }
