@@ -98,4 +98,8 @@ public final class DiagnosticProvider {
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
   }
 
+  public void clearAllComputedDiagnostics() {
+    computedDiagnostics.clear();
+  }
+
 }

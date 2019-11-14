@@ -279,6 +279,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   public void reset() {
+    diagnosticProvider.clearAllComputedDiagnostics();
     context.clear();
   }
 
