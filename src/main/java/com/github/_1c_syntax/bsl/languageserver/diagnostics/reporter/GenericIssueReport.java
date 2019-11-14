@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -61,12 +60,10 @@ public class GenericIssueReport {
   private static Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
 
   static {
-
     severityMap.put(DiagnosticSeverity.Error, SEVERITY_CRITICAL);
     severityMap.put(DiagnosticSeverity.Hint, SEVERITY_INFO);
     severityMap.put(DiagnosticSeverity.Information, SEVERITY_MINOR);
     severityMap.put(DiagnosticSeverity.Warning, SEVERITY_MAJOR);
-
   }
 
   static {
@@ -88,22 +85,16 @@ public class GenericIssueReport {
 
   public GenericIssueReport(AnalysisInfo analysisInfo) {
     List<GenericIssueEntry> listGenericIssueEntry = new ArrayList<>();
-    Path sourceRoot = Paths.get(analysisInfo.getSourceDir());
     for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         GenericIssueEntry entry = new GenericIssueEntry(
-          getRelativizePath(sourceRoot, fileInfo.getPath()),
-          diagnostic,
-          sourceRoot
+          fileInfo.getPath().toString(),
+          diagnostic
         );
         listGenericIssueEntry.add(entry);
       }
     }
     issues = listGenericIssueEntry;
-  }
-
-  private static String getRelativizePath(Path sourceRoot, Path path) {
-    return sourceRoot.toAbsolutePath().relativize(path.toAbsolutePath()).toString();
   }
 
   @Value
@@ -135,7 +126,7 @@ public class GenericIssueReport {
       this.secondaryLocations = new ArrayList<>(secondaryLocations);
     }
 
-    public GenericIssueEntry(String fileName, Diagnostic diagnostic, Path sourceRoot) {
+    public GenericIssueEntry(String fileName, Diagnostic diagnostic) {
       DiagnosticSeverity localSeverity = diagnostic.getSeverity();
 
 
@@ -159,7 +150,7 @@ public class GenericIssueReport {
         secondaryLocations = new ArrayList<>();
       } else {
         secondaryLocations = relatedInformation.stream()
-          .map(diagnosticRelatedInformation -> new Location(diagnosticRelatedInformation, sourceRoot))
+          .map(Location::new)
           .collect(Collectors.toList());
       }
     }
@@ -188,12 +179,9 @@ public class GenericIssueReport {
       textRange = new TextRange(diagnostic.getRange());
     }
 
-    public Location(DiagnosticRelatedInformation relatedInformation, Path sourceRoot) {
+    public Location(DiagnosticRelatedInformation relatedInformation) {
       message = relatedInformation.getMessage();
-      filePath = getRelativizePath(
-        sourceRoot,
-        Paths.get(URI.create(relatedInformation.getLocation().getUri())).toAbsolutePath()
-      );
+      filePath = Paths.get(URI.create(relatedInformation.getLocation().getUri())).toString();
       textRange = new TextRange(relatedInformation.getLocation().getRange());
     }
   }

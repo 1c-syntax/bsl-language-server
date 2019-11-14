@@ -39,8 +39,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -59,11 +57,8 @@ class JUnitTestSuites {
   @JacksonXmlElementWrapper(useWrapping = false)
   private final List<JUnitTestSuite> testsuite;
 
-  private static Path sourceDir = Paths.get(".");
-
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
     name = "bsl-language-server";
-    setSourceDir(Paths.get(analysisInfo.getSourceDir()).toAbsolutePath());
 
     testsuite = analysisInfo.getFileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
@@ -79,10 +74,6 @@ class JUnitTestSuites {
     this.testsuite = new ArrayList<>(testsuite);
   }
 
-  private static void setSourceDir(Path path) {
-    sourceDir = path;
-  }
-
   @Value
   static class JUnitTestSuite {
 
@@ -93,7 +84,7 @@ class JUnitTestSuites {
     private final List<JUnitTestCase> testcase;
 
     public JUnitTestSuite(FileInfo fileInfo) {
-      this.name = sourceDir.relativize(fileInfo.getPath().toAbsolutePath()).toString();
+      this.name = fileInfo.getPath().toString();
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
