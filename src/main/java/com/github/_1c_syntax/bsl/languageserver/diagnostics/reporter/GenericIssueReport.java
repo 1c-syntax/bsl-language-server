@@ -36,6 +36,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -87,14 +88,22 @@ public class GenericIssueReport {
 
   public GenericIssueReport(AnalysisInfo analysisInfo) {
     List<GenericIssueEntry> listGenericIssueEntry = new ArrayList<>();
+    Path sourceRoot = Paths.get(analysisInfo.getSourceDir());
     for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         GenericIssueEntry entry = new GenericIssueEntry(
-          analysisInfo.getRelativizePath(fileInfo.getPath()), diagnostic, analysisInfo);
+          getRelativizePath(sourceRoot, fileInfo.getPath()),
+          diagnostic,
+          sourceRoot
+        );
         listGenericIssueEntry.add(entry);
       }
     }
     issues = listGenericIssueEntry;
+  }
+
+  private static String getRelativizePath(Path sourceRoot, Path path) {
+    return sourceRoot.toAbsolutePath().relativize(path.toAbsolutePath()).toString();
   }
 
   @Value
@@ -126,7 +135,7 @@ public class GenericIssueReport {
       this.secondaryLocations = new ArrayList<>(secondaryLocations);
     }
 
-    public GenericIssueEntry(String fileName, Diagnostic diagnostic, AnalysisInfo analysisInfo) {
+    public GenericIssueEntry(String fileName, Diagnostic diagnostic, Path sourceRoot) {
       DiagnosticSeverity localSeverity = diagnostic.getSeverity();
 
 
@@ -150,7 +159,7 @@ public class GenericIssueReport {
         secondaryLocations = new ArrayList<>();
       } else {
         secondaryLocations = relatedInformation.stream()
-          .map(diagnosticRelatedInformation -> new Location(diagnosticRelatedInformation, analysisInfo))
+          .map(diagnosticRelatedInformation -> new Location(diagnosticRelatedInformation, sourceRoot))
           .collect(Collectors.toList());
       }
     }
@@ -179,10 +188,11 @@ public class GenericIssueReport {
       textRange = new TextRange(diagnostic.getRange());
     }
 
-    public Location(DiagnosticRelatedInformation relatedInformation, AnalysisInfo analysisInfo) {
+    public Location(DiagnosticRelatedInformation relatedInformation, Path sourceRoot) {
       message = relatedInformation.getMessage();
-      filePath = analysisInfo.getRelativizePath(
-        Paths.get(URI.create(relatedInformation.getLocation().getUri())).toAbsolutePath().toString()
+      filePath = getRelativizePath(
+        sourceRoot,
+        Paths.get(URI.create(relatedInformation.getLocation().getUri())).toAbsolutePath()
       );
       textRange = new TextRange(relatedInformation.getLocation().getRange());
     }

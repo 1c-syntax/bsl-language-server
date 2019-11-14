@@ -29,8 +29,6 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import lombok.Data;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,13 +42,4 @@ public class AnalysisInfo {
   private final LocalDateTime date;
   private final List<FileInfo> fileinfos;
   private final String sourceDir;
-
-  public final String getRelativizePath(Path path) {
-    return Paths.get(sourceDir).toAbsolutePath().relativize(path.toAbsolutePath()).toString();
-  }
-
-  public final String getRelativizePath(String path) {
-    return getRelativizePath(Paths.get(path));
-  }
-
 }
