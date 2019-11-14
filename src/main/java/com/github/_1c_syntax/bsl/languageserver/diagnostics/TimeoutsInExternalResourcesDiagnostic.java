@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.STANDARD
   }
 )
-public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
+public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern patternTimeout = Pattern.compile("^.(Таймаут|Timeout)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -58,7 +58,7 @@ public class WorkingTimeoutWithExternalResourcesDiagnostic extends AbstractVisit
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final int DEFAULT_NUMBER_TIMEOUT = 5;
 
-  public WorkingTimeoutWithExternalResourcesDiagnostic(DiagnosticInfo info) {
+  public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 

@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class WorkingTimeoutWithExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<WorkingTimeoutWithExternalResourcesDiagnostic> {
-  WorkingTimeoutWithExternalResourcesDiagnosticTest() {
-    super(WorkingTimeoutWithExternalResourcesDiagnostic.class);
+class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<TimeoutsInExternalResourcesDiagnostic> {
+  TimeoutsInExternalResourcesDiagnosticTest() {
+    super(TimeoutsInExternalResourcesDiagnostic.class);
   }
 
   @Test
