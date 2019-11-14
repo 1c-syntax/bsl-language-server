@@ -11,3 +11,14 @@
 #КонецОбласти
 
 А=1; А=2; А=3;
+
+Процедура А()
+ УспешноПодключено = ПодключитьВнешнююКомпоненту(
+		#Если Клиент Тогда
+			"C:\Projects\ETPAddin\Bin\Debug-Win32\AddInNative\AddInNative.dll",
+		#Иначе
+			"C:\Projects\ETPAddin\Bin\Debug-x64\AddInNative\AddInNative.dll",
+		#КонецЕсли
+			"ETP",
+			ТипВнешнейКомпоненты.Native);
+КонецПроцедуры

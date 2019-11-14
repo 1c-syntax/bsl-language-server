@@ -65,7 +65,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (ctx.preprocessor() != null) {
+    if (ctx.preprocessor() != null || ctx.exception != null) {
       return super.visitStatement(ctx);
     }
 
