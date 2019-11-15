@@ -1,19 +1,20 @@
 # Control flow statements should not be nested too deep
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br/>`brainoverload` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br>`brainoverload`
 
-## Parameters 
+## Parameters
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `maxAllowedLevel` | `int` | Максимальный уровень вложенности конструкций | `4` |
+Name | Type | Description | Default value
+--- | --- | --- | ---
+`maxAllowedLevel` | `int` | Максимальный уровень вложенности конструкций | `4`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
-Nested "If", "For", "ForEach", "While" and "Try" operators are key ingredients for so called "spaghetti-code".
+Nested operators "If", "For", "ForEach", "While" and "Try" are key ingredients for so called "spaghetti-code".
 
 Such code is hard for reading, refactoring and support.
 
@@ -23,24 +24,23 @@ Incorrect:
 
 ```bsl
 
-Если Чтото Тогда                  // Допустимо - уровень = 1
+If Something Then                  // Acceptable - level = 1
   /* ... */
-  Если ЧтоТоЕще Тогда             // Допустимо - уровень = 2
+  If SomethingElse Then             // Acceptable - level = 2
     /* ... */
-    Для Ном = 0 По 10 Цикл          // Допустимо - уровень = 3
+    For Nom = 0 to 10 Loop          // Acceptable - level = 3
       /* ... */
-      Если ОпятьУсловие Тогда       // Допустимо - уровень = 4, лимит достигнут, но не превышен
-        Если ЕщеЧтото Тогда        // Уровень = 5, Превышен лимит
+      If OneMoreCondition Then     // Acceptable - level = 4, limit is reached, not yet breached
+        If SomethingElse Then        // Level = 5, Limit is breached
           /* ... */
-        КонецЕсли;
-        Возврат;
-      КонецЕсли;
-    КонецЦикла;
-  КонецЕсли;
-КонецЕсли;
-
+        EndIf;
+        Return;
+      EndIf;
+    EndLoop;
+  EndIf;
+EndIf;
 ```
 
 ## Sources
 
-* [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
+- [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
