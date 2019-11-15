@@ -40,9 +40,9 @@ EndProcedure
 
 Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.
 
-**ВНИМАНИЕ**:
+**ATTENTION** : 
 
-Блок комментарием считается кодом, если хотя бы одна строка внутри блока определяется как код.
+A code block is considered commented , if at least one line inside the block is defined as code.
 
 ## Sources
 
