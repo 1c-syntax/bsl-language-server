@@ -55,12 +55,20 @@ public class DiagnosticStorage {
   }
 
   protected void addDiagnostic(BSLParserRuleContext node) {
+    if (node.exception != null) {
+      return;
+    }
+
     addDiagnostic(
       Ranges.create(node)
     );
   }
 
   protected void addDiagnostic(BSLParserRuleContext node, String diagnosticMessage) {
+    if (node.exception != null) {
+      return;
+    }
+
     addDiagnostic(
       Ranges.create(node),
       diagnosticMessage
@@ -116,6 +124,10 @@ public class DiagnosticStorage {
   }
 
   protected void addDiagnostic(BSLParserRuleContext node, List<DiagnosticRelatedInformation> relatedInformation) {
+    if (node.exception != null) {
+      return;
+    }
+
     addDiagnostic(
       node,
       diagnostic.getInfo().getDiagnosticMessage(),
@@ -136,6 +148,11 @@ public class DiagnosticStorage {
     String diagnosticMessage,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
+
+    if (node.exception != null) {
+      return;
+    }
+
     addDiagnostic(
       Ranges.create(node),
       diagnosticMessage,
