@@ -1,13 +1,14 @@
 # Else...The...ElseIf... statement should end with Else branch
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Major` | `Yes` | `10` | `badpractice` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `badpractice`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
-**If...Then...ElseIf...** statement should end with  **Else** branch.
+Syntax construct **If ... Then ... ElseIf ...** must end with the **Else** branch.
 
 ## Examples
 
