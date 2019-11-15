@@ -43,15 +43,10 @@ import java.util.stream.Collectors;
 public class DiagnosticSupplier {
 
   private final LanguageServerConfiguration configuration;
-  private List<Class<? extends BSLDiagnostic>> diagnosticClasses;
+  private static List<Class<? extends BSLDiagnostic>> diagnosticClasses = createDiagnosticClasses();
 
   public DiagnosticSupplier(LanguageServerConfiguration configuration) {
     this.configuration = configuration;
-    diagnosticClasses = createDiagnosticClasses();
-  }
-
-  public List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
-    return new ArrayList<>(diagnosticClasses);
   }
 
   public Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(String diagnosticCode) {
@@ -163,6 +158,10 @@ public class DiagnosticSupplier {
       .stream()
       .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
       .collect(Collectors.toList());
+  }
+
+  public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
+    return new ArrayList<>(diagnosticClasses);
   }
 
 }
