@@ -62,6 +62,6 @@ Correct:
 ПараметрыФормыКомпоновки.Вставить("Заголовок", ЗаголовокФормыНастройкиСхемыКомпоновкиДанных);
 ```
 
-## Sources
+## Reference
 
-- [Стандарт: Использование объектов типа Структура](https://its.1c.ru/db/v8std#content:693:hdoc)
+- [Standard: Using objects of type Structure](https://its.1c.ru/db/v8std#content:693:hdoc)
