@@ -1,13 +1,14 @@
 # Ternary operator usage
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Minor` | `No` | `3` | `brainoverload` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `3` | `brainoverload`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
-Use If-Else instead of ternary operator
+Instead of the ternary operator, use the "If-else" construct.
 
 ## Examples
 
