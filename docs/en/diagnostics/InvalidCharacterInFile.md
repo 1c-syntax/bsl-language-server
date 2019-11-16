@@ -1,8 +1,33 @@
 # Invalid character
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `1` | `error`<br/>`standard`<br/>`unpredictable` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Error` | `BSL`<br>`OS` | `Major` | `Yes` | `1` | `error`<br>`standard`<br>`unpredictable`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
+
+В текстах модулей (включая комментарии) не допускается использовать неразрывные пробелы и знак минус "-" в других кодировках (короткое, длинное тире, мягкий перенос и т.д.).
+
+Такие символы часто оказываются в тексте модулей при копировании из офисных документов и приводят к ряду сложностей при разработке.
+
+Например:
+
+- не работает поиск фрагментов текста, включающих «неправильные» минусы и пробелы
+- некорректно выводятся подсказки типов параметров процедур и функций в конфигураторе и расширенная проверка в 1С:EDT
+- указание «неправильного» минуса в выражениях приведет к синтаксической ошибке
+
+Диагностика обнаруживает следующие недопустимые символы
+
+- En Dash
+- Figure Dash
+- Em Dash
+- Horizontal Bar
+- "Wrong" Minus
+- Soft Hyphen
+- Non-breaking Space
+
+## Sources
+
+- [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
