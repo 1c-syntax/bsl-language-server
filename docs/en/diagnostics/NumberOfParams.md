@@ -25,9 +25,9 @@ Incorrect:
 
 ```bsl
 // Create item in catalog "Goods"
-Процедура СоздатьЭлементНоменклатуры(Наименование, ТоварУслуга, ЕдиницаИзмерения, ВесНетто, ПроверятьУникальность = Истина)
+Procedure CreateNewGoods(Description, Goods, Units, Weight, Check = True)
 
-КонецПроцедуры
+EndProcedure
 ```
 
 Correct:
@@ -36,8 +36,9 @@ Group parameters, having goods item properties into Structure ЗначенияР
 
 ```bsl
 // Create item in catalog "Goods"
-Процедура СоздатьЭлементНоменклатуры(ЗначенияРеквизитов, ПроверятьУникальность = Истина)
-КонецПроцедуры
+Procedure CreateNewGoods(Parameters, Check = True)
+
+EndProcedure
 ```
 
 ## Sources
