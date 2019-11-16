@@ -23,10 +23,10 @@ If the project uses SSL sub-system, then passwords should be stored in safe stor
 
 ### Additionally
 
-В значений паролей исключаются строки, где все символы `*`:
+Strings with all symbols `*` are excluded from the chech:
 
 ```bsl
-Пароль = "**********";
+Password = "**********";
 ```
 
 ## Examples
@@ -44,6 +44,6 @@ Passwords = CommonModule.ReadDataFromSafeStorage("StoringIdentifier", "Password"
 Password = Passwords.Password;
 ```
 
-## Sources
+## Reference
 
 - [Standard: Store passwords safe](https://its.1c.ru/db/v8std#content:740:hdoc)
