@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 ## Description
 
-Ошибка возникает если исходный код модуля написан с нарушением синтаксиса языка или при неправильном использовании инструкций препроцессора.
+The error occurs if the source code of the module is written in violation of the language syntax or if the preprocessor instructions are used incorrectly.
 
 Separate grammatical constructions, expressions, as well as declarations and places for calling procedures and functions, should not be split by preprocessor instructions and regions.
 
