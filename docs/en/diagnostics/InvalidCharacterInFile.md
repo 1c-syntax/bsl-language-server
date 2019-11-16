@@ -12,7 +12,7 @@ In the texts of modules (including comments) it is not allowed to use inextricab
 
 Such characters often appear in the text of the modules when copying from office documents and lead to a number of difficulties in the development.
 
-Например:
+Example:
 
 - the search for fragments of text that includes “wrong” minuses and spaces does not work
 - hints of types of parameters of procedures and functions in the configurator and extended verification in 1C: EDT are incorrectly displayed
