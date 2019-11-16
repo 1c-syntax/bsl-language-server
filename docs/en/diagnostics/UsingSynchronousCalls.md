@@ -8,11 +8,11 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 ## Description
 
-При разработке конфигураций, предназначенных для работы в веб-клиенте, запрещено использовать модальные формы и диалоги и синхронные вызовы. В противном случае, конфигурация окажется неработоспособной в ряде веб-браузеров, так как модальные окна не входят в стандарт веб-разработки, а для обеспечения взаимодействия с пользователем требуются асинхронные средства.
+When developing configurations designed to work in the web client, it is forbidden to use modal forms and dialogs and synchronous calls. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard, and asynchronous tools are required to ensure user interaction.
 
 ### Diagnostic restrictions
 
-На данный момент диагностируется **только использование методов глобального контекста**.
+Currently, **only the use of global context methods** is diagnosed.
 
 Method list:
 
