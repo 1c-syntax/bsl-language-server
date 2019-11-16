@@ -44,7 +44,7 @@ Rusian variant | English variant
 ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ | REQUESTUSERPERMISSION
 ЗАПУСТИТЬПРИЛОЖЕНИЕ | RUNAPP
 
-## Источники
+## Sources
 
 - [Ограничение на использование модальных окон и синхронных вызовов](https://its.1c.ru/db/v8std/content/703/hdoc/)
 - [Opt out of modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
