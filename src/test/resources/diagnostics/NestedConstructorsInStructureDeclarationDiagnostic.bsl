@@ -58,4 +58,8 @@
     Result = New Structure("Params",                                              // Pass
                             FillStructure(New FixedStructure(New Structure)));    // Pass
 
-    Result = New Structure("field1, field2, field3", New Array(), New Array(), New Array()); //Pass
+    Result = New Structure("field1, field2, field3", New Array(), New Array(), New Array()); // Pass
+
+    // FP
+    А = Новый Структура(Новый ФиксированнаяСтруктура(Мок_ПараметрыПроцедуры));
+    А = Новый ФиксированнаяСтруктура(Новый Структура("Источник, Данные"));

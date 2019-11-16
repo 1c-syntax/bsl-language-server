@@ -51,7 +51,7 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
     try {
       File reportFile = new File(outputDir.toFile(), "bsl-generic-json.json");
       mapper.writeValue(reportFile, report);
-      LOGGER.info("Generic issue report saved to {}", reportFile.getAbsolutePath());
+      LOGGER.info("Generic issue report saved to {}", reportFile.getCanonicalPath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

@@ -1,7 +1,7 @@
 ---
 name: Ошибка (прочее)
 about: Регистрация обнаруженной ошибки
-title: ''
+title: '[BUG]'
 labels: type/bug
 assignees: ''
 

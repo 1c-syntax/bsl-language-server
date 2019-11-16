@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
@@ -33,46 +34,47 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
-  private final T diagnostic;
+  protected final T diagnosticInstance;
 
+  @SuppressWarnings("unchecked")
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
-    try {
-      diagnostic = diagnosticClass.getDeclaredConstructor().newInstance();
-    } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-      e.printStackTrace();
-      throw new RuntimeException("Diagnostic instantiate error", e);
-    }
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
+    diagnosticInstance = (T) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
   }
 
-  T getDiagnosticInstance() {
-    return diagnostic;
+  protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    return diagnosticInstance.getDiagnostics(documentContext);
   }
 
-  List<Diagnostic> getDiagnostics() {
+  protected List<Diagnostic> getDiagnostics() {
     DocumentContext documentContext = getDocumentContext();
-    return diagnostic.getDiagnostics(documentContext);
+    return getDiagnostics(documentContext);
   }
 
-  List<Diagnostic> getDiagnostics(String SimpleFileName) {
-    DocumentContext documentContext = getDocumentContext(SimpleFileName);
-    return diagnostic.getDiagnostics(documentContext);
+  protected List<Diagnostic> getDiagnostics(String simpleFileName) {
+    DocumentContext documentContext = getDocumentContext(simpleFileName);
+    return getDiagnostics(documentContext);
   }
 
-  List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic) {
+    DocumentContext documentContext = getDocumentContext();
+    return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
+  }
+
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
     DocumentContext documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
-  List<CodeAction> getQuickFixes(Range range) {
+  protected List<CodeAction> getQuickFixes(Range range) {
     DocumentContext documentContext = getDocumentContext();
-    List<Diagnostic> diagnostics = this.diagnostic.getDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);
   }
@@ -89,16 +91,16 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     params.setRange(range);
     params.setContext(codeActionContext);
 
-    return ((QuickFixProvider) this.diagnostic).getQuickFixes(diagnostics, params, documentContext);
+    return ((QuickFixProvider) this.diagnosticInstance).getQuickFixes(diagnostics, params, documentContext);
 
   }
 
-  private DocumentContext getDocumentContext() {
-    return getDocumentContext(diagnostic.getClass().getSimpleName());
+  protected DocumentContext getDocumentContext() {
+    return getDocumentContext(diagnosticInstance.getClass().getSimpleName());
   }
 
   @SneakyThrows
-  private DocumentContext getDocumentContext(String SimpleFileName) {
+  protected DocumentContext getDocumentContext(String SimpleFileName) {
     String filePath = "diagnostics/" + SimpleFileName + ".bsl";
     String textDocumentContent = IOUtils.resourceToString(
       filePath,

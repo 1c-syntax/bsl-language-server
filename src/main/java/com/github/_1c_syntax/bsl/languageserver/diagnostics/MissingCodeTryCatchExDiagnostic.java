@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -54,6 +55,10 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
     description = "Считать комментарий в исключении кодом"
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
+
+  public MissingCodeTryCatchExDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {

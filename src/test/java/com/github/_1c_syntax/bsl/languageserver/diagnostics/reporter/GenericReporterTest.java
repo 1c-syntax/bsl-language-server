@@ -38,7 +38,9 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,18 +62,36 @@ class GenericReporterTest {
   void report() throws IOException {
 
     // given
-    Diagnostic diagnostic = new Diagnostic(
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    diagnostics.add(new Diagnostic(
       Ranges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
       "test"
-    );
-    Location location = new Location("file:///fake-uri.bsl", Ranges.create(0, 2, 2, 3));
-    diagnostic.setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
+    ));
+
+    diagnostics.add(new Diagnostic(
+      Ranges.create(0, 1, 2, 4),
+      "message4",
+      DiagnosticSeverity.Error,
+      "test-source2",
+      "test3"
+    ));
+
+    diagnostics.add(new Diagnostic(
+      Ranges.create(3, 1, 4, 4),
+      "message4",
+      DiagnosticSeverity.Error,
+      "test-source2",
+      "test3"
+    ));
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
-    FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
+    Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
+    diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
+
+    FileInfo fileInfo = new FileInfo(documentContext, diagnostics);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
 
     AbstractDiagnosticReporter reporter = new GenericIssueReporter();
@@ -83,7 +103,13 @@ class GenericReporterTest {
     ObjectMapper mapper = new ObjectMapper();
     GenericIssueReport report = mapper.readValue(file, GenericIssueReport.class);
     assertThat(report).isNotNull();
-
+    assertThat(report.getIssues()).isNotNull();
+    assertThat(report.getIssues().size()).isEqualTo(3);
+    assertThat(report.getIssues().get(0).getPrimaryLocation()).isNotNull();
+    assertThat(report.getIssues().get(0).getSecondaryLocations()).isNotNull();
+    assertThat(report.getIssues().get(0).getSecondaryLocations().size()).isEqualTo(1);
+    assertThat(report.getIssues().get(2).getRuleId()).isEqualTo("test3");
+    assertThat(report.getIssues().get(1).getSeverity()).isEqualTo("CRITICAL");
   }
 
 }

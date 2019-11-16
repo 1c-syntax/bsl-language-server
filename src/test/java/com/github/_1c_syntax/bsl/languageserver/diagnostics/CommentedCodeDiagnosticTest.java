@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDiagnostic> {
 
@@ -38,34 +37,47 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   }
 
   @Test
-  void runTest()
-  {
+  void runTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(11);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 0, 6, 81));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(16, 4, 34, 16));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(36, 4, 42, 156));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(44, 4, 49, 16));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(59, 4, 65, 78));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(76, 0, 80, 18));
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(Ranges.create(82, 0, 82, 23));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(Ranges.create(84, 0, 85, 38));
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(Ranges.create(117, 0, 118, 24));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(Ranges.create(203, 0, 203, 32));
-    assertThat(diagnostics.get(10).getRange()).isEqualTo(Ranges.create(244, 0, 264, 152));
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 6, 81)
+      .hasRange(16, 4, 34, 16)
+      .hasRange(36, 4, 42, 156)
+      .hasRange(44, 4, 49, 16)
+      .hasRange(59, 4, 65, 78)
+      .hasRange(76, 0, 80, 18)
+      .hasRange(82, 0, 82, 23)
+      .hasRange(84, 0, 85, 38)
+      .hasRange(117, 0, 118, 24)
+      .hasRange(203, 0, 203, 32)
+      .hasRange(244, 0, 264, 152);
   }
 
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
     configuration.put("threshold", 1f);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testQuickFixRemoveCode(){
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0));
+
+    assertThat(quickFixes)
+      .hasSize(1);
+
+    final CodeAction fix = quickFixes.get(0);
+    assertThat(fix).of(diagnosticInstance).in(getDocumentContext()).fixes(diagnostics.get(0));
 
   }
 }

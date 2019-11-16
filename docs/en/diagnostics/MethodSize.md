@@ -1,5 +1,14 @@
-# Method size limit
+# Method size restriction
 
-## Parameters
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Yes` | `30` | `badpractice` |
 
-- `maxMethodSize` - `Integer` - max method size in lines. By default set to 200.
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `maxMethodSize` | `int` | Максимальная длина метода в строках | `200` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description

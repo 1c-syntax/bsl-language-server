@@ -24,17 +24,22 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
-import com.github._1c_syntax.bsl.languageserver.utils.Tokenizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.Tokenizer;
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +56,11 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
+public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
+  private static final String COMMENT_START = "//";
+  private static final int MINIMAL_TOKEN_COUNT = 2;
 
   @DiagnosticParameter(
     type = Float.class,
@@ -65,7 +72,8 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   private List<MethodDescription> methodDescriptions;
   private CodeRecognizer codeRecognizer;
 
-  public CommentedCodeDiagnostic() {
+  public CommentedCodeDiagnostic(DiagnosticInfo info) {
+    super(info);
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
@@ -172,14 +180,15 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isTextParsedAsCode(String text) {
-    if (codeRecognizer.meetsCondition(text)) {
-      Tokenizer tokenizer = new Tokenizer(uncomment(text));
-      final List<Token> tokens = tokenizer.getTokens();
+    if (!codeRecognizer.meetsCondition(text)) {
+      return false;
+    }
 
-      // Если меньше двух токенов нет смысла анализировать - это код
-      if (tokens.size() < 2) {
-        return true;
-      }
+    Tokenizer tokenizer = new Tokenizer(uncomment(text));
+    final List<Token> tokens = tokenizer.getTokens();
+
+    // Если меньше двух токенов нет смысла анализировать - это код
+    if (tokens.size() >= MINIMAL_TOKEN_COUNT) {
 
       List<Integer> tokenTypes = tokens.stream()
         .map(Token::getType)
@@ -192,18 +201,32 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic {
           return false;
         }
       }
-
-      return true;
     }
 
-    return false;
-  }
+    return true;
+}
 
   private static String uncomment(String comment) {
-    if (comment.startsWith("//")) {
-      return uncomment(comment.substring(2));
+    if (comment.startsWith(COMMENT_START)) {
+      return uncomment(comment.substring(COMMENT_START.length()));
     }
     return comment;
   }
 
+  @Override
+  public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach(diagnostic -> {
+      textEdits.add(new TextEdit(diagnostic.getRange(), ""));
+    });
+
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      info.getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
+    );
+  }
 }

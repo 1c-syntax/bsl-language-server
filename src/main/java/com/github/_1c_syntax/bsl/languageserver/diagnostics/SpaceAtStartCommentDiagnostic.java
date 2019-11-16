@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -60,6 +61,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   private static final int COMMENT_LENGTH = 2;
 
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  private DiagnosticInfo info;
 
   @DiagnosticParameter(
     type = String.class,
@@ -68,6 +70,10 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
       + " Список через запятую. Например: //@,//(c)"
   )
   private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
+
+  public SpaceAtStartCommentDiagnostic(DiagnosticInfo info) {
+    this.info = info;
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -94,6 +100,11 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
         diagnosticStorage.addDiagnostic(t));
 
     return diagnosticStorage.getDiagnostics();
+  }
+
+  @Override
+  public DiagnosticInfo getInfo() {
+    return info;
   }
 
   private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
@@ -131,7 +142,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
 
     return CodeActionProvider.createCodeActions(
       textEdits,
-      getResourceString("quickFixMessage"),
+      info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
       diagnostics
     );

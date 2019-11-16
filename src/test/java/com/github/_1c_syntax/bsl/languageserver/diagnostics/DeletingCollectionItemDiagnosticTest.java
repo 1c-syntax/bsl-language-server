@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest<DeletingCollectionItemDiagnostic> {
+
+class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest<DeletingCollectionItemDiagnostic> {
 
   DeletingCollectionItemDiagnosticTest() {
     super(DeletingCollectionItemDiagnostic.class);
@@ -39,14 +39,15 @@ public class DeletingCollectionItemDiagnosticTest extends AbstractDiagnosticTest
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(8);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(17, 8, 17, 47));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(23, 4, 23, 21));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(28, 4, 28, 25));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(33, 4, 33, 30));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(39, 8, 39, 34));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(45, 4, 45, 23));
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(Ranges.create(50, 4, 50, 37));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(Ranges.create(55, 4, 55, 39));
+    assertThat(diagnostics, true)
+      .hasRange(17, 8, 17, 47)
+      .hasRange(23, 4, 23, 21)
+      .hasRange(28, 4, 28, 25)
+      .hasRange(33, 4, 33, 30)
+      .hasRange(39, 8, 39, 34)
+      .hasRange(45, 4, 45, 23)
+      .hasRange(50, 4, 50, 37)
+      .hasRange(55, 4, 55, 39);
   }
 
 }

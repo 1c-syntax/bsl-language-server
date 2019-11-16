@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentContextTest {
 
   @Test
+  void testRebuild() throws IOException {
+
+    DocumentContext documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
+    assertThat(documentContext.getTokens()).hasSize(48);
+
+    File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
+    String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    documentContext.rebuild(fileContent);
+    assertThat(documentContext.getTokens()).hasSize(19);
+  }
+
+  @Test
   void testClearASTData() throws IOException, IllegalAccessException {
     // given
     DocumentContext documentContext = getDocumentContext();
@@ -42,9 +55,8 @@ class DocumentContextTest {
     documentContext.clearASTData();
 
     // then
-    final Object lazyAst = FieldUtils.readField(documentContext, "ast", true);
-    final Object ast = FieldUtils.readField(lazyAst, "value", true);
-    assertThat(ast).isNull();
+    final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
+    assertThat(tokenizer).isNull();
   }
 
   @Test
@@ -68,19 +80,22 @@ class DocumentContextTest {
 
   public DocumentContext getDocumentContext() throws IOException {
 
-    String filePath = "./src/test/resources/context/DocumentContextTest.bsl";
-    return getDocumentContext(filePath);
+    return getDocumentContext("./src/test/resources/context/DocumentContextTest.bsl");
   }
 
   private DocumentContext getDocumentContext(String filePath) throws IOException {
 
-    // given
-    String fileContent = FileUtils.readFileToString(
-      new File(filePath),
-      StandardCharsets.UTF_8
-    );
+    return TestUtils.getDocumentContextFromFile(filePath);
+  }
 
-    return new DocumentContext("fake-uri.bsl", fileContent);
+  @Test
+  void testComputeMetricsLocForCover() throws IOException {
+
+    DocumentContext documentContext =
+      getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
+
+    assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
+
   }
 
 }

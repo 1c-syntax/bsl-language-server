@@ -21,17 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<UsingFindElementByStringDiagnostic> {
 
-  UsingFindElementByStringDiagnosticTest() { super(UsingFindElementByStringDiagnostic.class); }
+class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<UsingFindElementByStringDiagnostic> {
+
+  UsingFindElementByStringDiagnosticTest() {
+    super(UsingFindElementByStringDiagnostic.class);
+  }
 
   @Test
   void runTest() {
@@ -41,11 +43,12 @@ public class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTe
 
     // then
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(7, 38, 7, 78));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(9, 40, 9, 61));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(13, 27, 13, 59));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(24, 35, 24, 53));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(27, 35, 27, 51));
+    assertThat(diagnostics, true)
+      .hasRange(7, 38, 7, 78)
+      .hasRange(9, 40, 9, 61)
+      .hasRange(13, 27, 13, 59)
+      .hasRange(24, 35, 24, 53)
+      .hasRange(27, 35, 27, 51);
 
   }
 

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.codeactions.CodeActionSupplier;
 import com.github._1c_syntax.bsl.languageserver.codeactions.FixAllCodeActionSupplier;
 import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixCodeActionSupplier;
+import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -45,9 +46,11 @@ import java.util.stream.Collectors;
 public final class CodeActionProvider {
 
   private final DiagnosticProvider diagnosticProvider;
+  private final QuickFixSupplier quickFixSupplier;
 
-  public CodeActionProvider(DiagnosticProvider diagnosticProvider) {
+  public CodeActionProvider(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
     this.diagnosticProvider = diagnosticProvider;
+    this.quickFixSupplier = quickFixSupplier;
   }
 
   public static List<CodeAction> createCodeActions(
@@ -87,8 +90,10 @@ public final class CodeActionProvider {
 
     List<CodeAction> codeActions = new ArrayList<>();
 
-    CodeActionSupplier fixAllCodeActionSupplier = new FixAllCodeActionSupplier(diagnosticProvider);
-    CodeActionSupplier quickFixCodeActionSupplier = new QuickFixCodeActionSupplier(diagnosticProvider);
+    CodeActionSupplier fixAllCodeActionSupplier
+      = new FixAllCodeActionSupplier(diagnosticProvider, quickFixSupplier);
+    CodeActionSupplier quickFixCodeActionSupplier
+      = new QuickFixCodeActionSupplier(diagnosticProvider, quickFixSupplier);
 
     codeActions.addAll(quickFixCodeActionSupplier.getCodeActions(params, documentContext));
     codeActions.addAll(fixAllCodeActionSupplier.getCodeActions(params, documentContext));

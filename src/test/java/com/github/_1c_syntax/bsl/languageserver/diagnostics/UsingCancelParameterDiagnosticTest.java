@@ -21,15 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class UsingCancelParameterDiagnosticTest extends AbstractDiagnosticTest<UsingCancelParameterDiagnostic>{
+
+class UsingCancelParameterDiagnosticTest extends AbstractDiagnosticTest<UsingCancelParameterDiagnostic> {
 
   UsingCancelParameterDiagnosticTest() {
     super(UsingCancelParameterDiagnostic.class);
@@ -40,11 +40,12 @@ class UsingCancelParameterDiagnosticTest extends AbstractDiagnosticTest<UsingCan
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(7, 8, 7, 21));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(14, 4, 14, 27));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(42, 4, 42, 65));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(43, 4, 43, 65));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(44, 4, 44, 65));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(45, 4, 45, 69));
+    assertThat(diagnostics, true)
+      .hasRange(7, 8, 7, 21)
+      .hasRange(14, 4, 14, 27)
+      .hasRange(42, 4, 42, 65)
+      .hasRange(43, 4, 43, 65)
+      .hasRange(44, 4, 44, 65)
+      .hasRange(45, 4, 45, 69);
   }
 }

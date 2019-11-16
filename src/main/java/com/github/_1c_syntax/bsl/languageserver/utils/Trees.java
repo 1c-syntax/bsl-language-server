@@ -79,7 +79,7 @@ public final class Trees {
       descendants = org.antlr.v4.runtime.tree.Trees.getDescendants(parent)
         .stream()
         .filter(node -> node instanceof BSLParserRuleContext)
-        .filter(node -> (getRuleIndex(node) == getRuleIndex(tnc)
+        .filter(node -> (node.equals(tnc)
           || getRuleIndex(node) == ruleindex))
         .collect(Collectors.toList());
     }
@@ -174,4 +174,20 @@ public final class Trees {
 
     return tnc;
   }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды нужно типа
+   */
+  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
+    if(tnc.getParent() == null) {
+      return null;
+    }
+
+    if (getRuleIndex(tnc.getParent()) == ruleindex) {
+      return (BSLParserRuleContext) tnc.getParent();
+    } else {
+      return getRootParent((BSLParserRuleContext) tnc.getParent(), ruleindex);
+    }
+  }
+
 }

@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnostic>{
+
+class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnostic> {
 
   LineLengthDiagnosticTest() {
     super(LineLengthDiagnostic.class);
@@ -43,32 +42,48 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 0, 4, 121));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(5, 0, 5, 122));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(8, 0, 8, 127));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(11, 0, 11, 136));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(12, 0, 12, 135));
+    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(11, 0, 11, 136)
+      .hasRange(12, 0, 12, 135)
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      // FIXme
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 178);
+
   }
 
   @Test
   void testConfigure() {
     // given
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("maxLineLength", 119);
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(6);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 0, 3, 120));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(4, 0, 4, 121));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(5, 0, 5, 122));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(8, 0, 8, 127));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(11, 0, 11, 136));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(12, 0, 12, 135));
-
+    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics, true)
+      .hasRange(3, 0, 3, 120)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(11, 0, 11, 136)
+      .hasRange(12, 0, 12, 135)
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      // FIXme
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 178);
   }
 }

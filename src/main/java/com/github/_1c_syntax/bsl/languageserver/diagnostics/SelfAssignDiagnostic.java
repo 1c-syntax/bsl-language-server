@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -41,6 +42,10 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 )
 public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
+  public SelfAssignDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
 
@@ -50,8 +55,8 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitAssignment(ctx);
     }
 
-    if (ctx.complexIdentifier().getText().equalsIgnoreCase(expression.getText())
-      && getDescendantsCount(ctx.complexIdentifier()) == getDescendantsCount(expression)) {
+    if (ctx.lValue().getText().equalsIgnoreCase(expression.getText())
+      && getDescendantsCount(ctx.lValue()) == getDescendantsCount(expression)) {
       diagnosticStorage.addDiagnostic(ctx);
     }
 

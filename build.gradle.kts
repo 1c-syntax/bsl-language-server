@@ -11,7 +11,6 @@ plugins {
     id("io.franzbecker.gradle-lombok") version "3.2.0"
     id("com.github.gradle-git-version-calculator") version "1.1.0"
     id("com.github.ben-manes.versions") version "0.25.0"
-
 }
 
 repositories {
@@ -48,16 +47,27 @@ dependencies {
     // https://github.com/1c-syntax/bsl-language-server/issues/369
     // Excude jline and use fixed one.
     compile("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
-    compile("com.github.nixel2007", "jline3", "c31cca7e6b4b48518c6aee5a076b00b67c7be9ea")
+    compile("org.jline", "jline", "3.13.1")
 
     compile("org.slf4j", "slf4j-api", "1.8.0-beta4")
     compile("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "0.10.0")
+    compile("com.github.1c-syntax", "bsl-parser", "0.11.0") {
+        exclude("com.github.nixel2007.antlr4", "antlr4-maven-plugin")
+        exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotations")
+        exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotation-processors")
+        exclude("com.github.nixel2007.antlr4", "antlr4-runtime-testsuite")
+        exclude("com.github.nixel2007.antlr4", "antlr4-tool-testsuite")
+        exclude("com.ibm.icu", "*")
+        exclude("org.antlr", "ST4")
+        exclude("org.abego.treelayout", "org.abego.treelayout.core")
+        exclude("org.antlr", "antlr-runtime")
+        exclude("org.glassfish", "javax.json")
+    }
 
-    compile("com.github.1c-syntax:mdclasses:13a6833e56de3d15a94a120d27906b4013f2a132")
+    compile("com.github.1c-syntax:mdclasses:9df30a46ff35f99d8478e0634198e203badfbcfd")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
@@ -121,7 +131,11 @@ tasks.jacocoTestReport {
 tasks.processResources {
     filteringCharset = "UTF-8"
     from("docs/diagnostics") {
-        into("com/github/_1c_syntax/bsl/languageserver/diagnostics")
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/ru")
+    }
+
+    from("docs/en/diagnostics") {
+        into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
     }
 }
 
@@ -166,3 +180,4 @@ lombok {
 // custom developers tools
 apply(from = "gradle/tools-new-diagnostic.gradle.kts")
 apply(from = "gradle/tools-update-diagnostics-index.gradle.kts")
+apply(from = "gradle/tools-update-diagnostics-doc.gradle.kts")

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -42,23 +43,33 @@ import java.util.stream.Stream;
   }
 )
 public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDiagnostic {
-  private Pattern beginTransaction = Pattern.compile(
+  private static final Pattern BEGIN_TRANSACTION_PATTERN = Pattern.compile(
     "НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private BSLParserRuleContext nodeBeginTransaction;
   private BSLParser.StatementContext nodeEndFile;
 
-  public BeginTransactionBeforeTryCatchDiagnostic() {
+  public BeginTransactionBeforeTryCatchDiagnostic(DiagnosticInfo info) {
+    super(info);
     nodeBeginTransaction = null;
     nodeEndFile = null;
   }
 
+  private static boolean isGlobalMethodBeginTransaction(BSLParser.StatementContext ctx) {
+    if (ctx.getStart().getType() != BSLParser.IDENTIFIER) {
+      return false;
+    }
+    return ctx.getChildCount() > 0
+      && ctx.getChild(0).getChildCount() > 0
+      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
+      && BEGIN_TRANSACTION_PATTERN.matcher(ctx.getText()).find();
+  }
+
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-    int ctxType = ctx.getStart().getType();
 
-    if (ctxType == BSLParser.TRY_KEYWORD) {
+    if (ctx.getStart().getType() == BSLParser.TRY_KEYWORD) {
       nodeBeginTransaction = null;
       return super.visitStatement(ctx);
     }
@@ -70,7 +81,7 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
     }
 
     // Ищем только в идентификаторах
-    if (ctxType == BSLParser.IDENTIFIER && beginTransaction.matcher(ctx.getText()).find()) {
+    if (isGlobalMethodBeginTransaction(ctx)) {
       nodeBeginTransaction = ctx;
     }
 

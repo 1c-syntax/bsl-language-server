@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -48,35 +49,34 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
+  public NonExportMethodsInApiRegionDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
     Optional<MethodSymbol> methodSymbolOption = documentContext.getMethodSymbol(ctx);
+    if (methodSymbolOption.isPresent()) {
 
-    if (!methodSymbolOption.isPresent()) {
-      return ctx;
+      MethodSymbol methodSymbol = methodSymbolOption.get();
+      if (!methodSymbol.isExport()) {
+
+        RegionSymbol methodRegion = methodSymbol.getRegion();
+        if (methodRegion != null) {
+
+          documentContext.getRegions()
+            .stream()
+            .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
+            .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
+            .findFirst()
+            .ifPresent((RegionSymbol regionSymbol) -> {
+              String message = info.getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
+              diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
+            });
+        }
+      }
     }
-
-    MethodSymbol methodSymbol = methodSymbolOption.get();
-
-    if (methodSymbol.isExport()) {
-      return ctx;
-    }
-
-    RegionSymbol methodRegion = methodSymbol.getRegion();
-    if (methodRegion == null) {
-      return ctx;
-    }
-
-    documentContext.getRegions()
-      .stream()
-      .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
-      .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
-      .findFirst()
-      .ifPresent((RegionSymbol regionSymbol) -> {
-        String message = getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
-        diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-      });
 
     return ctx;
   }

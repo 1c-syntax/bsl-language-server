@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -36,7 +37,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,67 +55,65 @@ import java.util.stream.Collectors;
 )
 public class NestedConstructorsInStructureDeclarationDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Collection<ParseTree> nestedNewContext = new ArrayList<>();
-  private final String relatedMessage = getResourceString("nestedConstructorRelatedMessage");
+  private final String relatedMessage;
+
+  public NestedConstructorsInStructureDeclarationDiagnostic(DiagnosticInfo info) {
+    super(info);
+    relatedMessage = this.info.getResourceString("nestedConstructorRelatedMessage");
+  }
 
   @Override
   public ParseTree visitNewExpression(NewExpressionContext ctx) {
 
-    nestedNewContext.clear();
-
-    // Checking that new context is structure declaration with parameters
     BSLParser.TypeNameContext typeName = ctx.typeName();
-    if (typeName == null) {
-      return ctx;
-    }
 
-    if (!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
-      return ctx;
+    if (typeName == null
+      || !(DiagnosticHelper.isStructureType(typeName) || DiagnosticHelper.isFixedStructureType(typeName))
+    ) {
+      return super.visitNewExpression(ctx);
     }
 
     BSLParser.DoCallContext structureDoCallContext = ctx.doCall();
+
     if (structureDoCallContext == null) {
       return ctx;
     }
 
-    // Looking for nested constructors
-    structureDoCallContext.callParamList().callParam().stream()
-      .filter(parseTree -> parseTree.start.getType() == BSLParser.NEW_KEYWORD)
-      .forEach(parseTree -> Trees.findAllRuleNodes(parseTree, BSLParser.RULE_newExpression)
-        .stream()
-        .limit(1)
-        .filter((ParseTree newContext) -> {
-            BSLParser.DoCallContext doCallContext = ((NewExpressionContext) newContext).doCall();
-            return doCallContext != null &&
-              doCallContext.callParamList().callParam().stream().anyMatch(param -> param.getChildCount() > 0);
-          }
-        ).collect(Collectors.toCollection(() -> nestedNewContext)));
-
-    if (nestedNewContext.isEmpty()) {
-      return ctx;
+    if (structureDoCallContext.callParamList().callParam().size() <= 1) {
+      return super.visitNewExpression(ctx);
     }
 
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
     relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
       Ranges.create(ctx),
       relatedMessage
     ));
-
-    nestedNewContext.stream()
-      .map(expressionContext ->
-        RelatedInformation.create(
-          documentContext.getUri(),
-          Ranges.create((BSLParser.NewExpressionContext) expressionContext),
-          relatedMessage
-        )
-      )
+    structureDoCallContext.callParamList().callParam().stream()
+      .filter(tree -> tree.start.getType() == BSLParser.NEW_KEYWORD)
+      .map(tree -> Trees.findAllRuleNodes(tree, BSLParser.RULE_newExpression))
+      .filter(tree -> !tree.isEmpty())
+      .map(tree -> (ParseTree) tree.toArray()[0])
+      .map(tree -> (NewExpressionContext) tree)
+      .filter(NestedConstructorsInStructureDeclarationDiagnostic::hasParams)
+      .map(newContext -> RelatedInformation.create(
+        documentContext.getUri(),
+        Ranges.create((BSLParser.NewExpressionContext) newContext),
+        relatedMessage
+      ))
       .collect(Collectors.toCollection(() -> relatedInformation));
 
-    diagnosticStorage.addDiagnostic(ctx, relatedInformation);
+    if (relatedInformation.size() > 1) {
+      diagnosticStorage.addDiagnostic(ctx, relatedInformation);
+    }
 
     return super.visitNewExpression(ctx);
+  }
+
+  private static boolean hasParams(NewExpressionContext newContext) {
+    BSLParser.DoCallContext doCallContext = newContext.doCall();
+    return doCallContext != null
+      && doCallContext.callParamList().callParam().stream().anyMatch(param -> param.getChildCount() > 0);
   }
 
 }

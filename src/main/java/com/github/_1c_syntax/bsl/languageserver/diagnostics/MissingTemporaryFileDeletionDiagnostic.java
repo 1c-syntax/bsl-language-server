@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -65,12 +66,17 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     "^(" + REGEX_DELETION_FILE + ")",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  public MissingTemporaryFileDeletionDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    String searchDeleteFileMethodProperty = (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
+    String searchDeleteFileMethodProperty =
+      (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
     searchDeleteFileMethod = Pattern.compile(
       "^(" + searchDeleteFileMethodProperty + ")",
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -97,7 +103,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       String variableName = getVariableName(ctx);
       if (variableName == null) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic(ctx);
         return super.visitGlobalMethodCall(ctx);
       }
 
@@ -105,14 +111,10 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       BSLParser.CodeBlockContext codeBlockContext = (BSLParser.CodeBlockContext)
         Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
 
-      if (codeBlockContext == null) {
-        return super.visitGlobalMethodCall(ctx);
+      if (codeBlockContext != null
+        && !foundDeleteFile(codeBlockContext, variableName, filterLine)) {
+        diagnosticStorage.addDiagnostic(ctx);
       }
-
-      if (!foundDeleteFile(codeBlockContext, variableName, filterLine)) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
-      }
-
     }
 
     return super.visitGlobalMethodCall(ctx);
@@ -162,8 +164,6 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
   private boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
 
-    boolean result = false;
-
     BSLParser.CallParamListContext callParamListContext = doCallContext.callParamList();
     if (callParamListContext == null) {
       return false;
@@ -174,6 +174,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       return false;
     }
 
+    boolean result = false;
     for (BSLParser.CallParamContext callParamContext : list) {
       if (callParamContext.getText().equalsIgnoreCase(variableName)) {
         result = true;
@@ -193,12 +194,12 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       return null;
     }
 
-    BSLParser.ComplexIdentifierContext complexIdentifierContext = assignment.complexIdentifier();
-    if (complexIdentifierContext == null) {
+    BSLParser.LValueContext lValue = assignment.lValue();
+    if (lValue == null) {
       return null;
     }
 
-    return complexIdentifierContext.getText();
+    return lValue.getText();
   }
 
   // TODO: перенести в TREES или в BSL parser

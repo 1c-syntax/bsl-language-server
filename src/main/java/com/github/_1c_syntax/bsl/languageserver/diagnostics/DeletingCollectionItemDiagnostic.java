@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -48,6 +49,10 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
+  public DeletingCollectionItemDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
@@ -61,7 +66,7 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
       .map(node -> node.getParent().getParent())
       .filter(callStatement -> namesEqual(callStatement, expression))
       .forEach(callStatement -> diagnosticStorage.addDiagnostic(
-          (BSLParser.CallStatementContext) callStatement, getDiagnosticMessage(expression))
+          (BSLParser.CallStatementContext) callStatement, info.getDiagnosticMessage(expression))
       );
 
     return super.visitForEachStatement(ctx);

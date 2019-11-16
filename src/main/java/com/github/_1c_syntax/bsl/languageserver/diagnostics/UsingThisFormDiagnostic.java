@@ -22,16 +22,20 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -39,6 +43,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -48,6 +53,7 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
   minutesToFix = 1,
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.DEPRECATED
@@ -66,26 +72,37 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   private static final String THIS_OBJECT = "ЭтотОбъект";
   private static final String THIS_OBJECT_EN = "ThisObject";
 
+  private static final List<Integer> ANNOTATION = Arrays.asList(
+    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
+    BSLParser.ANNOTATION_ATSERVER_SYMBOL
+  );
+
+  public UsingThisFormDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    if(isMethodInFormModule()) {
+    if (isMethodInFormModule()) {
       return super.visitFile(ctx);
     }
-
     return ctx;
   }
 
   private boolean isMethodInFormModule() {
 
+    // todo after metadata test mock
+    // todo    ModuleType type = documentContext.getServerContext().getConfiguration()
+    // todo      .getModuleType(new File(documentContext.getUri()).toURI());
+    // todo    return type == ModuleType.FormModule;
+
     return this.documentContext
       .getTokens()
       .stream()
-      .anyMatch((Token token) -> token.getType() == BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
-        || token.getType() == BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
-        || token.getType() == BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL
-        || token.getType() == BSLParser.ANNOTATION_ATCLIENT_SYMBOL
-        || token.getType() == BSLParser.ANNOTATION_ATSERVER_SYMBOL);
-
+      .anyMatch((Token token) -> ANNOTATION.indexOf(token.getType()) >= 0);
   }
 
   @Override
@@ -93,7 +110,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     if (needCheck(ctx.procDeclaration())) {
       return super.visitProcedure(ctx);
     }
-
     return ctx;
   }
 
@@ -102,7 +118,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     if (needCheck(ctx.funcDeclaration())) {
       return super.visitFunction(ctx);
     }
-
     return ctx;
   }
 
@@ -113,40 +128,42 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   private static List<BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
     BSLParser.ParamListContext paramList = declaration.getRuleContext(BSLParser.ParamListContext.class, 0);
-    if(paramList == null) {
+    if (paramList == null) {
       return Collections.emptyList();
     }
     return paramList.getRuleContexts(BSLParser.ParamContext.class);
   }
 
   private static boolean hasThisForm(List<BSLParser.ParamContext> params) {
-    for(BSLParser.ParamContext param : params) {
+    for (BSLParser.ParamContext param : params) {
       if(pattern.matcher(param.getText()).find()) {
         return true;
       }
     }
-
     return false;
   }
 
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
-    if(pattern.matcher(ctx.getText()).find()) {
-      diagnosticStorage.addDiagnostic(ctx.start);
+    if (ctx.globalMethodCall() != null
+      && ctx.getStart() == ctx.globalMethodCall().getStart()) {
+      return super.visitCallStatement(ctx);
+    }
+
+    if (pattern.matcher(ctx.getStart().getText()).matches()){
+      diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
     return super.visitCallStatement(ctx);
   }
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
-    for(Token child  : ctx.getTokens()) {
-      if(pattern.matcher(child.getText()).find()) {
-        diagnosticStorage.addDiagnostic(child);
-      }
-    }
+  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
+      .filter(token -> pattern.matcher(token.getText()).matches())
+      .forEach(token -> diagnosticStorage.addDiagnostic((TerminalNode) token));
 
-    return super.visitExpression(ctx);
+    return ctx;
   }
 
   @Override
@@ -158,13 +175,13 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
     List<TextEdit> newTextEdits = new ArrayList<>();
 
-    for(Diagnostic diagnostic : diagnostics) {
+    for (Diagnostic diagnostic : diagnostics) {
       newTextEdits.add(getQuickFixText(diagnostic, documentContext));
     }
 
     return CodeActionProvider.createCodeActions(
       newTextEdits,
-      getResourceString("quickFixMessage"),
+      info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
       diagnostics
     );
@@ -174,7 +191,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     Range range = diagnostic.getRange();
     String currentText = documentContext.getText(range);
 
-    if(onlyRuPattern.matcher(currentText).matches()) {
+    if (onlyRuPattern.matcher(currentText).matches()) {
       return new TextEdit(range, THIS_OBJECT);
     }
 

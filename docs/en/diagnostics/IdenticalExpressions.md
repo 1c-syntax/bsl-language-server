@@ -1,4 +1,11 @@
-# There are identical sub-expressions to the left and to the right of the 'foo' operator
+# There are identical sub-expressions to the left and to the right of the "foo" operator
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `5` | `suspicious` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
 
 The analyzer found a code fragment that most probably has a logic error. There is an operator (, <=, >=, =, <>, AND, OR, -, /) in the program text to the left and to the right of which there are identical subexpressions.
 

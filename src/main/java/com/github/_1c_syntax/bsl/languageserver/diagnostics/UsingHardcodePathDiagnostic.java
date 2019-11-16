@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Map;
@@ -49,44 +48,18 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String REGEX_PATH =
     "^(?=\\/).*|^(%.*%)(?=\\\\|\\/|\\/\\/)|^(~)(?=\\\\|\\/|\\/\\/)|(^([a-z]):" +
-    "(?=\\\\|\\/\\/(?![\0-\37<>:\"\\/\\\\|?*])|\\/(?![\0-\37<>:\"\\/\\\\|?*])|$)|^\\\\(?=[\\\\\\/]" +
-    "[^\0-\37<>:\"\\/\\\\|?*]+)|^(?=(\\\\|\\/|\\/\\/)$)^\\.(?=(\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+))" +
-    "((\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+|(\\\\|\\/|\\/\\/)$)*()$";
-
-  private static final String REGEX_NETWORK_ADDRESS =
-    "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:" +
-    "|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:)" +
-    "{1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}" +
-    "(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)" +
-    "|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}" +
-    "[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:" +
-    "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" +
-    "|((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
-
-  private static final int DOTS_IN_IPV4 = 3;
+      "(?=\\\\|\\/\\/(?![\0-\37<>:\"\\/\\\\|?*])|\\/(?![\0-\37<>:\"\\/\\\\|?*])|$)|^\\\\(?=[\\\\\\/]" +
+      "[^\0-\37<>:\"\\/\\\\|?*]+)|^(?=(\\\\|\\/|\\/\\/)$)^\\.(?=(\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+))" +
+      "((\\\\|\\/|\\/\\/)[^\0-\37<>:\"\\/\\\\|?*]+|(\\\\|\\/|\\/\\/)$)*()$";
 
   private static final String REGEX_STD_PATHS_UNIX =
     "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|" +
-    "media|opt|proc|root|run|sbin|tmp|usr|var";
-
-  private static final String REGEX_ALPHABET = "[A-zА-я]";
+      "media|opt|proc|root|run|sbin|tmp|usr|var";
 
   private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
 
-  private static final  String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|" +
-    "Namespace|Драйвер|Driver";
-
   private static final Pattern patternPath = getLocalPattern(REGEX_PATH);
-  private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
   private static final Pattern patternURL = getLocalPattern(REGEX_URL);
-  private static final Pattern patternAlphabet = getLocalPattern(REGEX_ALPHABET);
-
-  @DiagnosticParameter(
-    type = String.class,
-    defaultValue = REGEX_EXCLUSION,
-    description = "Ключевые слова поиска для исключения выражений при поиске IP адресов"
-  )
-  private Pattern searchWordsExclusion = getLocalPattern(REGEX_EXCLUSION);
 
   @DiagnosticParameter(
     type = String.class,
@@ -95,26 +68,15 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Pattern searchWordsStdPathsUnix = getLocalPattern("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 
-  @DiagnosticParameter(
-    type = Boolean.class,
-    defaultValue = "true",
-    description = "Использовать поиск сетевых адресов"
-  )
-  private boolean enableSearchNetworkAddresses = true;
+  public UsingHardcodePathDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
       return;
     }
-    // Включение поиска ip адресов
-    enableSearchNetworkAddresses =
-      (boolean) configuration.getOrDefault("enableSearchNetworkAddresses", enableSearchNetworkAddresses);
-
-    // Слова исключения, при поиске IP адресов
-    String searchWordsExclusionProperty =
-      (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);
-    searchWordsExclusion = getLocalPattern(searchWordsExclusionProperty);
 
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty =
@@ -128,10 +90,6 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
    * и IP4 / IP6 сетевые адреса.
    * Пример:
    * КаталогПрограмм = "C:\Program Files (x86)\";
-   * <p>
-   * или
-   * <p>
-   * СетевойПуть = "127.0.0.1";
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
@@ -140,46 +98,22 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
       Matcher matcher = patternPath.matcher(content);
       Matcher matcherURL = patternURL.matcher(content);
       if (matcher.find() && !matcherURL.find()) {
-        processSearchingPath(ctx, content);
-      } else if (enableSearchNetworkAddresses) {
-        processSearchingNetworkAddress(ctx, content);
+        processVisitString(ctx, content);
       }
     }
-    return super.visitString(ctx);
+    return ctx;
   }
 
-  private void processSearchingPath(BSLParser.StringContext ctx, String content) {
+  private void processVisitString(BSLParser.StringContext ctx, String content) {
     // Проверим пути с / на стандартные корневые каталоги и обработаем их отдельно
     if (content.startsWith("/")) {
       Matcher matcher = searchWordsStdPathsUnix.matcher(content);
-      if (matcher.find()) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
-      }
-    } else {
-      diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
-    }
-  }
-
-  private void processSearchingNetworkAddress(BSLParser.StringContext ctx, String content) {
-    Matcher matcher = patternNetworkAddress.matcher(content);
-    if (matcher.find()) {
-      // для исключения классификаторов в строке (т.к. не можем искать по ^ и $
-      // считаем количество точек, если в строке нет символов алфавита ru и en
-      matcher = patternAlphabet.matcher(content);
-      if (!matcher.find() && (content.chars().filter(num -> num == '.').count() > DOTS_IN_IPV4)) {
+      if (!matcher.find()) {
         return;
       }
-
-      ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
-      if (parent == null) {
-        diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
-      } else {
-        matcher = searchWordsExclusion.matcher(parent.getText());
-        if (!matcher.find()) {
-          diagnosticStorage.addDiagnostic(ctx, getDiagnosticMessage());
-        }
-      }
     }
+
+    diagnosticStorage.addDiagnostic(ctx);
   }
 
   private static Pattern getLocalPattern(String content) {

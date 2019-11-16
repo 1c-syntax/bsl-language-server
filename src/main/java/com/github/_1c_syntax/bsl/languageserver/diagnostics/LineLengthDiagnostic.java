@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -31,13 +32,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -51,7 +50,7 @@ import java.util.Optional;
 public class LineLengthDiagnostic implements BSLDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
-  private int prevTokenType;
+  private int prevTokenType = 0;
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -59,6 +58,13 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
     description = "Максимальная длина строки в символах"
   )
   private int maxLineLength = MAX_LINE_LENGTH;
+  private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+  private final DiagnosticInfo info;
+  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+
+  public LineLengthDiagnostic(DiagnosticInfo info) {
+    this.info = info;
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {
@@ -71,39 +77,50 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
-    List<Diagnostic> diagnostics = new ArrayList<>();
-    Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+    diagnosticStorage.clearDiagnostics();
+    tokensInOneLine.clear();
 
-    for (Token token : tokens) {
-      if ((token.getType() != BSLLexer.STRINGPART
-        && token.getType() != BSLLexer.STRINGTAIL)
-        && ((prevTokenType != BSLLexer.STRINGPART && prevTokenType != BSLLexer.STRINGTAIL) && token.getType() == BSLLexer.SEMICOLON)) {
-        putInCollection(tokensInOneLine, token);
+    documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
+        if (mustBePutIn(token)) {
+          putInCollection(token);
+        }
+        prevTokenType = token.getType();
       }
-      prevTokenType = token.getType();
-    }
+    );
 
-    List<Token> comments = documentContext.getComments();
-    comments.forEach((Token token) -> putInCollection(tokensInOneLine, token));
+    documentContext.getComments().forEach(this::putInCollection);
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
-      Optional<Integer> max = value.stream().max(Integer::compareTo);
-      Integer maxCharPosition = max.orElse(0);
+      Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
       if (maxCharPosition > maxLineLength) {
-        Range range = Ranges.create(key, 0, key, maxCharPosition);
-        diagnostics.add(BSLDiagnostic.createDiagnostic(
-          this,
-          range,
-          getDiagnosticMessage(maxCharPosition, maxLineLength)));
+        diagnosticStorage.addDiagnostic(
+          Ranges.create(key, 0, key, maxCharPosition),
+          info.getDiagnosticMessage(maxCharPosition, maxLineLength)
+        );
       }
     });
 
-    return diagnostics;
+    return diagnosticStorage.getDiagnostics();
   }
 
-  private void putInCollection(Map<Integer, List<Integer>> tokensInOneLine, Token token) {
-    List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine(), new ArrayList<>());
+  @Override
+  public DiagnosticInfo getInfo() {
+    return info;
+  }
+
+  private boolean mustBePutIn(Token token) {
+
+    boolean isStringPart = token.getType() == BSLLexer.STRINGPART
+      || token.getType() == BSLLexer.STRINGTAIL;
+    boolean prevIsStringPart = prevTokenType == BSLLexer.STRINGPART
+      || prevTokenType == BSLLexer.STRINGTAIL;
+
+    return !isStringPart && !(prevIsStringPart
+      && token.getType() == BSLLexer.SEMICOLON);
+  }
+
+  private void putInCollection(Token token) {
+    List<Integer> tokenList = tokensInOneLine.getOrDefault(token.getLine() - 1, new ArrayList<>());
     tokenList.add(token.getCharPositionInLine() + token.getText().length());
     tokensInOneLine.put(token.getLine() - 1, tokenList);
   }

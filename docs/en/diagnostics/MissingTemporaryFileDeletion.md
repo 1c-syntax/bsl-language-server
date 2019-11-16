@@ -1,13 +1,26 @@
 # Missing temporary file deletion after using
 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Error` | `BSL`<br>`OS` | `Major` | `Yes` | `5` | `badpractice`<br>`standard`
+
 ## Parameters
 
-* `searchDeleteFileMethod` - `Строка` - Keywords to search methods for move or delete files. 
-Default ``УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``.
+Name | Type | Description | Default value
+--- | --- | --- | ---
+`searchDeleteFileMethod` | `Pattern` | Ключевые слова поиска методов удаления / перемещения файлов | `"УдалитьФайлы
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+## Description
+
+After you finished working with temporary file or folder, you need to delete it yourself.
+You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
 
 ## Examples
 
 Incorrect:
+
 ```bsl
 TempFileName = GetTempFileName("xml");
 Data.Write(TempFileName);
@@ -15,6 +28,7 @@ Data.Write(TempFileName);
 ```
 
 Сorrect:
+
 ```bsl
 TempFileName = GetTempFileName("xml");
 Data.Write(TempFileName);
@@ -29,3 +43,7 @@ Catch
    WriteLogEvent(НСтр("ru = 'My subsystem.Action'"), EventLogLevel.Error, , , DetailErrorDescription(ErrorInfo()));
 EndTry;
 ```
+
+## Reference
+
+- [FileSystem access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import lombok.SneakyThrows;
 import me.tongfei.progressbar.ProgressBar;
@@ -42,13 +43,17 @@ import java.util.List;
 public class FormatCommand implements Command {
 
   private CommandLine cmd;
+  private ServerContext serverContext;
 
   public FormatCommand(CommandLine cmd) {
     this.cmd = cmd;
+    this.serverContext = new ServerContext();
   }
 
   @Override
   public int execute() {
+    serverContext.clear();
+
     String srcDirOption = cmd.getOptionValue("srcDir", "");
 
     Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
@@ -67,9 +72,11 @@ public class FormatCommand implements Command {
   }
 
   @SneakyThrows
-  private static void formatFile(File file) {
+  private void formatFile(File file) {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    DocumentContext documentContext = new DocumentContext(file.toURI().toString(), textDocumentContent);
+    final String uri = file.toURI().toString();
+
+    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
 
     DocumentFormattingParams params = new DocumentFormattingParams();
     FormattingOptions options = new FormattingOptions();
@@ -77,6 +84,9 @@ public class FormatCommand implements Command {
 
     params.setOptions(options);
     final List<TextEdit> formatting = FormatProvider.getFormatting(params, documentContext);
+
+    serverContext.removeDocument(uri);
+
     if (formatting.isEmpty()) {
       return;
     }

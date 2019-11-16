@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -50,17 +51,21 @@ import java.util.List;
 )
 public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
+  public EmptyStatementDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-      if (!Trees.findErrorNode(
-        Trees.getPreviousNode(
-          Trees.getRootParent(ctx),
-          ctx,
-          BSLParser.RULE_statement))) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
+    if (ctx.getChildCount() == 1
+      && ctx.SEMICOLON() != null
+      && !Trees.findErrorNode(
+      Trees.getPreviousNode(
+        Trees.getRootParent(ctx),
+        ctx,
+        BSLParser.RULE_statement))) {
+      diagnosticStorage.addDiagnostic(ctx);
     }
 
     return super.visitStatement(ctx);
@@ -92,7 +97,7 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
 
     return CodeActionProvider.createCodeActions(
       textEdits,
-      getResourceString("quickFixMessage"),
+      info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
       diagnostics
     );

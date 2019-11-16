@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -54,6 +55,14 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   )
   private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
+  public MagicNumberDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
+  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
+    return (expression.getChildCount() <= 1);
+  }
+
   private boolean isExcluded(String s) {
     for (String elem : this.authorizedNumbers) {
       if (s.compareTo(elem) == 0) {
@@ -62,10 +71,6 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     return false;
-  }
-
-  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
   }
 
   @Override
@@ -85,22 +90,14 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
     String checked = ctx.getText();
 
-    if(checked == null || isExcluded(checked)) {
-      return super.visitNumeric(ctx);
+    if (checked != null && !isExcluded(checked)) {
+      ParserRuleContext expression = ctx.getParent().getParent().getParent();
+      if (expression instanceof BSLParser.ExpressionContext
+        && !isNumericExpression((BSLParser.ExpressionContext) expression)) {
+        diagnosticStorage.addDiagnostic(ctx.stop, info.getDiagnosticMessage(checked));
+      }
     }
 
-    ParserRuleContext expression = ctx.getParent().getParent().getParent();
-
-    if (!(expression instanceof BSLParser.ExpressionContext)) {
-      return ctx;
-    }
-
-    if (isNumericExpression((BSLParser.ExpressionContext) expression)) {
-      return super.visitNumeric(ctx);
-    }
-
-    diagnosticStorage.addDiagnostic(ctx.stop, getDiagnosticMessage(checked));
     return ctx;
   }
-
 }

@@ -19,22 +19,40 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class TokenizerTest
-{
+class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<TimeoutsInExternalResourcesDiagnostic> {
+  TimeoutsInExternalResourcesDiagnosticTest() {
+    super(TimeoutsInExternalResourcesDiagnostic.class);
+  }
+
   @Test
-  void checkTokenizer()
-  {
-    Tokenizer tokenizer = new Tokenizer("Если Условие() Тогда");
-    final List<Token> tokens = tokenizer.getTokens();
-    assertThat(tokens).hasSize(7);
+  void test() {
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(8);
+
+    // check ranges
+    assertThat(diagnostics, true)
+      .hasRange(3, 20, 3, 75)
+      .hasRange(5, 20, 5, 92)
+      .hasRange(7, 18, 7, 72)
+      .hasRange(11, 16, 11, 80)
+      .hasRange(19, 21, 19, 65)
+      .hasRange(32, 14, 32, 43)
+      .hasRange(69, 26, 69, 114)
+      .hasRange(76, 10, 76, 39)
+    ;
+
   }
 }

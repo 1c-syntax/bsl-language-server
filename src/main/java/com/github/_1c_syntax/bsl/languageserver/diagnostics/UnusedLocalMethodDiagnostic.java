@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -36,50 +37,54 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
-	type = DiagnosticType.CODE_SMELL,
-	severity = DiagnosticSeverity.MAJOR,
-	minutesToFix = 1,
-	activatedByDefault = true,
-	scope = DiagnosticScope.OS,
-	tags = {
-		DiagnosticTag.STANDARD,
-		DiagnosticTag.SUSPICIOUS
-	}
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.OS,
+  minutesToFix = 1,
+  activatedByDefault = true,
+  tags = {
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.SUSPICIOUS
+  }
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-	private static final Pattern attachablePattern = Pattern.compile(
-		"(подключаемый_.*|attachable_.*)",
-		Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-	);
+  private static final Pattern attachablePattern = Pattern.compile(
+    "(подключаемый_.*|attachable_.*)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
-	@Override
-	public ParseTree visitFile(BSLParser.FileContext ctx) {
+  public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
-		List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
-	 		.stream()
-			.map(parseTree -> ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase())
-			.collect(Collectors.toList());
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
 
-		Trees.findAllRuleNodes(ctx, BSLParser.RULE_subName)
-			.stream()
-			.map(parseTree -> ((BSLParser.SubNameContext) parseTree))
-			.filter(subNameContext -> Trees.findAllTokenNodes(subNameContext.getParent(), BSLLexer.EXPORT_KEYWORD).isEmpty())
-			.filter(subNameContext -> !isAttachable(subNameContext))
-			.filter(subNameContext -> !isHandler(subNameContext))
-			.filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase()))
-			.forEach(node -> diagnosticStorage.addDiagnostic(node, getDiagnosticMessage(node.getText())));
+    List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
+      .stream()
+      .map(parseTree -> ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase())
+      .collect(Collectors.toList());
 
-		return ctx;
-	}
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_subName)
+      .stream()
+      .map(parseTree -> ((BSLParser.SubNameContext) parseTree))
+      .filter(subNameContext -> Trees.findAllTokenNodes(subNameContext.getParent(), BSLLexer.EXPORT_KEYWORD).isEmpty())
+      .filter(subNameContext -> !isAttachable(subNameContext))
+      .filter(subNameContext -> !isHandler(subNameContext))
+      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase()))
+      .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getDiagnosticMessage(node.getText())));
 
-	private boolean isAttachable(BSLParser.SubNameContext subNameContext) {
-		return  attachablePattern.matcher(subNameContext.getText()).matches();
-	}
+    return ctx;
+  }
 
-	private boolean isHandler(BSLParser.SubNameContext subNameContext) {
-		// TODO Тут опредлять что это обработчик
-		return false;
-	}
+  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
+    return attachablePattern.matcher(subNameContext.getText()).matches();
+  }
+
+  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
+    // TODO Тут опредлять что это обработчик
+    return false;
+  }
 
 }

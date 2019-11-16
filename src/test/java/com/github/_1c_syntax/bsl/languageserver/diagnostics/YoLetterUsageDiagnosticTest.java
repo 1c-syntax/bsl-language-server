@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class YoLetterUsageDiagnosticTest extends AbstractDiagnosticTest<YoLetterUsageDiagnostic> {
 
@@ -40,10 +40,11 @@ class YoLetterUsageDiagnosticTest extends AbstractDiagnosticTest<YoLetterUsageDi
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(0, 6, 0, 11));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(2, 10, 2, 20));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(2, 21, 2, 25));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(3, 13, 3, 17));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(5, 39, 5, 43));
+    assertThat(diagnostics, true)
+      .hasRange(0, 6, 0, 11)
+      .hasRange(2, 10, 2, 20)
+      .hasRange(2, 21, 2, 25)
+      .hasRange(3, 13, 3, 17)
+      .hasRange(5, 39, 5, 43);
   }
 }

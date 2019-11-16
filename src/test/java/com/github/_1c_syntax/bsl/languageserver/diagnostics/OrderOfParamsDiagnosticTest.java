@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class OrderOfParamsDiagnosticTest extends AbstractDiagnosticTest<OrderOfParamsDiagnostic>{
+class OrderOfParamsDiagnosticTest extends AbstractDiagnosticTest<OrderOfParamsDiagnostic> {
 
   OrderOfParamsDiagnosticTest() {
     super(OrderOfParamsDiagnostic.class);
@@ -40,8 +39,8 @@ class OrderOfParamsDiagnosticTest extends AbstractDiagnosticTest<OrderOfParamsDi
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);
-
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(14, 52, 14, 102));
+    assertThat(diagnostics, true)
+      .hasRange(14, 52, 14, 102);
 
   }
 }

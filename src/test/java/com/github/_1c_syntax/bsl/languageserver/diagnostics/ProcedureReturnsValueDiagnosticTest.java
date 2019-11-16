@@ -21,31 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class ProcedureReturnsValueDiagnosticTest extends AbstractDiagnosticTest<ProcedureReturnsValueDiagnostic> {
 
-  ProcedureReturnsValueDiagnosticTest()
-  {
+class ProcedureReturnsValueDiagnosticTest extends AbstractDiagnosticTest<ProcedureReturnsValueDiagnostic> {
+
+  ProcedureReturnsValueDiagnosticTest() {
     super(ProcedureReturnsValueDiagnostic.class);
   }
 
   @Test
-  void runTest()
-  {
+  void runTest() {
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(8, 4, 8, 16));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(16, 8, 16, 37));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(28, 12, 28, 30));
+    assertThat(diagnostics, true)
+      .hasRange(8, 4, 8, 16)
+      .hasRange(16, 8, 16, 37)
+      .hasRange(28, 12, 28, 30);
   }
 }

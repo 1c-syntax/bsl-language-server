@@ -1,11 +1,22 @@
 # Space at the beginning of the comment
 
-Between comment symbols "//" and comment text has to be a space.
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `standard` |
 
-**Reference**: [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `commentsAnnotation` | `Pattern` | Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c) | `"//@,//(c),//©"` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
+Between comment symbols "//" and comment text has to be a space.
 
 Exception from the rule is ***comments-annotations***, comments starting with special symbols sequence.
 
-## Parameters
+## Sources
 
-- `commentsAnnotation` - `String` - Ignore comments starting with defined sub-strings. The list separated with comma. By default: `//@,//(c),//©`.
+* [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)

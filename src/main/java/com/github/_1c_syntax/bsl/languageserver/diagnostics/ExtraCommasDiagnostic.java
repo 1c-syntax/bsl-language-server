@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -39,6 +40,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 
 public class ExtraCommasDiagnostic extends AbstractVisitorDiagnostic {
+
+  public ExtraCommasDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
   public ParseTree visitCallParamList(BSLParser.CallParamListContext ctx) {

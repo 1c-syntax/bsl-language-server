@@ -21,34 +21,36 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class IdenticalExpressionsDiagnosticTest  extends AbstractDiagnosticTest<IdenticalExpressionsDiagnostic> {
 
-  IdenticalExpressionsDiagnosticTest() { super(IdenticalExpressionsDiagnostic.class); }
+class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<IdenticalExpressionsDiagnostic> {
+
+  IdenticalExpressionsDiagnosticTest() {
+    super(IdenticalExpressionsDiagnostic.class);
+  }
 
   @Test
   void runTest() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(10);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 9, 4, 25));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(6, 16, 6, 31));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(11, 13, 11, 28));
-    assertThat(diagnostics.get(3).getRange()).isEqualTo(Ranges.create(13, 9, 13, 66));
-    assertThat(diagnostics.get(4).getRange()).isEqualTo(Ranges.create(15, 16, 15, 34));
-    assertThat(diagnostics.get(5).getRange()).isEqualTo(Ranges.create(19, 9, 19, 85));
-    assertThat(diagnostics.get(6).getRange()).isEqualTo(Ranges.create(21, 16, 21, 33));
-    assertThat(diagnostics.get(7).getRange()).isEqualTo(Ranges.create(25, 9, 25, 38));
-    assertThat(diagnostics.get(8).getRange()).isEqualTo(Ranges.create(27, 16, 27, 43));
-    assertThat(diagnostics.get(9).getRange()).isEqualTo(Ranges.create(31, 16, 31, 33));
-
+    assertThat(diagnostics, true)
+      .hasRange(4, 9, 4, 25)
+      .hasRange(6, 16, 6, 31)
+      .hasRange(11, 13, 11, 28)
+      .hasRange(13, 9, 13, 66)
+      .hasRange(15, 16, 15, 34)
+      .hasRange(19, 9, 19, 85)
+      .hasRange(21, 16, 21, 33)
+      .hasRange(25, 9, 25, 38)
+      .hasRange(27, 16, 27, 43)
+      .hasRange(31, 16, 31, 33);
   }
 
 }

@@ -1,8 +1,16 @@
 # Ternary operator usage
 
-> Diagnostic is disabled by default.
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `3` | `brainoverload`
 
-Use If-Else instead of ternary operator
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+## Description
+
+Instead of the ternary operator, use the "If-else" construct.
+
+## Examples
 
 Bad:
 

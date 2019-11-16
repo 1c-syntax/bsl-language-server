@@ -134,8 +134,23 @@ https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/
 ## Благодарности
 
 Огромное спасибо всем [контрибьюторам](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) проекта, всем участвовавшим в обсуждениях, помогавшим с тестированием.
+
 Вы потрясающие!  
 
-Powered by [![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
+Спасибо компаниям, поддерживающим проекты с открытым исходным кодом, а особенно тем, кто поддержали нас: 
 
-Этот продукт поддерживается [YourKit](https://www.yourkit.com), разработчиком инструментов для мониторинга и профилирования Java и .Net приложений.
+---
+
+[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
+
+Создатель инновационных и интеллектуальных инструментов для профилирования приложений `Java` и `.NET` [YourKit, LLC](https://www.yourkit.com) любезно предоставил нам лицензии на продукт `YourKit Java Profiler`.
+
+С помощью `YourKit Java Profiler` мы мониторим и улучшаем производительность проекта.
+
+---
+
+[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
+
+Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
+
+`IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.

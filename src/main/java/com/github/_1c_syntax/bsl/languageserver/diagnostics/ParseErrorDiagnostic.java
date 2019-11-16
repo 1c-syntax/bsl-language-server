@@ -21,15 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.misc.IntervalSet;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ErrorNodeImpl;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
+import java.util.StringJoiner;
+import java.util.stream.IntStream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -42,14 +50,51 @@ import org.antlr.v4.runtime.tree.ErrorNodeImpl;
 )
 public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
+  public ParseErrorDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void visitErrorNode(ErrorNode node) {
 
     if (((ErrorNodeImpl) node).symbol.getTokenIndex() == -1) {
       diagnosticStorage.addDiagnostic(
         ((BSLParserRuleContext) node.getParent()).getStart(),
-        getDiagnosticMessage(node.getText())
+        info.getDiagnosticMessage(node.getText())
       );
     }
+  }
+
+  @Override
+  public void enterFile(BSLParser.FileContext ctx) {
+    BSLParser.FileContext ast = this.documentContext.getAst();
+    String initialExpectedString = info.getResourceString("expectedTokens") + " ";
+
+    Trees.getDescendants(ast).stream()
+      .filter(parseTree -> !(parseTree instanceof TerminalNodeImpl))
+      .map(parseTree -> (BSLParserRuleContext) parseTree)
+      .filter(node -> node.exception != null)
+      .forEach((BSLParserRuleContext node) -> {
+        IntervalSet expectedTokens = node.exception.getExpectedTokens();
+        StringJoiner sj = new StringJoiner(", ");
+        expectedTokens.getIntervals().stream()
+          .flatMapToInt(interval -> IntStream.range(interval.a, interval.b))
+          .mapToObj(ParseErrorDiagnostic::getTokenName)
+          .forEachOrdered(sj::add);
+
+        diagnosticStorage.addDiagnostic(
+          node.exception.getOffendingToken(),
+          info.getDiagnosticMessage(initialExpectedString + sj.toString())
+        );
+      });
+  }
+
+  private static String getTokenName(int tokenType) {
+    String value = BSLLexer.VOCABULARY.getLiteralName(tokenType);
+    if (value == null) {
+      value = BSLLexer.VOCABULARY.getSymbolicName(tokenType);
+    }
+
+    return value;
   }
 }

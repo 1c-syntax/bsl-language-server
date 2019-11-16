@@ -1,7 +1,15 @@
 # Unused local method
 
-Только для OneScript 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `OS` | `Major` | `Yes` | `1` | `standard`<br>`suspicious`
 
- Программные модули не должны иметь неиспользуемых процедур и функций.
- 
- Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+## Description
+
+Modules should not have unused procedures and functions.
+
+## Sources
+
+- [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)

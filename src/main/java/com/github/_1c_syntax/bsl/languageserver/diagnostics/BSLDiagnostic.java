@@ -22,114 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.Token;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Range;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
+/**
+ * BSLDiagnostic main purpose is to provide collection of LSP {@link Diagnostic},
+ * fired on concrete {@link DocumentContext}.
+ *
+ * Each BSLDiagnostic implementation MUST contain constructor with exactly one parameter {@link DiagnosticInfo}.
+ * Passed DiagnosticInfo MUST be stored as a object field and returned by {@link #getInfo()}.
+ *
+ * {@link #getDiagnostics(DocumentContext)} method SHOULD use {@link DiagnosticStorage} to add and return diagnostics.
+ */
 public interface BSLDiagnostic {
 
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
-  default String getDiagnosticMessage() {
-    return getResourceString("diagnosticMessage");
+  DiagnosticInfo getInfo();
+
+  default void configure(Map<String, Object> configuration) {
   }
 
-  default String getResourceString(String key) {
-    return ResourceBundle.getBundle(getClass().getName(), new UTF8Control()).getString(key);
-  }
-
-  default String getDiagnosticMessage(Object... args) {
-    return String.format(getDiagnosticMessage(), args);
-  }
-
-  default void configure(Map<String, Object> configuration) {}
-
-  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, BSLParserRuleContext node) {
-    return createDiagnostic(bslDiagnostic, Ranges.create(node), bslDiagnostic.getDiagnosticMessage());
-  }
-
-  static Diagnostic createDiagnostic(
-    BSLDiagnostic bslDiagnostic,
-    BSLParserRuleContext node,
-    List<DiagnosticRelatedInformation> relatedInformation
-  ) {
-    return createDiagnostic(
-      bslDiagnostic,
-      Ranges.create(node),
-      bslDiagnostic.getDiagnosticMessage(),
-      relatedInformation
-    );
-  }
-
-  static Diagnostic createDiagnostic(
-    BSLDiagnostic bslDiagnostic,
-    Token token,
-    List<DiagnosticRelatedInformation> relatedInformation
-  ) {
-    return createDiagnostic(
-      bslDiagnostic,
-      Ranges.create(token),
-      bslDiagnostic.getDiagnosticMessage(),
-      relatedInformation
-    );
-  }
-
-  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, String diagnosticMessage, BSLParserRuleContext node) {
-    return createDiagnostic(bslDiagnostic, Ranges.create(node), diagnosticMessage);
-  }
-
-  static Diagnostic createDiagnostic(
-    BSLDiagnostic bslDiagnostic,
-    int startLine,
-    int startChar,
-    int endLine,
-    int endChar
-  ) {
-    return createDiagnostic(
-      bslDiagnostic,
-      Ranges.create(startLine, startChar, endLine, endChar),
-      bslDiagnostic.getDiagnosticMessage()
-    );
-  }
-
-  static Diagnostic createDiagnostic(BSLDiagnostic bslDiagnostic, Range range, String diagnosticMessage) {
-    return createDiagnostic(
-      bslDiagnostic,
-      range,
-      diagnosticMessage,
-      null
-    );
-
-  }
-
-  static Diagnostic createDiagnostic(
-    BSLDiagnostic bslDiagnostic,
-    Range range,
-    String diagnosticMessage,
-    @Nullable
-    List<DiagnosticRelatedInformation> relatedInformation
-  ) {
-    Diagnostic diagnostic = new Diagnostic(
-      range,
-      diagnosticMessage,
-      DiagnosticProvider.getLSPDiagnosticSeverity(bslDiagnostic),
-      DiagnosticProvider.SOURCE,
-      DiagnosticProvider.getDiagnosticCode(bslDiagnostic)
-    );
-
-    if (relatedInformation != null) {
-      diagnostic.setRelatedInformation(relatedInformation);
-    }
-    return diagnostic;
-  }
 }

@@ -21,31 +21,31 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-public class BeginTransactionBeforeTryCatchDiagnosticTest extends AbstractDiagnosticTest<BeginTransactionBeforeTryCatchDiagnostic> {
-	BeginTransactionBeforeTryCatchDiagnosticTest() {
-		super(BeginTransactionBeforeTryCatchDiagnostic.class);
-	}
 
-	@Test
-	void test() {
-		List<Diagnostic> diagnostics = getDiagnostics();
+class BeginTransactionBeforeTryCatchDiagnosticTest extends AbstractDiagnosticTest<BeginTransactionBeforeTryCatchDiagnostic> {
+  BeginTransactionBeforeTryCatchDiagnosticTest() {
+    super(BeginTransactionBeforeTryCatchDiagnostic.class);
+  }
 
-		assertThat(diagnostics).hasSize(7);
-		assertThat(diagnostics)
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(29, 4, 29, 23)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(42, 8, 42, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(55, 4, 55, 23)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(68, 8, 68, 27)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(77, 4, 77, 23)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(90, 4, 90, 23)))
-			.anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(102, 0, 102, 19)));
-	}
+  @Test
+  void test() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics, true)
+      .hasRange(29, 4, 29, 23)
+      .hasRange(42, 8, 42, 27)
+      .hasRange(55, 4, 55, 23)
+      .hasRange(68, 8, 68, 27)
+      .hasRange(77, 4, 77, 23)
+      .hasRange(90, 4, 90, 23)
+      .hasRange(102, 0, 102, 19);
+  }
 }

@@ -21,22 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -56,6 +59,10 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   // диапазоны препроцессорных скобок
   private List<Range> preprocessorRanges = new ArrayList<>();
 
+  public UnreachableCodeDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     errorRanges.clear();
@@ -68,19 +75,19 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitFile(ctx);
     }
 
-    Stack<ParseTree> previousNodes = new Stack<>();
+    Deque<ParseTree> previousNodes = new ArrayDeque<>();
     for (ParseTree node : preprocessors) {
 
       // если это начало блока, просто закинем его в стэк
       if (((BSLParser.PreprocessorContext) node).preproc_if() != null) {
-        previousNodes.add(node);
+        previousNodes.push(node);
       } else if ((((BSLParser.PreprocessorContext) node).preproc_else() != null
-          || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
+        || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
 
         // для веток условия сначала фиксируем блок который уже прошли
         // затем новую ноду добавим
         savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
-        previousNodes.add(node);
+        previousNodes.push(node);
 
       } else {
         // в конце условия просто зафиксим прошедший блок
@@ -96,7 +103,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitFile(ctx);
   }
 
-  private void savePreprocessorRange(Stack<ParseTree> nodes, BSLParser.PreprocessorContext node) {
+  private void savePreprocessorRange(Deque<ParseTree> nodes, BSLParser.PreprocessorContext node) {
     if (!nodes.isEmpty()) {
       BSLParser.PreprocessorContext previous = (BSLParser.PreprocessorContext) nodes.pop();
       preprocessorRanges.add(
@@ -165,15 +172,13 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParseTree> statements = Trees.findAllRuleNodes(ppNodeParent, BSLParser.RULE_statement)
       .stream()
+      .filter(node -> ((BSLParser.StatementContext) node).getStart().getType() != BSLLexer.SEMICOLON)
       .filter(node -> node.getParent().equals(ppNodeParent))
       .collect(Collectors.toList());
 
-    if (statements.size() > 1) {
-      Collections.reverse(statements);
-    }
-
     // если в блоке кода есть еще стейты кроме текущего
     if (statements.size() > 1) {
+      Collections.reverse(statements);
 
       // найдем последний блок
       BSLParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);

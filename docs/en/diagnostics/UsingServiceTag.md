@@ -1,5 +1,18 @@
 # Using service tags
 
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `0` | `badpractice` |
+
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `serviceTags` | `String` | Служебные теги | `"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
 The diagnostic finds use of service tags in comments. Tags list:
 
 - TODO
@@ -15,7 +28,3 @@ The diagnostic finds use of service tags in comments. Tags list:
 - КОНСТРУКТОР_ВВОДА_НА_ОСНОВАНИИ
 
 Tags list can be extended via options.
-
-## Parameters
-
-- `serviceTags` - `String` - keyword for search. Bu default : "todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG".

@@ -21,13 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -40,21 +42,29 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 )
 public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Class<BSLParser.NumericContext> numericNode = BSLParser.NumericContext.class;
+  public UnaryPlusInConcatenationDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
-
-    boolean expressionHasError = ctx.children.size() == 3 // у выражения должно быть три операнда
-      && ctx.children.get(1).getChildCount() == 1 // второй из них - знак некоторой операции
-      && ctx.children.get(1).getChild(0).toString().equals("+") // а именно "+"
-      && ctx.children.get(2).getChildCount() == 2 // третий - выражение с унарной операцией, должно состоять из двух операндов
-      && ctx.children.get(2).getChild(0).getChild(0).toString().equals("+") // первый из которых - "+"
-      && !numericNode.isAssignableFrom(ctx.children.get(2).getChild(1).getChild(0).getClass()); // а второй не должен быть числом
-    if (expressionHasError) {
-      diagnosticStorage.addDiagnostic((TerminalNode) ctx.children.get(1).getChild(0));
+  public ParseTree visitMember(BSLParser.MemberContext ctx) {
+    ParseTree childZero = ctx.getChild(0);
+    if (childZero == null) {
+      return super.visitMember(ctx);
     }
-    return super.visitExpression(ctx);
+    ParseTree previousNode = Trees.getPreviousNode(ctx.parent, childZero, BSLParser.RULE_operation);
+    if (
+      (childZero instanceof BSLParser.UnaryModifierContext)
+        && ctx.getChildCount() > 1
+        && !(ctx.getChild(1).getChild(0) instanceof BSLParser.NumericContext)
+        && "+".equals(childZero.getText())
+        && !previousNode.equals(childZero)
+        && "+".equals(previousNode.getText())
+    ) {
+      diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).start);
+    }
+
+    return super.visitMember(ctx);
   }
 
 }

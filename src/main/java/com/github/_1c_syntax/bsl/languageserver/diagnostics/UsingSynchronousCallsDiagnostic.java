@@ -21,11 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -44,7 +46,7 @@ import java.util.regex.Pattern;
   }
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
-  private Pattern modalityMethods = Pattern.compile(
+  private static final Pattern MODALITY_METHODS = Pattern.compile(
     "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
       "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
       "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
@@ -58,9 +60,14 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  private static final Pattern SERVER_COMPILER_PATTERN = Pattern.compile(
+    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
   private HashMap<String, String> pairMethods = new HashMap<>();
 
-  public UsingSynchronousCallsDiagnostic() {
+  public UsingSynchronousCallsDiagnostic(DiagnosticInfo info) {
+    super(info);
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
     pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
@@ -118,9 +125,17 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
-    if (modalityMethods.matcher(methodName).matches()) {
-      diagnosticStorage.addDiagnostic(ctx,
-        getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+    if (MODALITY_METHODS.matcher(methodName).matches()) {
+      BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
+      if (rootParent == null
+        || Trees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
+        .stream()
+        .filter(node ->
+          SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {
+
+        diagnosticStorage.addDiagnostic(ctx,
+          info.getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+      }
     }
     return super.visitGlobalMethodCall(ctx);
   }

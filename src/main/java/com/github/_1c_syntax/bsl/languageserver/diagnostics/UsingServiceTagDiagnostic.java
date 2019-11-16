@@ -22,12 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Diagnostic;
 
@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -57,6 +56,10 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
   private String serviceTags = SERVICE_TAGS_DEFAULT;
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
 
+  public UsingServiceTagDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -75,19 +78,21 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
-    return documentContext.getComments()
+    diagnosticStorage.clearDiagnostics();
+
+    documentContext.getComments()
       .parallelStream()
       .filter((Token token) -> pattern.matcher(token.getText()).find())
-      .map((Token token) -> {
+      .forEach((Token token) -> {
         Matcher matcher = pattern.matcher(token.getText());
         matcher.find();
-        return BSLDiagnostic.createDiagnostic(
-          this,
-          Ranges.create(token),
-          getDiagnosticMessage(matcher.group(0)));
-      })
-      .collect((Collectors.toList()));
+        diagnosticStorage.addDiagnostic(
+          token,
+          info.getDiagnosticMessage(matcher.group(0))
+        );
+      });
 
+    return diagnosticStorage.getDiagnostics();
   }
 
 }

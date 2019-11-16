@@ -22,17 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,11 +40,7 @@ class DocumentSymbolProviderTest {
   @Test
   void testDocumentSymbol() throws IOException {
 
-    String fileContent = FileUtils.readFileToString(
-      new File("./src/test/resources/providers/documentSymbol.bsl"),
-      StandardCharsets.UTF_8
-    );
-    DocumentContext documentContext = new DocumentContext("fake-uri.bsl", fileContent);
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbol(documentContext);
 
@@ -60,7 +54,7 @@ class DocumentSymbolProviderTest {
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(0, 6, 0, 7)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 6, 2, 7)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 9, 2, 10)))
-      ;
+    ;
 
     // methods
     assertThat(documentSymbols)
@@ -83,7 +77,7 @@ class DocumentSymbolProviderTest {
       .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(11, 10, 11, 11)))
       .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 10, 12, 11)))
       .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 12, 12, 13)))
-      ;
+    ;
 
     // regions
     assertThat(documentSymbols)
@@ -101,7 +95,7 @@ class DocumentSymbolProviderTest {
       .hasSize(1)
       .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
       .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(23, 0, 25, 14)))
-      ;
+    ;
 
   }
 

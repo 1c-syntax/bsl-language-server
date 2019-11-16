@@ -21,113 +21,28 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.NumberOfOptionalParamsDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
-import java.util.MissingResourceException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class DiagnosticProviderTest {
 
   @Test
-  void configureNullDryRun() {
+  void testComputeDiagnostics() {
     // given
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
-    List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
+    final DocumentContext documentContext
+      = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
 
     // when
-    diagnosticInstances.forEach(diagnostic -> diagnostic.configure(null));
+    final List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
 
     // then
-    // should run without runtime errors
-  }
-
-  @Test
-  void testAllDiagnosticsHaveMetadataAnnotation() {
-    // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
-
-    // then
-    assertThat(diagnosticClasses)
-      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
-        diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class)
-      );
-  }
-
-  @Test
-  void testAddDiagnosticsHaveDiagnosticName() {
-    // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
-
-    // then
-    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        try {
-          DiagnosticProvider.getDiagnosticName(diagnosticClass);
-        } catch (MissingResourceException e) {
-          throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have diagnosticName", e);
-        }
-      }
-    )).doesNotThrowAnyException();
-  }
-
-  @Test
-  void testAllDiagnosticsHaveDiagnosticMessage() {
-    // when
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
-    List<BSLDiagnostic> diagnosticInstances = diagnosticProvider.getDiagnosticInstances();
-
-    // then
-    assertThatCode(() -> diagnosticInstances.forEach(diagnostic -> {
-        try {
-          diagnostic.getDiagnosticMessage();
-        } catch (MissingResourceException e) {
-          throw new RuntimeException(diagnostic.getClass().getSimpleName() + " does not have diagnosticMessage", e);
-        }
-      }
-    )).doesNotThrowAnyException();
-  }
-
-  @Test
-  void testAllDiagnosticsHaveDescriptionResource() {
-
-    // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
-
-    // then
-    assertThat(diagnosticClasses).allMatch(diagnosticClass -> !"".equals(DiagnosticProvider.getDiagnosticDescription(diagnosticClass)));
-
-  }
-
-  @Test
-  void testDiagnosticParametrs(){
-
-    Map<String, DiagnosticParameter> params = DiagnosticProvider.getDiagnosticParameters(NumberOfOptionalParamsDiagnostic.class);
-    assertThat(params).hasSize(1);
-    assertThat(DiagnosticProvider.getDefaultValue(params.get("maxOptionalParamsCount"))).isEqualTo(3);
-    assertThat(params.get("maxOptionalParamsCount").defaultValue()).isEqualTo("3");
-
-    Map<String, DiagnosticParameter> lineLengthParams = DiagnosticProvider.getDiagnosticParameters(LineLengthDiagnostic.class);
-    assertThat(lineLengthParams.get("maxLineLength").defaultValue()).isEqualTo("120");
-
-  }
-
-  @Test
-  void testAllDiagnosticsHaveTags() {
-    // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticProvider.getDiagnosticClasses();
-
-    // then
-    assertThat(diagnosticClasses)
-      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
-        DiagnosticProvider.getDiagnosticTags(diagnosticClass).size() > 0
-          && DiagnosticProvider.getDiagnosticTags(diagnosticClass).size() <= 3);
+    assertThat(diagnostics.size()).isGreaterThan(0);
   }
 }

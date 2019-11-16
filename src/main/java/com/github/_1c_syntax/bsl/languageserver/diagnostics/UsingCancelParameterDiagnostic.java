@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -52,6 +53,10 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
+  public UsingCancelParameterDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
@@ -72,7 +77,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParseTree> tree = assigns.stream()
       .filter(
-        node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).complexIdentifier()
+        node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
           .getText())
           .matches()
       ).collect(Collectors.toList());
@@ -95,25 +100,22 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean orCancel(BSLParser.AssignmentContext ident) {
 
     BSLParser.ExpressionContext expression = ident.expression();
-    if (expression == null) {
-      return false;
-    }
+    if (expression != null) {
 
-    BSLParser.OperationContext logicalOperation = expression.operation(0);
-    if (logicalOperation == null) {
-      return false;
-    }
+      BSLParser.OperationContext logicalOperation = expression.operation(0);
+      if (logicalOperation != null) {
 
-    BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
-    if (boolOperation != null
-      && boolOperation.OR_KEYWORD() != null) {
+        BSLParser.BoolOperationContext boolOperation = logicalOperation.boolOperation();
+        if (boolOperation != null
+          && boolOperation.OR_KEYWORD() != null) {
 
-      return expression
-        .member()
-        .stream()
-        .anyMatch(token -> cancelPattern.matcher(token.getText())
-          .matches());
-
+          return expression
+            .member()
+            .stream()
+            .anyMatch(token -> cancelPattern.matcher(token.getText())
+              .matches());
+        }
+      }
     }
 
     return false;

@@ -230,7 +230,11 @@ public final class FormatProvider {
         // no-op
       }
 
-      newTextBuilder.append(token.getText());
+      String addedText = token.getText();
+      if (tokenType == BSLLexer.LINE_COMMENT || tokenType == BSLLexer.PREPROC_LINE_COMMENT) {
+        addedText = addedText.trim();
+      }
+      newTextBuilder.append(addedText);
 
       // Increment on operator starts and left paren
       if (needIncrementIndent(tokenType)) {

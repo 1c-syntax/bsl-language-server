@@ -22,26 +22,53 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatementPerLineDiagnostic> {
 
   OneStatementPerLineDiagnosticTest() {
-      super(OneStatementPerLineDiagnostic.class);
-    }
+    super(OneStatementPerLineDiagnostic.class);
+  }
 
   @Test
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(3, 8, 3, 13));
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(8, 18, 8, 32));
-    assertThat(diagnostics.get(2).getRange()).isEqualTo(Ranges.create(12, 5, 12, 9));
+    assertThat(diagnostics, true)
+      .hasRange(3, 8, 3, 14)
+      .hasRange(3, 8, 3, 14)
+      .hasRange(3, 8, 3, 14);
+  }
+
+  @Test
+  void testQuickFixStartLine() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      Ranges.create(12, 5, 12, 9)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().startsWith("\n")
+      );
   }
 }

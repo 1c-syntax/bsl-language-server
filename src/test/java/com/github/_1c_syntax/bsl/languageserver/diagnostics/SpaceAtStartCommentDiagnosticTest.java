@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -31,7 +30,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
 
 class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtStartCommentDiagnostic> {
 
@@ -44,30 +44,30 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 0, 6, 20)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 12, 8, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(9, 16, 9, 32)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(20, 0, 20, 56)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(22, 0, 22, 40)));
+    assertThat(diagnostics, true)
+      .hasRange(6, 0, 6, 20)
+      .hasRange(8, 12, 8, 26)
+      .hasRange(9, 16, 9, 32)
+      .hasRange(20, 0, 20, 56)
+      .hasRange(22, 0, 22, 40);
   }
 
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = DiagnosticProvider.getDefaultDiagnosticConfiguration(getDiagnosticInstance());
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
     configuration.put("commentsAnnotation", "//@,//(c),//(с)");
-    getDiagnosticInstance().configure(configuration);
+    diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(6, 0, 6, 20)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(8, 12, 8, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(9, 16, 9, 32)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(22, 0, 22, 40)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(28, 0, 28, 81)));
+    assertThat(diagnostics, true)
+      .hasRange(6, 0, 6, 20)
+      .hasRange(8, 12, 8, 26)
+      .hasRange(9, 16, 9, 32)
+      .hasRange(22, 0, 22, 40)
+      .hasRange(28, 0, 28, 81);
   }
 
   @Test
