@@ -4,13 +4,13 @@ This section contains articles containing information for developers of diagnost
 
 ## Instructions
 
-- Старт
-    - [Настройка окружения](EnvironmentSetting.md)
-    - [Быстрый старт](FastStart.md)
-- Разработка диагностик
-    - [Пример разработки диагностики](DiagnosticExample.md)
-    - [Процесс (workflow) разработки диагностики](DiagnosticDevWorkFlow.md)
-    - [Описание типов и важности диагностик](DiagnosticTypeAndSeverity.md)
-    - [Тэги диагностик](DiagnosticTag.md)
-    - [Добавление параметров диагностике](DiagnostcAddSettings.md)
-    - [Добавление быстрых исправлений диагностик](DiagnosticQuickFix.md)
+- Start
+    - [Setting environment](EnvironmentSetting.md)
+    - [Quick start](FastStart.md)
+- Diagnostics development
+    - [Diagnostic development example](DiagnosticExample.md)
+    - [Diagnostic development workflow](DiagnosticDevWorkFlow.md)
+    - [Diagnostic type and severity description](DiagnosticTypeAndSeverity.md)
+    - [Diagnostic tags](DiagnosticTag.md)
+    - [Add parameters to Diagnostic](DiagnostcAddSettings.md)
+    - [Add QuickFix to Diagnostic](DiagnosticQuickFix.md)
