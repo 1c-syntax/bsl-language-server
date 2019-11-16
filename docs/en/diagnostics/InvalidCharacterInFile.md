@@ -8,17 +8,17 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 ## Description
 
-В текстах модулей (включая комментарии) не допускается использовать неразрывные пробелы и знак минус "-" в других кодировках (короткое, длинное тире, мягкий перенос и т.д.).
+In the texts of modules (including comments) it is not allowed to use inextricable spaces and the minus sign "-" in other encodings (short, long dash, soft hyphen, etc.).
 
-Такие символы часто оказываются в тексте модулей при копировании из офисных документов и приводят к ряду сложностей при разработке.
+Such characters often appear in the text of the modules when copying from office documents and lead to a number of difficulties in the development.
 
 Например:
 
-- не работает поиск фрагментов текста, включающих «неправильные» минусы и пробелы
-- некорректно выводятся подсказки типов параметров процедур и функций в конфигураторе и расширенная проверка в 1С:EDT
-- указание «неправильного» минуса в выражениях приведет к синтаксической ошибке
+- the search for fragments of text that includes “wrong” minuses and spaces does not work
+- hints of types of parameters of procedures and functions in the configurator and extended verification in 1C: EDT are incorrectly displayed
+- specifying a “wrong” minus in expressions will result in a syntax error
 
-Диагностика обнаруживает следующие недопустимые символы
+Diagnostics detects the following invalid characters
 
 - En Dash
 - Figure Dash
