@@ -12,10 +12,10 @@ When working with external resources using the objects WSDefinitions, WSProxy, H
 
 Setting a timeout protects against external factors:
 
-- нестабильного подключения к Интернету, когда регулярно происходит прерывание связи, и система не может получить цельный ответ сервера, к которому выполняется подключение;
-- при включенных антивирусных программах или при неправильных настройках брандмауэра;
+- unstable Internet connection, when the connection is interrupted regularly, and the system cannot receive a complete response from the server to which the connection is made;
+- when anti-virus programs are enabled or if the firewall settings are incorrect;
 - incorrect proxy-server settings;
-- ненадежной работы веб-сервера из-за возросшей нагрузки или некорректной работы скриптов.
+- unreliable operation of the web server due to increased load or incorrect operation of scripts.
 
 ## Examples
 
