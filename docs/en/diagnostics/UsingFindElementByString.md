@@ -1,10 +1,11 @@
-# Using FindByName and FindByCode
+# Using "FindByName" and "FindByCode"
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Major` | `Yes` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL` | `Major` | `Yes` | `2` | `standard`<br>`badpractice`<br>`performance`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 The diagnostic finds use of methods FindByName and FindByCode with hardcoded values.
