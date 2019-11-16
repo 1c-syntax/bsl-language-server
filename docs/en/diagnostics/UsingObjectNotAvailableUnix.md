@@ -16,7 +16,7 @@ Checked the use of unavailable in :
 - COMObject
 - Mail
 
-**Проверка значение выполнения условия пока не выполняется.**
+**Checking the value of the condition is not satisfied.**
 
 ### Addition
 
