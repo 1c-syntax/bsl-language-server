@@ -54,7 +54,7 @@ dependencies {
 
     compile("org.reflections", "reflections", "0.9.10")
 
-    compile("com.github.1c-syntax", "bsl-parser", "cd887918b4b85622d8afa29c23802fedddd1af81") {
+    compile("com.github.1c-syntax", "bsl-parser", "0.11.0") {
         exclude("com.github.nixel2007.antlr4", "antlr4-maven-plugin")
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotations")
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotation-processors")
