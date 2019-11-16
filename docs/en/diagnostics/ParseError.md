@@ -1,17 +1,20 @@
 # Source code parse error
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `5` | `error` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `error`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
-An error occurs if the source code of the module is written with a violation of the syntax of the language or if the preprocessor instructions are used incorrectly.
+Ошибка возникает если исходный код модуля написан с нарушением синтаксиса языка или при неправильном использовании инструкций препроцессора.
 
-Do not split separate grammatical structures, expressions, declarations and procedures and functions calls by the preprocessor instructions and regions.
+Separate grammatical constructions, expressions, as well as declarations and places for calling procedures and functions, should not be split by preprocessor instructions and regions.
 
 ## Examples
+
+Incorrect:
 
 ```bsl
 Процедура Пример1()
@@ -42,6 +45,6 @@ Do not split separate grammatical structures, expressions, declarations and proc
   Параметр3);
 ```
 
-## Sources
+## Reference
 
-* [Standard: #439 Use of compilation and preprocessor directives](https://its.1c.ru/db/v8std#content:439:hdoc)
+- [Standard: #439 Use of compilation and preprocessor directives](https://its.1c.ru/db/v8std#content:439:hdoc)
