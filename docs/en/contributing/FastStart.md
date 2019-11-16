@@ -7,10 +7,10 @@ The following describes the steps to get started quickly.
 1. Create project directory `bsl-language-server`
 2. Clone the project repository to the created directory `https://github.com/1c-syntax/bsl-language-server.git`
 3. Set up the environment according to the [instructions](EnvironmentSetting.md)
-4. Выполнить команды для ингнорирования изменений в служебных файлах
-    1. `git update-index --assume-unchanged ./.idea/compiler.xml`
-    2. `git update-index --assume-unchanged ./.idea/encodings.xml`
-    3. `git update-index --assume-unchanged ./.idea/misc.xml`
+4. Execute commands to ignore changes in service files
+    1.  `git update-index --assume-unchanged ./.idea/compiler.xml` 
+    2.  `git update-index --assume-unchanged ./.idea/encodings.xml` 
+    3.  `git update-index --assume-unchanged ./.idea/misc.xml` 
 5. Open the `build.gradle.kts` file from the project directory, agree to import the dependencies, wait for them to download
 6. Run (from context menu or ide console) command `gradlew test`, if passed then all settings are correct
 7. Make yourself familiar with  [diagnostics development example](DiagnosticExample.md) , [structure and files purpose description,](DiagnosticStructure.md) and other articles in the [section for developers](index.md)
