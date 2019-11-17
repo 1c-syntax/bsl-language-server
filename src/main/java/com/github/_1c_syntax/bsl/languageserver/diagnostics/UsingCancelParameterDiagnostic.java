@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -62,10 +63,10 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
     Collection<ParseTree> params = Trees.findAllRuleNodes(ctx, BSLParser.RULE_param);
 
-    boolean inParams = params.stream().anyMatch(
-      node -> cancelPattern.matcher(((BSLParser.ParamContext) node).IDENTIFIER()
-        .getText())
-        .matches());
+    boolean inParams = params.stream()
+      .map(node -> ((BSLParser.ParamContext) node).IDENTIFIER())
+      .filter(Objects::nonNull)
+      .anyMatch(node -> cancelPattern.matcher(node.getText()).matches());
 
     // ToDO обрабатывать не только в параметрах
     if (!inParams) {
