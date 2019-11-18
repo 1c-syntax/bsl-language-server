@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWordsExclusion` | `Pattern` | Ключевые слова поиска для исключения выражений при поиске IP адресов | `"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"` |
+| `searchWordsExclusion` | `Pattern` | ```Ключевые слова поиска для исключения выражений при поиске IP адресов``` | ```"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
