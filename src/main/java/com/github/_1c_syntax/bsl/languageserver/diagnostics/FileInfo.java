@@ -44,7 +44,7 @@ public class FileInfo {
 
   public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
     URI uri = URI.create(documentContext.getUri());
-    path = Paths.get(sourceDir).toAbsolutePath().relativize(Paths.get(uri));
+    path = Paths.get(sourceDir).toAbsolutePath().relativize(Paths.get(uri).toAbsolutePath());
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
   }
