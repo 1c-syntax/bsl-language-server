@@ -85,6 +85,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     return newExpression.typeName() != null && DiagnosticHelper.isWSDefinitionsType(newExpression.typeName());
   }
 
+  private static boolean isFTPConnection(BSLParser.NewExpressionContext newExpression) {
+    return newExpression.typeName() != null && DiagnosticHelper.isFTPConnectionType(newExpression.typeName());
+  }
+
   private static boolean isNumberOrVariable(BSLParser.MemberContext member) {
     if (member.constValue() != null) {
       return (member.constValue().numeric() != null);
@@ -99,9 +103,15 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       return true;
     }
 
-    int numberTimeout = DEFAULT_NUMBER_TIMEOUT;
+    int numberTimeout;
     if (isWSDefinitions(newExpression)) {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1;
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1; // 5-й
+    }
+    else if (isFTPConnection(newExpression)) {
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT + 1; // 7-ой
+    }
+    else {
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT; // 6-ой
     }
 
     List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();

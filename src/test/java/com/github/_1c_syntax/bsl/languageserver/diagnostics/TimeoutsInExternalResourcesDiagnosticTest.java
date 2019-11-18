@@ -46,12 +46,12 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
     assertThat(diagnostics, true)
       .hasRange(3, 20, 3, 75)
       .hasRange(5, 20, 5, 92)
-      .hasRange(7, 18, 7, 72)
-      .hasRange(11, 16, 11, 80)
-      .hasRange(19, 21, 19, 65)
-      .hasRange(32, 14, 32, 43)
-      .hasRange(69, 26, 69, 114)
-      .hasRange(76, 10, 76, 39)
+      .hasRange(9, 18, 9, 72)
+      .hasRange(13, 16, 13, 80)
+      .hasRange(21, 21, 21, 65)
+      .hasRange(34, 14, 34, 43)
+      .hasRange(71, 26, 71, 114)
+      .hasRange(78, 10, 78, 39)
     ;
 
   }
