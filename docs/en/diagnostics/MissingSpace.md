@@ -1,21 +1,20 @@
 # Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `badpractice` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
---- | --- | --- | ---
-`listForCheckLeft` | `String` | Список символов для проверки слева (разделенные пробелом). Например: ) = | `""`
-`listForCheckRight` | `String` | Список символов для проверки справа (разделенные пробелом). Например: ( = | `", ;"`
-`listForCheckLeftAndRight` | `String` | Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < > | `"+ - * / = % < > <> <= >="`
-`checkSpaceToRightOfUnary` | `Boolean` | Проверять наличие пробела справа от унарных знаков (+ -) | `false`
-`allowMultipleCommas` | `Boolean` | Разрешать несколько запятых подряд | `false`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `listForCheckLeft` | `String` | ```Список символов для проверки слева (разделенные пробелом). Например: ) =``` | ```""``` |
+| `listForCheckRight` | `String` | ```Список символов для проверки справа (разделенные пробелом). Например: ( =``` | ```", ;"``` |
+| `listForCheckLeftAndRight` | `String` | ```Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >``` | ```"+ - * / = % < > <> <= >="``` |
+| `checkSpaceToRightOfUnary` | `Boolean` | ```Проверять наличие пробела справа от унарных знаков (+ -)``` | ```false``` |
+| `allowMultipleCommas` | `Boolean` | ```Разрешать несколько запятых подряд``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.

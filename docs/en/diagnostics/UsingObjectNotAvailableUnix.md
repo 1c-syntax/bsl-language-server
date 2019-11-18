@@ -1,11 +1,10 @@
-# Using unavailable objects in Unix
+# Using unavailable in Unix objects
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Error` | `BSL` | `Critical` | `Yes` | `30` | `standard`<br>`lockinos`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL` | `Critical` | `Yes` | `30` | `standard`<br/>`lockinos` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.

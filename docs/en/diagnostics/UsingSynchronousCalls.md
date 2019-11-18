@@ -1,11 +1,10 @@
 # Using synchronous calls
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL` | `Major` | `No` | `15` | `standard`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `No` | `15` | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 When developing configurations designed to work in the web client, it is forbidden to use modal forms and dialogs and synchronous calls. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard, and asynchronous tools are required to ensure user interaction.

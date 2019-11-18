@@ -1,11 +1,10 @@
 # Invalid character
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Error` | `BSL`<br>`OS` | `Major` | `Yes` | `1` | `error`<br>`standard`<br>`unpredictable`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `1` | `error`<br/>`standard`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 In the texts of modules (including comments) it is not allowed to use inextricable spaces and the minus sign "-" in other encodings (short, long dash, soft hyphen, etc.).

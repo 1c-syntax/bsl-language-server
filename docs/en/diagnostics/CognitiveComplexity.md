@@ -8,8 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `complexityThreshold` | `int` | Допустимая когнитивная сложность метода | `15` |
-| `checkModuleBody` | `boolean` | Проверять тело модуля | `true` |
+| `complexityThreshold` | `int` | ```Допустимая когнитивная сложность метода``` | ```15``` |
+| `checkModuleBody` | `boolean` | ```Проверять тело модуля``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
