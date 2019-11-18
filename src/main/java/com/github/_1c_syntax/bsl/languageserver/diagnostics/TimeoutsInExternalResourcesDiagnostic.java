@@ -179,7 +179,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
 
     BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
-    if (assignmentContext.isEmpty()) {
+    if (assignmentContext == null) {
       return false;
     }
 
