@@ -40,7 +40,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics).hasSize(9);
 
     // check ranges
     assertThat(diagnostics, true)
@@ -52,6 +52,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
       .hasRange(34, 14, 34, 43)
       .hasRange(71, 26, 71, 114)
       .hasRange(78, 10, 78, 39)
+      .hasRange(81, 47, 81, 76)
     ;
 
   }
