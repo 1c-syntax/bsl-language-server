@@ -23,6 +23,7 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
 
     private var typeRuMap = hashMapOf("ERROR" to "Ошибка",
             "VULNERABILITY" to "Уязвимость",
+            "SECURITYHOTSPOT" to "Потенциальная уязвимость",
             "CODE_SMELL" to "Дефект кода");
 
     private var typeMapRu = hashMapOf<String, Int>()
@@ -30,6 +31,7 @@ open class ToolsUpdateDiagnosticsIndex @javax.inject.Inject constructor(objects:
 
     private var typeEnMap = hashMapOf("ERROR" to "Error",
             "VULNERABILITY" to "Vulnerability",
+            "SECURITYHOTSPOT" to "Security Hotspot",
             "CODE_SMELL" to "Code smell");
 
     private var severityRuMap = hashMapOf("BLOCKER" to "Блокирующий",
