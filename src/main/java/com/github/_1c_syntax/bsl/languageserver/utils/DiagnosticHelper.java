@@ -74,4 +74,7 @@ public final class DiagnosticHelper {
     return "WSОпределения".equalsIgnoreCase(tnc.getText()) || "WSDefinitions".equalsIgnoreCase(tnc.getText());
   }
 
+  public static boolean isFTPConnectionType(ParseTree tnc) {
+    return "FTPСоединение".equalsIgnoreCase(tnc.getText()) || "FTPConnection".equalsIgnoreCase(tnc.getText());
+  }
 }

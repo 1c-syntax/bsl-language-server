@@ -1,17 +1,16 @@
 # Storing confidential information in code
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
---- | --- | --- | ---
-`searchWords` | `Pattern` | Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях. | `"Пароль
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `searchWords` | `Pattern` | ```Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях.``` | ```"Пароль|Password"``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 It is prohibited to store any confidential information in the code. The confidential information is:

@@ -1,17 +1,16 @@
 # Missing temporary file deletion after using
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Error` | `BSL`<br>`OS` | `Major` | `Yes` | `5` | `badpractice`<br>`standard`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `5` | `badpractice`<br/>`standard` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
---- | --- | --- | ---
-`searchDeleteFileMethod` | `Pattern` | Ключевые слова поиска методов удаления / перемещения файлов | `"УдалитьФайлы
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `searchDeleteFileMethod` | `Pattern` | ```Ключевые слова поиска методов удаления / перемещения файлов``` | ```"УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 After you finished working with temporary file or folder, you need to delete it yourself.

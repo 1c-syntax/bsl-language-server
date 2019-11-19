@@ -56,7 +56,7 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
-    String expression = ctx.expression().getText().toLowerCase(Locale.getDefault());
+    String expression = ctx.expression().getText();
 
     Trees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
       .stream()
@@ -82,7 +82,7 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
     BSLParser.CallStatementContext callStatement = (BSLParser.CallStatementContext) node;
 
     String callStatementText = callStatement.getText().toLowerCase(Locale.getDefault());
-    String prefix = expression
+    String prefix = expression.toLowerCase(Locale.getDefault())
       + "."
       + callStatement.accessCall().methodCall().methodName().getText().toLowerCase(Locale.getDefault())
       + "(";

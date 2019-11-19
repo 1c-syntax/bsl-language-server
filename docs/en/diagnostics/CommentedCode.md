@@ -1,17 +1,16 @@
 # Commented out code
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `standard`<br/>`badpractice` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
---- | --- | --- | ---
-`threshold` | `float` | Порог чуствительности | `0.9F`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `threshold` | `float` | ```Порог чуствительности``` | ```0.9F``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Software modules should not have commented out code fragments, as well as fragments,

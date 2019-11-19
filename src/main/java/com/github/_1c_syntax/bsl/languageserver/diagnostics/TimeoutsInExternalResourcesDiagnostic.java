@@ -75,14 +75,18 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
   private static boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
     BSLParser.TypeNameContext typeNameContext = newExpression.typeName();
-    if (typeNameContext != null) {
-      return patternNewExpression.matcher(typeNameContext.getText()).find();
+    if (typeNameContext == null) {
+      return false;
     }
-    return false;
+    return patternNewExpression.matcher(typeNameContext.getText()).find();
   }
 
   private static boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
     return newExpression.typeName() != null && DiagnosticHelper.isWSDefinitionsType(newExpression.typeName());
+  }
+
+  private static boolean isFTPConnection(BSLParser.NewExpressionContext newExpression) {
+    return newExpression.typeName() != null && DiagnosticHelper.isFTPConnectionType(newExpression.typeName());
   }
 
   private static boolean isNumberOrVariable(BSLParser.MemberContext member) {
@@ -99,9 +103,15 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       return true;
     }
 
-    int numberTimeout = DEFAULT_NUMBER_TIMEOUT;
+    int numberTimeout;
     if (isWSDefinitions(newExpression)) {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1;
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1; // 5-й
+    }
+    else if (isFTPConnection(newExpression)) {
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT + 1; // 7-ой
+    }
+    else {
+      numberTimeout = DEFAULT_NUMBER_TIMEOUT; // 6-ой
     }
 
     List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
@@ -112,7 +122,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     boolean needContinue = true;
     BSLParser.ExpressionContext expression = listParams.get(numberTimeout).expression();
     if (expression != null && !expression.member().isEmpty()) {
-      BSLParser.MemberContext memberContext = expression.member().get(0);
+      BSLParser.MemberContext memberContext = expression.member(0);
       if (isNumberOrVariable(memberContext)) {
         needContinue = false;
         isContact.set(false);
@@ -167,7 +177,13 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   }
 
   private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
-    BSLParser.LValueContext lValue = localStatement.assignment().lValue();
+
+    BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
+    if (assignmentContext == null) {
+      return false;
+    }
+
+    BSLParser.LValueContext lValue = assignmentContext.lValue();
     if (!lValue.isEmpty()) {
 
       BSLParser.AcceptorContext acceptor = lValue.acceptor();
