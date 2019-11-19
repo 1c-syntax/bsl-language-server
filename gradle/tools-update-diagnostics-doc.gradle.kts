@@ -1,6 +1,3 @@
-import org.gradle.plugins.javascript.coffeescript.compile.internal.SerializableCoffeeScriptCompileSpec
-import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
-
 open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
 
     @OutputDirectory
@@ -162,7 +159,6 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             docPath.writeText(addText + text.substring(indexHeader),
                     charset("UTF-8"))
         }
-        logger.quiet("File {} updated", docPath)
     }
 
     private fun getDiagnosticDescription(key: String, lang: String): String {

@@ -189,4 +189,5 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
 ## Завершение
 
 После успешного тестирования диагностики добавляем ее в список реализованных диагностик проекта путем редактирования файлов `docs/index.md` для русского описания и `docs/en/index.md` для английского.  
-Обновление индекса справки можно выполнить автоматически, запустив gradle-задачу updateDiagnosticsIndex (из командной строки или IDE) `gradlew updateDiagnosticsIndex`.
+Обновление индекса справки можно выполнить автоматически, запустив gradle-задачу updateDiagnosticsIndex (из командной строки или IDE) `gradlew updateDiagnosticsIndex`.  
+Чтобы не забыть все действия, которые необходимо выполнить перед окончание разработки, стоит воспользоваться специальной команда, запускаемой `gradlew precommit` из командной строки либо `precommit` из панели задач Gradle в IDE. 
