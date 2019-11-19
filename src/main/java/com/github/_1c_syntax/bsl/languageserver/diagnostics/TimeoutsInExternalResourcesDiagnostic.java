@@ -75,10 +75,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
   private static boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
     BSLParser.TypeNameContext typeNameContext = newExpression.typeName();
-    if (typeNameContext != null) {
-      return patternNewExpression.matcher(typeNameContext.getText()).find();
+    if (typeNameContext == null) {
+      return false;
     }
-    return false;
+    return patternNewExpression.matcher(typeNameContext.getText()).find();
   }
 
   private static boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
@@ -122,7 +122,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     boolean needContinue = true;
     BSLParser.ExpressionContext expression = listParams.get(numberTimeout).expression();
     if (expression != null && !expression.member().isEmpty()) {
-      BSLParser.MemberContext memberContext = expression.member().get(0);
+      BSLParser.MemberContext memberContext = expression.member(0);
       if (isNumberOrVariable(memberContext)) {
         needContinue = false;
         isContact.set(false);
@@ -177,7 +177,13 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   }
 
   private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
-    BSLParser.LValueContext lValue = localStatement.assignment().lValue();
+
+    BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
+    if (assignmentContext == null) {
+      return false;
+    }
+
+    BSLParser.LValueContext lValue = assignmentContext.lValue();
     if (!lValue.isEmpty()) {
 
       BSLParser.AcceptorContext acceptor = lValue.acceptor();
