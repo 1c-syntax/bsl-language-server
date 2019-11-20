@@ -111,10 +111,10 @@ public final class MultilingualStringAnalyser {
   }
 
   private void expandMultilingualString() {
-    String[] languagesStrings = getMultilingualString().split("';");
+    String[] languagesStrings = getMultilingualString().split("('|\"{2});");
     for (String s : languagesStrings) {
-      String[] parts = s.split("=\\s*'");
-      if (parts.length == VALID_LANG_PARTS) {
+      String[] parts = s.split("=\\s*('|\"{2})");
+      if (parts.length >= VALID_LANG_PARTS) {
         expandedMultilingualString.put(parts[0].replaceAll("\\W+|\\s*", ""), parts[1]);
       }
     }
