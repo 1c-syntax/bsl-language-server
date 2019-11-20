@@ -56,8 +56,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_COMMENT_AS_CODE,
-    description = "Считать комментарий в блоке кодом"
+    defaultValue = "" + DEFAULT_COMMENT_AS_CODE
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
 

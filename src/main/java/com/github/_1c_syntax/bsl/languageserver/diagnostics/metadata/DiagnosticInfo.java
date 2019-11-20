@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DiagnosticInfo {
@@ -149,6 +150,10 @@ public class DiagnosticInfo {
 
   public Object getDefaultValue(DiagnosticParameter diagnosticParameter) {
     return castDiagnosticParameterValue(diagnosticParameter.defaultValue(), diagnosticParameter.type());
+  }
+
+  public String getDescription(String parameterName) {
+    return getResourceString(parameterName);
   }
 
   public Map<String, Object> getDefaultDiagnosticConfiguration() {
