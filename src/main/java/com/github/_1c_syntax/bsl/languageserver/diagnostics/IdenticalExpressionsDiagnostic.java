@@ -52,13 +52,13 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
 
-    List<BSLParser.OperationContext> onlyOperation = ctx.operation();
+    List<? extends BSLParser.OperationContext> onlyOperation = ctx.operation();
 
     if(sufficientSize(ctx) || !isUniformExpression(onlyOperation)) {
       return super.visitChildren(ctx);
     }
 
-    List<BSLParser.MemberContext> onlyMembers = ctx.member();
+    List<? extends BSLParser.MemberContext> onlyMembers = ctx.member();
 
     List<ParseTree> identicalExpressions = onlyMembers
       .stream()
@@ -82,7 +82,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     return ctx.children.size() < MIN_EXPRESSION_SIZE;
   }
 
-  private static boolean isUniformExpression(List<BSLParser.OperationContext> operation) {
+  private static boolean isUniformExpression(List<? extends BSLParser.OperationContext> operation) {
     List<Integer> groupOperation = groupIdenticalOperation(operation);
 
     return groupOperation.size() == 1
@@ -90,7 +90,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
       && groupOperation.get(0) != BSLParser.PLUS;
   }
 
-  private static List<Integer> groupIdenticalOperation(List<BSLParser.OperationContext> operation) {
+  private static List<Integer> groupIdenticalOperation(List<? extends BSLParser.OperationContext> operation) {
     return operation
       .stream()
       .map((BSLParser.OperationContext o) -> o.start.getType())

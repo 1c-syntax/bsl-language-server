@@ -114,7 +114,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       numberTimeout = DEFAULT_NUMBER_TIMEOUT; // 6-ой
     }
 
-    List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
+    List<? extends BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
     if (listParams == null || listParams.size() <= numberTimeout) {
       return true;
     }
