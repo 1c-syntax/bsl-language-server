@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.reflections.ReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -35,12 +34,12 @@ public final class DiagnosticParameterInfo {
   private final String description;
   private final Object defaultValue;
 
-  private DiagnosticParameterInfo(Field field, DiagnosticInfo diagnosticInfo) {
+  private DiagnosticParameterInfo(Field field, String description) {
 
     DiagnosticParameter diagnosticParameter = field.getAnnotation(DiagnosticParameter.class);
     this.type = diagnosticParameter.type();
     this.name = field.getName();
-    this.description = diagnosticInfo.getResourceString(name);
+    this.description = description;
     this.defaultValue = castDiagnosticParameterValue(diagnosticParameter.defaultValue());
 
   }
@@ -79,17 +78,14 @@ public final class DiagnosticParameterInfo {
   }
 
   @SuppressWarnings("unchecked")
-  static Map<String, DiagnosticParameterInfo> createDiagnosticParameters(
-    Class<? extends BSLDiagnostic> diagnosticClass,
-    DiagnosticInfo diagnosticInfo
-  ) {
+  static Map<String, DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
     return ReflectionUtils.getAllFields(
-      diagnosticClass,
+      diagnosticInfo.getDiagnosticClass(),
       ReflectionUtils.withAnnotation(DiagnosticParameter.class)
     ).stream()
       .collect(Collectors.toMap(
         Field::getName,
-        (Field field) -> new DiagnosticParameterInfo(field, diagnosticInfo)
+        (Field field) -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName()))
       ));
   }
 }

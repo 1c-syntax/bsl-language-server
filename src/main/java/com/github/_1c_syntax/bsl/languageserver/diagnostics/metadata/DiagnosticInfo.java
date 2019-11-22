@@ -61,7 +61,7 @@ public class DiagnosticInfo {
 
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
-    diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(diagnosticClass, this);
+    diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
   }
 
   public Class<? extends BSLDiagnostic> getDiagnosticClass() {
