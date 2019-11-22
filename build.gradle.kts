@@ -181,3 +181,14 @@ lombok {
 apply(from = "gradle/tools-new-diagnostic.gradle.kts")
 apply(from = "gradle/tools-update-diagnostics-index.gradle.kts")
 apply(from = "gradle/tools-update-diagnostics-doc.gradle.kts")
+apply(from = "gradle/tools-update-json-schema.gradle.kts")
+
+tasks.register("precommit") {
+    description = "Run all precommit tasks"
+    group = "Developer tools"
+    dependsOn(":test")
+    dependsOn(":licenseFormat")
+    dependsOn(":updateDiagnosticDocs")
+    dependsOn(":updateDiagnosticsIndex")
+    dependsOn(":updateJsonSchema")
+}
