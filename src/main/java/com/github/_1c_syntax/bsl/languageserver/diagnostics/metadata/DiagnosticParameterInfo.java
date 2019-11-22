@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
 
 public final class DiagnosticParameterInfo {
 
-  private final Object defaultValue;
   private final Class type;
-  private final String description;
   private final String name;
+  private final String description;
+  private final Object defaultValue;
 
   private DiagnosticParameterInfo(Field field, DiagnosticInfo diagnosticInfo) {
 
@@ -45,16 +45,20 @@ public final class DiagnosticParameterInfo {
 
   }
 
-  public Object getDefaultValue() {
-    return this.defaultValue;
+  public Class getType() {
+    return type;
+  }
+
+  public String getName() {
+    return name;
   }
 
   public String getDescription() {
     return this.description;
   }
 
-  public String getName() {
-    return name;
+  public Object getDefaultValue() {
+    return this.defaultValue;
   }
 
   private Object castDiagnosticParameterValue(String valueToCast) {
