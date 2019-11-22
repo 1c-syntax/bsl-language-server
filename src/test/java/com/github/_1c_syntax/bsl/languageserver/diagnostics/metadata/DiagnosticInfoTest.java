@@ -40,6 +40,7 @@ class DiagnosticInfoTest {
       .isEqualTo("Считать комментарий в блоке кодом");
 
     assertThat(parameter.getDefaultValue()).isEqualTo(false);
+    assertThat(parameter.getType()).isEqualTo(Boolean.class);
   }
 
   @Test
