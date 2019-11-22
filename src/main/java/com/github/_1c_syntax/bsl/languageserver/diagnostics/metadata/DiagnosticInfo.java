@@ -25,13 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.apache.commons.io.IOUtils;
-import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +39,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DiagnosticInfo {
@@ -56,7 +53,7 @@ public class DiagnosticInfo {
 
   private final String diagnosticCode;
   private DiagnosticMetadata diagnosticMetadata;
-  private Map<String, DiagnosticParameter> diagnosticParameters;
+  private Map<String, DiagnosticParameterInfo> diagnosticParameters;
 
   public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, LanguageServerConfiguration configuration) {
     this.diagnosticClass = diagnosticClass;
@@ -64,7 +61,7 @@ public class DiagnosticInfo {
 
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
-    diagnosticParameters = createDiagnosticParameters();
+    diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(diagnosticClass, this);
   }
 
   public Class<? extends BSLDiagnostic> getDiagnosticClass() {
@@ -144,23 +141,15 @@ public class DiagnosticInfo {
     return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
   }
 
-  public Map<String, DiagnosticParameter> getDiagnosticParameters() {
+  public Map<String, DiagnosticParameterInfo> getDiagnosticParameters() {
     return new HashMap<>(diagnosticParameters);
-  }
-
-  public Object getDefaultValue(DiagnosticParameter diagnosticParameter) {
-    return castDiagnosticParameterValue(diagnosticParameter.defaultValue(), diagnosticParameter.type());
-  }
-
-  public String getDescription(String parameterName) {
-    return getResourceString(parameterName);
   }
 
   public Map<String, Object> getDefaultDiagnosticConfiguration() {
     return diagnosticParameters.entrySet().stream()
       .collect(Collectors.toMap(
         Map.Entry::getKey,
-        (Map.Entry<String, DiagnosticParameter> entry) -> getDefaultValue(entry.getValue())
+        (Map.Entry<String, DiagnosticParameterInfo> entry) -> entry.getValue().getDefaultValue()
         )
       );
   }
@@ -174,17 +163,6 @@ public class DiagnosticInfo {
     return simpleName;
   }
 
-  @SuppressWarnings("unchecked")
-  private Map<String, DiagnosticParameter> createDiagnosticParameters() {
-    return ReflectionUtils.getAllFields(
-      diagnosticClass,
-      ReflectionUtils.withAnnotation(DiagnosticParameter.class)
-    ).stream()
-      .collect(Collectors.toMap(
-        Field::getName,
-        (Field field) -> field.getAnnotation(DiagnosticParameter.class)
-      ));
-  }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
     Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> map = new EnumMap<>(DiagnosticSeverity.class);
@@ -196,22 +174,4 @@ public class DiagnosticInfo {
 
     return map;
   }
-
-  private static Object castDiagnosticParameterValue(String valueToCast, Class type) {
-    Object value;
-    if (type == Integer.class) {
-      value = Integer.parseInt(valueToCast);
-    } else if (type == Boolean.class) {
-      value = Boolean.parseBoolean(valueToCast);
-    } else if (type == Float.class) {
-      value = Float.parseFloat(valueToCast);
-    } else if (type == String.class) {
-      value = valueToCast;
-    } else {
-      throw new IllegalArgumentException("Unsupported diagnostic parameter type " + type);
-    }
-
-    return value;
-  }
-
 }
