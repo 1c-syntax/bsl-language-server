@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class DiagnosticInfo {
 
   private final String diagnosticCode;
   private DiagnosticMetadata diagnosticMetadata;
-  private Map<String, DiagnosticParameterInfo> diagnosticParameters;
+  private List<DiagnosticParameterInfo> diagnosticParameters;
 
   public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, LanguageServerConfiguration configuration) {
     this.diagnosticClass = diagnosticClass;
@@ -141,17 +140,13 @@ public class DiagnosticInfo {
     return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
   }
 
-  public Map<String, DiagnosticParameterInfo> getDiagnosticParameters() {
-    return new HashMap<>(diagnosticParameters);
+  public List<DiagnosticParameterInfo> getDiagnosticParameters() {
+    return diagnosticParameters;
   }
 
   public Map<String, Object> getDefaultDiagnosticConfiguration() {
-    return diagnosticParameters.entrySet().stream()
-      .collect(Collectors.toMap(
-        Map.Entry::getKey,
-        (Map.Entry<String, DiagnosticParameterInfo> entry) -> entry.getValue().getDefaultValue()
-        )
-      );
+    return diagnosticParameters.stream()
+      .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
 
   private String createDiagnosticCode() {

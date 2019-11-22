@@ -35,7 +35,7 @@ class DiagnosticInfoTest {
   void testParameter() {
 
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, LanguageServerConfiguration.create());
-    DiagnosticParameterInfo parameter = diagnosticInfo.getDiagnosticParameters().get("commentAsCode");
+    DiagnosticParameterInfo parameter = diagnosticInfo.getDiagnosticParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
 
@@ -48,7 +48,7 @@ class DiagnosticInfoTest {
     LanguageServerConfiguration languageServerConfiguration = LanguageServerConfiguration.create();
     languageServerConfiguration.setDiagnosticLanguage(DiagnosticLanguage.EN);
     DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, languageServerConfiguration);
-    assertThat(diagnosticEnInfo.getDiagnosticParameters().get("commentAsCode").getDescription())
+    assertThat(diagnosticEnInfo.getDiagnosticParameters().get(0).getDescription())
       .isEqualTo("Comment as code");
 
   }
