@@ -50,8 +50,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS,
-    description = "Список разрешенных чисел через запятую. Например: -1,0,1,60"
+    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS
   )
   private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 

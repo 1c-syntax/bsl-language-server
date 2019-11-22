@@ -47,8 +47,7 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_PARAMS_COUNT,
-    description = "Допустимое количество параметров метода"
+    defaultValue = "" + MAX_PARAMS_COUNT
   )
   private int maxParamsCount = MAX_PARAMS_COUNT;
 

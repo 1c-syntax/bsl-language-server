@@ -65,9 +65,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
-    description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок."
-      + " Список через запятую. Например: //@,//(c)"
+    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
   )
   private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
 

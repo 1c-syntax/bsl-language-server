@@ -49,10 +49,8 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY,
-    description = "Допустимое количество логических конструкций в условии оператора Если"
+    defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY
   )
-
   private int maxIfConditionComplexity = MAX_IF_CONDITION_COMPLEXITY;
 
   public IfConditionComplexityDiagnostic(DiagnosticInfo info) {

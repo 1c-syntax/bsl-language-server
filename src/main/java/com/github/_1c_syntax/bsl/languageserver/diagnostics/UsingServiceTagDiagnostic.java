@@ -50,8 +50,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + SERVICE_TAGS_DEFAULT,
-    description = "Служебные теги"
+    defaultValue = "" + SERVICE_TAGS_DEFAULT
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);

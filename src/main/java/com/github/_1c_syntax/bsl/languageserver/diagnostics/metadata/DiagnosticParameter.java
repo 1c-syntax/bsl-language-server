@@ -31,5 +31,4 @@ import java.lang.annotation.Target;
 public @interface DiagnosticParameter {
   Class type();
   String defaultValue() default "";
-  String description() default "";
 }

@@ -51,8 +51,7 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_COMMENT_AS_CODE,
-    description = "Считать комментарий в исключении кодом"
+    defaultValue = "" + DEFAULT_COMMENT_AS_CODE
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
 

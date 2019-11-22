@@ -53,8 +53,7 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_VALUES_COUNT,
-    description = "Допустимое количество значений свойств, передаваемых в конструктор структуры"
+    defaultValue = "" + MAX_VALUES_COUNT
   )
   private int maxValuesCount = MAX_VALUES_COUNT;
 

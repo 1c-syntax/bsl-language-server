@@ -73,36 +73,31 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT,
-    description = "Список символов для проверки слева (разделенные пробелом). Например: ) ="
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
   )
   private String listForCheckLeft = getRegularString(DEFAULT_LIST_FOR_CHECK_LEFT);
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT,
-    description = "Список символов для проверки справа (разделенные пробелом). Например: ( ="
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT
   )
   private String listForCheckRight = getRegularString(DEFAULT_LIST_FOR_CHECK_RIGHT);
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT,
-    description = "Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >"
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
   )
   private String listForCheckLeftAndRight = getRegularString(DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY,
-    description = "Проверять наличие пробела справа от унарных знаков (+ -)"
+    defaultValue = "" + DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY
   )
   private Boolean checkSpaceToRightOfUnary = DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY;
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_ALLOW_MULTIPLE_COMMAS,
-    description = "Разрешать несколько запятых подряд"
+    defaultValue = "" + DEFAULT_ALLOW_MULTIPLE_COMMAS
   )
   private Boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS;
 

@@ -57,15 +57,13 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + COMPLEXITY_THRESHOLD,
-    description = "Допустимая когнитивная сложность метода"
+    defaultValue = "" + COMPLEXITY_THRESHOLD
   )
   private int complexityThreshold = COMPLEXITY_THRESHOLD;
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + CHECK_MODULE_BODY,
-    description = "Проверять тело модуля"
+    defaultValue = "" + CHECK_MODULE_BODY
   )
   private boolean checkModuleBody = CHECK_MODULE_BODY;
 

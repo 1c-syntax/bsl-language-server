@@ -59,8 +59,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = REGEX_DELETION_FILE,
-    description = "Ключевые слова поиска методов удаления / перемещения файлов"
+    defaultValue = REGEX_DELETION_FILE
   )
   private Pattern searchDeleteFileMethod = Pattern.compile(
     "^(" + REGEX_DELETION_FILE + ")",

@@ -47,8 +47,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_METHOD_SIZE,
-    description = "Максимальная длина метода в строках"
+    defaultValue = "" + MAX_METHOD_SIZE
   )
   private int maxMethodSize = MAX_METHOD_SIZE;
 

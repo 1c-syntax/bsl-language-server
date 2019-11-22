@@ -47,8 +47,7 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_OPTIONAL_PARAMS_COUNT,
-    description = "Допустимое количество необязательных параметров метода"
+    defaultValue = "" + MAX_OPTIONAL_PARAMS_COUNT
   )
   private int maxOptionalParamsCount = MAX_OPTIONAL_PARAMS_COUNT;
 
@@ -69,7 +68,7 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
     int paramCount = (int) ctx.param().stream().filter(param -> param.defaultValue() != null).count();
-    if (paramCount > maxOptionalParamsCount){
+    if (paramCount > maxOptionalParamsCount) {
       diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(paramCount, maxOptionalParamsCount));
     }
 

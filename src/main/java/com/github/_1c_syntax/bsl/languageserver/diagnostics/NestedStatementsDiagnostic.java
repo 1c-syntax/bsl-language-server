@@ -60,8 +60,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_ALLOWED_LEVEL,
-    description = "Максимальный уровень вложенности конструкций"
+    defaultValue = "" + MAX_ALLOWED_LEVEL
   )
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 

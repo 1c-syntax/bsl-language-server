@@ -63,8 +63,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = REGEX_STD_PATHS_UNIX,
-    description = "Ключевые слова поиска стандартных корневых каталогов Unix"
+    defaultValue = REGEX_STD_PATHS_UNIX
   )
   private Pattern searchWordsStdPathsUnix = getLocalPattern("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 

@@ -69,8 +69,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = FIND_WORD_DEFAULT,
-    description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
+    defaultValue = FIND_WORD_DEFAULT
   )
   private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
