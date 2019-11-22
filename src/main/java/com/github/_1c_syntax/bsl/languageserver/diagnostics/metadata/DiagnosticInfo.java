@@ -141,7 +141,7 @@ public class DiagnosticInfo {
   }
 
   public List<DiagnosticParameterInfo> getDiagnosticParameters() {
-    return diagnosticParameters;
+    return new ArrayList<>(diagnosticParameters);
   }
 
   public Map<String, Object> getDefaultDiagnosticConfiguration() {
