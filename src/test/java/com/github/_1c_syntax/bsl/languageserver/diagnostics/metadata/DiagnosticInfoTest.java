@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
+import org.assertj.core.api.Assertions;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -34,12 +36,31 @@ class DiagnosticInfoTest {
   void testParameter() {
 
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class);
+
+    Assertions.assertThat(diagnosticInfo.getDiagnosticCode()).isEqualTo("EmptyCodeBlock");
+    Assertions.assertThat(diagnosticInfo.getDiagnosticName()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getDiagnosticMessage()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getDiagnosticMessage("")).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getDiagnosticType()).isEqualTo(DiagnosticType.CODE_SMELL);
+    Assertions.assertThat(diagnosticInfo.getDiagnosticSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
+    Assertions.assertThat(diagnosticInfo.getDiagnosticSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
+    Assertions.assertThat(diagnosticInfo.getLSPDiagnosticSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+    Assertions.assertThat(diagnosticInfo.getCompatibilityMode()).isEqualTo(DiagnosticCompatibilityMode.UNDEFINED);
+    Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.ALL);
+    Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(5);
+    Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
+    Assertions.assertThat(diagnosticInfo.getDiagnosticTags().size()).isGreaterThan(0);
+
+    Assertions.assertThat(diagnosticInfo.getDefaultDiagnosticConfiguration().size()).isGreaterThan(0);
+
+
     DiagnosticParameterInfo parameter = diagnosticInfo.getDiagnosticParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
 
     assertThat(parameter.getDefaultValue()).isEqualTo(false);
     assertThat(parameter.getType()).isEqualTo(Boolean.class);
+
   }
 
   @Test
