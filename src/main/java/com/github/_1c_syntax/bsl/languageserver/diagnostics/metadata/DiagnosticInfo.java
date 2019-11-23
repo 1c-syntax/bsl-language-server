@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.apache.commons.io.IOUtils;
@@ -61,6 +62,10 @@ public class DiagnosticInfo {
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
+  }
+
+  public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
+    this(diagnosticClass, LanguageServerConfiguration.DEFAULT_DIAGNOSTIC_LANGUAGE);
   }
 
   public Class<? extends BSLDiagnostic> getDiagnosticClass() {

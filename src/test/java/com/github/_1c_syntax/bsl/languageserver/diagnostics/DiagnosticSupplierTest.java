@@ -82,7 +82,7 @@ class DiagnosticSupplierTest {
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, DiagnosticLanguage.RU);
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass);
         String diagnosticName;
         try {
           diagnosticName = info.getDiagnosticName();
@@ -122,7 +122,7 @@ class DiagnosticSupplierTest {
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, DiagnosticLanguage.RU);
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass);
         String diagnosticDescription;
         try {
           diagnosticDescription = info.getDiagnosticDescription();
@@ -142,7 +142,7 @@ class DiagnosticSupplierTest {
     // then
     assertThat(diagnosticClasses)
       .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnosticClass, DiagnosticLanguage.RU);
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnosticClass);
         return diagnosticInfo.getDiagnosticTags().size() > 0
           && diagnosticInfo.getDiagnosticTags().size() <= 3;
       });

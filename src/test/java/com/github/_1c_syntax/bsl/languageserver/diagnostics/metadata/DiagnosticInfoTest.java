@@ -33,7 +33,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameter() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, DiagnosticLanguage.RU);
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class);
     DiagnosticParameterInfo parameter = diagnosticInfo.getDiagnosticParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
