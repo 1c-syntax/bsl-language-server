@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +33,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameter() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, LanguageServerConfiguration.create());
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, DiagnosticLanguage.RU);
     DiagnosticParameterInfo parameter = diagnosticInfo.getDiagnosticParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
@@ -46,9 +45,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameterEn() {
 
-    LanguageServerConfiguration languageServerConfiguration = LanguageServerConfiguration.create();
-    languageServerConfiguration.setDiagnosticLanguage(DiagnosticLanguage.EN);
-    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, languageServerConfiguration);
+    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, DiagnosticLanguage.EN);
     assertThat(diagnosticEnInfo.getDiagnosticParameters().get(0).getDescription())
       .isEqualTo("Comment as code");
 

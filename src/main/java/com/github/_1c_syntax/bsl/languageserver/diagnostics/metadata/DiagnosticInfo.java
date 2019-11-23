@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import org.apache.commons.io.IOUtils;
@@ -48,15 +48,15 @@ public class DiagnosticInfo {
     = createSeverityToLSPSeverityMap();
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
-  private final LanguageServerConfiguration configuration;
+  private final DiagnosticLanguage diagnosticLanguage;
 
   private final String diagnosticCode;
   private DiagnosticMetadata diagnosticMetadata;
   private List<DiagnosticParameterInfo> diagnosticParameters;
 
-  public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, LanguageServerConfiguration configuration) {
+  public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, DiagnosticLanguage diagnosticLanguage) {
     this.diagnosticClass = diagnosticClass;
-    this.configuration = configuration;
+    this.diagnosticLanguage = diagnosticLanguage;
 
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
@@ -76,7 +76,7 @@ public class DiagnosticInfo {
   }
 
   public String getDiagnosticDescription() {
-    String langCode = configuration.getDiagnosticLanguage().getLanguageCode();
+    String langCode = diagnosticLanguage.getLanguageCode();
 
     String resourceName = langCode + "/" + diagnosticCode + ".md";
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
@@ -103,7 +103,7 @@ public class DiagnosticInfo {
   }
 
   public String getResourceString(String key) {
-    String languageCode = configuration.getDiagnosticLanguage().getLanguageCode();
+    String languageCode = diagnosticLanguage.getLanguageCode();
     Locale locale = Locale.forLanguageTag(languageCode);
     return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key).intern();
   }

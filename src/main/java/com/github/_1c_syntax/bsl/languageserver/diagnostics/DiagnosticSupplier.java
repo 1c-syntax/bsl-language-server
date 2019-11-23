@@ -67,7 +67,7 @@ public class DiagnosticSupplier {
   }
 
   public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
-    DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, configuration);
+    DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, configuration.getDiagnosticLanguage());
     BSLDiagnostic diagnosticInstance = createDiagnosticInstance(info);
     configureDiagnostic(diagnosticInstance);
 
@@ -83,7 +83,7 @@ public class DiagnosticSupplier {
   }
 
   private DiagnosticInfo createDiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
-    return new DiagnosticInfo(diagnosticClass, configuration);
+    return new DiagnosticInfo(diagnosticClass, configuration.getDiagnosticLanguage());
   }
 
   private void configureDiagnostic(BSLDiagnostic diagnostic) {

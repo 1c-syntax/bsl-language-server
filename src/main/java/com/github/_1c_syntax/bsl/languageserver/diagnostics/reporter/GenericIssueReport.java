@@ -139,7 +139,7 @@ public class GenericIssueReport {
       Optional<Class<? extends BSLDiagnostic>> diagnosticClass =
         diagnosticSupplier.getDiagnosticClass(diagnostic.getCode());
       if (diagnosticClass.isPresent()) {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass.get(), configuration);
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass.get(), configuration.getDiagnosticLanguage());
         effortMinutes = info.getMinutesToFix();
       } else {
         effortMinutes = 0;

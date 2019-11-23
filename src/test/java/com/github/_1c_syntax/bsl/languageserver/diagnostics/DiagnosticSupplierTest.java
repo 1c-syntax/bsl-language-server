@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
@@ -81,7 +82,7 @@ class DiagnosticSupplierTest {
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, LanguageServerConfiguration.create());
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, DiagnosticLanguage.RU);
         String diagnosticName;
         try {
           diagnosticName = info.getDiagnosticName();
@@ -121,7 +122,7 @@ class DiagnosticSupplierTest {
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, LanguageServerConfiguration.create());
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, DiagnosticLanguage.RU);
         String diagnosticDescription;
         try {
           diagnosticDescription = info.getDiagnosticDescription();
@@ -141,7 +142,7 @@ class DiagnosticSupplierTest {
     // then
     assertThat(diagnosticClasses)
       .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnosticClass, LanguageServerConfiguration.create());
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnosticClass, DiagnosticLanguage.RU);
         return diagnosticInfo.getDiagnosticTags().size() > 0
           && diagnosticInfo.getDiagnosticTags().size() <= 3;
       });
