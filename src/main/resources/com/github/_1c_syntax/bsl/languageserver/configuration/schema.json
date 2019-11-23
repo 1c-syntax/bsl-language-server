@@ -159,6 +159,9 @@
                 "PairingBrokenTransaction": {
                     "$ref": "diagnostics-schema.json#/definitions/PairingBrokenTransaction"
                 },
+                "CompilationDirectiveLost": {
+                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveLost"
+                },
                 "UnusedLocalMethod": {
                     "$ref": "diagnostics-schema.json#/definitions/UnusedLocalMethod"
                 },
