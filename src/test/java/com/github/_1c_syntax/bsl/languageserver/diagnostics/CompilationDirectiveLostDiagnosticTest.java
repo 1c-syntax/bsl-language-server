@@ -22,14 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<CompilationDirectiveLostDiagnostic> {
   CompilationDirectiveLostDiagnosticTest() {
@@ -40,40 +38,12 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
   void testFormModule() {
 
     DocumentContext documentContext = getDocumentContext();
-    DocumentContext spy = spy(documentContext);
-
-    when(spy.getModuleType()).thenReturn(ModuleType.FormModule);
-    List<Diagnostic> diagnostics = getDiagnostics(spy);
-
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(9, 0, 9, 18);
-
-  }
-
-
-  @Test
-  void testCommandModule() {
-
-    DocumentContext documentContext = getDocumentContext();
-    DocumentContext spy = spy(documentContext);
-
-    when(spy.getModuleType()).thenReturn(ModuleType.CommandModule);
-    List<Diagnostic> diagnostics = getDiagnostics(spy);
-
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(9, 0, 9, 18);
-
-  }
-
-  @Test
-  void testModuleObject() {
-
-    DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(9, 0, 9, 18);
 
   }
+
 }

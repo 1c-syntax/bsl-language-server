@@ -28,6 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticI
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.reflections.Reflections;
@@ -55,11 +57,12 @@ public class DiagnosticSupplier {
       .findAny();
   }
 
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, ModuleType moduleType, CompatibilityMode compatibilityMode) {
     return diagnosticClasses.stream()
       .map(this::createDiagnosticInfo)
       .filter(this::isEnabled)
       .filter(info -> inScope(info, fileType))
+      .filter(info -> correctModuleType(info, moduleType))
       .filter(info -> passedCompatibilityMode(info, compatibilityMode))
       .map(this::createDiagnosticInstance)
       .peek(this::configureDiagnostic)
@@ -122,6 +125,22 @@ public class DiagnosticSupplier {
       fileScope = DiagnosticScope.BSL;
     }
     return scope == DiagnosticScope.ALL || scope == fileScope;
+  }
+
+  private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype) {
+    ModuleType[] diagnosticModules = diagnosticInfo.getModules();
+    if (diagnosticModules.length == 0){
+      return true;
+    }
+
+    boolean contain = false;
+    for (ModuleType module : diagnosticModules) {
+      if (module == moduletype) {
+        contain = true;
+        break;
+      }
+    }
+    return contain;
   }
 
   private static boolean passedCompatibilityMode(

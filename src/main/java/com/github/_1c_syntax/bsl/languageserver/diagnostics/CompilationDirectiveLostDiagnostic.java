@@ -39,6 +39,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.UNPREDICTABLE
+  },
+  modules = {
+    ModuleType.FormModule,
+    ModuleType.CommandModule
   }
 
 )
@@ -46,18 +50,6 @@ public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnosti
 
   public CompilationDirectiveLostDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
-
-    if (documentContext.getModuleType() == ModuleType.FormModule
-      || documentContext.getModuleType() == ModuleType.CommandModule) {
-      return super.visitFile(ctx);
-    }
-    return ctx;
-
-
   }
 
   @Override
