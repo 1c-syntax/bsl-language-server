@@ -22,8 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +50,7 @@ class DiagnosticSupplierTest {
   @Test
   void configureNullDryRun() {
     // given
-    List<BSLDiagnostic> diagnosticInstances = diagnosticSupplier.getDiagnosticClasses().stream()
+    List<BSLDiagnostic> diagnosticInstances = DiagnosticSupplier.getDiagnosticClasses().stream()
       .map(diagnosticSupplier::getDiagnosticInstance)
       .collect(Collectors.toList());
 
@@ -61,7 +65,7 @@ class DiagnosticSupplierTest {
   @Test
   void testAllDiagnosticsHaveMetadataAnnotation() {
     // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticSupplier.getDiagnosticClasses();
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
 
     // then
     assertThat(diagnosticClasses)
@@ -73,7 +77,7 @@ class DiagnosticSupplierTest {
   @Test
   void testAddDiagnosticsHaveDiagnosticName() {
     // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticSupplier.getDiagnosticClasses();
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
@@ -92,7 +96,7 @@ class DiagnosticSupplierTest {
   @Test
   void testAllDiagnosticsHaveDiagnosticMessage() {
     // when
-    List<BSLDiagnostic> diagnosticInstances = diagnosticSupplier.getDiagnosticClasses().stream()
+    List<BSLDiagnostic> diagnosticInstances = DiagnosticSupplier.getDiagnosticClasses().stream()
       .map(diagnosticSupplier::getDiagnosticInstance)
       .collect(Collectors.toList());
 
@@ -113,7 +117,7 @@ class DiagnosticSupplierTest {
   void testAllDiagnosticsHaveDescriptionResource() {
 
     // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticSupplier.getDiagnosticClasses();
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
@@ -132,7 +136,7 @@ class DiagnosticSupplierTest {
   @Test
   void testAllDiagnosticsHaveTags() {
     // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticSupplier.getDiagnosticClasses();
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
 
     // then
     assertThat(diagnosticClasses)
@@ -141,6 +145,35 @@ class DiagnosticSupplierTest {
         return diagnosticInfo.getDiagnosticTags().size() > 0
           && diagnosticInfo.getDiagnosticTags().size() <= 3;
       });
+  }
+
+  @Test
+  void testCompatibilityMode() {
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, new CompatibilityMode(3, 10))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
+    ).isTrue();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, new CompatibilityMode(3, 6))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
+    ).isTrue();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null)
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
+    ).isFalse();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL,  new CompatibilityMode(2, 16))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
+    ).isFalse();
+
   }
 
   private DiagnosticSupplier getDefaultDiagnosticSupplier() {
