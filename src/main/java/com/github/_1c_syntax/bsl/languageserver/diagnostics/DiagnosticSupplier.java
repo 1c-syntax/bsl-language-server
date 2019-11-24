@@ -137,7 +137,7 @@ public class DiagnosticSupplier {
       return false;
     }
 
-    return CompatibilityMode.compareTo(contextCompatibilityMode, compatibilityMode.getCompatibilityMode()) >= 0;
+    return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
   }
 
   @SuppressWarnings("unchecked")
