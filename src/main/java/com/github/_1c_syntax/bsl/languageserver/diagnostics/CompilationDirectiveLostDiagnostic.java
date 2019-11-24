@@ -33,7 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
   minutesToFix = 1,
   tags = {
