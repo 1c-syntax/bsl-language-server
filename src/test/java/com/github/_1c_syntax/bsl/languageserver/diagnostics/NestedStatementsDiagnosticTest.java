@@ -21,11 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.Assertions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,6 +48,22 @@ public class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<Neste
     assertThat(diagnostics.get(0).getRelatedInformation().size()).isEqualTo(5);
     assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(50, 6, 50, 10));
     assertThat(diagnostics.get(1).getRelatedInformation().size()).isEqualTo(7);
+
+  }
+
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration.put("maxAllowedLevel", 6);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    Assertions.assertThat(diagnostics, true)
+      .hasRange(50, 6, 50, 10);
+    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(7);
 
   }
 }
