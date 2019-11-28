@@ -66,8 +66,9 @@ class ReportersAggregatorTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
-    FileInfo fileInfo = new FileInfo(documentContext, Collections.singletonList(diagnostic));
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
+    String sourceDir = ".";
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     aggregator.report(analysisInfo);
 

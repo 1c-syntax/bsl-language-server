@@ -91,8 +91,9 @@ class GenericReporterTest {
     Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
     diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
-    FileInfo fileInfo = new FileInfo(documentContext, diagnostics);
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
+    String sourceDir = ".";
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics);
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     AbstractDiagnosticReporter reporter = new GenericIssueReporter();
 

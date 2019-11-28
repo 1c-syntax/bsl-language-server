@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
@@ -33,6 +34,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.Diagnostic;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,21 +77,23 @@ public class AnalyzeCommand implements Command {
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
-    List<FileInfo> diagnostics;
+    List<FileInfo> fileInfos;
     try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
-      diagnostics = files.parallelStream()
-        .peek(file -> pb.step())
-        .map(this::getFileContextFromFile)
+      fileInfos = files.parallelStream()
+        .map((File file) -> {
+          pb.step();
+          return getFileInfoFromFile(srcDir, file);
+        })
         .collect(Collectors.toList());
     }
 
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), diagnostics, srcDirOption);
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDirOption);
     ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
     aggregator.report(analysisInfo);
     return 0;
   }
 
-  private FileInfo getFileContextFromFile(File file) {
+  private FileInfo getFileInfoFromFile(Path srcDir, File file) {
     String textDocumentContent;
     try {
       textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
@@ -98,10 +102,16 @@ public class AnalyzeCommand implements Command {
     }
 
     DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
-    FileInfo fileInfo = new FileInfo(documentContext, diagnosticProvider.computeDiagnostics(documentContext));
+
+    Path filePath = srcDir.relativize(file.toPath().toAbsolutePath());
+    List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
+    MetricStorage metrics = documentContext.getMetrics();
+
+    FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearASTData();
+    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;
   }
