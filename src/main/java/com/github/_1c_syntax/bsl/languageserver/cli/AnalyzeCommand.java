@@ -111,6 +111,7 @@ public class AnalyzeCommand implements Command {
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearASTData();
+    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;
   }
