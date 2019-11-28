@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxLineLength` | `int` | ```Максимальная длина строки в символах``` | ```120``` |
+| `maxLineLength` | `int` | ```Max line length``` | ```120``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

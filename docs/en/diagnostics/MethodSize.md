@@ -1,4 +1,4 @@
-# Method size restriction
+# Method size 
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxMethodSize` | `int` | ```Максимальная длина метода в строках``` | ```200``` |
+| `maxMethodSize` | `int` | ```Max method line count.``` | ```200``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxAllowedLevel` | `int` | ```Максимальный уровень вложенности конструкций``` | ```4``` |
+| `maxAllowedLevel` | `int` | ```Max nested level``` | ```4``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

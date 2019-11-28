@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxOptionalParamsCount` | `int` | ```Допустимое количество необязательных параметров метода``` | ```3``` |
+| `maxOptionalParamsCount` | `int` | ```Max number of optional parameters``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

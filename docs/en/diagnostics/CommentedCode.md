@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `threshold` | `float` | ```Порог чуствительности``` | ```0.9F``` |
+| `threshold` | `float` | ```Threshold``` | ```0.9F``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

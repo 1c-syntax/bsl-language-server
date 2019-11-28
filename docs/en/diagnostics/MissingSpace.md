@@ -8,11 +8,11 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `listForCheckLeft` | `String` | ```Список символов для проверки слева (разделенные пробелом). Например: ) =``` | ```""``` |
-| `listForCheckRight` | `String` | ```Список символов для проверки справа (разделенные пробелом). Например: ( =``` | ```", ;"``` |
-| `listForCheckLeftAndRight` | `String` | ```Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >``` | ```"+ - * / = % < > <> <= >="``` |
-| `checkSpaceToRightOfUnary` | `Boolean` | ```Проверять наличие пробела справа от унарных знаков (+ -)``` | ```false``` |
-| `allowMultipleCommas` | `Boolean` | ```Разрешать несколько запятых подряд``` | ```false``` |
+| `listForCheckLeft` | `String` | ```Symbols  for spaces from left side (space separated). Example: ) =``` | ```""``` |
+| `listForCheckRight` | `String` | ```Symbols  for spaces from right side (space separated). Example: ( =``` | ```", ;"``` |
+| `listForCheckLeftAndRight` | `String` | ```Symbols for spaces from both side(space separated) Example: + - * / = % < >``` | ```"+ - * / = % < > <> <= >="``` |
+| `checkSpaceToRightOfUnary` | `Boolean` | ```Check space right from unary (+ -)``` | ```false``` |
+| `allowMultipleCommas` | `Boolean` | ```Allow few commas``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

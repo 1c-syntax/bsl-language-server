@@ -18,18 +18,17 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     private var metadataTagsBodyPattern = Regex("DiagnosticTag\\.(\\w+?)(?:[\\s\\W]|\$)",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var namePattern = Regex("^diagnosticName\\s*=\\s*(.*)$",
-            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE));
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?(\\w+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-    private var paramsDescriptionPattern = Regex("^\\s*?description\\s*?=\\s*?\"([\\s\\w\\W]+)\"",
-            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-    private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),\$",
+    private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),*\$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     private var newlinePattern = Regex("\"\\s*\\+\\s*\"",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
 
     private var srcPath = "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics"
+    private var resourcePath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/diagnostics"
     private var defaultValues = hashMapOf<String, String>()
     private var templateDocHeader = "# <Description>\n\n<Metadata>\n<Params><!-- Блоки выше заполняются автоматически, не трогать -->\n"
     private var templateDocMetadata = "| <TypeHeader> | <ScopeHeader> | <SeverityHeader> | <ActivatedHeader> | <MinutesHeader> | <TagsHeader> |\n" +
@@ -44,29 +43,29 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             "CRITICAL" to "Критичный",
             "MAJOR" to "Важный",
             "MINOR" to "Незначительный",
-            "INFO" to "Информационный");
+            "INFO" to "Информационный")
 
     private var severityEnMap = hashMapOf("BLOCKER" to "Blocker",
             "CRITICAL" to "Critical",
             "MAJOR" to "Major",
             "MINOR" to "Minor",
-            "INFO" to "Info");
+            "INFO" to "Info")
 
     private var typeRuMap = hashMapOf("ERROR" to "Ошибка",
             "VULNERABILITY" to "Уязвимость",
             "SECURITY_HOTSPOT" to "Потенциальная уязвимость",
-            "CODE_SMELL" to "Дефект кода");
+            "CODE_SMELL" to "Дефект кода")
 
     private var typeEnMap = hashMapOf("ERROR" to "Error",
             "VULNERABILITY" to "Vulnerability",
             "SECURITY_HOTSPOT" to "Security Hotspot",
-            "CODE_SMELL" to "Code smell");
+            "CODE_SMELL" to "Code smell")
 
     private var typeParamRuMap = hashMapOf("int" to "Число",
             "boolean" to "Булево",
             "String" to "Строка",
             "Boolean" to "Число",
-            "Pattern" to "Регулярное выражение");
+            "Pattern" to "Регулярное выражение")
 
     private fun getMetadataFromText(text: String, metadata: HashMap<String, Any>) {
         val match = metadataPattern.find(text)
@@ -91,8 +90,6 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             matches.forEach {
                 val oneParam = hashMapOf("type" to it.groupValues[2], "name" to it.groupValues[3])
                 val body = it.groupValues[1]
-                oneParam["description"] = getValueFromText(body, paramsDescriptionPattern, "")
-                        .replace(newlinePattern, "")
                 var defValue = getValueFromText(body, paramsDefPattern, "")
                 if(defValue.isNotEmpty()) {
                     val valPattern = Regex("\\s+?${defValue}\\s*=\\s*?([\\w\\W]+?);\$",
@@ -164,17 +161,33 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     }
 
     private fun getDiagnosticDescription(key: String, lang: String): String {
-        var langNew = if (lang == "") "ru" else "en"
+        val langNew = if (lang == "") "ru" else "en"
         val fileP = File(outputDir.get().asFile.path,
-                "src/main/resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/${key}Diagnostic_${langNew}.properties");
+                "${resourcePath}/${key}Diagnostic_${langNew}.properties")
         if (fileP.exists()) {
-            val match = namePattern.find(fileP.readText(charset("UTF-8")));
+            val match = namePattern.find(fileP.readText(charset("UTF-8")))
             if (match != null && match.groups.isNotEmpty()) {
-                return match.groups[1]?.value.toString();
+                return match.groups[1]?.value.toString()
             }
         }
-        logger.quiet("File '{}' not exist", fileP.path);
-        return "";
+        logger.quiet("File '{}' not exist", fileP.path)
+        return ""
+    }
+
+    private fun getDiagnosticParameterDescription(key: String, lang: String, paramName: String): String {
+        val langNew = if (lang == "") "ru" else "en"
+        val fileP = File(outputDir.get().asFile.path,
+                "${resourcePath}/${key}Diagnostic_${langNew}.properties")
+        if (fileP.exists()) {
+            val parameterDescriptionPattern = Regex("^${paramName}\\s*=\\s*(.*)$",
+                    setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+            val match = parameterDescriptionPattern.find(fileP.readText(charset("UTF-8")))
+            if (match != null && match.groups.isNotEmpty()) {
+                return match.groups[1]?.value.toString()
+            }
+        }
+        logger.quiet("File '{}' not exist", fileP.path)
+        return ""
     }
 
     private fun makeDiagnosticMetadata(lang: String, metadata: HashMap<String, Any>): String {
@@ -208,7 +221,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
 
         }
 
-        return metadataBody;
+        return metadataBody
     }
 
     private fun makeDiagnosticParams(key: String, lang: String, metadata: HashMap<String, Any>): String {
@@ -232,10 +245,11 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     if (it is HashMap<*, *>) {
                         var typeValue = it.getOrDefault("type", "").toString()
                         typeValue = typeParamRuMap.getOrDefault(typeValue, typeValue)
+                        val paramName = it.getOrDefault("name", "").toString()
                         paramsBody += templateDocLineParams
-                                .replace("<Name>", it.getOrDefault("name", "").toString())
+                                .replace("<Name>", paramName)
                                 .replace("<Type>", typeValue)
-                                .replace("<Description>", it.getOrDefault("description", "").toString())
+                                .replace("<Description>", getDiagnosticParameterDescription(key, lang, paramName))
                                 .replace("<Def>", it.getOrDefault("defaultValue", "").toString())
                     }
                 }
@@ -249,10 +263,11 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
 
                 params.forEach {
                     if (it is HashMap<*, *>) {
+                        val paramName = it.getOrDefault("name", "").toString()
                         paramsBody += templateDocLineParams
-                                .replace("<Name>", it.getOrDefault("name", "").toString())
+                                .replace("<Name>", paramName)
                                 .replace("<Type>", it.getOrDefault("type", "").toString())
-                                .replace("<Description>", it.getOrDefault("description", "").toString())
+                                .replace("<Description>", getDiagnosticParameterDescription(key, lang, paramName))
                                 .replace("<Def>", it.getOrDefault("defaultValue", "").toString())
                     }
                 }
@@ -266,7 +281,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     private fun loadDefaultValues() {
         defaultValues.clear()
         val fileP = File(outputDir.get().asFile.path,
-                "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java");
+                "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java")
         val text = getValueFromText(fileP.readText(charset("UTF-8")), Regex("DiagnosticMetadata\\s*?\\{([\\w\\s\\W]+)\\}",
                 setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)), "")
         defaultValues["type"] = getValueFromText(text, Regex("DiagnosticType\\s+?type\\(\\)\\s+?default\\s+?DiagnosticType\\.(\\w+)",
@@ -286,7 +301,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
     fun updateDocs() {
         logger.quiet("Update diagnostic docs")
 
-        loadDefaultValues();
+        loadDefaultValues()
         val result = getDiagnosticsMetadata()
         result.forEach {
             updateDocFile("",

@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `commentsAnnotation` | `Pattern` | ```Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)``` | ```"//@,//(c),//©"``` |
+| `commentsAnnotation` | `Pattern` | ```Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)``` | ```"//@,//(c),//©"``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
