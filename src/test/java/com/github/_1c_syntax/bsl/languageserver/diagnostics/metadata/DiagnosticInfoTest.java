@@ -24,8 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import org.assertj.core.api.Assertions;
-import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -61,6 +62,12 @@ class DiagnosticInfoTest {
     assertThat(parameter.getDefaultValue()).isEqualTo(false);
     assertThat(parameter.getType()).isEqualTo(Boolean.class);
 
+    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getDiagnosticParameter(parameter.getName());
+    assertThat(maybeParameter).isPresent();
+    assertThat(maybeParameter).hasValue(parameter);
+
+    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getDiagnosticParameter("fakeParameterName");
+    assertThat(maybeFakeParameter).isEmpty();
   }
 
   @Test

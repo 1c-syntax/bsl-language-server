@@ -38,6 +38,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -147,6 +148,10 @@ public class DiagnosticInfo {
 
   public List<DiagnosticParameterInfo> getDiagnosticParameters() {
     return new ArrayList<>(diagnosticParameters);
+  }
+
+  public Optional<DiagnosticParameterInfo> getDiagnosticParameter(String parameterName) {
+    return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findFirst();
   }
 
   public Map<String, Object> getDefaultDiagnosticConfiguration() {
