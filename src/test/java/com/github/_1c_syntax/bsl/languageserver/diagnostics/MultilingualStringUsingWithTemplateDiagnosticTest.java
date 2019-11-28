@@ -48,7 +48,7 @@ class MultilingualStringUsingWithTemplateDiagnosticTest
 
   @Test
   void testRuAndEn() {
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("declaredLanguages", "ru,en");
     diagnosticInstance.configure(configuration);
 

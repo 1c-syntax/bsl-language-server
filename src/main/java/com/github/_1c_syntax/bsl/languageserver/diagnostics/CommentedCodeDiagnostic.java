@@ -64,8 +64,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
 
   @DiagnosticParameter(
     type = Float.class,
-    defaultValue = "" + COMMENTED_CODE_THRESHOLD,
-    description = "Порог чуствительности"
+    defaultValue = "" + COMMENTED_CODE_THRESHOLD
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
 

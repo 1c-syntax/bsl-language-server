@@ -50,8 +50,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + SERVICE_TAGS_DEFAULT,
-    description = "Служебные теги"
+    defaultValue = "" + SERVICE_TAGS_DEFAULT
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
@@ -88,7 +87,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
         matcher.find();
         diagnosticStorage.addDiagnostic(
           token,
-          info.getDiagnosticMessage(matcher.group(0))
+          info.getMessage(matcher.group(0))
         );
       });
 

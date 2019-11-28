@@ -109,7 +109,7 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
   private void addDiagnosticWithMessage(ParseTree tranCall, HashMap<String, String> pairMethods) {
     String methodName = ((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText();
     diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) tranCall,
-      info.getDiagnosticMessage(pairMethods.get(methodName.toUpperCase(Locale.ENGLISH)), methodName));
+      info.getMessage(pairMethods.get(methodName.toUpperCase(Locale.ENGLISH)), methodName));
   }
 
 }

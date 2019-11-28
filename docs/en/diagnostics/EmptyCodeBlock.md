@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `commentAsCode` | `boolean` | ```Считать комментарий в блоке кодом``` | ```false``` |
+| `commentAsCode` | `boolean` | ```Comment as code``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -72,8 +72,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = REGEX_EXCLUSION,
-    description = "Ключевые слова поиска для исключения выражений при поиске IP адресов"
+    defaultValue = REGEX_EXCLUSION
   )
   private Pattern searchWordsExclusion = getLocalPattern(REGEX_EXCLUSION);
 

@@ -50,8 +50,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS,
-    description = "Список разрешенных чисел через запятую. Например: -1,0,1,60"
+    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS
   )
   private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
@@ -94,7 +93,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
       ParserRuleContext expression = ctx.getParent().getParent().getParent();
       if (expression instanceof BSLParser.ExpressionContext
         && !isNumericExpression((BSLParser.ExpressionContext) expression)) {
-        diagnosticStorage.addDiagnostic(ctx.stop, info.getDiagnosticMessage(checked));
+        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
 

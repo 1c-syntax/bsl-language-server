@@ -35,8 +35,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DECLARED_LANGUAGES_DEFAULT,
-    description = "Заявленные языки"
+    defaultValue = "" + DECLARED_LANGUAGES_DEFAULT
   )
   private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
   protected MultilingualStringAnalyser parser = new MultilingualStringAnalyser(DECLARED_LANGUAGES_DEFAULT);
@@ -64,7 +63,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
     }
 
     if (check()) {
-      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(parser.getMissingLanguages()));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(parser.getMissingLanguages()));
     }
 
     return super.visitGlobalMethodCall(ctx);

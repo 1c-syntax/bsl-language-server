@@ -54,8 +54,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_LINE_LENGTH,
-    description = "Максимальная длина строки в символах"
+    defaultValue = "" + MAX_LINE_LENGTH
   )
   private int maxLineLength = MAX_LINE_LENGTH;
   private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
@@ -95,7 +94,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
       if (maxCharPosition > maxLineLength) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(key, 0, key, maxCharPosition),
-          info.getDiagnosticMessage(maxCharPosition, maxLineLength)
+          info.getMessage(maxCharPosition, maxLineLength)
         );
       }
     });

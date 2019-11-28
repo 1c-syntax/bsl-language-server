@@ -69,7 +69,7 @@ class UsingHardcodeSecretInformationDiagnosticTest extends AbstractDiagnosticTes
 
     // без изменения параметра
     // when
-    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 

@@ -62,7 +62,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
   @Test
   void testConfigure() {
     // given
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("maxLineLength", 119);
     diagnosticInstance.configure(configuration);
 

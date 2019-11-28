@@ -66,7 +66,7 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
       .map(node -> node.getParent().getParent())
       .filter(callStatement -> namesEqual(callStatement, expression))
       .forEach(callStatement -> diagnosticStorage.addDiagnostic(
-          (BSLParser.CallStatementContext) callStatement, info.getDiagnosticMessage(expression))
+          (BSLParser.CallStatementContext) callStatement, info.getMessage(expression))
       );
 
     return super.visitForEachStatement(ctx);

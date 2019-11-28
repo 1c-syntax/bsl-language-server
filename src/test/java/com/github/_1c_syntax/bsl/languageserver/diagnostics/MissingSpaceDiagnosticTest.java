@@ -119,7 +119,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     List<Diagnostic> diagnostics;
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("listForCheckLeft", ")");
     configuration.put("listForCheckRight", "(");
     configuration.put("listForCheckLeftAndRight", "");
@@ -144,7 +144,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(34, 6, 34, 7);
 
 
-    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", "");
     configuration.put("listForCheckLeftAndRight", "-");
@@ -159,7 +159,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(27, 10, 27, 11);
 
 
-    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("listForCheckLeft", "");
     configuration.put("listForCheckRight", ",");
     configuration.put("listForCheckLeftAndRight", "");

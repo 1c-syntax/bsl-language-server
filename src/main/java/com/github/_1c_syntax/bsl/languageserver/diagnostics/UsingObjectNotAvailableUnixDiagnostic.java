@@ -75,7 +75,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     // ищем условие выше, пока не дойдем до null
 
     if (matcherTypeName.find() && !isFindIfBranchWithLinuxCondition(ctx)) {
-      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(typeNameContext.getText()));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(typeNameContext.getText()));
     }
     return super.visitNewExpression(ctx);
   }

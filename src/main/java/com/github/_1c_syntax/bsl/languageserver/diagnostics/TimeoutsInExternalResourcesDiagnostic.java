@@ -151,7 +151,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
           checkNextStatement(listNextStatements, variableName, isContact);
         }
         if (isContact.get()) {
-          diagnosticStorage.addDiagnostic(newExpression, info.getDiagnosticMessage());
+          diagnosticStorage.addDiagnostic(newExpression, info.getMessage());
         }
       }
     });

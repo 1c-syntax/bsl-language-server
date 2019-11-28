@@ -63,7 +63,7 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("commentAsCode", true);
     diagnosticInstance.configure(configuration);
 
@@ -78,7 +78,7 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
   @Test
   void testConfigureFile() {
 
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("commentAsCode", true);
     diagnosticInstance.configure(configuration);
 

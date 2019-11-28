@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWords` | `Pattern` | ```Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях.``` | ```"Пароль|Password"``` |
+| `searchWords` | `Pattern` | ```Keywords for search confidential.``` | ```"Пароль|Password"``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

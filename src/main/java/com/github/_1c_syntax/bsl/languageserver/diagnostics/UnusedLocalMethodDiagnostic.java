@@ -73,7 +73,7 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
       .filter(subNameContext -> !isAttachable(subNameContext))
       .filter(subNameContext -> !isHandler(subNameContext))
       .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase()))
-      .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getDiagnosticMessage(node.getText())));
+      .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getMessage(node.getText())));
 
     return ctx;
   }

@@ -69,8 +69,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = FIND_WORD_DEFAULT,
-    description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
+    defaultValue = FIND_WORD_DEFAULT
   )
   private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
@@ -213,7 +212,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       if (assignment != null
         && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
         && isNotEmptyStringByToken(assignment.getStop())) {
-        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getMessage());
       }
     }
   }
@@ -232,7 +231,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
     ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
     if (assignment != null) {
-      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getDiagnosticMessage());
+      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getMessage());
     }
   }
 

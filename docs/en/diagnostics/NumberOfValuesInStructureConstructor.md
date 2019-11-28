@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxValuesCount` | `int` | ```Допустимое количество значений свойств, передаваемых в конструктор структуры``` | ```3``` |
+| `maxValuesCount` | `int` | ```Max count values in structure construction``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
