@@ -89,7 +89,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
     String methodName = ctx.methodName().getText();
     if (modalityMethods.matcher(methodName).matches()) {
       diagnosticStorage.addDiagnostic(ctx,
-        info.getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+        info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
     }
     return super.visitGlobalMethodCall(ctx);
   }

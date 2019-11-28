@@ -68,7 +68,7 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
     int paramCount = ctx.param().size();
     if (paramCount > maxParamsCount) {
-      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(paramCount, maxParamsCount));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(paramCount, maxParamsCount));
     }
 
     return ctx;

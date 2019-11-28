@@ -93,7 +93,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
       ParserRuleContext expression = ctx.getParent().getParent().getParent();
       if (expression instanceof BSLParser.ExpressionContext
         && !isNumericExpression((BSLParser.ExpressionContext) expression)) {
-        diagnosticStorage.addDiagnostic(ctx.stop, info.getDiagnosticMessage(checked));
+        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
 

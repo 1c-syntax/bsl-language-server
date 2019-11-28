@@ -58,7 +58,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("threshold", 1f);
     diagnosticInstance.configure(configuration);
 

@@ -38,35 +38,35 @@ class DiagnosticInfoTest {
 
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class);
 
-    Assertions.assertThat(diagnosticInfo.getDiagnosticCode()).isEqualTo("EmptyCodeBlock");
-    Assertions.assertThat(diagnosticInfo.getDiagnosticName()).isNotEmpty();
-    Assertions.assertThat(diagnosticInfo.getDiagnosticMessage()).isNotEmpty();
-    Assertions.assertThat(diagnosticInfo.getDiagnosticMessage("")).isNotEmpty();
-    Assertions.assertThat(diagnosticInfo.getDiagnosticType()).isEqualTo(DiagnosticType.CODE_SMELL);
-    Assertions.assertThat(diagnosticInfo.getDiagnosticSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
-    Assertions.assertThat(diagnosticInfo.getDiagnosticSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
-    Assertions.assertThat(diagnosticInfo.getLSPDiagnosticSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo("EmptyCodeBlock");
+    Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage("")).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.CODE_SMELL);
+    Assertions.assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
+    Assertions.assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MAJOR);
+    Assertions.assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
     Assertions.assertThat(diagnosticInfo.getCompatibilityMode()).isEqualTo(DiagnosticCompatibilityMode.UNDEFINED);
     Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.ALL);
     Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(5);
     Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
-    Assertions.assertThat(diagnosticInfo.getDiagnosticTags().size()).isGreaterThan(0);
+    Assertions.assertThat(diagnosticInfo.getTags().size()).isGreaterThan(0);
 
-    Assertions.assertThat(diagnosticInfo.getDefaultDiagnosticConfiguration().size()).isGreaterThan(0);
+    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isGreaterThan(0);
 
 
-    DiagnosticParameterInfo parameter = diagnosticInfo.getDiagnosticParameters().get(0);
+    DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
     assertThat(parameter.getDescription())
       .isEqualTo("Считать комментарий в блоке кодом");
 
     assertThat(parameter.getDefaultValue()).isEqualTo(false);
     assertThat(parameter.getType()).isEqualTo(Boolean.class);
 
-    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getDiagnosticParameter(parameter.getName());
+    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
     assertThat(maybeParameter).isPresent();
     assertThat(maybeParameter).hasValue(parameter);
 
-    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getDiagnosticParameter("fakeParameterName");
+    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
     assertThat(maybeFakeParameter).isEmpty();
   }
 
@@ -74,7 +74,7 @@ class DiagnosticInfoTest {
   void testParameterEn() {
 
     DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, DiagnosticLanguage.EN);
-    assertThat(diagnosticEnInfo.getDiagnosticParameters().get(0).getDescription())
+    assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())
       .isEqualTo("Comment as code");
 
   }

@@ -54,7 +54,7 @@ public class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<Neste
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("maxAllowedLevel", 6);
     diagnosticInstance.configure(configuration);
 

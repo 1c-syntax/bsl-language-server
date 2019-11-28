@@ -94,7 +94,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
       if (maxCharPosition > maxLineLength) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(key, 0, key, maxCharPosition),
-          info.getDiagnosticMessage(maxCharPosition, maxLineLength)
+          info.getMessage(maxCharPosition, maxLineLength)
         );
       }
     });

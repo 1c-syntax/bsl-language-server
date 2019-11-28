@@ -52,7 +52,7 @@ class MissingCodeTryCatchExDiagnosticTest extends AbstractDiagnosticTest<Missing
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("commentAsCode", true);
     diagnosticInstance.configure(configuration);
 

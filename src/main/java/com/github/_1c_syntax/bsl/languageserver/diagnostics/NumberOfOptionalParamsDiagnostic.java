@@ -69,7 +69,7 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
 
     int paramCount = (int) ctx.param().stream().filter(param -> param.defaultValue() != null).count();
     if (paramCount > maxOptionalParamsCount) {
-      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(paramCount, maxOptionalParamsCount));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(paramCount, maxOptionalParamsCount));
     }
 
     return ctx;

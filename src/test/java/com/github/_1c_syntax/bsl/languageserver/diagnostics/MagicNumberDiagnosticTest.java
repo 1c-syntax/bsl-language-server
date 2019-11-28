@@ -56,7 +56,7 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
   @Test
   void testConfigure() {
     // conf
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("authorizedNumbers", "-1,0,1,60,7");
     diagnosticInstance.configure(configuration);
 

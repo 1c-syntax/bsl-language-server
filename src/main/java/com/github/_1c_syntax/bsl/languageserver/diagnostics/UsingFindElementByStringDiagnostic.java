@@ -63,7 +63,7 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
       if (param.children == null ||
         param.getStart().getType() == BSLParser.STRING ||
         param.getStart().getType() == BSLParser.DECIMAL) {
-        diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(matcher.group(0)));
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));
       }
     }
     return ctx;

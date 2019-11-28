@@ -70,7 +70,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     if(!identicalExpressions.isEmpty()) {
       diagnosticStorage.addDiagnostic(
         ctx,
-        info.getDiagnosticMessage(onlyOperation.get(0).getText(), identicalExpressions.get(0).getText())
+        info.getMessage(onlyOperation.get(0).getText(), identicalExpressions.get(0).getText())
       );
     }
 

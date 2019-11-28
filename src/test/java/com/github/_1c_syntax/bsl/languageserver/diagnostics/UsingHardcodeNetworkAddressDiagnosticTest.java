@@ -65,7 +65,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
 
     // Проверяем количество срабатываний без изменения параметров
     // when
-    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
@@ -74,7 +74,7 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
 
     // Изменяем ключевые слова исключения для поиска IP адресов
     // when
-    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("searchWordsExclusion", "Version");
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();

@@ -63,7 +63,7 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
     }
 
     if (check()) {
-      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(parser.getMissingLanguages()));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(parser.getMissingLanguages()));
     }
 
     return super.visitGlobalMethodCall(ctx);

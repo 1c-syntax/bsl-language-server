@@ -289,7 +289,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode, String tokenText) {
-    return info.getDiagnosticMessage(sampleMessage[errCode], tokenText);
+    return info.getMessage(sampleMessage[errCode], tokenText);
   }
 
   @Override

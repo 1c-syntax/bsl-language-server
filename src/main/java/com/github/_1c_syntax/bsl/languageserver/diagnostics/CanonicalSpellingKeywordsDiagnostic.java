@@ -598,7 +598,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
       .forEach(token ->
         diagnosticStorage.addDiagnostic(
           token,
-          info.getDiagnosticMessage(token.getText())
+          info.getMessage(token.getText())
         )
       );
 

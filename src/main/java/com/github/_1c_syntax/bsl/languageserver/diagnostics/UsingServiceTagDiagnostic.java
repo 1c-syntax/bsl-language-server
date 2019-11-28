@@ -87,7 +87,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
         matcher.find();
         diagnosticStorage.addDiagnostic(
           token,
-          info.getDiagnosticMessage(matcher.group(0))
+          info.getMessage(matcher.group(0))
         );
       });
 

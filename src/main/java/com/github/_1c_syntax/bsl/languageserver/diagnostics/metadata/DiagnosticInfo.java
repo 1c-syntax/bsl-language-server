@@ -73,15 +73,15 @@ public class DiagnosticInfo {
     return diagnosticClass;
   }
 
-  public String getDiagnosticCode() {
+  public String getCode() {
     return diagnosticCode;
   }
 
-  public String getDiagnosticName() {
+  public String getName() {
     return getResourceString("diagnosticName");
   }
 
-  public String getDiagnosticDescription() {
+  public String getDescription() {
     String langCode = diagnosticLanguage.getLanguageCode();
 
     String resourceName = langCode + "/" + diagnosticCode + ".md";
@@ -100,12 +100,12 @@ public class DiagnosticInfo {
     }
   }
 
-  public String getDiagnosticMessage() {
+  public String getMessage() {
     return getResourceString("diagnosticMessage");
   }
 
-  public String getDiagnosticMessage(Object... args) {
-    return String.format(getDiagnosticMessage(), args).intern();
+  public String getMessage(Object... args) {
+    return String.format(getMessage(), args).intern();
   }
 
   public String getResourceString(String key) {
@@ -114,16 +114,16 @@ public class DiagnosticInfo {
     return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key).intern();
   }
 
-  public DiagnosticType getDiagnosticType() {
+  public DiagnosticType getType() {
     return diagnosticMetadata.type();
   }
 
-  public DiagnosticSeverity getDiagnosticSeverity() {
+  public DiagnosticSeverity getSeverity() {
     return diagnosticMetadata.severity();
   }
 
-  public org.eclipse.lsp4j.DiagnosticSeverity getLSPDiagnosticSeverity() {
-    return severityToLSPSeverityMap.get(getDiagnosticSeverity());
+  public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
+    return severityToLSPSeverityMap.get(getSeverity());
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
@@ -142,19 +142,19 @@ public class DiagnosticInfo {
     return diagnosticMetadata.activatedByDefault();
   }
 
-  public List<DiagnosticTag> getDiagnosticTags() {
+  public List<DiagnosticTag> getTags() {
     return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
   }
 
-  public List<DiagnosticParameterInfo> getDiagnosticParameters() {
+  public List<DiagnosticParameterInfo> getParameters() {
     return new ArrayList<>(diagnosticParameters);
   }
 
-  public Optional<DiagnosticParameterInfo> getDiagnosticParameter(String parameterName) {
+  public Optional<DiagnosticParameterInfo> getParameter(String parameterName) {
     return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findFirst();
   }
 
-  public Map<String, Object> getDefaultDiagnosticConfiguration() {
+  public Map<String, Object> getDefaultConfiguration() {
     return diagnosticParameters.stream()
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
@@ -167,7 +167,6 @@ public class DiagnosticInfo {
 
     return simpleName;
   }
-
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
     Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> map = new EnumMap<>(DiagnosticSeverity.class);

@@ -76,7 +76,7 @@ class UsingHardcodePathDiagnosticTest extends AbstractDiagnosticTest<UsingHardco
     Map<String, Object> configuration;
     // Изменяем состав ключевых слов поиска стандартных корневых каталогов Unix
     // when
-    configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("searchWordsStdPathsUnix", "home|lib");
     diagnosticInstance.configure(configuration);
 

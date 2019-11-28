@@ -84,7 +84,7 @@ public class DiagnosticStorage {
   protected void addDiagnostic(Range range) {
     addDiagnostic(
       range,
-      diagnostic.getInfo().getDiagnosticMessage()
+      diagnostic.getInfo().getMessage()
     );
   }
 
@@ -130,7 +130,7 @@ public class DiagnosticStorage {
 
     addDiagnostic(
       node,
-      diagnostic.getInfo().getDiagnosticMessage(),
+      diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
@@ -138,7 +138,7 @@ public class DiagnosticStorage {
   public void addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
     addDiagnostic(
       token,
-      diagnostic.getInfo().getDiagnosticMessage(),
+      diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
@@ -195,9 +195,9 @@ public class DiagnosticStorage {
     Diagnostic diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
-      bslDiagnostic.getInfo().getLSPDiagnosticSeverity(),
+      bslDiagnostic.getInfo().getLSPSeverity(),
       SOURCE,
-      bslDiagnostic.getInfo().getDiagnosticCode()
+      bslDiagnostic.getInfo().getCode()
     );
 
     if (relatedInformation != null) {

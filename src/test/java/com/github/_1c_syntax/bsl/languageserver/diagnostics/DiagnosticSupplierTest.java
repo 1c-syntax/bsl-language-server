@@ -21,14 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,7 +82,7 @@ class DiagnosticSupplierTest {
         DiagnosticInfo info = new DiagnosticInfo(diagnosticClass);
         String diagnosticName;
         try {
-          diagnosticName = info.getDiagnosticName();
+          diagnosticName = info.getName();
         } catch (MissingResourceException e) {
           throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have diagnosticName", e);
         }
@@ -105,7 +102,7 @@ class DiagnosticSupplierTest {
     assertThatCode(() -> diagnosticInstances.forEach(diagnostic -> {
         String diagnosticMessage;
         try {
-          diagnosticMessage = diagnostic.getInfo().getDiagnosticMessage();
+          diagnosticMessage = diagnostic.getInfo().getMessage();
         } catch (MissingResourceException e) {
           throw new RuntimeException(diagnostic.getClass().getSimpleName() + " does not have diagnosticMessage", e);
         }
@@ -125,7 +122,7 @@ class DiagnosticSupplierTest {
         DiagnosticInfo info = new DiagnosticInfo(diagnosticClass);
         String diagnosticDescription;
         try {
-          diagnosticDescription = info.getDiagnosticDescription();
+          diagnosticDescription = info.getDescription();
         } catch (MissingResourceException e) {
           throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have diagnostic description file", e);
         }
@@ -143,8 +140,8 @@ class DiagnosticSupplierTest {
     assertThat(diagnosticClasses)
       .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) -> {
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnosticClass);
-        return diagnosticInfo.getDiagnosticTags().size() > 0
-          && diagnosticInfo.getDiagnosticTags().size() <= 3;
+        return diagnosticInfo.getTags().size() > 0
+          && diagnosticInfo.getTags().size() <= 3;
       });
   }
 

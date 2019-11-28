@@ -88,7 +88,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
       methodSymbol.getSubNameRange(),
-      info.getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+      info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
     ));
 
     List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
@@ -120,7 +120,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
         relatedInformation.add(RelatedInformation.create(
           documentContext.getUri(),
           methodSymbol.getSubNameRange(),
-          info.getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
         ));
 
         List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
@@ -138,7 +138,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
         diagnosticStorage.addDiagnostic(
           methodSymbol.getSubNameRange(),
-          info.getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
+          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
           makeRelations(methodSymbol, methodComplexity)
         );
       }
@@ -175,7 +175,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       relatedInformation.add(RelatedInformation.create(
         documentContext.getUri(),
         Ranges.create(ctx.getStart()),
-        info.getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold)
+        info.getMessage("body", fileCodeBlockComplexity, complexityThreshold)
       ));
 
       List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
@@ -193,7 +193,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
       diagnosticStorage.addDiagnostic(
         ctx.getStart(),
-        info.getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold),
+        info.getMessage("body", fileCodeBlockComplexity, complexityThreshold),
         relatedInformation
       );
     }

@@ -51,7 +51,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("complexityThreshold", 0);
     configuration.put("checkModuleBody", true);
     diagnosticInstance.configure(configuration);
@@ -63,7 +63,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
 
   @Test
   void testConfigureOneProperty() {
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("checkModuleBody", true);
     diagnosticInstance.configure(configuration);
 

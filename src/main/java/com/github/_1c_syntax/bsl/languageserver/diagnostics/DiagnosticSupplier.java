@@ -51,7 +51,7 @@ public class DiagnosticSupplier {
 
   public Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(String diagnosticCode) {
     return diagnosticClasses.stream()
-      .filter(diagnosticClass -> createDiagnosticInfo(diagnosticClass).getDiagnosticCode().equals(diagnosticCode))
+      .filter(diagnosticClass -> createDiagnosticInfo(diagnosticClass).getCode().equals(diagnosticCode))
       .findAny();
   }
 
@@ -88,7 +88,7 @@ public class DiagnosticSupplier {
 
   private void configureDiagnostic(BSLDiagnostic diagnostic) {
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnostics().get(diagnostic.getInfo().getDiagnosticCode());
+      configuration.getDiagnostics().get(diagnostic.getInfo().getCode());
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       diagnostic.configure(diagnosticConfiguration.getRight());
     }
@@ -100,7 +100,7 @@ public class DiagnosticSupplier {
     }
 
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnostics().get(diagnosticInfo.getDiagnosticCode());
+      configuration.getDiagnostics().get(diagnosticInfo.getCode());
 
     boolean activatedByDefault = diagnosticConfiguration == null && diagnosticInfo.isActivatedByDefault();
     boolean hasCustomConfiguration = diagnosticConfiguration != null && diagnosticConfiguration.isRight();
