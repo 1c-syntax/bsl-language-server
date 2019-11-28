@@ -54,12 +54,12 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
 
     private var typeRuMap = hashMapOf("ERROR" to "Ошибка",
             "VULNERABILITY" to "Уязвимость",
-            "SECURITYHOTSPOT" to "Потенциальная уязвимость",
+            "SECURITY_HOTSPOT" to "Потенциальная уязвимость",
             "CODE_SMELL" to "Дефект кода");
 
     private var typeEnMap = hashMapOf("ERROR" to "Error",
             "VULNERABILITY" to "Vulnerability",
-            "SECURITYHOTSPOT" to "Security Hotspot",
+            "SECURITY_HOTSPOT" to "Security Hotspot",
             "CODE_SMELL" to "Code smell");
 
     private var typeParamRuMap = hashMapOf("int" to "Число",

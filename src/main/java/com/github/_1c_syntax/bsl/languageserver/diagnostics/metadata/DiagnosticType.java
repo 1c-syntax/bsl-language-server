@@ -25,5 +25,5 @@ public enum  DiagnosticType {
   ERROR,
   CODE_SMELL,
   VULNERABILITY,
-  SECURITYHOTSPOT
+  SECURITY_HOTSPOT
 }
