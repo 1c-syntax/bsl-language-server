@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -167,10 +169,42 @@ class DiagnosticSupplierTest {
     ).isFalse();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL,  new CompatibilityMode(2, 16))
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, new CompatibilityMode(2, 16))
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
     ).isFalse();
+
+  }
+
+  @Test
+  void TestAllParametersHaveResourcesRU() {
+    allParametersHaveResources(DiagnosticLanguage.RU);
+  }
+
+  @Test
+  void TestAllParametersHaveResourcesEN() {
+    allParametersHaveResources(DiagnosticLanguage.EN);
+  }
+
+  void allParametersHaveResources(DiagnosticLanguage languag) {
+
+    // when
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
+
+    // then
+    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, languag);
+        Boolean allParametersHaveDescription;
+        try {
+          allParametersHaveDescription = info.getParameters().stream()
+            .map(DiagnosticParameterInfo::getDescription)
+            .noneMatch(String::isEmpty);
+        } catch (MissingResourceException e) {
+          throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have parameters description in resources", e);
+        }
+        assertThat(allParametersHaveDescription).isTrue();
+      }
+    )).doesNotThrowAnyException();
 
   }
 
