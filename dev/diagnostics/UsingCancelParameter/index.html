@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UsingCancelParameter/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,15 +34,15 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
-        <title>Работа с параметром «Отказ» - BSL Language Server Dev</title>
+        <title>Работа с параметром "Отказ" - BSL Language Server Dev</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -111,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Работа с параметром «Отказ»
+                Работа с параметром "Отказ"
               
             </span>
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -298,14 +327,41 @@
       
         <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
-    Неправильно:
+    Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
-    Правильно:
+    Примеры
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Неправильно
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Правильно
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Источники
   </a>
   
 </li>
@@ -329,18 +385,37 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UsingCancelParameter.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Работа с параметром «Отказ»</h1>
-<ol>
-<li>В обработчиках событий модулей объектов, наборов записей, форм и т.п., содержащих параметр Отказ 
-(ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления и т.п.), не следует 
-присваивать этому параметру значение Ложь.<br />
-Это требование обусловлено тем, что, как правило, в коде обработчиков событий параметр Отказ может 
-устанавливаться сразу в нескольких последовательных проверках (или в нескольких подписках на одно и то же событие). 
-В таком случае к моменту выполнения очередной проверки параметр Отказ уже может заранее содержать значение Истина, и 
-можно ошибочно сбросить его обратно в Ложь.
-Кроме того, при доработках конфигурации на внедрении число этих проверок может увеличиться.</li>
-</ol>
-<h4 id="_2">Неправильно:</h4>
+                <h1 id="_1">Работа с параметром "Отказ"<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Тип</th>
+<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Важность</th>
+<th align="center">Включена<br/>по умолчанию</th>
+<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Тэги</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Дефект кода</code></td>
+<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>Важный</code></td>
+<td align="center"><code>Да</code></td>
+<td align="center"><code>10</code></td>
+<td align="center"><code>standard</code><br/><code>badpractice</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>В обработчиках событий модулей объектов, наборов записей, форм и т.п., содержащих параметр Отказ (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления и т.п.), не следует присваивать этому параметру значение Ложь.<br />
+Это требование обусловлено тем, что, как правило, в коде обработчиков событий параметр Отказ может устанавливаться сразу в нескольких последовательных проверках (или в нескольких подписках на одно и то же событие). В таком случае к моменту выполнения очередной проверки параметр Отказ уже может заранее содержать значение Истина, и можно ошибочно сбросить его обратно в Ложь.<br />
+Кроме того, при доработках конфигурации на внедрении число этих проверок может увеличиться.</p>
+<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="_4">Неправильно<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
   <span class="o">...</span>
   <span class="nv">Отказ</span> <span class="o">=</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">();</span>
@@ -349,7 +424,7 @@
 </pre></div>
 
 
-<h4 id="_3">Правильно:</h4>
+<h3 id="_5">Правильно<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
   <span class="o">...</span>
   <span class="k">Если</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">()</span> <span class="k">Тогда</span>
@@ -365,7 +440,10 @@
 </pre></div>
 
 
-<p>Источник: <a href="https://its.1c.ru/db/v8std#content:686:hdoc">Работа с параметром "Отказ" в обработчиках событий</a></p>
+<h2 id="_6">Источники<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:686:hdoc">Работа с параметром "Отказ" в обработчиках событий</a></li>
+</ul>
                 
                   
                 
@@ -409,7 +487,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

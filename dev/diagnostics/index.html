@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href=".." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href=".." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../assets/images/logo.png" width="48" height="48">
       
@@ -360,17 +389,25 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/index.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Диагностики</h1>
+                <h1 id="_1">Диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>Используются для проверки кода на соответствие стандартам кодирования и для поиска возможных ошибок.</p>
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="/#configuration">конфигурационный файл</a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
-<h2 id="_2">Список реализованных диагностик</h2>
+<h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>Общее количество: <strong>63</strong></p>
+<ul>
+<li>Дефект кода: <strong>38</strong></li>
+<li>Уязвимость: <strong>2</strong></li>
+<li>Ошибка: <strong>23</strong></li>
+</ul>
 <table>
 <thead>
 <tr>
 <th>Ключ</th>
 <th>Название</th>
 <th align="center">Включена по умолчанию</th>
+<th>Важность</th>
+<th>Тип</th>
 <th>Тэги</th>
 </tr>
 </thead>
@@ -379,342 +416,504 @@
 <td><a href="BeginTransactionBeforeTryCatch/">BeginTransactionBeforeTryCatch</a></td>
 <td>Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию'</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="CanonicalSpellingKeywords/">CanonicalSpellingKeywords</a></td>
 <td>Каноническое написание ключевых слов</td>
 <td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="CognitiveComplexity/">CognitiveComplexity</a></td>
 <td>Когнитивная сложность</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Дефект кода</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="CommentedCode/">CommentedCode</a></td>
 <td>Закомментированный фрагмент кода</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="CommitTransactionOutsideTryCatch/">CommitTransactionOutsideTryCatch</a></td>
 <td>Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию'</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="DeletingCollectionItem/">DeletingCollectionItem</a></td>
 <td>Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл"</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>standard</code><br/><code>error</code></td>
+</tr>
+<tr>
+<td><a href="DeprecatedFind/">DeprecatedFind</a></td>
+<td>Использование устаревшего метода "Найти"</td>
+<td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
+<td><code>deprecated</code></td>
 </tr>
 <tr>
 <td><a href="DeprecatedMessage/">DeprecatedMessage</a></td>
 <td>Ограничение на использование устаревшего метода "Сообщить"</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
 <td><a href="EmptyCodeBlock/">EmptyCodeBlock</a></td>
 <td>Пустой блок кода</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code><br/><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="EmptyStatement/">EmptyStatement</a></td>
 <td>Пустой оператор</td>
 <td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="ExtraCommas/">ExtraCommas</a></td>
-<td>Лишние запятые при вызове метода</td>
+<td>Запятые без указания параметра в конце вызова метода</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="FunctionShouldHaveReturn/">FunctionShouldHaveReturn</a></td>
 <td>Функция должна содержать возврат</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>suspicious</code><br/><code>unpredictable</code></td>
 </tr>
 <tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>
 <td>Одинаковые выражения слева и справа от "foo" оператора</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="IfConditionComplexity/">IfConditionComplexity</a></td>
-<td>Слишком сложное условие оператора Если</td>
+<td>Использование сложных выражений в условии оператора "Если"</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="IfElseDuplicatedCodeBlock/">IfElseDuplicatedCodeBlock</a></td>
-<td>Повторяющиеся блоки кода в синтаксической конструкции Если…Тогда…ИначеЕсли…</td>
+<td>Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли...</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="IfElseDuplicatedCondition/">IfElseDuplicatedCondition</a></td>
-<td>Повторяющиеся условия в синтаксической конструкции Если…Тогда…ИначеЕсли…</td>
+<td>Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли...</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="IfElseIfEndsWithElse/">IfElseIfEndsWithElse</a></td>
 <td>Использование синтаксической конструкции Если...Тогда...ИначеЕсли...</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="InvalidCharacterInFile/">InvalidCharacterInFile</a></td>
+<td>Недопустимый символ</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
+<td><code>error</code><br/><code>standard</code><br/><code>unpredictable</code></td>
 </tr>
 <tr>
 <td><a href="LineLength/">LineLength</a></td>
 <td>Ограничение на длину строки</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MagicNumber/">MagicNumber</a></td>
 <td>Использование магического числа</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MethodSize/">MethodSize</a></td>
 <td>Ограничение на размер метода</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MissingCodeTryCatchEx/">MissingCodeTryCatchEx</a></td>
 <td>Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MissingSpace/">MissingSpace</a></td>
-<td>Пропущен пробел</td>
+<td>Пропущены пробелы слева или справа от операторов <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code>, а так же справа от <code>,</code> и <code>;</code></td>
 <td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MissingTemporaryFileDeletion/">MissingTemporaryFileDeletion</a></td>
 <td>Отсутствует удаление временного файла после использования</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>badpractice</code><br/><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="MultilingualStringHasAllDeclaredLanguages/">MultilingualStringHasAllDeclaredLanguages</a></td>
+<td>Есть локализованный текст для всех заявленных в конфигурации языков</td>
+<td align="center">Да</td>
+<td>Незначительный</td>
+<td>Ошибка</td>
+<td><code>error</code></td>
+</tr>
+<tr>
+<td><a href="MultilingualStringUsingWithTemplate/">MultilingualStringUsingWithTemplate</a></td>
+<td>Частично локализованный текст используется в функции СтрШаблон</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="NestedConstructorsInStructureDeclaration/">NestedConstructorsInStructureDeclaration</a></td>
 <td>Использование конструкторов с параметрами при объявлении структуры</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NestedStatements/">NestedStatements</a></td>
 <td>Управляющие конструкции не должны быть вложены слишком глубоко</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NestedTernaryOperator/">NestedTernaryOperator</a></td>
 <td>Вложенный тернарный оператор</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NonExportMethodsInApiRegion/">NonExportMethodsInApiRegion</a></td>
 <td>Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="NumberOfOptionalParams/">NumberOfOptionalParams</a></td>
 <td>Ограничение на количество не обязательных параметров метода</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NumberOfParams/">NumberOfParams</a></td>
 <td>Ограничение на количество параметров метода</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NumberOfValuesInStructureConstructor/">NumberOfValuesInStructureConstructor</a></td>
 <td>Ограничение на количество значений свойств, передаваемых в конструктор структуры</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="OneStatementPerLine/">OneStatementPerLine</a></td>
 <td>Одно выражение в одной строке</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>design</code></td>
 </tr>
 <tr>
 <td><a href="OrderOfParams/">OrderOfParams</a></td>
 <td>Порядок параметров метода</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>design</code></td>
 </tr>
 <tr>
 <td><a href="PairingBrokenTransaction/">PairingBrokenTransaction</a></td>
 <td>Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()"</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="ParseError/">ParseError</a></td>
 <td>Ошибка разбора исходного кода</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
 <td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="ProcedureReturnsValue/">ProcedureReturnsValue</a></td>
 <td>Процедура не должна возвращать значение</td>
 <td align="center">Да</td>
+<td>Блокирующий</td>
+<td>Ошибка</td>
 <td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="SelfAssign/">SelfAssign</a></td>
 <td>Присвоение переменной самой себе</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="SelfInsertion/">SelfInsertion</a></td>
 <td>Вставка коллекции в саму себя</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
 <td><code>standard</code><br/><code>unpredictable</code><br/><code>performance</code></td>
 </tr>
 <tr>
 <td><a href="SemicolonPresence/">SemicolonPresence</a></td>
-<td>Выражение должно заканчиваться ";"</td>
+<td>Выражение должно заканчиваться символом ";"</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="SeveralCompilerDirectives/">SeveralCompilerDirectives</a></td>
 <td>Ошибочное указание нескольких директив компиляции</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
 <td><code>unpredictable</code><br/><code>error</code></td>
 </tr>
 <tr>
 <td><a href="SpaceAtStartComment/">SpaceAtStartComment</a></td>
 <td>Пробел в начале комментария</td>
 <td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="TernaryOperatorUsage/">TernaryOperatorUsage</a></td>
 <td>Использование тернарного оператора</td>
 <td align="center">Нет</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>brainoverload</code></td>
+</tr>
+<tr>
+<td><a href="TimeoutsInExternalResources/">TimeoutsInExternalResources</a></td>
+<td>Таймауты при работе с внешними ресурсами</td>
+<td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
+<td><code>unpredictable</code><br/><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="TryNumber/">TryNumber</a></td>
 <td>Приведение к числу в попытке</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UnaryPlusInConcatenation/">UnaryPlusInConcatenation</a></td>
 <td>Унарный плюс в конкатенации строк</td>
 <td align="center">Да</td>
+<td>Блокирующий</td>
+<td>Ошибка</td>
 <td><code>suspicious</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="UnknownPreprocessorSymbol/">UnknownPreprocessorSymbol</a></td>
 <td>Неизвестный символ препроцессора</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
 <td><code>standard</code><br/><code>error</code></td>
 </tr>
 <tr>
 <td><a href="UnreachableCode/">UnreachableCode</a></td>
 <td>Недостижимый код</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Ошибка</td>
 <td><code>design</code><br/><code>suspicious</code></td>
+</tr>
+<tr>
+<td><a href="UnusedLocalMethod/">UnusedLocalMethod</a></td>
+<td>Неиспользуемый локальный метод</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br/><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="UseLessForEach/">UseLessForEach</a></td>
 <td>Бесполезный перебор коллекции</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
 <td><code>clumsy</code></td>
 </tr>
 <tr>
 <td><a href="UsingCancelParameter/">UsingCancelParameter</a></td>
 <td>Работа с параметром "Отказ"</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="UsingFindElementByString/">UsingFindElementByString</a></td>
 <td>Использование методов "НайтиПоНаименованию" и "НайтиПоКоду"</td>
 <td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code><br/><code>performance</code></td>
 </tr>
 <tr>
 <td><a href="UsingGoto/">UsingGoto</a></td>
-<td>Использование "Перейти"</td>
+<td>Оператор "Перейти" не должен использоваться</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
-<td><a href="UsingHardcodePath/">UsingHardcodePath</a></td>
-<td>Хранение путей к файлам и ip-адресов в коде</td>
+<td><a href="UsingHardcodeNetworkAddress/">UsingHardcodeNetworkAddress</a></td>
+<td>Хранение ip-адресов в коде</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Уязвимость</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="UsingHardcodePath/">UsingHardcodePath</a></td>
+<td>Хранение путей к файлам в коде</td>
+<td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingHardcodeSecretInformation/">UsingHardcodeSecretInformation</a></td>
 <td>Хранение конфиденциальной информации в коде</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Уязвимость</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingModalWindows/">UsingModalWindows</a></td>
 <td>Использование модальных окон</td>
 <td align="center">Нет</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingObjectNotAvailableUnix/">UsingObjectNotAvailableUnix</a></td>
 <td>Использование объектов недоступных в Unix системах</td>
 <td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
 <td><code>standard</code><br/><code>lockinos</code></td>
 </tr>
 <tr>
 <td><a href="UsingServiceTag/">UsingServiceTag</a></td>
 <td>Использование служебных тегов</td>
 <td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="UsingSynchronousCalls/">UsingSynchronousCalls</a></td>
 <td>Использование синхронных вызовов</td>
 <td align="center">Нет</td>
+<td>Важный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingThisForm/">UsingThisForm</a></td>
-<td>Использование свойства "ЭтаФорма"</td>
+<td>Использование устаревшего свойства "ЭтаФорма"</td>
 <td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
-<td><a href="WorkingTimeoutWithExternalResources/">WorkingTimeoutWithExternalResources</a></td>
-<td>Таймауты при работе с внешними ресурсами</td>
-<td align="center">Да</td>
-<td><code>unpredictable</code><br/><code>standard</code></td>
-</tr>
-<tr>
 <td><a href="YoLetterUsage/">YoLetterUsage</a></td>
-<td>Использование буквы “ё” в текстах модулей</td>
+<td>Использование буквы "ё" в текстах модулей</td>
 <td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
 <td><code>standard</code></td>
 </tr>
 </tbody>
@@ -783,7 +982,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UsingSynchronousCalls/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -270,7 +299,7 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
       Russian
     </a>
   </li>
@@ -297,8 +326,28 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    Ограничение диагностики
+  <a href="#description" class="md-nav__link">
+    Description
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostic-restrictions" class="md-nav__link">
+    Diagnostic restrictions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
   </a>
   
 </li>
@@ -322,128 +371,153 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/UsingSynchronousCalls.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="using-synchronous-calls">Using synchronous calls</h1>
-<p>При разработке конфигураций, предназначенных для работы в веб-клиенте, запрещено использовать модальные формы и диалоги и синхронные вызовы. В противном случае, конфигурация окажется неработоспособной в ряде веб-браузеров, так как модальные окна не входят в стандарт веб-разработки, а для обеспечения взаимодействия с пользователем требуются асинхронные средства.</p>
-<p>Источник: <a href="https://its.1c.ru/db/v8std/content/703/hdoc/">Ограничение на использование модальных окон и синхронных вызовов</a></p>
-<p>Полезная информаця:</p>
-<ul>
-<li><a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
-<li><a href="https://its.1c.ru/db/v838doc#bookmark:dev:TI000000438">Соответствие синхронных методов асинхронным аналогам</a></li>
-<li><a href="http://v8.1c.ru/o7/201412async/index.htm">Асинхронные вызовы расширений и внешних компонентов</a></li>
-</ul>
-<h2 id="_1">Ограничение диагностики</h2>
-<p>На данный момент диагностируется <strong>только использование методов глобального контекста</strong>.</p>
-<p>Список методов:</p>
+                <h1 id="using-synchronous-calls">Using synchronous calls<a class="headerlink" href="#using-synchronous-calls" title="Permanent link">Link</a></h1>
 <table>
 <thead>
 <tr>
-<th align="left">Метод</th>
-<th align="left">Английский вариант</th>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br/>by default</th>
+<th align="center">Minutes<br/>to fix</th>
+<th align="center">Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left">ВОПРОС</td>
-<td align="left">DOQUERYBOX</td>
-</tr>
-<tr>
-<td align="left">ОТКРЫТЬФОРМУМОДАЛЬНО</td>
-<td align="left">OPENFORMMODAL</td>
-</tr>
-<tr>
-<td align="left">ОТКРЫТЬЗНАЧЕНИЕ</td>
-<td align="left">OPENVALUE</td>
-</tr>
-<tr>
-<td align="left">ПРЕДУПРЕЖДЕНИЕ</td>
-<td align="left">DOMESSAGEBOX</td>
-</tr>
-<tr>
-<td align="left">ВВЕСТИДАТУ</td>
-<td align="left">INPUTDATE</td>
-</tr>
-<tr>
-<td align="left">ВВЕСТИЗНАЧЕНИЕ</td>
-<td align="left">INPUTVALUE</td>
-</tr>
-<tr>
-<td align="left">ВВЕСТИСТРОКУ</td>
-<td align="left">INPUTSTRING</td>
-</tr>
-<tr>
-<td align="left">ВВЕСТИЧИСЛО</td>
-<td align="left">INPUTNUMBER</td>
-</tr>
-<tr>
-<td align="left">УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ</td>
-<td align="left">INSTALLADDIN</td>
-</tr>
-<tr>
-<td align="left">УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ</td>
-<td align="left">INSTALLFILESYSTEMEXTENSION</td>
-</tr>
-<tr>
-<td align="left">УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ</td>
-<td align="left">INSTALLCRYPTOEXTENSION</td>
-</tr>
-<tr>
-<td align="left">ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ</td>
-<td align="left">ATTACHCRYPTOEXTENSION</td>
-</tr>
-<tr>
-<td align="left">ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ</td>
-<td align="left">ATTACHFILESYSTEMEXTENSION</td>
-</tr>
-<tr>
-<td align="left">ПОМЕСТИТЬФАЙЛ</td>
-<td align="left">PUTFILE</td>
-</tr>
-<tr>
-<td align="left">КОПИРОВАТЬФАЙЛ</td>
-<td align="left">FILECOPY</td>
-</tr>
-<tr>
-<td align="left">ПЕРЕМЕСТИТЬФАЙЛ</td>
-<td align="left">MOVEFILE</td>
-</tr>
-<tr>
-<td align="left">НАЙТИФАЙЛЫ</td>
-<td align="left">FINDFILES</td>
-</tr>
-<tr>
-<td align="left">УДАЛИТЬФАЙЛЫ</td>
-<td align="left">DELETEFILES</td>
-</tr>
-<tr>
-<td align="left">СОЗДАТЬКАТАЛОГ</td>
-<td align="left">CREATEDIRECTORY</td>
-</tr>
-<tr>
-<td align="left">КАТАЛОГВРЕМЕННЫХФАЙЛОВ</td>
-<td align="left">TEMPFILESDIR</td>
-</tr>
-<tr>
-<td align="left">КАТАЛОГДОКУМЕНТОВ</td>
-<td align="left">DOCUMENTSDIR</td>
-</tr>
-<tr>
-<td align="left">РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ</td>
-<td align="left">USERDATAWORKDIR</td>
-</tr>
-<tr>
-<td align="left">ПОЛУЧИТЬФАЙЛЫ</td>
-<td align="left">GETFILES</td>
-</tr>
-<tr>
-<td align="left">ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ</td>
-<td align="left">REQUESTUSERPERMISSION</td>
-</tr>
-<tr>
-<td align="left">ЗАПУСТИТЬПРИЛОЖЕНИЕ</td>
-<td align="left">RUNAPP</td>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Major</code></td>
+<td align="center"><code>No</code></td>
+<td align="center"><code>15</code></td>
+<td align="center"><code>standard</code></td>
 </tr>
 </tbody>
 </table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
+<p>When developing configurations designed to work in the web client, it is forbidden to use modal forms and dialogs and synchronous calls. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard, and asynchronous tools are required to ensure user interaction.</p>
+<h3 id="diagnostic-restrictions">Diagnostic restrictions<a class="headerlink" href="#diagnostic-restrictions" title="Permanent link">Link</a></h3>
+<p>Currently, <strong>only the use of global context methods</strong> is diagnosed.</p>
+<p>Method list:</p>
+<table>
+<thead>
+<tr>
+<th>Rusian variant</th>
+<th>English variant</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ВОПРОС</td>
+<td>DOQUERYBOX</td>
+</tr>
+<tr>
+<td>ОТКРЫТЬФОРМУМОДАЛЬНО</td>
+<td>OPENFORMMODAL</td>
+</tr>
+<tr>
+<td>ОТКРЫТЬЗНАЧЕНИЕ</td>
+<td>OPENVALUE</td>
+</tr>
+<tr>
+<td>ПРЕДУПРЕЖДЕНИЕ</td>
+<td>DOMESSAGEBOX</td>
+</tr>
+<tr>
+<td>ВВЕСТИДАТУ</td>
+<td>INPUTDATE</td>
+</tr>
+<tr>
+<td>ВВЕСТИЗНАЧЕНИЕ</td>
+<td>INPUTVALUE</td>
+</tr>
+<tr>
+<td>ВВЕСТИСТРОКУ</td>
+<td>INPUTSTRING</td>
+</tr>
+<tr>
+<td>ВВЕСТИЧИСЛО</td>
+<td>INPUTNUMBER</td>
+</tr>
+<tr>
+<td>УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ</td>
+<td>INSTALLADDIN</td>
+</tr>
+<tr>
+<td>УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ</td>
+<td>INSTALLFILESYSTEMEXTENSION</td>
+</tr>
+<tr>
+<td>УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ</td>
+<td>INSTALLCRYPTOEXTENSION</td>
+</tr>
+<tr>
+<td>ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ</td>
+<td>ATTACHCRYPTOEXTENSION</td>
+</tr>
+<tr>
+<td>ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ</td>
+<td>ATTACHFILESYSTEMEXTENSION</td>
+</tr>
+<tr>
+<td>ПОМЕСТИТЬФАЙЛ</td>
+<td>PUTFILE</td>
+</tr>
+<tr>
+<td>КОПИРОВАТЬФАЙЛ</td>
+<td>FILECOPY</td>
+</tr>
+<tr>
+<td>ПЕРЕМЕСТИТЬФАЙЛ</td>
+<td>MOVEFILE</td>
+</tr>
+<tr>
+<td>НАЙТИФАЙЛЫ</td>
+<td>FINDFILES</td>
+</tr>
+<tr>
+<td>УДАЛИТЬФАЙЛЫ</td>
+<td>DELETEFILES</td>
+</tr>
+<tr>
+<td>СОЗДАТЬКАТАЛОГ</td>
+<td>CREATEDIRECTORY</td>
+</tr>
+<tr>
+<td>КАТАЛОГВРЕМЕННЫХФАЙЛОВ</td>
+<td>TEMPFILESDIR</td>
+</tr>
+<tr>
+<td>КАТАЛОГДОКУМЕНТОВ</td>
+<td>DOCUMENTSDIR</td>
+</tr>
+<tr>
+<td>РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ</td>
+<td>USERDATAWORKDIR</td>
+</tr>
+<tr>
+<td>ПОЛУЧИТЬФАЙЛЫ</td>
+<td>GETFILES</td>
+</tr>
+<tr>
+<td>ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ</td>
+<td>REQUESTUSERPERMISSION</td>
+</tr>
+<tr>
+<td>ЗАПУСТИТЬПРИЛОЖЕНИЕ</td>
+<td>RUNAPP</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
+<ul>
+<li><a href="https://its.1c.ru/db/v8std/content/703/hdoc/">Ограничение на использование модальных окон и синхронных вызовов</a></li>
+<li><a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Opt out of modal windows (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v838doc#bookmark:dev:TI000000438">Correspondence of synchronous methods to asynchronous analogues (RU)</a></li>
+<li><a href="http://v8.1c.ru/o7/201412async/index.htm">Asynchronous calls to extensions and external components (RU)</a></li>
+</ul>
                 
                   
                 
@@ -487,7 +561,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

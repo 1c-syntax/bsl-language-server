@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UsingObjectNotAvailableUnix/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -270,7 +299,7 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
       Russian
     </a>
   </li>
@@ -297,15 +326,35 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    Description
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#addition" class="md-nav__link">
     Addition
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#reference" class="md-nav__link">
-    Reference
+  <a href="#examples" class="md-nav__link">
+    Examples
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
   </a>
   
 </li>
@@ -329,15 +378,48 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/UsingObjectNotAvailableUnix.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="using-unavailable-in-unix-objects">Using unavailable in Unix objects</h1>
+                <h1 id="using-unavailable-in-unix-objects">Using unavailable in Unix objects<a class="headerlink" href="#using-unavailable-in-unix-objects" title="Permanent link">Link</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br/>by default</th>
+<th align="center">Minutes<br/>to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Error</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Critical</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>30</code></td>
+<td align="center"><code>standard</code><br/><code>lockinos</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.
-For external components, using COM, it is recommended to change them to NativeAPI AddIn.</p>
+For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
 <p>Checked the use of unavailable in :</p>
 <ul>
 <li>COMObject</li>
 <li>Mail</li>
 </ul>
-<p>Example:</p>
+<p><strong>Checking the value of the condition is not satisfied.</strong></p>
+<h3 id="addition">Addition<a class="headerlink" href="#addition" title="Permanent link">Link</a></h3>
+<p>When found unavailable in Linux objects, the method is checked to include condition flow for platform type.</p>
+<ul>
+<li><code>Linux_x86</code></li>
+<li><code>Windows</code></li>
+<li><code>MacOs</code></li>
+</ul>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <div class="codehilite"><pre><span></span><span class="nv">Component</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">COMObject</span><span class="p">(</span><span class="s1">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
 </pre></div>
 
@@ -348,9 +430,6 @@ For external components, using COM, it is recommended to change them to NativeAP
 
 
 <p>Instead of this you can use <code>StartApplication()</code>.</p>
-<h2 id="addition">Addition</h2>
-<p>When found unavailable in Linux objects, the method is checked to include condition flow for platform type.</p>
-<p>For example:</p>
 <div class="codehilite"><pre><span></span><span class="nv">SystemInformation</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">SystemInformation</span><span class="p">();</span>
 <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">SystemInformation</span><span class="o">.</span><span class="nv">PlatformType</span> <span class="o">=</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86</span> <span class="nv">OR</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86_64</span> <span class="k">Then</span>
     <span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
@@ -358,8 +437,7 @@ For external components, using COM, it is recommended to change them to NativeAP
 </pre></div>
 
 
-<h2 id="reference">Reference</h2>
-<p>More information is available on ITS:</p>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001208">Features of the development of cross-platform applied solutions</a></li>
 <li><a href="https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001283">Features of the client application running Linux</a></li>
@@ -407,7 +485,7 @@ For external components, using COM, it is recommended to change them to NativeAP
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

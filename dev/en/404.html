@@ -31,8 +31,8 @@
       
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
-      <link rel="shortcut icon" href="/assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <link rel="shortcut icon" href="/bsl-language-server/dev/assets/images/logo.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,9 +40,9 @@
       
     
     
-      <link rel="stylesheet" href="/assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="/bsl-language-server/dev/assets/stylesheets/application.1b62728e.css">
       
-        <link rel="stylesheet" href="/assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="/bsl-language-server/dev/assets/stylesheets/application-palette.a8b3c06d.css">
       
       
         
@@ -51,7 +51,7 @@
       
     
     
-      <script src="/assets/javascripts/modernizr.74668098.js"></script>
+      <script src="/bsl-language-server/dev/assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -60,10 +60,37 @@
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
-    <link rel="stylesheet" href="/assets/fonts/material-icons.css">
+    <link rel="stylesheet" href="/bsl-language-server/dev/assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="/bsl-language-server/dev/assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -90,9 +117,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="/." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
-            <img src="/assets/images/logo.png" width="24" height="24">
+            <img src="/bsl-language-server/dev/assets/images/logo.png" width="24" height="24">
           
         </a>
       </div>
@@ -182,9 +209,9 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="/." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
-        <img src="/assets/images/logo.png" width="48" height="48">
+        <img src="/bsl-language-server/dev/assets/images/logo.png" width="48" height="48">
       
     </a>
     BSL Language Server Dev
@@ -218,7 +245,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/." title="Home" class="md-nav__link">
+    <a href="/bsl-language-server/dev/." title="Home" class="md-nav__link">
       Home
     </a>
   </li>
@@ -230,7 +257,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/contributing/" title="Contributing" class="md-nav__link">
+    <a href="/bsl-language-server/dev/contributing/" title="Contributing" class="md-nav__link">
       Contributing
     </a>
   </li>
@@ -242,7 +269,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/reporters/" title="Reporters" class="md-nav__link">
+    <a href="/bsl-language-server/dev/reporters/" title="Reporters" class="md-nav__link">
       Reporters
     </a>
   </li>
@@ -254,7 +281,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/diagnostics/" title="Diagnostics" class="md-nav__link">
+    <a href="/bsl-language-server/dev/diagnostics/" title="Diagnostics" class="md-nav__link">
       Diagnostics
     </a>
   </li>
@@ -266,7 +293,7 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
       Russian
     </a>
   </li>
@@ -310,7 +337,7 @@
       </div>
       
   <div class="md-footer-social">
-    <link rel="stylesheet" href="/assets/fonts/font-awesome.css">
+    <link rel="stylesheet" href="/bsl-language-server/dev/assets/fonts/font-awesome.css">
     
       <a href="https://github.com/1c-syntax" class="md-footer-social__link fa fa-github"></a>
     
@@ -324,28 +351,28 @@
       
     </div>
     
-      <script src="/assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="/bsl-language-server/dev/assets/javascripts/application.a8b5e56f.js"></script>
       
         
         
           
-          <script src="/assets/javascripts/lunr/lunr.stemmer.support.js"></script>
+          <script src="/bsl-language-server/dev/assets/javascripts/lunr/lunr.stemmer.support.js"></script>
           
             
           
             
               
               
-                <script src="/assets/javascripts/lunr/lunr.ru.js"></script>
+                <script src="/bsl-language-server/dev/assets/javascripts/lunr/lunr.ru.js"></script>
               
             
           
           
-            <script src="/assets/javascripts/lunr/lunr.multi.js"></script>
+            <script src="/bsl-language-server/dev/assets/javascripts/lunr/lunr.multi.js"></script>
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:"/"}})</script>
+      <script>app.initialize({version:"1.0.4",url:{base:"/bsl-language-server/dev"}})</script>
       
     
   </body>

@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UsingCancelParameter/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -32,15 +34,15 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
-        <title>Using parameter «Cancel» - BSL Language Server Dev</title>
+        <title>Using parameter "Cancel" - BSL Language Server Dev</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -111,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Using parameter «Cancel»
+                Using parameter "Cancel"
               
             </span>
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -270,7 +299,7 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
       Russian
     </a>
   </li>
@@ -297,15 +326,42 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#incorrect" class="md-nav__link">
-    Incorrect:
+  <a href="#description" class="md-nav__link">
+    Description
   </a>
   
 </li>
       
         <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    Examples
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#incorrect" class="md-nav__link">
+    Incorrect
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#correct" class="md-nav__link">
-    Correct:
+    Correct
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
   </a>
   
 </li>
@@ -329,12 +385,36 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/UsingCancelParameter.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="using-parameter-cancel">Using parameter «Cancel»</h1>
-<ol>
-<li>In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".
-    This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.In addition when modifying configuration the number of such checks can increase.</li>
-</ol>
-<h4 id="incorrect">Incorrect:</h4>
+                <h1 id="using-parameter-cancel">Using parameter "Cancel"<a class="headerlink" href="#using-parameter-cancel" title="Permanent link">Link</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br/>by default</th>
+<th align="center">Minutes<br/>to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>Major</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>10</code></td>
+<td align="center"><code>standard</code><br/><code>badpractice</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
+<p>In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".</p>
+<p>This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.In addition when modifying configuration the number of such checks can increase.</p>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
+<h3 id="incorrect">Incorrect<a class="headerlink" href="#incorrect" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
   <span class="o">...</span>
   <span class="nv">Cancel</span> <span class="o">=</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">();</span>
@@ -343,7 +423,7 @@
 </pre></div>
 
 
-<h4 id="correct">Correct:</h4>
+<h3 id="correct">Correct<a class="headerlink" href="#correct" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
   <span class="o">...</span>
   <span class="k">Если</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">()</span> <span class="k">Тогда</span>
@@ -359,7 +439,10 @@
 </pre></div>
 
 
-<p>Reference: <a href="https://its.1c.ru/db/v8std#content:686:hdoc">Standart: Working with the "Cancel" option in event handlers(RU)</a></p>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:686:hdoc">Standart: Working with the "Cancel" option in event handlers(RU)</a></li>
+</ul>
                 
                   
                 
@@ -403,7 +486,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

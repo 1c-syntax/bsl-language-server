@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="assets/javascripts/modernizr.74668098.js"></script>
+      <script src="assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="assets/images/logo.png" width="48" height="48">
       
@@ -279,6 +308,13 @@
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     Конфигурационный файл
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Благодарности
   </a>
   
 </li>
@@ -397,6 +433,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Благодарности
+  </a>
+  
+</li>
+      
       
       
       
@@ -416,13 +459,14 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/index.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="bsl-language-server">BSL Language Server</h1>
-<p><a href="https://travis-ci.org/1c-syntax/bsl-language-server"><img alt="Build Status" src="https://travis-ci.org/1c-syntax/bsl-language-server.svg?branch=master" /></a>
-<a href="https://github.com/1c-syntax/bsl-language-server/releases/latest"><img alt="Download" src="https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&amp;style=flat-square" /></a>
+                <h1 id="bsl-language-server">BSL Language Server<a class="headerlink" href="#bsl-language-server" title="Permanent link">&para;</a></h1>
+<p><a href="https://github.com/1c-syntax/bsl-language-server/actions"><img alt="Actions Status" src="https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg" /></a>
+<a href="https://github.com/1c-syntax/bsl-language-server/releases/latest"><img alt="Download" src="https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&amp;style=flat" /></a>
 <a href="https://jitpack.io/#1c-syntax/bsl-language-server"><img alt="JitPack" src="https://jitpack.io/v/1c-syntax/bsl-language-server.svg" /></a>
 <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Quality Gate" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=alert_status" /></a>
 <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Maintainability" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=sqale_rating" /></a>
-<a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=coverage" /></a></p>
+<a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=coverage" /></a>
+<a href="https://t.me/bsl_language_server"><img alt="telegram" src="https://img.shields.io/badge/telegram-chat-green.svg" /></a></p>
 <p>Реализация протокола <a href="https://microsoft.github.io/language-server-protocol/">language server protocol</a> для языка 1C (BSL) - языка 1С:Предприятие 8 и <a href="http://oscript.io">OneScript</a>.</p>
 <ul>
 <li><a href="contributing/">Руководство контрибьютора</a></li>
@@ -433,9 +477,10 @@
 <li><a href="#configuration">Конфигурационный файл</a></li>
 <li><a href="reporters">Репортеры</a></li>
 <li><a href="diagnostics">Диагностики</a></li>
+<li><a href="#thanks">Благодарности</a></li>
 </ul>
 <p><a id="capabilities"></a></p>
-<h2 id="_1">Возможности</h2>
+<h2 id="_1">Возможности<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Форматирование файла</li>
 <li>Форматирование выбранного диапазона</li>
@@ -448,7 +493,7 @@
 <li>Запуск форматирования файлов в каталоге из командной строки</li>
 </ul>
 <p><a id="cli"></a></p>
-<h2 id="_2">Запуск из командной строки</h2>
+<h2 id="_2">Запуск из командной строки<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Запуск jar-файлов осуществляется через <code>java -jar path/to/file.jar</code>.</p>
 <div class="codehilite"><pre><span></span>java -jar bsl-language-server.jar --help
 
@@ -467,7 +512,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <p>При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. Для взаимодействия используются stdin и stdout.</p>
 <p>По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр <code>diagnosticLanguage</code> в конфигурационном файле или вызвав событие <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
-<h2 id="_3">Запуск в режиме анализатора</h2>
+<h2 id="_3">Запуск в режиме анализатора<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме анализа используется параметр <code>--analyze</code> (сокращенно <code>-a</code>). Для указания каталога расположения анализируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников.</p>
 <p>Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр <code>--reporter</code> (сокращенно <code>-r</code>), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе <strong>Репортеры</strong>.</p>
 <p>Пример строки запуска анализа:</p>
@@ -483,7 +528,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 
 
 <p><a id="format"></a></p>
-<h2 id="_4">Запуск в режиме форматтера</h2>
+<h2 id="_4">Запуск в режиме форматтера<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме форматтера используется параметр <code>--format</code> (сокращенно <code>-f</code>). Для указания каталога расположения форматируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников.</p>
 <p>Пример строки запуска форматирования:</p>
 <div class="codehilite"><pre><span></span>java -jar bsl-language-server.jar --format --srcDir ./src/cf
@@ -491,7 +536,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 
 
 <p><a id="configuration"></a></p>
-<h2 id="_5">Конфигурационный файл</h2>
+<h2 id="_5">Конфигурационный файл<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <p>Конфигурационный файл представляет собой файл в формате JSON. Файл может содержать следующие настройки:</p>
 <ul>
 <li><code>diagnosticLanguage</code> - <code>Строка</code> - язык сообщений от движка диагностик. Допустимые значения - <code>en</code> и <code>ru</code>. По умолчанию - <code>ru</code>.</li>
@@ -507,7 +552,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 </li>
 </ul>
 <p>Вы можете использовать следующую JSON-схему для упрощения редактирования файла:</p>
-<div class="codehilite"><pre><span></span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="p">.</span><span class="n">githubusercontent</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="mi">1</span><span class="k">c</span><span class="o">-</span><span class="n">syntax</span><span class="o">/</span><span class="n">bsl</span><span class="o">-</span><span class="k">language</span><span class="o">-</span><span class="n">server</span><span class="o">/</span><span class="n">master</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">github</span><span class="o">/</span><span class="n">_1c_syntax</span><span class="o">/</span><span class="n">bsl</span><span class="o">/</span><span class="n">languageserver</span><span class="o">/</span><span class="n">configuration</span><span class="o">/</span><span class="k">schema</span><span class="p">.</span><span class="n">json</span>
+<div class="codehilite"><pre><span></span><span class="c">https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json</span>
 </pre></div>
 
 
@@ -526,6 +571,21 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
+
+
+<p><a id="thanks"></a></p>
+<h2 id="_6">Благодарности<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>Огромное спасибо всем <a href="https://github.com/1c-syntax/bsl-language-server/graphs/contributors">контрибьюторам</a> проекта, всем участвовавшим в обсуждениях, помогавшим с тестированием.</p>
+<p>Вы потрясающие!  </p>
+<p>Спасибо компаниям, поддерживающим проекты с открытым исходным кодом, а особенно тем, кто поддержали нас: </p>
+<hr />
+<p><a href="https://www.yourkit.com"><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></a>  </p>
+<p>Создатель инновационных и интеллектуальных инструментов для профилирования приложений <code>Java</code> и <code>.NET</code> <a href="https://www.yourkit.com">YourKit, LLC</a> любезно предоставил нам лицензии на продукт <code>YourKit Java Profiler</code>.</p>
+<p>С помощью <code>YourKit Java Profiler</code> мы мониторим и улучшаем производительность проекта.</p>
+<hr />
+<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a>  </p>
+<p>Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, <a href="https://www.jetbrains.com">JetBrains</a> поддержал наш проект, предоставив лицензии на свои продукты, в том числе на <code>IntelliJ IDEA Ultimate</code>.</p>
+<p><code>IntelliJ IDEA Ultimate</code> один из лучших инструментов в своем классе.</p>
                 
                   
                 
@@ -590,7 +650,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
       
     </div>
     
-      <script src="assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

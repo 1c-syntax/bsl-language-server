@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href=".." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href=".." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../assets/images/logo.png" width="48" height="48">
       
@@ -308,7 +337,7 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
       Russian
     </a>
   </li>
@@ -360,17 +389,25 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="diagnostics">Diagnostics</h1>
+                <h1 id="diagnostics">Diagnostics<a class="headerlink" href="#diagnostics" title="Permanent link">Link</a></h1>
 <p>Used for code analysis to meet coding standards and search for possible errors.</p>
 <p>Some of diagnostics are disabled by default. Use <a href="/#configuration">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
-<h2 id="implemented-diagnostics">Implemented diagnostics</h2>
+<h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
+<p>Total: <strong>63</strong></p>
+<ul>
+<li>Error: <strong>23</strong></li>
+<li>Code smell: <strong>38</strong></li>
+<li>Vulnerability: <strong>2</strong></li>
+</ul>
 <table>
 <thead>
 <tr>
 <th>Key</th>
 <th>Name</th>
 <th align="center">Enabled by default</th>
+<th>Severity</th>
+<th>Type</th>
 <th>Tags</th>
 </tr>
 </thead>
@@ -379,342 +416,504 @@
 <td><a href="BeginTransactionBeforeTryCatch/">BeginTransactionBeforeTryCatch</a></td>
 <td>Violating transaction rules for the 'BeginTransaction' method</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="CanonicalSpellingKeywords/">CanonicalSpellingKeywords</a></td>
-<td>Canonical spelling of keywords</td>
+<td>Canonical keyword writing</td>
 <td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="CognitiveComplexity/">CognitiveComplexity</a></td>
 <td>Cognitive complexity</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Code smell</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="CommentedCode/">CommentedCode</a></td>
 <td>Commented out code</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="CommitTransactionOutsideTryCatch/">CommitTransactionOutsideTryCatch</a></td>
 <td>Violating transaction rules for the 'CommitTransaction' method</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="DeletingCollectionItem/">DeletingCollectionItem</a></td>
 <td>Deleting an item when iterating through collection using the operator "For each ... In ... Do"</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>standard</code><br/><code>error</code></td>
+</tr>
+<tr>
+<td><a href="DeprecatedFind/">DeprecatedFind</a></td>
+<td>Using of the deprecated method "Find"</td>
+<td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
+<td><code>deprecated</code></td>
 </tr>
 <tr>
 <td><a href="DeprecatedMessage/">DeprecatedMessage</a></td>
 <td>Restriction on the use of deprecated "Message" method</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
 <td><a href="EmptyCodeBlock/">EmptyCodeBlock</a></td>
 <td>Empty code block</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>badpractice</code><br/><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="EmptyStatement/">EmptyStatement</a></td>
 <td>Empty statement</td>
 <td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="ExtraCommas/">ExtraCommas</a></td>
-<td>Extra commas when calling a method</td>
+<td>Commas without a parameter at the end of a method call</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="FunctionShouldHaveReturn/">FunctionShouldHaveReturn</a></td>
-<td>Function must have Return statement</td>
+<td>The function should have return</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>suspicious</code><br/><code>unpredictable</code></td>
 </tr>
 <tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>
 <td>There are identical sub-expressions to the left and to the right of the "foo" operator</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="IfConditionComplexity/">IfConditionComplexity</a></td>
-<td>If condition is too complex</td>
+<td>Usage of complex expressions in the "If" condition</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="IfElseDuplicatedCodeBlock/">IfElseDuplicatedCodeBlock</a></td>
-<td>Duplicated code blocks in If...Then...ElsIf...</td>
+<td>Duplicated code blocks in If...Then...ElseIf... statements</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="IfElseDuplicatedCondition/">IfElseDuplicatedCondition</a></td>
-<td>Duplicated conditions in If...Then...ElsIf...</td>
+<td>Duplicated conditions in If...Then...ElseIf... statements</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="IfElseIfEndsWithElse/">IfElseIfEndsWithElse</a></td>
-<td>Using If...Then...ElsIf... statement</td>
+<td>Else...The...ElseIf... statement should end with Else branch</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
-<td><a href="LineLength/">LineLength</a></td>
-<td>Line length restriction</td>
+<td><a href="InvalidCharacterInFile/">InvalidCharacterInFile</a></td>
+<td>Invalid character</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
+<td><code>error</code><br/><code>standard</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="LineLength/">LineLength</a></td>
+<td>Line Length limit</td>
+<td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MagicNumber/">MagicNumber</a></td>
-<td>Using magic number</td>
+<td>Magic numbers</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MethodSize/">MethodSize</a></td>
 <td>Method size restriction</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MissingCodeTryCatchEx/">MissingCodeTryCatchEx</a></td>
 <td>Missing code in Raise block in "Try ... Raise ... EndTry"</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MissingSpace/">MissingSpace</a></td>
-<td>Missing space</td>
+<td>Missing spaces to the left or right of operators + - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=, and also to the right of , and ;</td>
 <td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="MissingTemporaryFileDeletion/">MissingTemporaryFileDeletion</a></td>
 <td>Missing temporary file deletion after using</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>badpractice</code><br/><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="MultilingualStringHasAllDeclaredLanguages/">MultilingualStringHasAllDeclaredLanguages</a></td>
+<td>There is a localized text for all languages declared in the configuration</td>
+<td align="center">Yes</td>
+<td>Minor</td>
+<td>Error</td>
+<td><code>error</code></td>
+</tr>
+<tr>
+<td><a href="MultilingualStringUsingWithTemplate/">MultilingualStringUsingWithTemplate</a></td>
+<td>Partially localized text is used in the StrTemplate function</td>
+<td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="NestedConstructorsInStructureDeclaration/">NestedConstructorsInStructureDeclaration</a></td>
 <td>Nested constructors with parameters in structure declaration</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>badpractice</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NestedStatements/">NestedStatements</a></td>
 <td>Control flow statements should not be nested too deep</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Code smell</td>
 <td><code>badpractice</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NestedTernaryOperator/">NestedTernaryOperator</a></td>
 <td>Nested ternary operator</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NonExportMethodsInApiRegion/">NonExportMethodsInApiRegion</a></td>
 <td>Non export methods in API regions</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="NumberOfOptionalParams/">NumberOfOptionalParams</a></td>
 <td>Limit number of optional parameters in method</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NumberOfParams/">NumberOfParams</a></td>
-<td>Number of method parameters restriction</td>
+<td>Number of parameters in method</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="NumberOfValuesInStructureConstructor/">NumberOfValuesInStructureConstructor</a></td>
-<td>Number of values in structure constructor restriction</td>
+<td>Limit on the number of property values passed to the structure constructor</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="OneStatementPerLine/">OneStatementPerLine</a></td>
 <td>One statement per line</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>design</code></td>
 </tr>
 <tr>
 <td><a href="OrderOfParams/">OrderOfParams</a></td>
-<td>Order of method parameters</td>
+<td>Order of Parameters in method</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>design</code></td>
 </tr>
 <tr>
 <td><a href="PairingBrokenTransaction/">PairingBrokenTransaction</a></td>
 <td>Violation of pairing using methods "BeginTransaction()" &amp; "CommitTransaction()" / "RollbackTransaction()"</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="ParseError/">ParseError</a></td>
-<td>Error parsing source code</td>
+<td>Source code parse error</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
 <td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="ProcedureReturnsValue/">ProcedureReturnsValue</a></td>
-<td>Procedure must have no Return value</td>
+<td>Procedure should not return Value</td>
 <td align="center">Yes</td>
+<td>Blocker</td>
+<td>Error</td>
 <td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="SelfAssign/">SelfAssign</a></td>
-<td>Variable self assignment</td>
+<td>Variable is assigned to itself</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="SelfInsertion/">SelfInsertion</a></td>
 <td>Insert a collection into itself</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
 <td><code>standard</code><br/><code>unpredictable</code><br/><code>performance</code></td>
 </tr>
 <tr>
 <td><a href="SemicolonPresence/">SemicolonPresence</a></td>
-<td>Statement should end with ";"</td>
+<td>Statement should end with semicolon symbol ";"</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="SeveralCompilerDirectives/">SeveralCompilerDirectives</a></td>
 <td>Erroneous indication of several compilation directives</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
 <td><code>unpredictable</code><br/><code>error</code></td>
 </tr>
 <tr>
 <td><a href="SpaceAtStartComment/">SpaceAtStartComment</a></td>
 <td>Space at the beginning of the comment</td>
 <td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="TernaryOperatorUsage/">TernaryOperatorUsage</a></td>
 <td>Ternary operator usage</td>
 <td align="center">No</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>brainoverload</code></td>
 </tr>
 <tr>
-<td><a href="TryNumber/">TryNumber</a></td>
-<td>Cast to number in try catch block</td>
+<td><a href="TimeoutsInExternalResources/">TimeoutsInExternalResources</a></td>
+<td>Timeouts working with external resources</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>unpredictable</code><br/><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="TryNumber/">TryNumber</a></td>
+<td>Cast to number of try catch block</td>
+<td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UnaryPlusInConcatenation/">UnaryPlusInConcatenation</a></td>
 <td>Unary Plus sign in string concatenation</td>
 <td align="center">Yes</td>
+<td>Blocker</td>
+<td>Error</td>
 <td><code>suspicious</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="UnknownPreprocessorSymbol/">UnknownPreprocessorSymbol</a></td>
 <td>Unknown preprocessor symbol</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
 <td><code>standard</code><br/><code>error</code></td>
 </tr>
 <tr>
 <td><a href="UnreachableCode/">UnreachableCode</a></td>
 <td>Unreachable Code</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Error</td>
 <td><code>design</code><br/><code>suspicious</code></td>
 </tr>
 <tr>
-<td><a href="UseLessForEach/">UseLessForEach</a></td>
-<td>Useless For Each loop</td>
+<td><a href="UnusedLocalMethod/">UnusedLocalMethod</a></td>
+<td>Unused local method</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
+<td><code>standard</code><br/><code>suspicious</code></td>
+</tr>
+<tr>
+<td><a href="UseLessForEach/">UseLessForEach</a></td>
+<td>Useless collection iteration</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
 <td><code>clumsy</code></td>
 </tr>
 <tr>
 <td><a href="UsingCancelParameter/">UsingCancelParameter</a></td>
-<td>Using "Cancel" parameter</td>
+<td>Using parameter "Cancel"</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="UsingFindElementByString/">UsingFindElementByString</a></td>
-<td>Restriction on the use of "FindByDescription" and "FindByCode" methods</td>
+<td>Using FindByName and FindByCode</td>
 <td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code><br/><code>performance</code></td>
 </tr>
 <tr>
 <td><a href="UsingGoto/">UsingGoto</a></td>
-<td>"Goto" usage</td>
+<td>"goto" statement should not be used</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
-<td><a href="UsingHardcodePath/">UsingHardcodePath</a></td>
-<td>Using hardcode file paths and ip addresses in code</td>
+<td><a href="UsingHardcodeNetworkAddress/">UsingHardcodeNetworkAddress</a></td>
+<td>Using hardcode ip addresses in code</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Vulnerability</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="UsingHardcodePath/">UsingHardcodePath</a></td>
+<td>Using hardcode file paths in code</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingHardcodeSecretInformation/">UsingHardcodeSecretInformation</a></td>
 <td>Storing confidential information in code</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Vulnerability</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingModalWindows/">UsingModalWindows</a></td>
 <td>Using modal windows</td>
 <td align="center">No</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingObjectNotAvailableUnix/">UsingObjectNotAvailableUnix</a></td>
-<td>Using of objects not available in Unix</td>
+<td>Using unavailable in Unix objects</td>
 <td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
 <td><code>standard</code><br/><code>lockinos</code></td>
 </tr>
 <tr>
 <td><a href="UsingServiceTag/">UsingServiceTag</a></td>
 <td>Using service tags</td>
 <td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
 <td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="UsingSynchronousCalls/">UsingSynchronousCalls</a></td>
 <td>Using synchronous calls</td>
 <td align="center">No</td>
+<td>Major</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="UsingThisForm/">UsingThisForm</a></td>
-<td>Using the "ThisForm" property</td>
+<td>Using deprecated property "ThisForm"</td>
 <td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
-<td><a href="WorkingTimeoutWithExternalResources/">WorkingTimeoutWithExternalResources</a></td>
-<td>Timeouts working with external resources</td>
-<td align="center">Yes</td>
-<td><code>unpredictable</code><br/><code>standard</code></td>
-</tr>
-<tr>
 <td><a href="YoLetterUsage/">YoLetterUsage</a></td>
-<td>Using "Ё" letter in code</td>
+<td>Using Russian character "yo" ("ё") in code</td>
 <td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
 </tbody>
@@ -783,7 +982,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

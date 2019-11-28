@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnosticDevWorkFlow/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -306,14 +335,22 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/contributing/DiagnosticDevWorkFlow.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="workflow">Процесс (workflow) разработки диагностики</h1>
-<p><strong>Раздел в стадии заполнения</strong>.</p>
+                <h1 id="workflow">Процесс (workflow) разработки диагностики<a class="headerlink" href="#workflow" title="Permanent link">&para;</a></h1>
 <ol>
-<li>
-<p>Перед созданием новой диагностики нужно убедиться, что ее еще никто другой не реализовывает в данный момент.</p>
+<li>Зайти в раздел <a href="https://github.com/1c-syntax/bsl-language-server/issues">issues</a> и выбрать себе задачу из списка. Стоит выбирать задачи, еще не имеющие исполнителя, т.е. <code>Assignees</code> не указан (блок располагается справа, почти под заголовком).</li>
+<li>Если задачи для диагностики нет, то стоит ее создать, нажав кнопку <code>New issue</code></li>
+<li>Написать в комментарии к задаче мейнтейнерам, что хочешь взять задачу в работу. После того, как в задаче в блоке <code>Assignees</code> появится твой ник, можно приступать.</li>
+<li>Необходимо сделать форк репозитория в <code>GitHub</code>, склонировать репозиторий на локальную машину и создать новую ветку-фичу (разработка ведется по git flow).</li>
+<li>Если форк был уже создан, то необходимо обновить ветку <code>develop</code> из основного репозитория. Проще всего это делается следующим образом<ol>
+<li>У локального репозитория указывается два адреса удаленных репозиториев: твой и основной</li>
+<li>Получаешь обновление с обоих репозиториев <code>git fetch --progress "--all" --prune</code></li>
+<li>В локальном репозитории переключаешься на ветку <code>develop</code></li>
+<li>Сбрасываешь состояние ветки до состояния основного репозитория (<code>git reset --hard</code>)</li>
+<li>Отправляешь ветку в свой удаленный репозиторий</li>
+</ol>
 </li>
 <li>
-<p>Для создания нужных файлов в нужных местах, необходимо выполнить команду <code>gradlew newDiagnostic --key="KeyDiagnostic"</code>, вместо <code>KeyDiagnostic</code> необходимо указать ключ своей диагностики. Подробная информация в справке <code>gradlew -q help --task newDiagnostic</code>. Параметры на момент написания:</p>
+<p>Для создания нужных файлов в нужных местах, необходимо выполнить команду <code>gradlew newDiagnostic --key="KeyDiagnostic"</code>, вместо <code>KeyDiagnostic</code> необходимо указать ключ своей диагностики. Подробная информация в справке <code>gradlew -q help --task newDiagnostic</code>. Параметры на момент написания этой статьи:</p>
 </li>
 <li>
 <p><code>--key</code> - Ключ диагностики</p>
@@ -321,17 +358,29 @@
 <li><code>--nameRu</code> - Название диагностики на русском языке</li>
 <li><code>--nameEn</code> - Название диагностики на английском языке</li>
 </ol>
-<p>При старте, будет выведен список доступных тэгов диагностик. Необходимо ввести через разделитель пробел от одного до трех тэгов из предложенных.</p>
+<p>При старте будет выведен список доступных тэгов диагностик. Необходимо ввести через разделитель пробел от одного до трех тэгов из предложенных.</p>
 <ol>
+<li>Выполнить разработку</li>
 <li>
-<p>После завершения разработки диагностики необходимо запустить gradle-задачу <code>licenseFormat</code> (из командной строки или IDE) <code>gradlew licenseFormat</code> для корректного размещения блоков лицензий.</p>
+<p>После завершения разработки диагностики необходимо проверить изменения, выполнив тестирование, а также выполнить ряд служебных задач.<br />
+Для упрощения создана специальная команда, запускаемая <code>gradlew precommit</code> из командной строки либо запустить <code>precommit</code> из панели задач Gradle в IDE.
+Состав команды на данный момент</p>
 </li>
 <li>
-<p>После завершения разработки диагностики необходимо запустить gradle-задачу <code>test</code> (из командной строки или IDE) <code>gradlew test</code> для полной проверки проекта.</p>
+<p>test - автотестирование всего проекта</p>
+</li>
+<li>licenseFormat - установка блока лицензии в исходных java файлах</li>
+<li>updateDiagnosticDocs - обновление справки по диагностикам</li>
+<li>updateDiagnosticIndex - обновление индекса диагностик</li>
+<li>
+<p>updateJsonSchema - обновление json схемы</p>
 </li>
 <li>
-<p>Перед коммитом изменений необходимо обновить индекс справки, запустив gradle-задачу <code>updateDiagnosticsIndex</code> <code>gradlew updateDiagnosticsIndex</code></p>
+<p>Если все сделано правильно, необходимо зафиксировать изменения и отправить в свой удаленный репозиторий.</p>
 </li>
+<li>Необходимо создать <code>Pull request</code> из своей фиче-ветки в ветку <code>develop</code> основго репозитория и заполнить информацию в описании.</li>
+<li>До закрытия <code>pull request</code>, мейнтейнеры проведут проверку кода, выскажут замечания. Исправление замечаний необходимо производить в той же фиче-ветке, github автоматом подтянет изменения к созданному <code>pull request</code>.</li>
+<li>Закрытие <code>pull request</code> подтверждает факт завершения задачи.</li>
 </ol>
                 
                   
@@ -376,7 +425,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

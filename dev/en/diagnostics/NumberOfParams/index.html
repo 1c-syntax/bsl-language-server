@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/NumberOfParams/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Copy to clipboard">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -270,7 +299,7 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
       Russian
     </a>
   </li>
@@ -297,15 +326,29 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
+  <a href="#parameters" class="md-nav__link">
+    Parameters
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
+  <a href="#description" class="md-nav__link">
+    Description
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    Examples
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
   </a>
   
 </li>
@@ -329,32 +372,75 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/NumberOfParams.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="number-of-parameters-in-method">Number of parameters in method</h1>
-<ol>
-<li>It is not recommended to declare many parameters in functions (best practice to use not more than seven parameters). In So doing there should not be many parameters with default values set (best practice to have not more than three such parameters). Otherwise code readability decreases. For example it is easy to make a mistake in number of commas passing optional parameters.</li>
-</ol>
+                <h1 id="number-of-parameters-in-method">Number of parameters in method<a class="headerlink" href="#number-of-parameters-in-method" title="Permanent link">Link</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br/>by default</th>
+<th align="center">Minutes<br/>to fix</th>
+<th align="center">Tags</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>Minor</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>30</code></td>
+<td align="center"><code>standard</code><br/><code>brainoverload</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">Link</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th align="center">Type</th>
+<th align="left">Description</th>
+<th align="center">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>maxParamsCount</code></td>
+<td align="center"><code>int</code></td>
+<td align="left"><code>Допустимое количество параметров метода</code></td>
+<td align="center"><code>7</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
+<p>It is not recommended to declare many parameters in functions (best practice to use not more than seven parameters). In So doing there should not be many parameters with default values set (best practice to have not more than three such parameters). Otherwise code readability decreases. 
+For example it is easy to make a mistake in number of commas passing optional parameters.</p>
 <p>If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.</p>
-<h4 id="example">Example</h4>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
-<span class="k">Процедура</span> <span class="nv">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">Наименование</span><span class="p">,</span> <span class="nv">ТоварУслуга</span><span class="p">,</span> <span class="nv">ЕдиницаИзмерения</span><span class="p">,</span> <span class="nv">ВесНетто</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
+<span class="nv">Procedure</span> <span class="nv">CreateNewGoods</span><span class="p">(</span><span class="nv">Description</span><span class="p">,</span> <span class="nv">Goods</span><span class="p">,</span> <span class="nv">Units</span><span class="p">,</span> <span class="nv">Weight</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 
-<span class="k">КонецПроцедуры</span>
+<span class="k">EndProcedure</span>
 </pre></div>
 
 
 <p>Correct:</p>
 <p>Group parameters, having goods item properties into Structure ЗначенияРеквизитов.</p>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
-<span class="k">Процедура</span> <span class="nv">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">ЗначенияРеквизитов</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
-<span class="k">КонецПроцедуры</span>
+<span class="nv">Procedure</span> <span class="nv">CreateNewGoods</span><span class="p">(</span><span class="nv">Parameters</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="k">EndProcedure</span>
 </pre></div>
 
 
-<p>Reference: <a href="https://its.1c.ru/db/v8std#content:640:hdoc">Стандарт: Параметры процедур и функций</a></p>
-<h2 id="parameters">Parameters</h2>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
-<li><code>maxOptionalParamsCount</code> - <code>Integer</code> - Max number of optional parameters in method. By default set to 3.</li>
+<li><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Standard: Procedure and function parameters</a></li>
 </ul>
                 
                   
@@ -399,7 +485,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

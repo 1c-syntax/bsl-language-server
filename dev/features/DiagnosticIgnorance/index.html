@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/features/DiagnosticIgnorance/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -370,10 +399,10 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/features/DiagnosticIgnorance.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Экранирование кода от диагностик</h1>
+                <h1 id="_1">Экранирование кода от диагностик<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>Статический анализатор обнаруживает проблемы, ошибки и недочеты в коде в соответствии с заложенными в него правилами (диагностиками). Как и везде, в коде решения могут возникать ситуации, когда необходимо отойти от правил. Данные ситуации могут возникать по разным причинам: как в связи с архитектурными особенностями решения, так и в следствии невозможности (по разным причинам) изменить код для соответствия требованиям.</p>
 <p>Для того, чтобы не приходилось каждый раз вручную отмечать замечание как неактуальное, BSL LS предоставляет функциональность, посредством которой можно скрыть или заэкранировать отдельные участки кода от срабатывания той или иной диагностики.</p>
-<h2 id="_2">Описание</h2>
+<h2 id="_2">Описание<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Для того, чтобы скрыть часть кода от анализатора BSL LS, необходимо добавить в код специальный комментарий.<br />
 Комментарий экранирования в общем случае формируется следующим образом: <code>[Префикс][:КлючДиагностики]-[ФлагАктивации]</code>. Теперь по-подробнее.</p>
 <ul>
@@ -382,12 +411,12 @@
 <li><code>ФлагАктивации</code> строковый признак включения/выключения диагностики. Поддерживается русский (<code>вкл</code> и <code>выкл</code>) и английский (<code>on</code> и <code>off</code>) варианты. </li>
 </ul>
 <p>Для того, чтобы отключить <strong>ВСЕ</strong> диагностики для части кода, необходимо опустить указание ключа диагностики.</p>
-<h2 id="_3">Примеры и варианты использования</h2>
-<h3 id="_4">Отключить все диагностики в модуле</h3>
+<h2 id="_3">Примеры и варианты использования<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="_4">Отключить все диагностики в модуле<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <p>Для отключения всех диагностик в модуле, т.е. по-сути скрыть модуль от анализатора BSL LS, необходимо в начале модуля вставить комментарий <code>// BSLLS-off</code> (или <code>// BSLLS-выкл</code>)</p>
-<h3 id="_5">Отключить конкретные диагностики в модуле</h3>
+<h3 id="_5">Отключить конкретные диагностики в модуле<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <p>Для отключения конкретных диагностик в модуле (возьмем для примера когнитивную сложность <code>CognitiveComplexity</code> и ограничение на размер метода <code>MethodSize</code>), необходимо в начале модуля вставить комментарий <code>// BSLLS:CognitiveComplexity-off</code> и <code>// BSLLS:MethodSize-off</code> (или <code>// BSLLS:CognitiveComplexity-выкл</code> и <code>// BSLLS:MethodSize-выкл</code>)</p>
-<h3 id="_6">Отключить все диагностики для участка кода</h3>
+<h3 id="_6">Отключить все диагностики для участка кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <p>Если необходимо отключить диагностики для участка кода, оставив возможность BSL LS анализировать оставшие, необходимо <code>обернуть</code> скрываемый участок кода по примеру</p>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS-off</span>
 <span class="k">Процедура</span> <span class="nv">СкрываемаяОтBSLLSПроцедура</span><span class="p">()</span>
@@ -401,7 +430,7 @@
 </pre></div>
 
 
-<h3 id="_7">Отключить конкретные диагностики для участка кода</h3>
+<h3 id="_7">Отключить конкретные диагностики для участка кода<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
 <p>Если необходимо отключить конкретные диагностики (возьмем для примера когнитивную сложность <code>CognitiveComplexity</code> и ограничение на размер метода <code>MethodSize</code>) для участка кода, необходимо <code>обернуть</code> скрываемый участок кода по примеру</p>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:MethodSize-off</span>
 <span class="k">Процедура</span> <span class="nv">СкрываемаяОтMethodSizeПроцедура</span><span class="p">()</span>
@@ -432,7 +461,7 @@
 </pre></div>
 
 
-<h3 id="_8">Отключить диагностику для одной строки</h3>
+<h3 id="_8">Отключить диагностику для одной строки<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
 <p>Для экранирование одной строки можно использовать <code>обертку</code> как в примере выше, но удобнее использовать <code>висячий комментарий</code>, т.е. комментарий, расположенный в конце строки, пример</p>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ВидимаяBSLLS</span><span class="p">()</span>
     <span class="c c-Singleline">// С помощью висячего комментария скрыта следующая строка от диагностики &quot;Каноническое написание ключевых слов&quot;</span>
@@ -484,7 +513,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

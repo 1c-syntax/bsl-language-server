@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/MissingSpace/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -298,15 +327,36 @@
       
         <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
-    Основные параметры
+    Параметры
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    Описание диагностики
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Примеры
   </a>
   
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    Дополнительные параметры
+  <a href="#checkspacetorightofunary" class="md-nav__link">
+    Использование параметра checkSpaceToRightOfUnary
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#allowmultiplecommas" class="md-nav__link">
+    Использование параметра allowMultipleCommas
   </a>
   
 </li>
@@ -335,25 +385,78 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/MissingSpace.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="-lt-gt-ltgt-lt-gt">Пропущены пробелы слева или справа от операторов <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code>, а так же справа от <code>,</code> и <code>;</code></h1>
+                <h1 id="-lt-gt-ltgt-lt-gt">Пропущены пробелы слева или справа от операторов <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code>, а так же справа от <code>,</code> и <code>;</code><a class="headerlink" href="#-lt-gt-ltgt-lt-gt" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Тип</th>
+<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Важность</th>
+<th align="center">Включена<br/>по умолчанию</th>
+<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Тэги</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Дефект кода</code></td>
+<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>Информационный</code></td>
+<td align="center"><code>Да</code></td>
+<td align="center"><code>1</code></td>
+<td align="center"><code>badpractice</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="left">Описание</th>
+<th align="center">Значение по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>listForCheckLeft</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="left"><code>Список символов для проверки слева (разделенные пробелом). Например: ) =</code></td>
+<td align="center"><code>""</code></td>
+</tr>
+<tr>
+<td align="center"><code>listForCheckRight</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="left"><code>Список символов для проверки справа (разделенные пробелом). Например: ( =</code></td>
+<td align="center"><code>", ;"</code></td>
+</tr>
+<tr>
+<td align="center"><code>listForCheckLeftAndRight</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="left"><code>Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % &lt; &gt;</code></td>
+<td align="center"><code>"+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;="</code></td>
+</tr>
+<tr>
+<td align="center"><code>checkSpaceToRightOfUnary</code></td>
+<td align="center"><code>Число</code></td>
+<td align="left"><code>Проверять наличие пробела справа от унарных знаков (+ -)</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+<tr>
+<td align="center"><code>allowMultipleCommas</code></td>
+<td align="center"><code>Число</code></td>
+<td align="left"><code>Разрешать несколько запятых подряд</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Для улучшения читаемости кода слева и справа от операторов <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code> должны быть пробелы.
-Так же пробел должен быть справа от <code>,</code> и <code>;</code>  </p>
-<h2 id="_1">Основные параметры</h2>
-<p>Символы (или группы символов) для проверки задаются тремя списками. Символы в списках необходимо разделять пробелами.</p>
-<ul>
-<li>
-<p><strong><code>listForCheckLeft</code></strong> - <code>Строка</code> - Символы  слева от которых нужно проверять пробел.
- Список по-умолчанию пустой.</p>
-</li>
-<li>
-<p><strong><code>listForCheckRight</code></strong> - <code>Строка</code> - Символы справа от которых нужно проверять пробел.
- Значение по-умолчанию <code>, ;</code></p>
-</li>
-<li>
-<p><strong><code>listForCheckLeftAndRight</code></strong> - <code>Строка</code> - Символы справа от которых нужно проверять пробел.
- Значение по-умолчанию <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></p>
-</li>
-</ul>
+Так же пробел должен быть справа от <code>,</code> и <code>;</code></p>
+<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Плохо</p>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ВычислитьСумму</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span><span class="nv">Параметр2</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">Параметр1</span><span class="o">=</span><span class="nv">Параметр2</span> <span class="k">Тогда</span>
@@ -372,31 +475,32 @@
 </pre></div>
 
 
-<h3 id="_2">Дополнительные параметры</h3>
-<ul>
-<li>
-<p><strong><code>checkSpaceToRightOfUnary</code></strong> - <code>Булево</code> - Проверять пробел справа от унарного оператора (+ и -).
-Парметр имеет смысл, только если оператор присутствует в одном из трех основных параметров. Значение по-умолчанию <code>false</code></p>
-<p>При значении <code>false</code> 
-<code>bsl
-А = -Б;     // Хорошо
-А = - Б;    // Хорошо</code>
-При значении <code>true</code> 
-<code>bsl
-А = -Б;     // Плохо
-А = - Б;    // Хорошо</code>
-* <strong><code>allowMultipleCommas</code></strong> - <code>Булево</code> - Разрешить несколько запятых подряд.
-Парметр имеет смысл, только если <code>,</code> присутствует в одном из трех основных параметров. Значение по-умолчанию <code>false</code></p>
-<p>При значении <code>false</code> 
-<code>bsl
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Плохо
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Хорошо</code>
-При значении <code>true</code> 
-<code>bsl
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Хорошо
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Хорошо</code></p>
-</li>
-</ul>
+<h3 id="checkspacetorightofunary">Использование параметра <code>checkSpaceToRightOfUnary</code><a class="headerlink" href="#checkspacetorightofunary" title="Permanent link">&para;</a></h3>
+<p>Параметр имеет смысл, только если унарный оператор присутствует в одном из трех основных параметров.</p>
+<p>При значении <code>false</code> </p>
+<div class="codehilite"><pre><span></span><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">Б</span><span class="p">;</span>     <span class="c c-Singleline">// Хорошо</span>
+<span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">Б</span><span class="p">;</span>    <span class="c c-Singleline">// Хорошо</span>
+</pre></div>
+
+
+<p>При значении <code>true</code></p>
+<div class="codehilite"><pre><span></span><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">Б</span><span class="p">;</span>     <span class="c c-Singleline">// Плохо</span>
+<span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">Б</span><span class="p">;</span>    <span class="c c-Singleline">// Хорошо</span>
+</pre></div>
+
+
+<h3 id="allowmultiplecommas">Использование параметра <code>allowMultipleCommas</code><a class="headerlink" href="#allowmultiplecommas" title="Permanent link">&para;</a></h3>
+<p>Параметр имеет смысл, только если <code>,</code> присутствует в одном из трех основных параметров. Значение по-умолчанию <code>false</code></p>
+<p>При значении <code>false</code></p>
+<div class="codehilite"><pre><span></span>    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,,,,</span> <span class="nv">Отказ</span><span class="p">);</span>        <span class="c c-Singleline">// Плохо</span>
+    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Отказ</span><span class="p">);</span>     <span class="c c-Singleline">// Хорошо</span>
+</pre></div>
+
+
+<p>При значении <code>true</code></p>
+<div class="codehilite"><pre><span></span>    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,,,,</span> <span class="nv">Отказ</span><span class="p">);</span>        <span class="c c-Singleline">// Хорошо</span>
+    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Отказ</span><span class="p">);</span>     <span class="c c-Singleline">// Хорошо</span>
+</pre></div>
                 
                   
                 
@@ -440,7 +544,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/contributing/DiagnostcAddSettings/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -349,60 +378,56 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/contributing/DiagnostcAddSettings.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Добавление параметров для диагностики</h1>
+                <h1 id="_1">Добавление параметров для диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>Некоторые диагностики могут иметь параметры, позволяющие конечным пользователям настраивать алгоритм работы.<br />
 В качестве примера, возможным параметром может быть максимальная длина строки для замечания на длинные строки, перечень числовых констант, не являющихся магическими числами.</p>
-<h2 id="_2">Реализация параметра диагностики</h2>
+<h2 id="_2">Реализация параметра диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Для реализации параметра диагностики, необходимо внести следующие изменения в файлы, реализующие диагностику.</p>
-<h3 id="_3">Доработка класса диагностики</h3>
+<h3 id="_3">Доработка класса диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p>В класс диагностики необходимо добавить константное поле, в котором будет сохранено значение параметра по-умолчанию.
-Например <code>private static final String DEFAULT_COMMENTS_ANNOTATION = "//@";</code>. </p>
+Например <code>private static final String DEFAULT_COMMENTS_ANNOTATION = "//@";</code>.</p>
 <p>Необходимо добавить приватное поле, в котором будет хранится значение параметра. Поле необходимо аннотировать <code>@DiagnosticParameter</code> и указать тип параметра, значение по умолчанию (значение всегда строкового типа), а также описание параметра.<br />
 Например</p>
-<div class="codehilite"><pre><span></span><span class="nd">@DiagnosticParameter</span><span class="o">(</span>
-    <span class="n">type</span> <span class="o">=</span> <span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span>
-    <span class="n">defaultValue</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="o">,</span>
+<div class="codehilite"><pre><span></span><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
+    <span class="n">type</span> <span class="o">=</span> <span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">,</span>
+    <span class="n">defaultValue</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="p">,</span>
     <span class="n">description</span> <span class="o">=</span> <span class="s">&quot;Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)&quot;</span>
-  <span class="o">)</span>
-  <span class="kd">private</span> <span class="n">String</span> <span class="n">commentsAnnotation</span> <span class="o">=</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="o">;</span>
+  <span class="p">)</span>
+  <span class="kd">private</span> <span class="n">String</span> <span class="n">commentsAnnotation</span> <span class="o">=</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="p">;</span>
 </pre></div>
 
 
 <p>Следующим шагом, необходимо реализовать метод установки значения <code>configure</code>.<br />
 Например</p>
 <div class="codehilite"><pre><span></span> <span class="nd">@Override</span>
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">configuration</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
-      <span class="k">return</span><span class="o">;</span>
-    <span class="o">}</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">configuration</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
 
-    <span class="k">this</span><span class="o">.</span><span class="na">commentsAnnotation</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">configuration</span><span class="o">.</span><span class="na">getOrDefault</span><span class="o">(</span><span class="s">&quot;commentsAnnotation&quot;</span><span class="o">,</span> <span class="n">commentsAnnotation</span><span class="o">);</span>
-  <span class="o">}</span>
+    <span class="k">this</span><span class="p">.</span><span class="na">commentsAnnotation</span> <span class="o">=</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span> <span class="n">configuration</span><span class="p">.</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">&quot;commentsAnnotation&quot;</span><span class="p">,</span> <span class="n">commentsAnnotation</span><span class="p">);</span>
+  <span class="p">}</span>
 </pre></div>
 
 
-<h3 id="_4">Доработка тестов</h3>
+<h3 id="_4">Доработка тестов<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <p>Обязательно нужно добавить тест для случая изменения настроек диагностики.<br />
 Тест добавляется во все тот же класс теста диагностики <em>(отдельный метод для каждой комбинации вариантов настроек диагностики)</em>. В начале теста необходимо выполнить установку значения параметра диагностики, последующие действия аналогичны общим правилам написания тестов.<br />
-Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по-умолчанию, используя метод <code>DiagnosticProvider.getDefaultDiagnosticConfiguration()</code> для текущей диагностики <code>getDiagnosticInstance()</code>. Затем выполнить изменение значения параметра, путем добавления в коллекцию конфигурации, а затем переконфигурировать текущую диагностику, обратившись к методу <code>configure</code>.<br />
+Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по-умолчанию, используя метод <code>getDefaultDiagnosticConfiguration()</code> из метаданных текущей диагностики <code>diagnosticInstance.getInfo()</code>. Затем выполнить изменение значения параметра, путем добавления в коллекцию конфигурации, а затем переконфигурировать текущую диагностику, обратившись к методу <code>configure</code>.<br />
 Пример</p>
 <div class="codehilite"><pre><span></span><span class="c1">// получение текущей конфигурации диагностики</span>
-<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">DiagnosticProvider</span><span class="o">.</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="o">(</span><span class="n">getDiagnosticInstance</span><span class="o">());</span>
+<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span>
 
 <span class="c1">// установка нового значения</span>
-<span class="n">configuration</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;commentsAnnotation&quot;</span><span class="o">,</span> <span class="s">&quot;//(с)&quot;</span><span class="o">);</span>
+<span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;commentsAnnotation&quot;</span><span class="p">,</span> <span class="s">&quot;//(с)&quot;</span><span class="p">);</span>
 
 <span class="c1">// переконфигурирование</span>
-<span class="n">getDiagnosticInstance</span><span class="o">().</span><span class="na">configure</span><span class="o">(</span><span class="n">configuration</span><span class="o">);</span>
+<span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
 </pre></div>
 
 
-<h3 id="_5">Доработка документации</h3>
-<p>Все параметры диагностики в обязательном порядке должны быть отражены в ее описании (для обоих поддерживаемых языков). В соответствии с шаблоном, это может выглядеть так  </p>
-<div class="codehilite"><pre><span></span><span class="gu">##</span> Параметры
-
-<span class="k">*</span> <span class="sb">`commentsAnnotation`</span> - <span class="sb">`Строка`</span> - Пропускать комментарии, начинающиеся с указанных подстрок. Список через запятую. Значение по-умолчанию: <span class="sb">`//@`</span>.
-</pre></div>
+<h3 id="_5">Доработка документации<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>Добавление информации о параметрах диагностики в документацию вручную не требуется: после добавления/изменения параметров диагностики необходимо запустить gradlew задачу <code>updateDiagnosticDocs</code>, которая самостоятельно выполнит необходимые правки.</p>
                 
                   
                 
@@ -446,7 +471,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

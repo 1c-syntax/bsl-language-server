@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/UsingHardcodePath/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,15 +34,15 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
-        <title>Хранение путей к файлам и ip-адресов в коде - BSL Language Server Dev</title>
+        <title>Хранение путей к файлам в коде - BSL Language Server Dev</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -85,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#ip-" tabindex="1" class="md-skip">
+      <a href="#_1" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -111,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Хранение путей к файлам и ip-адресов в коде
+                Хранение путей к файлам в коде
               
             </span>
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -297,15 +326,35 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Параметры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
+    Описание диагностики
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     Особенности
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Примеры
   </a>
   
 </li>
@@ -329,29 +378,74 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UsingHardcodePath.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="ip-">Хранение путей к файлам и ip-адресов в коде</h1>
-<p>Запрещено хранить в коде:
-* Пути к файлам и папкам (Windows, Unix)
-* Сетевые адрес (ip6, ip4)</p>
-<h2 id="_1">Параметры</h2>
+                <h1 id="_1">Хранение путей к файлам в коде<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Тип</th>
+<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Важность</th>
+<th align="center">Включена<br/>по умолчанию</th>
+<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Тэги</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Ошибка</code></td>
+<td align="center"><code>BSL</code></td>
+<td align="center"><code>Критичный</code></td>
+<td align="center"><code>Да</code></td>
+<td align="center"><code>15</code></td>
+<td align="center"><code>standard</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">Параметры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="left">Описание</th>
+<th align="center">Значение по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>searchWordsStdPathsUnix</code></td>
+<td align="center"><code>Регулярное выражение</code></td>
+<td align="left"><code>Ключевые слова поиска стандартных корневых каталогов Unix</code></td>
+<td align="center"><code>"bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="_3">Описание диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>Запрещено хранить в коде:</p>
 <ul>
-<li><code>searchWordsExclusion</code> - <code>Строка</code> - Ключевые слова поиска для исключения выражений при поиске IP адресов. 
-По умолчанию <code>Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver</code>.</li>
-<li><code>searchWordsStdPathsUnix</code> - <code>Строка</code> - Ключевые слова поиска стандартных корневых каталогов Unix. 
-По умолчанию <code>bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var</code>.</li>
-<li><code>enableSearchNetworkAddresses</code> - <code>Булево</code> - Использовать поиск сетевых адресов. По умолчанию <code>Да</code>.</li>
+<li>Пути к файлам и папкам (Windows, Unix)</li>
 </ul>
-<p>Есть как минимум несколько способов правильного хранения такой информации:
-* Хранение в константе.
-* Хранение в регистре сведений.
-* Хранение в отдельном модулей, в котором отключена проверка правила (не рекомендуется).
-* Хранение в справочнике, узле плана обмена и т.д..</p>
-<p><strong>Неправильно:</strong></p>
+<p>Есть как минимум несколько способов правильного хранения такой информации:</p>
+<ul>
+<li>Хранение в константе.</li>
+<li>Хранение в регистре сведений.</li>
+<li>Хранение в отдельном модулей, в котором отключена проверка правила (не рекомендуется).</li>
+<li>Хранение в справочнике, узле плана обмена и т.д..</li>
+</ul>
+<h3 id="_4">Особенности<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>При поиске путей Windows / Unix происходит проверка и на URL в строке. Ключевые слова поиска URL:
+* <code>http</code>
+* <code>https</code>
+* <code>ftp</code></p>
+<h2 id="_5">Примеры<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>Неправильно:</p>
 <div class="codehilite"><pre><span></span><span class="nv">КаталогОбмена</span> <span class="o">=</span> <span class="s1">&quot;c:/обмен/обменданными&quot;</span><span class="p">;</span>
 </pre></div>
 
 
-<p><strong>Правильно:</strong></p>
+<p>Правильно:</p>
 <div class="codehilite"><pre><span></span><span class="nv">КаталогОбмена</span> <span class="o">=</span> <span class="nb">Константы</span><span class="o">.</span><span class="nv">КаталогОбмена</span><span class="o">.</span><span class="nv">Получить</span><span class="p">();</span>
 </pre></div>
 
@@ -359,13 +453,6 @@
 <p>или</p>
 <div class="codehilite"><pre><span></span><span class="nv">КаталогОбмена</span> <span class="o">=</span> <span class="nv">ОбменДаннымиПовтИсп</span><span class="o">.</span><span class="nv">КаталогОбмена</span><span class="p">();</span>
 </pre></div>
-
-
-<h2 id="_2">Особенности</h2>
-<p>При поиске путей Windows / Unix происходит проверка и на URL в строке. Ключевые слова поиска URL:
-* <code>http</code>
-* <code>https</code>
-* <code>ftp</code></p>
                 
                   
                 
@@ -409,7 +496,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

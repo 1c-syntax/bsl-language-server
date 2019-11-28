@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/reporters/console/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -329,29 +358,29 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/reporters/console.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="console-reporter">Console reporter</h1>
+                <h1 id="console-reporter">Console reporter<a class="headerlink" href="#console-reporter" title="Permanent link">&para;</a></h1>
 <p>Ключ репортера - <code>console</code></p>
-<h2 id="_1">Описание</h2>
+<h2 id="_1">Описание<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Выводит результаты анализа в stdout и/или подключенные к логгеру. Выводится результат работы метода <code>toString()</code> объекта <a href="https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/reporter/AnalysisInfo.java">AnalysisInfo</a></p>
-<h2 id="_2">Пример вывода</h2>
-<div class="codehilite"><pre><span></span><span class="nv">Analysis</span> <span class="nv">date</span>: <span class="mi">2019</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">28</span><span class="nv">T15</span>:<span class="mi">32</span>:<span class="mi">06</span>.<span class="mi">856</span>
-[<span class="nv">FileInfo</span><span class="ss">(</span><span class="nv">path</span><span class="o">=</span><span class="nv">C</span>:\<span class="nv">src</span>\<span class="nv">cf</span>\<span class="nv">Catalogs</span>\МойСправочник\<span class="nv">Ext</span>\<span class="nv">ManagerModule</span>.<span class="nv">bsl</span>, <span class="nv">diagnostics</span><span class="o">=</span>[]<span class="ss">)</span>, <span class="nv">FileInfo</span><span class="ss">(</span><span class="nv">path</span><span class="o">=</span><span class="nv">C</span>:\<span class="nv">src</span>\<span class="nv">cf</span>\<span class="nv">Catalogs</span>\АккредитационныеКомиссии\<span class="nv">Ext</span>\<span class="nv">ObjectModule</span>.<span class="nv">bsl</span>, <span class="nv">diagnostics</span><span class="o">=</span>[<span class="nv">Diagnostic</span> [
-  <span class="nv">range</span> <span class="o">=</span> <span class="nv">Range</span> [
-    <span class="nv">start</span> <span class="o">=</span> <span class="nv">Position</span> [
-      <span class="nv">line</span> <span class="o">=</span> <span class="mi">55</span>
-      <span class="nv">character</span> <span class="o">=</span> <span class="mi">0</span>
-    ]
-    <span class="k">end</span> <span class="o">=</span> <span class="nv">Position</span> [
-      <span class="nv">line</span> <span class="o">=</span> <span class="mi">55</span>
-      <span class="nv">character</span> <span class="o">=</span> <span class="mi">140</span>
-    ]
-  ]
-  <span class="nv">severity</span> <span class="o">=</span> <span class="nv">Information</span>
-  <span class="nv">code</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">LineLengthDiagnostic</span><span class="s2">&quot;</span>
-  <span class="nv">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">bsl-language-server</span><span class="s2">&quot;</span>
-  <span class="nv">message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">Превышена длина строки</span><span class="s2">&quot;</span>
-  <span class="nv">relatedInformation</span> <span class="o">=</span> <span class="nv">null</span>
-]]<span class="ss">)</span>]
+<h2 id="_2">Пример вывода<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><span class="err">Analysis date: 2019-01-28T15:32:06.856</span>
+<span class="err">[FileInfo(path=C:\src\cf\Catalogs\МойСправочник\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [</span>
+<span class="err">  range = Range [</span>
+<span class="err">    start = Position [</span>
+<span class="err">      line = 55</span>
+<span class="err">      character = 0</span>
+<span class="err">    ]</span>
+<span class="err">    end = Position [</span>
+<span class="err">      line = 55</span>
+<span class="err">      character = 140</span>
+<span class="err">    ]</span>
+<span class="err">  ]</span>
+<span class="err">  severity = Information</span>
+<span class="err">  code = &quot;LineLengthDiagnostic&quot;</span>
+<span class="err">  source = &quot;bsl-language-server&quot;</span>
+<span class="err">  message = &quot;Превышена длина строки&quot;</span>
+<span class="err">  relatedInformation = null</span>
+<span class="err">]])]</span>
 </pre></div>
                 
                   
@@ -396,7 +425,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         

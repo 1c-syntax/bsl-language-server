@@ -11,6 +11,8 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/CognitiveComplexity/">
+      
       
       
         <meta name="lang:clipboard.copy" content="Копировать в буфер">
@@ -32,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
     
     
       
@@ -40,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -51,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -63,7 +65,34 @@
     <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
+    
+      
+        
+<script>
+  window.ga = window.ga || function() {
+    (ga.q = ga.q || []).push(arguments)
+  }
+  ga.l = +new Date
+  /* Setup integration and send page view */
+  ga("create", "UA-150754232-1", "1c-syntax.github.io")
+  ga("set", "anonymizeIp", true)
+  ga("send", "pageview")
+  /* Register handler to log search on blur */
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.forms.search) {
+      var query = document.forms.search.query
+      query.addEventListener("blur", function() {
+        if (this.value) {
+          var path = document.location.pathname;
+          ga("send", "pageview", path + "?q=" + this.value)
+        }
+      })
+    }
+  })
+</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
       
     
     
@@ -94,7 +123,7 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
             <img src="../../assets/images/logo.png" width="24" height="24">
           
@@ -186,7 +215,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
   <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="BSL Language Server Dev" class="md-nav__button md-logo">
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
         <img src="../../assets/images/logo.png" width="48" height="48">
       
@@ -305,6 +334,14 @@
       
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
+    Описание диагностики
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     Подсчет Когнитивной сложности
   </a>
   
@@ -319,14 +356,14 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении
   </a>
   
@@ -336,10 +373,22 @@
     </nav>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    Когнитивная сложность на примерах
+  <a href="#_7" class="md-nav__link">
+    Примеры
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    Источники
   </a>
   
 </li>
@@ -363,19 +412,63 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/CognitiveComplexity.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Когнитивная сложность</h1>
+                <h1 id="_1">Когнитивная сложность<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center">Тип</th>
+<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Важность</th>
+<th align="center">Включена<br/>по умолчанию</th>
+<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Тэги</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>Дефект кода</code></td>
+<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>Критичный</code></td>
+<td align="center"><code>Да</code></td>
+<td align="center"><code>15</code></td>
+<td align="center"><code>brainoverload</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">Параметры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="left">Описание</th>
+<th align="center">Значение по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>complexityThreshold</code></td>
+<td align="center"><code>Число</code></td>
+<td align="left"><code>Допустимая когнитивная сложность метода</code></td>
+<td align="center"><code>15</code></td>
+</tr>
+<tr>
+<td align="center"><code>checkModuleBody</code></td>
+<td align="center"><code>Булево</code></td>
+<td align="left"><code>Проверять тело модуля</code></td>
+<td align="center"><code>true</code></td>
+</tr>
+</tbody>
+</table>
+<!-- Блоки выше заполняются автоматически, не трогать -->
+
+<h2 id="_3">Описание диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Когнитивная сложность показывает на сколько сложно воспринимать написанный код.<br />
 Высокая когнитивная сложность явно указывает на необходимость проведения рефакторинга кода для облегчения его будущей поддержки.<br />
 Наиболее эффективным способом снижения когнитивной сложности является декомпозиция кода, дробление методов на более простые, а также оптимизация логических выражений.</p>
-<h2 id="_2">Параметры</h2>
-<ul>
-<li><code>complexityThreshold</code> - <code>Число</code> - Допустимая когнитивная сложность метода. Значение по-умолчанию: 15.</li>
-<li><code>checkModuleBody</code> - <code>Булево</code> - Проверять тело модуля. Значение по-умолчанию: Да.</li>
-</ul>
-<h2 id="_3">Подсчет Когнитивной сложности</h2>
-<p>Ниже приведены правила анализа когда, условия повышения когнитивной сложности.
-<strong>Источник</strong>: <a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a></p>
-<h3 id="1">Каждый следующий блок увеличивает сложность на 1</h3>
+<h3 id="_4">Подсчет Когнитивной сложности<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>Ниже приведены правила анализа когда, условия повышения когнитивной сложности.</p>
+<h4 id="1">Каждый следующий блок увеличивает сложность на 1<a class="headerlink" href="#1" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>                <span class="c c-Singleline">// +1</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
@@ -431,7 +524,7 @@
 </pre></div>
 
 
-<h3 id="_4">За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности</h3>
+<h4 id="_5">За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
@@ -461,8 +554,8 @@
 </pre></div>
 
 
-<h3 id="_5">Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении</h3>
-<h2 id="_6"><code>Когнитивная сложность</code> на примерах</h2>
+<h4 id="_6">Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
+<h2 id="_7">Примеры<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
 <p>Ниже на примерах кода произведен рассчет когнитивной сложности методов.</p>
 <div class="codehilite"><pre><span></span><span class="k">Функция</span> <span class="nv">Пример1</span><span class="p">(</span><span class="nv">ТипКласса</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">ТипКласса</span><span class="o">.</span><span class="nv">Неизвестен</span><span class="p">()</span> <span class="k">Тогда</span>                                                  <span class="c c-Singleline">// +1, условие, вложенности нет</span>
@@ -552,6 +645,12 @@
     <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецФункции</span>
 </pre></div>
+
+
+<h2 id="_8">Источники<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a></li>
+</ul>
                 
                   
                 
@@ -595,7 +694,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
       
         
         
