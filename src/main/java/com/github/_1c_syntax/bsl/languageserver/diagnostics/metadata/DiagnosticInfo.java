@@ -151,7 +151,7 @@ public class DiagnosticInfo {
   }
 
   public Optional<DiagnosticParameterInfo> getParameter(String parameterName) {
-    return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findFirst();
+    return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findAny();
   }
 
   public Map<String, Object> getDefaultConfiguration() {
