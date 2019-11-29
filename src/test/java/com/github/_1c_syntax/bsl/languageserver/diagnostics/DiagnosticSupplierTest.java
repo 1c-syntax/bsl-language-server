@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticI
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -173,6 +174,35 @@ class DiagnosticSupplierTest {
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
     ).isFalse();
+
+  }
+
+  @Test
+  void testModuleMode() {
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommandModule, new CompatibilityMode(3, 10))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isTrue();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.FormModule, new CompatibilityMode(3, 10))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isTrue();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommonModule, new CompatibilityMode(3, 10))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isFalse();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null, new CompatibilityMode(3, 10))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isTrue();
 
   }
 
