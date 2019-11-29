@@ -202,6 +202,12 @@ class DiagnosticSupplierTest {
       diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null, new CompatibilityMode(3, 10))
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isFalse();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null, new CompatibilityMode(3, 10))
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof EmptyCodeBlockDiagnostic)
     ).isTrue();
 
   }

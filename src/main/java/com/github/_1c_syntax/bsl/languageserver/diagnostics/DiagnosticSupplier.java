@@ -136,7 +136,11 @@ public class DiagnosticSupplier {
 
   private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype) {
     ModuleType[] diagnosticModules = diagnosticInfo.getModules();
-    if (diagnosticModules.length == 0 || moduletype == null) {
+    if (diagnosticModules.length != 0 && moduletype == null) {
+      return false;
+    }
+
+    if (diagnosticModules.length == 0) {
       return true;
     }
 
