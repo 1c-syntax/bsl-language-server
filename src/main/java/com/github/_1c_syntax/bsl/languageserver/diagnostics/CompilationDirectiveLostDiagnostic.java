@@ -35,14 +35,14 @@ import org.antlr.v4.runtime.tree.ParseTree;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
+  modules = {
+    ModuleType.FormModule,
+    ModuleType.CommandModule
+  },
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.UNPREDICTABLE
-  },
-  modules = {
-    ModuleType.FormModule,
-    ModuleType.CommandModule
   }
 
 )

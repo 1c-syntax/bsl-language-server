@@ -56,7 +56,11 @@ public class DiagnosticSupplier {
       .findAny();
   }
 
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, ModuleType moduleType, CompatibilityMode compatibilityMode) {
+  public List<BSLDiagnostic> getDiagnosticInstances(
+    FileType fileType,
+    ModuleType moduleType,
+    CompatibilityMode compatibilityMode) {
+
     return diagnosticClasses.stream()
       .map(this::createDiagnosticInfo)
       .filter(this::isEnabled)
