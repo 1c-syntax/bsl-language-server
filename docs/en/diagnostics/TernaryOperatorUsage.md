@@ -1,4 +1,4 @@
-# Ternary operator usage
+# Ternary operator usage (TernaryOperatorUsage)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -45,4 +45,20 @@ Good:
 If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
       Status = "Done";
 End If;
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:TernaryOperatorUsage-off
+// BSLLS:TernaryOperatorUsage-on
+```
+
+### Parameter for config
+
+```json
+"TernaryOperatorUsage": false
 ```

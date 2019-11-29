@@ -1,4 +1,4 @@
-# Using hardcode file paths in code
+# Using hardcode file paths in code (UsingHardcodePath)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -50,4 +50,22 @@ or
 
 ```bsl
 ExchangeFolder = DataExchangeReuse.ExchangeFolder();
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingHardcodePath-off
+// BSLLS:UsingHardcodePath-on
+```
+
+### Parameter for config
+
+```json
+"UsingHardcodePath": {
+    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
+}
 ```

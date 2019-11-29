@@ -1,4 +1,4 @@
-# Empty code block
+# Empty code block (EmptyCodeBlock)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -19,3 +19,21 @@ Empty blocks are a sign of a possible error:
 - Deleted content
 
 Empty blocks of code must be filled or removed.
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:EmptyCodeBlock-off
+// BSLLS:EmptyCodeBlock-on
+```
+
+### Parameter for config
+
+```json
+"EmptyCodeBlock": {
+    "commentAsCode": false
+}
+```

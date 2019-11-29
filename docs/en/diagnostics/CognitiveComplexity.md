@@ -1,4 +1,4 @@
-# Cognitive complexity
+# Cognitive complexity (CognitiveComplexity)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -214,3 +214,22 @@ EndFunction
 ## Sources
 
 * [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:CognitiveComplexity-off
+// BSLLS:CognitiveComplexity-on
+```
+
+### Parameter for config
+
+```json
+"CognitiveComplexity": {
+    "complexityThreshold": 15,
+    "checkModuleBody": true
+}
+```

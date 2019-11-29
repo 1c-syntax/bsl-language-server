@@ -1,4 +1,4 @@
-# Partially localized text is used in the StrTemplate function
+# Partially localized text is used in the StrTemplate function (MultilingualStringUsingWithTemplate)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -18,3 +18,19 @@ Source: [localization requirements] (https://its.1c.ru/db/v8std/content/763/hdoc
 ## Options
 
 * `Declared languages` -` String` - Comma-separated lines of language codes that support configuration. For example: `ru, en`
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MultilingualStringUsingWithTemplate-off
+// BSLLS:MultilingualStringUsingWithTemplate-on
+```
+
+### Parameter for config
+
+```json
+"MultilingualStringUsingWithTemplate": false
+```

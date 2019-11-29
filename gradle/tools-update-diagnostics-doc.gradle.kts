@@ -29,8 +29,17 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
 
     private var srcPath = "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics"
     private var resourcePath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/diagnostics"
+
     private var defaultValues = hashMapOf<String, String>()
-    private var templateDocHeader = "# <Description>\n\n<Metadata>\n<Params><!-- Блоки выше заполняются автоматически, не трогать -->\n"
+
+    private var templateDocHeader = "# <Description> (<DiagnosticKey>)\n\n<Metadata>\n<Params>" +
+           "<!-- Блоки выше заполняются автоматически, не трогать -->\n"
+    private var templateDocFooter =
+            "## <Helpers>\n\n" +
+            "<!-- Блоки ниже заполняются автоматически, не трогать -->\n" +
+            "### <DiagnosticIgnorance>\n\n```bsl\n// BSLLS:<DiagnosticKey>-off\n// BSLLS:<DiagnosticKey>-on\n```\n\n" +
+            "### <ParameterConfig>\n\n```json\n\"<DiagnosticKey>\": <DiagnosticConfig>\n```\n"
+
     private var templateDocMetadata = "| <TypeHeader> | <ScopeHeader> | <SeverityHeader> | <ActivatedHeader> | <MinutesHeader> | <TagsHeader> |\n" +
             "| :-: | :-: | :-: | :-: | :-: | :-: |\n" +
             "| `<Type>` | `<Scope>` | `<Severity>` | `<Activated>` | `<Minutes>` | <Tags> |\n"
@@ -143,21 +152,46 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         val text = docPath.readText(charset("UTF-8"))
 
         var header = "## Описание диагностики"
-        if (lang != "") {
-            header = "## Description"
-        }
-        val addText = templateDocHeader
+        var footer = "## Сниппеты"
+        val headerText = templateDocHeader
                 .replace("<Description>", getDiagnosticDescription(key, lang))
                 .replace("<Metadata>", makeDiagnosticMetadata(lang, metadata))
                 .replace("<Params>", makeDiagnosticParams(key, lang, metadata))
+                .replace("<DiagnosticKey>", key)
 
-        val indexHeader = text.indexOf(header)
-        if (indexHeader < 0) {
-            docPath.writeText(addText + header + "\n\n" + text, charset("UTF-8"))
+        var footerText = templateDocFooter
+                .replace("<DiagnosticKey>", key)
+                .replace("<DiagnosticConfig>", makeDiagnosticConfigExample(metadata))
+
+        if (lang == "") {
+            footerText = footerText
+                    .replace("<Helpers>", "Сниппеты")
+                    .replace("<DiagnosticIgnorance>", "Экранирование кода")
+                    .replace("<ParameterConfig>", "Параметр конфигурационного файла")
         } else {
-            docPath.writeText(addText + text.substring(indexHeader),
-                    charset("UTF-8"))
+            footerText = footerText
+                    .replace("<Helpers>", "Snippets")
+                    .replace("<DiagnosticIgnorance>", "Diagnostic ignorance in code")
+                    .replace("<ParameterConfig>", "Parameter for config")
+            header = "## Description"
+            footer = "## Snippets"
         }
+
+        var index = text.indexOf(header)
+        var newText = if (index < 0) {
+            "$headerText$header\n\n$text"
+        } else {
+            "$headerText${text.substring(index)}"
+        }
+
+        index = newText.indexOf(footer)
+        newText = if (index < 1) {
+            "${newText.trimEnd()}\n\n$footerText"
+        } else {
+            "${newText.substring(1, index - 1).trimEnd()}\n\n$footerText"
+        }
+
+        docPath.writeText(newText, charset("UTF-8"))
     }
 
     private fun getDiagnosticDescription(key: String, lang: String): String {
@@ -218,7 +252,6 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                     .replace("<Type>", typeEnMap.getOrDefault(metadata.getOrDefault("type", ""), ""))
                     .replace("<Severity>", severityEnMap.getOrDefault(metadata.getOrDefault("severity", ""), ""))
                     .replace("<Activated>", if (metadata.getOrDefault("activatedByDefault", "").toString().toLowerCase() == "true") "Yes" else "No")
-
         }
 
         return metadataBody
@@ -273,6 +306,30 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
                 }
             }
             return paramsBody + "\n"
+        }
+
+        return ""
+    }
+
+    private fun makeDiagnosticConfigExample(metadata: HashMap<String, Any>): String {
+        val params = metadata.getOrDefault("params", arrayListOf<HashMap<String, String>>())
+        if(params is ArrayList<*>) {
+
+            if (params.isEmpty()) {
+                return "false"
+            }
+
+            var configBody = ""
+            var configDelimiter = ""
+            params.forEach {
+                if (it is HashMap<*, *>) {
+                    configBody += "$configDelimiter    \"${it.getOrDefault("name", "")}\": " +
+                            "${it.getOrDefault("defaultValue", "")}"
+                    configDelimiter = ",\n"
+                }
+            }
+            configBody = "{\n${configBody}\n}"
+            return configBody
         }
 
         return ""

@@ -1,4 +1,4 @@
-# Line Length limit
+# Line Length limit (LineLength)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -18,3 +18,21 @@ If the line length is grater than 120 characters you should you line break. It i
 ## Sources
 
 * [Standart: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:LineLength-off
+// BSLLS:LineLength-on
+```
+
+### Parameter for config
+
+```json
+"LineLength": {
+    "maxLineLength": 120
+}
+```

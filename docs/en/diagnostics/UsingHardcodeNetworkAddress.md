@@ -1,4 +1,4 @@
-# Using hardcode ip addresses in code
+# Using hardcode ip addresses in code (UsingHardcodeNetworkAddress)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -34,4 +34,22 @@ Incorrect:
 Correct:
 ```bsl
 СетевойАдрес = МойМодульПовтИсп.СетевойАдресСервера();
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingHardcodeNetworkAddress-off
+// BSLLS:UsingHardcodeNetworkAddress-on
+```
+
+### Parameter for config
+
+```json
+"UsingHardcodeNetworkAddress": {
+    "searchWordsExclusion": "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"
+}
 ```

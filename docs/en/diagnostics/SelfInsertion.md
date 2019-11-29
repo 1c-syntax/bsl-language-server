@@ -1,4 +1,4 @@
-# Insert a collection into itself
+# Insert a collection into itself (SelfInsertion)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -12,3 +12,19 @@ Inserting a collection into itself results in circular references.
 ## Sources
 
 * [Search for circular links](https://its.1c.ru/db/metod8dev#content:5859:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:SelfInsertion-off
+// BSLLS:SelfInsertion-on
+```
+
+### Parameter for config
+
+```json
+"SelfInsertion": false
+```

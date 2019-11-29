@@ -1,4 +1,4 @@
-# Using synchronous calls
+# Using synchronous calls (UsingSynchronousCalls)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -49,3 +49,19 @@ Rusian variant | English variant
 - [Opt out of modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 - [Correspondence of synchronous methods to asynchronous analogues (RU)](https://its.1c.ru/db/v838doc#bookmark:dev:TI000000438)
 - [Asynchronous calls to extensions and external components (RU)](http://v8.1c.ru/o7/201412async/index.htm)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingSynchronousCalls-off
+// BSLLS:UsingSynchronousCalls-on
+```
+
+### Parameter for config
+
+```json
+"UsingSynchronousCalls": false
+```

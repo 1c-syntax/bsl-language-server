@@ -1,4 +1,4 @@
-# Source code parse error
+# Source code parse error (ParseError)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -47,3 +47,19 @@ Incorrect:
 ## Reference
 
 - [Standard: #439 Use of compilation and preprocessor directives](https://its.1c.ru/db/v8std#content:439:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:ParseError-off
+// BSLLS:ParseError-on
+```
+
+### Parameter for config
+
+```json
+"ParseError": false
+```

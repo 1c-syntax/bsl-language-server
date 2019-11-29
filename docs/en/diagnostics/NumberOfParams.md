@@ -1,4 +1,4 @@
-# Number of parameters in method
+# Number of parameters in method (NumberOfParams)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -43,3 +43,21 @@ EndProcedure
 ## Sources
 
 - [Standard: Procedure and function parameters](https://its.1c.ru/db/v8std#content:640:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:NumberOfParams-off
+// BSLLS:NumberOfParams-on
+```
+
+### Parameter for config
+
+```json
+"NumberOfParams": {
+    "maxParamsCount": 7
+}
+```

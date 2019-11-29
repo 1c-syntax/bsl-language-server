@@ -1,4 +1,4 @@
-# There are identical sub-expressions to the left and to the right of the "foo" operator
+# There are identical sub-expressions to the left and to the right of the "foo" operator (IdenticalExpressions)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -39,4 +39,20 @@ If Summ <> 0 Then
     // TODO
 
 EndIf;
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:IdenticalExpressions-off
+// BSLLS:IdenticalExpressions-on
+```
+
+### Parameter for config
+
+```json
+"IdenticalExpressions": false
 ```

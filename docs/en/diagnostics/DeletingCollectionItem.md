@@ -1,4 +1,4 @@
-# Deleting an item when iterating through collection using the operator "For each ... In ... Do"
+# Deleting an item when iterating through collection using the operator "For each ... In ... Do" (DeletingCollectionItem)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -33,3 +33,19 @@ EndDo;
 ## Sources
 
 * [1С:Программирование для начинающих. Разработка в системе "1С:Предприятие 8.3" (RU)](https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:DeletingCollectionItem-off
+// BSLLS:DeletingCollectionItem-on
+```
+
+### Parameter for config
+
+```json
+"DeletingCollectionItem": false
+```

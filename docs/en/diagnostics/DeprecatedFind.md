@@ -1,4 +1,4 @@
-# Using of the deprecated method "Find"
+# Using of the deprecated method "Find" (DeprecatedFind)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -28,3 +28,18 @@ If StrFind(Collaborator.Name, "Boris") > 0 Then
 EndIf; 
 ```
 
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:DeprecatedFind-off
+// BSLLS:DeprecatedFind-on
+```
+
+### Parameter for config
+
+```json
+"DeprecatedFind": false
+```

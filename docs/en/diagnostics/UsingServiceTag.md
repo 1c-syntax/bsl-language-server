@@ -1,4 +1,4 @@
-# Using service tags
+# Using service tags (UsingServiceTag)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -28,3 +28,21 @@ The diagnostic finds use of service tags in comments. Tags list:
 - КОНСТРУКТОР_ВВОДА_НА_ОСНОВАНИИ
 
 Tags list can be extended via options.
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingServiceTag-off
+// BSLLS:UsingServiceTag-on
+```
+
+### Parameter for config
+
+```json
+"UsingServiceTag": {
+    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
+}
+```

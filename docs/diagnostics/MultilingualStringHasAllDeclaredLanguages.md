@@ -1,4 +1,4 @@
-# Есть локализованный текст для всех заявленных в конфигурации языков
+# Есть локализованный текст для всех заявленных в конфигурации языков (MultilingualStringHasAllDeclaredLanguages)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -13,3 +13,19 @@
 ## Источники
 
 - [требования по локализации](https://its.1c.ru/db/v8std/content/763/hdoc)
+
+## Сниппеты
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Экранирование кода
+
+```bsl
+// BSLLS:MultilingualStringHasAllDeclaredLanguages-off
+// BSLLS:MultilingualStringHasAllDeclaredLanguages-on
+```
+
+### Параметр конфигурационного файла
+
+```json
+"MultilingualStringHasAllDeclaredLanguages": false
+```

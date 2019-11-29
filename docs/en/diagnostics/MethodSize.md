@@ -1,4 +1,4 @@
-# Method size 
+# Method size  (MethodSize)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -12,3 +12,21 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MethodSize-off
+// BSLLS:MethodSize-on
+```
+
+### Parameter for config
+
+```json
+"MethodSize": {
+    "maxMethodSize": 200
+}
+```
