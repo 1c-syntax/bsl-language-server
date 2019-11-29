@@ -38,7 +38,7 @@
     
     
       
-        <title>Использование сложных выражений в условии оператора "Если" - BSL Language Server Dev</title>
+        <title>Использование сложных выражений в условии оператора "Если" (IfConditionComplexity) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#ifconditioncomplexity" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Использование сложных выражений в условии оператора "Если"
+                Использование сложных выражений в условии оператора "Если" (IfConditionComplexity)
               
             </span>
           
@@ -326,23 +326,50 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Параметры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     Примеры
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -365,7 +392,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/IfConditionComplexity.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Использование сложных выражений в условии оператора "Если"<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="ifconditioncomplexity">Использование сложных выражений в условии оператора "Если" (IfConditionComplexity)<a class="headerlink" href="#ifconditioncomplexity" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -388,7 +415,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_2">Параметры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -409,9 +436,9 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_3">Описание диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Сложное выражение (содержащее более 3 логических конструкции) необходимо вынести в отдельный метод или переменную.</p>
-<h2 id="_4">Примеры<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Плохо:</p>
 <div class="codehilite"><pre><span></span><span class="k">Если</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;АнализСубконто&quot;</span>
     <span class="k">ИЛИ</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;АнализСчета&quot;</span>
@@ -461,6 +488,22 @@
         <span class="k">ИЛИ</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;ШахматнаяВедомость&quot;</span><span class="p">;</span>
 
 <span class="k">КонецФункции</span>
+</pre></div>
+
+
+<h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
+<span class="c c-Singleline">// BSLLS:IfConditionComplexity-on</span>
+</pre></div>
+
+
+<h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;IfConditionComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;maxIfConditionComplexity&quot;</span><span class="p">:</span> <span class="mi">3</span>
+<span class="p">}</span>
 </pre></div>
                 
                   

@@ -38,7 +38,7 @@
     
     
       
-        <title>Недостижимый код - BSL Language Server Dev</title>
+        <title>Недостижимый код (UnreachableCode) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#unreachablecode" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Недостижимый код
+                Недостижимый код (UnreachableCode)
               
             </span>
           
@@ -326,16 +326,43 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Примеры
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -358,7 +385,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UnreachableCode.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Недостижимый код<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="unreachablecode">Недостижимый код (UnreachableCode)<a class="headerlink" href="#unreachablecode" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -383,10 +410,10 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Код, расположенный после операторов "Возврат", "Перейти", "ВызватьИсключение", "Прервать", "Продолжить", никогда не будет исполнен.</p>
 <p>Ошибки недостижимого кода могут возникать в результате невнимательности разработчика, при редактировании "чужого кода".</p>
-<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">Пример</span><span class="p">()</span>
     <span class="k">Возврат</span><span class="p">;</span>
     <span class="c c-Singleline">// Код ниже оператора Возврат никогда не будет исполнен</span>
@@ -407,6 +434,20 @@
     <span class="k">КонецЕсли</span><span class="p">;</span>
     <span class="k">Возврат</span> <span class="nv">Параметр1</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
+</pre></div>
+
+
+<h2 id="_3">Сниппеты<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_4">Экранирование кода<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UnreachableCode-off</span>
+<span class="c c-Singleline">// BSLLS:UnreachableCode-on</span>
+</pre></div>
+
+
+<h3 id="_5">Параметр конфигурационного файла<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UnreachableCode&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </pre></div>
                 
                   

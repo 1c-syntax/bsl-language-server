@@ -38,7 +38,7 @@
     
     
       
-        <title>Присвоение переменной самой себе - BSL Language Server Dev</title>
+        <title>Присвоение переменной самой себе (SelfAssign) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#selfassign" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Присвоение переменной самой себе
+                Присвоение переменной самой себе (SelfAssign)
               
             </span>
           
@@ -326,9 +326,36 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Описание диагностики
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -351,7 +378,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/SelfAssign.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Присвоение переменной самой себе<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="selfassign">Присвоение переменной самой себе (SelfAssign)<a class="headerlink" href="#selfassign" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -376,8 +403,20 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Присвоение переменной самой себе не имеет смысла и обычно указывает на ошибку.</p>
+<h2 id="_2">Сниппеты<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_3">Экранирование кода<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:SelfAssign-off</span>
+<span class="c c-Singleline">// BSLLS:SelfAssign-on</span>
+</pre></div>
+
+
+<h3 id="_4">Параметр конфигурационного файла<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;SelfAssign&quot;</span><span class="err">:</span> <span class="kc">false</span>
+</pre></div>
                 
                   
                 

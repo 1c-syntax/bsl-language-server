@@ -38,7 +38,7 @@
     
     
       
-        <title>Процедура не должна возвращать значение - BSL Language Server Dev</title>
+        <title>Процедура не должна возвращать значение (ProcedureReturnsValue) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#procedurereturnsvalue" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Процедура не должна возвращать значение
+                Процедура не должна возвращать значение (ProcedureReturnsValue)
               
             </span>
           
@@ -326,9 +326,36 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Описание диагностики
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -351,7 +378,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/ProcedureReturnsValue.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Процедура не должна возвращать значение<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="procedurereturnsvalue">Процедура не должна возвращать значение (ProcedureReturnsValue)<a class="headerlink" href="#procedurereturnsvalue" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -376,8 +403,20 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p><code>Процедура</code>, в отличие от <code>Функции</code> не может возвращать значения. Эта диагностика находит процедуры, где есть <code>Возврат</code> со значением.</p>
+<h2 id="_2">Сниппеты<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_3">Экранирование кода<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:ProcedureReturnsValue-off</span>
+<span class="c c-Singleline">// BSLLS:ProcedureReturnsValue-on</span>
+</pre></div>
+
+
+<h3 id="_4">Параметр конфигурационного файла<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;ProcedureReturnsValue&quot;</span><span class="err">:</span> <span class="kc">false</span>
+</pre></div>
                 
                   
                 

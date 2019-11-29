@@ -38,7 +38,7 @@
     
     
       
-        <title>Хранение ip-адресов в коде - BSL Language Server Dev</title>
+        <title>Хранение ip-адресов в коде (UsingHardcodeNetworkAddress) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#ip-" tabindex="1" class="md-skip">
+      <a href="#ip-usinghardcodenetworkaddress" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Хранение ip-адресов в коде
+                Хранение ip-адресов в коде (UsingHardcodeNetworkAddress)
               
             </span>
           
@@ -346,6 +346,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
       
       
       
@@ -365,7 +392,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UsingHardcodeNetworkAddress.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="ip-">Хранение ip-адресов в коде<a class="headerlink" href="#ip-" title="Permanent link">&para;</a></h1>
+                <h1 id="ip-usinghardcodenetworkaddress">Хранение ip-адресов в коде (UsingHardcodeNetworkAddress)<a class="headerlink" href="#ip-usinghardcodenetworkaddress" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -433,6 +460,22 @@
 
 <p>Правильно:</p>
 <div class="codehilite"><pre><span></span><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="nv">МойМодульПовтИсп</span><span class="o">.</span><span class="nv">СетевойАдресСервера</span><span class="p">();</span>
+</pre></div>
+
+
+<h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-off</span>
+<span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-on</span>
+</pre></div>
+
+
+<h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UsingHardcodeNetworkAddress&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;searchWordsExclusion&quot;</span><span class="p">:</span> <span class="s2">&quot;Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver&quot;</span>
+<span class="p">}</span>
 </pre></div>
                 
                   

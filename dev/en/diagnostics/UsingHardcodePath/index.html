@@ -38,7 +38,7 @@
     
     
       
-        <title>Using hardcode file paths in code - BSL Language Server Dev</title>
+        <title>Using hardcode file paths in code (UsingHardcodePath) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#using-hardcode-file-paths-in-code" tabindex="1" class="md-skip">
+      <a href="#using-hardcode-file-paths-in-code-usinghardcodepath" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Using hardcode file paths in code
+                Using hardcode file paths in code (UsingHardcodePath)
               
             </span>
           
@@ -359,6 +359,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#snippets" class="md-nav__link">
+    Snippets
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
+    Diagnostic ignorance in code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-for-config" class="md-nav__link">
+    Parameter for config
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
       
       
       
@@ -378,7 +405,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/UsingHardcodePath.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="using-hardcode-file-paths-in-code">Using hardcode file paths in code<a class="headerlink" href="#using-hardcode-file-paths-in-code" title="Permanent link">Link</a></h1>
+                <h1 id="using-hardcode-file-paths-in-code-usinghardcodepath">Using hardcode file paths in code (UsingHardcodePath)<a class="headerlink" href="#using-hardcode-file-paths-in-code-usinghardcodepath" title="Permanent link">Link</a></h1>
 <table>
 <thead>
 <tr>
@@ -454,6 +481,22 @@
 
 <p>or</p>
 <div class="codehilite"><pre><span></span><span class="nv">ExchangeFolder</span> <span class="o">=</span> <span class="nv">DataExchangeReuse</span><span class="o">.</span><span class="nv">ExchangeFolder</span><span class="p">();</span>
+</pre></div>
+
+
+<h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UsingHardcodePath-off</span>
+<span class="c c-Singleline">// BSLLS:UsingHardcodePath-on</span>
+</pre></div>
+
+
+<h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UsingHardcodePath&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;searchWordsStdPathsUnix&quot;</span><span class="p">:</span> <span class="s2">&quot;bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var&quot;</span>
+<span class="p">}</span>
 </pre></div>
                 
                   

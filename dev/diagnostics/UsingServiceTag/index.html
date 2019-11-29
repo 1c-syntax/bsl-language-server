@@ -38,7 +38,7 @@
     
     
       
-        <title>Использование служебных тегов - BSL Language Server Dev</title>
+        <title>Использование служебных тегов (UsingServiceTag) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#usingservicetag" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Использование служебных тегов
+                Использование служебных тегов (UsingServiceTag)
               
             </span>
           
@@ -326,16 +326,43 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Параметры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Описание диагностики
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -358,7 +385,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UsingServiceTag.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Использование служебных тегов<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="usingservicetag">Использование служебных тегов (UsingServiceTag)<a class="headerlink" href="#usingservicetag" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -381,7 +408,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_2">Параметры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -402,7 +429,7 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_3">Описание диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Диагностика отлавливает использование служебных тегов в комментариях. Список тегов:</p>
 <ul>
 <li>TODO</li>
@@ -418,6 +445,20 @@
 <li>КОНСТРУКТОР_ВВОДА_НА_ОСНОВАНИИ</li>
 </ul>
 <p>Список тегов так же можно расширить через настройки.</p>
+<h2 id="_3">Сниппеты<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_4">Экранирование кода<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UsingServiceTag-off</span>
+<span class="c c-Singleline">// BSLLS:UsingServiceTag-on</span>
+</pre></div>
+
+
+<h3 id="_5">Параметр конфигурационного файла<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UsingServiceTag&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;serviceTags&quot;</span><span class="p">:</span> <span class="s2">&quot;todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG&quot;</span>
+<span class="p">}</span>
+</pre></div>
                 
                   
                 

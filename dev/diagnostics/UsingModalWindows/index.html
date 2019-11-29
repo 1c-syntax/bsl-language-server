@@ -38,7 +38,7 @@
     
     
       
-        <title>Использование модальных окон - BSL Language Server Dev</title>
+        <title>Использование модальных окон (UsingModalWindows) - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#usingmodalwindows" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Использование модальных окон
+                Использование модальных окон (UsingModalWindows)
               
             </span>
           
@@ -326,7 +326,7 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Описание диагностики
   </a>
   
@@ -334,7 +334,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Ограничения диагностики
   </a>
   
@@ -346,16 +346,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     Примеры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     Источники
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -378,7 +405,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UsingModalWindows.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Использование модальных окон<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="usingmodalwindows">Использование модальных окон (UsingModalWindows)<a class="headerlink" href="#usingmodalwindows" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -403,9 +430,9 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Модальные и всплывающие окна считаются плохим тоном, пользователи привыкли к работе "в одном окне". При разработке конфигураций, предназначенных для работы в веб-клиенте, запрещено использовать модальные формы и диалоги. В противном случае, конфигурация окажется неработоспособной в ряде веб-браузеров, так как модальные окна не входят в стандарт веб-разработки.</p>
-<h3 id="_3">Ограничения диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<h3 id="_2">Ограничения диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
 <p>На данный момент диагностируется <strong>только использование методов глобального контекста</strong>.</p>
 <p>Список методов:</p>
 <table>
@@ -466,7 +493,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_4">Примеры<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Пример &quot;Плохо&quot;</span>
 <span class="nb">Предупреждение</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 
@@ -475,11 +502,23 @@
 </pre></div>
 
 
-<h2 id="_5">Источники<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std/content/703/hdoc/">Ограничение на использование модальных окон и синхронных вызовов</a></li>
 <li>Полезная информаця: <a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
 </ul>
+<h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UsingModalWindows-off</span>
+<span class="c c-Singleline">// BSLLS:UsingModalWindows-on</span>
+</pre></div>
+
+
+<h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UsingModalWindows&quot;</span><span class="err">:</span> <span class="kc">false</span>
+</pre></div>
                 
                   
                 
