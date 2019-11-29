@@ -188,7 +188,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
         newText = if (index < 1) {
             "${newText.trimEnd()}\n\n$footerText"
         } else {
-            "${newText.substring(1, index - 1).trimEnd()}\n\n$footerText"
+            "${newText.substring(0, index - 1).trimEnd()}\n\n$footerText"
         }
 
         docPath.writeText(newText, charset("UTF-8"))
