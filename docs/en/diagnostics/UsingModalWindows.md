@@ -1,4 +1,4 @@
-# Using modal windows
+# Using modal windows (UsingModalWindows)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -44,3 +44,19 @@ Russian variant | English variant
 
 - [Limit on the use of modal windows and synchronous calls (RU)](https://its.1c.ru/db/v8std/content/703/hdoc/)
 - Useful information: [Refusal to use modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingModalWindows-off
+// BSLLS:UsingModalWindows-on
+```
+
+### Parameter for config
+
+```json
+"UsingModalWindows": false
+```

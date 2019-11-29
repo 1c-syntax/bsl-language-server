@@ -1,4 +1,4 @@
-# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;
+# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; (MissingSpace)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -76,4 +76,26 @@ If set to `true`
 ```bsl
 ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Correct
 ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MissingSpace-off
+// BSLLS:MissingSpace-on
+```
+
+### Parameter for config
+
+```json
+"MissingSpace": {
+    "listForCheckLeft": "",
+    "listForCheckRight": ", ;",
+    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >=",
+    "checkSpaceToRightOfUnary": false,
+    "allowMultipleCommas": false
+}
 ```

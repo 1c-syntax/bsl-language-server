@@ -1,4 +1,4 @@
-# Missing temporary file deletion after using
+# Missing temporary file deletion after using (MissingTemporaryFileDeletion)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -46,3 +46,21 @@ EndTry;
 ## Reference
 
 - [FileSystem access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MissingTemporaryFileDeletion-off
+// BSLLS:MissingTemporaryFileDeletion-on
+```
+
+### Parameter for config
+
+```json
+"MissingTemporaryFileDeletion": {
+    "searchDeleteFileMethod": "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"
+}
+```

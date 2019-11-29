@@ -1,4 +1,4 @@
-# Unreachable Code
+# Unreachable Code (UnreachableCode)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -34,4 +34,20 @@ Function Example(Parameter1, Parameter2)
     EndIf; 
     Return Parameter1;
 EndFunction
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UnreachableCode-off
+// BSLLS:UnreachableCode-on
+```
+
+### Parameter for config
+
+```json
+"UnreachableCode": false
 ```

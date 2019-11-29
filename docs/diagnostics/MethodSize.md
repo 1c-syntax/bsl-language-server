@@ -1,4 +1,4 @@
-# Ограничение на размер метода
+# Ограничение на размер метода (MethodSize)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -27,3 +27,21 @@
 - [Martin Fowler: Refactoring](https://www.refactoring.com/)
 - [Инструменты рефакторинга и отказа от модальности](https://v8.1c.ru/o7/201312ref/index.htm)
 - [Инструменты рефакторинга в 1С](https://www.koderline.ru/expert/programming/article-vspomogatelnye-funktsii-v-1s/#anchor6)
+
+## Сниппеты
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Экранирование кода
+
+```bsl
+// BSLLS:MethodSize-off
+// BSLLS:MethodSize-on
+```
+
+### Параметр конфигурационного файла
+
+```json
+"MethodSize": {
+    "maxMethodSize": 200
+}
+```

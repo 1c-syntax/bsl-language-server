@@ -1,4 +1,4 @@
-# Using Russian character "yo" ("ё") in code
+# Using Russian character "yo" ("ё") in code (YoLetterUsage)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -13,3 +13,19 @@ Exception is interface texts, displayed to user in messages, forms and help, whe
 ## Sources
 
 * [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:YoLetterUsage-off
+// BSLLS:YoLetterUsage-on
+```
+
+### Parameter for config
+
+```json
+"YoLetterUsage": false
+```

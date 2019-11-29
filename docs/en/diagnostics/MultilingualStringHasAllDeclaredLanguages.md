@@ -1,4 +1,4 @@
-# There is a localized text for all languages declared in the configuration
+# There is a localized text for all languages declared in the configuration (MultilingualStringHasAllDeclaredLanguages)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -17,3 +17,19 @@ Source: [localization requirements] (https://its.1c.ru/db/v8std/content/763/hdoc
 ## Options
 
 * `Declared languages` -` String` - Comma-separated lines of language codes that support configuration. For example: `ru, en`
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MultilingualStringHasAllDeclaredLanguages-off
+// BSLLS:MultilingualStringHasAllDeclaredLanguages-on
+```
+
+### Parameter for config
+
+```json
+"MultilingualStringHasAllDeclaredLanguages": false
+```

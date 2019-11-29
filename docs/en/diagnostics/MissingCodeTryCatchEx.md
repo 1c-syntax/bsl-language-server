@@ -1,4 +1,4 @@
-# Missing code in Raise block in "Try ... Raise ... EndTry"
+# Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -47,3 +47,21 @@ As a rule, such a design hides a real problem, which is subsequently impossible 
 ## Sources
 
 * [Catching Exceptions in Code (RU)](https://its.1c.ru/db/v8std#content:499:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MissingCodeTryCatchEx-off
+// BSLLS:MissingCodeTryCatchEx-on
+```
+
+### Parameter for config
+
+```json
+"MissingCodeTryCatchEx": {
+    "commentAsCode": false
+}
+```

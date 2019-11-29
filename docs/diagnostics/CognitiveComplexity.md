@@ -1,4 +1,4 @@
-# Когнитивная сложность
+# Когнитивная сложность (CognitiveComplexity)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -216,3 +216,22 @@
 ## Источники
 
 * [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
+
+## Сниппеты
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Экранирование кода
+
+```bsl
+// BSLLS:CognitiveComplexity-off
+// BSLLS:CognitiveComplexity-on
+```
+
+### Параметр конфигурационного файла
+
+```json
+"CognitiveComplexity": {
+    "complexityThreshold": 15,
+    "checkModuleBody": true
+}
+```

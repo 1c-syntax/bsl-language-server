@@ -1,4 +1,4 @@
-# Magic numbers
+# Magic numbers (MagicNumber)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -31,4 +31,20 @@ Function GetsTheInterval (Duration in Seconds)
      Return Duration < HoursWininterval * SecondsHour;
 
 End Function
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MagicNumber-off
+// BSLLS:MagicNumber-on
+```
+
+### Parameter for config
+
+```json
+"MagicNumber": false
 ```

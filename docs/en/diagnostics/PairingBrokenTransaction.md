@@ -1,4 +1,4 @@
-# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
+# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -57,3 +57,19 @@ EndProcedure
 ## Sources
 
 * [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:PairingBrokenTransaction-off
+// BSLLS:PairingBrokenTransaction-on
+```
+
+### Parameter for config
+
+```json
+"PairingBrokenTransaction": false
+```

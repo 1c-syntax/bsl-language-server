@@ -1,4 +1,4 @@
-# Restriction on the use of deprecated "Message" method
+# Restriction on the use of deprecated "Message" method (DeprecatedMessage)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -14,3 +14,19 @@ To display messages to the user in all cases, you should use the MessageUser obj
 ## Sources
 
 * [Standard: Limit use of the obsolete method Message](https://its.1c.ru/db/v8std#content:418:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:DeprecatedMessage-off
+// BSLLS:DeprecatedMessage-on
+```
+
+### Parameter for config
+
+```json
+"DeprecatedMessage": false
+```

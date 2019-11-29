@@ -1,4 +1,4 @@
-# Using FindByName and FindByCode
+# Using FindByName and FindByCode (UsingFindElementByString)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -29,4 +29,20 @@ Acceptable use:
 
 ```bsl
 Справочники.КлассификаторБанков.НайтиПоКоду(СведенияОБанке.БИК);
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingFindElementByString-off
+// BSLLS:UsingFindElementByString-on
+```
+
+### Parameter for config
+
+```json
+"UsingFindElementByString": false
 ```

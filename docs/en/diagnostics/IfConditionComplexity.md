@@ -1,4 +1,4 @@
-# Usage of complex expressions in the "If" condition
+# Usage of complex expressions in the "If" condition (IfConditionComplexity)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -56,4 +56,22 @@ Function IsCorrectId(Id)
             Or Id = "Expr9";
 
 EndFunction
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:IfConditionComplexity-off
+// BSLLS:IfConditionComplexity-on
+```
+
+### Parameter for config
+
+```json
+"IfConditionComplexity": {
+    "maxIfConditionComplexity": 3
+}
 ```

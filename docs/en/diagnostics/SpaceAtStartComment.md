@@ -1,4 +1,4 @@
-# Space at the beginning of the comment
+# Space at the beginning of the comment (SpaceAtStartComment)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -20,3 +20,21 @@ Exception from the rule is ***comments-annotations***, comments starting with sp
 ## Sources
 
 * [Standard: Modules text, Item 7.3](https://its.1c.ru/db/v8std#content:456:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:SpaceAtStartComment-off
+// BSLLS:SpaceAtStartComment-on
+```
+
+### Parameter for config
+
+```json
+"SpaceAtStartComment": {
+    "commentsAnnotation": "//@,//(c),//©"
+}
+```

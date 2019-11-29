@@ -1,4 +1,4 @@
-# Nested ternary operator
+# Nested ternary operator (NestedTernaryOperator)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -45,4 +45,20 @@ If PageEmp_emptype = Null OR PageEmp_emptype = 0 Then
       Status = "Done";
 
 End If;
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:NestedTernaryOperator-off
+// BSLLS:NestedTernaryOperator-on
+```
+
+### Parameter for config
+
+```json
+"NestedTernaryOperator": false
 ```
