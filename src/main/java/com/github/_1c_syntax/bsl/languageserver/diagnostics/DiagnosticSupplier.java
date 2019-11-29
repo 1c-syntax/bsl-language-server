@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.reflections.Reflections;
@@ -67,6 +66,10 @@ public class DiagnosticSupplier {
       .map(this::createDiagnosticInstance)
       .peek(this::configureDiagnostic)
       .collect(Collectors.toList());
+  }
+
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {
+    return getDiagnosticInstances(fileType, null, compatibilityMode);
   }
 
   public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
@@ -129,7 +132,7 @@ public class DiagnosticSupplier {
 
   private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype) {
     ModuleType[] diagnosticModules = diagnosticInfo.getModules();
-    if (diagnosticModules.length == 0){
+    if (diagnosticModules.length == 0 || moduletype == null) {
       return true;
     }
 
