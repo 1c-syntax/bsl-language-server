@@ -72,8 +72,16 @@ public class DiagnosticSupplier {
       .collect(Collectors.toList());
   }
 
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
+    return getDiagnosticInstances(fileType, ModuleType.Unknown, new CompatibilityMode(3, 99));
+  }
+
+  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, ModuleType moduleType) {
+    return getDiagnosticInstances(fileType, moduleType, new CompatibilityMode(3, 99));
+  }
+
   public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {
-    return getDiagnosticInstances(fileType, null, compatibilityMode);
+    return getDiagnosticInstances(fileType, ModuleType.Unknown, compatibilityMode);
   }
 
   public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
@@ -136,9 +144,6 @@ public class DiagnosticSupplier {
 
   private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype) {
     ModuleType[] diagnosticModules = diagnosticInfo.getModules();
-    if (diagnosticModules.length != 0 && moduletype == null) {
-      return false;
-    }
 
     if (diagnosticModules.length == 0) {
       return true;

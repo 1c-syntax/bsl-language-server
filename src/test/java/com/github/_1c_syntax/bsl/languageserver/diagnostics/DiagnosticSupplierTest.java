@@ -164,7 +164,7 @@ class DiagnosticSupplierTest {
     ).isTrue();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null)
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.Unknown, null)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
     ).isFalse();
@@ -178,34 +178,34 @@ class DiagnosticSupplierTest {
   }
 
   @Test
-  void testModuleMode() {
+  void testModuleType() {
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommandModule, new CompatibilityMode(3, 10))
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommandModule)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
     ).isTrue();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.FormModule, new CompatibilityMode(3, 10))
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.FormModule)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
     ).isTrue();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommonModule, new CompatibilityMode(3, 10))
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommonModule)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
     ).isFalse();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null, new CompatibilityMode(3, 10))
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.Unknown)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
     ).isFalse();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null, new CompatibilityMode(3, 10))
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.Unknown)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof EmptyCodeBlockDiagnostic)
     ).isTrue();
