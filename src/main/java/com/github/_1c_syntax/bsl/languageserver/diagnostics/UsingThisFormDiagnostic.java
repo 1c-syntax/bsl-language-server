@@ -33,7 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.Token;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
@@ -43,7 +43,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -54,6 +53,9 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL,
   minutesToFix = 1,
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3,
+  modules = {
+    ModuleType.FormModule
+  },
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.DEPRECATED
@@ -72,38 +74,10 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   private static final String THIS_OBJECT = "ЭтотОбъект";
   private static final String THIS_OBJECT_EN = "ThisObject";
 
-  private static final List<Integer> ANNOTATION = Arrays.asList(
-    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
-    BSLParser.ANNOTATION_ATSERVER_SYMBOL
-  );
-
   public UsingThisFormDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
-  @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
-    if (isMethodInFormModule()) {
-      return super.visitFile(ctx);
-    }
-    return ctx;
-  }
-
-  private boolean isMethodInFormModule() {
-
-    // todo after metadata test mock
-    // todo    ModuleType type = documentContext.getServerContext().getConfiguration()
-    // todo      .getModuleType(new File(documentContext.getUri()).toURI());
-    // todo    return type == ModuleType.FormModule;
-
-    return this.documentContext
-      .getTokens()
-      .stream()
-      .anyMatch((Token token) -> ANNOTATION.indexOf(token.getType()) >= 0);
-  }
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
@@ -136,7 +110,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   private static boolean hasThisForm(List<BSLParser.ParamContext> params) {
     for (BSLParser.ParamContext param : params) {
-      if(pattern.matcher(param.getText()).find()) {
+      if (pattern.matcher(param.getText()).find()) {
         return true;
       }
     }
@@ -150,7 +124,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
       return super.visitCallStatement(ctx);
     }
 
-    if (pattern.matcher(ctx.getStart().getText()).matches()){
+    if (pattern.matcher(ctx.getStart().getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
