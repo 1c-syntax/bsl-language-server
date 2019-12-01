@@ -205,7 +205,7 @@ class DiagnosticSupplierTest {
     ).isFalse();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.Unknown)
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof EmptyCodeBlockDiagnostic)
     ).isTrue();

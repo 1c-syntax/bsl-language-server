@@ -73,11 +73,11 @@ public class DiagnosticSupplier {
   }
 
   public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
-    return getDiagnosticInstances(fileType, ModuleType.Unknown, new CompatibilityMode(3, 99));
+    return getDiagnosticInstances(fileType, ModuleType.Unknown, new CompatibilityMode("DontUse"));
   }
 
   public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, ModuleType moduleType) {
-    return getDiagnosticInstances(fileType, moduleType, new CompatibilityMode(3, 99));
+    return getDiagnosticInstances(fileType, moduleType, new CompatibilityMode("DontUse"));
   }
 
   public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {

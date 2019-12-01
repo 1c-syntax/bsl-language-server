@@ -51,11 +51,11 @@ import java.util.regex.Pattern;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 1,
-  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3,
   modules = {
     ModuleType.FormModule
   },
+  minutesToFix = 1,
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.DEPRECATED
