@@ -33,6 +33,7 @@ public class MetricStorage {
   private int functions;
   private int lines;
   private int ncloc;
+  private int comments;
   private int statements;
   private int[] nclocData;
   private int[] covlocData;

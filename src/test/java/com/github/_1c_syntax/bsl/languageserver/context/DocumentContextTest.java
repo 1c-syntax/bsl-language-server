@@ -98,4 +98,15 @@ class DocumentContextTest {
 
   }
 
+  @Test
+  void testComputeMetricsComments() throws IOException {
+
+    DocumentContext documentContext =
+      getDocumentContext("./src/test/resources/context/DocumentContextCommentsTest.bsl");
+
+    assertThat(documentContext.getMetrics().getComments()).isEqualTo(8);
+
+  }
+
+
 }
