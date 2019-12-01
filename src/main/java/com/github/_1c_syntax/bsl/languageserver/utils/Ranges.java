@@ -29,10 +29,6 @@ import org.eclipse.lsp4j.Range;
 
 public final class Ranges {
 
-  private Ranges() {
-    // Utility class
-  }
-
   public static Range create(int startLine, int startChar, int endLine, int endChar) {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
   }
