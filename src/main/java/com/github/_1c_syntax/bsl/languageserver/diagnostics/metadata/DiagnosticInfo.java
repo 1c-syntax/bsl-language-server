@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,6 +133,10 @@ public class DiagnosticInfo {
 
   public DiagnosticScope getScope() {
     return diagnosticMetadata.scope();
+  }
+
+  public ModuleType[] getModules() {
+    return diagnosticMetadata.modules();
   }
 
   public int getMinutesToFix() {

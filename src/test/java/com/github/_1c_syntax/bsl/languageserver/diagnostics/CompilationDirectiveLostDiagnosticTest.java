@@ -19,24 +19,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
+package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface DiagnosticMetadata {
-  DiagnosticType type() default DiagnosticType.ERROR;
-  DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
-  DiagnosticScope scope() default DiagnosticScope.ALL;
-  ModuleType[] modules() default {};
-  int minutesToFix() default 0;
-  boolean activatedByDefault() default true;
-  DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
-  DiagnosticTag[] tags() default {};
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+
+class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<CompilationDirectiveLostDiagnostic> {
+  CompilationDirectiveLostDiagnosticTest() {
+    super(CompilationDirectiveLostDiagnostic.class);
+  }
+
+  @Test
+  void testFormModule() {
+
+    DocumentContext documentContext = getDocumentContext();
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(9, 0, 9, 18);
+
+  }
+
 }
