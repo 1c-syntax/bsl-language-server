@@ -47,6 +47,8 @@ import java.util.Map;
 public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_NUMBERS = "-1,0,1";
+  private static final boolean DEFAULT_ALLOW_MAGIC_NUMBER = true;
+
 
   @DiagnosticParameter(
     type = String.class,
@@ -54,22 +56,14 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
   )
   private List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + DEFAULT_ALLOW_MAGIC_NUMBER
+  )
+  private boolean allowMagicIndexes = DEFAULT_ALLOW_MAGIC_NUMBER;
+
   public MagicNumberDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
-  }
-
-  private boolean isExcluded(String s) {
-    for (String elem : this.authorizedNumbers) {
-      if (s.compareTo(elem) == 0) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   @Override
@@ -83,6 +77,7 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     for (String s : authorizedNumbersString.split(",")) {
       this.authorizedNumbers.add(s.trim());
     }
+    allowMagicIndexes = (boolean) configuration.getOrDefault("allowMagicIndexes", DEFAULT_ALLOW_MAGIC_NUMBER);
   }
 
   @Override
@@ -92,11 +87,30 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     if (checked != null && !isExcluded(checked)) {
       ParserRuleContext expression = ctx.getParent().getParent().getParent();
       if (expression instanceof BSLParser.ExpressionContext
-        && !isNumericExpression((BSLParser.ExpressionContext) expression)) {
+        && (!isNumericExpression((BSLParser.ExpressionContext) expression)
+        || mayBeNumberAccess((BSLParser.ExpressionContext) expression))) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
 
     return ctx;
+  }
+
+  private boolean isExcluded(String s) {
+    for (String elem : this.authorizedNumbers) {
+      if (s.compareTo(elem) == 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean mayBeNumberAccess(BSLParser.ExpressionContext expression) {
+    return !allowMagicIndexes && expression.getParent() instanceof BSLParser.AccessIndexContext;
+  }
+
+  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
+    return (expression.getChildCount() <= 1);
   }
 }

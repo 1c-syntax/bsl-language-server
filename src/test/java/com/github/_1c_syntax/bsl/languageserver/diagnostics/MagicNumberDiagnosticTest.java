@@ -71,4 +71,29 @@ class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagno
       .hasRange(20, 21, 20, 23)
       .hasRange(23, 24, 23, 26);
   }
+
+  @Test
+  void testIndexes() {
+    // conf
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("allowMagicIndexes", false);
+    diagnosticInstance.configure(configuration);
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics, true)
+      .hasRange(3, 18, 3, 20)
+      .hasRange(3, 23, 3, 25)
+      .hasRange(7, 31, 7, 33)
+      .hasRange(11, 20, 11, 21)
+      .hasRange(20, 21, 20, 23)
+      .hasRange(23, 24, 23, 26)
+      .hasRange(27, 34, 27, 35)
+      .hasRange(53, 32, 53, 34)
+      .hasRange(54, 18, 54, 20);
+  }
+
 }
