@@ -1,6 +1,6 @@
 name: Publish to m2
 
-on: push
+on: [push]
 
 jobs:
   gpr:
