@@ -1,13 +1,15 @@
 name: Publish to m2
 
-on: [push]
+on:
+  push:
+  release:
+      types: [published]
 
 jobs:
   gpr:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.event.repository.full_name
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2-beta
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
