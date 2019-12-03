@@ -335,6 +335,15 @@ public class DocumentContext {
     }
     metricsTemp.setLines(lines);
 
+    int comments;
+    final List<Token> commentsUnboxed = getComments();
+    if (commentsUnboxed.isEmpty()) {
+      comments = 0;
+    } else {
+      comments = (int) commentsUnboxed.stream().map(Token::getLine).distinct().count();
+    }
+    metricsTemp.setComments(comments);
+
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
     metricsTemp.setStatements(statements);
 

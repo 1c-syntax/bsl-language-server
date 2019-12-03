@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -32,6 +34,7 @@ public @interface DiagnosticMetadata {
   DiagnosticType type() default DiagnosticType.ERROR;
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
   DiagnosticScope scope() default DiagnosticScope.ALL;
+  ModuleType[] modules() default {};
   int minutesToFix() default 0;
   boolean activatedByDefault() default true;
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;

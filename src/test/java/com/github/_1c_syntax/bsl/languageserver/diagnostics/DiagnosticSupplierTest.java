@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticI
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -163,7 +164,7 @@ class DiagnosticSupplierTest {
     ).isTrue();
 
     assertThat(
-      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, null)
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.Unknown, null)
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
     ).isFalse();
@@ -173,6 +174,41 @@ class DiagnosticSupplierTest {
         .stream()
         .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic)
     ).isFalse();
+
+  }
+
+  @Test
+  void testModuleType() {
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommandModule)
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isTrue();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.FormModule)
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isTrue();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.CommonModule)
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isFalse();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL, ModuleType.Unknown)
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic)
+    ).isFalse();
+
+    assertThat(
+      diagnosticSupplier.getDiagnosticInstances(FileType.BSL)
+        .stream()
+        .anyMatch(diagnostic -> diagnostic instanceof EmptyCodeBlockDiagnostic)
+    ).isTrue();
 
   }
 

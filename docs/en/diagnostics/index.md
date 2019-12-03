@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **63**
+Total: **64**
 
 * Error: **23**
-* Code smell: **38**
+* Code smell: **39**
 * Vulnerability: **2**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -21,6 +21,7 @@ Total: **63**
 | [CognitiveComplexity](CognitiveComplexity.md) | Cognitive complexity | Yes | Critical | Code smell | `brainoverload` |
 | [CommentedCode](CommentedCode.md) | Commented out code | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` |
+| [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br/>`unpredictable` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | Major | Error | `standard`<br/>`error` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
@@ -36,7 +37,7 @@ Total: **63**
 | [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br/>`standard`<br/>`unpredictable` |
 | [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` |
-| [MethodSize](MethodSize.md) | Method size restriction | Yes | Major | Code smell | `badpractice` |
+| [MethodSize](MethodSize.md) | Method size  | Yes | Major | Code smell | `badpractice` |
 | [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br/>`badpractice` |
 | [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` |
 | [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br/>`standard` |

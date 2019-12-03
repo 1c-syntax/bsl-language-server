@@ -344,6 +344,15 @@
             "title": "",
             "$id": "#/definitions/PairingBrokenTransaction"
         },
+        "CompilationDirectiveLost": {
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "",
+            "$id": "#/definitions/CompilationDirectiveLost"
+        },
         "UnusedLocalMethod": {
             "default": null,
             "type": [
