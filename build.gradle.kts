@@ -23,6 +23,24 @@ repositories {
     maven { url = URI("https://jitpack.io") }
 }
 
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/1c-syntax/bsl-language-server")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USER")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_DEPLOY_KEY")
+            }
+        }
+    }
+    publications {
+        register("gpr", MavenPublication::class) {
+            from(components["java"])
+        }
+    }
+}
+
 group = "com.github.1c-syntax"
 
 gitVersioning {
