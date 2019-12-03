@@ -1,4 +1,6 @@
 
+import me.qoomon.gradle.gitversioning.GitVersioningPluginExtension.CommitVersionDescription
+import me.qoomon.gradle.gitversioning.GitVersioningPluginExtension.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.net.URI
 import java.util.*
@@ -11,7 +13,7 @@ plugins {
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
     id("io.franzbecker.gradle-lombok") version "3.2.0"
-    id("com.github.gradle-git-version-calculator") version "1.1.0"
+    id("me.qoomon.git-versioning") version "1.4.0"
     id("com.github.ben-manes.versions") version "0.25.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
@@ -22,7 +24,21 @@ repositories {
 }
 
 group = "com.github.1c-syntax"
-version = gitVersionCalculator.calculateVersion("v")
+
+gitVersioning {
+    preferTags = true
+    branch(closureOf<VersionDescription> {
+        pattern = "^(?!v[0-9]+).*"
+        versionFormat = "\${branch}-\${commit.short}"
+    })
+    tag(closureOf<VersionDescription>{
+        pattern = "v(?<tagVersion>[0-9].*)"
+        versionFormat = "\${tagVersion}"
+    })
+    commit(closureOf<CommitVersionDescription>{
+        versionFormat = "\${commit.short}"
+    })
+}
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
@@ -95,7 +111,7 @@ tasks.withType<JavaCompile> {
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
-        attributes["Implementation-Version"] = archiveVersion.get()
+//        attributes["Implementation-Version"] = archiveVersion.get()
     }
 
     enabled = false
