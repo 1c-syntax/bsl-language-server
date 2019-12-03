@@ -13,7 +13,7 @@ jobs:
         with:
           java-version: 11
       - name: Github Package Registry publish
-        run: ./gradlew publish --debug --stacktrace
+        run: ./gradlew publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPR_DEPLOY_KEY: ${{ secrets.GPR_DEPLOY_KEY }}
