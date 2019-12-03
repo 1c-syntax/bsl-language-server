@@ -5,6 +5,7 @@ import java.util.*
 
 plugins {
     java
+    maven
     `maven-publish`
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
