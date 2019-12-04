@@ -27,11 +27,12 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 public class TestUtils {
 
-  public static final String FAKE_DOCUMENT_URI = "file:///fake-uri.bsl";
+  public static final URI FAKE_DOCUMENT_URI = URI.create("file:///fake-uri.bsl");
 
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
@@ -41,7 +42,7 @@ public class TestUtils {
       StandardCharsets.UTF_8
     );
 
-    return new DocumentContext(filePath, fileContent, new ServerContext());
+    return new DocumentContext(URI.create(filePath), fileContent, new ServerContext());
   }
 
   @SneakyThrows

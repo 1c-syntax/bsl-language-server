@@ -199,11 +199,14 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void didChange() throws IOException {
+
+    final File testFile = getTestFile();
+
     DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
+    
+    params.setTextDocument(new VersionedTextDocumentIdentifier(testFile.toURI().toString(), 1));
 
-    params.setTextDocument(new VersionedTextDocumentIdentifier());
-
-    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+    String fileContent = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
     TextDocumentContentChangeEvent changeEvent = new TextDocumentContentChangeEvent(fileContent);
 
     List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();

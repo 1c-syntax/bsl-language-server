@@ -25,14 +25,16 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
+import java.net.URI;
+
 public class RelatedInformation {
 
   private RelatedInformation() {
     // Utility class
   }
 
-  public static DiagnosticRelatedInformation create(String uri, Range range, String message) {
-    Location location = new Location(uri, range);
+  public static DiagnosticRelatedInformation create(URI uri, Range range, String message) {
+    Location location = new Location(uri.toString(), range);
     return new DiagnosticRelatedInformation(location, message);
   }
 }

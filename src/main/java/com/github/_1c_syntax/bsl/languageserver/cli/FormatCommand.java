@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -74,7 +75,7 @@ public class FormatCommand implements Command {
   @SneakyThrows
   private void formatFile(File file) {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    final String uri = file.toURI().toString();
+    final URI uri = file.toURI();
 
     DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
 

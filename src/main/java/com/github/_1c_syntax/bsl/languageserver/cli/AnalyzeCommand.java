@@ -101,7 +101,7 @@ public class AnalyzeCommand implements Command {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
+    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(file.toPath().toAbsolutePath());
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);

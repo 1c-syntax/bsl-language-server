@@ -88,7 +88,7 @@ class JUnitReporterTest {
     ));
 
     DocumentContext documentContext = new DocumentContext(
-      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri().toString(),
+      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       "",
       new ServerContext()
     );

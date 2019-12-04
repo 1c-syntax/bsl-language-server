@@ -28,13 +28,14 @@ import com.github._1c_syntax.mdclasses.metadata.configurations.EmptyConfiguratio
 import org.eclipse.lsp4j.TextDocumentItem;
 
 import javax.annotation.CheckForNull;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServerContext {
-  private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<AbstractConfiguration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   private Path configurationRoot;
@@ -47,16 +48,21 @@ public class ServerContext {
     this.configurationRoot = configurationRoot;
   }
 
-  public Map<String, DocumentContext> getDocuments() {
+  public Map<URI, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
   }
 
   @CheckForNull
   public DocumentContext getDocument(String uri) {
+    return getDocument(URI.create(uri));
+  }
+
+  @CheckForNull
+  public DocumentContext getDocument(URI uri) {
     return documents.get(uri);
   }
 
-  public DocumentContext addDocument(String uri, String content) {
+  public DocumentContext addDocument(URI uri, String content) {
 
     DocumentContext documentContext = documents.get(uri);
     if (documentContext == null) {
@@ -70,10 +76,10 @@ public class ServerContext {
   }
 
   public DocumentContext addDocument(TextDocumentItem textDocumentItem) {
-    return addDocument(textDocumentItem.getUri(), textDocumentItem.getText());
+    return addDocument(URI.create(textDocumentItem.getUri()), textDocumentItem.getText());
   }
 
-  public void removeDocument(String uri) {
+  public void removeDocument(URI uri) {
     documents.remove(uri);
   }
 
@@ -100,5 +106,6 @@ public class ServerContext {
 
     return configurationBuilder.build();
   }
+
 
 }

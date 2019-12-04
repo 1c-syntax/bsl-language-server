@@ -44,6 +44,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -71,10 +72,10 @@ public class DocumentContext {
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
   private boolean callAdjustRegionsAfterCalculation;
-  private final String uri;
+  private final URI uri;
   private final FileType fileType;
 
-  public DocumentContext(String uri, String content, ServerContext context) {
+  public DocumentContext(URI uri, String content, ServerContext context) {
     this.uri = uri;
     this.content = content;
     this.context = context;
@@ -82,7 +83,7 @@ public class DocumentContext {
 
     FileType fileTypeFromUri;
     try {
-      fileTypeFromUri = FileType.valueOf(FilenameUtils.getExtension(uri).toUpperCase(Locale.ENGLISH));
+      fileTypeFromUri = FileType.valueOf(FilenameUtils.getExtension(uri.getPath()).toUpperCase(Locale.ENGLISH));
     } catch (IllegalArgumentException ignored) {
       fileTypeFromUri = FileType.BSL;
     }
@@ -185,7 +186,7 @@ public class DocumentContext {
     return metrics.getOrCompute();
   }
 
-  public String getUri() {
+  public URI getUri() {
     return uri;
   }
 
@@ -284,7 +285,7 @@ public class DocumentContext {
   }
 
   private ModuleType computeModuleType() {
-    ModuleType type = context.getConfiguration().getModuleType(new File(uri).toURI());
+    ModuleType type = context.getConfiguration().getModuleType(uri);
     if (type == null) {
       type = ModuleType.ObjectModule;
     }

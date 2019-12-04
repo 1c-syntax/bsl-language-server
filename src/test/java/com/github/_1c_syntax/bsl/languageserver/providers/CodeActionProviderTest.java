@@ -70,7 +70,7 @@ class CodeActionProviderTest {
     CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
-    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
 
@@ -105,7 +105,7 @@ class CodeActionProviderTest {
     CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
-    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
 

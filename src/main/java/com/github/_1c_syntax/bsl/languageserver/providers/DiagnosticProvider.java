@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -44,7 +45,7 @@ public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
 
-  private final Map<String, Set<Diagnostic>> computedDiagnostics;
+  private final Map<URI, Set<Diagnostic>> computedDiagnostics;
   private final DiagnosticSupplier diagnosticSupplier;
 
   public DiagnosticProvider() {
@@ -59,14 +60,14 @@ public final class DiagnosticProvider {
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = computeDiagnostics(documentContext);
 
-    client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri(), diagnostics));
+    client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics));
   }
 
   public void publishEmptyDiagnosticList(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = new ArrayList<>();
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
     client.publishDiagnostics(
-      new PublishDiagnosticsParams(documentContext.getUri(), diagnostics)
+      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics)
     );
   }
 

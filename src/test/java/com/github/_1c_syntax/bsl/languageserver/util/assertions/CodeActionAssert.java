@@ -132,7 +132,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
   }
 
   private List<TextEdit> getTextEdits() {
-    final List<TextEdit> textEdits = actual.getEdit().getChanges().get(documentContext.getUri());
+    final List<TextEdit> textEdits = actual.getEdit().getChanges().get(documentContext.getUri().toString());
     Objects.requireNonNull(textEdits);
     return textEdits;
   }
