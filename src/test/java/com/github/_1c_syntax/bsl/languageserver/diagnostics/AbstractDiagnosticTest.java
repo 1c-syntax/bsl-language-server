@@ -80,7 +80,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   private List<CodeAction> getQuickFixes(DocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
-    TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri());
+    TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
     codeActionContext.setDiagnostics(diagnostics);

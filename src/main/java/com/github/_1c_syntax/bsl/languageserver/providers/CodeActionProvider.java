@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,7 +57,7 @@ public final class CodeActionProvider {
   public static List<CodeAction> createCodeActions(
     List<TextEdit> textEdits,
     String title,
-    String uri,
+    URI uri,
     List<Diagnostic> diagnostics
   ) {
 
@@ -67,7 +68,7 @@ public final class CodeActionProvider {
     WorkspaceEdit edit = new WorkspaceEdit();
 
     Map<String, List<TextEdit>> changes = new HashMap<>();
-    changes.put(uri, textEdits);
+    changes.put(uri.toString(), textEdits);
     edit.setChanges(changes);
 
     if (diagnostics.size() > 1) {

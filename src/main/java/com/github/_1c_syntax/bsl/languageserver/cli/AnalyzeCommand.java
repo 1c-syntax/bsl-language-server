@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
@@ -40,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -64,8 +64,8 @@ public class AnalyzeCommand implements Command {
     String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
     String configurationOption = cmd.getOptionValue("configuration", "");
 
-    Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
-    Path outputDir = Paths.get(outputDirOption).toAbsolutePath();
+    Path srcDir = Absolute.path(srcDirOption);
+    Path outputDir = Absolute.path(outputDirOption);
     File configurationFile = new File(configurationOption);
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
@@ -101,9 +101,9 @@ public class AnalyzeCommand implements Command {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = context.addDocument(file.toURI().toString(), textDocumentContent);
+    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
 
-    Path filePath = srcDir.relativize(file.toPath().toAbsolutePath());
+    Path filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
     MetricStorage metrics = documentContext.getMetrics();
 

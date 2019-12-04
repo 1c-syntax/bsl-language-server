@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
 
 class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<InvalidCharacterInFileDiagnostic> {
@@ -73,7 +74,7 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        !codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(3).getNewText().contains("—")
+        !codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(3).getNewText().contains("—")
       )
     ;
 
@@ -91,7 +92,7 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        !codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(7).getNewText().contains(" ")
+        !codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(7).getNewText().contains(" ")
       )
     ;
   }

@@ -42,7 +42,7 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  void initialize() throws ExecutionException, InterruptedException {
+  void initialize() {
     // given
     InitializeParams params = new InitializeParams();
 

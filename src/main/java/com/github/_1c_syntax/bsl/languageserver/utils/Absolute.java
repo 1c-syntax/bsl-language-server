@@ -21,20 +21,45 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.Range;
+import lombok.SneakyThrows;
 
+import java.io.File;
 import java.net.URI;
+import java.nio.file.Path;
 
-public class RelatedInformation {
+public final class Absolute {
 
-  private RelatedInformation() {
+  private Absolute() {
     // Utility class
   }
 
-  public static DiagnosticRelatedInformation create(URI uri, Range range, String message) {
-    Location location = new Location(uri.toString(), range);
-    return new DiagnosticRelatedInformation(location, message);
+  @SneakyThrows
+  public static URI uri(URI uri) {
+    return path(uri).toUri();
+  }
+
+  @SneakyThrows
+  public static URI uri(String uri) {
+    return uri(URI.create(uri));
+  }
+
+  @SneakyThrows
+  public static Path path(URI uri) {
+    return path(new File(uri));
+  }
+
+  @SneakyThrows
+  public static Path path(String path) {
+    return path(new File(path));
+  }
+
+  @SneakyThrows
+  public static Path path(Path path) {
+    return path(path.toUri());
+  }
+
+  @SneakyThrows
+  public static Path path(File file) {
+    return file.getCanonicalFile().toPath().toAbsolutePath();
   }
 }

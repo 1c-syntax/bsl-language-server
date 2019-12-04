@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -97,12 +98,12 @@ class LanguageServerConfigurationTest {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
     Path path = Paths.get(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
-    assertThat(configurationRoot.toAbsolutePath()).isEqualTo(path.toAbsolutePath());
+    assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
     configuration = LanguageServerConfiguration.create(configurationFile);
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
-    assertThat(configurationRoot.toAbsolutePath()).isEqualTo(path.toAbsolutePath());
+    assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
   }
 

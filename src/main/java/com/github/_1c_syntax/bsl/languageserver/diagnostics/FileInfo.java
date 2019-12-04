@@ -24,13 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,8 +43,8 @@ public class FileInfo {
   private MetricStorage metrics;
 
   public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
-    URI uri = URI.create(documentContext.getUri());
-    path = Paths.get(sourceDir).toAbsolutePath().relativize(Paths.get(uri).toAbsolutePath());
+    URI uri = documentContext.getUri();
+    path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
   }
