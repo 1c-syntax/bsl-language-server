@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -210,7 +211,7 @@ public final class LanguageServerConfiguration {
       Path configurationRoot = null;
       if (node.get("configurationRoot") != null) {
         String configurationRootValue = node.get("configurationRoot").asText();
-        configurationRoot = Paths.get(configurationRootValue).toAbsolutePath();
+        configurationRoot = Absolute.path(configurationRootValue);
       }
       return configurationRoot;
     }
@@ -220,10 +221,10 @@ public final class LanguageServerConfiguration {
     Path rootPath = null;
     Path pathFromConfiguration = configuration.getConfigurationRoot();
     if (pathFromConfiguration == null) {
-      rootPath = srcDir;
+      rootPath = Absolute.path(srcDir);
     } else {
       // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
-      if (pathFromConfiguration.startsWith(srcDir.toAbsolutePath())) {
+      if (pathFromConfiguration.startsWith(Absolute.path(srcDir))) {
         rootPath = pathFromConfiguration;
       }
     }

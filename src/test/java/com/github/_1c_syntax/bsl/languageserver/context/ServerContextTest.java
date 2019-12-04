@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
@@ -41,7 +42,7 @@ public class ServerContextTest {
   @Test
   void testConfigurationMetadata() {
 
-    Path path = Paths.get(PATH_TO_METADATA).toAbsolutePath();
+    Path path = Absolute.path(PATH_TO_METADATA);
     ServerContext serverContext = new ServerContext(path);
     AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
 
@@ -56,14 +57,14 @@ public class ServerContextTest {
     assertThat(configurationMetadata.getCompatibilityMode().getVersion()).isEqualTo(10);
 
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
-    ModuleType type = configurationMetadata.getModuleType(file.toURI());
+    ModuleType type = configurationMetadata.getModuleType(Absolute.uri(file.toURI()));
     assertThat(type).isEqualTo(ModuleType.CommonModule);
 
   }
 
   @Test
   void testErrorConfigurationMetadata() {
-    Path path = Paths.get(PATH_TO_METADATA, "test").toAbsolutePath();
+    Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
 
     ServerContext serverContext = new ServerContext();
     serverContext.setConfigurationRoot(path);

@@ -19,36 +19,47 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.util;
+package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
-public class TestUtils {
+public final class Absolute {
 
-  public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
-
-  @SneakyThrows
-  public static DocumentContext getDocumentContextFromFile(String filePath) {
-
-    String fileContent = FileUtils.readFileToString(
-      new File(filePath),
-      StandardCharsets.UTF_8
-    );
-
-    return new DocumentContext(Path.of(filePath).toAbsolutePath().toUri(), fileContent, new ServerContext());
+  private Absolute() {
+    // Utility class
   }
 
   @SneakyThrows
-  public static DocumentContext getDocumentContext(String fileContent) {
-    return new DocumentContext(FAKE_DOCUMENT_URI, fileContent, new ServerContext());
+  public static URI uri(URI uri) {
+    return path(uri).toUri();
+  }
+
+  @SneakyThrows
+  public static URI uri(String uri) {
+    return uri(URI.create(uri));
+  }
+
+  @SneakyThrows
+  public static Path path(URI uri) {
+    return path(new File(uri));
+  }
+
+  @SneakyThrows
+  public static Path path(String path) {
+    return path(new File(path));
+  }
+
+  @SneakyThrows
+  public static Path path(Path path) {
+    return path(path.toUri());
+  }
+
+  @SneakyThrows
+  public static Path path(File file) {
+    return file.getCanonicalFile().toPath().toAbsolutePath();
   }
 }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
 import com.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
 import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
@@ -59,15 +60,16 @@ public class ServerContext {
 
   @CheckForNull
   public DocumentContext getDocument(URI uri) {
-    return documents.get(uri);
+    return documents.get(Absolute.uri(uri));
   }
 
   public DocumentContext addDocument(URI uri, String content) {
+    URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = documents.get(uri);
+    DocumentContext documentContext = getDocument(absoluteURI);
     if (documentContext == null) {
-      documentContext = new DocumentContext(uri, content, this);
-      documents.put(uri, documentContext);
+      documentContext = new DocumentContext(absoluteURI, content, this);
+      documents.put(absoluteURI, documentContext);
     } else {
       documentContext.rebuild(content);
     }
@@ -80,7 +82,7 @@ public class ServerContext {
   }
 
   public void removeDocument(URI uri) {
-    documents.remove(uri);
+    documents.remove(Absolute.uri(uri));
   }
 
   public void clear() {

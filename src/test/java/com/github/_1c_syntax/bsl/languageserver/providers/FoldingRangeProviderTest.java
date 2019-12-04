@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FoldingRangeProviderTest {
 
   @Test
-  void testFoldingRange() throws IOException {
+  void testFoldingRange() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
