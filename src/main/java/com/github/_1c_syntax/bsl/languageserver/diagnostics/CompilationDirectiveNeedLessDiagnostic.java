@@ -49,7 +49,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
   },
   minutesToFix = 1,
   tags = {
-    DiagnosticTag.CLUMSY
+    DiagnosticTag.CLUMSY,
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.UNPREDICTABLE
   }
 
 )
