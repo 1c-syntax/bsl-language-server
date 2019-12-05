@@ -56,7 +56,7 @@ public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnosti
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
 
     if (ctx.compilerDirective().isEmpty()) {
-      diagnosticStorage.addDiagnostic(ctx, ctx.subName().getText());
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.subName().getText()));
     }
 
     return ctx;
@@ -66,7 +66,7 @@ public class CompilationDirectiveLostDiagnostic extends AbstractVisitorDiagnosti
   public ParseTree visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
 
     if (ctx.compilerDirective().isEmpty()) {
-      diagnosticStorage.addDiagnostic(ctx, ctx.subName().getText());
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.subName().getText()));
     }
 
     return ctx;
