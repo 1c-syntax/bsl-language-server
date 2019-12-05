@@ -27,7 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.ParamContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+
+import java.util.Objects;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -47,22 +50,11 @@ public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
 
-    boolean wasOptional = false;
-    boolean onlyOne = false;
-
-    for (BSLParser.ParamContext param : ctx.param()) {
-      boolean itsOptional = param.defaultValue() != null;
-
-      if (itsOptional) {
-        wasOptional = true;
-      }
-
-      if (!onlyOne && !itsOptional && wasOptional) {
-        diagnosticStorage.addDiagnostic(ctx);
-        onlyOne = true;
-      }
+    boolean hasDefaultBetweenRequired = ctx.param().stream().map(ParamContext::defaultValue).dropWhile(Objects::isNull)
+      .anyMatch(Objects::isNull);
+    if (hasDefaultBetweenRequired) {
+      diagnosticStorage.addDiagnostic(ctx);
     }
-
     return ctx;
   }
 

@@ -28,8 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -42,8 +44,9 @@ import java.util.regex.Pattern;
 )
 public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern pattern = Pattern.compile("число|number",
+  private static final Pattern NUMBER_PATTERN = Pattern.compile("число|number",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  public static final Predicate<GlobalMethodCallContext> MATCH_METHOD_CALL_CAST_TO_NUMBER = e -> NUMBER_PATTERN.matcher(e.methodName().getText()).matches();
 
   public TryNumberDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -54,10 +57,12 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
-      .filter(node -> pattern.matcher((
-        (BSLParser.GlobalMethodCallContext) node).methodName().getText()).matches())
-      .forEach(node -> diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) node));
+      .filter(GlobalMethodCallContext.class::isInstance)
+      .map(GlobalMethodCallContext.class::cast)
+      .filter(MATCH_METHOD_CALL_CAST_TO_NUMBER)
+      .forEach(diagnosticStorage::addDiagnostic);
 
     return ctx;
   }
+
 }
