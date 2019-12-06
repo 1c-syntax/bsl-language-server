@@ -50,6 +50,10 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
+  private static Predicate<ParseTree> parentClassMatchTo(Class<?> clazzName) {
+    return e -> e.getParent().getClass().equals(clazzName);
+  }
+
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
@@ -67,10 +71,6 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     return super.visitForEachStatement(ctx);
-  }
-
-  public Predicate<ParseTree> parentClassMatchTo(Class<?> clazzName) {
-    return e -> e.getParent().getClass().equals(clazzName);
   }
 
 }

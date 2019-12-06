@@ -46,7 +46,7 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern NUMBER_PATTERN = Pattern.compile("число|number",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  public static final Predicate<GlobalMethodCallContext> MATCH_METHOD_CALL_CAST_TO_NUMBER = e -> NUMBER_PATTERN.matcher(e.methodName().getText()).matches();
+  private static final Predicate<GlobalMethodCallContext> MATCH_METHOD_CALL_CAST_TO_NUMBER = e -> NUMBER_PATTERN.matcher(e.methodName().getText()).matches();
 
   public TryNumberDiagnostic(DiagnosticInfo info) {
     super(info);

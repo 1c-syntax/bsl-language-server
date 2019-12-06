@@ -26,8 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.ParamContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.ParamListContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Objects;
@@ -48,9 +48,11 @@ public class OrderOfParamsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitParamList(BSLParser.ParamListContext ctx) {
+  public ParseTree visitParamList(ParamListContext ctx) {
 
-    boolean hasDefaultBetweenRequired = ctx.param().stream().map(ParamContext::defaultValue).dropWhile(Objects::isNull)
+    boolean hasDefaultBetweenRequired = ctx.param().stream()
+      .map(ParamContext::defaultValue)
+      .dropWhile(Objects::isNull)
       .anyMatch(Objects::isNull);
     if (hasDefaultBetweenRequired) {
       diagnosticStorage.addDiagnostic(ctx);
