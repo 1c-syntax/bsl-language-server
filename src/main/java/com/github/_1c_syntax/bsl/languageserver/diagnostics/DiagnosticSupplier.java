@@ -31,9 +31,9 @@ import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.reflections.Reflections;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import org.reflections8.Reflections;
+import org.reflections8.util.ClasspathHelper;
+import org.reflections8.util.ConfigurationBuilder;
 
 import java.util.ArrayList;
 import java.util.List;

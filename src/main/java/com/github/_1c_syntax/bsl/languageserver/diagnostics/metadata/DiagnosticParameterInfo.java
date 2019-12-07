@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import org.reflections.ReflectionUtils;
+import org.reflections8.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
