@@ -19,7 +19,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var namePattern = Regex("^diagnosticName\\s*=\\s*(.*)$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-    private var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?(\\w+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
+    private var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?([\\w<>,\\s]+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),*\$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
