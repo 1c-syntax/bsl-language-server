@@ -21,16 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 
+@Slf4j
 public class ConsoleReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "console";
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleReporter.class.getSimpleName());
 
   public ConsoleReporter(){
     super();

@@ -21,19 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+@Slf4j
 public class VersionCommand implements Command {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(VersionCommand.class.getName());
-
 
   @Override
   public int execute() {

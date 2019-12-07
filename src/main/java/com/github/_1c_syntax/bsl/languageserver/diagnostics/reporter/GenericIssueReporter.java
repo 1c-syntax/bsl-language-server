@@ -22,18 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+@Slf4j
 public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "generic";
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(GenericIssueReporter.class.getSimpleName());
 
   public GenericIssueReporter(){
     super();

@@ -32,9 +32,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -56,9 +55,9 @@ import java.util.stream.Stream;
 @Data
 @AllArgsConstructor
 @JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
+@Slf4j
 public final class LanguageServerConfiguration {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(LanguageServerConfiguration.class.getSimpleName());
   public static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
   private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
