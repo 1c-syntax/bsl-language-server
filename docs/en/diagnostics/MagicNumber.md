@@ -4,6 +4,12 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `badpractice` |
 
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `allowMagicIndexes` | `boolean` | ```allow magic indexes``` | ```"-1,0,1"``` |
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -46,5 +52,7 @@ End Function
 ### Parameter for config
 
 ```json
-"MagicNumber": false
+"MagicNumber": {
+    "allowMagicIndexes": "-1,0,1"
+}
 ```
