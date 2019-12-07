@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxMethodSize` | `int` | ```Max method line count.``` | ```200``` |
+| `maxMethodSize` | `Integer` | ```Max method line count.``` | ```200``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

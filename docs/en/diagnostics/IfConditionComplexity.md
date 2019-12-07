@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxIfConditionComplexity` | `int` | ```Maximum count condition in if statement``` | ```3``` |
+| `maxIfConditionComplexity` | `Integer` | ```Maximum count condition in if statement``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

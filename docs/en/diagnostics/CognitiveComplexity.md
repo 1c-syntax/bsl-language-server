@@ -8,8 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `complexityThreshold` | `int` | ```Complexity threshold``` | ```15``` |
-| `checkModuleBody` | `boolean` | ```Check module body``` | ```true``` |
+| `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```15``` |
+| `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
