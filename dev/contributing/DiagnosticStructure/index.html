@@ -514,6 +514,10 @@
 </pre></div>
 
 
+<div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractDiagnostic</span>
+</pre></div>
+
+
 <div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span>
 </pre></div>
 
@@ -525,6 +529,10 @@
 <p>Диагностика может предоставлять т.н. <code>быстрые исправления</code>, для чего класс диагностики должен реализовывать интерфейс <code>QuickFixProvider</code>. Подробно о добавлении <code>быстрых исправлений</code> в диагностику написано <a href="../DiagnosticQuickFix/">статье</a>.</p>
 <p>Примеры</p>
 <div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
 </pre></div>
 
 
