@@ -79,6 +79,10 @@ public class TemplateDiagnostic implements BSLDiagnostic
 ```
 
 ```java
+public class TemplateDiagnostic extends AbstractDiagnostic
+```
+
+```java
 public class TemplateDiagnostic extends AbstractVisitorDiagnostic
 ```
 
@@ -93,6 +97,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 
 ```java
 public class TemplateDiagnostic implements BSLDiagnostic, QuickFixProvider
+```
+
+```java
+public class TemplateDiagnostic extends AbstractDiagnostic implements QuickFixProvider
 ```
 
 ```java

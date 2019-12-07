@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +46,7 @@ import java.util.Map;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class LineLengthDiagnostic implements BSLDiagnostic {
+public class LineLengthDiagnostic extends AbstractDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
   private int prevTokenType = 0;
@@ -58,11 +57,9 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   )
   private int maxLineLength = MAX_LINE_LENGTH;
   private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
-  private final DiagnosticInfo info;
-  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
 
   public LineLengthDiagnostic(DiagnosticInfo info) {
-    this.info = info;
+    super(info);
   }
 
   @Override
@@ -74,10 +71,8 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
-    diagnosticStorage.clearDiagnostics();
-    tokensInOneLine.clear();
+  protected void check(DocumentContext documentContext) {
+        tokensInOneLine.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
         if (mustBePutIn(token)) {
@@ -98,13 +93,6 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
         );
       }
     });
-
-    return diagnosticStorage.getDiagnostics();
-  }
-
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
   }
 
   private boolean mustBePutIn(Token token) {

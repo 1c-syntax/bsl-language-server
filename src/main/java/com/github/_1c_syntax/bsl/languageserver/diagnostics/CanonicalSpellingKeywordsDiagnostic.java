@@ -50,15 +50,13 @@ import java.util.Map;
     DiagnosticTag.STANDARD
   }
 )
-public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, QuickFixProvider {
+public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   private static Map<Integer, List<String>> canonicalKeywords = getPreset();
   private static Map<String, String> canonicalStrings = getCanonical();
-  private final DiagnosticInfo info;
-  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
 
   public CanonicalSpellingKeywordsDiagnostic(DiagnosticInfo info) {
-    this.info = info;
+    super(info);
   }
 
   private static Map<Integer, List<String>> getPreset() {
@@ -586,10 +584,7 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
     return result;
   }
 
-  @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    diagnosticStorage.clearDiagnostics();
-
+  protected void check(DocumentContext documentContext) {
     documentContext.getTokensFromDefaultChannel()
       .parallelStream()
       .filter((Token t) ->
@@ -601,13 +596,6 @@ public class CanonicalSpellingKeywordsDiagnostic implements BSLDiagnostic, Quick
           info.getMessage(token.getText())
         )
       );
-
-    return diagnosticStorage.getDiagnostics();
-  }
-
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
   }
 
   @Override

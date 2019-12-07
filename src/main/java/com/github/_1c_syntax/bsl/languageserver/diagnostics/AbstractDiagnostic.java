@@ -23,37 +23,30 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Diagnostic;
 
-import java.util.Locale;
+import java.util.List;
 
-@DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 5,
-  tags = {
-    DiagnosticTag.STANDARD
-  }
-)
-public class YoLetterUsageDiagnostic extends AbstractDiagnostic {
+public abstract class AbstractDiagnostic implements BSLDiagnostic {
 
-  public YoLetterUsageDiagnostic(DiagnosticInfo info) {
-    super(info);
+  protected final DiagnosticInfo info;
+  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+
+  public AbstractDiagnostic(DiagnosticInfo info) {
+    this.info = info;
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
-    documentContext.getTokensFromDefaultChannel()
-      .parallelStream()
-      .filter((Token t) ->
-        t.getType() == BSLParser.IDENTIFIER &&
-          t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
-      .forEach(token -> diagnosticStorage.addDiagnostic(token));
+  public DiagnosticInfo getInfo() {
+    return info;
   }
 
+  @Override
+  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    diagnosticStorage.clearDiagnostics();
+    check(documentContext);
+    return diagnosticStorage.getDiagnostics();
+  }
+
+  protected abstract void check(DocumentContext documentContext);
 }
