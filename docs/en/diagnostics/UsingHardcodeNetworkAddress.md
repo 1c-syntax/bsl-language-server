@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWordsExclusion` | `Pattern` | ```Keywords for evolution hardcoded ip search``` | ```"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"``` |
+| `searchWordsExclusion` | `String` | ```Keywords for evolution hardcoded ip search``` | ```"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

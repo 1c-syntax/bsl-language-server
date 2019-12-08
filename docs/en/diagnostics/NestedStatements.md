@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxAllowedLevel` | `int` | ```Max nested level``` | ```4``` |
+| `maxAllowedLevel` | `Integer` | ```Max nested level``` | ```4``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

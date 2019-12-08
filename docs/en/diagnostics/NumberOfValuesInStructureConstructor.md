@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxValuesCount` | `int` | ```Max count values in structure construction``` | ```3``` |
+| `maxValuesCount` | `Integer` | ```Max count values in structure construction``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

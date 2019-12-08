@@ -8,7 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `allowMagicIndexes` | `boolean` | ```allow magic indexes``` | ```"-1,0,1"``` |
+| `authorizedNumbers` | `String` | ```allowed numbers, coma separated. Example:-1,0,1,60``` | ```"-1,0,1"``` |
+| `allowMagicIndexes` | `Boolean` | ```allow magic indexes``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -53,6 +54,7 @@ End Function
 
 ```json
 "MagicNumber": {
-    "allowMagicIndexes": "-1,0,1"
+    "authorizedNumbers": "-1,0,1",
+    "allowMagicIndexes": true
 }
 ```

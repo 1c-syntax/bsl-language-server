@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxLineLength` | `int` | ```Max line length``` | ```120``` |
+| `maxLineLength` | `Integer` | ```Max line length``` | ```120``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

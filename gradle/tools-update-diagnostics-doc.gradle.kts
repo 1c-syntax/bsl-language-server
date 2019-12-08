@@ -19,7 +19,9 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var namePattern = Regex("^diagnosticName\\s*=\\s*(.*)$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-    private var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?(\\w+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
+    private var paramsPattern = Regex("^\\s*?\\@DiagnosticParameter\\(([. \\s\\w\\W]*?)\\)\\s*\$\\s*?private\\s*?([\\w<>,\\s]+)\\s+?(\\w+)\\s+?(?:\\=|\\;)",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+    private var typePattern = Regex("type\\s*=\\s*(.*)\\.class",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),*\$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
@@ -70,11 +72,12 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             "SECURITY_HOTSPOT" to "Security Hotspot",
             "CODE_SMELL" to "Code smell")
 
-    private var typeParamRuMap = hashMapOf("int" to "Число",
-            "boolean" to "Булево",
+    private var typeParamRuMap = hashMapOf(
+            "Integer" to "Число",
+            "Boolean" to "Булево",
             "String" to "Строка",
-            "Boolean" to "Число",
-            "Pattern" to "Регулярное выражение")
+            "Float" to "Число с плавающей точкой"
+    )
 
     private fun getMetadataFromText(text: String, metadata: HashMap<String, Any>) {
         val match = metadataPattern.find(text)
@@ -97,7 +100,13 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             val params = arrayListOf<HashMap<String, String>>()
 
             matches.forEach {
-                val oneParam = hashMapOf("type" to it.groupValues[2], "name" to it.groupValues[3])
+
+                val typeMatch = typePattern.find(it.groupValues[1])
+                var type = ""
+                if (typeMatch != null && typeMatch.groupValues.isNotEmpty()) {
+                    type = typeMatch.groupValues[1]
+                }
+                val oneParam = hashMapOf("type" to type, "name" to it.groupValues[3])
                 val body = it.groupValues[1]
                 var defValue = getValueFromText(body, paramsDefPattern, "")
                 if(defValue.isNotEmpty()) {
