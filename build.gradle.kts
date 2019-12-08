@@ -88,7 +88,8 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    implementation("net.oneandone.reflections8", "reflections8", "0.11.5")
+    implementation("io.github.classgraph", "classgraph", "4.8.58")
+
 
     implementation("com.github.1c-syntax", "bsl-parser", "0.11.0") {
         exclude("com.github.nixel2007.antlr4", "antlr4-maven-plugin")

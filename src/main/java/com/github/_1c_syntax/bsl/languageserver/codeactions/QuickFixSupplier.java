@@ -24,13 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
-import org.reflections8.Reflections;
-import org.reflections8.util.ClasspathHelper;
-import org.reflections8.util.ConfigurationBuilder;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class QuickFixSupplier {
 
@@ -73,18 +73,16 @@ public class QuickFixSupplier {
 
   private static List<Class<? extends QuickFixProvider>> createQuickFixClasses() {
 
-    Reflections quickFixReflections = new Reflections(
-      new ConfigurationBuilder()
-        .setUrls(
-          ClasspathHelper.forPackage(
-            BSLDiagnostic.class.getPackage().getName(),
-            ClasspathHelper.contextClassLoader(),
-            ClasspathHelper.staticClassLoader()
-          )
-        )
-    );
+    ScanResult scanResult =
+      new ClassGraph()
+        .enableAllInfo()
+        .whitelistPackages(BSLDiagnostic.class.getPackageName())
+        .scan();
 
-    return new ArrayList<>(quickFixReflections.getSubTypesOf(QuickFixProvider.class));
+
+    return scanResult.getClassesImplementing(QuickFixProvider.class.getName())
+      .stream().map(classInfo -> classInfo.loadClass(QuickFixProvider.class))
+      .collect(Collectors.toList());
   }
 
 }

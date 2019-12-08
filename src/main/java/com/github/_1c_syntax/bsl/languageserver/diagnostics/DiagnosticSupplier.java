@@ -29,11 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.reflections8.Reflections;
-import org.reflections8.util.ClasspathHelper;
-import org.reflections8.util.ConfigurationBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -178,21 +178,17 @@ public class DiagnosticSupplier {
   @SuppressWarnings("unchecked")
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
-    Reflections diagnosticReflections = new Reflections(
-      new ConfigurationBuilder()
-        .setUrls(
-          ClasspathHelper.forPackage(
-            BSLDiagnostic.class.getPackage().getName(),
-            ClasspathHelper.contextClassLoader(),
-            ClasspathHelper.staticClassLoader()
-          )
-        )
-    );
+    try (
+      ScanResult scanResult = new ClassGraph().enableAllInfo().whitelistPackages(BSLDiagnostic.class.getPackageName())
+        .scan()) {
+      ClassInfoList routeClassInfoList = scanResult.getClassesWithAnnotation(DiagnosticMetadata.class.getName());
 
-    return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
-      .stream()
-      .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
-      .collect(Collectors.toList());
+      return routeClassInfoList
+        .stream()
+        .map(aClass -> (Class<? extends BSLDiagnostic>) aClass.loadClass())
+        .collect(Collectors.toList());
+    }
+
   }
 
   public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {

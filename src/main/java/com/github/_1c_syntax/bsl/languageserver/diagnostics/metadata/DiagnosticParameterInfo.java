@@ -21,7 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import org.reflections8.ReflectionUtils;
+
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -79,11 +83,19 @@ public final class DiagnosticParameterInfo {
 
   @SuppressWarnings("unchecked")
   static List<DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
-    return ReflectionUtils.getAllFields(
-      diagnosticInfo.getDiagnosticClass(),
-      ReflectionUtils.withAnnotation(DiagnosticParameter.class)
-    ).stream()
-      .map((Field field) -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))
-      .collect(Collectors.toList());
+
+
+    try (
+      ScanResult scanResult = new ClassGraph()
+      .enableAllInfo()
+      .whitelistPackages(BSLDiagnostic.class.getPackageName())
+      .scan()) {
+
+      ClassInfo classInfo = scanResult.getClassInfo(diagnosticInfo.getDiagnosticClass().getName());
+      return classInfo.getFieldInfo().stream()
+        .filter(fieldInfo -> fieldInfo.getAnnotationInfo(DiagnosticParameter.class.getName()) != null)
+        .map(field -> new DiagnosticParameterInfo(field.loadClassAndGetField(), diagnosticInfo.getResourceString(field.getName())))
+        .collect(Collectors.toList());
+    }
   }
 }
