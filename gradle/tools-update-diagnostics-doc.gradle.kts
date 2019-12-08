@@ -73,7 +73,7 @@ open class ToolsUpdateDiagnosticDocs @javax.inject.Inject constructor(objects: O
             "CODE_SMELL" to "Code smell")
 
     private var typeParamRuMap = hashMapOf(
-            "Integer" to "Число",
+            "Integer" to "Целое",
             "Boolean" to "Булево",
             "String" to "Строка",
             "Float" to "Число с плавающей точкой"
