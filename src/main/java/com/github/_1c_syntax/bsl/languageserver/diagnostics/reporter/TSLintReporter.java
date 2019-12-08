@@ -23,9 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,11 +32,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class TSLintReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "tslint";
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(TSLintReporter.class.getSimpleName());
 
   public TSLintReporter(){
     super();

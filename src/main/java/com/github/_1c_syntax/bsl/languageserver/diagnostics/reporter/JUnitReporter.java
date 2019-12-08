@@ -24,18 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+@Slf4j
 public class JUnitReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "junit";
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(JUnitReporter.class.getSimpleName());
 
   public JUnitReporter() {
     super();
