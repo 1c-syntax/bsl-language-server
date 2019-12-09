@@ -85,7 +85,7 @@ public class DiagnosticInfo {
 
     String resourceName = langCode + "/" + diagnosticCode + ".md";
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
-
+  System.out.println(resourceName);
     if (descriptionStream == null) {
       LOGGER.error("Can't find resource {}", resourceName);
       return "";

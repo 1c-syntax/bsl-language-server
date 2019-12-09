@@ -108,64 +108,64 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitAssignment(AssignmentContext ctx) {
+    if (ctx.expression() != null) {
+      BSLParser.MemberContext firstMember = ctx.expression().member(0);
+      String variableName = ctx.lValue().getText();
+      VariableDefinition currentVariable = new VariableDefinition(variableName);
+      currentVariable.addDeclaration(ctx.lValue());
 
-    BSLParser.MemberContext firstMember = ctx.expression().member(0);
-    String variableName = ctx.lValue().getText();
-    VariableDefinition currentVariable = new VariableDefinition(variableName);
-    currentVariable.addDeclaration(ctx.lValue());
 
-
-    if (firstMember != null) {
-      if (firstMember.complexIdentifier() != null) {
-        BSLParser.ComplexIdentifierContext complexId = firstMember.complexIdentifier();
-        if (complexId.newExpression() != null) {
-          BSLParser.NewExpressionContext newExpression = complexId.newExpression();
-          if (newExpression.typeName() != null) {
-            String typeName = newExpression.typeName().getText();
-            if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
-              currentVariable.addType(QUERY_BUILDER_TYPE);
-            } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
-              currentVariable.addType(REPORT_BUILDER_TYPE);
-            } else if (QUERY_PATTERN.matcher(typeName).matches()) {
-              currentVariable.addType(QUERY_TYPE);
+      if (firstMember != null) {
+        if (firstMember.complexIdentifier() != null) {
+          BSLParser.ComplexIdentifierContext complexId = firstMember.complexIdentifier();
+          if (complexId.newExpression() != null) {
+            BSLParser.NewExpressionContext newExpression = complexId.newExpression();
+            if (newExpression.typeName() != null) {
+              String typeName = newExpression.typeName().getText();
+              if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
+                currentVariable.addType(QUERY_BUILDER_TYPE);
+              } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
+                currentVariable.addType(REPORT_BUILDER_TYPE);
+              } else if (QUERY_PATTERN.matcher(typeName).matches()) {
+                currentVariable.addType(QUERY_TYPE);
+              } else {
+                currentVariable.addType(newExpression.typeName().getText());
+              }
             } else {
-              currentVariable.addType(newExpression.typeName().getText());
+              currentVariable.addType(UNDEFINED_TYPE);
             }
+
+          } else if (complexId.IDENTIFIER() != null) {
+            Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(getComplexPathName(complexId, null));
+            if (variableDefinition.isPresent()) {
+              currentVariable.types.addAll(variableDefinition.get().types);
+            } else {
+              currentVariable.types.add(UNDEFINED_TYPE);
+            }
+          }
+        } else if (firstMember.constValue() != null) {
+          BSLParser.ConstValueContext constValue = firstMember.constValue();
+          if (constValue.string() != null) {
+            currentVariable.addType(STRING_TYPE);
+          } else if (constValue.DATETIME() != null) {
+            currentVariable.addType(DATE_TYPE);
+          } else if (constValue.numeric() != null) {
+            currentVariable.addType(NUMBER_TYPE);
+          } else if (constValue.TRUE() != null) {
+            currentVariable.addType(BOOLEAN_TYPE);
+          } else if (constValue.FALSE() != null) {
+            currentVariable.addType(BOOLEAN_TYPE);
+          } else if (constValue.NULL() != null) {
+            currentVariable.addType(NULL_TYPE);
           } else {
             currentVariable.addType(UNDEFINED_TYPE);
           }
-
-        } else if (complexId.IDENTIFIER() != null) {
-          Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(getComplexPathName(complexId, null));
-          if (variableDefinition.isPresent()) {
-            currentVariable.types.addAll(variableDefinition.get().types);
-          } else {
-            currentVariable.types.add(UNDEFINED_TYPE);
-          }
-        }
-      } else if (firstMember.constValue() != null) {
-        BSLParser.ConstValueContext constValue = firstMember.constValue();
-        if (constValue.string() != null) {
-          currentVariable.addType(STRING_TYPE);
-        } else if (constValue.DATETIME() != null) {
-          currentVariable.addType(DATE_TYPE);
-        } else if (constValue.numeric() != null) {
-          currentVariable.addType(NUMBER_TYPE);
-        } else if (constValue.TRUE() != null) {
-          currentVariable.addType(BOOLEAN_TYPE);
-        } else if (constValue.FALSE() != null) {
-          currentVariable.addType(BOOLEAN_TYPE);
-        } else if (constValue.NULL() != null) {
-          currentVariable.addType(NULL_TYPE);
         } else {
           currentVariable.addType(UNDEFINED_TYPE);
         }
-      } else {
-        currentVariable.addType(UNDEFINED_TYPE);
       }
+      currentScope.addVariable(variableName, currentVariable);
     }
-    currentScope.addVariable(variableName, currentVariable);
-
     return super.visitAssignment(ctx);
   }
 
