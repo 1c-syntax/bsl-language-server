@@ -75,7 +75,11 @@ public class QuickFixSupplier {
 
     ScanResult scanResult =
       new ClassGraph()
-        .enableAllInfo()
+        .disableJarScanning()
+        .disableModuleScanning()
+        .disableNestedJarScanning()
+        .disableRuntimeInvisibleAnnotations()
+        .enableClassInfo()
         .whitelistPackages(BSLDiagnostic.class.getPackageName())
         .scan();
 

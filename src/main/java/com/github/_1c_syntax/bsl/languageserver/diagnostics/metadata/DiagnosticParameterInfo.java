@@ -85,11 +85,20 @@ public final class DiagnosticParameterInfo {
   static List<DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
 
 
+    final String packageName = BSLDiagnostic.class.getPackageName();
     try (
       ScanResult scanResult = new ClassGraph()
-      .enableAllInfo()
-      .whitelistPackages(BSLDiagnostic.class.getPackageName())
-      .scan()) {
+        .verbose()
+        .disableJarScanning()
+        .disableModuleScanning()
+        .disableNestedJarScanning()
+        .disableRuntimeInvisibleAnnotations()
+        .enableFieldInfo()
+        .enableAnnotationInfo()
+        .whitelistPackages(packageName)
+        .blacklistPackages(packageName + "/*")
+        .blacklistPaths("*/*.properties", "resources/*", "test/*", "build/*")
+        .scan()) {
 
       ClassInfo classInfo = scanResult.getClassInfo(diagnosticInfo.getDiagnosticClass().getName());
       return classInfo.getFieldInfo().stream()

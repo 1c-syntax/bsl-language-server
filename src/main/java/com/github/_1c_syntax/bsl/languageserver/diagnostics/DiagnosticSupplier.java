@@ -179,7 +179,14 @@ public class DiagnosticSupplier {
   private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
 
     try (
-      ScanResult scanResult = new ClassGraph().enableAllInfo().whitelistPackages(BSLDiagnostic.class.getPackageName())
+      ScanResult scanResult = new ClassGraph()
+        .disableJarScanning()
+        .disableModuleScanning()
+        .disableNestedJarScanning()
+        .disableRuntimeInvisibleAnnotations()
+        .enableAnnotationInfo()
+        .enableClassInfo()
+        .whitelistPackages(BSLDiagnostic.class.getPackageName())
         .scan()) {
       ClassInfoList routeClassInfoList = scanResult.getClassesWithAnnotation(DiagnosticMetadata.class.getName());
 
