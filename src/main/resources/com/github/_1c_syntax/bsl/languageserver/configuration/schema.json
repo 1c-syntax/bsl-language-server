@@ -78,6 +78,9 @@
                 "TernaryOperatorUsage": {
                     "$ref": "diagnostics-schema.json#/definitions/TernaryOperatorUsage"
                 },
+                "CreateQueryInCycle": {
+                    "$ref": "diagnostics-schema.json#/definitions/CreateQueryInCycle"
+                },
                 "UsingObjectNotAvailableUnix": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingObjectNotAvailableUnix"
                 },

@@ -13,6 +13,15 @@
             "title": "",
             "$id": "#/definitions/TernaryOperatorUsage"
         },
+        "CreateQueryInCycle": {
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "",
+            "$id": "#/definitions/CreateQueryInCycle"
+        },
         "UsingObjectNotAvailableUnix": {
             "default": null,
             "type": [

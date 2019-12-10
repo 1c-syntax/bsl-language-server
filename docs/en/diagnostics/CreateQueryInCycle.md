@@ -1,3 +1,12 @@
+# Execution query on cycle (CreateQueryInCycle)
+
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `20` | `performance` |
+
+<!-- Блоки выше заполняются автоматически, не трогать -->
+## Description
+
 ## Описание диагностики
 
 Execution query in cycle
@@ -59,4 +68,20 @@ Good
 	СуммаДокументов = ВыборкаДетальныеЗаписи.СуммаДокумента;
 КонецЦикла;
 
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:CreateQueryInCycle-off
+// BSLLS:CreateQueryInCycle-on
+```
+
+### Parameter for config
+
+```json
+"CreateQueryInCycle": false
 ```
