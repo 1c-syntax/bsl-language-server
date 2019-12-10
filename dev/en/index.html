@@ -545,7 +545,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <li><code>computeDiagnostics</code> - <code>String</code> - trigger for the computation of diagnostics. Valid values: <code>onType</code> (on file edit), <code>onSave</code> (on file save), <code>never</code>. By default set to <code>onSave</code>.</li>
 <li><code>traceLog</code> - <code>String</code> - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set <strong> significantly slows down</strong> communication speed between server and client. Dy default - not set.</li>
 <li><code>diagnostics</code> - <code>Object</code> - diagnostics settings collection. Collection items are objects with the structure as following:<ul>
-<li>object key - <code>String</code> - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.</li>
+<li>object key - <code>String</code> - diagnostics key, as given in section <a href="diagnostics">Diagnostics</a>.</li>
 <li>object value<ul>
 <li><code>Boolean</code> - <code>false</code> to disable diagnostics, <code>true</code> - to enable diagnostics without additional settings. By default set to <code>true</code>.</li>
 <li><code>Object</code> - Structure of settings for each diagnostics. Available parameters are give in each diagnostics section.</li>
