@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **65**
+Общее количество: **66**
 
-* Дефект кода: **40**
+* Дефект кода: **41**
 * Уязвимость: **2**
 * Ошибка: **23**
 
@@ -27,6 +27,7 @@
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br/>`suspicious` |
+| [EmptyRegion](EmptyRegion.md) | Область не должна быть пустой | Да | Информационный | Дефект кода | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` |
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | Важный | Ошибка | `suspicious`<br/>`unpredictable` |
@@ -37,7 +38,7 @@
 | [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` |
 | [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br/>`standard`<br/>`unpredictable` |
 | [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
-| [MagicNumber](MagicNumber.md) | Использование магического числа | Да | Незначительный | Дефект кода | `badpractice` |
+| [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` |
 | [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` |
 | [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br/>`badpractice` |
 | [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` |
