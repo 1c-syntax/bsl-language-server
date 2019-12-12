@@ -68,13 +68,13 @@
             "properties": {
                 "complexityThreshold": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Complexity threshold",
+                    "example": "15"
                 },
                 "checkModuleBody": {
                     "type": "boolean",
-                    "title": "",
-                    "example": ""
+                    "title": "Check module body",
+                    "example": "true"
                 }
             },
             "$id": "#/definitions/CognitiveComplexity"
@@ -134,8 +134,8 @@
             "properties": {
                 "maxValuesCount": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Max count values in structure construction",
+                    "example": "3"
                 }
             },
             "$id": "#/definitions/NumberOfValuesInStructureConstructor"
@@ -159,8 +159,8 @@
             "properties": {
                 "maxMethodSize": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Max method line count.",
+                    "example": "200"
                 }
             },
             "$id": "#/definitions/MethodSize"
@@ -193,8 +193,8 @@
             "properties": {
                 "searchWordsStdPathsUnix": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Keywords for search unix dirs",
+                    "example": "\"bin|boot|dev|etc|home|lib|lost\\\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var\""
                 }
             },
             "$id": "#/definitions/UsingHardcodePath"
@@ -218,8 +218,8 @@
             "properties": {
                 "maxParamsCount": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Max number of params count",
+                    "example": "7"
                 }
             },
             "$id": "#/definitions/NumberOfParams"
@@ -234,28 +234,28 @@
             "properties": {
                 "listForCheckLeftAndRight": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Symbols for spaces from both side(space separated) Example: + - * / = % < >",
+                    "example": "\"+ - * / = % < > <> <= >=\""
                 },
                 "allowMultipleCommas": {
                     "type": "boolean",
-                    "title": "",
-                    "example": ""
+                    "title": "Allow few commas",
+                    "example": "false"
                 },
                 "checkSpaceToRightOfUnary": {
                     "type": "boolean",
-                    "title": "",
-                    "example": ""
+                    "title": "Check space right from unary (+ -)",
+                    "example": "false"
                 },
                 "listForCheckLeft": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Symbols  for spaces from left side (space separated). Example: ) =",
+                    "example": "\"\""
                 },
                 "listForCheckRight": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Symbols  for spaces from right side (space separated). Example: ( =",
+                    "example": "\", ;\""
                 }
             },
             "$id": "#/definitions/MissingSpace"
@@ -270,8 +270,8 @@
             "properties": {
                 "searchDeleteFileMethod": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Keywords for search delete/remove methods",
+                    "example": "\"\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile\""
                 }
             },
             "$id": "#/definitions/MissingTemporaryFileDeletion"
@@ -295,8 +295,8 @@
             "properties": {
                 "commentAsCode": {
                     "type": "boolean",
-                    "title": "",
-                    "example": ""
+                    "title": "Comment as code",
+                    "example": "false"
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
@@ -320,8 +320,8 @@
             "properties": {
                 "threshold": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Threshold",
+                    "example": "0.9F"
                 }
             },
             "$id": "#/definitions/CommentedCode"
@@ -399,8 +399,8 @@
             "properties": {
                 "maxAllowedLevel": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Max nested level",
+                    "example": "4"
                 }
             },
             "$id": "#/definitions/NestedStatements"
@@ -442,8 +442,8 @@
             "properties": {
                 "searchWords": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Keywords for search confidential.",
+                    "example": "\"\u041f\u0430\u0440\u043e\u043b\u044c|Password\""
                 }
             },
             "$id": "#/definitions/UsingHardcodeSecretInformation"
@@ -458,8 +458,8 @@
             "properties": {
                 "commentAsCode": {
                     "type": "boolean",
-                    "title": "",
-                    "example": ""
+                    "title": "Comment as code",
+                    "example": "false"
                 }
             },
             "$id": "#/definitions/EmptyCodeBlock"
@@ -492,8 +492,8 @@
             "properties": {
                 "serviceTags": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Service tags",
+                    "example": "\"todo|fixme|!!|mrg|@|\u043e\u0442\u043b\u0430\u0434\u043a\u0430|debug|\u0434\u043b\u044f\\\\s*\u043e\u0442\u043b\u0430\u0434\u043a\u0438|(\\\\{\\\\{|\\\\}\\\\})\u041a\u041e\u041d\u0421\u0422\u0420\u0423\u041a\u0422\u041e\u0420_|(\\\\{\\\\{|\\\\}\\\\})MRG\""
                 }
             },
             "$id": "#/definitions/UsingServiceTag"
@@ -616,8 +616,8 @@
             "properties": {
                 "maxLineLength": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Max line length",
+                    "example": "120"
                 }
             },
             "$id": "#/definitions/LineLength"
@@ -632,8 +632,8 @@
             "properties": {
                 "commentsAnnotation": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)",
+                    "example": "\"//@,//(c),//\u00a9\""
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
@@ -684,8 +684,8 @@
             "properties": {
                 "maxOptionalParamsCount": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Max number of optional parameters",
+                    "example": "3"
                 }
             },
             "$id": "#/definitions/NumberOfOptionalParams"
@@ -700,8 +700,8 @@
             "properties": {
                 "searchWordsExclusion": {
                     "type": "string",
-                    "title": "",
-                    "example": ""
+                    "title": "Keywords for evolution hardcoded ip search",
+                    "example": "\"\u0412\u0435\u0440\u0441\u0438|Version|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432|Namespace|\u0414\u0440\u0430\u0439\u0432\u0435\u0440|Driver\""
                 }
             },
             "$id": "#/definitions/UsingHardcodeNetworkAddress"
@@ -734,8 +734,8 @@
             "properties": {
                 "maxIfConditionComplexity": {
                     "type": "integer",
-                    "title": "",
-                    "example": ""
+                    "title": "Maximum count condition in if statement",
+                    "example": "3"
                 }
             },
             "$id": "#/definitions/IfConditionComplexity"
@@ -750,8 +750,8 @@
             "properties": {
                 "allowMagicIndexes": {
                     "type": "boolean",
-                    "title": "",
-                    "example": ""
+                    "title": "allow magic indexes",
+                    "example": "\"-1,0,1\""
                 }
             },
             "$id": "#/definitions/MagicNumber"
