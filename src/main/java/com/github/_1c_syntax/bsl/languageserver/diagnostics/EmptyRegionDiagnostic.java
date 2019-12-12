@@ -50,12 +50,10 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic {
 
     documentContext.getMethods();
 
-    List<RegionSymbol> regions = documentContext.getRegionsFlat();
     documentContext.getRegionsFlat()
       .stream()
       .filter(regionSymbol -> regionSymbol.getMethods().isEmpty())
-      .map(RegionSymbol::getNode)
-      .forEach(diagnosticStorage::addDiagnostic);
+      .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getNode(), info.getMessage(regionSymbol.getName())));
 
   }
 
