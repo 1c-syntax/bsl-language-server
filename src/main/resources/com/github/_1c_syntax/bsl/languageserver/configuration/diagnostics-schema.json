@@ -588,6 +588,15 @@
             "title": "",
             "$id": "#/definitions/InvalidCharacterInFile"
         },
+        "EmptyRegion": {
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "",
+            "$id": "#/definitions/EmptyRegion"
+        },
         "DeprecatedMessage": {
             "default": null,
             "type": [

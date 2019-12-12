@@ -231,6 +231,9 @@
                 "InvalidCharacterInFile": {
                     "$ref": "diagnostics-schema.json#/definitions/InvalidCharacterInFile"
                 },
+                "EmptyRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/EmptyRegion"
+                },
                 "DeprecatedMessage": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
                 },
