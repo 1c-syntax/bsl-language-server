@@ -109,7 +109,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitAssignment(@NonNull AssignmentContext ctx) {
+  public ParseTree visitAssignment(AssignmentContext ctx) {
     if (ctx.expression() != null) {
       BSLParser.MemberContext firstMember = ctx.expression().member(0);
       String variableName = ctx.lValue().getText();
@@ -163,19 +163,40 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private Set<String> getTypeFromNewExpressionContext(@NonNull BSLParser.NewExpressionContext newExpression) {
+    String typeName = "";
     if (newExpression.typeName() != null) {
-      String typeName = newExpression.typeName().getText();
-      if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
-        return Set.of(QUERY_BUILDER_TYPE);
-      } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
-        return Set.of(REPORT_BUILDER_TYPE);
-      } else if (QUERY_PATTERN.matcher(typeName).matches()) {
-        return Set.of(QUERY_TYPE);
-      } else {
-        return Set.of(newExpression.typeName().getText());
-      }
+      typeName = newExpression.typeName().getText();
     } else {
-      return Set.of(UNDEFINED_TYPE);
+      if (newExpression.doCall() != null) {
+        BSLParser.DoCallContext doCall = newExpression.doCall();
+        if (doCall.callParamList() != null) {
+          BSLParser.CallParamListContext paramList = doCall.callParamList();
+          Optional<BSLParser.CallParamContext> firstParam = paramList.callParam().stream().findFirst();
+          if (firstParam.isPresent()) {
+            if (firstParam.get().expression().member().size() > 0) {
+              if (firstParam.get().expression().member(0).constValue() != null) {
+                BSLParser.ConstValueContext constValue = firstParam.get().expression().member(0).constValue();
+                if (getTypesFromConstValue(constValue).contains(STRING_TYPE)) {
+                  typeName = constValue.getText();
+                  typeName = typeName.substring(1, typeName.length() - 1);
+                }
+              }
+            }
+          } else {
+            typeName = UNDEFINED_TYPE;
+            //TODO Bad call new statement
+          }
+        }
+      }
+    }
+    if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
+      return Set.of(QUERY_BUILDER_TYPE);
+    } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
+      return Set.of(REPORT_BUILDER_TYPE);
+    } else if (QUERY_PATTERN.matcher(typeName).matches()) {
+      return Set.of(QUERY_TYPE);
+    } else {
+      return Set.of(typeName);
     }
   }
 

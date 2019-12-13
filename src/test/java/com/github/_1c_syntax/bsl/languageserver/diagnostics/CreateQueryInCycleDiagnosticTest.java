@@ -39,13 +39,14 @@ class CreateQueryInCycleDiagnosticTest extends AbstractDiagnosticTest<CreateQuer
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(4, 8, 4, 36)
       .hasRange(27, 23, 27, 47)
       .hasRange(44, 4, 44, 22)
       .hasRange(48, 4, 48, 22)
       .hasRange(59, 4, 59, 18)
-      .hasRange(60, 4, 60, 24);
+      .hasRange(60, 4, 60, 24)
+      .hasRange(66, 4, 66, 22);
   }
 }
