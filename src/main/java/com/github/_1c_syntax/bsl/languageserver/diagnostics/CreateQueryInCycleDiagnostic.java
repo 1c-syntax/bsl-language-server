@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.NonNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -82,6 +83,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
+
   @Override
   public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     currentScope.enterScope(MODULE_SCOPE);
@@ -107,59 +109,18 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitAssignment(AssignmentContext ctx) {
+  public ParseTree visitAssignment(@NonNull AssignmentContext ctx) {
     if (ctx.expression() != null) {
       BSLParser.MemberContext firstMember = ctx.expression().member(0);
       String variableName = ctx.lValue().getText();
       VariableDefinition currentVariable = new VariableDefinition(variableName);
       currentVariable.addDeclaration(ctx.lValue());
 
-
       if (firstMember != null) {
         if (firstMember.complexIdentifier() != null) {
-          BSLParser.ComplexIdentifierContext complexId = firstMember.complexIdentifier();
-          if (complexId.newExpression() != null) {
-            BSLParser.NewExpressionContext newExpression = complexId.newExpression();
-            if (newExpression.typeName() != null) {
-              String typeName = newExpression.typeName().getText();
-              if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
-                currentVariable.addType(QUERY_BUILDER_TYPE);
-              } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
-                currentVariable.addType(REPORT_BUILDER_TYPE);
-              } else if (QUERY_PATTERN.matcher(typeName).matches()) {
-                currentVariable.addType(QUERY_TYPE);
-              } else {
-                currentVariable.addType(newExpression.typeName().getText());
-              }
-            } else {
-              currentVariable.addType(UNDEFINED_TYPE);
-            }
-
-          } else if (complexId.IDENTIFIER() != null) {
-            Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(getComplexPathName(complexId, null));
-            if (variableDefinition.isPresent()) {
-              currentVariable.types.addAll(variableDefinition.get().types);
-            } else {
-              currentVariable.types.add(UNDEFINED_TYPE);
-            }
-          }
+          currentVariable.types.addAll(getTypesFromComplexIdentifier(firstMember.complexIdentifier()));
         } else if (firstMember.constValue() != null) {
-          BSLParser.ConstValueContext constValue = firstMember.constValue();
-          if (constValue.string() != null) {
-            currentVariable.addType(STRING_TYPE);
-          } else if (constValue.DATETIME() != null) {
-            currentVariable.addType(DATE_TYPE);
-          } else if (constValue.numeric() != null) {
-            currentVariable.addType(NUMBER_TYPE);
-          } else if (constValue.TRUE() != null) {
-            currentVariable.addType(BOOLEAN_TYPE);
-          } else if (constValue.FALSE() != null) {
-            currentVariable.addType(BOOLEAN_TYPE);
-          } else if (constValue.NULL() != null) {
-            currentVariable.addType(NULL_TYPE);
-          } else {
-            currentVariable.addType(UNDEFINED_TYPE);
-          }
+          currentVariable.types.addAll(getTypesFromConstValue(firstMember.constValue()));
         } else {
           currentVariable.addType(UNDEFINED_TYPE);
         }
@@ -167,6 +128,63 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       currentScope.addVariable(variableName, currentVariable);
     }
     return super.visitAssignment(ctx);
+  }
+
+  private Set<String> getTypesFromConstValue(@NonNull BSLParser.ConstValueContext constValue) {
+    if (constValue.string() != null) {
+      return Set.of(STRING_TYPE);
+    } else if (constValue.DATETIME() != null) {
+      return Set.of(DATE_TYPE);
+    } else if (constValue.numeric() != null) {
+      return Set.of(NUMBER_TYPE);
+    } else if (constValue.TRUE() != null) {
+      return Set.of(BOOLEAN_TYPE);
+    } else if (constValue.FALSE() != null) {
+      return Set.of(BOOLEAN_TYPE);
+    } else if (constValue.NULL() != null) {
+      return Set.of(NULL_TYPE);
+    } else {
+      return Set.of(UNDEFINED_TYPE);
+    }
+  }
+
+  private Set<String> getTypesFromComplexIdentifier(@NonNull BSLParser.ComplexIdentifierContext complexId) {
+    if (complexId.newExpression() != null) {
+      return getTypeFromNewExpressionContext(complexId.newExpression());
+    } else if (complexId.IDENTIFIER() != null) {
+      Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(getComplexPathName(complexId, null));
+      if (variableDefinition.isPresent()) {
+        return variableDefinition.get().types;
+      } else {
+        return Set.of(UNDEFINED_TYPE);
+      }
+    }
+    return Set.of();
+  }
+
+  private Set<String> getTypeFromNewExpressionContext(@NonNull BSLParser.NewExpressionContext newExpression) {
+    if (newExpression.typeName() != null) {
+      String typeName = newExpression.typeName().getText();
+      if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
+        return Set.of(QUERY_BUILDER_TYPE);
+      } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
+        return Set.of(REPORT_BUILDER_TYPE);
+      } else if (QUERY_PATTERN.matcher(typeName).matches()) {
+        return Set.of(QUERY_TYPE);
+      } else {
+        return Set.of(newExpression.typeName().getText());
+      }
+    } else {
+      return Set.of(UNDEFINED_TYPE);
+    }
+  }
+
+  private String getVariableNameFromCallStatementContext(@NonNull BSLParser.CallStatementContext callStatement) {
+    return callStatement.IDENTIFIER().getText();
+  }
+
+  private String getVariableNameFromModifierContext(@NonNull BSLParser.ModifierContext modifier) {
+    return getComplexPathName(((BSLParser.ComplexIdentifierContext) modifier.getParent()), modifier);
   }
 
   private String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
@@ -188,13 +206,14 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       if (currentScope.codeFlowInCycle()) {
         String variableName = null;
         BSLParserRuleContext errorContext = null;
-        if (ctx.getParent() instanceof BSLParser.CallStatementContext) {
-          errorContext = ((BSLParser.CallStatementContext) ctx.getParent());
-          variableName = ((BSLParser.CallStatementContext) ctx.getParent()).IDENTIFIER().getText();
-        } else if (ctx.getParent() instanceof BSLParser.ModifierContext) {
-          BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) ctx.getParent();
+        BSLParserRuleContext parent = (BSLParserRuleContext) ctx.getParent();
+        if (parent instanceof BSLParser.CallStatementContext) {
+          errorContext = parent;
+          variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
+        } else if (parent instanceof BSLParser.ModifierContext) {
+          BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
           errorContext = (BSLParser.ComplexIdentifierContext) callModifier.getParent();
-          variableName = getComplexPathName(((BSLParser.ComplexIdentifierContext) callModifier.getParent()), callModifier);
+          variableName = getVariableNameFromModifierContext(callModifier);
         }
         Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
         BSLParserRuleContext finalErrorContext = errorContext;
