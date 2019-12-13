@@ -1,6 +1,7 @@
 
-import me.qoomon.gradle.gitversioning.GitVersioningPluginExtension.CommitVersionDescription
-import me.qoomon.gradle.gitversioning.GitVersioningPluginExtension.VersionDescription
+import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
+import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
+import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.net.URI
 import java.util.*
@@ -13,7 +14,7 @@ plugins {
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
     id("io.franzbecker.gradle-lombok") version "3.2.0"
-    id("me.qoomon.git-versioning") version "1.4.0"
+    id("me.qoomon.git-versioning") version "2.1.0"
     id("com.github.ben-manes.versions") version "0.25.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
@@ -43,20 +44,23 @@ publishing {
 
 group = "com.github.1c-syntax"
 
-gitVersioning {
+gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     preferTags = true
-    branch(closureOf<VersionDescription> {
+    branchVersionDescription(closureOf<VersionDescription> {
         pattern = "^(?!v[0-9]+).*"
-        versionFormat = "\${branch}-\${commit.short}"
+        versionFormat = "\${branch}-\${commit.short}\${dirty}"
     })
     tag(closureOf<VersionDescription>{
         pattern = "v(?<tagVersion>[0-9].*)"
-        versionFormat = "\${tagVersion}"
+        versionFormat = "\${tagVersion}\${dirty}"
     })
     commit(closureOf<CommitVersionDescription>{
-        versionFormat = "\${commit.short}"
+        versionFormat = "\${commit.short}\${dirty}"
     })
-}
+})
+
+val jacksonVersion = "2.10.0"
+val junitVersion = "5.5.2"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
@@ -70,9 +74,9 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
 
-    implementation("com.fasterxml.jackson.core", "jackson-databind", "2.10.0")
-    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", "2.10.0")
-    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", "2.10.0")
+    implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
+    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
+    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
 
     // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
     implementation("javax.xml.bind", "jaxb-api", "2.3.1")
@@ -107,8 +111,8 @@ dependencies {
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.2")
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.5.2")
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
+    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     testImplementation("org.assertj", "assertj-core", "3.13.2")
 
@@ -129,7 +133,7 @@ tasks.withType<JavaCompile> {
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
-//        attributes["Implementation-Version"] = archiveVersion.get()
+        attributes["Implementation-Version"] = archiveVersion.get()
     }
 
     enabled = false

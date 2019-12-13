@@ -3,6 +3,7 @@ open class ToolsUpdateJsonSchema @javax.inject.Inject constructor(objects: Objec
     val outputDir: DirectoryProperty = objects.directoryProperty()
 
     private var srcPath = "src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics"
+    private var resourcePath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/diagnostics"
     private var schemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json"
     private var diagnosticSchemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics-schema.json"
 
@@ -12,7 +13,7 @@ open class ToolsUpdateJsonSchema @javax.inject.Inject constructor(objects: Objec
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var paramsDescriptionPattern = Regex("^\\s*?description\\s*?=\\s*?\"([\\s\\w\\W]+)\"",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-    private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),\$",
+    private var paramsDefPattern = Regex("^\\s*?defaultValue\\s*?=\\s*?(?:\\s*?\"\"\\s*\\+\\s*)*([\\w]+?),*\$",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
     private var newlinePattern = Regex("\"\\s*\\+\\s*\"",
             setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
@@ -60,8 +61,17 @@ open class ToolsUpdateJsonSchema @javax.inject.Inject constructor(objects: Objec
                             val oneParam = hashMapOf("type" to type)
 
                             val body = it.groupValues[1]
-                            oneParam["title"] = getValueFromText(body, paramsDescriptionPattern)
-                                    .replace(newlinePattern, "")
+                            val fileP = File(outputDir.get().asFile.path,
+                                    "${resourcePath}/${key}Diagnostic_en.properties")
+                            if (fileP.exists()) {
+                                val parameterDescriptionPattern = Regex("^${it.groupValues[3]}\\s*=\\s*(.*)$",
+                                        setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
+                                val match = parameterDescriptionPattern.find(fileP.readText(charset("UTF-8")))
+                                if (match != null && match.groups.isNotEmpty()) {
+                                    oneParam["title"] = match.groups[1]?.value.toString().replace(newlinePattern, "")
+                                }
+                            }
+
                             var defValue = getValueFromText(body, paramsDefPattern)
                             if (defValue.isNotEmpty()) {
                                 val valPattern = Regex("\\s+?${defValue}\\s*=\\s*?([\\w\\W]+?);\$",

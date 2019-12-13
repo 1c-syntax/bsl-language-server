@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **66**
+Total: **67**
 
 * Error: **24**
-* Code smell: **40**
+* Code smell: **41**
 * Vulnerability: **2**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -28,6 +28,7 @@ Total: **66**
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br/>`suspicious` |
+| [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` |
 | [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | The function should have return | Yes | Major | Error | `suspicious`<br/>`unpredictable` |
