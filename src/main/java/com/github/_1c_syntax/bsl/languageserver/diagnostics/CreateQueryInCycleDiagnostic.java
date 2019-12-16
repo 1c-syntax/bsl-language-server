@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
@@ -160,6 +161,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private Set<String> getTypesFromComplexIdentifier(BSLParser.ComplexIdentifierContext complexId) {
+
     if (complexId.newExpression() != null) {
       return Set.of(getTypeFromNewExpressionContext(complexId.newExpression()));
     } else if (complexId.IDENTIFIER() != null) {
@@ -174,32 +176,23 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
-    String typeName = "";
-    if (newExpression.typeName() != null) {
-      typeName = newExpression.typeName().getText();
-    } else {
-      if (newExpression.doCall() != null) {
-        BSLParser.DoCallContext doCall = newExpression.doCall();
-        if (doCall.callParamList() != null) {
-          BSLParser.CallParamListContext paramList = doCall.callParamList();
-          Optional<BSLParser.CallParamContext> firstParam = paramList.callParam().stream().findFirst();
-          if (firstParam.isPresent()) {
-            if (!firstParam.get().expression().member().isEmpty()) {
-              if (firstParam.get().expression().member(0).constValue() != null) {
-                BSLParser.ConstValueContext constValue = firstParam.get().expression().member(0).constValue();
-                if (getTypeFromConstValue(constValue).equals(STRING_TYPE)) {
-                  typeName = constValue.getText();
-                  typeName = typeName.substring(1, typeName.length() - 1);
-                }
-              }
-            }
-          } else {
-            typeName = UNDEFINED_TYPE;
-            //TODO Bad call new statement
-          }
-        }
-      }
-    }
+
+    String typeName = Optional.ofNullable(newExpression.typeName())
+      .map(RuleContext::getText)
+      .or(() -> Optional.ofNullable(newExpression.doCall())
+        .map(BSLParser.DoCallContext::callParamList)
+        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
+        .map(BSLParser.CallParamContext::expression)
+        .map(BSLParser.ExpressionContext::member)
+        .flatMap(memberListContext -> memberListContext.stream().findFirst())
+        .map(BSLParser.MemberContext::constValue)
+        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
+        .map(constValue -> {
+          String constValueText = constValue.getText();
+          return constValueText.substring(1, constValueText.length() - 1);
+        })
+      )
+      .orElse(UNDEFINED_TYPE);
 
     if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
       return QUERY_BUILDER_TYPE;
