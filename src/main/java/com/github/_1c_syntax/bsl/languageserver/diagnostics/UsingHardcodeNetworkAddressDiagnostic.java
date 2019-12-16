@@ -48,27 +48,22 @@ import java.util.regex.Pattern;
 public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String REGEX_NETWORK_ADDRESS =
-    "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:" +
+    "^((?<ip6Address>([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:" +
       "|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:)" +
       "{1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}" +
       "(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)" +
       "|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}" +
       "[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:" +
       "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" +
-      "|((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
-
-  private static final int DOTS_IN_IPV4 = 3;
+      "|(?<ip4Address>((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])))$";
 
   private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
 
   private static final String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|" +
     "Namespace|Драйвер|Driver";
 
-  private static final String REGEX_ALPHABET = "[A-zА-я]";
-
   private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
   private static final Pattern patternURL = getLocalPattern(REGEX_URL);
-  private static final Pattern patternAlphabet = getLocalPattern(REGEX_ALPHABET);
 
   @DiagnosticParameter(
     type = String.class,
@@ -78,6 +73,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   public UsingHardcodeNetworkAddressDiagnostic(DiagnosticInfo info) {
     super(info);
+  }
+
+  private static Pattern getLocalPattern(String content) {
+    return Pattern.compile(content, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
   @Override
@@ -113,33 +112,14 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   }
 
   private void processVisitString(BSLParser.StringContext ctx, String content) {
-    Matcher matcher = patternNetworkAddress.matcher(content);
-    if (matcher.find()) {
-
-      String firstValue = matcher.group(0);
-      int countDots = (int) firstValue.chars().filter(num -> num == '.').count();
-      int countDotsAll = (int) content.chars().filter(num -> num == '.').count();
-      matcher = patternAlphabet.matcher(firstValue);
-      boolean findAlphabet = matcher.find();
-
-      if (countDots > 0 && (countDotsAll > DOTS_IN_IPV4 || findAlphabet)) { // для ip4
-        return;
-      }
-
+    if (patternNetworkAddress.matcher(content).find()) {
       ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
       if (parent != null) {
-        matcher = searchWordsExclusion.matcher(parent.getText());
-        if (matcher.find()) {
+        if (searchWordsExclusion.matcher(parent.getText()).find()) {
           return;
         }
       }
-
       diagnosticStorage.addDiagnostic(ctx);
     }
   }
-
-  private static Pattern getLocalPattern(String content) {
-    return Pattern.compile(content, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  }
-
 }
