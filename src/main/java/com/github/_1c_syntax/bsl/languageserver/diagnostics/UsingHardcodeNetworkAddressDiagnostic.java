@@ -33,7 +33,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -57,13 +56,10 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
       "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))" +
       "|(?<ip4Address>((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])))$";
 
-  private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
-
   private static final String REGEX_EXCLUSION = "Верси|Version|ЗапуститьПриложение|RunApp|Пространств|" +
     "Namespace|Драйвер|Driver";
 
-  private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
-  private static final Pattern patternURL = getLocalPattern(REGEX_URL);
+  private static final Pattern PATTERN_NETWORK_ADDRESS = getLocalPattern(REGEX_NETWORK_ADDRESS);
 
   @DiagnosticParameter(
     type = String.class,
@@ -102,24 +98,16 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
     String content = ctx.getText().replace("\"", "");
-    if (content.length() > 2) {
-      Matcher matcherURL = patternURL.matcher(content);
-      if (!matcherURL.find()) {
-        processVisitString(ctx, content);
-      }
-    }
-    return ctx;
-  }
-
-  private void processVisitString(BSLParser.StringContext ctx, String content) {
-    if (patternNetworkAddress.matcher(content).find()) {
+    if (PATTERN_NETWORK_ADDRESS.matcher(content).find()) {
       ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
       if (parent != null) {
         if (searchWordsExclusion.matcher(parent.getText()).find()) {
-          return;
+          return ctx;
         }
       }
       diagnosticStorage.addDiagnostic(ctx);
     }
+    return ctx;
   }
+
 }
