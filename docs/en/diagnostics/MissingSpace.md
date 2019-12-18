@@ -8,11 +8,11 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `listForCheckLeft` | `String` | ```Symbols  for spaces from left side (space separated). Example: ) =``` | ```""``` |
-| `listForCheckRight` | `String` | ```Symbols  for spaces from right side (space separated). Example: ( =``` | ```", ;"``` |
-| `listForCheckLeftAndRight` | `String` | ```Symbols for spaces from both side(space separated) Example: + - * / = % < >``` | ```"+ - * / = % < > <> <= >="``` |
 | `checkSpaceToRightOfUnary` | `Boolean` | ```Check space right from unary (+ -)``` | ```false``` |
+| `listForCheckRight` | `String` | ```Symbols  for spaces from right side (space separated). Example: ( =``` | ```, ;``` |
+| `listForCheckLeft` | `String` | ```Symbols  for spaces from left side (space separated). Example: ) =``` | `````` |
 | `allowMultipleCommas` | `Boolean` | ```Allow few commas``` | ```false``` |
+| `listForCheckLeftAndRight` | `String` | ```Symbols for spaces from both side(space separated) Example: + - * / = % < >``` | ```+ - * / = % < > <> <= >=``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -92,10 +92,10 @@ If set to `true`
 
 ```json
 "MissingSpace": {
-    "listForCheckLeft": "",
-    "listForCheckRight": ", ;",
-    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >=",
     "checkSpaceToRightOfUnary": false,
-    "allowMultipleCommas": false
+    "listForCheckRight": ", ;",
+    "listForCheckLeft": "",
+    "allowMultipleCommas": false,
+    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >="
 }
 ```

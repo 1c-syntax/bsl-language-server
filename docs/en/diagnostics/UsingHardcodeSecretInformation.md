@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWords` | `String` | ```Keywords for search confidential.``` | ```"Пароль|Password"``` |
+| `searchWords` | `String` | ```Keywords for search confidential.``` | ```Пароль|Password``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

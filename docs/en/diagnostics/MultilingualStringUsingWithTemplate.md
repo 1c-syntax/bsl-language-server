@@ -4,6 +4,12 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL` | `Major` | `Yes` | `2` | `error` |
 
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `declaredLanguages` | `String` | ```Declared languages``` | ```ru``` |
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -32,5 +38,7 @@ Source: [localization requirements] (https://its.1c.ru/db/v8std/content/763/hdoc
 ### Parameter for config
 
 ```json
-"MultilingualStringUsingWithTemplate": false
+"MultilingualStringUsingWithTemplate": {
+    "declaredLanguages": "ru"
+}
 ```

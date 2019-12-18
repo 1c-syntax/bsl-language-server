@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWordsStdPathsUnix` | `String` | ```Keywords for search unix dirs``` | ```"bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"``` |
+| `searchWordsStdPathsUnix` | `String` | ```Keywords for search unix dirs``` | ```bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -66,6 +66,6 @@ ExchangeFolder = DataExchangeReuse.ExchangeFolder();
 
 ```json
 "UsingHardcodePath": {
-    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
+    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
 }
 ```

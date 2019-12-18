@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchDeleteFileMethod` | `String` | ```Keywords for search delete/remove methods``` | ```"УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"``` |
+| `searchDeleteFileMethod` | `String` | ```Keywords for search delete/remove methods``` | ```УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

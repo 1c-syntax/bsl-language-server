@@ -96,26 +96,26 @@
                 "TryNumber": {
                     "$ref": "diagnostics-schema.json#/definitions/TryNumber"
                 },
+                "OrderOfParams": {
+                    "$ref": "diagnostics-schema.json#/definitions/OrderOfParams"
+                },
                 "CognitiveComplexity": {
                     "$ref": "diagnostics-schema.json#/definitions/CognitiveComplexity"
                 },
                 "DeprecatedFind": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedFind"
                 },
-                "OrderOfParams": {
-                    "$ref": "diagnostics-schema.json#/definitions/OrderOfParams"
+                "NestedConstructorsInStructureDeclaration": {
+                    "$ref": "diagnostics-schema.json#/definitions/NestedConstructorsInStructureDeclaration"
                 },
                 "IdenticalExpressions": {
                     "$ref": "diagnostics-schema.json#/definitions/IdenticalExpressions"
                 },
-                "NestedConstructorsInStructureDeclaration": {
-                    "$ref": "diagnostics-schema.json#/definitions/NestedConstructorsInStructureDeclaration"
+                "NumberOfValuesInStructureConstructor": {
+                    "$ref": "diagnostics-schema.json#/definitions/NumberOfValuesInStructureConstructor"
                 },
                 "NonExportMethodsInApiRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/NonExportMethodsInApiRegion"
-                },
-                "NumberOfValuesInStructureConstructor": {
-                    "$ref": "diagnostics-schema.json#/definitions/NumberOfValuesInStructureConstructor"
                 },
                 "IfElseDuplicatedCondition": {
                     "$ref": "diagnostics-schema.json#/definitions/IfElseDuplicatedCondition"
@@ -126,11 +126,11 @@
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
-                "SemicolonPresence": {
-                    "$ref": "diagnostics-schema.json#/definitions/SemicolonPresence"
-                },
                 "UsingHardcodePath": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingHardcodePath"
+                },
+                "SemicolonPresence": {
+                    "$ref": "diagnostics-schema.json#/definitions/SemicolonPresence"
                 },
                 "UnreachableCode": {
                     "$ref": "diagnostics-schema.json#/definitions/UnreachableCode"
@@ -153,11 +153,11 @@
                 "UsingCancelParameter": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingCancelParameter"
                 },
-                "CommentedCode": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommentedCode"
-                },
                 "ProcedureReturnsValue": {
                     "$ref": "diagnostics-schema.json#/definitions/ProcedureReturnsValue"
+                },
+                "CommentedCode": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommentedCode"
                 },
                 "PairingBrokenTransaction": {
                     "$ref": "diagnostics-schema.json#/definitions/PairingBrokenTransaction"
@@ -165,11 +165,11 @@
                 "CompilationDirectiveNeedLess": {
                     "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveNeedLess"
                 },
-                "CompilationDirectiveLost": {
-                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveLost"
-                },
                 "UnusedLocalMethod": {
                     "$ref": "diagnostics-schema.json#/definitions/UnusedLocalMethod"
+                },
+                "CompilationDirectiveLost": {
+                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveLost"
                 },
                 "TimeoutsInExternalResources": {
                     "$ref": "diagnostics-schema.json#/definitions/TimeoutsInExternalResources"
@@ -177,17 +177,17 @@
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
                 },
-                "NestedStatements": {
-                    "$ref": "diagnostics-schema.json#/definitions/NestedStatements"
-                },
                 "UseLessForEach": {
                     "$ref": "diagnostics-schema.json#/definitions/UseLessForEach"
                 },
-                "UsingFindElementByString": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingFindElementByString"
+                "NestedStatements": {
+                    "$ref": "diagnostics-schema.json#/definitions/NestedStatements"
                 },
                 "UsingGoto": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingGoto"
+                },
+                "UsingFindElementByString": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingFindElementByString"
                 },
                 "UsingHardcodeSecretInformation": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingHardcodeSecretInformation"
@@ -249,11 +249,11 @@
                 "IfElseDuplicatedCodeBlock": {
                     "$ref": "diagnostics-schema.json#/definitions/IfElseDuplicatedCodeBlock"
                 },
-                "ExtraCommas": {
-                    "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
-                },
                 "SelfInsertion": {
                     "$ref": "diagnostics-schema.json#/definitions/SelfInsertion"
+                },
+                "ExtraCommas": {
+                    "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
                 },
                 "NestedTernaryOperator": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedTernaryOperator"
@@ -270,11 +270,11 @@
                 "MultilingualStringUsingWithTemplate": {
                     "$ref": "diagnostics-schema.json#/definitions/MultilingualStringUsingWithTemplate"
                 },
-                "IfConditionComplexity": {
-                    "$ref": "diagnostics-schema.json#/definitions/IfConditionComplexity"
-                },
                 "MagicNumber": {
                     "$ref": "diagnostics-schema.json#/definitions/MagicNumber"
+                },
+                "IfConditionComplexity": {
+                    "$ref": "diagnostics-schema.json#/definitions/IfConditionComplexity"
                 }
             }
         }
