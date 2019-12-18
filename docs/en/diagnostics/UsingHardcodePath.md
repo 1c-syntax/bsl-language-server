@@ -66,6 +66,6 @@ ExchangeFolder = DataExchangeReuse.ExchangeFolder();
 
 ```json
 "UsingHardcodePath": {
-    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
+    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
 }
 ```

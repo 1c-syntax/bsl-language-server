@@ -43,6 +43,6 @@
 
 ```json
 "UsingServiceTag": {
-    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG"
+    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
 }
 ```

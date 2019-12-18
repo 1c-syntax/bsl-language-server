@@ -450,7 +450,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
                             || it.getOrDefault("type", "") == "Integer"
                             || it.getOrDefault("type", "") == "Float") "" else "\""
                     configBody += "$configDelimiter    \"${it.getOrDefault("name", "")}\": " +
-                            "${qoutes}${it.getOrDefault("defaultValue", "")}${qoutes}"
+                            "${qoutes}${it.getOrDefault("defaultValue", "").toString().replace("\\", "\\\\")}${qoutes}"
                     configDelimiter = ",\n"
                 }
             }
