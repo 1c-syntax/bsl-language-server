@@ -75,68 +75,83 @@
                 "$ref": "#/definitions/Diagnostic"
             },
             "properties": {
-                "TernaryOperatorUsage": {
-                    "$ref": "diagnostics-schema.json#/definitions/TernaryOperatorUsage"
-                },
-                "CreateQueryInCycle": {
-                    "$ref": "diagnostics-schema.json#/definitions/CreateQueryInCycle"
-                },
-                "UsingObjectNotAvailableUnix": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingObjectNotAvailableUnix"
-                },
-                "SelfAssign": {
-                    "$ref": "diagnostics-schema.json#/definitions/SelfAssign"
-                },
-                "UsingSynchronousCalls": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingSynchronousCalls"
-                },
-                "EmptyStatement": {
-                    "$ref": "diagnostics-schema.json#/definitions/EmptyStatement"
-                },
-                "TryNumber": {
-                    "$ref": "diagnostics-schema.json#/definitions/TryNumber"
-                },
-                "OrderOfParams": {
-                    "$ref": "diagnostics-schema.json#/definitions/OrderOfParams"
-                },
-                "CognitiveComplexity": {
-                    "$ref": "diagnostics-schema.json#/definitions/CognitiveComplexity"
-                },
-                "DeprecatedFind": {
-                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedFind"
-                },
-                "NestedConstructorsInStructureDeclaration": {
-                    "$ref": "diagnostics-schema.json#/definitions/NestedConstructorsInStructureDeclaration"
-                },
-                "IdenticalExpressions": {
-                    "$ref": "diagnostics-schema.json#/definitions/IdenticalExpressions"
-                },
-                "NumberOfValuesInStructureConstructor": {
-                    "$ref": "diagnostics-schema.json#/definitions/NumberOfValuesInStructureConstructor"
-                },
-                "NonExportMethodsInApiRegion": {
-                    "$ref": "diagnostics-schema.json#/definitions/NonExportMethodsInApiRegion"
-                },
-                "IfElseDuplicatedCondition": {
-                    "$ref": "diagnostics-schema.json#/definitions/IfElseDuplicatedCondition"
-                },
-                "MethodSize": {
-                    "$ref": "diagnostics-schema.json#/definitions/MethodSize"
+                "BeginTransactionBeforeTryCatch": {
+                    "$ref": "diagnostics-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
-                "UsingHardcodePath": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingHardcodePath"
+                "CognitiveComplexity": {
+                    "$ref": "diagnostics-schema.json#/definitions/CognitiveComplexity"
                 },
-                "SemicolonPresence": {
-                    "$ref": "diagnostics-schema.json#/definitions/SemicolonPresence"
+                "CommentedCode": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommentedCode"
                 },
-                "UnreachableCode": {
-                    "$ref": "diagnostics-schema.json#/definitions/UnreachableCode"
+                "CommitTransactionOutsideTryCatch": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommitTransactionOutsideTryCatch"
                 },
-                "NumberOfParams": {
-                    "$ref": "diagnostics-schema.json#/definitions/NumberOfParams"
+                "CompilationDirectiveLost": {
+                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveLost"
+                },
+                "CompilationDirectiveNeedLess": {
+                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveNeedLess"
+                },
+                "CreateQueryInCycle": {
+                    "$ref": "diagnostics-schema.json#/definitions/CreateQueryInCycle"
+                },
+                "DeletingCollectionItem": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeletingCollectionItem"
+                },
+                "DeprecatedFind": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedFind"
+                },
+                "DeprecatedMessage": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
+                },
+                "EmptyCodeBlock": {
+                    "$ref": "diagnostics-schema.json#/definitions/EmptyCodeBlock"
+                },
+                "EmptyRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/EmptyRegion"
+                },
+                "EmptyStatement": {
+                    "$ref": "diagnostics-schema.json#/definitions/EmptyStatement"
+                },
+                "ExtraCommas": {
+                    "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
+                },
+                "FunctionShouldHaveReturn": {
+                    "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
+                },
+                "IdenticalExpressions": {
+                    "$ref": "diagnostics-schema.json#/definitions/IdenticalExpressions"
+                },
+                "IfConditionComplexity": {
+                    "$ref": "diagnostics-schema.json#/definitions/IfConditionComplexity"
+                },
+                "IfElseDuplicatedCodeBlock": {
+                    "$ref": "diagnostics-schema.json#/definitions/IfElseDuplicatedCodeBlock"
+                },
+                "IfElseDuplicatedCondition": {
+                    "$ref": "diagnostics-schema.json#/definitions/IfElseDuplicatedCondition"
+                },
+                "IfElseIfEndsWithElse": {
+                    "$ref": "diagnostics-schema.json#/definitions/IfElseIfEndsWithElse"
+                },
+                "InvalidCharacterInFile": {
+                    "$ref": "diagnostics-schema.json#/definitions/InvalidCharacterInFile"
+                },
+                "LineLength": {
+                    "$ref": "diagnostics-schema.json#/definitions/LineLength"
+                },
+                "MagicNumber": {
+                    "$ref": "diagnostics-schema.json#/definitions/MagicNumber"
+                },
+                "MethodSize": {
+                    "$ref": "diagnostics-schema.json#/definitions/MethodSize"
+                },
+                "MissingCodeTryCatchEx": {
+                    "$ref": "diagnostics-schema.json#/definitions/MissingCodeTryCatchEx"
                 },
                 "MissingSpace": {
                     "$ref": "diagnostics-schema.json#/definitions/MissingSpace"
@@ -147,134 +162,119 @@
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "diagnostics-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
                 },
-                "MissingCodeTryCatchEx": {
-                    "$ref": "diagnostics-schema.json#/definitions/MissingCodeTryCatchEx"
+                "MultilingualStringUsingWithTemplate": {
+                    "$ref": "diagnostics-schema.json#/definitions/MultilingualStringUsingWithTemplate"
                 },
-                "UsingCancelParameter": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingCancelParameter"
-                },
-                "ProcedureReturnsValue": {
-                    "$ref": "diagnostics-schema.json#/definitions/ProcedureReturnsValue"
-                },
-                "CommentedCode": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommentedCode"
-                },
-                "PairingBrokenTransaction": {
-                    "$ref": "diagnostics-schema.json#/definitions/PairingBrokenTransaction"
-                },
-                "CompilationDirectiveNeedLess": {
-                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveNeedLess"
-                },
-                "UnusedLocalMethod": {
-                    "$ref": "diagnostics-schema.json#/definitions/UnusedLocalMethod"
-                },
-                "CompilationDirectiveLost": {
-                    "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveLost"
-                },
-                "TimeoutsInExternalResources": {
-                    "$ref": "diagnostics-schema.json#/definitions/TimeoutsInExternalResources"
-                },
-                "FunctionShouldHaveReturn": {
-                    "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
-                },
-                "UseLessForEach": {
-                    "$ref": "diagnostics-schema.json#/definitions/UseLessForEach"
+                "NestedConstructorsInStructureDeclaration": {
+                    "$ref": "diagnostics-schema.json#/definitions/NestedConstructorsInStructureDeclaration"
                 },
                 "NestedStatements": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedStatements"
                 },
-                "UsingGoto": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingGoto"
-                },
-                "UsingFindElementByString": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingFindElementByString"
-                },
-                "UsingHardcodeSecretInformation": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingHardcodeSecretInformation"
-                },
-                "EmptyCodeBlock": {
-                    "$ref": "diagnostics-schema.json#/definitions/EmptyCodeBlock"
-                },
-                "YoLetterUsage": {
-                    "$ref": "diagnostics-schema.json#/definitions/YoLetterUsage"
-                },
-                "CommitTransactionOutsideTryCatch": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommitTransactionOutsideTryCatch"
-                },
-                "UsingServiceTag": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingServiceTag"
-                },
-                "UnknownPreprocessorSymbol": {
-                    "$ref": "diagnostics-schema.json#/definitions/UnknownPreprocessorSymbol"
-                },
-                "BeginTransactionBeforeTryCatch": {
-                    "$ref": "diagnostics-schema.json#/definitions/BeginTransactionBeforeTryCatch"
-                },
-                "UsingThisForm": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingThisForm"
-                },
-                "IfElseIfEndsWithElse": {
-                    "$ref": "diagnostics-schema.json#/definitions/IfElseIfEndsWithElse"
-                },
-                "OneStatementPerLine": {
-                    "$ref": "diagnostics-schema.json#/definitions/OneStatementPerLine"
-                },
-                "UsingModalWindows": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingModalWindows"
-                },
-                "DeletingCollectionItem": {
-                    "$ref": "diagnostics-schema.json#/definitions/DeletingCollectionItem"
-                },
-                "ParseError": {
-                    "$ref": "diagnostics-schema.json#/definitions/ParseError"
-                },
-                "UnaryPlusInConcatenation": {
-                    "$ref": "diagnostics-schema.json#/definitions/UnaryPlusInConcatenation"
-                },
-                "InvalidCharacterInFile": {
-                    "$ref": "diagnostics-schema.json#/definitions/InvalidCharacterInFile"
-                },
-                "EmptyRegion": {
-                    "$ref": "diagnostics-schema.json#/definitions/EmptyRegion"
-                },
-                "DeprecatedMessage": {
-                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
-                },
-                "LineLength": {
-                    "$ref": "diagnostics-schema.json#/definitions/LineLength"
-                },
-                "SpaceAtStartComment": {
-                    "$ref": "diagnostics-schema.json#/definitions/SpaceAtStartComment"
-                },
-                "IfElseDuplicatedCodeBlock": {
-                    "$ref": "diagnostics-schema.json#/definitions/IfElseDuplicatedCodeBlock"
-                },
-                "SelfInsertion": {
-                    "$ref": "diagnostics-schema.json#/definitions/SelfInsertion"
-                },
-                "ExtraCommas": {
-                    "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
-                },
                 "NestedTernaryOperator": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedTernaryOperator"
+                },
+                "NonExportMethodsInApiRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/NonExportMethodsInApiRegion"
                 },
                 "NumberOfOptionalParams": {
                     "$ref": "diagnostics-schema.json#/definitions/NumberOfOptionalParams"
                 },
-                "UsingHardcodeNetworkAddress": {
-                    "$ref": "diagnostics-schema.json#/definitions/UsingHardcodeNetworkAddress"
+                "NumberOfParams": {
+                    "$ref": "diagnostics-schema.json#/definitions/NumberOfParams"
+                },
+                "NumberOfValuesInStructureConstructor": {
+                    "$ref": "diagnostics-schema.json#/definitions/NumberOfValuesInStructureConstructor"
+                },
+                "OneStatementPerLine": {
+                    "$ref": "diagnostics-schema.json#/definitions/OneStatementPerLine"
+                },
+                "OrderOfParams": {
+                    "$ref": "diagnostics-schema.json#/definitions/OrderOfParams"
+                },
+                "PairingBrokenTransaction": {
+                    "$ref": "diagnostics-schema.json#/definitions/PairingBrokenTransaction"
+                },
+                "ParseError": {
+                    "$ref": "diagnostics-schema.json#/definitions/ParseError"
+                },
+                "ProcedureReturnsValue": {
+                    "$ref": "diagnostics-schema.json#/definitions/ProcedureReturnsValue"
+                },
+                "SelfAssign": {
+                    "$ref": "diagnostics-schema.json#/definitions/SelfAssign"
+                },
+                "SelfInsertion": {
+                    "$ref": "diagnostics-schema.json#/definitions/SelfInsertion"
+                },
+                "SemicolonPresence": {
+                    "$ref": "diagnostics-schema.json#/definitions/SemicolonPresence"
                 },
                 "SeveralCompilerDirectives": {
                     "$ref": "diagnostics-schema.json#/definitions/SeveralCompilerDirectives"
                 },
-                "MultilingualStringUsingWithTemplate": {
-                    "$ref": "diagnostics-schema.json#/definitions/MultilingualStringUsingWithTemplate"
+                "SpaceAtStartComment": {
+                    "$ref": "diagnostics-schema.json#/definitions/SpaceAtStartComment"
                 },
-                "MagicNumber": {
-                    "$ref": "diagnostics-schema.json#/definitions/MagicNumber"
+                "TernaryOperatorUsage": {
+                    "$ref": "diagnostics-schema.json#/definitions/TernaryOperatorUsage"
                 },
-                "IfConditionComplexity": {
-                    "$ref": "diagnostics-schema.json#/definitions/IfConditionComplexity"
+                "TimeoutsInExternalResources": {
+                    "$ref": "diagnostics-schema.json#/definitions/TimeoutsInExternalResources"
+                },
+                "TryNumber": {
+                    "$ref": "diagnostics-schema.json#/definitions/TryNumber"
+                },
+                "UnaryPlusInConcatenation": {
+                    "$ref": "diagnostics-schema.json#/definitions/UnaryPlusInConcatenation"
+                },
+                "UnknownPreprocessorSymbol": {
+                    "$ref": "diagnostics-schema.json#/definitions/UnknownPreprocessorSymbol"
+                },
+                "UnreachableCode": {
+                    "$ref": "diagnostics-schema.json#/definitions/UnreachableCode"
+                },
+                "UnusedLocalMethod": {
+                    "$ref": "diagnostics-schema.json#/definitions/UnusedLocalMethod"
+                },
+                "UseLessForEach": {
+                    "$ref": "diagnostics-schema.json#/definitions/UseLessForEach"
+                },
+                "UsingCancelParameter": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingCancelParameter"
+                },
+                "UsingFindElementByString": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingFindElementByString"
+                },
+                "UsingGoto": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingGoto"
+                },
+                "UsingHardcodeNetworkAddress": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingHardcodeNetworkAddress"
+                },
+                "UsingHardcodePath": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingHardcodePath"
+                },
+                "UsingHardcodeSecretInformation": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingHardcodeSecretInformation"
+                },
+                "UsingModalWindows": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingModalWindows"
+                },
+                "UsingObjectNotAvailableUnix": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingObjectNotAvailableUnix"
+                },
+                "UsingServiceTag": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingServiceTag"
+                },
+                "UsingSynchronousCalls": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingSynchronousCalls"
+                },
+                "UsingThisForm": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingThisForm"
+                },
+                "YoLetterUsage": {
+                    "$ref": "diagnostics-schema.json#/definitions/YoLetterUsage"
                 }
             }
         }

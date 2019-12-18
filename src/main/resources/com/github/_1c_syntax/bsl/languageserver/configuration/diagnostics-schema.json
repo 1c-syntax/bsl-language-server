@@ -4,85 +4,25 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Diagnostic definition part",
     "definitions": {
-        "TernaryOperatorUsage": {
-            "description": "Ternary operator usage",
+        "BeginTransactionBeforeTryCatch": {
+            "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Ternary operator usage",
-            "$id": "#/definitions/TernaryOperatorUsage"
+            "title": "Violating transaction rules for the 'BeginTransaction' method",
+            "$id": "#/definitions/BeginTransactionBeforeTryCatch"
         },
-        "CreateQueryInCycle": {
-            "description": "Execution query on cycle",
+        "CanonicalSpellingKeywords": {
+            "description": "Canonical keyword writing",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Execution query on cycle",
-            "$id": "#/definitions/CreateQueryInCycle"
-        },
-        "UsingObjectNotAvailableUnix": {
-            "description": "Using unavailable in Unix objects",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using unavailable in Unix objects",
-            "$id": "#/definitions/UsingObjectNotAvailableUnix"
-        },
-        "SelfAssign": {
-            "description": "Variable is assigned to itself",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Variable is assigned to itself",
-            "$id": "#/definitions/SelfAssign"
-        },
-        "UsingSynchronousCalls": {
-            "description": "Using synchronous calls",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using synchronous calls",
-            "$id": "#/definitions/UsingSynchronousCalls"
-        },
-        "EmptyStatement": {
-            "description": "Empty statement",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Empty statement",
-            "$id": "#/definitions/EmptyStatement"
-        },
-        "TryNumber": {
-            "description": "Cast to number of try catch block",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Cast to number of try catch block",
-            "$id": "#/definitions/TryNumber"
-        },
-        "OrderOfParams": {
-            "description": "Order of Parameters in method",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Order of Parameters in method",
-            "$id": "#/definitions/OrderOfParams"
+            "title": "Canonical keyword writing",
+            "$id": "#/definitions/CanonicalSpellingKeywords"
         },
         "CognitiveComplexity": {
             "description": "Cognitive complexity",
@@ -108,6 +48,74 @@
             },
             "$id": "#/definitions/CognitiveComplexity"
         },
+        "CommentedCode": {
+            "description": "Commented out code",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Commented out code",
+            "properties": {
+                "threshold": {
+                    "description": "Threshold",
+                    "default": 0.9,
+                    "type": "number",
+                    "title": "Threshold"
+                }
+            },
+            "$id": "#/definitions/CommentedCode"
+        },
+        "CommitTransactionOutsideTryCatch": {
+            "description": "Violating transaction rules for the 'CommitTransaction' method",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Violating transaction rules for the 'CommitTransaction' method",
+            "$id": "#/definitions/CommitTransactionOutsideTryCatch"
+        },
+        "CompilationDirectiveLost": {
+            "description": "Methods compilation directive",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Methods compilation directive",
+            "$id": "#/definitions/CompilationDirectiveLost"
+        },
+        "CompilationDirectiveNeedLess": {
+            "description": "Needless compilation directive",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Needless compilation directive",
+            "$id": "#/definitions/CompilationDirectiveNeedLess"
+        },
+        "CreateQueryInCycle": {
+            "description": "Execution query on cycle",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Execution query on cycle",
+            "$id": "#/definitions/CreateQueryInCycle"
+        },
+        "DeletingCollectionItem": {
+            "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
+            "$id": "#/definitions/DeletingCollectionItem"
+        },
         "DeprecatedFind": {
             "description": "Using of the deprecated method \"Find\"",
             "default": null,
@@ -118,15 +126,73 @@
             "title": "Using of the deprecated method \"Find\"",
             "$id": "#/definitions/DeprecatedFind"
         },
-        "NestedConstructorsInStructureDeclaration": {
-            "description": "Nested constructors with parameters in structure declaration",
+        "DeprecatedMessage": {
+            "description": "Restriction on the use of deprecated \"Message\" method",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Nested constructors with parameters in structure declaration",
-            "$id": "#/definitions/NestedConstructorsInStructureDeclaration"
+            "title": "Restriction on the use of deprecated \"Message\" method",
+            "$id": "#/definitions/DeprecatedMessage"
+        },
+        "EmptyCodeBlock": {
+            "description": "Empty code block",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Empty code block",
+            "properties": {
+                "commentAsCode": {
+                    "description": "Comment as code",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Comment as code"
+                }
+            },
+            "$id": "#/definitions/EmptyCodeBlock"
+        },
+        "EmptyRegion": {
+            "description": "The region should not be empty",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The region should not be empty",
+            "$id": "#/definitions/EmptyRegion"
+        },
+        "EmptyStatement": {
+            "description": "Empty statement",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Empty statement",
+            "$id": "#/definitions/EmptyStatement"
+        },
+        "ExtraCommas": {
+            "description": "Commas without a parameter at the end of a method call",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Commas without a parameter at the end of a method call",
+            "$id": "#/definitions/ExtraCommas"
+        },
+        "FunctionShouldHaveReturn": {
+            "description": "The function should have return",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The function should have return",
+            "$id": "#/definitions/FunctionShouldHaveReturn"
         },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
@@ -138,33 +204,33 @@
             "title": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
             "$id": "#/definitions/IdenticalExpressions"
         },
-        "NumberOfValuesInStructureConstructor": {
-            "description": "Limit on the number of property values passed to the structure constructor",
+        "IfConditionComplexity": {
+            "description": "Usage of complex expressions in the \"If\" condition",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Limit on the number of property values passed to the structure constructor",
+            "title": "Usage of complex expressions in the \"If\" condition",
             "properties": {
-                "maxValuesCount": {
-                    "description": "Max count values in structure construction",
+                "maxIfConditionComplexity": {
+                    "description": "Maximum count condition in if statement",
                     "default": 3,
                     "type": "integer",
-                    "title": "Max count values in structure construction"
+                    "title": "Maximum count condition in if statement"
                 }
             },
-            "$id": "#/definitions/NumberOfValuesInStructureConstructor"
+            "$id": "#/definitions/IfConditionComplexity"
         },
-        "NonExportMethodsInApiRegion": {
-            "description": "Non export methods in API regions",
+        "IfElseDuplicatedCodeBlock": {
+            "description": "Duplicated code blocks in If...Then...ElseIf... statements",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Non export methods in API regions",
-            "$id": "#/definitions/NonExportMethodsInApiRegion"
+            "title": "Duplicated code blocks in If...Then...ElseIf... statements",
+            "$id": "#/definitions/IfElseDuplicatedCodeBlock"
         },
         "IfElseDuplicatedCondition": {
             "description": "Duplicated conditions in If...Then...ElseIf... statements",
@@ -175,6 +241,68 @@
             ],
             "title": "Duplicated conditions in If...Then...ElseIf... statements",
             "$id": "#/definitions/IfElseDuplicatedCondition"
+        },
+        "IfElseIfEndsWithElse": {
+            "description": "Else...The...ElseIf... statement should end with Else branch",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Else...The...ElseIf... statement should end with Else branch",
+            "$id": "#/definitions/IfElseIfEndsWithElse"
+        },
+        "InvalidCharacterInFile": {
+            "description": "Invalid character",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Invalid character",
+            "$id": "#/definitions/InvalidCharacterInFile"
+        },
+        "LineLength": {
+            "description": "Line Length limit",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Line Length limit",
+            "properties": {
+                "maxLineLength": {
+                    "description": "Max line length",
+                    "default": 120,
+                    "type": "integer",
+                    "title": "Max line length"
+                }
+            },
+            "$id": "#/definitions/LineLength"
+        },
+        "MagicNumber": {
+            "description": "Magic numbers",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Magic numbers",
+            "properties": {
+                "allowMagicIndexes": {
+                    "description": "allow magic indexes",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "allow magic indexes"
+                },
+                "authorizedNumbers": {
+                    "description": "allowed numbers, coma separated. Example:-1,0,1,60",
+                    "default": "-1,0,1",
+                    "type": "string",
+                    "title": "allowed numbers, coma separated. Example:-1,0,1,60"
+                }
+            },
+            "$id": "#/definitions/MagicNumber"
         },
         "MethodSize": {
             "description": "Method size ",
@@ -194,71 +322,23 @@
             },
             "$id": "#/definitions/MethodSize"
         },
-        "CanonicalSpellingKeywords": {
-            "description": "Canonical keyword writing",
+        "MissingCodeTryCatchEx": {
+            "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Canonical keyword writing",
-            "$id": "#/definitions/CanonicalSpellingKeywords"
-        },
-        "UsingHardcodePath": {
-            "description": "Using hardcode file paths in code",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using hardcode file paths in code",
+            "title": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
             "properties": {
-                "searchWordsStdPathsUnix": {
-                    "description": "Keywords for search unix dirs",
-                    "default": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var",
-                    "type": "string",
-                    "title": "Keywords for search unix dirs"
+                "commentAsCode": {
+                    "description": "Comment as code",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Comment as code"
                 }
             },
-            "$id": "#/definitions/UsingHardcodePath"
-        },
-        "SemicolonPresence": {
-            "description": "Statement should end with semicolon symbol \";\"",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Statement should end with semicolon symbol \";\"",
-            "$id": "#/definitions/SemicolonPresence"
-        },
-        "UnreachableCode": {
-            "description": "Unreachable Code",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Unreachable Code",
-            "$id": "#/definitions/UnreachableCode"
-        },
-        "NumberOfParams": {
-            "description": "Number of parameters in method",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Number of parameters in method",
-            "properties": {
-                "maxParamsCount": {
-                    "description": "Max number of params count",
-                    "default": 7,
-                    "type": "integer",
-                    "title": "Max number of params count"
-                }
-            },
-            "$id": "#/definitions/NumberOfParams"
+            "$id": "#/definitions/MissingCodeTryCatchEx"
         },
         "MissingSpace": {
             "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
@@ -338,131 +418,33 @@
             },
             "$id": "#/definitions/MultilingualStringHasAllDeclaredLanguages"
         },
-        "MissingCodeTryCatchEx": {
-            "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
+        "MultilingualStringUsingWithTemplate": {
+            "description": "Partially localized text is used in the StrTemplate function",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
+            "title": "Partially localized text is used in the StrTemplate function",
             "properties": {
-                "commentAsCode": {
-                    "description": "Comment as code",
-                    "default": false,
-                    "type": "boolean",
-                    "title": "Comment as code"
-                }
-            },
-            "$id": "#/definitions/MissingCodeTryCatchEx"
-        },
-        "UsingCancelParameter": {
-            "description": "Using parameter \"Cancel\"",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using parameter \"Cancel\"",
-            "$id": "#/definitions/UsingCancelParameter"
-        },
-        "ProcedureReturnsValue": {
-            "description": "Procedure should not return Value",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Procedure should not return Value",
-            "$id": "#/definitions/ProcedureReturnsValue"
-        },
-        "CommentedCode": {
-            "description": "Commented out code",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Commented out code",
-            "properties": {
-                "threshold": {
-                    "description": "Threshold",
-                    "default": "0.9",
+                "declaredLanguages": {
+                    "description": "Declared languages",
+                    "default": "ru",
                     "type": "string",
-                    "title": "Threshold"
+                    "title": "Declared languages"
                 }
             },
-            "$id": "#/definitions/CommentedCode"
+            "$id": "#/definitions/MultilingualStringUsingWithTemplate"
         },
-        "PairingBrokenTransaction": {
-            "description": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
+        "NestedConstructorsInStructureDeclaration": {
+            "description": "Nested constructors with parameters in structure declaration",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
-            "$id": "#/definitions/PairingBrokenTransaction"
-        },
-        "CompilationDirectiveNeedLess": {
-            "description": "Needless compilation directive",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Needless compilation directive",
-            "$id": "#/definitions/CompilationDirectiveNeedLess"
-        },
-        "UnusedLocalMethod": {
-            "description": "Unused local method",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Unused local method",
-            "$id": "#/definitions/UnusedLocalMethod"
-        },
-        "CompilationDirectiveLost": {
-            "description": "Methods compilation directive",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Methods compilation directive",
-            "$id": "#/definitions/CompilationDirectiveLost"
-        },
-        "TimeoutsInExternalResources": {
-            "description": "Timeouts working with external resources",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Timeouts working with external resources",
-            "$id": "#/definitions/TimeoutsInExternalResources"
-        },
-        "FunctionShouldHaveReturn": {
-            "description": "The function should have return",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "The function should have return",
-            "$id": "#/definitions/FunctionShouldHaveReturn"
-        },
-        "UseLessForEach": {
-            "description": "Useless collection iteration",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Useless collection iteration",
-            "$id": "#/definitions/UseLessForEach"
+            "title": "Nested constructors with parameters in structure declaration",
+            "$id": "#/definitions/NestedConstructorsInStructureDeclaration"
         },
         "NestedStatements": {
             "description": "Control flow statements should not be nested too deep",
@@ -482,286 +464,6 @@
             },
             "$id": "#/definitions/NestedStatements"
         },
-        "UsingGoto": {
-            "description": "\"goto\" statement should not be used",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "\"goto\" statement should not be used",
-            "$id": "#/definitions/UsingGoto"
-        },
-        "UsingFindElementByString": {
-            "description": "Using FindByName and FindByCode",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using FindByName and FindByCode",
-            "$id": "#/definitions/UsingFindElementByString"
-        },
-        "UsingHardcodeSecretInformation": {
-            "description": "Storing confidential information in code",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Storing confidential information in code",
-            "properties": {
-                "searchWords": {
-                    "description": "Keywords for search confidential.",
-                    "default": "\u041f\u0430\u0440\u043e\u043b\u044c|Password",
-                    "type": "string",
-                    "title": "Keywords for search confidential."
-                }
-            },
-            "$id": "#/definitions/UsingHardcodeSecretInformation"
-        },
-        "EmptyCodeBlock": {
-            "description": "Empty code block",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Empty code block",
-            "properties": {
-                "commentAsCode": {
-                    "description": "Comment as code",
-                    "default": false,
-                    "type": "boolean",
-                    "title": "Comment as code"
-                }
-            },
-            "$id": "#/definitions/EmptyCodeBlock"
-        },
-        "YoLetterUsage": {
-            "description": "Using Russian character \"yo\" (\"\u0451\") in code",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using Russian character \"yo\" (\"\u0451\") in code",
-            "$id": "#/definitions/YoLetterUsage"
-        },
-        "CommitTransactionOutsideTryCatch": {
-            "description": "Violating transaction rules for the 'CommitTransaction' method",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Violating transaction rules for the 'CommitTransaction' method",
-            "$id": "#/definitions/CommitTransactionOutsideTryCatch"
-        },
-        "UsingServiceTag": {
-            "description": "Using service tags",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using service tags",
-            "properties": {
-                "serviceTags": {
-                    "description": "Service tags",
-                    "default": "todo|fixme|!!|mrg|@|\u043e\u0442\u043b\u0430\u0434\u043a\u0430|debug|\u0434\u043b\u044f\\s*\u043e\u0442\u043b\u0430\u0434\u043a\u0438|(\\{\\{|\\}\\})\u041a\u041e\u041d\u0421\u0422\u0420\u0423\u041a\u0422\u041e\u0420_|(\\{\\{|\\}\\})MRG",
-                    "type": "string",
-                    "title": "Service tags"
-                }
-            },
-            "$id": "#/definitions/UsingServiceTag"
-        },
-        "UnknownPreprocessorSymbol": {
-            "description": "Unknown preprocessor symbol",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Unknown preprocessor symbol",
-            "$id": "#/definitions/UnknownPreprocessorSymbol"
-        },
-        "BeginTransactionBeforeTryCatch": {
-            "description": "Violating transaction rules for the 'BeginTransaction' method",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Violating transaction rules for the 'BeginTransaction' method",
-            "$id": "#/definitions/BeginTransactionBeforeTryCatch"
-        },
-        "UsingThisForm": {
-            "description": "Using deprecated property \"ThisForm\"",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using deprecated property \"ThisForm\"",
-            "$id": "#/definitions/UsingThisForm"
-        },
-        "IfElseIfEndsWithElse": {
-            "description": "Else...The...ElseIf... statement should end with Else branch",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Else...The...ElseIf... statement should end with Else branch",
-            "$id": "#/definitions/IfElseIfEndsWithElse"
-        },
-        "OneStatementPerLine": {
-            "description": "One statement per line",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "One statement per line",
-            "$id": "#/definitions/OneStatementPerLine"
-        },
-        "UsingModalWindows": {
-            "description": "Using modal windows",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Using modal windows",
-            "$id": "#/definitions/UsingModalWindows"
-        },
-        "DeletingCollectionItem": {
-            "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
-            "$id": "#/definitions/DeletingCollectionItem"
-        },
-        "ParseError": {
-            "description": "Source code parse error",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Source code parse error",
-            "$id": "#/definitions/ParseError"
-        },
-        "UnaryPlusInConcatenation": {
-            "description": "Unary Plus sign in string concatenation",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Unary Plus sign in string concatenation",
-            "$id": "#/definitions/UnaryPlusInConcatenation"
-        },
-        "InvalidCharacterInFile": {
-            "description": "Invalid character",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Invalid character",
-            "$id": "#/definitions/InvalidCharacterInFile"
-        },
-        "EmptyRegion": {
-            "description": "The region should not be empty",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "The region should not be empty",
-            "$id": "#/definitions/EmptyRegion"
-        },
-        "DeprecatedMessage": {
-            "description": "Restriction on the use of deprecated \"Message\" method",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Restriction on the use of deprecated \"Message\" method",
-            "$id": "#/definitions/DeprecatedMessage"
-        },
-        "LineLength": {
-            "description": "Line Length limit",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Line Length limit",
-            "properties": {
-                "maxLineLength": {
-                    "description": "Max line length",
-                    "default": 120,
-                    "type": "integer",
-                    "title": "Max line length"
-                }
-            },
-            "$id": "#/definitions/LineLength"
-        },
-        "SpaceAtStartComment": {
-            "description": "Space at the beginning of the comment",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Space at the beginning of the comment",
-            "properties": {
-                "commentsAnnotation": {
-                    "description": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)",
-                    "default": "//@,//(c),//\u00a9",
-                    "type": "string",
-                    "title": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)"
-                }
-            },
-            "$id": "#/definitions/SpaceAtStartComment"
-        },
-        "IfElseDuplicatedCodeBlock": {
-            "description": "Duplicated code blocks in If...Then...ElseIf... statements",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Duplicated code blocks in If...Then...ElseIf... statements",
-            "$id": "#/definitions/IfElseDuplicatedCodeBlock"
-        },
-        "SelfInsertion": {
-            "description": "Insert a collection into itself",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Insert a collection into itself",
-            "$id": "#/definitions/SelfInsertion"
-        },
-        "ExtraCommas": {
-            "description": "Commas without a parameter at the end of a method call",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Commas without a parameter at the end of a method call",
-            "$id": "#/definitions/ExtraCommas"
-        },
         "NestedTernaryOperator": {
             "description": "Nested ternary operator",
             "default": null,
@@ -771,6 +473,16 @@
             ],
             "title": "Nested ternary operator",
             "$id": "#/definitions/NestedTernaryOperator"
+        },
+        "NonExportMethodsInApiRegion": {
+            "description": "Non export methods in API regions",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Non export methods in API regions",
+            "$id": "#/definitions/NonExportMethodsInApiRegion"
         },
         "NumberOfOptionalParams": {
             "description": "Limit number of optional parameters in method",
@@ -790,6 +502,260 @@
             },
             "$id": "#/definitions/NumberOfOptionalParams"
         },
+        "NumberOfParams": {
+            "description": "Number of parameters in method",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Number of parameters in method",
+            "properties": {
+                "maxParamsCount": {
+                    "description": "Max number of params count",
+                    "default": 7,
+                    "type": "integer",
+                    "title": "Max number of params count"
+                }
+            },
+            "$id": "#/definitions/NumberOfParams"
+        },
+        "NumberOfValuesInStructureConstructor": {
+            "description": "Limit on the number of property values passed to the structure constructor",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Limit on the number of property values passed to the structure constructor",
+            "properties": {
+                "maxValuesCount": {
+                    "description": "Max count values in structure construction",
+                    "default": 3,
+                    "type": "integer",
+                    "title": "Max count values in structure construction"
+                }
+            },
+            "$id": "#/definitions/NumberOfValuesInStructureConstructor"
+        },
+        "OneStatementPerLine": {
+            "description": "One statement per line",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "One statement per line",
+            "$id": "#/definitions/OneStatementPerLine"
+        },
+        "OrderOfParams": {
+            "description": "Order of Parameters in method",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Order of Parameters in method",
+            "$id": "#/definitions/OrderOfParams"
+        },
+        "PairingBrokenTransaction": {
+            "description": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
+            "$id": "#/definitions/PairingBrokenTransaction"
+        },
+        "ParseError": {
+            "description": "Source code parse error",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Source code parse error",
+            "$id": "#/definitions/ParseError"
+        },
+        "ProcedureReturnsValue": {
+            "description": "Procedure should not return Value",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Procedure should not return Value",
+            "$id": "#/definitions/ProcedureReturnsValue"
+        },
+        "SelfAssign": {
+            "description": "Variable is assigned to itself",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Variable is assigned to itself",
+            "$id": "#/definitions/SelfAssign"
+        },
+        "SelfInsertion": {
+            "description": "Insert a collection into itself",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Insert a collection into itself",
+            "$id": "#/definitions/SelfInsertion"
+        },
+        "SemicolonPresence": {
+            "description": "Statement should end with semicolon symbol \";\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Statement should end with semicolon symbol \";\"",
+            "$id": "#/definitions/SemicolonPresence"
+        },
+        "SeveralCompilerDirectives": {
+            "description": "Erroneous indication of several compilation directives",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Erroneous indication of several compilation directives",
+            "$id": "#/definitions/SeveralCompilerDirectives"
+        },
+        "SpaceAtStartComment": {
+            "description": "Space at the beginning of the comment",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Space at the beginning of the comment",
+            "properties": {
+                "commentsAnnotation": {
+                    "description": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)",
+                    "default": "//@,//(c),//\u00a9",
+                    "type": "string",
+                    "title": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)"
+                }
+            },
+            "$id": "#/definitions/SpaceAtStartComment"
+        },
+        "TernaryOperatorUsage": {
+            "description": "Ternary operator usage",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Ternary operator usage",
+            "$id": "#/definitions/TernaryOperatorUsage"
+        },
+        "TimeoutsInExternalResources": {
+            "description": "Timeouts working with external resources",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Timeouts working with external resources",
+            "$id": "#/definitions/TimeoutsInExternalResources"
+        },
+        "TryNumber": {
+            "description": "Cast to number of try catch block",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Cast to number of try catch block",
+            "$id": "#/definitions/TryNumber"
+        },
+        "UnaryPlusInConcatenation": {
+            "description": "Unary Plus sign in string concatenation",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unary Plus sign in string concatenation",
+            "$id": "#/definitions/UnaryPlusInConcatenation"
+        },
+        "UnknownPreprocessorSymbol": {
+            "description": "Unknown preprocessor symbol",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unknown preprocessor symbol",
+            "$id": "#/definitions/UnknownPreprocessorSymbol"
+        },
+        "UnreachableCode": {
+            "description": "Unreachable Code",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unreachable Code",
+            "$id": "#/definitions/UnreachableCode"
+        },
+        "UnusedLocalMethod": {
+            "description": "Unused local method",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused local method",
+            "$id": "#/definitions/UnusedLocalMethod"
+        },
+        "UseLessForEach": {
+            "description": "Useless collection iteration",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Useless collection iteration",
+            "$id": "#/definitions/UseLessForEach"
+        },
+        "UsingCancelParameter": {
+            "description": "Using parameter \"Cancel\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using parameter \"Cancel\"",
+            "$id": "#/definitions/UsingCancelParameter"
+        },
+        "UsingFindElementByString": {
+            "description": "Using FindByName and FindByCode",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using FindByName and FindByCode",
+            "$id": "#/definitions/UsingFindElementByString"
+        },
+        "UsingGoto": {
+            "description": "\"goto\" statement should not be used",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "\"goto\" statement should not be used",
+            "$id": "#/definitions/UsingGoto"
+        },
         "UsingHardcodeNetworkAddress": {
             "description": "Using hardcode ip addresses in code",
             "default": null,
@@ -808,75 +774,109 @@
             },
             "$id": "#/definitions/UsingHardcodeNetworkAddress"
         },
-        "SeveralCompilerDirectives": {
-            "description": "Erroneous indication of several compilation directives",
+        "UsingHardcodePath": {
+            "description": "Using hardcode file paths in code",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Erroneous indication of several compilation directives",
-            "$id": "#/definitions/SeveralCompilerDirectives"
-        },
-        "MultilingualStringUsingWithTemplate": {
-            "description": "Partially localized text is used in the StrTemplate function",
-            "default": null,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Partially localized text is used in the StrTemplate function",
+            "title": "Using hardcode file paths in code",
             "properties": {
-                "declaredLanguages": {
-                    "description": "Declared languages",
-                    "default": "ru",
+                "searchWordsStdPathsUnix": {
+                    "description": "Keywords for search unix dirs",
+                    "default": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var",
                     "type": "string",
-                    "title": "Declared languages"
+                    "title": "Keywords for search unix dirs"
                 }
             },
-            "$id": "#/definitions/MultilingualStringUsingWithTemplate"
+            "$id": "#/definitions/UsingHardcodePath"
         },
-        "MagicNumber": {
-            "description": "Magic numbers",
+        "UsingHardcodeSecretInformation": {
+            "description": "Storing confidential information in code",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Magic numbers",
+            "title": "Storing confidential information in code",
             "properties": {
-                "allowMagicIndexes": {
-                    "description": "allow magic indexes",
-                    "default": true,
-                    "type": "boolean",
-                    "title": "allow magic indexes"
-                },
-                "authorizedNumbers": {
-                    "description": "allowed numbers, coma separated. Example:-1,0,1,60",
-                    "default": "-1,0,1",
+                "searchWords": {
+                    "description": "Keywords for search confidential.",
+                    "default": "\u041f\u0430\u0440\u043e\u043b\u044c|Password",
                     "type": "string",
-                    "title": "allowed numbers, coma separated. Example:-1,0,1,60"
+                    "title": "Keywords for search confidential."
                 }
             },
-            "$id": "#/definitions/MagicNumber"
+            "$id": "#/definitions/UsingHardcodeSecretInformation"
         },
-        "IfConditionComplexity": {
-            "description": "Usage of complex expressions in the \"If\" condition",
+        "UsingModalWindows": {
+            "description": "Using modal windows",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Usage of complex expressions in the \"If\" condition",
+            "title": "Using modal windows",
+            "$id": "#/definitions/UsingModalWindows"
+        },
+        "UsingObjectNotAvailableUnix": {
+            "description": "Using unavailable in Unix objects",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using unavailable in Unix objects",
+            "$id": "#/definitions/UsingObjectNotAvailableUnix"
+        },
+        "UsingServiceTag": {
+            "description": "Using service tags",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using service tags",
             "properties": {
-                "maxIfConditionComplexity": {
-                    "description": "Maximum count condition in if statement",
-                    "default": 3,
-                    "type": "integer",
-                    "title": "Maximum count condition in if statement"
+                "serviceTags": {
+                    "description": "Service tags",
+                    "default": "todo|fixme|!!|mrg|@|\u043e\u0442\u043b\u0430\u0434\u043a\u0430|debug|\u0434\u043b\u044f\\s*\u043e\u0442\u043b\u0430\u0434\u043a\u0438|(\\{\\{|\\}\\})\u041a\u041e\u041d\u0421\u0422\u0420\u0423\u041a\u0422\u041e\u0420_|(\\{\\{|\\}\\})MRG",
+                    "type": "string",
+                    "title": "Service tags"
                 }
             },
-            "$id": "#/definitions/IfConditionComplexity"
+            "$id": "#/definitions/UsingServiceTag"
+        },
+        "UsingSynchronousCalls": {
+            "description": "Using synchronous calls",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using synchronous calls",
+            "$id": "#/definitions/UsingSynchronousCalls"
+        },
+        "UsingThisForm": {
+            "description": "Using deprecated property \"ThisForm\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using deprecated property \"ThisForm\"",
+            "$id": "#/definitions/UsingThisForm"
+        },
+        "YoLetterUsage": {
+            "description": "Using Russian character \"yo\" (\"\u0451\") in code",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using Russian character \"yo\" (\"\u0451\") in code",
+            "$id": "#/definitions/YoLetterUsage"
         }
     }
 }

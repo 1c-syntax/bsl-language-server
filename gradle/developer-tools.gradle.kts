@@ -182,8 +182,8 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
 
     private fun transformMetadata(diagnosticsMetadata: HashMap<String, HashMap<String, Any>>): HashMap<String, Any> {
         val result = hashMapOf<String, Any>()
-        val diagnostics = hashMapOf<String, Any>()
-        val diagnosticsKeys = hashMapOf<String, HashMap<String, String>>()
+        val diagnostics = sortedMapOf<String, Any>()
+        val diagnosticsKeys = sortedMapOf<String, HashMap<String, String>>()
 
         diagnosticsMetadata.forEach {itd ->
             diagnosticsKeys[itd.key] = hashMapOf("\$ref" to "diagnostics-schema.json#/definitions/${itd.key}")
@@ -200,13 +200,20 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
                     if (it is HashMap<*, *>) {
                         val typeString = it.getOrDefault("type", "").toString().toLowerCase()
                                 .replace("pattern", "string")
-                                .replace("float", "string")
-                        val value = if(typeString == "boolean") {
-                            it.getOrDefault("defaultValue", "false").toString().toBoolean()
-                        } else if(typeString == "integer") {
-                            it.getOrDefault("defaultValue", "0").toString().toInt()
-                        } else {
-                            "${it.getOrDefault("defaultValue", "")}"
+                                .replace("float", "number")
+                        val value = when (typeString) {
+                            "boolean" -> {
+                                it.getOrDefault("defaultValue", "false").toString().toBoolean()
+                            }
+                            "integer" -> {
+                                it.getOrDefault("defaultValue", "0").toString().toInt()
+                            }
+                            "number" -> {
+                                it.getOrDefault("defaultValue", "0").toString().toFloat()
+                            }
+                            else -> {
+                                "${it.getOrDefault("defaultValue", "")}"
+                            }
                         }
                         val oneParam = hashMapOf(
                                 "type" to typeString,
