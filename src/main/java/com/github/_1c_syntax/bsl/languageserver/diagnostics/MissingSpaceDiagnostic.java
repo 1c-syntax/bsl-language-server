@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -240,7 +241,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
 
     Token previousToken = tokens.get(t.getTokenIndex() - 1);
-    return patternNotSpace.matcher(previousToken.getText()).matches();
+    return previousToken.getType() != BSLParser.LPAREN
+      && patternNotSpace.matcher(previousToken.getText()).matches();
   }
 
   private boolean noSpaceRight(List<Token> tokens, Token t) {
