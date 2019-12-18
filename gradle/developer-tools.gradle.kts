@@ -446,7 +446,9 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
             var configDelimiter = ""
             params.forEach {
                 if (it is HashMap<*, *>) {
-                    val qoutes = if(it.getOrDefault("type", "") == "Boolean" || it.getOrDefault("type", "") == "Integer") {""} else {"\""}
+                    val qoutes = if(it.getOrDefault("type", "") == "Boolean"
+                            || it.getOrDefault("type", "") == "Integer"
+                            || it.getOrDefault("type", "") == "Float") "" else "\""
                     configBody += "$configDelimiter    \"${it.getOrDefault("name", "")}\": " +
                             "${qoutes}${it.getOrDefault("defaultValue", "")}${qoutes}"
                     configDelimiter = ",\n"

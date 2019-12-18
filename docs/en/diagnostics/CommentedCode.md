@@ -61,6 +61,6 @@ A code block is considered commented , if at least one line inside the block is 
 
 ```json
 "CommentedCode": {
-    "threshold": "0.9"
+    "threshold": 0.9
 }
 ```
