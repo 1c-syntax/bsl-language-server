@@ -127,7 +127,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     diagnosticInstance.configure(configuration);
 
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics).hasSize(14);
     // на )
     assertThat(diagnostics, true)
       .hasRange(3, 31, 3, 32)
@@ -136,13 +136,14 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(31, 31, 31, 32)
       .hasRange(33, 17, 33, 18)
       .hasRange(36, 4, 36, 5)
+      .hasRange(41, 87, 41, 88)
       // на (
       .hasRange(3, 16, 3, 17)
       .hasRange(17, 16, 17, 17)
       .hasRange(31, 6, 31, 7)
       .hasRange(31, 20, 31, 21)
       .hasRange(33, 6, 33, 7)
-      .hasRange(34, 6, 34, 7);
+      .hasRange(41, 45, 41, 46);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -154,10 +155,11 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
 
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(8, 12, 8, 13)
-      .hasRange(27, 10, 27, 11);
+      .hasRange(27, 10, 27, 11)
+      .hasRange(41, 46, 41, 47);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
