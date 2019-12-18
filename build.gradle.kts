@@ -94,7 +94,7 @@ dependencies {
 
     implementation("net.oneandone.reflections8", "reflections8", "0.11.5")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "0.11.0") {
+    implementation("com.github.1c-syntax", "bsl-parser", "9f924ccbb7a1a0f1f72cdbffa6059d837f0806bb") {
         exclude("com.github.nixel2007.antlr4", "antlr4-maven-plugin")
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotations")
         exclude("com.github.nixel2007.antlr4", "antlr4-runtime-test-annotation-processors")
