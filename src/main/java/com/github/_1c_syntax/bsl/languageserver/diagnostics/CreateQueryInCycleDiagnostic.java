@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.ToString;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -87,6 +88,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     currentScope = new VariableScope();
+    currentScope.enterScope(GLOBAL_SCOPE);
     ParseTree result = super.visitFile(ctx);
     currentScope = null;
     return result;
@@ -138,44 +140,44 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       currentVariable.addType(UNDEFINED_TYPE);
     }
 
-    currentScope.addVariable(variableName, currentVariable);
+    currentScope.addVariable(currentVariable);
     return super.visitAssignment(ctx);
   }
 
-  private String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
+  private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
+    String result;
     if (constValue.string() != null) {
-      return STRING_TYPE;
+      result = STRING_TYPE;
     } else if (constValue.DATETIME() != null) {
-      return DATE_TYPE;
+      result = DATE_TYPE;
     } else if (constValue.numeric() != null) {
-      return NUMBER_TYPE;
+      result = NUMBER_TYPE;
     } else if (constValue.TRUE() != null) {
-      return BOOLEAN_TYPE;
+      result = BOOLEAN_TYPE;
     } else if (constValue.FALSE() != null) {
-      return BOOLEAN_TYPE;
+      result = BOOLEAN_TYPE;
     } else if (constValue.NULL() != null) {
-      return NULL_TYPE;
+      result = NULL_TYPE;
     } else {
-      return UNDEFINED_TYPE;
+      result = UNDEFINED_TYPE;
     }
+
+    return result;
   }
 
   private Set<String> getTypesFromComplexIdentifier(BSLParser.ComplexIdentifierContext complexId) {
-
     if (complexId.newExpression() != null) {
       return Set.of(getTypeFromNewExpressionContext(complexId.newExpression()));
     } else if (complexId.IDENTIFIER() != null) {
-      Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(getComplexPathName(complexId, null));
-      if (variableDefinition.isPresent()) {
-        return variableDefinition.get().types;
-      } else {
-        return Set.of(UNDEFINED_TYPE);
-      }
+      return currentScope.getVariableByName(getComplexPathName(complexId, null))
+        .map(variableDefinition -> variableDefinition.types)
+        .orElse(Set.of(UNDEFINED_TYPE));
+    } else {
+      return Set.of();
     }
-    return Set.of();
   }
 
-  private String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
+  private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
 
     String typeName = Optional.ofNullable(newExpression.typeName())
       .map(RuleContext::getText)
@@ -187,10 +189,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
         .flatMap(memberListContext -> memberListContext.stream().findFirst())
         .map(BSLParser.MemberContext::constValue)
         .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(constValue -> {
-          String constValueText = constValue.getText();
-          return constValueText.substring(1, constValueText.length() - 1);
-        })
+        .map(RuleContext::getText)
+        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
       )
       .orElse(UNDEFINED_TYPE);
 
@@ -205,15 +205,15 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private String getVariableNameFromCallStatementContext(BSLParser.CallStatementContext callStatement) {
+  private static String getVariableNameFromCallStatementContext(BSLParser.CallStatementContext callStatement) {
     return callStatement.IDENTIFIER().getText();
   }
 
-  private String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
+  private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
     return getComplexPathName(((BSLParser.ComplexIdentifierContext) modifier.getParent()), modifier);
   }
 
-  private String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
+  private static String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
     StringBuilder sb = new StringBuilder();
     sb.append(ci.getChild(0).getText());
     for (BSLParser.ModifierContext mod : ci.modifier()) {
@@ -249,11 +249,11 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
     BSLParserRuleContext finalErrorContext = errorContext;
     if (finalErrorContext != null) {
-      variableDefinition.ifPresent(e -> {
+      variableDefinition.ifPresent((VariableDefinition definition) -> {
 
-        if (e.types.contains(QUERY_BUILDER_TYPE)
-          || e.types.contains(REPORT_BUILDER_TYPE)
-          || e.types.contains(QUERY_TYPE)) {
+        if (definition.types.contains(QUERY_BUILDER_TYPE)
+          || definition.types.contains(REPORT_BUILDER_TYPE)
+          || definition.types.contains(QUERY_TYPE)) {
           diagnosticStorage.addDiagnostic(finalErrorContext);
         }
 
@@ -291,6 +291,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     LINEAR, CYCLE
   }
 
+  @ToString
   public static class VariableDefinition {
     private String variableName;
     private Set<String> types = new HashSet<>();
@@ -309,15 +310,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
         this.firstDeclaration = firstDeclaration;
       }
     }
-
-    @Override
-    public String toString() {
-      return "VariableDefinition{" +
-        "variableName='" + variableName + '\'' +
-        ", variableTypes=" + types +
-        ", declaration=" + firstDeclaration.getText() +
-        '}';
-    }
   }
 
   private static class Scope {
@@ -329,15 +321,18 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       this.name = name;
     }
 
-    public void addVariable(String variableName, VariableDefinition variableDefinition, boolean typesMerge) {
-      this.variables.merge(variableName, variableDefinition, (key, value) -> {
-        if (!typesMerge) {
-          key.types.clear();
-        }
-        key.types.addAll(value.types);
+    public void addVariable(VariableDefinition variableDefinition, boolean typesMerge) {
+      this.variables.merge(
+        variableDefinition.variableName,
+        variableDefinition,
+        (VariableDefinition key, VariableDefinition value) -> {
+          if (!typesMerge) {
+            key.types.clear();
+          }
+          key.types.addAll(value.types);
 
-        return key;
-      });
+          return key;
+        });
     }
 
     public String getName() {
@@ -348,28 +343,24 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static class VariableScope extends ArrayDeque<Scope> {
     private Deque<CodeFlowType> flowMode = new ArrayDeque<>();
 
-    public VariableScope() {
-      this.enterScope(GLOBAL_SCOPE);
-    }
-
     public boolean codeFlowInCycle() {
       final CodeFlowType flowType = flowMode.peek();
       if (flowType == null) {
         return false;
       }
-      return flowType.equals(CodeFlowType.CYCLE);
+      return flowType == CodeFlowType.CYCLE;
     }
 
     public Optional<VariableDefinition> getVariableByName(String variableName) {
       return Optional.ofNullable(current().variables.get(variableName));
     }
 
-    public void addVariable(String variableName, VariableDefinition variableDefinition) {
+    public void addVariable(VariableDefinition variableDefinition) {
       final CodeFlowType flowType = flowMode.peek();
       if (flowType == null) {
         return;
       }
-      this.current().addVariable(variableName, variableDefinition, flowType.equals(CodeFlowType.CYCLE));
+      this.current().addVariable(variableDefinition, flowType == CodeFlowType.CYCLE);
     }
 
     public void enterScope(String name) {
