@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `serviceTags` | `String` | ```Service tags``` | ```"todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"``` |
+| `serviceTags` | `String` | ```Service tags``` | ```todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

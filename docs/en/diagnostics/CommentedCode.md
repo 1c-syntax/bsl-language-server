@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `threshold` | `Float` | ```Threshold``` | ```0.9F``` |
+| `threshold` | `Float` | ```Threshold``` | ```0.9``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -61,6 +61,6 @@ A code block is considered commented , if at least one line inside the block is 
 
 ```json
 "CommentedCode": {
-    "threshold": 0.9F
+    "threshold": 0.9
 }
 ```

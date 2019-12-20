@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `commentsAnnotation` | `String` | ```Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)``` | ```"//@,//(c),//©"``` |
+| `commentsAnnotation` | `String` | ```Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)``` | ```//@,//(c),//©``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

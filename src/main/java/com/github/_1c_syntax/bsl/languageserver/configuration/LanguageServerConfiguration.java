@@ -84,6 +84,17 @@ public final class LanguageServerConfiguration {
     );
   }
 
+  private LanguageServerConfiguration(DiagnosticLanguage diagnosticLanguage) {
+    this(
+      diagnosticLanguage,
+      DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
+      DEFAULT_COMPUTE_DIAGNOSTICS,
+      null,
+      new HashMap<>(),
+      null
+    );
+  }
+
   public static LanguageServerConfiguration create(File configurationFile) {
     LanguageServerConfiguration configuration = null;
     if (configurationFile.exists()) {
@@ -103,6 +114,10 @@ public final class LanguageServerConfiguration {
 
   public static LanguageServerConfiguration create() {
     return new LanguageServerConfiguration();
+  }
+
+  public static LanguageServerConfiguration create(DiagnosticLanguage diagnosticLanguage) {
+    return new LanguageServerConfiguration(diagnosticLanguage);
   }
 
   static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
