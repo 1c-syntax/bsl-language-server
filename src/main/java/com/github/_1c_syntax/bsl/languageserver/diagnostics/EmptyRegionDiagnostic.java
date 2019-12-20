@@ -71,7 +71,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
     List<TextEdit> textEdits = new ArrayList<>();
-    AtomicInteger maxDiagnosticEndLine = new AtomicInteger();
+    int maxDiagnosticEndLine = 0;
 
     for (Diagnostic diagnostic : diagnostics) {
 
@@ -92,12 +92,12 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
       RegionSymbol region = optionalRegionSymbol.get();
 
       int diagnosticEndLine = region.getEndLine() - 1;
-      if (diagnosticEndLine < maxDiagnosticEndLine.get()) {
+      if (diagnosticEndLine < maxDiagnosticEndLine) {
         continue;
       }
 
-      if (maxDiagnosticEndLine.get() == 0 || diagnosticEndLine > maxDiagnosticEndLine.get()) {
-        maxDiagnosticEndLine.set(diagnosticEndLine);
+      if (maxDiagnosticEndLine == 0 || diagnosticEndLine > maxDiagnosticEndLine) {
+        maxDiagnosticEndLine = diagnosticEndLine;
       }
 
       Position diagnosticRangeEnd = new Position(
