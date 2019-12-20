@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -52,26 +53,22 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
 
   @Test
   void testQuickFix() {
-
+    final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    List<CodeAction> quickFixes = getQuickFixes(
-      diagnostics.get(0),
-      Ranges.create(1, 1, 2, 14)
-    );
+    final Diagnostic firstDiagnostic = diagnostics.get(0);
 
-    assertThat(quickFixes)
-      .hasSize(1)
-      .first()
-      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+    List<CodeAction> quickFixes = getQuickFixes(firstDiagnostic);
 
-      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
-      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+    assertThat(quickFixes).hasSize(1);
 
-      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
-      .matches(codeAction ->
-        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().equals("")
-      )
-    ;
+    final CodeAction quickFix = quickFixes.get(0);
+
+    assertThat(quickFix).of(diagnosticInstance).in(documentContext)
+      .fixes(firstDiagnostic);
+
+    assertThat(quickFix).in(documentContext)
+      .hasChanges(1)
+      .hasNewText("");
 
   }
 }
