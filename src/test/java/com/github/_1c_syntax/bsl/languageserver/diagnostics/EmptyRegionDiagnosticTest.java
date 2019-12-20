@@ -21,12 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
 class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagnostic> {
   EmptyRegionDiagnosticTest() {
@@ -43,6 +47,31 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
       .hasRange(0, 1, 0, 13)
       .hasRange(4, 1, 4, 23)
       .hasRange(5, 1, 5, 26);
+
+  }
+
+  @Test
+  void testQuickFix() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    List<CodeAction> quickFixes = getQuickFixes(
+      diagnostics.get(0),
+      Ranges.create(1, 1, 2, 14)
+    );
+
+    assertThat(quickFixes)
+      .hasSize(1)
+      .first()
+      .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 1)
+      .matches(codeAction -> codeAction.getDiagnostics().get(0).equals(diagnostics.get(0)))
+
+      .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
+      .matches(codeAction ->
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().equals("")
+      )
+    ;
 
   }
 }
