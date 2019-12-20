@@ -447,34 +447,34 @@
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>listForCheckLeft</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>Symbols  for spaces from left side (space separated). Example: ) =</code></td>
-<td align="center"><code>""</code></td>
-</tr>
-<tr>
-<td align="center"><code>listForCheckRight</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>Symbols  for spaces from right side (space separated). Example: ( =</code></td>
-<td align="center"><code>", ;"</code></td>
-</tr>
-<tr>
-<td align="center"><code>listForCheckLeftAndRight</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>Symbols for spaces from both side(space separated) Example: + - * / = % &lt; &gt;</code></td>
-<td align="center"><code>"+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;="</code></td>
-</tr>
-<tr>
 <td align="center"><code>checkSpaceToRightOfUnary</code></td>
 <td align="center"><code>Boolean</code></td>
 <td align="left"><code>Check space right from unary (+ -)</code></td>
 <td align="center"><code>false</code></td>
 </tr>
 <tr>
+<td align="center"><code>listForCheckRight</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>Symbols  for spaces from right side (space separated). Example: ( =</code></td>
+<td align="center"><code>, ;</code></td>
+</tr>
+<tr>
+<td align="center"><code>listForCheckLeft</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>Symbols  for spaces from left side (space separated). Example: ) =</code></td>
+<td align="center">``````</td>
+</tr>
+<tr>
 <td align="center"><code>allowMultipleCommas</code></td>
 <td align="center"><code>Boolean</code></td>
 <td align="left"><code>Allow few commas</code></td>
 <td align="center"><code>false</code></td>
+</tr>
+<tr>
+<td align="center"><code>listForCheckLeftAndRight</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>Symbols for spaces from both side(space separated) Example: + - * / = % &lt; &gt;</code></td>
+<td align="center"><code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></td>
 </tr>
 </tbody>
 </table>
@@ -541,11 +541,11 @@ Also, the space should be to the right of <code>,</code> и <code>;</code></p>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><span class="s2">&quot;MissingSpace&quot;</span><span class="err">:</span> <span class="p">{</span>
-    <span class="nt">&quot;listForCheckLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span><span class="p">,</span>
     <span class="nt">&quot;checkSpaceToRightOfUnary&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nt">&quot;allowMultipleCommas&quot;</span><span class="p">:</span> <span class="kc">false</span>
+    <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;listForCheckLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;allowMultipleCommas&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span>
 <span class="p">}</span>
 </pre></div>
                 
