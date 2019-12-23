@@ -72,7 +72,8 @@ public class DocumentContext {
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
-  private boolean callAdjustRegionsAfterCalculation;
+  private boolean adjustingRegions;
+  private boolean regionsAdjusted;
   private final URI uri;
   private final FileType fileType;
 
@@ -115,8 +116,8 @@ public class DocumentContext {
 
   public List<MethodSymbol> getMethods() {
     final List<MethodSymbol> methodsUnboxed = methods.getOrCompute();
-    if (callAdjustRegionsAfterCalculation) {
-      callAdjustRegionsAfterCalculation = false;
+    if (!regionsAdjusted && !adjustingRegions) {
+      adjustingRegions = true;
       adjustRegions();
     }
     return new ArrayList<>(methodsUnboxed);
@@ -138,6 +139,10 @@ public class DocumentContext {
 
   public List<RegionSymbol> getRegions() {
     final List<RegionSymbol> regionsUnboxed = regions.getOrCompute();
+    if (!regionsAdjusted && !adjustingRegions) {
+      adjustingRegions = true;
+      adjustRegions();
+    }
     return new ArrayList<>(regionsUnboxed);
   }
 
@@ -232,6 +237,8 @@ public class DocumentContext {
     if (methods.isPresent()) {
       getMethods().forEach(Symbol::clearASTData);
     }
+
+    regionsAdjusted = false;
   }
 
   private void clear() {
@@ -255,11 +262,7 @@ public class DocumentContext {
 
   private List<RegionSymbol> computeRegions() {
     Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
-    final List<RegionSymbol> regionSymbols = regionSymbolComputer.compute();
-    if (!callAdjustRegionsAfterCalculation) {
-      adjustRegions();
-    }
-    return regionSymbols;
+    return regionSymbolComputer.compute();
   }
 
   private List<RegionSymbol> computeRegionsFlat() {
@@ -276,7 +279,6 @@ public class DocumentContext {
   }
 
   private List<MethodSymbol> computeMethods() {
-    callAdjustRegionsAfterCalculation = true;
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
     return methodSymbolComputer.compute();
   }
@@ -302,12 +304,12 @@ public class DocumentContext {
   }
 
   private void adjustRegions() {
-    getMethods().forEach((MethodSymbol methodSymbol) -> {
-      RegionSymbol region = methodSymbol.getRegion();
-      if (region != null) {
-        region.getMethods().add(methodSymbol);
-      }
-    });
+    getMethods().forEach((MethodSymbol methodSymbol) ->
+      methodSymbol.getRegion().ifPresent(region ->
+        region.getMethods().add(methodSymbol)
+      )
+    );
+    regionsAdjusted = true;
   }
 
   private MetricStorage computeMetrics() {
@@ -357,7 +359,7 @@ public class DocumentContext {
     return metricsTemp;
   }
 
-  private int[] computeCovlocData(){
+  private int[] computeCovlocData() {
 
     return Trees.getDescendants(getAst()).stream()
       .filter(node -> !(node instanceof TerminalNodeImpl))
@@ -370,8 +372,8 @@ public class DocumentContext {
   private boolean mustCovered(Tree node) {
 
     return node instanceof BSLParser.StatementContext
-            || node instanceof BSLParser.GlobalMethodCallContext
-            || node instanceof BSLParser.Var_nameContext;
+      || node instanceof BSLParser.GlobalMethodCallContext
+      || node instanceof BSLParser.Var_nameContext;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
