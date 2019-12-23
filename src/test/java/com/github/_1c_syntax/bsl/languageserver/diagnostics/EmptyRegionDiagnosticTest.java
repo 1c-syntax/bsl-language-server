@@ -21,12 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
 class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagnostic> {
   EmptyRegionDiagnosticTest() {
@@ -43,6 +48,27 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
       .hasRange(0, 1, 0, 13)
       .hasRange(4, 1, 4, 23)
       .hasRange(5, 1, 5, 26);
+
+  }
+
+  @Test
+  void testQuickFix() {
+    final DocumentContext documentContext = getDocumentContext();
+    List<Diagnostic> diagnostics = getDiagnostics();
+    final Diagnostic firstDiagnostic = diagnostics.get(0);
+
+    List<CodeAction> quickFixes = getQuickFixes(firstDiagnostic);
+
+    assertThat(quickFixes).hasSize(1);
+
+    final CodeAction quickFix = quickFixes.get(0);
+
+    assertThat(quickFix).of(diagnosticInstance).in(documentContext)
+      .fixes(firstDiagnostic);
+
+    assertThat(quickFix).in(documentContext)
+      .hasChanges(1)
+      .hasNewText("");
 
   }
 }
