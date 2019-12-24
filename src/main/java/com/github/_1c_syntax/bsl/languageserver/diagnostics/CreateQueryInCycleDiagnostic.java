@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.ToString;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -40,6 +41,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -83,6 +85,83 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   public CreateQueryInCycleDiagnostic(DiagnosticInfo info) {
     super(info);
+  }
+
+  private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
+    String result;
+    if (constValue.string() != null) {
+      result = STRING_TYPE;
+    } else if (constValue.DATETIME() != null) {
+      result = DATE_TYPE;
+    } else if (constValue.numeric() != null) {
+      result = NUMBER_TYPE;
+    } else if (constValue.TRUE() != null) {
+      result = BOOLEAN_TYPE;
+    } else if (constValue.FALSE() != null) {
+      result = BOOLEAN_TYPE;
+    } else if (constValue.NULL() != null) {
+      result = NULL_TYPE;
+    } else {
+      result = UNDEFINED_TYPE;
+    }
+
+    return result;
+  }
+
+  private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
+
+    String typeName = Optional.ofNullable(newExpression.typeName())
+      .map(RuleContext::getText)
+      .or(() -> Optional.ofNullable(newExpression.doCall())
+        .map(BSLParser.DoCallContext::callParamList)
+        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
+        .map(BSLParser.CallParamContext::expression)
+        .map(BSLParser.ExpressionContext::member)
+        .flatMap(memberListContext -> memberListContext.stream().findFirst())
+        .map(BSLParser.MemberContext::constValue)
+        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
+        .map(RuleContext::getText)
+        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
+      )
+      .orElse(UNDEFINED_TYPE);
+
+    if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
+      return QUERY_BUILDER_TYPE;
+    } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
+      return REPORT_BUILDER_TYPE;
+    } else if (QUERY_PATTERN.matcher(typeName).matches()) {
+      return QUERY_TYPE;
+    } else {
+      return typeName;
+    }
+  }
+
+  private static String getVariableNameFromCallStatementContext(BSLParser.CallStatementContext callStatement) {
+    return callStatement.IDENTIFIER().getText();
+  }
+
+  private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
+    ParserRuleContext parent = modifier.getParent();
+    if (parent instanceof BSLParser.ComplexIdentifierContext) {
+      return getComplexPathName(((BSLParser.ComplexIdentifierContext) parent), modifier);
+    } else if (parent instanceof BSLParser.CallStatementContext) {
+      BSLParser.CallStatementContext parentCall = (BSLParser.CallStatementContext) parent;
+
+      return parentCall.modifier().stream()
+        .takeWhile(e -> !e.equals(modifier))
+        .map(RuleContext::getText)
+        .collect(Collectors.joining("", parentCall.IDENTIFIER().getText(), ""));
+    }
+    return null;
+  }
+
+  private static String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
+
+    return ci.modifier().stream()
+      .takeWhile(e -> !e.equals(to))
+      .map(RuleContext::getText)
+      .collect(Collectors.joining("", ci.getChild(0).getText(), ""));
+
   }
 
   @Override
@@ -144,27 +223,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitAssignment(ctx);
   }
 
-  private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
-    String result;
-    if (constValue.string() != null) {
-      result = STRING_TYPE;
-    } else if (constValue.DATETIME() != null) {
-      result = DATE_TYPE;
-    } else if (constValue.numeric() != null) {
-      result = NUMBER_TYPE;
-    } else if (constValue.TRUE() != null) {
-      result = BOOLEAN_TYPE;
-    } else if (constValue.FALSE() != null) {
-      result = BOOLEAN_TYPE;
-    } else if (constValue.NULL() != null) {
-      result = NULL_TYPE;
-    } else {
-      result = UNDEFINED_TYPE;
-    }
-
-    return result;
-  }
-
   private Set<String> getTypesFromComplexIdentifier(BSLParser.ComplexIdentifierContext complexId) {
     if (complexId.newExpression() != null) {
       return Set.of(getTypeFromNewExpressionContext(complexId.newExpression()));
@@ -175,55 +233,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     } else {
       return Set.of();
     }
-  }
-
-  private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
-
-    String typeName = Optional.ofNullable(newExpression.typeName())
-      .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(memberListContext -> memberListContext.stream().findFirst())
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
-      )
-      .orElse(UNDEFINED_TYPE);
-
-    if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
-      return QUERY_BUILDER_TYPE;
-    } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
-      return REPORT_BUILDER_TYPE;
-    } else if (QUERY_PATTERN.matcher(typeName).matches()) {
-      return QUERY_TYPE;
-    } else {
-      return typeName;
-    }
-  }
-
-  private static String getVariableNameFromCallStatementContext(BSLParser.CallStatementContext callStatement) {
-    return callStatement.IDENTIFIER().getText();
-  }
-
-  private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
-    return getComplexPathName(((BSLParser.ComplexIdentifierContext) modifier.getParent()), modifier);
-  }
-
-  private static String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(ci.getChild(0).getText());
-    for (BSLParser.ModifierContext mod : ci.modifier()) {
-      if (mod.equals(to)) {
-        break;
-      }
-      sb.append(mod.getText());
-    }
-    return sb.toString();
-
   }
 
   @Override
@@ -243,7 +252,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
     } else if (parent instanceof BSLParser.ModifierContext) {
       BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
-      errorContext = (BSLParser.ComplexIdentifierContext) callModifier.getParent();
+      errorContext = (BSLParserRuleContext) callModifier.getParent();
       variableName = getVariableNameFromModifierContext(callModifier);
     }
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
