@@ -538,6 +538,16 @@
             },
             "$id": "#/definitions/NumberOfValuesInStructureConstructor"
         },
+        "OSUsersMethod": {
+            "description": "Using method OSUsers",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using method OSUsers",
+            "$id": "#/definitions/OSUsersMethod"
+        },
         "OneStatementPerLine": {
             "description": "One statement per line",
             "default": null,
