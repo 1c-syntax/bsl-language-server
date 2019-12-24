@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -62,7 +63,11 @@ public final class MethodSymbolComputer
     TerminalNode startNode = declaration.FUNCTION_KEYWORD();
     TerminalNode stopNode = ctx.ENDFUNCTION_KEYWORD();
 
-    if (startNode == null || stopNode == null) {
+    if (startNode == null
+      || startNode instanceof ErrorNode
+      || stopNode == null
+      || stopNode instanceof ErrorNode
+    ) {
       return ctx;
     }
 
@@ -89,7 +94,11 @@ public final class MethodSymbolComputer
     TerminalNode startNode = declaration.PROCEDURE_KEYWORD();
     TerminalNode stopNode = ctx.ENDPROCEDURE_KEYWORD();
 
-    if (startNode == null || stopNode == null) {
+    if (startNode == null
+      || startNode instanceof ErrorNode
+      || stopNode == null
+      || stopNode instanceof ErrorNode
+    ) {
       return ctx;
     }
 

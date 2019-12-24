@@ -64,7 +64,7 @@ public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
     BSLParser.MethodCallContext methodCall = ctx.accessCall().methodCall();
 
     if(deletePattern.matcher(methodCall.methodName().getText()).matches()) {
-      List<BSLParser.CallParamContext> callParams = methodCall
+      List<? extends BSLParser.CallParamContext> callParams = methodCall
         .doCall()
         .callParamList()
         .callParam();

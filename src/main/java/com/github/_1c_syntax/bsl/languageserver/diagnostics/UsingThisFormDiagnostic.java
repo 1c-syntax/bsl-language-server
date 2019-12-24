@@ -96,11 +96,11 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   private static boolean needCheck(BSLParserRuleContext declaration) {
-    List<BSLParser.ParamContext> params = getParams(declaration);
+    List<? extends BSLParser.ParamContext> params = getParams(declaration);
     return params.isEmpty() || !hasThisForm(params);
   }
 
-  private static List<BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
+  private static List<? extends BSLParser.ParamContext> getParams(BSLParserRuleContext declaration) {
     BSLParser.ParamListContext paramList = declaration.getRuleContext(BSLParser.ParamListContext.class, 0);
     if (paramList == null) {
       return Collections.emptyList();
@@ -108,7 +108,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     return paramList.getRuleContexts(BSLParser.ParamContext.class);
   }
 
-  private static boolean hasThisForm(List<BSLParser.ParamContext> params) {
+  private static boolean hasThisForm(List<? extends BSLParser.ParamContext> params) {
     for (BSLParser.ParamContext param : params) {
       if (pattern.matcher(param.getText()).find()) {
         return true;
