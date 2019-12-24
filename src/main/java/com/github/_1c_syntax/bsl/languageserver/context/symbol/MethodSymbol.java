@@ -28,6 +28,8 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
+import java.util.Optional;
+
 @Value
 @Builder
 public class MethodSymbol implements Symbol {
@@ -37,7 +39,7 @@ public class MethodSymbol implements Symbol {
   private final MethodDescription description;
 
   @ToString.Exclude
-  private final RegionSymbol region;
+  private final Optional<RegionSymbol> region;
 
   @NonFinal
   private BSLParserRuleContext node;
