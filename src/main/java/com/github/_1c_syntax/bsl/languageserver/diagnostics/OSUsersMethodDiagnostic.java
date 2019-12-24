@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
   type = DiagnosticType.SECURITY_HOTSPOT,
   severity = DiagnosticSeverity.CRITICAL,
   minutesToFix = 15,
+  scope = DiagnosticScope.BSL,
   tags = {
 		DiagnosticTag.SUSPICIOUS
 	}
