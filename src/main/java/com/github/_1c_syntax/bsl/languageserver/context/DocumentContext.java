@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -62,19 +63,27 @@ public class DocumentContext {
 
   private String content;
   private ServerContext context;
-  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
-  private Tokenizer tokenizer;
-  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics);
-  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>(this::computeCognitiveComplexity);
-  private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods);
-  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>(this::computeNodeToMethodsMap);
-  private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions);
-  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
-  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
-  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
-  private boolean callAdjustRegionsAfterCalculation;
   private final URI uri;
   private final FileType fileType;
+  private Tokenizer tokenizer;
+
+  private ReentrantLock computeLock = new ReentrantLock();
+
+  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
+  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
+  private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
+  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
+    = new Lazy<>(this::computeCognitiveComplexity, computeLock);
+  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
+    = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
+    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
+
+  private boolean adjustingRegions;
+  private boolean regionsAdjusted;
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     final Path absolutePath = Absolute.path(uri);
@@ -115,8 +124,8 @@ public class DocumentContext {
 
   public List<MethodSymbol> getMethods() {
     final List<MethodSymbol> methodsUnboxed = methods.getOrCompute();
-    if (callAdjustRegionsAfterCalculation) {
-      callAdjustRegionsAfterCalculation = false;
+    if (!regionsAdjusted && !adjustingRegions) {
+      adjustingRegions = true;
       adjustRegions();
     }
     return new ArrayList<>(methodsUnboxed);
@@ -138,6 +147,10 @@ public class DocumentContext {
 
   public List<RegionSymbol> getRegions() {
     final List<RegionSymbol> regionsUnboxed = regions.getOrCompute();
+    if (!regionsAdjusted && !adjustingRegions) {
+      adjustingRegions = true;
+      adjustRegions();
+    }
     return new ArrayList<>(regionsUnboxed);
   }
 
@@ -232,6 +245,8 @@ public class DocumentContext {
     if (methods.isPresent()) {
       getMethods().forEach(Symbol::clearASTData);
     }
+
+    regionsAdjusted = false;
   }
 
   private void clear() {
@@ -255,11 +270,7 @@ public class DocumentContext {
 
   private List<RegionSymbol> computeRegions() {
     Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
-    final List<RegionSymbol> regionSymbols = regionSymbolComputer.compute();
-    if (!callAdjustRegionsAfterCalculation) {
-      adjustRegions();
-    }
-    return regionSymbols;
+    return regionSymbolComputer.compute();
   }
 
   private List<RegionSymbol> computeRegionsFlat() {
@@ -276,7 +287,6 @@ public class DocumentContext {
   }
 
   private List<MethodSymbol> computeMethods() {
-    callAdjustRegionsAfterCalculation = true;
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
     return methodSymbolComputer.compute();
   }
@@ -302,12 +312,12 @@ public class DocumentContext {
   }
 
   private void adjustRegions() {
-    getMethods().forEach((MethodSymbol methodSymbol) -> {
-      RegionSymbol region = methodSymbol.getRegion();
-      if (region != null) {
-        region.getMethods().add(methodSymbol);
-      }
-    });
+    getMethods().forEach((MethodSymbol methodSymbol) ->
+      methodSymbol.getRegion().ifPresent(region ->
+        region.getMethods().add(methodSymbol)
+      )
+    );
+    regionsAdjusted = true;
   }
 
   private MetricStorage computeMetrics() {
@@ -357,7 +367,7 @@ public class DocumentContext {
     return metricsTemp;
   }
 
-  private int[] computeCovlocData(){
+  private int[] computeCovlocData() {
 
     return Trees.getDescendants(getAst()).stream()
       .filter(node -> !(node instanceof TerminalNodeImpl))
@@ -370,8 +380,8 @@ public class DocumentContext {
   private boolean mustCovered(Tree node) {
 
     return node instanceof BSLParser.StatementContext
-            || node instanceof BSLParser.GlobalMethodCallContext
-            || node instanceof BSLParser.Var_nameContext;
+      || node instanceof BSLParser.GlobalMethodCallContext
+      || node instanceof BSLParser.Var_nameContext;
   }
 
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {

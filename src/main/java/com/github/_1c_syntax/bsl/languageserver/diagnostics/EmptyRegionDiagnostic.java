@@ -39,7 +39,6 @@ import org.eclipse.lsp4j.TextEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -58,12 +57,12 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   @Override
   protected void check(DocumentContext documentContext) {
 
-    documentContext.getMethods();
-
     documentContext.getRegionsFlat()
       .stream()
       .filter(regionSymbol -> regionSymbol.getMethods().isEmpty())
-      .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getNode(), info.getMessage(regionSymbol.getName())));
+      .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(
+        regionSymbol.getNode(), info.getMessage(regionSymbol.getName()))
+      );
 
   }
 

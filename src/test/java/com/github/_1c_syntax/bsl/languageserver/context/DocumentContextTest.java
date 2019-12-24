@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,7 +51,7 @@ class DocumentContextTest {
   }
 
   @Test
-  void testClearASTData() throws IOException, IllegalAccessException {
+  void testClearASTData() throws IllegalAccessException {
     // given
     DocumentContext documentContext = getDocumentContext();
 
@@ -60,7 +64,7 @@ class DocumentContextTest {
   }
 
   @Test
-  void testMethodCompute() throws IOException {
+  void testMethodCompute() {
 
     DocumentContext documentContext = getDocumentContext();
 
@@ -78,18 +82,48 @@ class DocumentContextTest {
 
   }
 
-  public DocumentContext getDocumentContext() throws IOException {
+  @Test
+  void testRegionsAdjustingCompute() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+
+    // when
+    List<RegionSymbol> regions = documentContext.getRegions();
+
+    // then
+    assertThat(regions).anyMatch(regionSymbol -> regionSymbol.getMethods().size() > 0);
+  }
+
+  @Test
+  void testMethodsAdjustingCompute() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+
+    // when
+    List<MethodSymbol> methods = documentContext.getMethods();
+
+    // then
+    assertThat(methods)
+      .anyMatch(methodSymbol -> methodSymbol.getRegion().isPresent())
+      .anySatisfy(methodSymbol -> methodSymbol.getRegion().ifPresent(
+          regionSymbol -> assertThat(regionSymbol.getMethods()).contains(methodSymbol)
+        )
+      )
+    ;
+  }
+
+  @SneakyThrows
+  public DocumentContext getDocumentContext() {
 
     return getDocumentContext("./src/test/resources/context/DocumentContextTest.bsl");
   }
 
-  private DocumentContext getDocumentContext(String filePath) throws IOException {
-
+  private DocumentContext getDocumentContext(String filePath) {
     return TestUtils.getDocumentContextFromFile(filePath);
   }
 
   @Test
-  void testComputeMetricsLocForCover() throws IOException {
+  void testComputeMetricsLocForCover() {
 
     DocumentContext documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
@@ -99,7 +133,7 @@ class DocumentContextTest {
   }
 
   @Test
-  void testComputeMetricsComments() throws IOException {
+  void testComputeMetricsComments() {
 
     DocumentContext documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextCommentsTest.bsl");

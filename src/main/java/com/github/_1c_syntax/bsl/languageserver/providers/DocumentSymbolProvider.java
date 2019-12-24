@@ -53,7 +53,7 @@ public final class DocumentSymbolProvider {
     documentContext.getRegions().forEach(regionSymbol -> addRegion(documentContext, symbols, regionSymbol));
 
     documentContext.getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.getRegion() == null)
+      .filter(methodSymbol -> methodSymbol.getRegion().isEmpty())
       .forEach((MethodSymbol methodSymbol) -> addMethod(symbols, methodSymbol));
 
     return symbols.stream()
@@ -77,7 +77,8 @@ public final class DocumentSymbolProvider {
     regionSymbol.getChildren().forEach(childRegionSymbol -> addRegion(documentContext, children, childRegionSymbol));
 
     documentContext.getMethods().stream()
-      .filter(methodSymbol -> regionSymbol.equals(methodSymbol.getRegion()))
+      .filter(methodSymbol -> methodSymbol.getRegion().isPresent())
+      .filter(methodSymbol -> regionSymbol.equals(methodSymbol.getRegion().get()))
       .forEach(methodSymbol -> addMethod(children, methodSymbol));
 
     documentSymbol.setChildren(children);

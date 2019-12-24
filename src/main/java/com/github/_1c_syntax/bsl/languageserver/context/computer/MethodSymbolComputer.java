@@ -109,20 +109,18 @@ public final class MethodSymbolComputer
     return ctx;
   }
 
-  private RegionSymbol findRegion(TerminalNode start, TerminalNode stop) {
+  private Optional<RegionSymbol> findRegion(TerminalNode start, TerminalNode stop) {
 
     if (start == null || stop == null) {
-      return null;
+      return Optional.empty();
     }
 
     int startLine = start.getSymbol().getLine();
     int endLine = stop.getSymbol().getLine();
 
-    Optional<RegionSymbol> region = documentContext.getRegionsFlat().stream()
+    return documentContext.getRegionsFlat().stream()
       .filter(regionSymbol -> regionSymbol.getStartLine() < startLine && regionSymbol.getEndLine() > endLine)
       .max(Comparator.comparingInt(RegionSymbol::getStartLine));
-
-    return region.orElse(null);
 
   }
 
