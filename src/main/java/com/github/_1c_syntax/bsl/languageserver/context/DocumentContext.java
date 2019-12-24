@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -62,20 +63,27 @@ public class DocumentContext {
 
   private String content;
   private ServerContext context;
-  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList);
-  private Tokenizer tokenizer;
-  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics);
-  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData = new Lazy<>(this::computeCognitiveComplexity);
-  private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods);
-  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap = new Lazy<>(this::computeNodeToMethodsMap);
-  private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions);
-  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat);
-  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData = new Lazy<>(this::computeDiagnosticIgnorance);
-  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType);
-  private boolean adjustingRegions;
-  private boolean regionsAdjusted;
   private final URI uri;
   private final FileType fileType;
+  private Tokenizer tokenizer;
+
+  private ReentrantLock computeLock = new ReentrantLock();
+
+  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
+  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
+  private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
+  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
+    = new Lazy<>(this::computeCognitiveComplexity, computeLock);
+  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
+    = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
+    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
+
+  private boolean adjustingRegions;
+  private boolean regionsAdjusted;
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     final Path absolutePath = Absolute.path(uri);
