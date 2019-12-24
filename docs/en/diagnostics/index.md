@@ -8,11 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **67**
+Total: **68**
 
 * Error: **24**
 * Code smell: **41**
 * Vulnerability: **2**
+* Security Hotspot: **1**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
@@ -53,6 +54,7 @@ Total: **67**
 | [NumberOfOptionalParams](NumberOfOptionalParams.md) | Limit number of optional parameters in method | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
 | [NumberOfParams](NumberOfParams.md) | Number of parameters in method | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](NumberOfValuesInStructureConstructor.md) | Limit on the number of property values passed to the structure constructor | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
+| [OSUsersMethod](OSUsersMethod.md) | Using method OSUsers | Yes | Critical | Security Hotspot | `suspicious` |
 | [OneStatementPerLine](OneStatementPerLine.md) | One statement per line | Yes | Minor | Code smell | `standard`<br/>`design` |
 | [OrderOfParams](OrderOfParams.md) | Order of Parameters in method | Yes | Major | Code smell | `standard`<br/>`design` |
 | [PairingBrokenTransaction](PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes | Major | Error | `standard` |

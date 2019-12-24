@@ -186,6 +186,9 @@
                 "NumberOfValuesInStructureConstructor": {
                     "$ref": "diagnostics-schema.json#/definitions/NumberOfValuesInStructureConstructor"
                 },
+                "OSUsersMethod": {
+                    "$ref": "diagnostics-schema.json#/definitions/OSUsersMethod"
+                },
                 "OneStatementPerLine": {
                     "$ref": "diagnostics-schema.json#/definitions/OneStatementPerLine"
                 },
