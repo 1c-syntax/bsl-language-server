@@ -57,13 +57,33 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   @Override
   protected void check(DocumentContext documentContext) {
 
-    documentContext.getRegionsFlat()
-      .stream()
-      .filter(regionSymbol -> regionSymbol.getMethods().isEmpty())
-      .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(
-        regionSymbol.getNode(), info.getMessage(regionSymbol.getName()))
-      );
+    List <RegionSymbol> regions =  documentContext.getRegions();
+    for (RegionSymbol regionSymbol : regions) {
+      checkRegionRecursively(regionSymbol);
+    }
 
+  }
+
+  private boolean checkRegionRecursively(RegionSymbol region) {
+    boolean childrensHaveMethods = false;
+
+    if (!region.getChildren().isEmpty()) {
+
+      for (RegionSymbol childrenRegion : region.getChildren()) {
+        boolean childrenIsEmpty = checkRegionRecursively(childrenRegion);
+        if (!childrenIsEmpty) {
+          childrensHaveMethods = true;
+        }
+      }
+    }
+
+    if (region.getMethods().isEmpty() && !childrensHaveMethods) {
+      diagnosticStorage.addDiagnostic(
+        region.getNode(), info.getMessage(region.getName()));
+      return true;
+    }
+
+    return false;
   }
 
   @Override
