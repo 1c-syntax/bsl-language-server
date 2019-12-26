@@ -1,0 +1,141 @@
+name: Make image
+
+on:
+    release:
+        types: [published, created, edited]
+
+jobs:
+    build:
+        strategy:
+            fail-fast: true
+            matrix:
+               os: [windows-latest, ubuntu-latest, macOS-latest]
+               include:
+                    - os: windows-latest
+                      displayName: Windows
+                      prefix: win
+                      jpackageDownload: https://download.java.net/java/early_access/jdk14/27/GPL/openjdk-14-ea+27_windows-x64_bin.zip
+                      jdk14Path: /jdk-14
+                      app-image: bsl-language-server
+                    - os: ubuntu-latest
+                      displayName: Linux
+                      prefix: nix
+                      jpackageDownload: https://download.java.net/java/early_access/jdk14/27/GPL/openjdk-14-ea+27_linux-x64_bin.tar.gz
+                      jdk14Path: /jdk-14
+                      app-image: bsl-language-server
+                    - os: macOS-latest
+                      displayName: MacOS
+                      prefix: mac
+                      jpackageDownload: https://download.java.net/java/early_access/jdk14/27/GPL/openjdk-14-ea+27_osx-x64_bin.tar.gz
+                      jdk14Path: /jdk-14.jdk/Contents/Home
+                      app-image: bsl-language-server.app
+        runs-on: ${{ matrix.os }}
+        name: (${{ matrix.displayName }}) create image app version
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v2             
+            - name: Set up JDK
+              uses: actions/setup-java@v1
+              with:
+                java-version: 13
+            - name: Build with Gradle
+              run: ./gradlew build
+            - name: Download jpackage
+                # We need to download jpackage from https://jdk.java.net/jpackage/
+              run: |
+                  import tarfile
+                  import zipfile
+                  import sys
+                  if sys.version_info[0] >= 3:
+                    from urllib.request import urlretrieve
+                  else:
+                    from urllib import urlretrieve
+
+                  url = "${{ matrix.jpackageDownload }}"
+                  tmpfile, headers = urlretrieve(url)
+                  if (url.endswith("tar.gz")):
+                    tar = tarfile.open(tmpfile)
+                    tar.extractall()
+                    tar.close()
+                  elif (url.endswith("zip")):
+                    zip = zipfile.ZipFile(tmpfile)
+                    zip.extractall()
+                    zip.close()
+              shell: python
+            - name: Build jpackage app-image
+              run: |
+                    import os
+                    import platform
+                    import re
+                    import ntpath
+                    import shutil
+
+                    pattern = r"bsl.+\.jar"
+                    thisPlatform = platform.system();
+                    isWindows = False
+                    if thisPlatform == 'Windows':
+                        isWindows = True
+                        
+                    if isWindows:
+                        jpackage = os.getcwd() + "\\" + "${{ matrix.jdk14Path }}" + '\\bin\\jpackage.exe'
+                        dirName = os.getcwd() + "\\build\\libs"
+                    else:
+                        jpackage = os.getcwd() + "${{ matrix.jdk14Path }}" + '/bin/jpackage'
+                        dirName = os.getcwd() + "/build/libs"    
+
+                    def start():
+                        fullname = get_bslls_jar(dirName)
+                        if (fullname == None):
+                            exit
+                        
+                        cmdArgs = [jpackage]
+                        cmdArgs.append('--name')
+                        cmdArgs.append('bsl-language-server')
+                        cmdArgs.append('--input')
+                        cmdArgs.append('build/libs')
+                        cmdArgs.append('--main-jar')
+                        cmdArgs.append(fullname)
+                        if isWindows:
+                            cmdArgs.append('--win-console')
+                        cmdArgs.append('--type')
+                        cmdArgs.append('app-image')
+                        cmdArgs.append('--java-options')
+                        cmdArgs.append('-Xmx2g')
+
+                        cmd = ' '.join(cmdArgs) 
+                        os.system(cmd)
+                          
+                        shutil.make_archive("bsl-language-server_" + "${{ matrix.prefix }}", 'zip', './',"${{ matrix.app-image }}")
+
+                    def get_bslls_jar(dir):
+                        names = os.listdir(dir)
+                        for name in names:
+                            fullname = os.path.join(dir, name)
+                            if os.path.isfile(fullname) and re.search(pattern, fullname):
+                                return ntpath.basename(fullname)
+                        return None
+
+                    def run_jpackage():
+                        cmd = jpackage + ' @jpackage.cfg'
+                        print(cmd)
+                        os.system(cmd)
+
+                    start()
+              shell: python
+            - name: Upload artifact
+              uses: actions/upload-artifact@master
+              with:
+                name: bsl-language-server_${{ matrix.prefix }}.zip
+                path: ./${{ matrix.app-image }}
+            - name: Upload assets to release
+              uses: AButler/upload-release-assets@v1.0
+              with:
+                  files: './bsl-language-server_${{ matrix.prefix }}.zip'
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Upload jar to release
+              if: matrix.prefix == 'win'
+              uses: AButler/upload-release-assets@v1.0
+              with:
+                  files: './build/libs/*.jar'
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
