@@ -56,12 +56,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
   @Override
   protected void check(DocumentContext documentContext) {
-
-    List <RegionSymbol> regions =  documentContext.getRegions();
-    for (RegionSymbol regionSymbol : regions) {
-      checkRegionRecursively(regionSymbol);
-    }
-
+    documentContext.getRegions().forEach(this::checkRegionRecursively);
   }
 
   private boolean checkRegionRecursively(RegionSymbol region) {
