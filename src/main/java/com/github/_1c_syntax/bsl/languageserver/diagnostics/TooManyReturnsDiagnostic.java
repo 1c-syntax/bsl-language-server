@@ -81,9 +81,9 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
     maxReturnsCount = (int) configuration.getOrDefault("maxReturnsCount", maxReturnsCount);
   }
 
-  private String getRelatedMessage(ParseTree context) {
+  private String getRelatedMessage(BSLParser.ReturnStatementContext context) {
     if (context.getChildCount() > 1) {
-      return leftSubStr(documentContext.getText(Ranges.create((BSLParser.ReturnStatementContext) context)));
+      return leftSubStr(documentContext.getText(Ranges.create(context)));
     } else {
       return "+1";
     }
@@ -101,7 +101,7 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
           .map(context -> RelatedInformation.create(
             documentContext.getUri(),
             Ranges.create((BSLParser.ReturnStatementContext) context),
-            getRelatedMessage(context)
+            getRelatedMessage((BSLParser.ReturnStatementContext) context)
           )).collect(Collectors.toCollection(() -> relatedInformation));
 
         diagnosticStorage.addDiagnostic(
