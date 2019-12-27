@@ -35,8 +35,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,19 +56,36 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
   @Override
   protected void check(DocumentContext documentContext) {
+    documentContext.getRegions().forEach(this::checkRegionRecursively);
+  }
 
-    documentContext.getRegionsFlat()
-      .stream()
-      .filter(regionSymbol -> regionSymbol.getMethods().isEmpty())
-      .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(
-        regionSymbol.getNode(), info.getMessage(regionSymbol.getName()))
-      );
+  private boolean checkRegionRecursively(RegionSymbol region) {
+    boolean childrensHaveMethods = false;
 
+    if (!region.getChildren().isEmpty()) {
+
+      List<RegionSymbol> children = region.getChildren();
+      for (RegionSymbol childrenRegion : children) {
+        boolean childrenIsEmpty = checkRegionRecursively(childrenRegion);
+        if (!childrenIsEmpty) {
+          childrensHaveMethods = true;
+        }
+      }
+    }
+
+    if (region.getMethods().isEmpty() && !childrensHaveMethods) {
+      diagnosticStorage.addDiagnostic(
+        region.getNode(), info.getMessage(region.getName()));
+      return true;
+    }
+
+    return false;
   }
 
   @Override
   public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
+    diagnostics.sort(Comparator.comparingInt(o -> o.getRange().getStart().getLine()));
     List<TextEdit> textEdits = new ArrayList<>();
     int maxDiagnosticEndLine = 0;
 
