@@ -105,6 +105,17 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
   }
 
   @Override
+  public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
+    super.visitSubCodeBlock(ctx);
+    // ЗафиксироватьТранзакцию в конце метода
+    if (nodeEndTransaction != null) {
+      diagnosticStorage.addDiagnostic(nodeEndTransaction);
+      nodeEndTransaction = null;
+    }
+    return ctx;
+  }
+
+  @Override
   public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     // Находим последний стейт в модуле и запоминаем его
     Stream<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream();
