@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **68**
+Total: **69**
 
 * Error: **24**
-* Code smell: **41**
+* Code smell: **42**
 * Vulnerability: **2**
 * Security Hotspot: **1**
 
@@ -67,6 +67,7 @@ Total: **68**
 | [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` |
 | [TernaryOperatorUsage](TernaryOperatorUsage.md) | Ternary operator usage | No | Minor | Code smell | `brainoverload` |
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Timeouts working with external resources | Yes | Critical | Error | `unpredictable`<br/>`standard` |
+| [TooManyReturns](TooManyReturns.md) | Methods should not have too many return statements | No | Minor | Code smell | `brainoverload` |
 | [TryNumber](TryNumber.md) | Cast to number of try catch block | Yes | Major | Code smell | `standard` |
 | [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Unary Plus sign in string concatenation | Yes | Blocker | Error | `suspicious`<br/>`brainoverload` |
 | [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes | Critical | Error | `standard`<br/>`error` |
