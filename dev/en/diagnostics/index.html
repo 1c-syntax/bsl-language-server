@@ -394,10 +394,10 @@
 <p>Some of diagnostics are disabled by default. Use <a href="/#configuration">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>68</strong></p>
+<p>Total: <strong>69</strong></p>
 <ul>
 <li>Error: <strong>24</strong></li>
-<li>Code smell: <strong>41</strong></li>
+<li>Code smell: <strong>42</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>1</strong></li>
 </ul>
@@ -812,6 +812,14 @@
 <td>Critical</td>
 <td>Error</td>
 <td><code>unpredictable</code><br/><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="TooManyReturns/">TooManyReturns</a></td>
+<td>Methods should not have too many return statements</td>
+<td align="center">No</td>
+<td>Minor</td>
+<td>Code smell</td>
+<td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="TryNumber/">TryNumber</a></td>
