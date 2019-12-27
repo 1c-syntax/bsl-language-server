@@ -49,4 +49,14 @@ class CommitTransactionOutsideTryCatchDiagnosticTest extends AbstractDiagnosticT
       .hasRange(98, 8, 98, 34)
       .hasRange(106, 0, 106, 26);
   }
+
+  @Test
+  void testSingleSub() {
+
+    List<Diagnostic> diagnostics = getDiagnostics("CommitTransactionOutsideTryCatchDiagnosticSingleSub");
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(3, 4, 3, 30);
+  }
 }
