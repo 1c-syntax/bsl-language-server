@@ -1,3 +1,6 @@
+import java.net.URL
+import java.net.URLClassLoader
+
 open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactory) : DefaultTask() {
     lateinit var taskName: String // таска для исполнения
 
@@ -50,7 +53,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
             "String" to "Строка",
             "Float" to "Число с плавающей точкой")
 
-    private fun createDiagnosticSupplier(lang: String, classLoader: java.net.URLClassLoader) : Any {
+    private fun createDiagnosticSupplier(lang: String, classLoader: ClassLoader) : Any {
         val languageServerConfigurationClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration")
         val diagnosticLanguageClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage")
         val lsConfiguration = languageServerConfigurationClass.getDeclaredMethod("create", diagnosticLanguageClass)
@@ -60,39 +63,53 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
         return classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier").declaredConstructors[0].newInstance(lsConfiguration)
     }
 
+    private fun createClassLoader(): ClassLoader {
+        val urls: ArrayList<URL> = ArrayList()
+        File(project.buildDir, "classes")
+                .walkTopDown()
+                .forEach { urls.add(it.toURI().toURL()) }
+
+        File(project.buildDir, "resources")
+                .walkTopDown()
+                .forEach { urls.add(it.toURI().toURL()) }
+
+        val urlsParent: ArrayList<URL> = ArrayList()
+        project.configurations.getByName("runtimeClasspath").files.forEach {
+            urlsParent.add(it.toURI().toURL())}
+        val parentCL = URLClassLoader(urlsParent.toTypedArray())
+        return URLClassLoader(urls.toTypedArray(), parentCL)
+    }
+
     private fun getDiagnosticsMetadata(): HashMap<String, HashMap<String, Any>> {
 
-        val classLoader = java.net.URLClassLoader(
-                arrayListOf(File(project.buildDir, "libs")
-                        .walkBottomUp().filter{it.name.endsWith(".jar")}
-                        .sortedBy {file -> file.lastModified()}.last()
-                        .toURI().toURL()).toTypedArray())
-
+        val classLoader = createClassLoader()
         val diagnosticSupplierClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier")
+
         val diagnosticSupplierRU = createDiagnosticSupplier("ru", classLoader)
         val diagnosticSupplierEN = createDiagnosticSupplier("en", classLoader)
-        val diagnosticClasses = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticClasses").invoke(diagnosticSupplierClass)
 
         val result = hashMapOf<String, HashMap<String, Any>>()
-        if(diagnosticClasses is ArrayList<*>) {
-            for(diagnosticClass in diagnosticClasses) {
-                if(diagnosticClass is Class<*>) {
+        File(project.buildDir, "classes/java/main/com/github/_1c_syntax/bsl/languageserver/diagnostics")
+                .walkTopDown()
+                .filter{it.name.endsWith("Diagnostic.class")
+                        && !it.name.startsWith("Abstract")}
+                .forEach {
+                    val diagnosticClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.${it.nameWithoutExtension}")
+                    if(!diagnosticClass.toString().startsWith("interface")){
+                        val diagnosticInstanceRU = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticInstance", diagnosticClass.javaClass).invoke(diagnosticSupplierRU, diagnosticClass)
+                        val diagnosticInstanceEN = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticInstance", diagnosticClass.javaClass).invoke(diagnosticSupplierEN, diagnosticClass)
 
-                    val diagnosticInstanceRU = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticInstance", diagnosticClass.javaClass).invoke(diagnosticSupplierRU, diagnosticClass)
-                    val diagnosticInstanceEN = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticInstance", diagnosticClass.javaClass).invoke(diagnosticSupplierEN, diagnosticClass)
-
-                    val metadata = getDiagnosticMetadata(diagnosticClass, diagnosticInstanceRU, diagnosticInstanceEN, classLoader)
-                    if(metadata.isNotEmpty() && metadata["key"] is String) {
-                        result[metadata["key"] as String] = metadata
+                        val metadata = getDiagnosticMetadata(diagnosticClass, diagnosticInstanceRU, diagnosticInstanceEN, classLoader)
+                        if(metadata.isNotEmpty() && metadata["key"] is String) {
+                            result[metadata["key"] as String] = metadata
+                        }
                     }
                 }
-            }
-        }
 
         return result
     }
 
-    private fun getDiagnosticMetadata(diagnosticClass: Class<*>, diagnosticInstanceRU: Any, diagnosticInstanceEN: Any, classLoader: java.net.URLClassLoader): HashMap<String, Any> {
+    private fun getDiagnosticMetadata(diagnosticClass: Class<*>, diagnosticInstanceRU: Any, diagnosticInstanceEN: Any, classLoader: ClassLoader): HashMap<String, Any> {
         val diagnosticInfoClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo")
         val diagnosticParameterInfoClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo")
         val infoRU = diagnosticClass.getMethod("getInfo").invoke(diagnosticInstanceRU)
@@ -104,7 +121,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
         metadata["scope"] = diagnosticInfoClass.getMethod("getScope").invoke(infoRU).toString()
         metadata["minutesToFix"] = diagnosticInfoClass.getMethod("getMinutesToFix").invoke(infoRU).toString()
         metadata["activatedByDefault"] = diagnosticInfoClass.getMethod("isActivatedByDefault").invoke(infoRU)
-        metadata["tags"] = diagnosticInfoClass.getMethod("getTags").invoke(infoRU)
+        metadata["tags"] = diagnosticInfoClass.getMethod("getTags").invoke(infoRU).toString()
         metadata["description_ru"] = diagnosticInfoClass.getMethod("getName").invoke(infoRU).toString()
         metadata["description_en"] = diagnosticInfoClass.getMethod("getName").invoke(infoEN).toString()
 
@@ -469,6 +486,7 @@ tasks.register<DeveloperTools>("updateDiagnosticDocs") {
     description = "Updates diagnostic docs after changes"
     outputDir.set(project.layout.projectDirectory)
     taskName = "Update diagnostic docs"
+    outputs.upToDateWhen {false}
 }
 
 tasks.register<DeveloperTools>("updateDiagnosticsIndex") {
@@ -477,6 +495,7 @@ tasks.register<DeveloperTools>("updateDiagnosticsIndex") {
     description = "Update diagnostics index after changes"
     outputDir.set(project.layout.projectDirectory)
     taskName = "Update diagnostics index"
+    outputs.upToDateWhen {false}
 }
 
 tasks.register<DeveloperTools>("updateJsonSchema") {
@@ -485,4 +504,5 @@ tasks.register<DeveloperTools>("updateJsonSchema") {
     description = "Update json schema"
     outputDir.set(project.layout.projectDirectory)
     taskName = "Update json schema"
+    outputs.upToDateWhen {false}
 }
