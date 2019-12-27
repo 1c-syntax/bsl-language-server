@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **68**
+Общее количество: **69**
 
-* Дефект кода: **41**
+* Дефект кода: **42**
 * Уязвимость: **2**
 * Ошибка: **24**
 * Потенциальная уязвимость: **1**
@@ -67,6 +67,7 @@
 | [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` |
 | [TernaryOperatorUsage](TernaryOperatorUsage.md) | Использование тернарного оператора | Нет | Незначительный | Дефект кода | `brainoverload` |
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Таймауты при работе с внешними ресурсами | Да | Критичный | Ошибка | `unpredictable`<br/>`standard` |
+| [TooManyReturns](TooManyReturns.md) | Метод не должен содержать много возвратов | Нет | Незначительный | Дефект кода | `brainoverload` |
 | [TryNumber](TryNumber.md) | Приведение к числу в попытке | Да | Важный | Дефект кода | `standard` |
 | [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Унарный плюс в конкатенации строк | Да | Блокирующий | Ошибка | `suspicious`<br/>`brainoverload` |
 | [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да | Критичный | Ошибка | `standard`<br/>`error` |

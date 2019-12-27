@@ -676,6 +676,24 @@
             "title": "Timeouts working with external resources",
             "$id": "#/definitions/TimeoutsInExternalResources"
         },
+        "TooManyReturns": {
+            "description": "Methods should not have too many return statements",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Methods should not have too many return statements",
+            "properties": {
+                "maxReturnsCount": {
+                    "description": "Maximum allowed return statements per method",
+                    "default": 3,
+                    "type": "integer",
+                    "title": "Maximum allowed return statements per method"
+                }
+            },
+            "$id": "#/definitions/TooManyReturns"
+        },
         "TryNumber": {
             "description": "Cast to number of try catch block",
             "default": null,

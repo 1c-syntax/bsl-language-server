@@ -225,6 +225,9 @@
                 "TimeoutsInExternalResources": {
                     "$ref": "diagnostics-schema.json#/definitions/TimeoutsInExternalResources"
                 },
+                "TooManyReturns": {
+                    "$ref": "diagnostics-schema.json#/definitions/TooManyReturns"
+                },
                 "TryNumber": {
                     "$ref": "diagnostics-schema.json#/definitions/TryNumber"
                 },
