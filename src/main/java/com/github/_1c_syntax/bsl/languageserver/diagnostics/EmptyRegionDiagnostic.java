@@ -35,8 +35,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
-
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,7 +64,8 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
     if (!region.getChildren().isEmpty()) {
 
-      for (RegionSymbol childrenRegion : region.getChildren()) {
+      List<RegionSymbol> children = region.getChildren();
+      for (RegionSymbol childrenRegion : children) {
         boolean childrenIsEmpty = checkRegionRecursively(childrenRegion);
         if (!childrenIsEmpty) {
           childrensHaveMethods = true;
@@ -84,6 +85,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   @Override
   public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
+    diagnostics.sort(Comparator.comparingInt(o -> o.getRange().getStart().getLine()));
     List<TextEdit> textEdits = new ArrayList<>();
     int maxDiagnosticEndLine = 0;
 
