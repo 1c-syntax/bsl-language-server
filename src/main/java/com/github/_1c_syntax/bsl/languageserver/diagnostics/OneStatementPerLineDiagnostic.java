@@ -59,7 +59,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
     "^(\\s+?)[^\\s]",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private int previousLineNumber;
-  private ArrayList<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
+  private List<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
 
   public OneStatementPerLineDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -111,6 +111,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+    statementsPerLine.clear();
     super.visitFile(ctx);
     addDiagnostics();
     return ctx;
