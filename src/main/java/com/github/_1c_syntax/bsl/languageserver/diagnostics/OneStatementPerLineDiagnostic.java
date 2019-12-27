@@ -29,11 +29,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -56,33 +59,61 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
     "^(\\s+?)[^\\s]",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private int previousLineNumber;
-  private int previousDiagnosticLineNumber;
+  private ArrayList<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
 
   public OneStatementPerLineDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
+  private List<DiagnosticRelatedInformation> getRelatedInformation(BSLParser.StatementContext self) {
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+    statementsPerLine.stream()
+      .filter(context -> !context.equals(self))
+      .map(context -> RelatedInformation.create(
+        documentContext.getUri(),
+        Ranges.create((BSLParser.StatementContext) context),
+        "+1"
+      )).collect(Collectors.toCollection(() -> relatedInformation));
+    return relatedInformation;
+  }
+
+  private void addDiagnostics() {
+    if (!statementsPerLine.isEmpty()) {
+      statementsPerLine.forEach(
+        context -> diagnosticStorage.addDiagnostic(context,
+          getRelatedInformation(context))
+      );
+      statementsPerLine.clear();
+    }
+  }
+
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (ctx.preprocessor() != null || ctx.exception != null) {
-      return super.visitStatement(ctx);
-    }
-
-    if (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null) {
-      return super.visitStatement(ctx);
-    }
-
     int currentLine = ctx.getStart().getLine();
 
-    if (currentLine == previousLineNumber && currentLine != previousDiagnosticLineNumber) {
-      diagnosticStorage.addDiagnostic(ctx);
-      previousDiagnosticLineNumber = currentLine;
+    if (currentLine == previousLineNumber) {
+      statementsPerLine.add(ctx);
+    } else {
+      addDiagnostics();
+    }
+
+    if (ctx.preprocessor() != null || ctx.exception != null
+      || (ctx.getChildCount() == 1 && ctx.SEMICOLON() != null)) {
+      statementsPerLine.clear();
+      return super.visitStatement(ctx);
     }
 
     previousLineNumber = currentLine;
 
     return super.visitStatement(ctx);
+  }
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    super.visitFile(ctx);
+    addDiagnostics();
+    return ctx;
   }
 
   @Override
