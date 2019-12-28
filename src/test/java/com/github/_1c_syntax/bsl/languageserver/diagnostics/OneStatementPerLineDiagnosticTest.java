@@ -32,7 +32,6 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
-
 class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatementPerLineDiagnostic> {
 
   OneStatementPerLineDiagnosticTest() {
@@ -43,11 +42,24 @@ class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatem
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(3, 8, 3, 14)
-      .hasRange(3, 8, 3, 14)
-      .hasRange(3, 8, 3, 14);
+      .hasRange(8, 18, 8, 32)
+      .hasRange(8, 33, 8, 37)
+      .hasRange(12, 5, 12, 9)
+      .hasRange(12, 10, 12, 14);
+  }
+
+  @Test
+  void testEndFile() {
+    List<Diagnostic> diagnostics = getDiagnostics("OneStatementPerLineDiagnosticEndFile");
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 5, 1, 9)
+      .hasRange(1, 10, 1, 14);
+    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(1);
   }
 
   @Test
