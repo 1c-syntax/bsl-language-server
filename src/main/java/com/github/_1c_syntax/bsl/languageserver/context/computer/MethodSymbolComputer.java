@@ -147,22 +147,23 @@ public final class MethodSymbolComputer
       return lines;
     }
 
-    Token token = documentContext.getTokens().get(index - 1);
+    Token previousToken = documentContext.getTokens().get(index - 1);
+    Token currentToken = documentContext.getTokens().get(index);
 
-    if (abortSearch(token)) {
+    if (abortSearch(previousToken, currentToken)) {
       return lines;
     }
 
-    lines = getMethodComments(token.getTokenIndex(), lines);
-    int type = token.getType();
+    lines = getMethodComments(previousToken.getTokenIndex(), lines);
+    int type = previousToken.getType();
     if (type == BSLParser.LINE_COMMENT) {
-      lines.add(token);
+      lines.add(previousToken);
     }
     return lines;
   }
 
-  private boolean abortSearch(Token token) {
-    int type = token.getType();
+  private boolean abortSearch(Token previousToken, Token currentToken) {
+    int type = previousToken.getType();
     return (
       type != BSLParser.ANNOTATION_ATCLIENT_SYMBOL
         && type != BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
@@ -175,12 +176,12 @@ public final class MethodSymbolComputer
         && type != BSLParser.WHITE_SPACE
         && type != BSLParser.RULE_annotationParams
     )
-      || isBlankLine(token);
+      || isBlankLine(previousToken, currentToken);
   }
 
-  private boolean isBlankLine(Token token) {
-    return token.getType() == BSLParser.WHITE_SPACE
-      && (token.getTokenIndex() == 0
-      || documentContext.getTokens().get(token.getTokenIndex() - 1).getLine() != token.getLine());
+  private boolean isBlankLine(Token previousToken, Token currentToken) {
+    return previousToken.getType() == BSLParser.WHITE_SPACE
+      && (previousToken.getTokenIndex() == 0
+      || (previousToken.getLine() + 1) != currentToken.getLine());
   }
 }

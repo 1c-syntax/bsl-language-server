@@ -91,15 +91,8 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "526fb963589ddb7733210fee8163f8a7e5b55bb7") {
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-maven-plugin")
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-annotations")
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-testgen-maven-plugin")
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-runtime-test-annotations")
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-runtime-test-annotation-processors")
-        exclude("com.github.nixel2007.antlr4-optimized", "runtime-testsuite")
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-tool-testsuite")
-        exclude("com.github.nixel2007.antlr4-optimized", "antlr4-perf-testsuite")
+    implementation("com.github.1c-syntax", "bsl-parser", "86bbfc5ab44002b7d82228660292722ad2512731") {
+        exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
         exclude("org.abego.treelayout", "org.abego.treelayout.core")
