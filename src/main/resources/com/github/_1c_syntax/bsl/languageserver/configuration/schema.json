@@ -123,6 +123,9 @@
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
                 },
+                "GetFormMethod": {
+                    "$ref": "diagnostics-schema.json#/definitions/GetFormMethod"
+                },
                 "IdenticalExpressions": {
                     "$ref": "diagnostics-schema.json#/definitions/IdenticalExpressions"
                 },
