@@ -34,7 +34,10 @@ public final class MultilingualStringAnalyser {
 
   private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
   private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)";
-  private static final Pattern nStrMethodName = Pattern.compile(
+  private static final String NSTR_LANG_REGEX = "\\w+\\s*=\\s*['|\"{2}]";
+  private static final String NSTR_LANG_CUT_REGEX = "\\s*=\\s*['|\"{2}]";
+  private static final String WHITE_SPACE_REGEX = "\\s";
+  private static final Pattern NSTR_METHOD_NAME_PATTERN = Pattern.compile(
     NSTR_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
@@ -42,8 +45,16 @@ public final class MultilingualStringAnalyser {
     TEMPLATE_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
-  private Pattern NSTR_LANG_PATTERN = Pattern.compile(
-    "\\w+\\s*=\\s*['|\"{2}]",
+  private static final Pattern NSTR_LANG_PATTERN = Pattern.compile(
+    NSTR_LANG_REGEX,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final Pattern NSTR_LANG_CUT_PATTERN = Pattern.compile(
+    NSTR_LANG_CUT_REGEX,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile(
+    WHITE_SPACE_REGEX,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
@@ -56,12 +67,13 @@ public final class MultilingualStringAnalyser {
 
   public MultilingualStringAnalyser(String declaredLanguages) {
 
-    this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
+    Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
+    this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
 
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    return !nStrMethodName.matcher(globalMethodCallContext.methodName().getText()).find();
+    return !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
@@ -117,7 +129,8 @@ public final class MultilingualStringAnalyser {
     Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString());
 
     while (matcher.find()) {
-      String langKey = matcher.group().replaceAll("\\s*=\\s*['|\"{2}]", "");
+      Matcher cutMatcher = NSTR_LANG_CUT_PATTERN.matcher(matcher.group());
+      String langKey = cutMatcher.replaceAll("");
       expandedMultilingualString.add(langKey);
     }
 
