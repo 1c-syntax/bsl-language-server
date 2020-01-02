@@ -26,14 +26,12 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class MultilingualStringAnalyser {
 
-  private static final Byte VALID_LANG_PARTS = 2;
   private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
   private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)";
   private static final Pattern nStrMethodName = Pattern.compile(
@@ -44,12 +42,16 @@ public final class MultilingualStringAnalyser {
     TEMPLATE_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private Pattern NSTR_LANG_PATTERN = Pattern.compile(
+    "\\w+\\s*=\\s*['|\"{2}]",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
   private String variableName;
   private ArrayList<String> expectedLanguages;
-  private Map<String, String> expandedMultilingualString = new HashMap<>();
+  private ArrayList<String> expandedMultilingualString = new ArrayList<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
   public MultilingualStringAnalyser(String declaredLanguages) {
@@ -111,13 +113,14 @@ public final class MultilingualStringAnalyser {
   }
 
   private void expandMultilingualString() {
-    String[] languagesStrings = getMultilingualString().split("('|\"{2});");
-    for (String s : languagesStrings) {
-      String[] parts = s.split("=\\s*('|\"{2})");
-      if (parts.length >= VALID_LANG_PARTS) {
-        expandedMultilingualString.put(parts[0].replaceAll("\\W+|\\s*", ""), parts[1]);
-      }
+
+    Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString());
+
+    while (matcher.find()) {
+      String langKey = matcher.group().replaceAll("\\s*=\\s*['|\"{2}]", "");
+      expandedMultilingualString.add(langKey);
     }
+
   }
 
   private String getMultilingualString() {
@@ -131,7 +134,7 @@ public final class MultilingualStringAnalyser {
     }
 
     for (String lang : expectedLanguages) {
-      if (!expandedMultilingualString.containsKey(lang)) {
+      if (!expandedMultilingualString.contains(lang)) {
         missingLanguages.add(lang);
       }
     }
