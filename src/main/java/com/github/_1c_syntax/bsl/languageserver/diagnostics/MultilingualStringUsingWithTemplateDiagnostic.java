@@ -34,7 +34,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
   scope = DiagnosticScope.BSL,
   minutesToFix = 2,
   tags = {
-    DiagnosticTag.ERROR
+    DiagnosticTag.ERROR,
+    DiagnosticTag.LOCALIZE
   }
 )
 public class MultilingualStringUsingWithTemplateDiagnostic extends AbstractMultilingualStringDiagnostic {
