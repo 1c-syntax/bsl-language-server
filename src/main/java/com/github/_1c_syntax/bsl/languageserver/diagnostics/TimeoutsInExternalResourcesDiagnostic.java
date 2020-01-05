@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -56,7 +58,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|" +
       "WSПрокси|WSProxy|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final int DEFAULT_NUMBER_TIMEOUT = 5;
+  private int defaultNumberTimeout = 5;
+  private int defaultNumberTimeoutFtp = 6;
+  private int defaultNumberTimeoutWsd = 4;
+  private int defaultNumberTimeoutImp = 5;
 
   public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -89,6 +94,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     return newExpression.typeName() != null && DiagnosticHelper.isFTPConnectionType(newExpression.typeName());
   }
 
+  private static boolean isInternetMailProfile(BSLParser.NewExpressionContext newExpression) {
+    return newExpression.typeName() != null && DiagnosticHelper.isInternetMailProfileType(newExpression.typeName());
+  }
+
   private static boolean isNumberOrVariable(BSLParser.MemberContext member) {
     if (member.constValue() != null) {
       return (member.constValue().numeric() != null);
@@ -105,13 +114,13 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
     int numberTimeout;
     if (isWSDefinitions(newExpression)) {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1; // 5-й
-    }
-    else if (isFTPConnection(newExpression)) {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT + 1; // 7-ой
-    }
-    else {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT; // 6-ой
+      numberTimeout = defaultNumberTimeoutWsd;
+    } else if (isFTPConnection(newExpression)) {
+      numberTimeout = defaultNumberTimeoutFtp;
+    } else if (isInternetMailProfile(newExpression)) {
+      numberTimeout = defaultNumberTimeoutImp;
+    } else {
+      numberTimeout = defaultNumberTimeout;
     }
 
     List<? extends BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
@@ -156,6 +165,30 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       }
     });
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    CompatibilityMode diagnosticCompatibility = documentContext
+      .getServerContext()
+      .getConfiguration()
+      .getCompatibilityMode();
+
+    if (diagnosticCompatibility != null
+      && CompatibilityMode.compareTo(diagnosticCompatibility, DiagnosticCompatibilityMode.UNDEFINED.getCompatibilityMode()) != 0) {
+
+      if (CompatibilityMode.compareTo(diagnosticCompatibility,
+        DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_7.getCompatibilityMode()) == 1) {
+        defaultNumberTimeout = 4;
+        defaultNumberTimeoutWsd = 3;
+      }
+      if (CompatibilityMode.compareTo(diagnosticCompatibility,
+        DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_9.getCompatibilityMode()) == 1) {
+        defaultNumberTimeoutFtp = 5;
+      }
+    }
+
+    return super.visitFile(ctx);
   }
 
   private void checkNextStatement(
