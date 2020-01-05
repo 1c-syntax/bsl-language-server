@@ -77,4 +77,8 @@ public final class DiagnosticHelper {
   public static boolean isFTPConnectionType(ParseTree tnc) {
     return "FTPСоединение".equalsIgnoreCase(tnc.getText()) || "FTPConnection".equalsIgnoreCase(tnc.getText());
   }
+
+  public static boolean isInternetMailProfileType(ParseTree tnc) {
+    return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText()) || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
+  }
 }
