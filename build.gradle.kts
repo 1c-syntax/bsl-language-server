@@ -86,7 +86,7 @@ dependencies {
 
     // https://github.com/1c-syntax/bsl-language-server/issues/369
     // Excude jline and use fixed one.
-    implementation("me.tongfei", "progressbar", "0.8.0") { exclude(group = "org.jline") }
+    implementation("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
     implementation("org.jline", "jline", "3.13.2")
 
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
