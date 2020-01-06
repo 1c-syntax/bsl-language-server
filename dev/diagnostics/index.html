@@ -394,11 +394,11 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="/#configuration">конфигурационный файл</a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>69</strong></p>
+<p>Общее количество: <strong>70</strong></p>
 <ul>
 <li>Дефект кода: <strong>42</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
-<li>Ошибка: <strong>24</strong></li>
+<li>Ошибка: <strong>25</strong></li>
 <li>Потенциальная уязвимость: <strong>1</strong></li>
 </ul>
 <table>
@@ -540,6 +540,14 @@
 <td>Важный</td>
 <td>Ошибка</td>
 <td><code>suspicious</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="GetFormMethod/">GetFormMethod</a></td>
+<td>Использование метода ПолучитьФорму</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>

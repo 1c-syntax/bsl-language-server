@@ -394,9 +394,9 @@
 <p>Some of diagnostics are disabled by default. Use <a href="/#configuration">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>69</strong></p>
+<p>Total: <strong>70</strong></p>
 <ul>
-<li>Error: <strong>24</strong></li>
+<li>Error: <strong>25</strong></li>
 <li>Code smell: <strong>42</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>1</strong></li>
@@ -540,6 +540,14 @@
 <td>Major</td>
 <td>Error</td>
 <td><code>suspicious</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="GetFormMethod/">GetFormMethod</a></td>
+<td>GetForm method call</td>
+<td align="center">Yes</td>
+<td>Major</td>
+<td>Error</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>
