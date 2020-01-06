@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.OS,
   minutesToFix = 1,
-  activatedByDefault = true,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.SUSPICIOUS
@@ -49,13 +48,26 @@ import java.util.stream.Collectors;
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern attachablePattern = Pattern.compile(
+  private static final Pattern ATTACHABLE_PATTERN = Pattern.compile(
     "(подключаемый_.*|attachable_.*)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern HANDLER_PATTERN = Pattern.compile(
+    "(ПриСозданииОбъекта|OnObjectCreate)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
     super(info);
+  }
+
+  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
+    return ATTACHABLE_PATTERN.matcher(subNameContext.getText()).matches();
+  }
+
+  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
+    return HANDLER_PATTERN.matcher(subNameContext.getText()).matches();
   }
 
   @Override
@@ -77,14 +89,4 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
     return ctx;
   }
-
-  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
-    return attachablePattern.matcher(subNameContext.getText()).matches();
-  }
-
-  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
-    // TODO Тут опредлять что это обработчик
-    return false;
-  }
-
 }
