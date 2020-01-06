@@ -84,10 +84,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
 
-    // https://github.com/1c-syntax/bsl-language-server/issues/369
-    // Excude jline and use fixed one.
-    implementation("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
-    implementation("org.jline", "jline", "3.13.1")
+    implementation("me.tongfei", "progressbar", "0.8.0")
 
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
