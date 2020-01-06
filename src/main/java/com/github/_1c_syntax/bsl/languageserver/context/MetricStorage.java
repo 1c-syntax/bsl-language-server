@@ -38,4 +38,5 @@ public class MetricStorage {
   private int[] nclocData;
   private int[] covlocData;
   private int cognitiveComplexity;
+  private int cyclomaticComplexity;
 }

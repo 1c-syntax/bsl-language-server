@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
@@ -76,6 +77,8 @@ public class DocumentContext {
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
   private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
+  private Lazy<CyclomaticComplexityComputer.Data> cyclomaticComplexityData
+    = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
   private boolean adjustingRegions;
@@ -226,6 +229,11 @@ public class DocumentContext {
     return cognitiveComplexityData.getOrCompute();
   }
 
+
+  public CyclomaticComplexityComputer.Data getCyclomaticComplexityData() {
+    return cyclomaticComplexityData.getOrCompute();
+  }
+
   public DiagnosticIgnoranceComputer.Data getDiagnosticIgnorance() {
     return diagnosticIgnoranceData.getOrCompute();
   }
@@ -265,6 +273,7 @@ public class DocumentContext {
 
     metrics.clear();
     cognitiveComplexityData.clear();
+    cyclomaticComplexityData.clear();
     methods.clear();
     regions.clear();
     regionsFlat.clear();
@@ -334,6 +343,11 @@ public class DocumentContext {
     return cognitiveComplexityComputer.compute();
   }
 
+  private CyclomaticComplexityComputer.Data computeCyclomaticComplexity() {
+    Computer<CyclomaticComplexityComputer.Data> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
+    return cyclomaticComplexityComputer.compute();
+  }
+
   private void adjustRegions() {
     getMethods().forEach((MethodSymbol methodSymbol) ->
       methodSymbol.getRegion().ifPresent(region ->
@@ -386,6 +400,7 @@ public class DocumentContext {
     metricsTemp.setStatements(statements);
 
     metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
+    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().getFileComplexity());
 
     return metricsTemp;
   }

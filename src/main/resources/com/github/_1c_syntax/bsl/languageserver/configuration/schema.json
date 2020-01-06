@@ -37,6 +37,12 @@
             "title": "Show cognitive complexity score above method definition (codeLens).",
             "default": true
         },
+        "showCyclomaticComplexityCodeLens": {
+            "$id": "#/properties/showCyclomaticComplexityCodeLens",
+            "type": "boolean",
+            "title": "Show cyclomatic complexity score above method definition (codeLens).",
+            "default": true
+        },
         "computeDiagnostics": {
             "$id": "#/properties/computeDiagnostics",
             "type": "string",
@@ -101,6 +107,9 @@
                 },
                 "CreateQueryInCycle": {
                     "$ref": "diagnostics-schema.json#/definitions/CreateQueryInCycle"
+                },
+                "CyclomaticComplexity": {
+                    "$ref": "diagnostics-schema.json#/definitions/CyclomaticComplexity"
                 },
                 "DeletingCollectionItem": {
                     "$ref": "diagnostics-schema.json#/definitions/DeletingCollectionItem"

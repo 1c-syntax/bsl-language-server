@@ -116,6 +116,30 @@
             "title": "Execution query on cycle",
             "$id": "#/definitions/CreateQueryInCycle"
         },
+        "CyclomaticComplexity": {
+            "description": "Cyclomatic complexity",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Cyclomatic complexity",
+            "properties": {
+                "complexityThreshold": {
+                    "description": "Complexity threshold",
+                    "default": 10,
+                    "type": "integer",
+                    "title": "Complexity threshold"
+                },
+                "checkModuleBody": {
+                    "description": "Check module body",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check module body"
+                }
+            },
+            "$id": "#/definitions/CyclomaticComplexity"
+        },
         "DeletingCollectionItem": {
             "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "default": null,
