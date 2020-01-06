@@ -194,6 +194,16 @@
             "title": "The function should have return",
             "$id": "#/definitions/FunctionShouldHaveReturn"
         },
+        "GetFormMethod": {
+            "description": "GetForm method call",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "GetForm method call",
+            "$id": "#/definitions/GetFormMethod"
+        },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
             "default": null,
