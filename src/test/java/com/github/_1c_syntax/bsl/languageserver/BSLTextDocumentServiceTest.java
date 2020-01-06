@@ -24,9 +24,6 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionList;
-import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -38,7 +35,6 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -60,17 +56,18 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void completion() throws ExecutionException, InterruptedException {
-    // given
-    CompletionParams position = new CompletionParams();
-
-    // when
-    CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion = textDocumentService.completion(position);
-
-    // then
-    Either<List<CompletionItem>, CompletionList> listCompletionListEither = completion.get();
-    List<CompletionItem> completionItems = listCompletionListEither.getLeft();
-
-    assertThat(completionItems).allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()));
+    // todo
+//    // given
+//    CompletionParams position = new CompletionParams();
+//
+//    // when
+//    CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion = textDocumentService.completion(position);
+//
+//    // then
+//    Either<List<CompletionItem>, CompletionList> listCompletionListEither = completion.get();
+//    List<CompletionItem> completionItems = listCompletionListEither.getLeft();
+//
+//    assertThat(completionItems).allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()));
   }
 
   @Test
@@ -203,7 +200,7 @@ class BSLTextDocumentServiceTest {
     final File testFile = getTestFile();
 
     DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
-    
+
     params.setTextDocument(new VersionedTextDocumentIdentifier(testFile.toURI().toString(), 1));
 
     String fileContent = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);

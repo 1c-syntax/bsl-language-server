@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.CompletionOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -69,6 +71,9 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     setConfigurationRoot(params);
 
     ServerCapabilities capabilities = new ServerCapabilities();
+
+    var completionOptions = new CompletionOptions(Boolean.FALSE, List.of("."));
+    capabilities.setCompletionProvider(completionOptions);
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
     capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
     capabilities.setDocumentFormattingProvider(Boolean.TRUE);
