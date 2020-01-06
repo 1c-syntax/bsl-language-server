@@ -36,7 +36,7 @@ public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
-  private final MethodDescription description;
+  private final Optional<MethodDescription> description;
 
   @ToString.Exclude
   private final Optional<RegionSymbol> region;

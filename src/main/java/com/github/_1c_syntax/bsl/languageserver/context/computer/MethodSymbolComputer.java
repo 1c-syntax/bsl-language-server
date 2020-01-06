@@ -133,13 +133,13 @@ public final class MethodSymbolComputer
 
   }
 
-  private MethodDescription findMethodDescription(int startIndex) {
+  private Optional<MethodDescription> findMethodDescription(int startIndex) {
     List<Token> comments = getMethodComments(startIndex, new ArrayList<>());
     if (comments.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
 
-    return new MethodDescription(comments);
+    return Optional.of(new MethodDescription(comments));
   }
 
   private List<Token> getMethodComments(int index, List<Token> lines) {

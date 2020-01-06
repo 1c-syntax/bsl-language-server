@@ -44,7 +44,7 @@ import org.eclipse.lsp4j.TextEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -93,7 +93,8 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     methodDescriptions = documentContext.getMethods()
       .stream()
       .map(MethodSymbol::getDescription)
-      .filter(Objects::nonNull)
+      .filter(Optional::isPresent)
+      .map(Optional::get)
       .collect(Collectors.toList());
 
     groupComments(documentContext.getComments())
