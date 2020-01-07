@@ -29,8 +29,11 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -46,15 +49,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
+
 @Data
 @AllArgsConstructor
-@JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
+@JsonDeserialize(builder = LanguageServerConfiguration.LanguageServerConfigurationBuilder.class)
+@Builder(access = AccessLevel.MODULE)
 @Slf4j
 public final class LanguageServerConfiguration {
 
@@ -99,6 +104,8 @@ public final class LanguageServerConfiguration {
     LanguageServerConfiguration configuration = null;
     if (configurationFile.exists()) {
       ObjectMapper mapper = new ObjectMapper();
+      mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
       try {
         configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
       } catch (IOException e) {
@@ -120,31 +127,23 @@ public final class LanguageServerConfiguration {
     return new LanguageServerConfiguration(diagnosticLanguage);
   }
 
-  static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
+  @JsonPOJOBuilder(withPrefix = "")
+  static class LanguageServerConfigurationBuilder {
+
+    @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
+    private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
+
+  }
+
+  static class DiagnosticsDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
 
     @Override
-    public LanguageServerConfiguration deserialize(JsonParser jp, DeserializationContext context) throws IOException {
-      JsonNode node = jp.getCodec().readTree(jp);
+    public Map<String, Either<Boolean, Map<String, Object>>> deserialize(
+      JsonParser p,
+      DeserializationContext context
+    ) throws IOException {
 
-      DiagnosticLanguage diagnosticLanguage = getDiagnosticLanguage(node);
-      boolean showCognitiveComplexityCodeLens = getShowCognitiveComplexityCodeLens(node);
-      ComputeDiagnosticsTrigger computeDiagnostics = getComputeDiagnostics(node);
-      File traceLog = getTraceLog(node);
-      Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
-      Path configurationRoot = getConfigurationRoot(node);
-
-      return new LanguageServerConfiguration(
-        diagnosticLanguage,
-        showCognitiveComplexityCodeLens,
-        computeDiagnostics,
-        traceLog,
-        diagnosticsMap,
-        configurationRoot
-      );
-    }
-
-    private static Map<String, Either<Boolean, Map<String, Object>>> getDiagnostics(JsonNode node) {
-      JsonNode diagnostics = node.get("diagnostics");
+      JsonNode diagnostics = p.getCodec().readTree(p);
 
       if (diagnostics == null) {
         return Collections.emptyMap();
@@ -184,51 +183,6 @@ public final class LanguageServerConfiguration {
       return diagnosticConfiguration;
     }
 
-    private static DiagnosticLanguage getDiagnosticLanguage(JsonNode node) {
-      DiagnosticLanguage diagnosticLanguage;
-      if (node.get("diagnosticLanguage") != null) {
-        String diagnosticLanguageValue = node.get("diagnosticLanguage").asText();
-        diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguageValue.toUpperCase(Locale.ENGLISH));
-      } else {
-        diagnosticLanguage = DEFAULT_DIAGNOSTIC_LANGUAGE;
-      }
-      return diagnosticLanguage;
-    }
-
-    private static boolean getShowCognitiveComplexityCodeLens(JsonNode node) {
-      boolean showCognitiveComplexityCodeLens = DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS;
-      if (node.get("showCognitiveComplexityCodeLens") != null) {
-        showCognitiveComplexityCodeLens = node.get("showCognitiveComplexityCodeLens").asBoolean();
-      }
-      return showCognitiveComplexityCodeLens;
-    }
-
-    private static ComputeDiagnosticsTrigger getComputeDiagnostics(JsonNode node) {
-      ComputeDiagnosticsTrigger computeDiagnostics = DEFAULT_COMPUTE_DIAGNOSTICS;
-      if (node.get("computeDiagnostics") != null) {
-        String computeDiagnosticsValue = node.get("computeDiagnostics").asText();
-        computeDiagnostics = ComputeDiagnosticsTrigger.valueOf(computeDiagnosticsValue.toUpperCase(Locale.ENGLISH));
-      }
-      return computeDiagnostics;
-    }
-
-    private static File getTraceLog(JsonNode node) {
-      File traceLog = null;
-      if (node.get("traceLog") != null) {
-        String traceLogValue = node.get("traceLog").asText();
-        traceLog = new File(traceLogValue);
-      }
-      return traceLog;
-    }
-
-    private static Path getConfigurationRoot(JsonNode node) {
-      Path configurationRoot = null;
-      if (node.get("configurationRoot") != null) {
-        String configurationRootValue = node.get("configurationRoot").asText();
-        configurationRoot = Absolute.path(configurationRootValue);
-      }
-      return configurationRoot;
-    }
   }
 
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
@@ -238,8 +192,10 @@ public final class LanguageServerConfiguration {
       rootPath = Absolute.path(srcDir);
     } else {
       // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
-      if (pathFromConfiguration.startsWith(Absolute.path(srcDir))) {
-        rootPath = pathFromConfiguration;
+      var absoluteSrcDir = Absolute.path(srcDir);
+      var absolutePathFromConfiguration = Absolute.path(pathFromConfiguration);
+      if (absolutePathFromConfiguration.startsWith(absoluteSrcDir)) {
+        rootPath = absolutePathFromConfiguration;
       }
     }
     if (rootPath != null){
