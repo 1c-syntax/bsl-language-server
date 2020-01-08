@@ -24,6 +24,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeOutOfRegion": {
+            "description": "Code out of region",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Code out of region",
+            "$id": "#/definitions/CodeOutOfRegion"
+        },
         "CognitiveComplexity": {
             "description": "Cognitive complexity",
             "default": null,

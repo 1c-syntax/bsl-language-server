@@ -81,6 +81,9 @@
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
+                "CodeOutOfRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/CodeOutOfRegion"
+                },
                 "CognitiveComplexity": {
                     "$ref": "diagnostics-schema.json#/definitions/CognitiveComplexity"
                 },

@@ -72,4 +72,7 @@ public final class Ranges {
     return create(startLine, startChar, endLine, endChar);
   }
 
+  public static boolean containsRange(Range bigger, Range smaller) {
+    return org.eclipse.lsp4j.util.Ranges.containsRange(bigger, smaller);
+  }
 }

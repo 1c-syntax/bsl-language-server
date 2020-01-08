@@ -78,7 +78,7 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
       Stream<Token> comments = documentContext.getComments().stream();
       Range rangeTry = Ranges.create(ctx.getParent());
       if(comments.anyMatch(token ->
-          org.eclipse.lsp4j.util.Ranges.containsRange(
+          Ranges.containsRange(
             rangeTry,
             Ranges.create(token)))) {
         return super.visitExceptCodeBlock(ctx);

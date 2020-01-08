@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **70**
+Общее количество: **71**
 
-* Дефект кода: **42**
+* Дефект кода: **43**
 * Уязвимость: **2**
 * Ошибка: **25**
 * Потенциальная уязвимость: **1**
@@ -19,6 +19,7 @@
 | --- | --- | :-: | --- | --- | --- |
 | [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` |
 | [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | Информационный | Дефект кода | `standard` |
+| [CodeOutOfRegion](CodeOutOfRegion.md) | Код расположен вне области | Да | Информационный | Дефект кода | `standard` |
 | [CognitiveComplexity](CognitiveComplexity.md) | Когнитивная сложность | Да | Критичный | Дефект кода | `brainoverload` |
 | [CommentedCode](CommentedCode.md) | Закомментированный фрагмент кода | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` |
