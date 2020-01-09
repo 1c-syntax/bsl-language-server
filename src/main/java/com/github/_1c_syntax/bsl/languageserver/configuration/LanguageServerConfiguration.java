@@ -29,11 +29,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -58,8 +55,6 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 
 @Data
 @AllArgsConstructor
-@JsonDeserialize(builder = LanguageServerConfiguration.LanguageServerConfigurationBuilder.class)
-@Builder(access = AccessLevel.MODULE)
 @Slf4j
 public final class LanguageServerConfiguration {
 
@@ -74,6 +69,7 @@ public final class LanguageServerConfiguration {
   private ComputeDiagnosticsTrigger computeDiagnostics;
   @Nullable
   private File traceLog;
+  @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
   @Nullable
   private Path configurationRoot;
@@ -125,14 +121,6 @@ public final class LanguageServerConfiguration {
 
   public static LanguageServerConfiguration create(DiagnosticLanguage diagnosticLanguage) {
     return new LanguageServerConfiguration(diagnosticLanguage);
-  }
-
-  @JsonPOJOBuilder(withPrefix = "")
-  static class LanguageServerConfigurationBuilder {
-
-    @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
-    private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
-
   }
 
   static class DiagnosticsDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
