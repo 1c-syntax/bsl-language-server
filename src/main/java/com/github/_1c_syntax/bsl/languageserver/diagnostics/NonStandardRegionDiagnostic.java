@@ -168,16 +168,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
-    // получим "честные" области первого уровня
-    List<Range> methodRanges = documentContext.getMethods().stream()
-      .map(MethodSymbol::getRange).collect(Collectors.toList());
-    List<RegionSymbol> regions = documentContext.getRegions()
-      .stream()
-      .filter(region -> methodRanges.stream().noneMatch(methodRange ->
-        Ranges.containsRange(methodRange,
-          Ranges.create(region.getStartNode().getStart(), region.getEndNode().getStop()))
-      ))
-      .collect(Collectors.toList());
+    List<RegionSymbol> regions = documentContext.getFileLevelRegions();
 
     // чтобы не было лишних FP, анализировать модуль без областей не будем
     // вешать диагностику тож не будем, пусть вешается "CodeOutOfRegionDiagnostic"

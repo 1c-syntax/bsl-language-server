@@ -79,16 +79,7 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
-    // получим "честные" области первого уровня
-    List<Range> methodRanges = documentContext.getMethods().stream()
-      .map(MethodSymbol::getRange).collect(Collectors.toList());
-    List<RegionSymbol> regions = documentContext.getRegions()
-      .stream()
-      .filter(region -> methodRanges.stream().noneMatch(methodRange ->
-        Ranges.containsRange(methodRange,
-          Ranges.create(region))
-      ))
-      .collect(Collectors.toList());
+    List<RegionSymbol> regions = documentContext.getFileLevelRegions();
 
     // анализировать модуль без областей не будем
     if (regions.isEmpty()) {

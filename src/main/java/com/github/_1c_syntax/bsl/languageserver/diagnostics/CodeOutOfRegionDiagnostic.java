@@ -59,7 +59,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    List<RegionSymbol> regions = documentContext.getRegions();
+    List<RegionSymbol> regions = documentContext.getFileLevelRegions();
     regionsRanges.clear();
 
     // если областей нет, то и смысла дальше анализировть тоже нет
