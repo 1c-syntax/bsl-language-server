@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **71**
+Total: **73**
 
 * Error: **25**
-* Code smell: **43**
+* Code smell: **45**
 * Vulnerability: **2**
 * Security Hotspot: **1**
 
@@ -29,6 +29,7 @@ Total: **71**
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | Major | Error | `standard`<br/>`error` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
+| [DuplicateRegion](DuplicateRegion.md) | Duplicate regions | Yes | Info | Code smell | `standard` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br/>`suspicious` |
 | [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` |
@@ -53,6 +54,7 @@ Total: **71**
 | [NestedStatements](NestedStatements.md) | Control flow statements should not be nested too deep | Yes | Critical | Code smell | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](NestedTernaryOperator.md) | Nested ternary operator | Yes | Major | Code smell | `brainoverload` |
 | [NonExportMethodsInApiRegion](NonExportMethodsInApiRegion.md) | Non export methods in API regions | Yes | Major | Code smell | `standard` |
+| [NonStandardRegion](NonStandardRegion.md) | Non-standard region of module | Yes | Info | Code smell | `standard` |
 | [NumberOfOptionalParams](NumberOfOptionalParams.md) | Limit number of optional parameters in method | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
 | [NumberOfParams](NumberOfParams.md) | Number of parameters in method | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](NumberOfValuesInStructureConstructor.md) | Limit on the number of property values passed to the structure constructor | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |

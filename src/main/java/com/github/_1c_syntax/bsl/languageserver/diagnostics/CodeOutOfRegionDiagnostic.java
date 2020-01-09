@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -45,7 +46,8 @@ import java.util.List;
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD
-  }
+  },
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
 )
 public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
   private List<Range> regionsRanges = new ArrayList<>();

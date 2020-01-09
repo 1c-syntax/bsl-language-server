@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **71**
+Общее количество: **73**
 
-* Дефект кода: **43**
+* Дефект кода: **45**
 * Уязвимость: **2**
 * Ошибка: **25**
 * Потенциальная уязвимость: **1**
@@ -29,6 +29,7 @@
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да | Важный | Ошибка | `standard`<br/>`error` |
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
+| [DuplicateRegion](DuplicateRegion.md) | Повторяющиеся разделы модуля | Да | Информационный | Дефект кода | `standard` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br/>`suspicious` |
 | [EmptyRegion](EmptyRegion.md) | Область не должна быть пустой | Да | Информационный | Дефект кода | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` |
@@ -53,6 +54,7 @@
 | [NestedStatements](NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да | Критичный | Дефект кода | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](NestedTernaryOperator.md) | Вложенный тернарный оператор | Да | Важный | Дефект кода | `brainoverload` |
 | [NonExportMethodsInApiRegion](NonExportMethodsInApiRegion.md) | Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс | Да | Важный | Дефект кода | `standard` |
+| [NonStandardRegion](NonStandardRegion.md) | Нестандартные разделы модуля | Да | Информационный | Дефект кода | `standard` |
 | [NumberOfOptionalParams](NumberOfOptionalParams.md) | Ограничение на количество не обязательных параметров метода | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload` |
 | [NumberOfParams](NumberOfParams.md) | Ограничение на количество параметров метода | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload` |
