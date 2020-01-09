@@ -51,6 +51,56 @@ import java.util.stream.Collectors;
 )
 public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
 
+  private static final Pattern PUBLIC_REGION_NAME = Pattern.compile(
+    "^(?:ПрограммныйИнтерфейс|Public)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern INTERNAL_REGION_NAME = Pattern.compile(
+    "^(?:СлужебныйПрограммныйИнтерфейс|Internal)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern PRIVATE_REGION_NAME = Pattern.compile(
+    "^(?:СлужебныеПроцедурыИФункции|Private)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern EVENT_HANDLERS_REGION_NAME = Pattern.compile(
+    "^(?:ОбработчикиСобытий|EventHandlers)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern FORM_EVENT_HANDLERS_REGION_NAME = Pattern.compile(
+    "^(?:ОбработчикиСобытийФормы|FormEventHandlers)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME = Pattern.compile(
+    "^(?:ОбработчикиСобытийЭлементовШапкиФормы|FormHeaderItemsEventHandlers)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME = Pattern.compile(
+    "^(?:ОбработчикиСобытийЭлементовТаблицыФормы|FormTableItemsEventHandlers)[\\w]*$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME = Pattern.compile(
+    "^(?:ОбработчикиКомандФормы|FormCommandsEventHandlers)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern VARIABLES_REGION_NAME = Pattern.compile(
+    "^(?:ОписаниеПеременных|Variables)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern INITIALIZE_REGION_NAME = Pattern.compile(
+    "^(?:Инициализация|Initialize)$",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
   public NonStandardRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -59,108 +109,58 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
 
     List<Pattern> standardRegions = new ArrayList<>();
 
-    Pattern publicRegionName = Pattern.compile(
-      "^(?:ПрограммныйИнтерфейс|Public)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern internalRegionName = Pattern.compile(
-      "^(?:СлужебныйПрограммныйИнтерфейс|Internal)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern privateRegionName = Pattern.compile(
-      "^(?:СлужебныеПроцедурыИФункции|Private)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern eventHandlersRegionName = Pattern.compile(
-      "^(?:ОбработчикиСобытий|EventHandlers)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern formEventHandlersRegionName = Pattern.compile(
-      "^(?:ОбработчикиСобытийФормы|FormEventHandlers)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern formHeaderItemsEventHandlersRegionName = Pattern.compile(
-      "^(?:ОбработчикиСобытийЭлементовШапкиФормы|FormHeaderItemsEventHandlers)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern formTableItemsEventHandlersRegionName = Pattern.compile(
-      "^(?:ОбработчикиСобытийЭлементовТаблицыФормы|FormTableItemsEventHandlers)[\\w]*$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern formCommandsEventHandlersRegionName = Pattern.compile(
-      "^(?:ОбработчикиКомандФормы|FormCommandsEventHandlers)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern variablesRegionName = Pattern.compile(
-      "^(?:ОписаниеПеременных|Variables)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
-    Pattern initializeRegionName = Pattern.compile(
-      "^(?:Инициализация|Initialize)$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-
     if (moduleType == ModuleType.FormModule) {
-      standardRegions.add(variablesRegionName);
-      standardRegions.add(formEventHandlersRegionName);
-      standardRegions.add(formHeaderItemsEventHandlersRegionName);
-      standardRegions.add(formTableItemsEventHandlersRegionName);
-      standardRegions.add(formCommandsEventHandlersRegionName);
+      standardRegions.add(VARIABLES_REGION_NAME);
+      standardRegions.add(FORM_EVENT_HANDLERS_REGION_NAME);
+      standardRegions.add(FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME);
+      standardRegions.add(FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME);
+      standardRegions.add(FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME);
     }
 
     if (moduleType == ModuleType.ObjectModule
       || moduleType == ModuleType.RecordSetModule
       || moduleType == ModuleType.ValueManagerModule) {
-      standardRegions.add(variablesRegionName);
-      standardRegions.add(publicRegionName);
-      standardRegions.add(eventHandlersRegionName);
-      standardRegions.add(internalRegionName);
+      standardRegions.add(VARIABLES_REGION_NAME);
+      standardRegions.add(PUBLIC_REGION_NAME);
+      standardRegions.add(EVENT_HANDLERS_REGION_NAME);
+      standardRegions.add(INTERNAL_REGION_NAME);
     }
 
     if (moduleType == ModuleType.CommonModule) {
-      standardRegions.add(publicRegionName);
-      standardRegions.add(internalRegionName);
+      standardRegions.add(PUBLIC_REGION_NAME);
+      standardRegions.add(INTERNAL_REGION_NAME);
     }
 
     if (moduleType == ModuleType.ApplicationModule
       || moduleType == ModuleType.ManagedApplicationModule
       || moduleType == ModuleType.OrdinaryApplicationModule) {
-      standardRegions.add(variablesRegionName);
-      standardRegions.add(publicRegionName);
-      standardRegions.add(eventHandlersRegionName);
+      standardRegions.add(VARIABLES_REGION_NAME);
+      standardRegions.add(PUBLIC_REGION_NAME);
+      standardRegions.add(EVENT_HANDLERS_REGION_NAME);
     }
 
     if (moduleType == ModuleType.CommandModule
       || moduleType == ModuleType.SessionModule) {
-      standardRegions.add(eventHandlersRegionName);
+      standardRegions.add(EVENT_HANDLERS_REGION_NAME);
     }
 
     if (moduleType == ModuleType.ExternalConnectionModule) {
-      standardRegions.add(publicRegionName);
-      standardRegions.add(eventHandlersRegionName);
+      standardRegions.add(PUBLIC_REGION_NAME);
+      standardRegions.add(EVENT_HANDLERS_REGION_NAME);
     }
 
     if (moduleType == ModuleType.ManagerModule) {
-      standardRegions.add(publicRegionName);
-      standardRegions.add(eventHandlersRegionName);
-      standardRegions.add(internalRegionName);
+      standardRegions.add(PUBLIC_REGION_NAME);
+      standardRegions.add(EVENT_HANDLERS_REGION_NAME);
+      standardRegions.add(INTERNAL_REGION_NAME);
     }
 
     // у всех типов модулей есть такая область
-    standardRegions.add(privateRegionName);
+    standardRegions.add(PRIVATE_REGION_NAME);
 
     if (moduleType == ModuleType.FormModule
       || moduleType == ModuleType.ObjectModule) {
-      standardRegions.add(initializeRegionName);
+      standardRegions.add(INITIALIZE_REGION_NAME);
     }
     return standardRegions;
   }
@@ -188,7 +188,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
     ModuleType moduleType = documentContext
       .getServerContext()
       .getConfiguration()
-      .getModuleType(documentContext.getUri().normalize());
+      .getModuleType(documentContext.getUri());
 
     List<Pattern> standardRegions = getStandardRegions(moduleType);
 

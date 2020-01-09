@@ -86,7 +86,7 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(region -> methodRanges.stream().noneMatch(methodRange ->
         Ranges.containsRange(methodRange,
-          Ranges.create(region.getStartNode().getStart(), region.getEndNode().getStop()))
+          Ranges.create(region))
       ))
       .collect(Collectors.toList());
 
@@ -104,8 +104,7 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
 
             List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
             RegionSymbol currentRegion = regionsList.get(0);
-            Range currentRange = Ranges.create(
-              currentRegion.getStartNode().getStart(),
+            Range currentRange = Ranges.create(currentRegion.getStartNode().getStart(),
               currentRegion.getStartNode().getStop());
 
             regionsList.stream()

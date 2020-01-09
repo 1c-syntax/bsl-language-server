@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
@@ -67,7 +68,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     } else {
       regions.forEach(region ->
-        regionsRanges.add(Ranges.create(region.getStartNode().getStart(), region.getEndNode().getStop()))
+        regionsRanges.add(Ranges.create(region))
       );
     }
 
@@ -81,7 +82,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       .filter(node -> !(node instanceof BSLParser.PreprocessorContext)
         && !(node instanceof TerminalNode))
       .findFirst()
-      .ifPresent(node -> {
+      .ifPresent((Tree node) -> {
           Range ctxRange = Ranges.create((BSLParserRuleContext) node);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
@@ -103,20 +104,30 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitStatement(BSLParser.StatementContext ctx) {
-    if (ctx.getParent() instanceof BSLParser.CodeBlockContext
-      && ctx.getParent().getParent() != null
-      && ctx.getParent().getParent() instanceof BSLParser.FileCodeBlockContext
-      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_regionEnd).isEmpty()
-      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_regionStart).isEmpty()) {
-
-      Range ctxRange = Ranges.create(ctx);
-      if (regionsRanges.stream().noneMatch(regionRange ->
-        Ranges.containsRange(regionRange, ctxRange))) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-    }
+  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    addDiagnosticForFileCodeBlock(ctx);
     return ctx;
   }
 
+  @Override
+  public ParseTree visitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
+    addDiagnosticForFileCodeBlock(ctx);
+    return ctx;
+  }
+
+  private void addDiagnosticForFileCodeBlock(BSLParserRuleContext ctx) {
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+      .forEach((ParseTree child) -> {
+        if (child.getParent() instanceof BSLParser.CodeBlockContext
+          && Trees.findAllRuleNodes(child, BSLParser.RULE_regionEnd).isEmpty()
+          && Trees.findAllRuleNodes(child, BSLParser.RULE_regionStart).isEmpty()) {
+
+          Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
+          if (regionsRanges.stream().noneMatch(regionRange ->
+            Ranges.containsRange(regionRange, ctxRange))) {
+            diagnosticStorage.addDiagnostic((BSLParser.StatementContext) child);
+          }
+        }
+      });
+  }
 }
