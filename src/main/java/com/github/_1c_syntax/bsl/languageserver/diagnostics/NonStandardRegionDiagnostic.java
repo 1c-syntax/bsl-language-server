@@ -36,7 +36,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -105,9 +107,9 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
-  private static List<Pattern> getStandardRegions(ModuleType moduleType) {
+  private static Set<Pattern> getStandardRegions(ModuleType moduleType) {
 
-    List<Pattern> standardRegions = new ArrayList<>();
+    Set<Pattern> standardRegions = new HashSet<>();
 
     if (moduleType == ModuleType.FormModule) {
       standardRegions.add(VARIABLES_REGION_NAME);
@@ -181,7 +183,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
       .getConfiguration()
       .getModuleType(documentContext.getUri());
 
-    List<Pattern> standardRegions = getStandardRegions(moduleType);
+    Set<Pattern> standardRegions = getStandardRegions(moduleType);
 
     // проверим, что область находится в списке доступных
     regions.forEach((RegionSymbol region) -> {
