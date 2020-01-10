@@ -62,6 +62,9 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     // check that actual value we want to make assertions on is not null.
     isNotNull();
 
+    // saving original state
+    String cashedContent = documentContext.getContent();
+
     // apply edits from quick fix
     final List<TextEdit> textEdits = getTextEdits();
 
@@ -100,6 +103,9 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
 
     // check if expected diagnostic is not present in new diagnostic list
     Assertions.assertThat(diagnostics).doesNotContain(diagnostic);
+
+    // returning to original state
+    documentContext.rebuild(cashedContent);
 
     return this;
   }
