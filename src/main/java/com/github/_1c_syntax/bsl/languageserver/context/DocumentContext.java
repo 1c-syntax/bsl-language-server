@@ -185,11 +185,11 @@ public class DocumentContext {
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
     } else {
-      sb.append(startString.substring(start.getCharacter()));
+      sb.append(startString.substring(start.getCharacter())).append("\n");
     }
 
     for (int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
-      sb.append(contentListUnboxed[i]);
+      sb.append(contentListUnboxed[i]).append("\n");
     }
 
     if (start.getLine() != end.getLine()) {
