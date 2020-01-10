@@ -46,7 +46,9 @@ import java.util.stream.Collectors;
 public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern handlerParam = Pattern.compile(
-    "ОТКАЗ|ЭЛЕМЕНТ|СТАНДАРТНАЯОБРАБОТКА|КОМАНДА|ДОПОЛНИТЕЛЬНЫЕПАРАМЕТРЫ|" +
+    "ОТКАЗ|ЭЛЕМЕНТ|СТАНДАРТНАЯОБРАБОТКА|КОМАНДА|ДОПОЛНИТЕЛЬНЫЕПАРАМЕТРЫ|ПАРАМЕТРКОМАНДЫ|" +
+      "ПАРАМЕТРЫВЫПОЛНЕНИЯКОМАНДЫ|ОБЪЕКТКОПИРОВАНИЯ|ПРОВЕРЯЕМЫЕРЕКВИЗИТЫ|ДАННЫЕЗАПОЛНЕНИЯ|ПАРАМЕТРЫПЕРЕТАСКИВАНИЯ|" +
+      "СТРОКА|ПОЛЕ|ПАРАМЕТРЫЗАПИСИ|ТЕКУЩИЙОБЪЕКТ|ИМЯСОБЫТИЯ|ПАРАМЕТР|ИСТОЧНИК|ДАННЫЕВЫБОРА|ВЫБРАННАЯСТРОКА|" +
       "CANCEL",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
@@ -69,27 +71,17 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       .map(node -> ((BSLParser.ParamContext) node).IDENTIFIER().getText().toLowerCase(Locale.getDefault()))
       .collect(Collectors.toList());
 
-    Trees.findAllRuleNodes(ctx, BSLParser.RULE_lValue)
+    Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER)
       .stream()
-      .map(node -> ((BSLParser.LValueContext) node).IDENTIFIER())
       .filter(Objects::nonNull)
       .forEach(node ->
         paramsNames.remove((node.getText().toLowerCase(Locale.getDefault())))
       );
 
-    Trees.findAllRuleNodes(ctx, BSLParser.RULE_complexIdentifier)
-      .stream()
-      .map(node -> ((BSLParser.ComplexIdentifierContext) node).IDENTIFIER())
-      .filter(Objects::nonNull)
-      .forEach(node ->
-        paramsNames.remove(node.getText().toLowerCase(Locale.getDefault()))
-      );
-
-
     Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
       .map(param -> ((BSLParser.ParamContext) param).IDENTIFIER())
-      .filter(param -> paramsNames.contains(param.getText().toLowerCase()))
+      .filter(param -> paramsNames.contains(param.getText().toLowerCase(Locale.getDefault())))
       .filter(param -> !handlerParam.matcher(param.getText()).matches())
       .forEach(param ->
         diagnosticStorage.addDiagnostic(param, info.getMessage(param.getText()))
