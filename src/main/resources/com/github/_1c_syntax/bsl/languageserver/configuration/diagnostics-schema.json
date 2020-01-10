@@ -808,6 +808,16 @@
             "title": "Unused local method",
             "$id": "#/definitions/UnusedLocalMethod"
         },
+        "UnusedParameters": {
+            "description": "Unused parameter",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused parameter",
+            "$id": "#/definitions/UnusedParameters"
+        },
         "UseLessForEach": {
             "description": "Useless collection iteration",
             "default": null,

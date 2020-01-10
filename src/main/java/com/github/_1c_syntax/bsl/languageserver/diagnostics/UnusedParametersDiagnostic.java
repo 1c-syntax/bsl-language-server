@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -49,6 +50,10 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       "CANCEL",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+
+  public UnusedParametersDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
 
 
   @Override
@@ -87,7 +92,7 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       .filter(param -> paramsNames.contains(param.getText().toLowerCase()))
       .filter(param -> !handlerParam.matcher(param.getText()).matches())
       .forEach(param ->
-        diagnosticStorage.addDiagnostic(param, getDiagnosticMessage(param.getText()))
+        diagnosticStorage.addDiagnostic(param, info.getMessage(param.getText()))
       );
 
     return ctx;

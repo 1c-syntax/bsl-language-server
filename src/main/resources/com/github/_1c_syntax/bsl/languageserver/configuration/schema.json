@@ -284,6 +284,9 @@
                 "UnusedLocalMethod": {
                     "$ref": "diagnostics-schema.json#/definitions/UnusedLocalMethod"
                 },
+                "UnusedParameters": {
+                    "$ref": "diagnostics-schema.json#/definitions/UnusedParameters"
+                },
                 "UseLessForEach": {
                     "$ref": "diagnostics-schema.json#/definitions/UseLessForEach"
                 },

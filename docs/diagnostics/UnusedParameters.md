@@ -1,4 +1,4 @@
-# Неиспользуемый параметр
+# Неиспользуемый параметр (UnusedParameters)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -18,3 +18,19 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+
+## Сниппеты
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Экранирование кода
+
+```bsl
+// BSLLS:UnusedParameters-off
+// BSLLS:UnusedParameters-on
+```
+
+### Параметр конфигурационного файла
+
+```json
+"UnusedParameters": false
+```

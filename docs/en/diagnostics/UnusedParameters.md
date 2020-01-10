@@ -1,4 +1,4 @@
-# Unused parameter
+# Unused parameter (UnusedParameters)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -18,3 +18,19 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UnusedParameters-off
+// BSLLS:UnusedParameters-on
+```
+
+### Parameter for config
+
+```json
+"UnusedParameters": false
+```
