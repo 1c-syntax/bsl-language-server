@@ -37,17 +37,22 @@ public class BSLFootprint implements LanguageFootprint {
       CODE_EXACTLY,
       "КонецПроцедуры", "КонецФункции", "КонецЕсли;", "КонецЦикла;",
       "Возврат;", ".НайтиСтроки(", "СтрНачинается(",
-      "СтрНайти(", ".Выбрать(", ".Выгрузить(", ".Выполнить(",  "?(", ");"));
-    detectors.add(new KeywordsDetector(CODE_EXACTLY,"ИначеЕсли"));
+      "СтрНайти(", ".Выбрать(", ".Выгрузить(", ".Выполнить(", "?(", ");",
+      "#Если", "#Иначе", "#КонецЕсли", "#Область", "КонецПопытки;"));
+    detectors.add(new KeywordsDetector(CODE_EXACTLY, "ИначеЕсли"));
 
     detectors.add(new CamelCaseDetector(CODE_MOST_LIKELY));
-    detectors.add(new KeywordsDetector(CODE_MOST_LIKELY, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ", "СОЕДИНЕНИЕ",
-      "НЕ", "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ", "=", "+"));
+    detectors.add(new KeywordsDetector(CODE_MOST_LIKELY, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ",
+      "СОЕДИНЕНИЕ", "НЕ", "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ", "=", "+"));
 
     detectors.add(new EndWithDetector(CODE_MAYBE, ';'));
-    detectors.add(new KeywordsDetector(CODE_MAYBE,"И", "ИЛИ"));
-    detectors.add(new KeywordsDetector(CODE_MAYBE, "Если", "Тогда", "Процедура", "Функция", "Пока", "Для", "Каждого",
-      "Цикл", "Возврат", "Новый", "*"));
+    detectors.add(new KeywordsDetector(CODE_MAYBE, "И", "ИЛИ"));
+    detectors.add(new KeywordsDetector(CODE_MAYBE, "Если", "Тогда", "Процедура", "Функция", "Пока", "Для",
+      "Каждого", "Цикл", "Возврат", "Новый", "*"));
+
+    detectors.add(new PatternDetector(CODE_EXACTLY,
+      "^[/\\s]*(?:Процедура|Функция)\\s+[а-яА-Яё\\w]+\\s*?\\(",
+      "^[/\\s]*&На[а-яА-Яё]+\\s*?$*"));
   }
 
   @Override

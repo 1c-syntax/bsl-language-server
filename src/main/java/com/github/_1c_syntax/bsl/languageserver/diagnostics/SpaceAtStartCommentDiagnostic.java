@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
+import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -60,7 +62,9 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   );
   private static final int COMMENT_LENGTH = 2;
 
+  private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  private CodeRecognizer codeRecognizer;
   private DiagnosticInfo info;
 
   @DiagnosticParameter(
@@ -71,6 +75,20 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
 
   public SpaceAtStartCommentDiagnostic(DiagnosticInfo info) {
     this.info = info;
+    this.codeRecognizer = new CodeRecognizer(COMMENTED_CODE_THRESHOLD, new BSLFootprint());
+  }
+
+  private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
+    StringJoiner stringJoiner = new StringJoiner("|");
+    for (String elem : patternParts) {
+      String commentsAnnotationPatternString = "(?:^" + Pattern.quote(elem) + ".*)";
+      stringJoiner.add(commentsAnnotationPatternString);
+    }
+
+    return Pattern.compile(
+      stringJoiner.toString(),
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
   }
 
   @Override
@@ -92,7 +110,8 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
       .parallelStream()
       .filter((Token t) ->
         !goodCommentPattern.matcher(t.getText()).matches()
-          && !commentsAnnotation.matcher(t.getText()).matches())
+          && !commentsAnnotation.matcher(t.getText()).matches()
+          && !codeRecognizer.meetsCondition(t.getText()))
       .sequential()
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t));
@@ -103,19 +122,6 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   @Override
   public DiagnosticInfo getInfo() {
     return info;
-  }
-
-  private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
-    StringJoiner stringJoiner = new StringJoiner("|");
-    for (String elem : patternParts) {
-      String commentsAnnotationPatternString = "(?:^" + Pattern.quote(elem) + ".*)";
-      stringJoiner.add(commentsAnnotationPatternString);
-    }
-
-    return Pattern.compile(
-      stringJoiner.toString(),
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
   }
 
   @Override
