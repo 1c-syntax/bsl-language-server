@@ -53,20 +53,29 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
 
   @Test
   void testQuickFix() {
+
     final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    final Diagnostic firstDiagnostic = diagnostics.get(0);
+    final Diagnostic externalRegionDiagnostic = diagnostics.get(2);
+    final Diagnostic internalRegionDiagnostic = diagnostics.get(1);
 
-    List<CodeAction> quickFixes = getQuickFixes(firstDiagnostic);
-
+    List<CodeAction> quickFixes = getQuickFixes(externalRegionDiagnostic);
     assertThat(quickFixes).hasSize(1);
 
     final CodeAction quickFix = quickFixes.get(0);
 
-    assertThat(quickFix).of(diagnosticInstance).in(documentContext)
-      .fixes(firstDiagnostic);
+    assertThat(quickFix)
+      .of(diagnosticInstance)
+      .in(documentContext)
+      .fixes(externalRegionDiagnostic);
 
-    assertThat(quickFix).in(documentContext)
+    assertThat(quickFix)
+      .of(diagnosticInstance)
+      .in(documentContext)
+      .fixes(internalRegionDiagnostic);
+
+    assertThat(quickFix)
+      .in(documentContext)
       .hasChanges(1)
       .hasNewText("");
 
