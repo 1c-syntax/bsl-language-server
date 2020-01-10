@@ -181,7 +181,7 @@ public class DocumentContext {
     String[] contentListUnboxed = getContentList();
 
     if (start.getLine() > contentListUnboxed.length || end.getLine() > contentListUnboxed.length) {
-      throw new ArrayIndexOutOfBoundsException("Ranje goes beyond the boundaries of the parsed document");
+      throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
     }
 
     String startString = contentListUnboxed[start.getLine()];

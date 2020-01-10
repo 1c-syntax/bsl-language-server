@@ -63,7 +63,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     isNotNull();
 
     // saving original state
-    String cashedContent = documentContext.getContent();
+    String cachedContent = documentContext.getContent();
 
     // apply edits from quick fix
     final List<TextEdit> textEdits = getTextEdits();
@@ -105,7 +105,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     Assertions.assertThat(diagnostics).doesNotContain(diagnostic);
 
     // returning to original state
-    documentContext.rebuild(cashedContent);
+    documentContext.rebuild(cachedContent);
 
     return this;
   }
