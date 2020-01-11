@@ -78,9 +78,6 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
     implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
 
-    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-    implementation("javax.xml.bind", "jaxb-api", "2.3.1")
-
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
 
