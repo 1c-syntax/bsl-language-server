@@ -11,7 +11,7 @@
                 "object"
             ],
             "title": "Concrete diagnostic configuration.\nCan be boolean for turning on/off or object.",
-            "default": null
+            "default": true
         }
     },
     "properties": {
@@ -43,8 +43,8 @@
             "title": "Show cyclomatic complexity score above method definition (codeLens).",
             "default": true
         },
-        "computeDiagnostics": {
-            "$id": "#/properties/computeDiagnostics",
+        "computeDiagnosticsTrigger": {
+            "$id": "#/properties/computeDiagnosticsTrigger",
             "type": "string",
             "oneOf": [
                 {
@@ -62,6 +62,26 @@
             ],
             "title": "Trigger for the computation of diagnostics.",
             "default": "onSave"
+        },
+        "computeDiagnosticsSkipSupport": {
+            "$id": "#/properties/computeDiagnosticsSkipSupport",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "withSupport",
+                    "description": "Skip computing diagnostics on modules with any kind of support."
+                },
+                {
+                    "const": "withSupportLocked",
+                    "description": "Skip computing diagnostics on modules with `not editable` support mode."
+                },
+                {
+                    "const": "never",
+                    "description": "Never skip computing."
+                }
+            ],
+            "title": "Analyze module support variant and skip all diagnostics if necessary.",
+            "default": "never"
         },
         "traceLog": {
             "$id": "#/properties/traceLog",
