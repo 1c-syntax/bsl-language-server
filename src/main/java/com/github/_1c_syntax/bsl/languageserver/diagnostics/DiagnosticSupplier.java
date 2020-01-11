@@ -21,14 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsSkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.reflections8.Reflections;
@@ -36,6 +40,8 @@ import org.reflections8.util.ClasspathHelper;
 import org.reflections8.util.ConfigurationBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,32 +62,35 @@ public class DiagnosticSupplier {
       .findAny();
   }
 
-  public List<BSLDiagnostic> getDiagnosticInstances(
-    FileType fileType,
-    ModuleType moduleType,
-    CompatibilityMode compatibilityMode) {
+  public List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext) {
 
-    return diagnosticClasses.stream()
-      .map(this::createDiagnosticInfo)
-      .filter(this::isEnabled)
-      .filter(info -> inScope(info, fileType))
-      .filter(info -> correctModuleType(info, moduleType))
-      .filter(info -> passedCompatibilityMode(info, compatibilityMode))
-      .map(this::createDiagnosticInstance)
-      .peek(this::configureDiagnostic)
-      .collect(Collectors.toList());
-  }
+    Map<SupportConfiguration, SupportVariant> supportVariants = documentContext.getSupportVariants();
+    var moduleSupportVariant = supportVariants.values().stream()
+      .max(Comparator.naturalOrder())
+      .orElse(SupportVariant.NONE);
+    var configuredSkipSupport = configuration.getComputeDiagnosticsSkipSupport();
 
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType) {
-    return getDiagnosticInstances(fileType, ModuleType.Unknown, new CompatibilityMode("DontUse"));
-  }
+    if (needToComputeDiagnostics(moduleSupportVariant, configuredSkipSupport)) {
+      FileType fileType = documentContext.getFileType();
+      CompatibilityMode compatibilityMode = documentContext
+        .getServerContext()
+        .getConfiguration()
+        .getCompatibilityMode();
+      ModuleType moduleType = documentContext.getModuleType();
 
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, ModuleType moduleType) {
-    return getDiagnosticInstances(fileType, moduleType, new CompatibilityMode("DontUse"));
-  }
+      return diagnosticClasses.stream()
+        .map(this::createDiagnosticInfo)
+        .filter(this::isEnabled)
+        .filter(info -> inScope(info, fileType))
+        .filter(info -> correctModuleType(info, moduleType))
+        .filter(info -> passedCompatibilityMode(info, compatibilityMode))
+        .map(this::createDiagnosticInstance)
+        .peek(this::configureDiagnostic)
+        .collect(Collectors.toList());
+    } else {
+      return Collections.emptyList();
+    }
 
-  public List<BSLDiagnostic> getDiagnosticInstances(FileType fileType, CompatibilityMode compatibilityMode) {
-    return getDiagnosticInstances(fileType, ModuleType.Unknown, compatibilityMode);
   }
 
   public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
@@ -173,6 +182,21 @@ public class DiagnosticSupplier {
     }
 
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
+  }
+
+  private static boolean needToComputeDiagnostics(
+    SupportVariant moduleSupportVariant,
+    ComputeDiagnosticsSkipSupport configuredSkipSupport
+  ) {
+    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.NEVER || moduleSupportVariant == SupportVariant.NONE) {
+      return true;
+    }
+
+    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED) {
+      return moduleSupportVariant != SupportVariant.NOT_EDITABLE;
+    }
+
+    return configuredSkipSupport != ComputeDiagnosticsSkipSupport.WITHSUPPORT;
   }
 
   @SuppressWarnings("unchecked")
