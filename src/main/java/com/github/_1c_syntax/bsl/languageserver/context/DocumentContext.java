@@ -178,18 +178,23 @@ public class DocumentContext {
     Position start = range.getStart();
     Position end = range.getEnd();
 
+    String[] contentListUnboxed = getContentList();
+
+    if (start.getLine() > contentListUnboxed.length || end.getLine() > contentListUnboxed.length) {
+      throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
+    }
+
+    String startString = contentListUnboxed[start.getLine()];
     StringBuilder sb = new StringBuilder();
 
-    String[] contentListUnboxed = getContentList();
-    String startString = contentListUnboxed[start.getLine()];
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
     } else {
-      sb.append(startString.substring(start.getCharacter()));
+      sb.append(startString.substring(start.getCharacter())).append("\n");
     }
 
     for (int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
-      sb.append(contentListUnboxed[i]);
+      sb.append(contentListUnboxed[i]).append("\n");
     }
 
     if (start.getLine() != end.getLine()) {
