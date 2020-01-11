@@ -64,14 +64,15 @@ public final class LanguageServerConfiguration {
   public static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
   private static final boolean DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS = Boolean.TRUE;
-  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
+  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER
+    = ComputeDiagnosticsTrigger.ONSAVE;
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
 
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
   private boolean showCyclomaticComplexityCodeLens;
-  private ComputeDiagnosticsTrigger computeDiagnostics;
+  private ComputeDiagnosticsTrigger computeDiagnosticsTrigger;
   @Nullable
   private File traceLog;
   @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
@@ -96,7 +97,7 @@ public final class LanguageServerConfiguration {
       diagnosticLanguage,
       DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
       DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS,
-      DEFAULT_COMPUTE_DIAGNOSTICS,
+      DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER,
       null,
       new HashMap<>(),
       null
