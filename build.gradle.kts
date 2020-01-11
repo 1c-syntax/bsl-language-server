@@ -115,6 +115,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     testImplementation("org.assertj", "assertj-core", "3.13.2")
+    testImplementation("org.mockito", "mockito-core", "3.2.4")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }
