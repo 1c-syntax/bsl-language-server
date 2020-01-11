@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
-import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -44,7 +44,7 @@ public class ServerContextTest {
 
     Path path = Absolute.path(PATH_TO_METADATA);
     ServerContext serverContext = new ServerContext(path);
-    AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
+    Configuration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotEqualTo(null);
 
@@ -68,7 +68,7 @@ public class ServerContextTest {
 
     ServerContext serverContext = new ServerContext();
     serverContext.setConfigurationRoot(path);
-    AbstractConfiguration configurationMetadata = serverContext.getConfiguration();
+    Configuration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
     assertThat(configurationMetadata.getModulesByType()).hasSize(0);
