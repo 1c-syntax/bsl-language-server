@@ -131,6 +131,43 @@ public final class LanguageServerConfiguration {
     return new LanguageServerConfiguration(diagnosticLanguage);
   }
 
+  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+    Path rootPath = null;
+    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    if (pathFromConfiguration == null) {
+      rootPath = Absolute.path(srcDir);
+    } else {
+      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
+      var absoluteSrcDir = Absolute.path(srcDir);
+      var absolutePathFromConfiguration = Absolute.path(pathFromConfiguration);
+      if (absolutePathFromConfiguration.startsWith(absoluteSrcDir)) {
+        rootPath = absolutePathFromConfiguration;
+      }
+    }
+    if (rootPath != null){
+      File fileConfiguration = getConfigurationFile(rootPath);
+      if (fileConfiguration != null) {
+        rootPath = Paths.get(fileConfiguration.getParent());
+      }
+    }
+    return rootPath;
+  }
+
+  private static File getConfigurationFile(Path rootPath) {
+    File configurationFile = null;
+    List<Path> listPath = new ArrayList<>();
+    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
+      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
+      listPath = stream.collect(Collectors.toList());
+    } catch (IOException e) {
+      LOGGER.error("Error on read configuration file", e);
+    }
+    if (!listPath.isEmpty()) {
+      configurationFile = listPath.get(0).toFile();
+    }
+    return configurationFile;
+  }
+
   static class DiagnosticsDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
 
     @Override
@@ -179,44 +216,6 @@ public final class LanguageServerConfiguration {
       return diagnosticConfiguration;
     }
 
-  }
-
-  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
-    Path rootPath = null;
-    Path pathFromConfiguration = configuration.getConfigurationRoot();
-    if (pathFromConfiguration == null) {
-      rootPath = Absolute.path(srcDir);
-    } else {
-      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
-      var absoluteSrcDir = Absolute.path(srcDir);
-      var absolutePathFromConfiguration = Absolute.path(pathFromConfiguration);
-      if (absolutePathFromConfiguration.startsWith(absoluteSrcDir)) {
-        rootPath = absolutePathFromConfiguration;
-      }
-    }
-    if (rootPath != null){
-      File fileConfiguration = getConfigurationFile(rootPath);
-      if (fileConfiguration != null) {
-        rootPath = Paths.get(fileConfiguration.getParent());
-      }
-    }
-    return rootPath;
-  }
-
-
-  private static File getConfigurationFile(Path rootPath) {
-    File configurationFile = null;
-    List<Path> listPath = new ArrayList<>();
-    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
-      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.collect(Collectors.toList());
-    } catch (IOException e) {
-      LOGGER.error("Error on read configuration file", e);
-    }
-    if (!listPath.isEmpty()) {
-      configurationFile = listPath.get(0).toFile();
-    }
-    return configurationFile;
   }
 
 }

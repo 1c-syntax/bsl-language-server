@@ -222,15 +222,15 @@ class DiagnosticSupplierTest {
     allParametersHaveResources(DiagnosticLanguage.EN);
   }
 
-  void allParametersHaveResources(DiagnosticLanguage languag) {
+  void allParametersHaveResources(DiagnosticLanguage language) {
 
     // when
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
 
     // then
     assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, languag);
-        Boolean allParametersHaveDescription;
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, language);
+        boolean allParametersHaveDescription;
         try {
           allParametersHaveDescription = info.getParameters().stream()
             .map(DiagnosticParameterInfo::getDescription)

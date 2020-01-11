@@ -38,7 +38,9 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -73,6 +75,8 @@ public class DocumentContext {
 
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
+    = new Lazy<>(this::computeSupportVariants, computeLock);
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
   private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
@@ -242,6 +246,10 @@ public class DocumentContext {
     return moduleType.getOrCompute();
   }
 
+  public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
+    return supportVariants.getOrCompute();
+  }
+
   public void rebuild(String content) {
     clear();
     this.content = content;
@@ -331,11 +339,11 @@ public class DocumentContext {
   }
 
   private ModuleType computeModuleType() {
-    ModuleType type = context.getConfiguration().getModuleType(uri);
-    if (type == null) {
-      type = ModuleType.ObjectModule;
-    }
-    return type;
+    return context.getConfiguration().getModuleType(uri);
+  }
+
+  private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {
+    return context.getConfiguration().getModuleSupport(uri);
   }
 
   private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
