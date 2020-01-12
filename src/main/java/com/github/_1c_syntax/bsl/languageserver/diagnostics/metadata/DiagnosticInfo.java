@@ -45,8 +45,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DiagnosticInfo {
 
-  private static Map<DiagnosticType, org.eclipse.lsp4j.DiagnosticSeverity> typeToLSPSeverityMap
-    = createTypeToLSPSeverityMap();
+  private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
+    = createSeverityToLSPSeverityMap();
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final DiagnosticLanguage diagnosticLanguage;
@@ -122,7 +122,14 @@ public class DiagnosticInfo {
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
-    return typeToLSPSeverityMap.get(getType());
+    var type = getType();
+    if (type == DiagnosticType.CODE_SMELL) {
+      return severityToLSPSeverityMap.get(getSeverity());
+    } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
+      return org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+    } else {
+      return org.eclipse.lsp4j.DiagnosticSeverity.Error;
+    }
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
@@ -171,14 +178,14 @@ public class DiagnosticInfo {
     return simpleName;
   }
 
-  private static Map<DiagnosticType, org.eclipse.lsp4j.DiagnosticSeverity> createTypeToLSPSeverityMap() {
-    Map<DiagnosticType, org.eclipse.lsp4j.DiagnosticSeverity> map = new EnumMap<>(DiagnosticType.class);
-    map.put(DiagnosticType.CODE_SMELL, org.eclipse.lsp4j.DiagnosticSeverity.Information);
-    map.put(DiagnosticType.ERROR, org.eclipse.lsp4j.DiagnosticSeverity.Error);
-    map.put(DiagnosticType.VULNERABILITY, org.eclipse.lsp4j.DiagnosticSeverity.Error);
-    map.put(DiagnosticType.SECURITY_HOTSPOT, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+  private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
+    Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> map = new EnumMap<>(DiagnosticSeverity.class);
+    map.put(DiagnosticSeverity.INFO, org.eclipse.lsp4j.DiagnosticSeverity.Hint);
+    map.put(DiagnosticSeverity.MINOR, org.eclipse.lsp4j.DiagnosticSeverity.Information);
+    map.put(DiagnosticSeverity.MAJOR, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+    map.put(DiagnosticSeverity.CRITICAL, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+    map.put(DiagnosticSeverity.BLOCKER, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
 
     return map;
   }
-
 }
