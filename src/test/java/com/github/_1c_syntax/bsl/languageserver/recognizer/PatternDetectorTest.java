@@ -29,16 +29,23 @@ public class PatternDetectorTest {
 
   @Test
   void runTest() {
-    PatternDetector detector = new PatternDetector(1, "^[/\\s]*(?:Процедура|Функция)\\s+[а-яА-Яё\\w]+\\s*?\\(", "^[/\\s]*@На[а-яА-Яё]+\\s*?$*");
+    PatternDetector detector = new PatternDetector(1,
+      "^[/\\s]*(?:Процедура|Функция|Procedure|Function)\\s+[а-яА-Яё\\w]+\\s*?\\(",
+      "^[/\\s]*(?:&На[а-яА-Яё]+|&At[\\w]+)\\s*?$*");
 
     assertThat(detector.detect("Процедура Какой-то текст")).isEqualTo(0);
     assertThat(detector.detect("Процедура МояПро0цедура()")).isEqualTo(1);
     assertThat(detector.detect("Функция   МояФункция (  Параметр)")).isEqualTo(1);
     assertThat(detector.detect("Какой-то текст МояФункция была(")).isEqualTo(0);
     assertThat(detector.detect("Функция или Процедура А")).isEqualTo(0);
-    assertThat(detector.detect("@НаКлиенте")).isEqualTo(1);
-    assertThat(detector.detect("//@НаКлиенте")).isEqualTo(1);
-    assertThat(detector.detect("@НаКлиенте\n@НаКлиенте\nПроцедура МояПро0цедура2(CGf)\nПроцедура МояПро0цедура2(CGf)")).isEqualTo(1);
+    assertThat(detector.detect("&НаКлиенте")).isEqualTo(1);
+    assertThat(detector.detect("//&НаКлиенте")).isEqualTo(1);
+    assertThat(detector.detect("&НаКлиенте\n\nПроцедура МояПро0цедура2(CGf)")).isEqualTo(1);
+    assertThat(detector.detect("//&НаКлиенте")).isEqualTo(1);
+    assertThat(detector.detect("//&AtServer")).isEqualTo(1);
+    assertThat(detector.detect("&AtClient\nProcedure МояПро0цедура2(CGf)")).isEqualTo(1);
+    assertThat(detector.detect("Функция MyFunc(Param, Param2)")).isEqualTo(1);
+    assertThat(detector.detect("//&AtКлиент")).isEqualTo(0);
   }
 
 }
