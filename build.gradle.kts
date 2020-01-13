@@ -89,7 +89,7 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    implementation("net.oneandone.reflections8", "reflections8", "0.11.5")
+    implementation("org.reflections", "reflections", "0.9.10")
 
     implementation("com.github.1c-syntax", "bsl-parser", "526fb963589ddb7733210fee8163f8a7e5b55bb7") {
         exclude("com.github.nixel2007.antlr4-optimized", "antlr4-maven-plugin")
