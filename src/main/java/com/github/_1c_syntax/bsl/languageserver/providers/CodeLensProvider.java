@@ -40,10 +40,13 @@ public final class CodeLensProvider {
   }
 
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return getComplexityCodeLenses(documentContext);
+    List<CodeLens> codeLenses = new ArrayList<>();
+    codeLenses.addAll(getCognitiveComplexityCodeLenses(documentContext));
+    codeLenses.addAll(getCyclomaticComplexityCodeLenses(documentContext));
+    return codeLenses;
   }
 
-  private List<CodeLens> getComplexityCodeLenses(DocumentContext documentContext) {
+  private List<CodeLens> getCognitiveComplexityCodeLenses(DocumentContext documentContext) {
     List<CodeLens> codeLenses = new ArrayList<>();
 
     if (configuration.isShowCognitiveComplexityCodeLens()) {
@@ -62,6 +65,12 @@ public final class CodeLensProvider {
         codeLenses.add(codeLens);
       });
     }
+
+    return codeLenses;
+  }
+
+  private List<CodeLens> getCyclomaticComplexityCodeLenses(DocumentContext documentContext) {
+    List<CodeLens> codeLenses = new ArrayList<>();
 
     if (configuration.isShowCyclomaticComplexityCodeLens()) {
 
@@ -83,4 +92,5 @@ public final class CodeLensProvider {
 
     return codeLenses;
   }
+
 }
