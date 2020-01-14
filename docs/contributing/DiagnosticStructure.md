@@ -69,6 +69,7 @@
 
 Класс должен реализовывать интерфейс `BSLDiagnostic`. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих `BSLDiagnostic`:
 
+- для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
 - при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наслодовать класс от `AbstractListenerDiagnostic`
 - в остальных случаях нужно использовать стратегию `визитера` и `AbstractVisitorDiagnostic`
 
@@ -88,7 +89,6 @@ public class TemplateDiagnostic extends AbstractVisitorDiagnostic
 
 ```java
 public class TemplateDiagnostic extends AbstractListenerDiagnostic
-
 ```
 
 Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
@@ -148,6 +148,32 @@ private final DiagnosticInfo info;
 
     // Возврат обнаруженных замечаний
     return diagnosticStorage.getDiagnostics();
+  }
+```
+
+### Класс диагностики, унаследованный от AbstractDiagnostic
+
+Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. 
+В классе диагностики необходимо реализовать только один метод `check`, принимающий в качестве параметра контекст анализируемоего файла `DocumentContext` и конструктор с инициализацией свойства `info` базового класса   
+
+Метод `check` должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в `diagnosticStorage`.
+
+Пример:
+
+```java
+  @Override
+  public TemplateDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
+  @Override
+  protected void check(DocumentContext documentContext) {
+    documentContext.getTokensFromDefaultChannel()
+      .parallelStream()
+      .filter((Token t) ->
+        t.getType() == BSLParser.IDENTIFIER &&
+          t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
+      .forEach(token -> diagnosticStorage.addDiagnostic(token));
   }
 ```
 
