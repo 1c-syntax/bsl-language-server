@@ -394,10 +394,10 @@
 <p>Some of diagnostics are disabled by default. Use <a href="/#configuration">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>70</strong></p>
+<p>Total: <strong>73</strong></p>
 <ul>
 <li>Error: <strong>25</strong></li>
-<li>Code smell: <strong>42</strong></li>
+<li>Code smell: <strong>45</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>1</strong></li>
 </ul>
@@ -424,6 +424,14 @@
 <tr>
 <td><a href="CanonicalSpellingKeywords/">CanonicalSpellingKeywords</a></td>
 <td>Canonical keyword writing</td>
+<td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="CodeOutOfRegion/">CodeOutOfRegion</a></td>
+<td>Code out of region</td>
 <td align="center">Yes</td>
 <td>Info</td>
 <td>Code smell</td>
@@ -500,6 +508,14 @@
 <td>Minor</td>
 <td>Code smell</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
+</tr>
+<tr>
+<td><a href="DuplicateRegion/">DuplicateRegion</a></td>
+<td>Duplicate regions</td>
+<td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="EmptyCodeBlock/">EmptyCodeBlock</a></td>
@@ -690,6 +706,14 @@
 <td>Non export methods in API regions</td>
 <td align="center">Yes</td>
 <td>Major</td>
+<td>Code smell</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="NonStandardRegion/">NonStandardRegion</a></td>
+<td>Non-standard region of module</td>
+<td align="center">Yes</td>
+<td>Info</td>
 <td>Code smell</td>
 <td><code>standard</code></td>
 </tr>
