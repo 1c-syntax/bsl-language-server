@@ -348,6 +348,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#abstractdiagnostic" class="md-nav__link">
+    Класс диагностики, унаследованный от AbstractDiagnostic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#abstractvisitordiagnostic" class="md-nav__link">
     Класс диагностики, унаследованный от AbstractVisitorDiagnostic
   </a>
@@ -506,6 +513,7 @@
 
 <p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>
 <ul>
+<li>для простых диагностик (проверка контекста модуля) стоит использовать наследование <code>AbstractVisitor</code> с реализацией единственного метода <code>check</code></li>
 <li>при необходимости анализа посещения узла / последовательности узлов, использовать стратегию <code>слушателя</code> нужно наслодовать класс от <code>AbstractListenerDiagnostic</code></li>
 <li>в остальных случаях нужно использовать стратегию <code>визитера</code> и <code>AbstractVisitorDiagnostic</code></li>
 </ul>
@@ -575,6 +583,28 @@
 
     <span class="c1">// Возврат обнаруженных замечаний</span>
     <span class="k">return</span> <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">getDiagnostics</span><span class="p">();</span>
+  <span class="p">}</span>
+</pre></div>
+
+
+<h3 id="abstractdiagnostic">Класс диагностики, унаследованный от AbstractDiagnostic<a class="headerlink" href="#abstractdiagnostic" title="Permanent link">&para;</a></h3>
+<p>Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. 
+В классе диагностики необходимо переопределить метод <code>check</code>, принимающий в качестве параметра контекст анализируемоего файла <code>DocumentContext</code>, и конструктор с инициализацией свойства <code>info</code> базового класса   </p>
+<p>Метод <code>check</code> должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
+<p>Пример:</p>
+<div class="codehilite"><pre><span></span>  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="nf">TemplateDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nd">@Override</span>
+  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">documentContext</span><span class="p">.</span><span class="na">getTokensFromDefaultChannel</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>
+        <span class="n">t</span><span class="p">.</span><span class="na">getType</span><span class="p">()</span> <span class="o">==</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">IDENTIFIER</span> <span class="o">&amp;&amp;</span>
+          <span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toUpperCase</span><span class="p">(</span><span class="n">Locale</span><span class="p">.</span><span class="na">ENGLISH</span><span class="p">).</span><span class="na">contains</span><span class="p">(</span><span class="s">&quot;Ё&quot;</span><span class="p">))</span>
+      <span class="p">.</span><span class="na">forEach</span><span class="p">(</span><span class="n">token</span> <span class="o">-&gt;</span> <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">token</span><span class="p">));</span>
   <span class="p">}</span>
 </pre></div>
 
