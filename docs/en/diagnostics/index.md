@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **73**
+Total: **74**
 
 * Error: **25**
-* Code smell: **45**
+* Code smell: **46**
 * Vulnerability: **2**
 * Security Hotspot: **1**
 
@@ -26,6 +26,7 @@ Total: **73**
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [CreateQueryInCycle](CreateQueryInCycle.md) | Execution query on cycle | Yes | Critical | Error | `performance` |
+| [CyclomaticComplexity](CyclomaticComplexity.md) | Cyclomatic complexity | Yes | Critical | Code smell | `brainoverload` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | Major | Error | `standard`<br/>`error` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |

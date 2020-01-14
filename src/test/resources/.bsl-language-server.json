@@ -1,6 +1,7 @@
 {
   "diagnosticLanguage": "en",
   "showCognitiveComplexityCodeLens": true,
+  "showCyclomaticComplexityCodeLens": true,
   "computeDiagnostics": "onType",
   "traceLog": "build/.trace.log",
   "configurationRoot": "src/test/resources/metadata",

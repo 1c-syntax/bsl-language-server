@@ -99,6 +99,7 @@ Configuration file is a file in JSON format. The file can contain the following 
 
 - `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
 - `showCognitiveComplexityCodeLens` - `Boolean` - show cognitive complexity score above method definition (codeLens). By default set to `true`.
+- `showCyclomaticComplexityCodeLens` - `Boolean` - show cyclomatic complexity score above method definition (codeLens). By default set to `true`.
 - `computeDiagnostics` - `String` - trigger for the computation of diagnostics. Valid values: `onType` (on file edit), `onSave` (on file save), `never`. By default set to `onSave`.
 - `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. Dy default - not set.
 - `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with the structure as following:

@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **73**
+Общее количество: **74**
 
-* Дефект кода: **45**
+* Дефект кода: **46**
 * Уязвимость: **2**
 * Ошибка: **25**
 * Потенциальная уязвимость: **1**
@@ -26,6 +26,7 @@
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [CreateQueryInCycle](CreateQueryInCycle.md) | Выполнение запроса в цикле | Да | Критичный | Ошибка | `performance` |
+| [CyclomaticComplexity](CyclomaticComplexity.md) | Цикломатическая сложность | Да | Критичный | Дефект кода | `brainoverload` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да | Важный | Ошибка | `standard`<br/>`error` |
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
