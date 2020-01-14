@@ -541,6 +541,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <ul>
 <li><code>diagnosticLanguage</code> - <code>Строка</code> - язык сообщений от движка диагностик. Допустимые значения - <code>en</code> и <code>ru</code>. По умолчанию - <code>ru</code>.</li>
 <li><code>showCognitiveComplexityCodeLens</code> - <code>Булево</code> - показывать когнитивную сложность метода над определением метода (codeLens). По умолчанию - <code>true</code>.</li>
+<li><code>showCyclomaticComplexityCodeLens</code> - <code>Булево</code> - показывать цикломатическую сложность метода над определением метода (codeLens). По умолчанию - <code>true</code>.</li>
 <li><code>computeDiagnostics</code> - <code>Строка</code> - триггер для вызова процедуры рассчета диагностик. Допустимые значения - <code>onType</code> (при редактировании файла), <code>onSave</code> (при сохранении файла), <code>never</code> (никогда). По умолчанию - <code>onSave</code>.</li>
 <li><code>traceLog</code> - <code>Строка</code> - путь к файлу для логирования всех входящих и исходящих запросов между BSL Language Server и Language Client из используемой IDE. Может быть абсолютным или относительным (от корня проекта). Заполнение настройки <strong>значительно замедляет</strong> скорость взаимодействия между сервером и клиентом. По умолчанию - значение не заполнено.</li>
 <li><code>diagnostics</code> - <code>Объект</code> - коллекция настроек диагностик. Элементами коллекции являются объекты со следующей структурой:<ul>

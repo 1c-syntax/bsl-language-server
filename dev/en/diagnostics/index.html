@@ -394,10 +394,10 @@
 <p>Some of diagnostics are disabled by default. Use <a href="/#configuration">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>73</strong></p>
+<p>Total: <strong>74</strong></p>
 <ul>
 <li>Error: <strong>25</strong></li>
-<li>Code smell: <strong>45</strong></li>
+<li>Code smell: <strong>46</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>1</strong></li>
 </ul>
@@ -484,6 +484,14 @@
 <td>Critical</td>
 <td>Error</td>
 <td><code>performance</code></td>
+</tr>
+<tr>
+<td><a href="CyclomaticComplexity/">CyclomaticComplexity</a></td>
+<td>Cyclomatic complexity</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Code smell</td>
+<td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="DeletingCollectionItem/">DeletingCollectionItem</a></td>
