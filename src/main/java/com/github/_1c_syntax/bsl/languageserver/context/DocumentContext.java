@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -61,29 +62,29 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 public class DocumentContext {
 
-  private String content;
-  private ServerContext context;
   private final URI uri;
   private final FileType fileType;
+  private String content;
+  private ServerContext context;
   private Tokenizer tokenizer;
 
   private ReentrantLock computeLock = new ReentrantLock();
 
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
-  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
-  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
   private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
-  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
-    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
-
   private boolean adjustingRegions;
   private boolean regionsAdjusted;
+  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
+  private Lazy<List<RegionSymbol>> fileLevelRegions = new Lazy<>(this::computeFileLevelRegions, computeLock);
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
+    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     final Path absolutePath = Absolute.path(uri);
@@ -157,6 +158,11 @@ public class DocumentContext {
   public List<RegionSymbol> getRegionsFlat() {
     final List<RegionSymbol> regionsFlatUnboxed = regionsFlat.getOrCompute();
     return new ArrayList<>(regionsFlatUnboxed);
+  }
+
+  public List<RegionSymbol> getFileLevelRegions() {
+    final List<RegionSymbol> fileLevelRegionsUnboxed = fileLevelRegions.getOrCompute();
+    return new ArrayList<>(fileLevelRegionsUnboxed);
   }
 
   public List<Token> getTokens() {
@@ -288,6 +294,18 @@ public class DocumentContext {
         return list;
       })
       .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+  }
+
+  private List<RegionSymbol> computeFileLevelRegions() {
+    List<Range> methodRanges = getMethods().stream()
+      .map(MethodSymbol::getRange).collect(Collectors.toList());
+
+    return getRegions().stream()
+      .filter(region -> methodRanges.stream().noneMatch(methodRange ->
+        Ranges.containsRange(methodRange,
+          Ranges.create(region))
+      ))
       .collect(Collectors.toList());
   }
 

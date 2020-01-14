@@ -113,6 +113,10 @@ public class DiagnosticInfo {
     return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key).intern();
   }
 
+  public String getResourceString(String key, Object... args) {
+    return String.format(getResourceString(key), args).intern();
+  }
+
   public DiagnosticType getType() {
     return diagnosticMetadata.type();
   }

@@ -24,6 +24,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeOutOfRegion": {
+            "description": "Code out of region",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Code out of region",
+            "$id": "#/definitions/CodeOutOfRegion"
+        },
         "CognitiveComplexity": {
             "description": "Cognitive complexity",
             "default": null,
@@ -135,6 +145,16 @@
             ],
             "title": "Restriction on the use of deprecated \"Message\" method",
             "$id": "#/definitions/DeprecatedMessage"
+        },
+        "DuplicateRegion": {
+            "description": "Duplicate regions",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate regions",
+            "$id": "#/definitions/DuplicateRegion"
         },
         "EmptyCodeBlock": {
             "description": "Empty code block",
@@ -493,6 +513,16 @@
             ],
             "title": "Non export methods in API regions",
             "$id": "#/definitions/NonExportMethodsInApiRegion"
+        },
+        "NonStandardRegion": {
+            "description": "Non-standard region of module",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Non-standard region of module",
+            "$id": "#/definitions/NonStandardRegion"
         },
         "NumberOfOptionalParams": {
             "description": "Limit number of optional parameters in method",

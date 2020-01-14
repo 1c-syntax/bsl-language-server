@@ -81,6 +81,9 @@
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
+                "CodeOutOfRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/CodeOutOfRegion"
+                },
                 "CognitiveComplexity": {
                     "$ref": "diagnostics-schema.json#/definitions/CognitiveComplexity"
                 },
@@ -107,6 +110,9 @@
                 },
                 "DeprecatedMessage": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
+                },
+                "DuplicateRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/DuplicateRegion"
                 },
                 "EmptyCodeBlock": {
                     "$ref": "diagnostics-schema.json#/definitions/EmptyCodeBlock"
@@ -179,6 +185,9 @@
                 },
                 "NonExportMethodsInApiRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/NonExportMethodsInApiRegion"
+                },
+                "NonStandardRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/NonStandardRegion"
                 },
                 "NumberOfOptionalParams": {
                     "$ref": "diagnostics-schema.json#/definitions/NumberOfOptionalParams"

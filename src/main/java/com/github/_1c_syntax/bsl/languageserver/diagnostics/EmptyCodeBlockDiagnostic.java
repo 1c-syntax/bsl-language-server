@@ -90,7 +90,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
       Stream<Token> comments = documentContext.getComments().stream();
       Range rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
       if (comments.anyMatch(token ->
-        org.eclipse.lsp4j.util.Ranges.containsRange(
+        Ranges.containsRange(
           rangeCodeBlock,
           Ranges.create(token)))) {
         return super.visitCodeBlock(ctx);
