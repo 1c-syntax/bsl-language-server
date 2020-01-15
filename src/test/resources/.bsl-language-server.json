@@ -3,6 +3,7 @@
   "showCognitiveComplexityCodeLens": true,
   "showCyclomaticComplexityCodeLens": true,
   "computeDiagnosticsTrigger": "onType",
+  "computeDiagnosticsSkipSupport": "withSupportLocked",
   "traceLog": "build/.trace.log",
   "configurationRoot": "src/test/resources/metadata",
   "diagnostics": {

@@ -21,8 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum ComputeDiagnosticsSkipSupport {
-  WITHSUPPORTLOCKED,
-  WITHSUPPORT,
+  @JsonProperty("withSupportLocked")
+  WITH_SUPPORT_LOCKED,
+  @JsonProperty("withSupport")
+  WITH_SUPPORT,
+  @JsonProperty("never")
   NEVER
 }

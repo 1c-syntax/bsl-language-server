@@ -192,11 +192,11 @@ public class DiagnosticSupplier {
       return true;
     }
 
-    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED) {
+    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.WITH_SUPPORT_LOCKED) {
       return moduleSupportVariant != SupportVariant.NOT_EDITABLE;
     }
 
-    return configuredSkipSupport != ComputeDiagnosticsSkipSupport.WITHSUPPORT;
+    return configuredSkipSupport != ComputeDiagnosticsSkipSupport.WITH_SUPPORT;
   }
 
   @SuppressWarnings("unchecked")

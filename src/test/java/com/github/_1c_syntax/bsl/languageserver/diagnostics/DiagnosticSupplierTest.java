@@ -235,7 +235,7 @@ class DiagnosticSupplierTest {
       .isNotEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
-    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED);
+    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.WITH_SUPPORT_LOCKED);
     when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
     assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
       .isNotEmpty();
@@ -257,7 +257,7 @@ class DiagnosticSupplierTest {
       .isEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
-    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.WITHSUPPORT);
+    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.WITH_SUPPORT);
     when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
     assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
       .isNotEmpty();
