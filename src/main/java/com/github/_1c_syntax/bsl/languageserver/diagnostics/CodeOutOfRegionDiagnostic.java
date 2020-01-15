@@ -65,15 +65,15 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     regionsRanges.clear();
 
     // если областей нет, то и смысла дальше анализировть тоже нет
-    if (regions.isEmpty()) {
-      if (ctx.getTokens().size() > 0) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-
+    if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
+      diagnosticStorage.addDiagnostic(ctx);
       return ctx;
     }
 
-    regions.forEach(region -> regionsRanges.add(Ranges.create(region)));
+    regions.forEach(region ->
+      regionsRanges.add(Ranges.create(region))
+    );
+
     return super.visitFile(ctx);
 
   }
