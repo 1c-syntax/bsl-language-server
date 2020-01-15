@@ -37,6 +37,9 @@ public enum DiagnosticTag {
   LOCALIZE("Проблемы локализации")
   ;
 
-  DiagnosticTag(String ru) {
+  private final String description;
+
+  DiagnosticTag(String descriptionRu) {
+    this.description = descriptionRu;
   }
 }

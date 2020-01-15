@@ -67,11 +67,12 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     // для неизвестного модуля
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(6, 1, 6, 19)
-      .hasRange(28, 1, 28, 13)
-      .hasRange(36, 1, 36, 13)
+      .hasRange(6, 1, 19)
+      .hasRange(12, 1, 35)
+      .hasRange(28, 1, 13)
+      .hasRange(36, 1, 13)
     ;
   }
 

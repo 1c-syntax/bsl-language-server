@@ -61,11 +61,9 @@ public class AnalyzeCommand implements Command {
   public int execute() {
     String srcDirOption = cmd.getOptionValue("srcDir", "");
     String outputDirOption = cmd.getOptionValue("outputDir", "");
-    String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
     String configurationOption = cmd.getOptionValue("configuration", "");
 
     Path srcDir = Absolute.path(srcDirOption);
-    Path outputDir = Absolute.path(outputDirOption);
     File configurationFile = new File(configurationOption);
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
@@ -88,6 +86,8 @@ public class AnalyzeCommand implements Command {
     }
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDirOption);
+    Path outputDir = Absolute.path(outputDirOption);
+    String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
     ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
     aggregator.report(analysisInfo);
     return 0;

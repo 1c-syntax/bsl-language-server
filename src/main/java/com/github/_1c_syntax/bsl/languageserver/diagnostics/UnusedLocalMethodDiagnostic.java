@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -75,7 +76,8 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
     List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
-      .map(parseTree -> ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase())
+      .map(parseTree ->
+        ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
       .collect(Collectors.toList());
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_subName)
@@ -84,7 +86,7 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
       .filter(subNameContext -> Trees.findAllTokenNodes(subNameContext.getParent(), BSLLexer.EXPORT_KEYWORD).isEmpty())
       .filter(subNameContext -> !isAttachable(subNameContext))
       .filter(subNameContext -> !isHandler(subNameContext))
-      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase()))
+      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase(Locale.ENGLISH)))
       .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getMessage(node.getText())));
 
     return ctx;

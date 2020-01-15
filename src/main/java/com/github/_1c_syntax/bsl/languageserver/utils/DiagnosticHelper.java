@@ -79,6 +79,7 @@ public final class DiagnosticHelper {
   }
 
   public static boolean isInternetMailProfileType(ParseTree tnc) {
-    return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText()) || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
+    return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText())
+      || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
   }
 }

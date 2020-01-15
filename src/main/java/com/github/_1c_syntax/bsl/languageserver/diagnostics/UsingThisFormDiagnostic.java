@@ -78,7 +78,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     super(info);
   }
 
-
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     if (needCheck(ctx.procDeclaration())) {
