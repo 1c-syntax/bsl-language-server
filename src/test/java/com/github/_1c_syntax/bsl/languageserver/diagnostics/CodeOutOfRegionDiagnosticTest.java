@@ -58,4 +58,13 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
       .hasRange(4, 0, 22, 0);
 
   }
+
+  @Test
+  void testEmptyFile() {
+
+    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmptyFile");
+    assertThat(diagnostics).isEmpty();
+
+  }
+
 }
