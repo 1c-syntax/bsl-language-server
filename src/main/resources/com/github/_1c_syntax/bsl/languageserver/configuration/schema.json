@@ -155,6 +155,9 @@
                 "ExtraCommas": {
                     "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
                 },
+                "FormDataToValue": {
+                    "$ref": "diagnostics-schema.json#/definitions/FormDataToValue"
+                },
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
                 },
