@@ -119,6 +119,10 @@ public class DiagnosticStorage {
     addDiagnostic(terminalNode.getSymbol());
   }
 
+  protected void addDiagnostic(TerminalNode terminalNode, String diagnosticMessage) {
+    addDiagnostic(terminalNode.getSymbol(), diagnosticMessage);
+  }
+
   protected void addDiagnostic(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
     addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
