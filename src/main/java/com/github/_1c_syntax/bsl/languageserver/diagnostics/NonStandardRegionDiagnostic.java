@@ -152,7 +152,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   private static Pattern createPattern(String keywordRu, String keywordEn, String template) {
     return Pattern.compile(
-      String.format(template, keywordRu, keywordEn).intern(),
+      String.format(template, keywordRu, keywordEn),
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 

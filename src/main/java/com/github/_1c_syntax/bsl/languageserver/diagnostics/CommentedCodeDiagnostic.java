@@ -218,9 +218,10 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> textEdits.add(new TextEdit(diagnostic.getRange(), "")));
+    List<TextEdit> textEdits = diagnostics.stream()
+      .map(Diagnostic::getRange)
+      .map(range -> new TextEdit(range, ""))
+      .collect(Collectors.toList());
 
     return CodeActionProvider.createCodeActions(
       textEdits,
