@@ -89,7 +89,7 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
+  private static boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
 
     Optional<ParseTree> subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
 
