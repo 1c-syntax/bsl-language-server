@@ -128,8 +128,10 @@ public final class LanguageServerConfiguration {
   }
 
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+
     Path rootPath = null;
     Path pathFromConfiguration = configuration.getConfigurationRoot();
+
     if (pathFromConfiguration == null) {
       rootPath = Absolute.path(srcDir);
     } else {
@@ -140,13 +142,27 @@ public final class LanguageServerConfiguration {
         rootPath = absolutePathFromConfiguration;
       }
     }
-    if (rootPath != null){
+
+    if (rootPath != null) {
+
       File fileConfiguration = getConfigurationFile(rootPath);
       if (fileConfiguration != null) {
-        rootPath = Paths.get(fileConfiguration.getParent());
+        if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
+          rootPath = Paths.get(
+            Paths.get(
+              Paths.get(
+                fileConfiguration.getParent()
+              ).getParent().toString()
+            ).getParent().toString()
+          );
+        } else {
+          rootPath = Paths.get(fileConfiguration.getParent());
+        }
       }
     }
+
     return rootPath;
+
   }
 
   private static File getConfigurationFile(Path rootPath) {
