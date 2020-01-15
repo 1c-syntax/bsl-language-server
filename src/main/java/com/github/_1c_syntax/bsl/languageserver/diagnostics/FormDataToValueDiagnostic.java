@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
   minutesToFix = 5,
   tags = {
     DiagnosticTag.BADPRACTICE
-	}
+  }
 
 )
 public class FormDataToValueDiagnostic extends AbstractVisitorDiagnostic {
