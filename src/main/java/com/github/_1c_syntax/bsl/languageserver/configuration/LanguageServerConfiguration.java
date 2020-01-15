@@ -42,13 +42,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -128,8 +128,10 @@ public final class LanguageServerConfiguration {
   }
 
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+
     Path rootPath = null;
     Path pathFromConfiguration = configuration.getConfigurationRoot();
+
     if (pathFromConfiguration == null) {
       rootPath = Absolute.path(srcDir);
     } else {
@@ -140,13 +142,26 @@ public final class LanguageServerConfiguration {
         rootPath = absolutePathFromConfiguration;
       }
     }
-    if (rootPath != null){
+
+    if (rootPath != null) {
       File fileConfiguration = getConfigurationFile(rootPath);
       if (fileConfiguration != null) {
-        rootPath = Paths.get(fileConfiguration.getParent());
+        if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
+          rootPath = Optional.of(fileConfiguration.toPath())
+            .map(Path::getParent)
+            .map(Path::getParent)
+            .map(Path::getParent)
+            .orElse(null);
+        } else {
+          rootPath = Optional.of(fileConfiguration.toPath())
+            .map(Path::getParent)
+            .orElse(null);
+        }
       }
     }
+
     return rootPath;
+
   }
 
   private static File getConfigurationFile(Path rootPath) {
