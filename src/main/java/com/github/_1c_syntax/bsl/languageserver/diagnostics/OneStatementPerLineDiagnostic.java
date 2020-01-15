@@ -71,7 +71,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
       .filter(context -> !context.equals(self))
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
-        Ranges.create((BSLParser.StatementContext) context),
+        Ranges.create(context),
         "+1"
       )).collect(Collectors.toCollection(() -> relatedInformation));
     return relatedInformation;

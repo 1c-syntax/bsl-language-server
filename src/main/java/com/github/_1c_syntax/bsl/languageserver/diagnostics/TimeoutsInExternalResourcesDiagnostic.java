@@ -52,16 +52,15 @@ import java.util.stream.Collectors;
 )
 public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern patternTimeout = Pattern.compile("^.(Таймаут|Timeout)",
+  private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^.(Таймаут|Timeout)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final Pattern patternNewExpression = Pattern.compile(
+  private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
     "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|" +
       "WSПрокси|WSProxy|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private int defaultNumberTimeout = 5;
   private int defaultNumberTimeoutFtp = 6;
   private int defaultNumberTimeoutWsd = 4;
-  private int defaultNumberTimeoutImp = 5;
 
   public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -83,7 +82,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     if (typeNameContext == null) {
       return false;
     }
-    return patternNewExpression.matcher(typeNameContext.getText()).find();
+    return PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText()).find();
   }
 
   private static boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
@@ -118,7 +117,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     } else if (isFTPConnection(newExpression)) {
       numberTimeout = defaultNumberTimeoutFtp;
     } else if (isInternetMailProfile(newExpression)) {
-      numberTimeout = defaultNumberTimeoutImp;
+      numberTimeout = 5;
     } else {
       numberTimeout = defaultNumberTimeout;
     }
@@ -175,7 +174,8 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       .getCompatibilityMode();
 
     if (diagnosticCompatibility != null
-      && CompatibilityMode.compareTo(diagnosticCompatibility, DiagnosticCompatibilityMode.UNDEFINED.getCompatibilityMode()) != 0) {
+      && CompatibilityMode.compareTo(diagnosticCompatibility,
+        DiagnosticCompatibilityMode.UNDEFINED.getCompatibilityMode()) != 0) {
 
       if (CompatibilityMode.compareTo(diagnosticCompatibility,
         DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_7.getCompatibilityMode()) == 1) {
@@ -226,7 +226,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
         if (!allRuleNodes.isEmpty()) {
 
           BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.get(0);
-          return patternTimeout.matcher(accessProperty.getText()).find();
+          return PATTERN_TIMEOUT.matcher(accessProperty.getText()).find();
 
         }
       }

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -55,24 +56,26 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   public DuplicateRegionDiagnostic(DiagnosticInfo info) {
     super(info);
-    regionNames.put("ПрограммныйИнтерфейс", "Public");
-    regionNames.put("Public", "Public");
-    regionNames.put("СлужебныйПрограммныйИнтерфейс", "Internal");
-    regionNames.put("Internal", "Internal");
-    regionNames.put("СлужебныеПроцедурыИФункции", "Private");
-    regionNames.put("Private", "Private");
-    regionNames.put("ОбработчикиСобытий", "EventHandlers");
-    regionNames.put("EventHandlers", "EventHandlers");
-    regionNames.put("ОбработчикиСобытийФормы", "FormEventHandlers");
-    regionNames.put("FormEventHandlers", "FormEventHandlers");
-    regionNames.put("ОбработчикиСобытийЭлементовШапкиФормы", "FormHeaderItemsEventHandlers");
-    regionNames.put("FormHeaderItemsEventHandlers", "FormHeaderItemsEventHandlers");
-    regionNames.put("ОбработчикиКомандФормы", "FormCommandsEventHandlers");
-    regionNames.put("FormCommandsEventHandlers", "FormCommandsEventHandlers");
-    regionNames.put("ОписаниеПеременных", "Variables");
-    regionNames.put("Variables", "Variables");
-    regionNames.put("Инициализация", "Initialize");
-    regionNames.put("Initialize", "Initialize");
+    regionNames.put(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
+    regionNames.put(Keywords.PUBLIC_REGION_EN, Keywords.PUBLIC_REGION_EN);
+    regionNames.put(Keywords.INTERNAL_REGION_RU, Keywords.INTERNAL_REGION_EN);
+    regionNames.put(Keywords.INTERNAL_REGION_EN, Keywords.INTERNAL_REGION_EN);
+    regionNames.put(Keywords.PRIVATE_REGION_RU, Keywords.PRIVATE_REGION_EN);
+    regionNames.put(Keywords.PRIVATE_REGION_EN, Keywords.PRIVATE_REGION_EN);
+    regionNames.put(Keywords.EVENT_HANDLERS_REGION_RU, Keywords.EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.EVENT_HANDLERS_REGION_EN, Keywords.EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION_RU, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.FORM_EVENT_HANDLERS_REGION_EN, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
+      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN,
+      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+    regionNames.put(Keywords.VARIABLES_REGION_RU, Keywords.VARIABLES_REGION_EN);
+    regionNames.put(Keywords.VARIABLES_REGION_EN, Keywords.VARIABLES_REGION_EN);
+    regionNames.put(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
+    regionNames.put(Keywords.INITIALIZE_REGION_EN, Keywords.INITIALIZE_REGION_EN);
   }
 
   @Override

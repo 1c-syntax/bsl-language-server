@@ -214,13 +214,14 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   @Override
-  public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
+  ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach(diagnostic -> {
-      textEdits.add(new TextEdit(diagnostic.getRange(), ""));
-    });
+    List<TextEdit> textEdits = diagnostics.stream()
+      .map(Diagnostic::getRange)
+      .map(range -> new TextEdit(range, ""))
+      .collect(Collectors.toList());
 
     return CodeActionProvider.createCodeActions(
       textEdits,
