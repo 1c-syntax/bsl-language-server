@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -33,27 +34,22 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 1,
+  scope = DiagnosticScope.OS,
+  minutesToFix = 5,
   tags = {DiagnosticTag.DESIGN}
 )
 
 public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern handlerParam = Pattern.compile(
-    "ОТКАЗ|ЭЛЕМЕНТ|СТАНДАРТНАЯОБРАБОТКА|КОМАНДА|ДОПОЛНИТЕЛЬНЫЕПАРАМЕТРЫ|ПАРАМЕТРКОМАНДЫ|" +
-      "ПАРАМЕТРЫВЫПОЛНЕНИЯКОМАНДЫ|ОБЪЕКТКОПИРОВАНИЯ|ПРОВЕРЯЕМЫЕРЕКВИЗИТЫ|ДАННЫЕЗАПОЛНЕНИЯ|ПАРАМЕТРЫПЕРЕТАСКИВАНИЯ|" +
-      "СТРОКА|ПОЛЕ|ПАРАМЕТРЫЗАПИСИ|ТЕКУЩИЙОБЪЕКТ|ИМЯСОБЫТИЯ|ПАРАМЕТР|ИСТОЧНИК|ДАННЫЕВЫБОРА|ВЫБРАННАЯСТРОКА|ГРУППА|" +
-      "РОДИТЕЛЬ|КОПИРОВАНИЕ|РАСШИФРОВКА|НОВАЯСТРОКА|ОТМЕНАРЕДАКТИРОВАНИЯ|НОВЫЙОБЪЕКТ|ВЫБРАННОЕЗНАЧЕНИЕ|ЗНАЧЕНИЕ|" +
-      "ПАРАМЕТРЫПОЛУЧЕНИЯДАННЫХ|ОЖИДАНИЕ|РЕЖИМЗАПИСИ|РЕЖИМПРОВЕДЕНИЯ|ЗАМЕЩЕНИЕ|ТЕКСТЗАПОЛНЕНИЯ|ФОРМИРУЕМЫЕЗАДАЧИ|" +
-      "НАВИГАЦИОННАЯССЫЛКАФОРМАТИРОВАННОЙСТРОКИ|ТЕКСТПРЕДУПРЕЖДЕНИЯ|ЗАВЕРШЕНИЕРАБОТЫ|ИМЯЭЛЕМЕНТА|НАСТРОЙКИ|" +
-      "ИСТОЧНИКВЫБОРА|ДОПОЛНИТЕЛЬНАЯИНФОРМАЦИЯ|ВИДФОРМЫ|ПАРАМЕТРЫ|ВЫБРАННАЯФОРМА|НАСТРОЙКИ|" +
-      "CANCEL",
+  private static final Pattern HANDLER_PATTERN = Pattern.compile(
+    "(ПриСозданииОбъекта|OnObjectCreate)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
@@ -86,7 +82,6 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .map(param -> ((BSLParser.ParamContext) param).IDENTIFIER())
       .filter(param -> paramsNames.contains(param.getText().toLowerCase(Locale.getDefault())))
-      .filter(param -> !handlerParam.matcher(param.getText()).matches())
       .forEach(param ->
         diagnosticStorage.addDiagnostic(param, info.getMessage(param.getText()))
       );
@@ -95,8 +90,15 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
-    //todo handlers from context
-    return false;
+
+    Optional<ParseTree> subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
+
+    String subName = "";
+    if (subNames.isPresent()) {
+      subName = subNames.get().getText();
+    }
+
+    return HANDLER_PATTERN.matcher(subName).matches();
   }
 
 }
