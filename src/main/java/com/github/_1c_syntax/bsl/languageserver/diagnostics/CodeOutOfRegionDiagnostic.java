@@ -121,8 +121,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
       .forEach((ParseTree child) -> {
         if (child.getParent() instanceof BSLParser.CodeBlockContext
-          && Trees.findAllRuleNodes(child, BSLParser.RULE_regionEnd).isEmpty()
-          && Trees.findAllRuleNodes(child, BSLParser.RULE_regionStart).isEmpty()) {
+          && Trees.findAllRuleNodes(child, BSLParser.RULE_preprocessor).isEmpty()) {
 
           Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
