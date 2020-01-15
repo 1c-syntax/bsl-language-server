@@ -78,9 +78,6 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
     implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
 
-    // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-    implementation("javax.xml.bind", "jaxb-api", "2.3.1")
-
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
 
@@ -92,7 +89,7 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    implementation("net.oneandone.reflections8", "reflections8", "0.11.5")
+    implementation("org.reflections", "reflections", "0.9.10")
 
     implementation("com.github.1c-syntax", "bsl-parser", "526fb963589ddb7733210fee8163f8a7e5b55bb7") {
         exclude("com.github.nixel2007.antlr4-optimized", "antlr4-maven-plugin")
@@ -110,7 +107,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
 
-    implementation("com.github.1c-syntax:mdclasses:2ba0a98a43cc11d7775c5169ce0e921c0d921386")
+    implementation("com.github.1c-syntax:mdclasses:50c4afe94103bd31316c96fafe89cd5c66eecfa2")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
@@ -118,6 +115,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     testImplementation("org.assertj", "assertj-core", "3.13.2")
+    testImplementation("org.mockito", "mockito-core", "3.2.4")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }

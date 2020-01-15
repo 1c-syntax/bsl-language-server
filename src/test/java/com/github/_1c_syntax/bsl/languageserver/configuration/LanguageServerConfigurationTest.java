@@ -34,11 +34,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import static com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.DEFAULT_DIAGNOSTIC_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
+  private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   @BeforeEach
@@ -89,6 +91,24 @@ class LanguageServerConfigurationTest {
 
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotEqualTo(null);
+
+  }
+
+  @Test
+  void createFromEmptyFile() {
+
+    // given
+    File configurationFile = new File(PATH_TO_EMPTY_CONFIGURATION_FILE);
+
+    // when
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+
+    // then
+    DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
+
+    assertThat(diagnosticLanguage).isEqualTo(DEFAULT_DIAGNOSTIC_LANGUAGE);
+    assertThat(diagnostics).isEmpty();
 
   }
 

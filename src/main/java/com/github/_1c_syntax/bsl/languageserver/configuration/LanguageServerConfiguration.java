@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -54,21 +56,26 @@ import java.util.stream.Stream;
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 @Data
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor=@__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @Slf4j
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class LanguageServerConfiguration {
 
   public static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
   private static final boolean DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS = Boolean.TRUE;
-  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
+  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER
+    = ComputeDiagnosticsTrigger.ONSAVE;
+  private static final ComputeDiagnosticsSkipSupport DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT
+    = ComputeDiagnosticsSkipSupport.NEVER;
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
 
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
   private boolean showCyclomaticComplexityCodeLens;
-  private ComputeDiagnosticsTrigger computeDiagnostics;
+  private ComputeDiagnosticsTrigger computeDiagnosticsTrigger;
+  private ComputeDiagnosticsSkipSupport computeDiagnosticsSkipSupport;
   @Nullable
   private File traceLog;
   @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
@@ -77,15 +84,7 @@ public final class LanguageServerConfiguration {
   private Path configurationRoot;
 
   private LanguageServerConfiguration() {
-    this(
-      DEFAULT_DIAGNOSTIC_LANGUAGE,
-      DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
-      DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS,
-      DEFAULT_COMPUTE_DIAGNOSTICS,
-      null,
-      new HashMap<>(),
-      null
-    );
+    this(DEFAULT_DIAGNOSTIC_LANGUAGE);
   }
 
   private LanguageServerConfiguration(DiagnosticLanguage diagnosticLanguage) {
@@ -93,7 +92,8 @@ public final class LanguageServerConfiguration {
       diagnosticLanguage,
       DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
       DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS,
-      DEFAULT_COMPUTE_DIAGNOSTICS,
+      DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER,
+      DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT,
       null,
       new HashMap<>(),
       null
@@ -125,6 +125,43 @@ public final class LanguageServerConfiguration {
 
   public static LanguageServerConfiguration create(DiagnosticLanguage diagnosticLanguage) {
     return new LanguageServerConfiguration(diagnosticLanguage);
+  }
+
+  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
+    Path rootPath = null;
+    Path pathFromConfiguration = configuration.getConfigurationRoot();
+    if (pathFromConfiguration == null) {
+      rootPath = Absolute.path(srcDir);
+    } else {
+      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
+      var absoluteSrcDir = Absolute.path(srcDir);
+      var absolutePathFromConfiguration = Absolute.path(pathFromConfiguration);
+      if (absolutePathFromConfiguration.startsWith(absoluteSrcDir)) {
+        rootPath = absolutePathFromConfiguration;
+      }
+    }
+    if (rootPath != null){
+      File fileConfiguration = getConfigurationFile(rootPath);
+      if (fileConfiguration != null) {
+        rootPath = Paths.get(fileConfiguration.getParent());
+      }
+    }
+    return rootPath;
+  }
+
+  private static File getConfigurationFile(Path rootPath) {
+    File configurationFile = null;
+    List<Path> listPath = new ArrayList<>();
+    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
+      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
+      listPath = stream.collect(Collectors.toList());
+    } catch (IOException e) {
+      LOGGER.error("Error on read configuration file", e);
+    }
+    if (!listPath.isEmpty()) {
+      configurationFile = listPath.get(0).toFile();
+    }
+    return configurationFile;
   }
 
   static class DiagnosticsDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
@@ -175,44 +212,6 @@ public final class LanguageServerConfiguration {
       return diagnosticConfiguration;
     }
 
-  }
-
-  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
-    Path rootPath = null;
-    Path pathFromConfiguration = configuration.getConfigurationRoot();
-    if (pathFromConfiguration == null) {
-      rootPath = Absolute.path(srcDir);
-    } else {
-      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
-      var absoluteSrcDir = Absolute.path(srcDir);
-      var absolutePathFromConfiguration = Absolute.path(pathFromConfiguration);
-      if (absolutePathFromConfiguration.startsWith(absoluteSrcDir)) {
-        rootPath = absolutePathFromConfiguration;
-      }
-    }
-    if (rootPath != null){
-      File fileConfiguration = getConfigurationFile(rootPath);
-      if (fileConfiguration != null) {
-        rootPath = Paths.get(fileConfiguration.getParent());
-      }
-    }
-    return rootPath;
-  }
-
-
-  private static File getConfigurationFile(Path rootPath) {
-    File configurationFile = null;
-    List<Path> listPath = new ArrayList<>();
-    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
-      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.collect(Collectors.toList());
-    } catch (IOException e) {
-      LOGGER.error("Error on read configuration file", e);
-    }
-    if (!listPath.isEmpty()) {
-      configurationFile = listPath.get(0).toFile();
-    }
-    return configurationFile;
   }
 
 }

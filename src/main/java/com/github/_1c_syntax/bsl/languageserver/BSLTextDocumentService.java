@@ -224,7 +224,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
-    if (configuration.getComputeDiagnostics() != ComputeDiagnosticsTrigger.NEVER) {
+    if (configuration.getComputeDiagnosticsTrigger() != ComputeDiagnosticsTrigger.NEVER) {
       validate(documentContext);
     }
   }
@@ -241,7 +241,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     diagnosticProvider.clearComputedDiagnostics(documentContext);
     documentContext.rebuild(params.getContentChanges().get(0).getText());
 
-    if (configuration.getComputeDiagnostics() == ComputeDiagnosticsTrigger.ONTYPE) {
+    if (configuration.getComputeDiagnosticsTrigger() == ComputeDiagnosticsTrigger.ONTYPE) {
       validate(documentContext);
     }
   }
@@ -268,7 +268,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    if (configuration.getComputeDiagnostics() != ComputeDiagnosticsTrigger.NEVER) {
+    if (configuration.getComputeDiagnosticsTrigger() != ComputeDiagnosticsTrigger.NEVER) {
       validate(documentContext);
     }
   }

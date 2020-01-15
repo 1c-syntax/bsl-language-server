@@ -23,11 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
-import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -72,21 +69,14 @@ public final class DiagnosticProvider {
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-
-    FileType fileType = documentContext.getFileType();
-    CompatibilityMode contextCompatibilityMode = documentContext
-      .getServerContext()
-      .getConfiguration()
-      .getCompatibilityMode();
-    ModuleType moduleType = documentContext.getModuleType();
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     List<Diagnostic> diagnostics =
-      diagnosticSupplier.getDiagnosticInstances(fileType, moduleType, contextCompatibilityMode).parallelStream()
-      .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
-      .filter((Diagnostic diagnostic) ->
-        !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-      .collect(Collectors.toList());
+      diagnosticSupplier.getDiagnosticInstances(documentContext).parallelStream()
+        .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+        .filter((Diagnostic diagnostic) ->
+          !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
+        .collect(Collectors.toList());
 
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
 
@@ -104,5 +94,4 @@ public final class DiagnosticProvider {
   public void clearAllComputedDiagnostics() {
     computedDiagnostics.clear();
   }
-
 }
