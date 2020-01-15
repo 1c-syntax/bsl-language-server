@@ -38,12 +38,14 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(17, 10, 17, 12)
       .hasRange(31, 0, 31, 13)
       .hasRange(4, 0, 4, 8)
       .hasRange(8, 0, 9, 9)
+      .hasRange(42, 0, 42, 7)
+      .hasRange(44, 0, 44, 7)
     ;
 
   }
