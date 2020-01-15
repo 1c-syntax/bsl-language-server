@@ -48,14 +48,14 @@ public class GetFormMethodDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
-  private static final Pattern messagePattern = Pattern.compile(
+  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
     "ПолучитьФорму|GetForm",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
+    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx.methodName());
     }
 
@@ -64,7 +64,7 @@ public class GetFormMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
+    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx.methodName());
     }
 

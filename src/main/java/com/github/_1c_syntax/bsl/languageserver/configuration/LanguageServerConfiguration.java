@@ -188,7 +188,6 @@ public final class LanguageServerConfiguration {
           diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
         } else {
           Map<String, Object> diagnosticConfiguration = getDiagnosticConfiguration(mapper, entry.getValue());
-
           diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
         }
       });
@@ -202,8 +201,7 @@ public final class LanguageServerConfiguration {
     ) {
       Map<String, Object> diagnosticConfiguration;
       try {
-        JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {
-        });
+        JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {});
         diagnosticConfiguration = mapper.readValue(mapper.treeAsTokens(diagnosticConfig), type);
       } catch (IOException e) {
         LOGGER.error("Can't deserialize diagnostic configuration", e);
