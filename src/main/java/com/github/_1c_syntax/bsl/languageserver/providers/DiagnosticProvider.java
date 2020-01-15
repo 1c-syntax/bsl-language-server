@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
@@ -44,10 +43,6 @@ public final class DiagnosticProvider {
 
   private final Map<URI, Set<Diagnostic>> computedDiagnostics;
   private final DiagnosticSupplier diagnosticSupplier;
-
-  public DiagnosticProvider() {
-    this(new DiagnosticSupplier(LanguageServerConfiguration.create()));
-  }
 
   public DiagnosticProvider(DiagnosticSupplier diagnosticSupplier) {
     this.diagnosticSupplier = diagnosticSupplier;
