@@ -62,23 +62,26 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
     createPattern(Keywords.PRIVATE_REGION_RU, Keywords.PRIVATE_REGION_EN);
 
   private static final Pattern EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.EVENTHANDLERS_REGION_RU, Keywords.EVENTHANDLERS_REGION_EN);
+    createPattern(Keywords.EVENT_HANDLERS_REGION_RU, Keywords.EVENT_HANDLERS_REGION_EN);
 
   private static final Pattern FORM_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORMEVENTHANDLERS_REGION_RU, Keywords.FORMEVENTHANDLERS_REGION_EN);
+    createPattern(Keywords.FORM_EVENT_HANDLERS_REGION_RU, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
 
   private static final Pattern FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORMHEADERITEMSEVENTHANDLERS_REGION_RU, Keywords.FORMHEADERITEMSEVENTHANDLERS_REGION_EN);
+    createPattern(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
+      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
 
   private static final Pattern FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME =
-    createPattern("ОбработчикиСобытийЭлементовТаблицыФормы",
-      "FormTableItemsEventHandlers", "^(?:%s|%s)[\\w]*$");
+    createPattern(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU,
+      Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN,
+      "^(?:%s|%s)[\\w]*$");
 
   private static final Pattern FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORMCOMMANDSEVENTHANDLERS_REGION_RU, Keywords.FORMCOMMANDSEVENTHANDLERS_REGION_EN);
+    createPattern(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
 
   private static final Pattern VARIABLES_REGION_NAME =
-    createPattern(Keywords.VARIABLES_REGION_RU, Keywords.VARIABLES_REGION_EN);
+    createPattern(Keywords.VARIABLES_REGION_RU,
+      Keywords.VARIABLES_REGION_EN);
 
   private static final Pattern INITIALIZE_REGION_NAME =
     createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);

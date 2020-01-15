@@ -146,8 +146,8 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     // ENDDO_KEYWORD
     List<String> endDoKeywordSpelling = new ArrayList<>();
-    endDoKeywordSpelling.add(Keywords.ENDDO_RU);
-    endDoKeywordSpelling.add(Keywords.ENDDO_EN);
+    endDoKeywordSpelling.add(Keywords.END_DO_RU);
+    endDoKeywordSpelling.add(Keywords.END_DO_EN);
     result.put(BSLParser.ENDDO_KEYWORD, endDoKeywordSpelling);
 
     // TO_KEYWORD
@@ -218,14 +218,14 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     // ENDTRY_KEYWORD
     List<String> endTryKeywordSpelling = new ArrayList<>();
-    endTryKeywordSpelling.add(Keywords.ENDTRY_RU);
-    endTryKeywordSpelling.add(Keywords.ENDTRY_EN);
+    endTryKeywordSpelling.add(Keywords.END_TRY_RU);
+    endTryKeywordSpelling.add(Keywords.END_TRY_EN);
     result.put(BSLParser.ENDTRY_KEYWORD, endTryKeywordSpelling);
 
     // ENDPROCEDURE_KEYWORD
     List<String> endProcedureKeywordSpelling = new ArrayList<>();
-    endProcedureKeywordSpelling.add(Keywords.ENDPROCEDURE_RU);
-    endProcedureKeywordSpelling.add(Keywords.ENDPROCEDURE_EN);
+    endProcedureKeywordSpelling.add(Keywords.END_PROCEDURE_RU);
+    endProcedureKeywordSpelling.add(Keywords.END_PROCEDURE_EN);
     result.put(BSLParser.ENDPROCEDURE_KEYWORD, endProcedureKeywordSpelling);
 
     // FUNCTION_KEYWORD
@@ -236,8 +236,8 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     // ENDFUNCTION_KEYWORD
     List<String> endfunctionKeywordSpelling = new ArrayList<>();
-    endfunctionKeywordSpelling.add(Keywords.ENDFUNCTION_RU);
-    endfunctionKeywordSpelling.add(Keywords.ENDFUNCTION_EN);
+    endfunctionKeywordSpelling.add(Keywords.END_FUNCTION_RU);
+    endfunctionKeywordSpelling.add(Keywords.END_FUNCTION_EN);
     result.put(BSLParser.ENDFUNCTION_KEYWORD, endfunctionKeywordSpelling);
 
     // FALSE
@@ -248,14 +248,14 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     // ADDHANDLER_KEYWORD
     List<String> addHandlerKeywordSpelling = new ArrayList<>();
-    addHandlerKeywordSpelling.add(Keywords.ADDHANDLER_RU);
-    addHandlerKeywordSpelling.add(Keywords.ADDHANDLER_EN);
+    addHandlerKeywordSpelling.add(Keywords.ADD_HANDLER_RU);
+    addHandlerKeywordSpelling.add(Keywords.ADD_HANDLER_EN);
     result.put(BSLParser.ADDHANDLER_KEYWORD, addHandlerKeywordSpelling);
 
     // REMOVEHANDLER_KEYWORD
     List<String> removeHandlerKeywordSpelling = new ArrayList<>();
-    removeHandlerKeywordSpelling.add(Keywords.REMOVEHANDLER_RU);
-    removeHandlerKeywordSpelling.add(Keywords.REMOVEHANDLER_EN);
+    removeHandlerKeywordSpelling.add(Keywords.REMOVE_HANDLER_RU);
+    removeHandlerKeywordSpelling.add(Keywords.REMOVE_HANDLER_EN);
     result.put(BSLParser.REMOVEHANDLER_KEYWORD, removeHandlerKeywordSpelling);
 
     // GOTO_KEYWORD
@@ -378,92 +378,92 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     // PREPROC_MOBILEAPPCLIENT_SYMBOL
     List<String> preprocMobileAppClientKeywordSpelling = new ArrayList<>();
-    preprocMobileAppClientKeywordSpelling.add(Keywords.MOBILEAPPCLIENT_RU);
-    preprocMobileAppClientKeywordSpelling.add(Keywords.MOBILEAPPCLIENT_EN);
+    preprocMobileAppClientKeywordSpelling.add(Keywords.MOBILE_APP_CLIENT_RU);
+    preprocMobileAppClientKeywordSpelling.add(Keywords.MOBILE_APP_CLIENT_EN);
     result.put(BSLParser.PREPROC_MOBILEAPPCLIENT_SYMBOL, preprocMobileAppClientKeywordSpelling);
 
     // PREPROC_MOBILEAPPSERVER_SYMBOL
     List<String> preprocMobileAppServerKeywordSpelling = new ArrayList<>();
-    preprocMobileAppServerKeywordSpelling.add(Keywords.MOBILEAPPSERVER_RU);
-    preprocMobileAppServerKeywordSpelling.add(Keywords.MOBILEAPPSERVER_EN);
+    preprocMobileAppServerKeywordSpelling.add(Keywords.MOBILE_APP_SERVER_RU);
+    preprocMobileAppServerKeywordSpelling.add(Keywords.MOBILE_APP_SERVER_EN);
     result.put(BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL, preprocMobileAppServerKeywordSpelling);
 
     // PREPROC_MOBILECLIENT_SYMBOL
     List<String> preprocMobileClientKeywordSpelling = new ArrayList<>();
-    preprocMobileClientKeywordSpelling.add(Keywords.MOBILECLIENT_RU);
-    preprocMobileClientKeywordSpelling.add(Keywords.MOBILECLIENT_EN);
+    preprocMobileClientKeywordSpelling.add(Keywords.MOBILE_CLIENT_RU);
+    preprocMobileClientKeywordSpelling.add(Keywords.MOBILE_CLIENT_EN);
     result.put(BSLParser.PREPROC_MOBILECLIENT_SYMBOL, preprocMobileClientKeywordSpelling);
 
     // PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL
     List<String> preprocThickClientOrdinaryKeywordSpelling = new ArrayList<>();
-    preprocThickClientOrdinaryKeywordSpelling.add(Keywords.THICKCLIENTORDINARYAPPLICATION_RU);
-    preprocThickClientOrdinaryKeywordSpelling.add(Keywords.THICKCLIENTORDINARYAPPLICATION_EN);
+    preprocThickClientOrdinaryKeywordSpelling.add(Keywords.THICK_CLIENT_ORDINARY_APPLICATION_RU);
+    preprocThickClientOrdinaryKeywordSpelling.add(Keywords.THICK_CLIENT_ORDINARY_APPLICATION_EN);
     result.put(BSLParser.PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL, preprocThickClientOrdinaryKeywordSpelling);
 
     // PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL
     List<String> preprocThickClientManagedKeywordSpelling = new ArrayList<>();
-    preprocThickClientManagedKeywordSpelling.add(Keywords.THICKCLIENTMANAGEDAPPLICATION_RU);
-    preprocThickClientManagedKeywordSpelling.add(Keywords.THICKCLIENTMANAGEDAPPLICATION_EN);
+    preprocThickClientManagedKeywordSpelling.add(Keywords.THICK_CLIENT_MANAGED_APPLICATION_RU);
+    preprocThickClientManagedKeywordSpelling.add(Keywords.THICK_CLIENT_MANAGED_APPLICATION_EN);
     result.put(BSLParser.PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL, preprocThickClientManagedKeywordSpelling);
 
     // PREPROC_EXTERNALCONNECTION_SYMBOL
     List<String> preprocExternalConnKeywordSpelling = new ArrayList<>();
-    preprocExternalConnKeywordSpelling.add(Keywords.EXTERNALCONNECTION_RU);
-    preprocExternalConnKeywordSpelling.add(Keywords.EXTERNALCONNECTION_EN);
+    preprocExternalConnKeywordSpelling.add(Keywords.EXTERNAL_CONNECTION_RU);
+    preprocExternalConnKeywordSpelling.add(Keywords.EXTERNAL_CONNECTION_EN);
     result.put(BSLParser.PREPROC_EXTERNALCONNECTION_SYMBOL, preprocExternalConnKeywordSpelling);
 
     // PREPROC_THINCLIENT_SYMBOL
     List<String> preprocThinClientKeywordSpelling = new ArrayList<>();
-    preprocThinClientKeywordSpelling.add(Keywords.THINCLIENT_RU);
-    preprocThinClientKeywordSpelling.add(Keywords.THINCLIENT_EN);
+    preprocThinClientKeywordSpelling.add(Keywords.THIN_CLIENT_RU);
+    preprocThinClientKeywordSpelling.add(Keywords.THIN_CLIENT_EN);
     result.put(BSLParser.PREPROC_THINCLIENT_SYMBOL, preprocThinClientKeywordSpelling);
 
     // PREPROC_WEBCLIENT_SYMBOL
     List<String> preprocWebClientKeywordSpelling = new ArrayList<>();
-    preprocWebClientKeywordSpelling.add(Keywords.WEBCLIENT_RU);
-    preprocWebClientKeywordSpelling.add(Keywords.WEBCLIENT_EN);
+    preprocWebClientKeywordSpelling.add(Keywords.WEB_CLIENT_RU);
+    preprocWebClientKeywordSpelling.add(Keywords.WEB_CLIENT_EN);
     result.put(BSLParser.PREPROC_WEBCLIENT_SYMBOL, preprocWebClientKeywordSpelling);
 
     // PREPROC_ATCLIENT_SYMBOL
     List<String> preprocAtClientKeywordSpelling = new ArrayList<>();
-    preprocAtClientKeywordSpelling.add(Keywords.ATCLIENT_RU);
-    preprocAtClientKeywordSpelling.add(Keywords.ATCLIENT_EN);
+    preprocAtClientKeywordSpelling.add(Keywords.AT_CLIENT_RU);
+    preprocAtClientKeywordSpelling.add(Keywords.AT_CLIENT_EN);
     result.put(BSLParser.PREPROC_ATCLIENT_SYMBOL, preprocAtClientKeywordSpelling);
 
     // PREPROC_ATSERVER_SYMBOL
     List<String> preprocAtServerKeywordSpelling = new ArrayList<>();
-    preprocAtServerKeywordSpelling.add(Keywords.ATSERVER_RU);
-    preprocAtServerKeywordSpelling.add(Keywords.ATSERVER_EN);
+    preprocAtServerKeywordSpelling.add(Keywords.AT_SERVER_RU);
+    preprocAtServerKeywordSpelling.add(Keywords.AT_SERVER_EN);
     result.put(BSLParser.PREPROC_ATSERVER_SYMBOL, preprocAtServerKeywordSpelling);
 
     // ANNOTATION_ATCLIENT_SYMBOL
     List<String> annotAtClientKeywordSpelling = new ArrayList<>();
-    annotAtClientKeywordSpelling.add(Keywords.ATCLIENT_RU);
-    annotAtClientKeywordSpelling.add(Keywords.ATCLIENT_EN);
+    annotAtClientKeywordSpelling.add(Keywords.AT_CLIENT_RU);
+    annotAtClientKeywordSpelling.add(Keywords.AT_CLIENT_EN);
     result.put(BSLParser.ANNOTATION_ATCLIENT_SYMBOL, annotAtClientKeywordSpelling);
 
     // ANNOTATION_ATSERVER_SYMBOL_SYMBOL
     List<String> annotAtServerKeywordSpelling = new ArrayList<>();
-    annotAtServerKeywordSpelling.add(Keywords.ATSERVER_RU);
-    annotAtServerKeywordSpelling.add(Keywords.ATSERVER_EN);
+    annotAtServerKeywordSpelling.add(Keywords.AT_SERVER_RU);
+    annotAtServerKeywordSpelling.add(Keywords.AT_SERVER_EN);
     result.put(BSLParser.ANNOTATION_ATSERVER_SYMBOL, annotAtServerKeywordSpelling);
 
     // ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
     List<String> annotAtServerNoContextKeywordSpelling = new ArrayList<>();
-    annotAtServerNoContextKeywordSpelling.add(Keywords.ATSERVERNOCONTEXT_RU);
-    annotAtServerNoContextKeywordSpelling.add(Keywords.ATSERVERNOCONTEXT_EN);
+    annotAtServerNoContextKeywordSpelling.add(Keywords.AT_SERVER_NO_CONTEXT_RU);
+    annotAtServerNoContextKeywordSpelling.add(Keywords.AT_SERVER_NO_CONTEXT_EN);
     result.put(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL, annotAtServerNoContextKeywordSpelling);
 
     // ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL
     List<String> annotAtClientServerNoContextKeywordSpelling = new ArrayList<>();
-    annotAtClientServerNoContextKeywordSpelling.add(Keywords.ATCLIENTATSERVERNOCONTEXT_RU);
-    annotAtClientServerNoContextKeywordSpelling.add(Keywords.ATCLIENTATSERVERNOCONTEXT_EN);
+    annotAtClientServerNoContextKeywordSpelling.add(Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_RU);
+    annotAtClientServerNoContextKeywordSpelling.add(Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_EN);
     result.put(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL, annotAtClientServerNoContextKeywordSpelling);
 
     // ANNOTATION_ATCLIENTATSERVER_SYMBOL
     List<String> annotAtClientServerKeywordSpelling = new ArrayList<>();
-    annotAtClientServerKeywordSpelling.add(Keywords.ATCLIENTATSERVER_RU);
-    annotAtClientServerKeywordSpelling.add(Keywords.ATCLIENTATSERVER_EN);
+    annotAtClientServerKeywordSpelling.add(Keywords.AT_CLIENT_AT_SERVER_RU);
+    annotAtClientServerKeywordSpelling.add(Keywords.AT_CLIENT_AT_SERVER_EN);
     result.put(BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL, annotAtClientServerKeywordSpelling);
 
     return result;
@@ -497,8 +497,8 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     result.put(Keywords.BREAK_UP_EN, Keywords.BREAK_EN);
     result.put(Keywords.CONTINUE_UP_RU, Keywords.CONTINUE_RU);
     result.put(Keywords.CONTINUE_UP_EN, Keywords.CONTINUE_EN);
-    result.put(Keywords.ENDDO_UP_RU, Keywords.ENDDO_RU);
-    result.put(Keywords.ENDDO_UP_EN, Keywords.ENDDO_EN);
+    result.put(Keywords.END_DO_UP_RU, Keywords.END_DO_RU);
+    result.put(Keywords.END_DO_UP_EN, Keywords.END_DO_EN);
     result.put(Keywords.TO_UP_RU, Keywords.TO_RU);
     result.put(Keywords.TO_UP_EN, Keywords.TO_EN);
     result.put(Keywords.PROCEDURE_UP_RU, Keywords.PROCEDURE_RU);
@@ -521,20 +521,20 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     result.put(Keywords.EXCEPT_UP_EN, Keywords.EXCEPT_EN);
     result.put(Keywords.RAISE_UP_RU, Keywords.RAISE_RU);
     result.put(Keywords.RAISE_UP_EN, Keywords.RAISE_EN);
-    result.put(Keywords.ENDTRY_UP_RU, Keywords.ENDTRY_RU);
-    result.put(Keywords.ENDTRY_UP_EN, Keywords.ENDTRY_EN);
-    result.put(Keywords.ENDPROCEDURE_UP_RU, Keywords.ENDPROCEDURE_RU);
-    result.put(Keywords.ENDPROCEDURE_UP_EN, Keywords.ENDPROCEDURE_EN);
+    result.put(Keywords.END_TRY_UP_RU, Keywords.END_TRY_RU);
+    result.put(Keywords.END_TRY_UP_EN, Keywords.END_TRY_EN);
+    result.put(Keywords.END_PROCEDURE_UP_RU, Keywords.END_PROCEDURE_RU);
+    result.put(Keywords.END_PROCEDURE_UP_EN, Keywords.END_PROCEDURE_EN);
     result.put(Keywords.FUNCTION_UP_RU, Keywords.FUNCTION_RU);
     result.put(Keywords.FUNCTION_UP_EN, Keywords.FUNCTION_EN);
-    result.put(Keywords.ENDFUNCTION_UP_RU, Keywords.ENDFUNCTION_RU);
-    result.put(Keywords.ENDFUNCTION_UP_EN, Keywords.ENDFUNCTION_EN);
+    result.put(Keywords.END_FUNCTION_UP_RU, Keywords.END_FUNCTION_RU);
+    result.put(Keywords.END_FUNCTION_UP_EN, Keywords.END_FUNCTION_EN);
     result.put(Keywords.FALSE_UP_RU, Keywords.FALSE_RU);
     result.put(Keywords.FALSE_UP_EN, Keywords.FALSE_EN);
-    result.put(Keywords.ADDHANDLER_UP_RU, Keywords.ADDHANDLER_RU);
-    result.put(Keywords.ADDHANDLER_UP_EN, Keywords.ADDHANDLER_EN);
-    result.put(Keywords.REMOVEHANDLER_UP_RU, Keywords.REMOVEHANDLER_RU);
-    result.put(Keywords.REMOVEHANDLER_UP_EN, Keywords.REMOVEHANDLER_EN);
+    result.put(Keywords.ADD_HANDLER_UP_RU, Keywords.ADD_HANDLER_RU);
+    result.put(Keywords.ADD_HANDLER_UP_EN, Keywords.ADD_HANDLER_EN);
+    result.put(Keywords.REMOVE_HANDLER_UP_RU, Keywords.REMOVE_HANDLER_RU);
+    result.put(Keywords.REMOVE_HANDLER_UP_EN, Keywords.REMOVE_HANDLER_EN);
     result.put(Keywords.GOTO_UP_RU, Keywords.GOTO_RU);
     result.put(Keywords.GOTO_UP_EN, Keywords.GOTO_EN);
     result.put(Keywords.AND_RU, Keywords.AND_RU);
@@ -555,32 +555,32 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     result.put(Keywords.SERVER_UP_EN, Keywords.SERVER_EN);
     result.put(Keywords.CLIENT_UP_RU, Keywords.CLIENT_RU);
     result.put(Keywords.CLIENT_UP_EN, Keywords.CLIENT_EN);
-    result.put(Keywords.MOBILEAPPCLIENT_UP_RU, Keywords.MOBILEAPPCLIENT_RU);
-    result.put(Keywords.MOBILEAPPCLIENT_UP_EN, Keywords.MOBILEAPPCLIENT_EN);
-    result.put(Keywords.MOBILEAPPSERVER_UP_RU, Keywords.MOBILEAPPSERVER_RU);
-    result.put(Keywords.MOBILEAPPSERVER_UP_EN, Keywords.MOBILEAPPSERVER_EN);
-    result.put(Keywords.MOBILECLIENT_UP_RU, Keywords.MOBILECLIENT_RU);
-    result.put(Keywords.MOBILECLIENT_UP_EN, Keywords.MOBILECLIENT_EN);
-    result.put(Keywords.THICKCLIENTORDINARYAPPLICATION_UP_RU, Keywords.THICKCLIENTORDINARYAPPLICATION_RU);
-    result.put(Keywords.THICKCLIENTORDINARYAPPLICATION_UP_EN, Keywords.THICKCLIENTORDINARYAPPLICATION_EN);
-    result.put(Keywords.THICKCLIENTMANAGEDAPPLICATION_UP_RU, Keywords.THICKCLIENTMANAGEDAPPLICATION_RU);
-    result.put(Keywords.THICKCLIENTMANAGEDAPPLICATION_UP_EN, Keywords.THICKCLIENTMANAGEDAPPLICATION_EN);
-    result.put(Keywords.EXTERNALCONNECTION_UP_RU, Keywords.EXTERNALCONNECTION_RU);
-    result.put(Keywords.EXTERNALCONNECTION_UP_EN, Keywords.EXTERNALCONNECTION_EN);
-    result.put(Keywords.THINCLIENT_UP_RU, Keywords.THINCLIENT_RU);
-    result.put(Keywords.THINCLIENT_UP_EN, Keywords.THINCLIENT_EN);
-    result.put(Keywords.WEBCLIENT_UP_RU, Keywords.WEBCLIENT_RU);
-    result.put(Keywords.WEBCLIENT_UP_EN, Keywords.WEBCLIENT_EN);
-    result.put(Keywords.ATCLIENT_UP_RU, Keywords.ATCLIENT_RU);
-    result.put(Keywords.ATCLIENT_UP_EN, Keywords.ATCLIENT_EN);
-    result.put(Keywords.ATSERVER_UP_RU, Keywords.ATSERVER_RU);
-    result.put(Keywords.ATSERVER_UP_EN, Keywords.ATSERVER_EN);
-    result.put(Keywords.ATSERVERNOCONTEXT_UP_RU, Keywords.ATSERVERNOCONTEXT_RU);
-    result.put(Keywords.ATSERVERNOCONTEXT_UP_EN, Keywords.ATSERVERNOCONTEXT_EN);
-    result.put(Keywords.ATCLIENTATSERVERNOCONTEXT_UP_RU, Keywords.ATCLIENTATSERVERNOCONTEXT_RU);
-    result.put(Keywords.ATCLIENTATSERVERNOCONTEXT_UP_EN, Keywords.ATCLIENTATSERVERNOCONTEXT_EN);
-    result.put(Keywords.ATCLIENTATSERVER_UP_RU, Keywords.ATCLIENTATSERVER_RU);
-    result.put(Keywords.ATCLIENTATSERVER_UP_EN, Keywords.ATCLIENTATSERVER_EN);
+    result.put(Keywords.MOBILE_APP_CLIENT_UP_RU, Keywords.MOBILE_APP_CLIENT_RU);
+    result.put(Keywords.MOBILE_APP_CLIENT_UP_EN, Keywords.MOBILE_APP_CLIENT_EN);
+    result.put(Keywords.MOBILE_APP_SERVER_UP_RU, Keywords.MOBILE_APP_SERVER_RU);
+    result.put(Keywords.MOBILE_APP_SERVER_UP_EN, Keywords.MOBILE_APP_SERVER_EN);
+    result.put(Keywords.MOBILE_CLIENT_UP_RU, Keywords.MOBILE_CLIENT_RU);
+    result.put(Keywords.MOBILE_CLIENT_UP_EN, Keywords.MOBILE_CLIENT_EN);
+    result.put(Keywords.THICK_CLIENT_ORDINARY_APPLICATION_UP_RU, Keywords.THICK_CLIENT_ORDINARY_APPLICATION_RU);
+    result.put(Keywords.THICK_CLIENT_ORDINARY_APPLICATION_UP_EN, Keywords.THICK_CLIENT_ORDINARY_APPLICATION_EN);
+    result.put(Keywords.THICK_CLIENT_MANAGED_APPLICATION_UP_RU, Keywords.THICK_CLIENT_MANAGED_APPLICATION_RU);
+    result.put(Keywords.THICK_CLIENT_MANAGED_APPLICATION_UP_EN, Keywords.THICK_CLIENT_MANAGED_APPLICATION_EN);
+    result.put(Keywords.EXTERNAL_CONNECTION_UP_RU, Keywords.EXTERNAL_CONNECTION_RU);
+    result.put(Keywords.EXTERNAL_CONNECTION_UP_EN, Keywords.EXTERNAL_CONNECTION_EN);
+    result.put(Keywords.THIN_CLIENT_UP_RU, Keywords.THIN_CLIENT_RU);
+    result.put(Keywords.THIN_CLIENT_UP_EN, Keywords.THIN_CLIENT_EN);
+    result.put(Keywords.WEB_CLIENT_UP_RU, Keywords.WEB_CLIENT_RU);
+    result.put(Keywords.WEB_CLIENT_UP_EN, Keywords.WEB_CLIENT_EN);
+    result.put(Keywords.AT_CLIENT_UP_RU, Keywords.AT_CLIENT_RU);
+    result.put(Keywords.AT_CLIENT_UP_EN, Keywords.AT_CLIENT_EN);
+    result.put(Keywords.AT_SERVER_UP_RU, Keywords.AT_SERVER_RU);
+    result.put(Keywords.AT_SERVER_UP_EN, Keywords.AT_SERVER_EN);
+    result.put(Keywords.AT_SERVER_NO_CONTEXT_UP_RU, Keywords.AT_SERVER_NO_CONTEXT_RU);
+    result.put(Keywords.AT_SERVER_NO_CONTEXT_UP_EN, Keywords.AT_SERVER_NO_CONTEXT_EN);
+    result.put(Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_UP_RU, Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_RU);
+    result.put(Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_UP_EN, Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_EN);
+    result.put(Keywords.AT_CLIENT_AT_SERVER_UP_RU, Keywords.AT_CLIENT_AT_SERVER_RU);
+    result.put(Keywords.AT_CLIENT_AT_SERVER_UP_EN, Keywords.AT_CLIENT_AT_SERVER_EN);
 
     return result;
   }
