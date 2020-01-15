@@ -42,13 +42,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -144,19 +144,18 @@ public final class LanguageServerConfiguration {
     }
 
     if (rootPath != null) {
-
       File fileConfiguration = getConfigurationFile(rootPath);
       if (fileConfiguration != null) {
         if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
-          rootPath = Paths.get(
-            Paths.get(
-              Paths.get(
-                fileConfiguration.getParent()
-              ).getParent().toString()
-            ).getParent().toString()
-          );
+          rootPath = Optional.of(fileConfiguration.toPath())
+            .map(Path::getParent)
+            .map(Path::getParent)
+            .map(Path::getParent)
+            .orElse(null);
         } else {
-          rootPath = Paths.get(fileConfiguration.getParent());
+          rootPath = Optional.of(fileConfiguration.toPath())
+            .map(Path::getParent)
+            .orElse(null);
         }
       }
     }
