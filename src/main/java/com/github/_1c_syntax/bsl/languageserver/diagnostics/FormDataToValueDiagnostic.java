@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
   scope = DiagnosticScope.BSL,
   minutesToFix = 5,
   tags = {
-		DiagnosticTag.BADPRACTICE
+    DiagnosticTag.BADPRACTICE
 	}
 
 )
