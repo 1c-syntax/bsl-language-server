@@ -89,14 +89,20 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern INITIALIZE_REGION_NAME =
     createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
 
-  private final Map<ModuleType, Set<Pattern>> standardRegionsByModuleType;
+  private static final Map<ModuleType, Set<Pattern>> standardRegionsByModuleType = makeStandardRegions();
 
   public NonStandardRegionDiagnostic(DiagnosticInfo info) {
     super(info);
-    standardRegionsByModuleType = new HashMap<>();
+
+  }
+
+  private static Map<ModuleType, Set<Pattern>> makeStandardRegions() {
+    Map<ModuleType, Set<Pattern>> standardRegions = new HashMap<>();
     for (ModuleType moduleType : ModuleType.values()) {
-      standardRegionsByModuleType.put(moduleType, getStandardRegionsByModuleType(moduleType));
+      standardRegions.put(moduleType, getStandardRegionsByModuleType(moduleType));
     }
+
+    return standardRegions;
   }
 
   private static Set<Pattern> getStandardRegionsByModuleType(ModuleType moduleType) {
