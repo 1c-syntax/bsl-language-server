@@ -35,8 +35,11 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -86,11 +89,21 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern INITIALIZE_REGION_NAME =
     createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
 
+  private final Map<ModuleType, Set<Pattern>> standardRegionsByModuleType;
+
   public NonStandardRegionDiagnostic(DiagnosticInfo info) {
     super(info);
+    standardRegionsByModuleType = new HashMap<>();
+    for (ModuleType moduleType : ModuleType.values()) {
+      standardRegionsByModuleType.put(moduleType, getStandardRegionsByModuleType(moduleType));
+    }
   }
 
-  private static Set<Pattern> getStandardRegions(ModuleType moduleType) {
+  private static Set<Pattern> getStandardRegionsByModuleType(ModuleType moduleType) {
+
+    if (moduleType == ModuleType.Unknown) {
+      return Collections.emptySet();
+    }
 
     Set<Pattern> standardRegions = new HashSet<>();
 
@@ -136,7 +149,6 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
         break;
       default:
         // для Unknown ничего
-        return standardRegions;
     }
 
     // у всех типов модулей есть такая область
@@ -163,7 +175,9 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
     // нет смысла говорить о стандартах для неизвестных модулях
-    Set<Pattern> standardRegions = getStandardRegions(documentContext.getModuleType());
+    Set<Pattern> standardRegions = standardRegionsByModuleType.getOrDefault(
+      documentContext.getModuleType(), Collections.emptySet());
+
     if (standardRegions.isEmpty()) {
       return ctx;
     }
