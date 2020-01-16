@@ -70,9 +70,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    regions.forEach(region ->
-      regionsRanges.add(Ranges.create(region))
-    );
+    regions.forEach(region -> regionsRanges.add(Ranges.create(region)));
 
     return super.visitFile(ctx);
 

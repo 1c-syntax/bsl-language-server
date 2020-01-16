@@ -35,8 +35,11 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -86,11 +89,27 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern INITIALIZE_REGION_NAME =
     createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
 
+  private static final Map<ModuleType, Set<Pattern>> standardRegionsByModuleType = makeStandardRegions();
+
   public NonStandardRegionDiagnostic(DiagnosticInfo info) {
     super(info);
+
   }
 
-  private static Set<Pattern> getStandardRegions(ModuleType moduleType) {
+  private static Map<ModuleType, Set<Pattern>> makeStandardRegions() {
+    Map<ModuleType, Set<Pattern>> standardRegions = new HashMap<>();
+    for (ModuleType moduleType : ModuleType.values()) {
+      standardRegions.put(moduleType, getStandardRegionsByModuleType(moduleType));
+    }
+
+    return standardRegions;
+  }
+
+  private static Set<Pattern> getStandardRegionsByModuleType(ModuleType moduleType) {
+
+    if (moduleType == ModuleType.Unknown) {
+      return Collections.emptySet();
+    }
 
     Set<Pattern> standardRegions = new HashSet<>();
 
@@ -136,7 +155,6 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
         break;
       default:
         // для Unknown ничего
-        return standardRegions;
     }
 
     // у всех типов модулей есть такая область
@@ -162,6 +180,14 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
+    // нет смысла говорить о стандартах для неизвестных модулях
+    Set<Pattern> standardRegions = standardRegionsByModuleType.getOrDefault(
+      documentContext.getModuleType(), Collections.emptySet());
+
+    if (standardRegions.isEmpty()) {
+      return ctx;
+    }
+
     List<RegionSymbol> regions = documentContext.getFileLevelRegions();
 
     // чтобы не было лишних FP, анализировать модуль без областей не будем
@@ -169,13 +195,6 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
     if (regions.isEmpty()) {
       return ctx;
     }
-
-    ModuleType moduleType = documentContext
-      .getServerContext()
-      .getConfiguration()
-      .getModuleType(documentContext.getUri());
-
-    Set<Pattern> standardRegions = getStandardRegions(moduleType);
 
     // проверим, что область находится в списке доступных
     regions.forEach((RegionSymbol region) -> {
