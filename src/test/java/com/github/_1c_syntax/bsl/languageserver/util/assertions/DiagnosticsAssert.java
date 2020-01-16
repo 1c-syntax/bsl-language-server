@@ -43,6 +43,14 @@ public class DiagnosticsAssert extends AbstractListAssert<DiagnosticsAssert, Lis
 
   }
 
+  public DiagnosticsAssert hasRange(int startLine, int startChar, int endChar) {
+
+    return anySatisfy(diagnostic ->
+      assertFactory.createAssert(diagnostic).hasRange(startLine, startChar, startLine, endChar)
+    );
+
+  }
+
   @Override
   protected DiagnosticAssert toAssert(Diagnostic value, String description) {
     return assertFactory.createAssert(value);

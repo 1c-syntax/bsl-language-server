@@ -113,6 +113,10 @@ public class DiagnosticInfo {
     return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key).intern();
   }
 
+  public String getResourceString(String key, Object... args) {
+    return String.format(getResourceString(key), args).intern();
+  }
+
   public DiagnosticType getType() {
     return diagnosticMetadata.type();
   }
@@ -122,7 +126,14 @@ public class DiagnosticInfo {
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
-    return severityToLSPSeverityMap.get(getSeverity());
+    var type = getType();
+    if (type == DiagnosticType.CODE_SMELL) {
+      return severityToLSPSeverityMap.get(getSeverity());
+    } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
+      return org.eclipse.lsp4j.DiagnosticSeverity.Warning;
+    } else {
+      return org.eclipse.lsp4j.DiagnosticSeverity.Error;
+    }
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {

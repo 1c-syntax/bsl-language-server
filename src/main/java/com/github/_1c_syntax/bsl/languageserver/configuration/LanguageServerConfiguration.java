@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -40,55 +42,58 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
+
 @Data
-@AllArgsConstructor
-@JsonDeserialize(using = LanguageServerConfiguration.LanguageServerConfigurationDeserializer.class)
+@AllArgsConstructor(onConstructor=@__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @Slf4j
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class LanguageServerConfiguration {
 
   public static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
   private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
-  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS = ComputeDiagnosticsTrigger.ONSAVE;
+  private static final boolean DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS = Boolean.TRUE;
+  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER
+    = ComputeDiagnosticsTrigger.ONSAVE;
+  private static final ComputeDiagnosticsSkipSupport DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT
+    = ComputeDiagnosticsSkipSupport.NEVER;
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
 
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
-  private ComputeDiagnosticsTrigger computeDiagnostics;
+  private boolean showCyclomaticComplexityCodeLens;
+  private ComputeDiagnosticsTrigger computeDiagnosticsTrigger;
+  private ComputeDiagnosticsSkipSupport computeDiagnosticsSkipSupport;
   @Nullable
   private File traceLog;
+  @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
   @Nullable
   private Path configurationRoot;
 
   private LanguageServerConfiguration() {
-    this(
-      DEFAULT_DIAGNOSTIC_LANGUAGE,
-      DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
-      DEFAULT_COMPUTE_DIAGNOSTICS,
-      null,
-      new HashMap<>(),
-      null
-    );
+    this(DEFAULT_DIAGNOSTIC_LANGUAGE);
   }
 
   private LanguageServerConfiguration(DiagnosticLanguage diagnosticLanguage) {
     this(
       diagnosticLanguage,
       DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
-      DEFAULT_COMPUTE_DIAGNOSTICS,
+      DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS,
+      DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER,
+      DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT,
       null,
       new HashMap<>(),
       null
@@ -99,6 +104,8 @@ public final class LanguageServerConfiguration {
     LanguageServerConfiguration configuration = null;
     if (configurationFile.exists()) {
       ObjectMapper mapper = new ObjectMapper();
+      mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
       try {
         configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
       } catch (IOException e) {
@@ -120,31 +127,67 @@ public final class LanguageServerConfiguration {
     return new LanguageServerConfiguration(diagnosticLanguage);
   }
 
-  static class LanguageServerConfigurationDeserializer extends JsonDeserializer<LanguageServerConfiguration> {
+  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
-    @Override
-    public LanguageServerConfiguration deserialize(JsonParser jp, DeserializationContext context) throws IOException {
-      JsonNode node = jp.getCodec().readTree(jp);
+    Path rootPath = null;
+    Path pathFromConfiguration = configuration.getConfigurationRoot();
 
-      DiagnosticLanguage diagnosticLanguage = getDiagnosticLanguage(node);
-      boolean showCognitiveComplexityCodeLens = getShowCognitiveComplexityCodeLens(node);
-      ComputeDiagnosticsTrigger computeDiagnostics = getComputeDiagnostics(node);
-      File traceLog = getTraceLog(node);
-      Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = getDiagnostics(node);
-      Path configurationRoot = getConfigurationRoot(node);
-
-      return new LanguageServerConfiguration(
-        diagnosticLanguage,
-        showCognitiveComplexityCodeLens,
-        computeDiagnostics,
-        traceLog,
-        diagnosticsMap,
-        configurationRoot
-      );
+    if (pathFromConfiguration == null) {
+      rootPath = Absolute.path(srcDir);
+    } else {
+      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
+      var absoluteSrcDir = Absolute.path(srcDir);
+      var absolutePathFromConfiguration = Absolute.path(pathFromConfiguration);
+      if (absolutePathFromConfiguration.startsWith(absoluteSrcDir)) {
+        rootPath = absolutePathFromConfiguration;
+      }
     }
 
-    private static Map<String, Either<Boolean, Map<String, Object>>> getDiagnostics(JsonNode node) {
-      JsonNode diagnostics = node.get("diagnostics");
+    if (rootPath != null) {
+      File fileConfiguration = getConfigurationFile(rootPath);
+      if (fileConfiguration != null) {
+        if (fileConfiguration.getAbsolutePath().endsWith(".mdo")) {
+          rootPath = Optional.of(fileConfiguration.toPath())
+            .map(Path::getParent)
+            .map(Path::getParent)
+            .map(Path::getParent)
+            .orElse(null);
+        } else {
+          rootPath = Optional.of(fileConfiguration.toPath())
+            .map(Path::getParent)
+            .orElse(null);
+        }
+      }
+    }
+
+    return rootPath;
+
+  }
+
+  private static File getConfigurationFile(Path rootPath) {
+    File configurationFile = null;
+    List<Path> listPath = new ArrayList<>();
+    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
+      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
+      listPath = stream.collect(Collectors.toList());
+    } catch (IOException e) {
+      LOGGER.error("Error on read configuration file", e);
+    }
+    if (!listPath.isEmpty()) {
+      configurationFile = listPath.get(0).toFile();
+    }
+    return configurationFile;
+  }
+
+  static class DiagnosticsDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
+
+    @Override
+    public Map<String, Either<Boolean, Map<String, Object>>> deserialize(
+      JsonParser p,
+      DeserializationContext context
+    ) throws IOException {
+
+      JsonNode diagnostics = p.getCodec().readTree(p);
 
       if (diagnostics == null) {
         return Collections.emptyMap();
@@ -160,7 +203,6 @@ public final class LanguageServerConfiguration {
           diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
         } else {
           Map<String, Object> diagnosticConfiguration = getDiagnosticConfiguration(mapper, entry.getValue());
-
           diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
         }
       });
@@ -174,8 +216,7 @@ public final class LanguageServerConfiguration {
     ) {
       Map<String, Object> diagnosticConfiguration;
       try {
-        JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {
-        });
+        JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {});
         diagnosticConfiguration = mapper.readValue(mapper.treeAsTokens(diagnosticConfig), type);
       } catch (IOException e) {
         LOGGER.error("Can't deserialize diagnostic configuration", e);
@@ -184,87 +225,6 @@ public final class LanguageServerConfiguration {
       return diagnosticConfiguration;
     }
 
-    private static DiagnosticLanguage getDiagnosticLanguage(JsonNode node) {
-      DiagnosticLanguage diagnosticLanguage;
-      if (node.get("diagnosticLanguage") != null) {
-        String diagnosticLanguageValue = node.get("diagnosticLanguage").asText();
-        diagnosticLanguage = DiagnosticLanguage.valueOf(diagnosticLanguageValue.toUpperCase(Locale.ENGLISH));
-      } else {
-        diagnosticLanguage = DEFAULT_DIAGNOSTIC_LANGUAGE;
-      }
-      return diagnosticLanguage;
-    }
-
-    private static boolean getShowCognitiveComplexityCodeLens(JsonNode node) {
-      boolean showCognitiveComplexityCodeLens = DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS;
-      if (node.get("showCognitiveComplexityCodeLens") != null) {
-        showCognitiveComplexityCodeLens = node.get("showCognitiveComplexityCodeLens").asBoolean();
-      }
-      return showCognitiveComplexityCodeLens;
-    }
-
-    private static ComputeDiagnosticsTrigger getComputeDiagnostics(JsonNode node) {
-      ComputeDiagnosticsTrigger computeDiagnostics = DEFAULT_COMPUTE_DIAGNOSTICS;
-      if (node.get("computeDiagnostics") != null) {
-        String computeDiagnosticsValue = node.get("computeDiagnostics").asText();
-        computeDiagnostics = ComputeDiagnosticsTrigger.valueOf(computeDiagnosticsValue.toUpperCase(Locale.ENGLISH));
-      }
-      return computeDiagnostics;
-    }
-
-    private static File getTraceLog(JsonNode node) {
-      File traceLog = null;
-      if (node.get("traceLog") != null) {
-        String traceLogValue = node.get("traceLog").asText();
-        traceLog = new File(traceLogValue);
-      }
-      return traceLog;
-    }
-
-    private static Path getConfigurationRoot(JsonNode node) {
-      Path configurationRoot = null;
-      if (node.get("configurationRoot") != null) {
-        String configurationRootValue = node.get("configurationRoot").asText();
-        configurationRoot = Absolute.path(configurationRootValue);
-      }
-      return configurationRoot;
-    }
-  }
-
-  public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
-    Path rootPath = null;
-    Path pathFromConfiguration = configuration.getConfigurationRoot();
-    if (pathFromConfiguration == null) {
-      rootPath = Absolute.path(srcDir);
-    } else {
-      // Проверим, что srcDir = pathFromConfiguration или что pathFromConfiguration находится внутри srcDir
-      if (pathFromConfiguration.startsWith(Absolute.path(srcDir))) {
-        rootPath = pathFromConfiguration;
-      }
-    }
-    if (rootPath != null){
-      File fileConfiguration = getConfigurationFile(rootPath);
-      if (fileConfiguration != null) {
-        rootPath = Paths.get(fileConfiguration.getParent());
-      }
-    }
-    return rootPath;
-  }
-
-
-  private static File getConfigurationFile(Path rootPath) {
-    File configurationFile = null;
-    List<Path> listPath = new ArrayList<>();
-    try (Stream<Path> stream = Files.find(rootPath, 50, (path, basicFileAttributes) ->
-      basicFileAttributes.isRegularFile() && searchConfiguration.matcher(path.getFileName().toString()).find())) {
-      listPath = stream.collect(Collectors.toList());
-    } catch (IOException e) {
-      LOGGER.error("Error on read configuration file", e);
-    }
-    if (!listPath.isEmpty()) {
-      configurationFile = listPath.get(0).toFile();
-    }
-    return configurationFile;
   }
 
 }

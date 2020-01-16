@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CodeLensProviderTest {
 
   @Test
-  void testGetCodeLens() throws IOException {
+  void testGetCodeLens() {
 
     // given
     String filePath = "./src/test/resources/providers/codeLens.bsl";
@@ -49,19 +49,24 @@ class CodeLensProviderTest {
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
 
     // then
-    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
+    Map<MethodSymbol, Integer> methodsCognitiveComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
+    Map<MethodSymbol, Integer> methodsCyclomaticComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity();
 
     MethodSymbol firstMethod = documentContext.getMethods().get(0);
     MethodSymbol secondMethod = documentContext.getMethods().get(1);
-    int cognitiveComplexityFirstMethod = methodsComplexity.get(firstMethod);
-    int cognitiveComplexitySecondMethod = methodsComplexity.get(secondMethod);
+    int cognitiveComplexityFirstMethod = methodsCognitiveComplexity.get(firstMethod);
+    int cognitiveComplexitySecondMethod = methodsCognitiveComplexity.get(secondMethod);
+    int cyclomaticComplexityFirstMethod = methodsCyclomaticComplexity.get(firstMethod);
+    int cyclomaticComplexitySecondMethod = methodsCyclomaticComplexity.get(secondMethod);
 
-    assertThat(codeLenses).hasSize(2);
+    assertThat(codeLenses).hasSize(4);
     assertThat(codeLenses)
       .anyMatch(codeLens -> codeLens.getRange().equals(firstMethod.getSubNameRange()))
       .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cognitiveComplexityFirstMethod)))
+      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cyclomaticComplexityFirstMethod)))
       .anyMatch(codeLens -> codeLens.getRange().equals(secondMethod.getSubNameRange()))
       .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cognitiveComplexitySecondMethod)))
+      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cyclomaticComplexitySecondMethod)))
     ;
 
   }

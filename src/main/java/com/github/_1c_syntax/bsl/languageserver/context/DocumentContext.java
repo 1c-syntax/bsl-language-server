@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
@@ -31,12 +32,15 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -61,29 +65,33 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 public class DocumentContext {
 
-  private String content;
-  private ServerContext context;
   private final URI uri;
   private final FileType fileType;
+  private String content;
+  private ServerContext context;
   private Tokenizer tokenizer;
 
   private ReentrantLock computeLock = new ReentrantLock();
 
   private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
-  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
+    = new Lazy<>(this::computeSupportVariants, computeLock);
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
-  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
   private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
+  private Lazy<CyclomaticComplexityComputer.Data> cyclomaticComplexityData
+    = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
-  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
-    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
-
   private boolean adjustingRegions;
   private boolean regionsAdjusted;
+  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
+  private Lazy<List<RegionSymbol>> fileLevelRegions = new Lazy<>(this::computeFileLevelRegions, computeLock);
+  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
+    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     final Path absolutePath = Absolute.path(uri);
@@ -159,6 +167,11 @@ public class DocumentContext {
     return new ArrayList<>(regionsFlatUnboxed);
   }
 
+  public List<RegionSymbol> getFileLevelRegions() {
+    final List<RegionSymbol> fileLevelRegionsUnboxed = fileLevelRegions.getOrCompute();
+    return new ArrayList<>(fileLevelRegionsUnboxed);
+  }
+
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
@@ -178,18 +191,23 @@ public class DocumentContext {
     Position start = range.getStart();
     Position end = range.getEnd();
 
+    String[] contentListUnboxed = getContentList();
+
+    if (start.getLine() > contentListUnboxed.length || end.getLine() > contentListUnboxed.length) {
+      throw new ArrayIndexOutOfBoundsException("Range goes beyond the boundaries of the parsed document");
+    }
+
+    String startString = contentListUnboxed[start.getLine()];
     StringBuilder sb = new StringBuilder();
 
-    String[] contentListUnboxed = getContentList();
-    String startString = contentListUnboxed[start.getLine()];
     if (start.getLine() == end.getLine()) {
       sb.append(startString, start.getCharacter(), end.getCharacter());
     } else {
-      sb.append(startString.substring(start.getCharacter()));
+      sb.append(startString.substring(start.getCharacter())).append("\n");
     }
 
     for (int i = start.getLine() + 1; i <= end.getLine() - 1; i++) {
-      sb.append(contentListUnboxed[i]);
+      sb.append(contentListUnboxed[i]).append("\n");
     }
 
     if (start.getLine() != end.getLine()) {
@@ -215,12 +233,21 @@ public class DocumentContext {
     return cognitiveComplexityData.getOrCompute();
   }
 
+
+  public CyclomaticComplexityComputer.Data getCyclomaticComplexityData() {
+    return cyclomaticComplexityData.getOrCompute();
+  }
+
   public DiagnosticIgnoranceComputer.Data getDiagnosticIgnorance() {
     return diagnosticIgnoranceData.getOrCompute();
   }
 
   public ModuleType getModuleType() {
     return moduleType.getOrCompute();
+  }
+
+  public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
+    return supportVariants.getOrCompute();
   }
 
   public void rebuild(String content) {
@@ -254,6 +281,7 @@ public class DocumentContext {
 
     metrics.clear();
     cognitiveComplexityData.clear();
+    cyclomaticComplexityData.clear();
     methods.clear();
     regions.clear();
     regionsFlat.clear();
@@ -286,6 +314,18 @@ public class DocumentContext {
       .collect(Collectors.toList());
   }
 
+  private List<RegionSymbol> computeFileLevelRegions() {
+    List<Range> methodRanges = getMethods().stream()
+      .map(MethodSymbol::getRange).collect(Collectors.toList());
+
+    return getRegions().stream()
+      .filter(region -> methodRanges.stream().noneMatch(methodRange ->
+        Ranges.containsRange(methodRange,
+          Ranges.create(region))
+      ))
+      .collect(Collectors.toList());
+  }
+
   private List<MethodSymbol> computeMethods() {
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
     return methodSymbolComputer.compute();
@@ -299,16 +339,21 @@ public class DocumentContext {
   }
 
   private ModuleType computeModuleType() {
-    ModuleType type = context.getConfiguration().getModuleType(uri);
-    if (type == null) {
-      type = ModuleType.ObjectModule;
-    }
-    return type;
+    return context.getConfiguration().getModuleType(uri);
+  }
+
+  private Map<SupportConfiguration, SupportVariant> computeSupportVariants() {
+    return context.getConfiguration().getModuleSupport(uri);
   }
 
   private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
     Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
     return cognitiveComplexityComputer.compute();
+  }
+
+  private CyclomaticComplexityComputer.Data computeCyclomaticComplexity() {
+    Computer<CyclomaticComplexityComputer.Data> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
+    return cyclomaticComplexityComputer.compute();
   }
 
   private void adjustRegions() {
@@ -363,6 +408,7 @@ public class DocumentContext {
     metricsTemp.setStatements(statements);
 
     metricsTemp.setCognitiveComplexity(getCognitiveComplexityData().getFileComplexity());
+    metricsTemp.setCyclomaticComplexity(getCyclomaticComplexityData().getFileComplexity());
 
     return metricsTemp;
   }

@@ -23,9 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
-import com.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
-import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
-import com.github._1c_syntax.mdclasses.metadata.configurations.EmptyConfiguration;
+import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import org.eclipse.lsp4j.TextDocumentItem;
 
 import javax.annotation.CheckForNull;
@@ -37,7 +35,7 @@ import java.util.Map;
 
 public class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
-  private final Lazy<AbstractConfiguration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   private Path configurationRoot;
 
@@ -94,19 +92,16 @@ public class ServerContext {
     this.configurationRoot = configurationRoot;
   }
 
-  public AbstractConfiguration getConfiguration() {
+  public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
-  private AbstractConfiguration computeConfigurationMetadata() {
+  private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return new EmptyConfiguration();
+      return Configuration.newBuilder().build();
     }
 
-    ConfigurationBuilder configurationBuilder =
-      new ConfigurationBuilder(configurationRoot);
-
-    return configurationBuilder.build();
+    return Configuration.newBuilder(configurationRoot).build();
   }
 
 

@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Major` | `Yes` | `2` | `error` |
+| `Error` | `BSL` | `Major` | `Yes` | `2` | `error`<br/>`localize` |
 
 ## Parameters 
 

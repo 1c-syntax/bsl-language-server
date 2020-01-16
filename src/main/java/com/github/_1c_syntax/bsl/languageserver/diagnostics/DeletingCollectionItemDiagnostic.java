@@ -51,7 +51,8 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
     "(удалить|delete)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
-  private static final Predicate<MethodCallContext> MATCH_METHOD_CALL_DELETE = e -> DELETE_CALL_PATTERN.matcher(e.methodName().getText()).matches();
+  private static final Predicate<MethodCallContext> MATCH_METHOD_CALL_DELETE
+    = e -> DELETE_CALL_PATTERN.matcher(e.methodName().getText()).matches();
 
   public DeletingCollectionItemDiagnostic(DiagnosticInfo info) {
     super(info);

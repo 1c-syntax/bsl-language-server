@@ -69,8 +69,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final int INDEX_WORD_LEFT = 0;
   private static final int INDEX_WORD_RIGHT = 1;
   private static final int INDEX_WORD_LEFT_RIGHT = 2;
+  private static final int COUNT_WORDS = 3;
 
-  private final String[] sampleMessage = new String[3];
+  private final String[] sampleMessage = new String[COUNT_WORDS];
 
   @DiagnosticParameter(
     type = String.class,

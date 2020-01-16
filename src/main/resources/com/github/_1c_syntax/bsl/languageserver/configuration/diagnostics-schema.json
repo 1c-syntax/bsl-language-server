@@ -24,6 +24,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeOutOfRegion": {
+            "description": "Code out of region",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Code out of region",
+            "$id": "#/definitions/CodeOutOfRegion"
+        },
         "CognitiveComplexity": {
             "description": "Cognitive complexity",
             "default": null,
@@ -106,6 +116,30 @@
             "title": "Execution query on cycle",
             "$id": "#/definitions/CreateQueryInCycle"
         },
+        "CyclomaticComplexity": {
+            "description": "Cyclomatic complexity",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Cyclomatic complexity",
+            "properties": {
+                "complexityThreshold": {
+                    "description": "Complexity threshold",
+                    "default": 10,
+                    "type": "integer",
+                    "title": "Complexity threshold"
+                },
+                "checkModuleBody": {
+                    "description": "Check module body",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check module body"
+                }
+            },
+            "$id": "#/definitions/CyclomaticComplexity"
+        },
         "DeletingCollectionItem": {
             "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "default": null,
@@ -135,6 +169,16 @@
             ],
             "title": "Restriction on the use of deprecated \"Message\" method",
             "$id": "#/definitions/DeprecatedMessage"
+        },
+        "DuplicateRegion": {
+            "description": "Duplicate regions",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Duplicate regions",
+            "$id": "#/definitions/DuplicateRegion"
         },
         "EmptyCodeBlock": {
             "description": "Empty code block",
@@ -184,6 +228,16 @@
             "title": "Commas without a parameter at the end of a method call",
             "$id": "#/definitions/ExtraCommas"
         },
+        "FormDataToValue": {
+            "description": "FormDataToValue method call",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "FormDataToValue method call",
+            "$id": "#/definitions/FormDataToValue"
+        },
         "FunctionShouldHaveReturn": {
             "description": "The function should have return",
             "default": null,
@@ -193,6 +247,16 @@
             ],
             "title": "The function should have return",
             "$id": "#/definitions/FunctionShouldHaveReturn"
+        },
+        "GetFormMethod": {
+            "description": "GetForm method call",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "GetForm method call",
+            "$id": "#/definitions/GetFormMethod"
         },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
@@ -484,6 +548,16 @@
             "title": "Non export methods in API regions",
             "$id": "#/definitions/NonExportMethodsInApiRegion"
         },
+        "NonStandardRegion": {
+            "description": "Non-standard region of module",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Non-standard region of module",
+            "$id": "#/definitions/NonStandardRegion"
+        },
         "NumberOfOptionalParams": {
             "description": "Limit number of optional parameters in method",
             "default": null,
@@ -743,6 +817,16 @@
             ],
             "title": "Unused local method",
             "$id": "#/definitions/UnusedLocalMethod"
+        },
+        "UnusedParameters": {
+            "description": "Unused parameter",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused parameter",
+            "$id": "#/definitions/UnusedParameters"
         },
         "UseLessForEach": {
             "description": "Useless collection iteration",

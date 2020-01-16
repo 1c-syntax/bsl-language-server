@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,6 @@ import java.util.stream.Collectors;
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.OS,
   minutesToFix = 1,
-  activatedByDefault = true,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.SUSPICIOUS
@@ -49,8 +49,13 @@ import java.util.stream.Collectors;
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern attachablePattern = Pattern.compile(
+  private static final Pattern ATTACHABLE_PATTERN = Pattern.compile(
     "(подключаемый_.*|attachable_.*)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
+  private static final Pattern HANDLER_PATTERN = Pattern.compile(
+    "(ПриСозданииОбъекта|OnObjectCreate)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
@@ -58,12 +63,21 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
+  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
+    return ATTACHABLE_PATTERN.matcher(subNameContext.getText()).matches();
+  }
+
+  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
+    return HANDLER_PATTERN.matcher(subNameContext.getText()).matches();
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
     List<String> collect = Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
-      .map(parseTree -> ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase())
+      .map(parseTree ->
+        ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
       .collect(Collectors.toList());
 
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_subName)
@@ -72,19 +86,9 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
       .filter(subNameContext -> Trees.findAllTokenNodes(subNameContext.getParent(), BSLLexer.EXPORT_KEYWORD).isEmpty())
       .filter(subNameContext -> !isAttachable(subNameContext))
       .filter(subNameContext -> !isHandler(subNameContext))
-      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase()))
+      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase(Locale.ENGLISH)))
       .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getMessage(node.getText())));
 
     return ctx;
   }
-
-  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
-    return attachablePattern.matcher(subNameContext.getText()).matches();
-  }
-
-  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
-    // TODO Тут опредлять что это обработчик
-    return false;
-  }
-
 }

@@ -11,7 +11,7 @@
                 "object"
             ],
             "title": "Concrete diagnostic configuration.\nCan be boolean for turning on/off or object.",
-            "default": null
+            "default": true
         }
     },
     "properties": {
@@ -37,8 +37,14 @@
             "title": "Show cognitive complexity score above method definition (codeLens).",
             "default": true
         },
-        "computeDiagnostics": {
-            "$id": "#/properties/computeDiagnostics",
+        "showCyclomaticComplexityCodeLens": {
+            "$id": "#/properties/showCyclomaticComplexityCodeLens",
+            "type": "boolean",
+            "title": "Show cyclomatic complexity score above method definition (codeLens).",
+            "default": true
+        },
+        "computeDiagnosticsTrigger": {
+            "$id": "#/properties/computeDiagnosticsTrigger",
             "type": "string",
             "oneOf": [
                 {
@@ -56,6 +62,26 @@
             ],
             "title": "Trigger for the computation of diagnostics.",
             "default": "onSave"
+        },
+        "computeDiagnosticsSkipSupport": {
+            "$id": "#/properties/computeDiagnosticsSkipSupport",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "withSupport",
+                    "description": "Skip computing diagnostics on modules with any kind of support."
+                },
+                {
+                    "const": "withSupportLocked",
+                    "description": "Skip computing diagnostics on modules with `not editable` support mode."
+                },
+                {
+                    "const": "never",
+                    "description": "Never skip computing."
+                }
+            ],
+            "title": "Analyze module support variant and skip all diagnostics if necessary.",
+            "default": "never"
         },
         "traceLog": {
             "$id": "#/properties/traceLog",
@@ -81,6 +107,9 @@
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
+                "CodeOutOfRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/CodeOutOfRegion"
+                },
                 "CognitiveComplexity": {
                     "$ref": "diagnostics-schema.json#/definitions/CognitiveComplexity"
                 },
@@ -99,6 +128,9 @@
                 "CreateQueryInCycle": {
                     "$ref": "diagnostics-schema.json#/definitions/CreateQueryInCycle"
                 },
+                "CyclomaticComplexity": {
+                    "$ref": "diagnostics-schema.json#/definitions/CyclomaticComplexity"
+                },
                 "DeletingCollectionItem": {
                     "$ref": "diagnostics-schema.json#/definitions/DeletingCollectionItem"
                 },
@@ -107,6 +139,9 @@
                 },
                 "DeprecatedMessage": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
+                },
+                "DuplicateRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/DuplicateRegion"
                 },
                 "EmptyCodeBlock": {
                     "$ref": "diagnostics-schema.json#/definitions/EmptyCodeBlock"
@@ -120,8 +155,14 @@
                 "ExtraCommas": {
                     "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
                 },
+                "FormDataToValue": {
+                    "$ref": "diagnostics-schema.json#/definitions/FormDataToValue"
+                },
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
+                },
+                "GetFormMethod": {
+                    "$ref": "diagnostics-schema.json#/definitions/GetFormMethod"
                 },
                 "IdenticalExpressions": {
                     "$ref": "diagnostics-schema.json#/definitions/IdenticalExpressions"
@@ -176,6 +217,9 @@
                 },
                 "NonExportMethodsInApiRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/NonExportMethodsInApiRegion"
+                },
+                "NonStandardRegion": {
+                    "$ref": "diagnostics-schema.json#/definitions/NonStandardRegion"
                 },
                 "NumberOfOptionalParams": {
                     "$ref": "diagnostics-schema.json#/definitions/NumberOfOptionalParams"
@@ -242,6 +286,9 @@
                 },
                 "UnusedLocalMethod": {
                     "$ref": "diagnostics-schema.json#/definitions/UnusedLocalMethod"
+                },
+                "UnusedParameters": {
+                    "$ref": "diagnostics-schema.json#/definitions/UnusedParameters"
                 },
                 "UseLessForEach": {
                     "$ref": "diagnostics-schema.json#/definitions/UseLessForEach"

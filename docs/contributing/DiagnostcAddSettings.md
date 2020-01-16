@@ -18,8 +18,7 @@
 ```java
 @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
-    description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)"
+    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
   )
   private String commentsAnnotation = DEFAULT_COMMENTS_ANNOTATION;
 
@@ -58,6 +57,16 @@ configuration.put("commentsAnnotation", "//(с)");
 diagnosticInstance.configure(configuration);
 
 ```
+
+### Добавление описания параметров
+
+Для корректной работы необходимо в ресурсных файлах диагностики добавить для каждого языка описание параметра.  
+Ресурсы диагностики расположены в файлах `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_en.properties` и `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_ru.properties`.  
+В каждом файле необходимо добавить новую строку с именем параметра и его описанием
+
+```ini
+commentsAnnotation=Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)
+```                   
 
 ### Доработка документации
 
