@@ -38,13 +38,26 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics, true)
-      .hasRange(17, 10, 17, 12)
-      .hasRange(31, 0, 31, 13)
-      .hasRange(4, 0, 4, 8)
+      .hasRange(4, 0, 8)
+      // TODO так вообще то правильно, но пока следующая строка .hasRange(9, 0, 9)
       .hasRange(8, 0, 9, 9)
+      .hasRange(17, 10, 13)
+      .hasRange(24, 10, 12)
+      .hasRange(46, 0, 13)
+      .hasRange(57, 0, 7)
+      .hasRange(61, 0, 28)
+      .hasRange(63, 0, 30)
     ;
+
+  }
+
+  @Test
+  void emptyTest() {
+
+    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmpty");
+    assertThat(diagnostics).hasSize(0);
 
   }
 

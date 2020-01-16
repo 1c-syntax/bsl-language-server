@@ -65,15 +65,15 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     regionsRanges.clear();
 
     // если областей нет, то и смысла дальше анализировть тоже нет
-    if (regions.isEmpty()) {
-      if (ctx.getTokens().size() > 0) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-
+    if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
+      diagnosticStorage.addDiagnostic(ctx);
       return ctx;
     }
 
-    regions.forEach(region -> regionsRanges.add(Ranges.create(region)));
+    regions.forEach(region ->
+      regionsRanges.add(Ranges.create(region))
+    );
+
     return super.visitFile(ctx);
 
   }
@@ -121,8 +121,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
       .forEach((ParseTree child) -> {
         if (child.getParent() instanceof BSLParser.CodeBlockContext
-          && Trees.findAllRuleNodes(child, BSLParser.RULE_regionEnd).isEmpty()
-          && Trees.findAllRuleNodes(child, BSLParser.RULE_regionStart).isEmpty()) {
+          && Trees.findAllRuleNodes(child, BSLParser.RULE_preprocessor).isEmpty()) {
 
           Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
