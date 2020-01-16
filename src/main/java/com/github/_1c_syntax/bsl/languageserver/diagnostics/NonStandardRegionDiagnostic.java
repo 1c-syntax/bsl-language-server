@@ -179,7 +179,8 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
 
     // проверим, что область находится в списке доступных
     regions.forEach((RegionSymbol region) -> {
-      if (standardRegions.stream().noneMatch(regionName -> regionName.matcher(region.getName()).find())) {
+      if (region.getStartNode() != null
+      && standardRegions.stream().noneMatch(regionName -> regionName.matcher(region.getName()).find())) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(region.getStartNode().getStart(), region.getStartNode().getStop()),
           info.getMessage(region.getName())
