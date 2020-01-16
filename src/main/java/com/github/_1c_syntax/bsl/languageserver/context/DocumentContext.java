@@ -319,9 +319,10 @@ public class DocumentContext {
       .map(MethodSymbol::getRange).collect(Collectors.toList());
 
     return getRegions().stream()
-      .filter(region -> methodRanges.stream().noneMatch(methodRange ->
-        Ranges.containsRange(methodRange,
-          Ranges.create(region))
+      .filter(region ->
+          region.getStartNode() != null
+            && methodRanges.stream().noneMatch(methodRange ->
+            Ranges.containsRange(methodRange,Ranges.create(region))
       ))
       .collect(Collectors.toList());
   }
