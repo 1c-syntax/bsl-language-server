@@ -38,7 +38,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(8);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(4, 0, 8)
       // TODO так вообще то правильно, но пока следующая строка .hasRange(9, 0, 9)
@@ -47,8 +47,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
       .hasRange(24, 10, 12)
       .hasRange(46, 0, 13)
       .hasRange(57, 0, 7)
-      .hasRange(61, 0, 28)
-      .hasRange(63, 0, 30)
+      .hasRange(59, 0, 69, 9)
     ;
 
   }
