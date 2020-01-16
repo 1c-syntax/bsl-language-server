@@ -162,13 +162,8 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
-    ModuleType moduleType = documentContext
-      .getServerContext()
-      .getConfiguration()
-      .getModuleType(documentContext.getUri());
-
     // нет смысла говорить о стандартах для неизвестных модулях
-    Set<Pattern> standardRegions = getStandardRegions(moduleType);
+    Set<Pattern> standardRegions = getStandardRegions(documentContext.getModuleType());
     if (standardRegions.isEmpty()) {
       return ctx;
     }
