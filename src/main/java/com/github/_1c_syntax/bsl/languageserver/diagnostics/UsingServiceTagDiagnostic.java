@@ -46,7 +46,10 @@ import java.util.regex.Pattern;
 public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки"
-    + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG";
+    + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
+    + "|Вставить\\s*содержимое\\s*обработчика"
+    + "|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code"
+    + "|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents";
 
   @DiagnosticParameter(
     type = String.class,

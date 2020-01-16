@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `serviceTags` | `String` | ```Service tags``` | ```todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG``` |
+| `serviceTags` | `String` | ```Service tags``` | ```todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG|Вставить\s*содержимое\s*обработчика|Paste\s*handler\s*content|Insert\s*handler\s*code|Insert\s*handler\s*content|Insert\s*handler\s*contents``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -26,6 +26,10 @@ The diagnostic finds use of service tags in comments. Tags list:
 - КОНСТРУКТОР_ДВИЖЕНИЙ_РЕГИСТРОВ
 - КОНСТРУКТОР_ПЕЧАТИ
 - КОНСТРУКТОР_ВВОДА_НА_ОСНОВАНИИ
+- Вставить содержимое обработчика
+- Insert handler code
+- Insert handler contents
+- Paste handler content
 
 Tags list can be extended via options.
 
@@ -43,6 +47,6 @@ Tags list can be extended via options.
 
 ```json
 "UsingServiceTag": {
-    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
+    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG|Вставить\\s*содержимое\\s*обработчика|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents"
 }
 ```

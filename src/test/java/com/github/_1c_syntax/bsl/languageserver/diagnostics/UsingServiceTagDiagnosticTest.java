@@ -42,7 +42,7 @@ class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingServiceT
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(15);
+    assertThat(diagnostics).hasSize(21);
     assertThat(diagnostics, true)
       .hasRange(1, 0, 1, 36)
       .hasRange(13, 4, 13, 50)
@@ -58,7 +58,13 @@ class UsingServiceTagDiagnosticTest extends AbstractDiagnosticTest<UsingServiceT
       .hasRange(61, 4, 61, 51)
       .hasRange(65, 0, 65, 11)
       .hasRange(67, 0, 67, 11)
-      .hasRange(71, 4, 71, 36);
+      .hasRange(71, 4, 71, 36)
+      .hasRange(77, 4, 77, 39)
+      .hasRange(82, 4, 82, 27)
+      .hasRange(88, 4, 88, 31)
+      .hasRange(98, 4, 98, 38)
+      .hasRange(105, 4, 105, 28)
+      .hasRange(112, 4, 112, 29);
 
   }
 

@@ -953,7 +953,7 @@
             "properties": {
                 "serviceTags": {
                     "description": "Service tags",
-                    "default": "todo|fixme|!!|mrg|@|\u043e\u0442\u043b\u0430\u0434\u043a\u0430|debug|\u0434\u043b\u044f\\s*\u043e\u0442\u043b\u0430\u0434\u043a\u0438|(\\{\\{|\\}\\})\u041a\u041e\u041d\u0421\u0422\u0420\u0423\u041a\u0422\u041e\u0420_|(\\{\\{|\\}\\})MRG",
+                    "default": "todo|fixme|!!|mrg|@|\u043e\u0442\u043b\u0430\u0434\u043a\u0430|debug|\u0434\u043b\u044f\\s*\u043e\u0442\u043b\u0430\u0434\u043a\u0438|(\\{\\{|\\}\\})\u041a\u041e\u041d\u0421\u0422\u0420\u0423\u041a\u0422\u041e\u0420_|(\\{\\{|\\}\\})MRG|\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044c\\s*\u0441\u043e\u0434\u0435\u0440\u0436\u0438\u043c\u043e\u0435\\s*\u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0447\u0438\u043a\u0430|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents",
                     "type": "string",
                     "title": "Service tags"
                 }

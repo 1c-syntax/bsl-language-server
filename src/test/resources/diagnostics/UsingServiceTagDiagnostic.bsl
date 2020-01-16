@@ -72,3 +72,43 @@
     // для отладки: просто проверка?
     Возврат 1;
 КонецФункции
+
+Процедура ОбработкаПроверкиЗаполнения(Отказ, ПроверяемыеРеквизиты)
+    // С таким комментарием генерирует 1С обработчики
+    // Вставить содержимое обработчика.
+КонецПроцедуры
+
+Procedure Posting(Cancel, PostingMode)
+    // Вариант на английском для модуля объекта
+    // Insert handler code.
+EndProcedure
+
+&AtServer
+Procedure Command1AtServer()
+    // Вариант на английском для модуля формы
+    // Insert handler contents.
+EndProcedure
+
+&AtClient
+Procedure Command1(Command)
+	Command1AtServer();
+EndProcedure
+
+&НаКлиенте
+Процедура ОбработкаКоманды(ПараметрКоманды, ПараметрыВыполненияКоманды)
+    //Вставить содержимое обработчика.
+	//ПараметрыФормы = Новый Структура("", );
+	//ОткрытьФорму("Обработка.Обработка1.Форма", ПараметрыФормы, ПараметрыВыполненияКоманды.Источник, ПараметрыВыполненияКоманды.Уникальность, ПараметрыВыполненияКоманды.Окно, ПараметрыВыполненияКоманды.НавигационнаяСсылка);
+КонецПроцедуры
+
+&AtClient
+Procedure CommandProcessing(CommandParameter, CommandExecuteParameters)
+    //Paste handler content.
+	//FormParameters = New Structure("", );
+	//OpenForm("Document.Document1.ListForm", FormParameters, CommandExecuteParameters.Source, CommandExecuteParameters.Uniqueness, CommandExecuteParameters.Window, CommandExecuteParameters.URL);
+EndProcedure
+
+&AtClient
+Procedure AfterWrite(WriteParameters)
+    //Insert handler contents
+EndProcedure
