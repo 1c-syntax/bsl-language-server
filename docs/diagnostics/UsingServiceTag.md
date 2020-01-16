@@ -26,6 +26,10 @@
 * КОНСТРУКТОР_ДВИЖЕНИЙ_РЕГИСТРОВ
 * КОНСТРУКТОР_ПЕЧАТИ
 * КОНСТРУКТОР_ВВОДА_НА_ОСНОВАНИИ
+* Вставить содержимое обработчика
+* Insert handler code
+* Insert handler contents
+* Paste handler content
 
 Список тегов так же можно расширить через настройки.
 
@@ -43,6 +47,6 @@
 
 ```json
 "UsingServiceTag": {
-    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
+    "serviceTags": "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG|Вставить\\s*содержимое\\s*обработчика|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents"
 }
 ```
