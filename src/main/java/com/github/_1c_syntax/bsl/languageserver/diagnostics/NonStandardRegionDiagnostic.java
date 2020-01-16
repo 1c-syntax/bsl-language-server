@@ -162,6 +162,17 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
+    ModuleType moduleType = documentContext
+      .getServerContext()
+      .getConfiguration()
+      .getModuleType(documentContext.getUri());
+
+    // нет смысла говорить о стандартах для неизвестных модулях
+    Set<Pattern> standardRegions = getStandardRegions(moduleType);
+    if (standardRegions.isEmpty()) {
+      return ctx;
+    }
+
     List<RegionSymbol> regions = documentContext.getFileLevelRegions();
 
     // чтобы не было лишних FP, анализировать модуль без областей не будем
@@ -170,17 +181,9 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    ModuleType moduleType = documentContext
-      .getServerContext()
-      .getConfiguration()
-      .getModuleType(documentContext.getUri());
-
-    Set<Pattern> standardRegions = getStandardRegions(moduleType);
-
     // проверим, что область находится в списке доступных
     regions.forEach((RegionSymbol region) -> {
-      if (region.getStartNode() != null
-      && standardRegions.stream().noneMatch(regionName -> regionName.matcher(region.getName()).find())) {
+      if (standardRegions.stream().noneMatch(regionName -> regionName.matcher(region.getName()).find())) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(region.getStartNode().getStart(), region.getStartNode().getStop()),
           info.getMessage(region.getName())
