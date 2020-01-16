@@ -41,6 +41,7 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -119,10 +120,11 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   private void addDiagnosticForFileCodeBlock(BSLParserRuleContext ctx) {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+      .stream()
+      .filter(node -> node.getParent().getParent() == ctx)
       .forEach((ParseTree child) -> {
-        if (child.getParent() instanceof BSLParser.CodeBlockContext
-          && Trees.findAllRuleNodes(child, BSLParser.RULE_preprocessor).isEmpty()) {
-
+        if (child.getChildCount() > 1
+          || !(child.getChild(0) instanceof BSLParser.PreprocessorContext)) {
           Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
             Ranges.containsRange(regionRange, ctxRange))) {
