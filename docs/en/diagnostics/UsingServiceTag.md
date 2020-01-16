@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `serviceTags` | `String` | ```Service tags``` | ```todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG``` |
+| `serviceTags` | `String` | ```Service tags``` | ```todo|fixme|!!|mrg|@|отладка|debug|для\s*отладки|(\{\{|\}\})КОНСТРУКТОР_|(\{\{|\}\})MRG|Вставить\s*содержимое\s*обработчика|Paste\s*handler\s*content|Insert\s*handler\s*code|Insert\s*handler\s*content|Insert\s*handler\s*contents``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
