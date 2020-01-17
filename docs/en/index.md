@@ -18,6 +18,7 @@
 - <a href="#configuration">Configuration file</a>
 - <a href="reporters">Reporters</a>
 - <a href="diagnostics">Diagnostics</a>
+- <a href="features">Features</a>
 - <a href="#thanks">Special thanks</a>
 
 <a id="capabilities"></a>
