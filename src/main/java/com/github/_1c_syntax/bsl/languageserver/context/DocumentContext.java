@@ -285,6 +285,7 @@ public class DocumentContext {
     methods.clear();
     regions.clear();
     regionsFlat.clear();
+    fileLevelRegions.clear();
     diagnosticIgnoranceData.clear();
   }
 
