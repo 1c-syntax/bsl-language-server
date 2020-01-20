@@ -59,8 +59,8 @@ jobs:
         mkdir temp
         cp mkdocs.yml temp
         cp -R docs/. temp/docs
-        mkdir temp/docs/assets/configuration
-        cp -R src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/. temp/docs/assets/configuration
+        mkdir temp/docs/configuration
+        cp -R src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/. temp/docs/configuration
         rm -rf temp/docs/en
         cd temp
         mkdocs build
@@ -86,8 +86,8 @@ jobs:
         cp -R docs/en/. temp/docs
         mkdir temp/docs/assets
         cp -R docs/assets/. temp/docs/assets
-        mkdir temp/docs/assets/configuration
-        cp -R src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/. temp/docs/assets/configuration
+        mkdir temp/docs/configuration
+        cp -R src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/. temp/docs/configuration
         cd temp
         mkdocs build
         
