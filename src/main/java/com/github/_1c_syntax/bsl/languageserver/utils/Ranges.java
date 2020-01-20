@@ -52,7 +52,7 @@ public final class Ranges {
     int endLine = endToken.getLine() - 1;
     int endChar;
     if (endToken.getType() == Token.EOF) {
-      endChar = 0;
+      endChar = endToken.getCharPositionInLine();
     } else {
       endChar = endToken.getCharPositionInLine() + endToken.getText().length();
     }
