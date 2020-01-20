@@ -1,0 +1,1 @@
+# Конфигурирование BSL Language Server

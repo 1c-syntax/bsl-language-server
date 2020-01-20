@@ -18,6 +18,7 @@
 - <a href="#configuration">Configuration file</a>
 - <a href="reporters">Reporters</a>
 - <a href="diagnostics">Diagnostics</a>
+- <a href="features">Features</a>
 - <a href="#thanks">Special thanks</a>
 
 <a id="capabilities"></a>
@@ -95,44 +96,7 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 
 ## Configuration file
 
-Configuration file is a file in JSON format. The file can contain the following blocks:
-
-- `diagnosticLanguage` - `String` - diagnostics text language. Valid values: `en` or `ru`. By default set to `ru`.
-- `showCognitiveComplexityCodeLens` - `Boolean` - show cognitive complexity score above method definition (codeLens). By default set to `true`.
-- `showCyclomaticComplexityCodeLens` - `Boolean` - show cyclomatic complexity score above method definition (codeLens). By default set to `true`.
-- `computeDiagnosticsTrigger` - `String` - trigger for the computation of diagnostics. Valid values: `onType` (on file edit), `onSave` (on file save), `never`. By default set to `onSave`.
-- `computeDiagnosticsSkipSupport` - `String` - skip computing diagnostics according to module's support mode (if there is a parent configuration).  Valid values: `never` (never skip computing), `withSupport` (skip computing on modules with any kind of support), `withSupportLocked` (skip computing diagnostics on modules with `not editable` support mode). By default - `never`.
-- `traceLog` - `String` - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set ** significantly slows down** communication speed between server and client. By default - not set.
-- `diagnostics` - `Object` - diagnostics settings collection. Collection items are objects with the structure as following:
-    - object key - `String` - diagnostics key, as given in section <a href="diagnostics">Diagnostics</a>.
-    - object value
-        - `Boolean` - `false` to disable diagnostics, `true` - to enable diagnostics without additional settings. By default set to `true`.
-        - `Object` - Structure of settings for each diagnostics. Available parameters are give in each diagnostics section.
-
-You may use this JSON-schema to simplify file editing:
-
-```
-https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json
-```
-
-Configuration file example, setting:
-
-- diagnostics text language - Russian;
-- [LineLength - Line length limit](diagnostics/LineLength.md) diagnostics settings - max line length set to 140 characters;
-- [MethodSize - Method size limit](diagnostics/MethodSize.md) diagnostics settings - disabled;
-
-```json
-{
-  "$schema": "https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json",
-  "diagnosticLanguage": "en",
-  "diagnostics": {
-    "LineLength": {
-      "maxLineLength": 140
-    },
-    "MethodSize": false
-  }
-}
-```
+A detailed description of the configuration file is given on [this page](features/ConfigurationFile.md)
 
 <a id="thanks"></a>
 
