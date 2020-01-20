@@ -7,8 +7,8 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
     @OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()
 
-    private var schemaPath = "docs/assets/configuration/schema.json"
-    private var diagnosticSchemaPath = "docs/assets/configuration/diagnostics-schema.json"
+    private var schemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json"
+    private var diagnosticSchemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics-schema.json"
 
     private var templateDocHeader = "# <Description> (<DiagnosticKey>)\n\n<Metadata>\n<Params>" +
             "<!-- Блоки выше заполняются автоматически, не трогать -->\n"
