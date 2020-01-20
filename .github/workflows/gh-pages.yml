@@ -8,6 +8,8 @@ on:
     paths:
     - 'docs/**'
     - 'src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/**'
+    - 'mkdocs.yml'
+    - 'mkdocs.en.yml'
 
 jobs:
   build-deploy:
