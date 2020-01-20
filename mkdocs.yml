@@ -4,6 +4,7 @@ nav:
   - Руководство контрибьютора: contributing/index.md
   - Репортеры: reporters/index.md
   - Диагностики: diagnostics/index.md
+  - Дополнительные возможности: features/index.md
   - English: https://1c-syntax.github.io/bsl-language-server/en
 theme: 
   name: material
