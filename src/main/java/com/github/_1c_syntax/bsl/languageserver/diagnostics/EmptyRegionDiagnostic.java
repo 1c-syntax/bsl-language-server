@@ -58,46 +58,33 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
   @Override
   protected void check(DocumentContext documentContext) {
-    documentContext.getRegions().forEach(this::checkRegionRecursively);
+    documentContext.getRegionsFlat().forEach(this::checkRegion);
   }
 
-  private boolean checkRegionRecursively(RegionSymbol region) {
-    boolean childrensHaveMethods = false;
+  private void checkRegion(RegionSymbol region) {
+    if (region.getChildrenNodes().isEmpty()) {
+      diagnosticStorage.addDiagnostic(
+        region.getNode(), info.getMessage(region.getName()));
+    } else {
+      List<RegionSymbol> children = region.getChildren();
+      if (!children.isEmpty()) {
+        // область может быть пустой т.к. в ней находятся только другие области
+        // поэтому удалим области из списка и посмотрим, что осталось
+        List<BSLParserRuleContext> parentNodes = new ArrayList<>(region.getChildrenNodes());
+        children.forEach((RegionSymbol childrenRegion) -> {
+          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode()));
+          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode().getParent()));
+          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode()));
+          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode().getParent()));
+          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getNameNode()));
+        });
 
-    List<RegionSymbol> children = region.getChildren();
-    if (!children.isEmpty()) {
-      for (RegionSymbol childrenRegion : children) {
-        boolean childrenIsEmpty = checkRegionRecursively(childrenRegion);
-        if (!childrenIsEmpty) {
-          childrensHaveMethods = true;
+        if (parentNodes.isEmpty()) {
+          diagnosticStorage.addDiagnostic(
+            region.getNode(), info.getMessage(region.getName()));
         }
       }
     }
-
-    if (region.getNodes().isEmpty() && !childrensHaveMethods) {
-      diagnosticStorage.addDiagnostic(
-        region.getNode(), info.getMessage(region.getName()));
-      return true;
-    } else if (!region.getNodes().isEmpty() && !children.isEmpty()) {
-      // область может быть пустой т.к. в ней находятся только другие области
-      // поэтому удалим области из списка и посмотрим, что осталось
-      List<BSLParserRuleContext> parentNodes = region.getNodes();
-      children.forEach((RegionSymbol childrenRegion) -> {
-        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode()));
-        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode().getParent()));
-        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode()));
-        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode().getParent()));
-        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getNameNode()));
-      });
-
-      if (parentNodes.isEmpty()) {
-        diagnosticStorage.addDiagnostic(
-          region.getNode(), info.getMessage(region.getName()));
-        return true;
-      }
-    }
-
-    return false;
   }
 
   @Override

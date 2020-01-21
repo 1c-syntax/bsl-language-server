@@ -31,8 +31,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
@@ -40,8 +42,9 @@ public final class RegionSymbolComputer
 
   private final DocumentContext documentContext;
   private Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
+  private Deque<BSLParser.RegionStartContext> regionStartContextsStack = new ArrayDeque<>();
   private List<RegionSymbol> regions = new ArrayList<>();
-  private List<BSLParserRuleContext> nodes = new ArrayList<>();
+  private List<BSLParserRuleContext> allNodes = new ArrayList<>();
 
   public RegionSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -51,12 +54,14 @@ public final class RegionSymbolComputer
   public List<RegionSymbol> compute() {
     regionStack.clear();
     regions.clear();
+    regionStartContextsStack.clear();
+    allNodes.clear();
 
     Trees.getDescendants(documentContext.getAst()).stream()
       .filter(node -> (node instanceof BSLParserRuleContext)
         && (((BSLParserRuleContext) node).getStop() != null)
         && (((BSLParserRuleContext) node).getStart() != null))
-      .forEach(node -> nodes.add((BSLParserRuleContext) node));
+      .forEach(node -> allNodes.add((BSLParserRuleContext) node));
 
     visitFile(documentContext.getAst());
 
@@ -74,6 +79,7 @@ public final class RegionSymbolComputer
     builder.nameNode(ctx.regionName());
 
     regionStack.push(builder);
+    regionStartContextsStack.push(ctx);
     return super.visitRegionStart(ctx);
   }
 
@@ -84,21 +90,27 @@ public final class RegionSymbolComputer
       return super.visitRegionEnd(ctx);
     }
 
+    BSLParser.RegionStartContext regionStartContext = regionStartContextsStack.pop();
+    int regionStartLine = regionStartContext.getStart().getLine();
+    int regionEndLine = ctx.getStop().getLine();
+
     RegionSymbol.RegionSymbolBuilder builder = regionStack.pop();
     builder.endNode(ctx);
     builder.endLine(ctx.getStop().getLine());
-    RegionSymbol region = builder.build();
-    nodes.stream().filter(node ->
-      (node.getStart().getLine() >= region.getStartLine()
-        || node.getStop().getLine() >= region.getStartLine()))
-      .takeWhile(node ->
-        (node.getStart().getLine() <= region.getEndLine()
-          || node.getStop().getLine() <= region.getEndLine()))
-      .filter(node ->
-        node.getStart().getLine() > region.getStartLine()
-          && node.getStart().getLine() < region.getEndLine())
-      .forEach(node -> region.getNodes().add(node));
 
+    List<BSLParserRuleContext> regionNodes = allNodes.stream()
+      .filter(node ->
+        node.getStart().getLine() > regionStartLine
+          && node.getStart().getLine() < regionEndLine)
+      .collect(Collectors.toList());
+
+    if (!regionNodes.isEmpty()) {
+      builder.childrenNodes(Collections.unmodifiableList(regionNodes));
+    } else {
+      builder.childrenNodes(Collections.unmodifiableList(Collections.emptyList()));
+    }
+
+    RegionSymbol region = builder.build();
     RegionSymbol.RegionSymbolBuilder parent = regionStack.peek();
     if (parent != null) {
       parent.child(region);

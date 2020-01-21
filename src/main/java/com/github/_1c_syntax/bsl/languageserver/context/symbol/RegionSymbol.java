@@ -51,7 +51,8 @@ public class RegionSymbol implements Symbol {
   @Singular
   private final List<RegionSymbol> children;
   private final List<MethodSymbol> methods = new ArrayList<>();
-  private final List<BSLParserRuleContext> nodes = new ArrayList<>();
+  @Singular
+  private final List<BSLParserRuleContext> childrenNodes;
 
   @NonFinal
   private BSLParserRuleContext node;
@@ -62,6 +63,5 @@ public class RegionSymbol implements Symbol {
     nameNode = null;
     startNode = null;
     endNode = null;
-    nodes.clear();
   }
 }
