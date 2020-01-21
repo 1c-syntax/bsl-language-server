@@ -29,7 +29,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.NonFinal;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +51,7 @@ public class RegionSymbol implements Symbol {
   @Singular
   private final List<RegionSymbol> children;
   private final List<MethodSymbol> methods = new ArrayList<>();
-  private final List<ParseTree> nodes = new ArrayList<>();
+  private final List<BSLParserRuleContext> nodes = new ArrayList<>();
 
   @NonFinal
   private BSLParserRuleContext node;

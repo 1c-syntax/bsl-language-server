@@ -33,7 +33,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
@@ -42,7 +41,7 @@ public final class RegionSymbolComputer
   private final DocumentContext documentContext;
   private Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
   private List<RegionSymbol> regions = new ArrayList<>();
-  private List<ParseTree> nodes = new ArrayList<>();
+  private List<BSLParserRuleContext> nodes = new ArrayList<>();
 
   public RegionSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -53,11 +52,12 @@ public final class RegionSymbolComputer
     regionStack.clear();
     regions.clear();
 
-    nodes = Trees.getDescendants(documentContext.getAst()).stream()
-      .filter(node -> node instanceof BSLParserRuleContext
-        && ((BSLParserRuleContext) node).getStop() != null
-        && ((BSLParserRuleContext) node).getStart() != null)
-      .collect(Collectors.toList());
+    Trees.getDescendants(documentContext.getAst()).stream()
+      .filter(node -> (node instanceof BSLParserRuleContext)
+        && (((BSLParserRuleContext) node).getStop() != null)
+        && (((BSLParserRuleContext) node).getStart() != null))
+      .forEach(node -> nodes.add((BSLParserRuleContext) node));
+
     visitFile(documentContext.getAst());
 
     return new ArrayList<>(regions);
@@ -88,16 +88,15 @@ public final class RegionSymbolComputer
     builder.endNode(ctx);
     builder.endLine(ctx.getStop().getLine());
     RegionSymbol region = builder.build();
-
     nodes.stream().filter(node ->
-      (((BSLParserRuleContext) node).getStart().getLine() >= region.getStartLine()
-        || ((BSLParserRuleContext) node).getStop().getLine() >= region.getStartLine()))
+      (node.getStart().getLine() >= region.getStartLine()
+        || node.getStop().getLine() >= region.getStartLine()))
       .takeWhile(node ->
-        (((BSLParserRuleContext) node).getStart().getLine() <= region.getEndLine()
-          || ((BSLParserRuleContext) node).getStop().getLine() <= region.getEndLine()))
+        (node.getStart().getLine() <= region.getEndLine()
+          || node.getStop().getLine() <= region.getEndLine()))
       .filter(node ->
-        ((BSLParserRuleContext) node).getStart().getLine() > region.getStartLine()
-          && ((BSLParserRuleContext) node).getStart().getLine() < region.getEndLine())
+        node.getStart().getLine() > region.getStartLine()
+          && node.getStart().getLine() < region.getEndLine())
       .forEach(node -> region.getNodes().add(node));
 
     RegionSymbol.RegionSymbolBuilder parent = regionStack.peek();

@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -79,11 +79,10 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
         region.getNode(), info.getMessage(region.getName()));
       return true;
     } else if (!region.getNodes().isEmpty() && !children.isEmpty()) {
-      List<ParseTree> parentNodes = region.getNodes();
+      // область может быть пустой т.к. в ней находятся только другие области
+      // поэтому удалим области из списка и посмотрим, что осталось
+      List<BSLParserRuleContext> parentNodes = region.getNodes();
       children.forEach((RegionSymbol childrenRegion) -> {
-        childrenRegion.getNodes().forEach(node ->
-          parentNodes.removeIf(parentNode -> parentNode.equals(node))
-        );
         parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode()));
         parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode().getParent()));
         parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode()));
