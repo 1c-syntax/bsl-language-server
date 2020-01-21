@@ -29,12 +29,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -62,9 +64,8 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   private boolean checkRegionRecursively(RegionSymbol region) {
     boolean childrensHaveMethods = false;
 
-    if (!region.getChildren().isEmpty()) {
-
-      List<RegionSymbol> children = region.getChildren();
+    List<RegionSymbol> children = region.getChildren();
+    if (!children.isEmpty()) {
       for (RegionSymbol childrenRegion : children) {
         boolean childrenIsEmpty = checkRegionRecursively(childrenRegion);
         if (!childrenIsEmpty) {
@@ -73,10 +74,28 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
       }
     }
 
-    if (region.getMethods().isEmpty() && !childrensHaveMethods) {
+    if (region.getNodes().isEmpty() && !childrensHaveMethods) {
       diagnosticStorage.addDiagnostic(
         region.getNode(), info.getMessage(region.getName()));
       return true;
+    } else if (!region.getNodes().isEmpty() && !children.isEmpty()) {
+      List<ParseTree> parentNodes = region.getNodes();
+      children.forEach((RegionSymbol childrenRegion) -> {
+        childrenRegion.getNodes().forEach(node ->
+          parentNodes.removeIf(parentNode -> parentNode.equals(node))
+        );
+        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode()));
+        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode().getParent()));
+        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode()));
+        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode().getParent()));
+        parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getNameNode()));
+      });
+
+      if (parentNodes.isEmpty()) {
+        diagnosticStorage.addDiagnostic(
+          region.getNode(), info.getMessage(region.getName()));
+        return true;
+      }
     }
 
     return false;
@@ -100,7 +119,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
       Optional<RegionSymbol> optionalRegionSymbol = documentContext.getRegionsFlat()
         .stream()
-        .filter(regionSymbol -> regionSymbol.getStartLine()-1 == diagnosticStartLine)
+        .filter(regionSymbol -> regionSymbol.getStartLine() - 1 == diagnosticStartLine)
         .findFirst();
       if (optionalRegionSymbol.isEmpty()) {
         continue;
