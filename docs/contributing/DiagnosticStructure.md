@@ -39,7 +39,7 @@
 
 В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(при использовании ide список импорта обновляется автоматически)_. Необходимо следить за тем, чтобы импортировались **только** то, что необходимо для реализации, все неиспользуемое должно быть **удалено** _(если [настройки](EnvironmentSetting.md) выполнены верно, то ide сделает все автоматически)_.
 
-Каждый класс диагностики должен иметь аннотацию `@DiagnosticMetadata`, содержащую метаданные диагностики. Актуальное содержимое всегда можно получить изучив [файл](https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
+Каждый класс диагностики должен иметь аннотацию `@DiagnosticMetadata`, содержащую метаданные диагностики. Актуальное содержимое всегда можно получить изучив [файл](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
 На момент написания статьи имеются следующие свойства:
 
