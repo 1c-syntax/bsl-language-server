@@ -376,7 +376,7 @@
 <ol>
 <li>Create project directory <code>bsl-language-server</code></li>
 <li>Clone the project repository to the created directory <code>https://github.com/1c-syntax/bsl-language-server.git</code></li>
-<li>Set up the environment according to the <a href="EnvironmentSetting.md">instructions</a></li>
+<li>Set up the environment according to the <a href="../EnvironmentSetting/">instructions</a></li>
 <li>Execute commands to ignore changes in service files<ol>
 <li><code>git update-index --assume-unchanged ./.idea/compiler.xml</code> </li>
 <li><code>git update-index --assume-unchanged ./.idea/encodings.xml</code> </li>
@@ -385,14 +385,14 @@
 </li>
 <li>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</li>
 <li>Run (from context menu or ide console) command <code>gradlew test</code>, if passed then all settings are correct</li>
-<li>Make yourself familiar with  <a href="DiagnosticExample.md">diagnostics development example</a> , <a href="DiagnosticStructure.md">structure and files purpose description,</a> and other articles in the <a href="../">section for developers</a></li>
+<li>Make yourself familiar with  <a href="../DiagnosticExample/">diagnostics development example</a> , <a href="../DiagnosticStructure/">structure and files purpose description,</a> and other articles in the <a href="../">section for developers</a></li>
 </ol>
 <h2 id="using-the-ast-debugger">Using the AST Debugger<a class="headerlink" href="#using-the-ast-debugger" title="Permanent link">Link</a></h2>
 <p>To analyze the AST tree when creating diagnostics, you may need to get a visual representation of the tree. To do this, follow these steps</p>
 <ol>
 <li>Create <code>bsl-parser</code> project directory</li>
 <li>Clone the project repository into the created directory <code>https://github.com/1c-syntax/bsl-parser.git</code></li>
-<li>Set up the environment according to the <a href="EnvironmentSetting.md">instruction</a> <em>(if not previously performed)</em></li>
+<li>Set up the environment according to the <a href="../EnvironmentSetting/">instruction</a> <em>(if not previously performed)</em></li>
 <li>Install <code>ANTLR v4 grammar plugin</code></li>
 <li>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</li>
 <li>Open <code>src/main/antlr/BSLParser.g4</code></li>
