@@ -63,5 +63,6 @@ public class RegionSymbol implements Symbol {
     nameNode = null;
     startNode = null;
     endNode = null;
+    nodes.clear();
   }
 }
