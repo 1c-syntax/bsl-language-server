@@ -27,8 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
@@ -42,32 +40,16 @@ import java.util.regex.Pattern;
 	}
 
 )
-public class GetFormMethodDiagnostic extends AbstractVisitorDiagnostic {
+public class GetFormMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
   public GetFormMethodDiagnostic(DiagnosticInfo info) {
     super(info);
+
+    Pattern localPattern = Pattern.compile(
+      "ПолучитьФорму|GetForm",
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+    setMethodPattern(localPattern);
   }
 
-  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
-    "ПолучитьФорму|GetForm",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
-
-  @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitMethodCall(ctx);
-  }
 }
