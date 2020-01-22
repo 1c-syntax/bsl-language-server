@@ -14,7 +14,7 @@ An empty statement is an operator consisting only of a semicolon (";"). Usually 
 - "copy paste", when the developer pasted the copied code containing the final character ";"
 - inattentive, when the developer twice (or even more) times clicked the symbol ";"
 
-Пустой оператор не приводит к ошибкам работы кода, но захламляет его, снижая восприятие.
+An empty statement does not lead to code errors, but clutters it, reducing perception.
 
 ## Snippets
 
