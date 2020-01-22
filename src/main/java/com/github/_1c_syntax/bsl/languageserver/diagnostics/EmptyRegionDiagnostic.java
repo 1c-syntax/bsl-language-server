@@ -29,16 +29,20 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.RuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -50,41 +54,42 @@ import java.util.Optional;
 )
 public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
+  private static final Set<Integer> REGIONS_NODE_INDEXES = Set.of(
+    BSLParser.RULE_regionName,
+    BSLParser.RULE_regionStart,
+    BSLParser.RULE_regionEnd,
+    BSLParser.RULE_preprocessor
+  );
+
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   protected void check(DocumentContext documentContext) {
-    documentContext.getRegions().forEach(this::checkRegionRecursively);
+    documentContext.getRegionsFlat().forEach(this::checkRegion);
   }
 
-  private boolean checkRegionRecursively(RegionSymbol region) {
-    boolean childrensHaveMethods = false;
+  private void checkRegion(RegionSymbol region) {
+    var hasChildren = region.getNodes().stream()
+      .map(RuleContext::getRuleIndex)
+      .filter(ruleIndex -> !REGIONS_NODE_INDEXES.contains(ruleIndex))
+      .findAny();
 
-    if (!region.getChildren().isEmpty()) {
-
-      List<RegionSymbol> children = region.getChildren();
-      for (RegionSymbol childrenRegion : children) {
-        boolean childrenIsEmpty = checkRegionRecursively(childrenRegion);
-        if (!childrenIsEmpty) {
-          childrensHaveMethods = true;
-        }
-      }
-    }
-
-    if (region.getMethods().isEmpty() && !childrensHaveMethods) {
+    if (hasChildren.isEmpty()) {
       diagnosticStorage.addDiagnostic(
-        region.getNode(), info.getMessage(region.getName()));
-      return true;
+        region.getNode(),
+        info.getMessage(region.getName())
+      );
     }
-
-    return false;
   }
 
   @Override
-  public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
-
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
     diagnostics.sort(Comparator.comparingInt(o -> o.getRange().getStart().getLine()));
     List<TextEdit> textEdits = new ArrayList<>();
     int maxDiagnosticEndLine = 0;
@@ -100,7 +105,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
       Optional<RegionSymbol> optionalRegionSymbol = documentContext.getRegionsFlat()
         .stream()
-        .filter(regionSymbol -> regionSymbol.getStartLine()-1 == diagnosticStartLine)
+        .filter(regionSymbol -> regionSymbol.getStartLine() - 1 == diagnosticStartLine)
         .findFirst();
       if (optionalRegionSymbol.isEmpty()) {
         continue;
