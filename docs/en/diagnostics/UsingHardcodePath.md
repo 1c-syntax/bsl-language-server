@@ -1,16 +1,17 @@
 # Using hardcode file paths in code (UsingHardcodePath)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Critical` | `Yes` | `15` | `standard` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Error` | `BSL` | `Critical` | `Yes` | `15` | `standard`
 
-## Parameters 
+## Parameters
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `searchWordsStdPathsUnix` | `String` | ```Keywords for search unix dirs``` | ```bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var``` |
+Name | Type | Description | Default value
+--- | --- | --- | ---
+`searchWordsStdPathsUnix` | `String` | `Search keywords for standard Unix root folders` | ```bin
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 It's forbidden to store in code:
@@ -34,13 +35,13 @@ When search for Windows / Unix  paths, also check for URL in a string. URL searc
 
 ## Examples
 
-**Incorrect:**
+Incorrect:
 
 ```bsl
 EchangeFolder = "c:/exchange/dataexchange";
 ```
 
-**Correct:**
+Correct:
 
 ```bsl
 ExchangeFolder = Constants.ExchangeFolder.Get();
@@ -55,6 +56,7 @@ ExchangeFolder = DataExchangeReuse.ExchangeFolder();
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
