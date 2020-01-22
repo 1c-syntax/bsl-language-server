@@ -345,15 +345,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    Описание диагностики
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    Примеры
+  <a href="#examples" class="md-nav__link">
+    Examples
   </a>
   
 </li>
@@ -408,37 +401,36 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Error</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Critical</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>20</code></td>
-<td align="center"><code>performance</code></td>
+<td><code>Error</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Critical</code></td>
+<td><code>Yes</code></td>
+<td><code>20</code></td>
+<td><code>performance</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">Link</a></h2>
 <p>Execution query in cycle</p>
-<h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">Link</a></h2>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bad</p>
-<div class="codehilite"><pre><span></span><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>    
+<div class="codehilite"><pre><span></span><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
 <span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
 <span class="k">Для</span> <span class="nv">индекс</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="nv">СписокДокументов</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">()</span> <span class="k">Цикл</span>
     <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
-    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> 
+    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
         <span class="s1">&quot;ВЫБРАТЬ</span>
         <span class="s">|   ПоступлениеТоваровУслуг.СуммаДокумента</span>
         <span class="s">|ИЗ</span>
@@ -460,11 +452,11 @@
 
 
 <p>Good</p>
-<div class="codehilite"><pre><span></span><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>    
+<div class="codehilite"><pre><span></span><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
 <span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
 
 <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
-<span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> 
+<span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
     <span class="s1">&quot;ВЫБРАТЬ</span>
     <span class="s">|   СУММА(ПоступлениеТоваровУслуг.СуммаДокумента) КАК СуммаДокумента</span>
     <span class="s">|ИЗ</span>

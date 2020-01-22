@@ -349,26 +349,6 @@
     Examples
   </a>
   
-    <nav class="md-nav">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#noncompliant" class="md-nav__link">
-    Noncompliant
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#compliant" class="md-nav__link">
-    Compliant
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -421,22 +401,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code></td>
-<td align="center"><code>Minor</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>2</code></td>
-<td align="center"><code>deprecated</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code></td>
+<td><code>Minor</code></td>
+<td><code>Yes</code></td>
+<td><code>2</code></td>
+<td><code>deprecated</code></td>
 </tr>
 </tbody>
 </table>
@@ -445,17 +425,17 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Method "Find" is deprecated. Use "StrFind" instead.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<h3 id="noncompliant">Noncompliant<a class="headerlink" href="#noncompliant" title="Permanent link">Link</a></h3>
+<p>Incorrect:</p>
 <div class="codehilite"><pre><span></span><span class="nv">If</span> <span class="nv">Find</span><span class="p">(</span><span class="nv">Collaborator</span><span class="o">.</span><span class="nv">Name</span><span class="p">,</span> <span class="s1">&quot;Boris&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
-<span class="nv">EndIf</span><span class="p">;</span> 
+<span class="nv">EndIf</span><span class="p">;</span>
 </pre></div>
 
 
-<h3 id="compliant">Compliant<a class="headerlink" href="#compliant" title="Permanent link">Link</a></h3>
+<p>Correct:</p>
 <div class="codehilite"><pre><span></span><span class="nv">If</span> <span class="nb">StrFind</span><span class="p">(</span><span class="nv">Collaborator</span><span class="o">.</span><span class="nv">Name</span><span class="p">,</span> <span class="s1">&quot;Boris&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
-<span class="nv">EndIf</span><span class="p">;</span> 
+<span class="nv">EndIf</span><span class="p">;</span>
 </pre></div>
 
 
