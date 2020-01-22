@@ -85,8 +85,11 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   }
 
   @Override
-  public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
-
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
     diagnostics.sort(Comparator.comparingInt(o -> o.getRange().getStart().getLine()));
     List<TextEdit> textEdits = new ArrayList<>();
     int maxDiagnosticEndLine = 0;
