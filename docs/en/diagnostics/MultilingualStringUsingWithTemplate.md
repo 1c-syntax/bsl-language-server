@@ -19,7 +19,7 @@ When used with StrTemplate, an empty string returned from NStr will throw an exc
 
 ## Sources
 
-- [[localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)
 
 ## Snippets
 
