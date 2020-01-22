@@ -44,8 +44,8 @@ class DeprecatedMessageDiagnosticTest extends AbstractDiagnosticTest<DeprecatedM
     // then
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .hasRange(4, 8, 4, 20)
-      .hasRange(10, 0, 10, 13);
+      .hasRange(4, 8, 4, 15)
+      .hasRange(10, 0, 10, 8);
 
   }
 }

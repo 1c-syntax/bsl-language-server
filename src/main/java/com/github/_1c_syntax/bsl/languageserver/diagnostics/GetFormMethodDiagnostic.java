@@ -42,14 +42,13 @@ import java.util.regex.Pattern;
 )
 public class GetFormMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
-  public GetFormMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
+  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
+    "ПолучитьФорму|GetForm",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
-    Pattern localPattern = Pattern.compile(
-      "ПолучитьФорму|GetForm",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
-    setMethodPattern(localPattern);
+  public GetFormMethodDiagnostic(DiagnosticInfo info) {
+    super(info, MESSAGE_PATTERN);
   }
 
 }

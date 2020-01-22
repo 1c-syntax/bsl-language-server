@@ -42,24 +42,19 @@ import java.util.regex.Pattern;
     DiagnosticTag.DEPRECATED
   }
 )
-public class DeprecatedMessageDiagnostic extends AbstractVisitorDiagnostic {
+public class DeprecatedMessageDiagnostic extends AbstractFindMethodDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(сообщить|message)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   public DeprecatedMessageDiagnostic(DiagnosticInfo info) {
-    super(info);
+    super(info, messagePattern);
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
+    return false;
   }
 
 }

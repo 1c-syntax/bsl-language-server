@@ -23,24 +23,25 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Getter;
+import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
 public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagnostic {
 
+  @Getter
+  @Setter
   private Pattern methodPattern = null;
 
   AbstractFindMethodDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
-  public Pattern getMethodPattern() {
-    return methodPattern;
-  }
-
-  public void setMethodPattern(Pattern methodPattern) {
-    this.methodPattern = methodPattern;
+  AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
+    super(info);
+    methodPattern = pattern;
   }
 
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {

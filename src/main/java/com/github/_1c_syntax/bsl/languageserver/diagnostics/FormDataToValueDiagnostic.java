@@ -42,32 +42,15 @@ import java.util.regex.Pattern;
   }
 
 )
-public class FormDataToValueDiagnostic extends AbstractVisitorDiagnostic {
-  public FormDataToValueDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
   private static final Pattern MESSAGE_PATTERN = Pattern.compile(
     "ДанныеФормыВЗначение|FormDataToValue",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
-  @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitMethodCall(ctx);
+  public FormDataToValueDiagnostic(DiagnosticInfo info) {
+    super(info, MESSAGE_PATTERN);
   }
 
 }
