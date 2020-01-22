@@ -1,27 +1,33 @@
 # Needless compilation directive (CompilationDirectiveNeedLess)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Major` | `Yes` | `1` | `clumsy`<br/>`standard`<br/>`unpredictable` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL` | `Major` | `Yes` | `1` | `clumsy`<br>`standard`<br>`unpredictable`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+## Description
+
+Compilation directives:
+
+```bsl
+&AtClient
+&AtServer
+&AtServerNoContext
+```
+
+must be used only in the code of managed form modules and in the code of command modules. In other modules, we recommend use instructions to the preprocessor.
+
+In server or client common modules, the execution context is obvious, so there is no sense in compilation directives. In common modules with client and server attributes, using compilation directives makes it difficult to understand which ones are procedures (functions) are available eventually.
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+- Source: [The use of compilation directives and preprocessor instructions(RUS)](https://its.1c.ru/db/v8std#content:453:hdoc)
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
