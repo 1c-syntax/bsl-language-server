@@ -408,22 +408,22 @@
 <table>
 <thead>
 <tr>
-<th>Type</th>
-<th>Scope</th>
-<th>Severity</th>
-<th>Activated<br>by default</th>
-<th>Minutes<br>to fix</th>
-<th>Tags</th>
+<th align="center">Type</th>
+<th align="center">Scope</th>
+<th align="center">Severity</th>
+<th align="center">Activated<br/>by default</th>
+<th align="center">Minutes<br/>to fix</th>
+<th align="center">Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>Code smell</code></td>
-<td><code>BSL</code><br><code>OS</code></td>
-<td><code>Minor</code></td>
-<td><code>Yes</code></td>
-<td><code>1</code></td>
-<td><code>badpractice</code></td>
+<td align="center"><code>Code smell</code></td>
+<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>Minor</code></td>
+<td align="center"><code>Yes</code></td>
+<td align="center"><code>1</code></td>
+<td align="center"><code>badpractice</code></td>
 </tr>
 </tbody>
 </table>
@@ -431,24 +431,24 @@
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default value</th>
+<th align="center">Name</th>
+<th align="center">Type</th>
+<th align="left">Description</th>
+<th align="center">Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>authorizedNumbers</code></td>
-<td><code>String</code></td>
-<td><code>allowed numbers, coma separated. Example:-1,0,1,60</code></td>
-<td><code>-1,0,1</code></td>
+<td align="center"><code>authorizedNumbers</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>allowed numbers, coma separated. Example:-1,0,1,60</code></td>
+<td align="center"><code>-1,0,1</code></td>
 </tr>
 <tr>
-<td><code>allowMagicIndexes</code></td>
-<td><code>Boolean</code></td>
-<td><code>allow magic indexes</code></td>
-<td><code>true</code></td>
+<td align="center"><code>allowMagicIndexes</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left"><code>allow magic indexes</code></td>
+<td align="center"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -460,7 +460,7 @@
 <p>Bad</p>
 <div class="codehilite"><pre><span></span><span class="k">Function</span> <span class="nv">GetsTheInterval</span><span class="p">(</span><span class="nv">Duration</span><span class="p">)</span>
 
-     <span class="k">Return</span> <span class="nv">Duration</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="o">*</span> <span class="m">60</span> <span class="o">*</span> <span class="m">60</span><span class="p">;</span>
+     <span class="k">Return</span> <span class="nv">Duration</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="o">*</span> <span class="m">60</span> <span class="o">*</span> <span class="m">60</span><span class="p">;</span>
 
 <span class="nv">End</span> <span class="k">Function</span>
 </pre></div>
@@ -468,12 +468,12 @@
 
 <p>Good</p>
 <div class="codehilite"><pre><span></span><span class="k">Function</span> <span class="nv">GetsTheInterval</span> <span class="p">(</span><span class="nv">Duration</span> <span class="nv">in</span> <span class="nv">Seconds</span><span class="p">)</span>
-
-    <span class="nv">MinutesHour</span>     <span class="o">=</span> <span class="m">60</span><span class="p">;</span>
-    <span class="nv">SecondsMinute</span>   <span class="o">=</span> <span class="m">60</span><span class="p">;</span>
-    <span class="nv">SecondsHour</span>     <span class="o">=</span> <span class="nv">SecondsMinute</span> <span class="o">*</span> <span class="nv">MinutesHour</span><span class="p">;</span>
-    <span class="nv">HoursIninterval</span> <span class="o">=</span> <span class="m">10</span><span class="p">;</span>
-    <span class="k">Return</span> <span class="nv">Duration</span> <span class="o">&lt;</span> <span class="nv">HoursWininterval</span> <span class="o">*</span> <span class="nv">SecondsHour</span><span class="p">;</span>
+    
+     <span class="nv">MinutesHour</span>     <span class="o">=</span> <span class="m">60</span><span class="p">;</span>
+     <span class="nv">SecondsMinute</span>   <span class="o">=</span> <span class="m">60</span><span class="p">;</span>
+     <span class="nv">SecondsHour</span>     <span class="o">=</span> <span class="nv">SecondsMinute</span> <span class="o">*</span> <span class="nv">MinutesHour</span><span class="p">;</span>
+     <span class="nv">HoursIninterval</span> <span class="o">=</span> <span class="m">10</span><span class="p">;</span>
+     <span class="k">Return</span> <span class="nv">Duration</span> <span class="o">&lt;</span> <span class="nv">HoursWininterval</span> <span class="o">*</span> <span class="nv">SecondsHour</span><span class="p">;</span>
 
 <span class="nv">End</span> <span class="k">Function</span>
 </pre></div>
