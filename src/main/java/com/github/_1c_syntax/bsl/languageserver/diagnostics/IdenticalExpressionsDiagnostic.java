@@ -54,7 +54,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
     List<? extends BSLParser.OperationContext> onlyOperation = ctx.operation();
 
-    if(sufficientSize(ctx) || !isUniformExpression(onlyOperation)) {
+    if (sufficientSize(ctx) || !isUniformExpression(onlyOperation)) {
       return super.visitChildren(ctx);
     }
 
@@ -67,7 +67,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
         .filter((ParseTree p) -> DiagnosticHelper.equalNodes(t, p)).count() > 1)
       .collect((Collectors.toList()));
 
-    if(!identicalExpressions.isEmpty()) {
+    if (!identicalExpressions.isEmpty()) {
       diagnosticStorage.addDiagnostic(
         ctx,
         info.getMessage(onlyOperation.get(0).getText(), identicalExpressions.get(0).getText())

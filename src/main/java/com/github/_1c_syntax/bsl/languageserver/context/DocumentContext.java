@@ -321,10 +321,10 @@ public class DocumentContext {
 
     return getRegions().stream()
       .filter(region ->
-          region.getStartNode() != null
-            && methodRanges.stream().noneMatch(methodRange ->
-            Ranges.containsRange(methodRange,Ranges.create(region))
-      ))
+        region.getStartNode() != null
+          && methodRanges.stream().noneMatch(methodRange ->
+          Ranges.containsRange(methodRange, Ranges.create(region))
+        ))
       .collect(Collectors.toList());
   }
 

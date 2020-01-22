@@ -30,11 +30,11 @@ public class ConsoleReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "console";
 
-  public ConsoleReporter(){
+  public ConsoleReporter() {
     super();
   }
 
-  public ConsoleReporter(Path outputDir){
+  public ConsoleReporter(Path outputDir) {
     super(outputDir);
   }
 

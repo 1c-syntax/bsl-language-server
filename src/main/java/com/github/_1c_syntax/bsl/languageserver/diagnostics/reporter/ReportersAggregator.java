@@ -64,7 +64,7 @@ public class ReportersAggregator {
 
   private static Map<String, Class> reporterMap() {
     Map<String, Class> map = new HashMap<>();
-    map.put(ConsoleReporter.KEY,  ConsoleReporter.class);
+    map.put(ConsoleReporter.KEY, ConsoleReporter.class);
     map.put(JsonReporter.KEY, JsonReporter.class);
     map.put(JUnitReporter.KEY, JUnitReporter.class);
     map.put(TSLintReporter.KEY, TSLintReporter.class);

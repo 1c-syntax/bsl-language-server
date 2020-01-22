@@ -54,7 +54,7 @@ class ReportersAggregatorTest {
 
   @Test
   void report() {
-    ReportersAggregator aggregator = new ReportersAggregator(Paths.get("."), new String[]{ "console" });
+    ReportersAggregator aggregator = new ReportersAggregator(Paths.get("."), new String[]{"console"});
 
     // given
     Diagnostic diagnostic = new Diagnostic(

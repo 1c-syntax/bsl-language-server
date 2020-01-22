@@ -106,7 +106,7 @@ class DocumentContextTest {
     assertThat(methods)
       .anyMatch(methodSymbol -> methodSymbol.getRegion().isPresent())
       .anySatisfy(methodSymbol -> methodSymbol.getRegion().ifPresent(
-          regionSymbol -> assertThat(regionSymbol.getMethods()).contains(methodSymbol)
+        regionSymbol -> assertThat(regionSymbol.getMethods()).contains(methodSymbol)
         )
       )
     ;

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-public enum  DiagnosticType {
+public enum DiagnosticType {
   ERROR,
   CODE_SMELL,
   VULNERABILITY,

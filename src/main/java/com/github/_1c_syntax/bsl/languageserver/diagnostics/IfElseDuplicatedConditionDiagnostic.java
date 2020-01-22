@@ -88,7 +88,7 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
     BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
 
     List<BSLParser.ExpressionContext> identicalExpressions = expressionContexts.stream()
-      .skip((long) i)
+      .skip(i)
       .filter(expressionContext ->
         !expressionContext.equals(currentExpression)
           && DiagnosticHelper.equalNodes(currentExpression, expressionContext))

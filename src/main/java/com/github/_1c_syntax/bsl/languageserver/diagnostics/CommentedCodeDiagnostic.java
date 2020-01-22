@@ -204,7 +204,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     }
 
     return true;
-}
+  }
 
   private static String uncomment(String comment) {
     if (comment.startsWith(COMMENT_START)) {

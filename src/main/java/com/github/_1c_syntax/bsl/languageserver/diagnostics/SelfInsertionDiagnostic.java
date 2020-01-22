@@ -56,21 +56,21 @@ public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
-    if(ctx.globalMethodCall() != null) {
+    if (ctx.globalMethodCall() != null) {
       return ctx;
     }
 
     String identifier = ctx.IDENTIFIER().getText().trim();
     BSLParser.MethodCallContext methodCall = ctx.accessCall().methodCall();
 
-    if(deletePattern.matcher(methodCall.methodName().getText()).matches()) {
+    if (deletePattern.matcher(methodCall.methodName().getText()).matches()) {
       List<? extends BSLParser.CallParamContext> callParams = methodCall
         .doCall()
         .callParamList()
         .callParam();
 
-      for(BSLParser.CallParamContext param : callParams) {
-        if(param.getText().trim().equals(identifier)) {
+      for (BSLParser.CallParamContext param : callParams) {
+        if (param.getText().trim().equals(identifier)) {
           diagnosticStorage.addDiagnostic(ctx);
         }
       }

@@ -358,7 +358,7 @@ public class CognitiveComplexityComputer
 
   private void structuralIncrement(Token token) {
     complexity += 1 + nestedLevel;
-    addSecondaryLocation(token,  1 + nestedLevel, nestedLevel);
+    addSecondaryLocation(token, 1 + nestedLevel, nestedLevel);
     nestedLevel++;
   }
 

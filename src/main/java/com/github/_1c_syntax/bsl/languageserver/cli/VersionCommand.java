@@ -46,9 +46,9 @@ public class VersionCommand implements Command {
     }
 
     System.out.print(String.format(
-       "version: %s%n",
-       manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
-     ));
+      "version: %s%n",
+      manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
+    ));
     return 0;
   }
 }

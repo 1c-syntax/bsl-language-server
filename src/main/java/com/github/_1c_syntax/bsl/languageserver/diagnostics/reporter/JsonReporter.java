@@ -33,11 +33,11 @@ public class JsonReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "json";
 
-  public JsonReporter(){
+  public JsonReporter() {
     super();
   }
 
-  public JsonReporter(Path outputDir){
+  public JsonReporter(Path outputDir) {
     super(outputDir);
   }
 

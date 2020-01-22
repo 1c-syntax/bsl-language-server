@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 public class KeywordsDetector extends AbstractDetector {
 
   private final List<String> keywords;
+
   public KeywordsDetector(double probability, String... keywords) {
     super(probability);
     this.keywords = Arrays.asList(keywords);

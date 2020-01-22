@@ -125,7 +125,7 @@ class JUnitTestSuites {
       String type = "";
       String message = "";
 
-      for (Diagnostic diagnostic: diagnostics) {
+      for (Diagnostic diagnostic : diagnostics) {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
         Position startRange = diagnostic.getRange().getStart();
         message = diagnostic.getMessage();
@@ -141,7 +141,7 @@ class JUnitTestSuites {
     }
 
     public JUnitTestCase(
-      @JsonProperty("name") String  name,
+      @JsonProperty("name") String name,
       @JsonProperty("classname") String classname,
       @JsonProperty("failure") JUnitFailure failure
     ) {

@@ -34,8 +34,7 @@ public enum DiagnosticTag {
   UNPREDICTABLE("Непредсказуемо работающий код"),
   DEPRECATED("Устаревшая функциональность"),
   ERROR("Ошибочная конструкция"),
-  LOCALIZE("Проблемы локализации")
-  ;
+  LOCALIZE("Проблемы локализации");
 
   private final String description;
 

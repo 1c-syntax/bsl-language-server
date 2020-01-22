@@ -39,7 +39,7 @@ public class JUnitReporter extends AbstractDiagnosticReporter {
     super();
   }
 
-  public JUnitReporter(Path outputDir){
+  public JUnitReporter(Path outputDir) {
     super(outputDir);
   }
 

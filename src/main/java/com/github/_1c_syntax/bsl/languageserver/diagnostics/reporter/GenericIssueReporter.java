@@ -33,11 +33,11 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "generic";
 
-  public GenericIssueReporter(){
+  public GenericIssueReporter() {
     super();
   }
 
-  public GenericIssueReporter(Path outputDir){
+  public GenericIssueReporter(Path outputDir) {
     super(outputDir);
   }
 

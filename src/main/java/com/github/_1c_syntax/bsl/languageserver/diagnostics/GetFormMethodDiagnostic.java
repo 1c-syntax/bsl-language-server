@@ -36,8 +36,8 @@ import java.util.regex.Pattern;
   minutesToFix = 15,
   scope = DiagnosticScope.BSL,
   tags = {
-		DiagnosticTag.ERROR
-	}
+    DiagnosticTag.ERROR
+  }
 
 )
 public class GetFormMethodDiagnostic extends AbstractFindMethodDiagnostic {

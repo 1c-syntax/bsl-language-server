@@ -93,7 +93,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
     BSLParser.CodeBlockContext currentCodeBlock = codeBlockContexts.get(i);
 
     List<BSLParser.CodeBlockContext> identicalCodeBlocks = codeBlockContexts.stream()
-      .skip((long) i)
+      .skip(i)
       .filter(codeBlockContext ->
         !codeBlockContext.equals(currentCodeBlock)
           && !(currentCodeBlock.children == null && codeBlockContext.children == null)
@@ -123,7 +123,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
           relatedMessage
         )
       )
-    .collect(Collectors.toCollection(() -> relatedInformation));
+      .collect(Collectors.toCollection(() -> relatedInformation));
 
     diagnosticStorage.addDiagnostic(currentCodeBlock, relatedInformation);
   }

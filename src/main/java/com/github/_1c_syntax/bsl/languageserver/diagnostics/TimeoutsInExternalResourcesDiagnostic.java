@@ -175,7 +175,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
     if (diagnosticCompatibility != null
       && CompatibilityMode.compareTo(diagnosticCompatibility,
-        DiagnosticCompatibilityMode.UNDEFINED.getCompatibilityMode()) != 0) {
+      DiagnosticCompatibilityMode.UNDEFINED.getCompatibilityMode()) != 0) {
 
       if (CompatibilityMode.compareTo(diagnosticCompatibility,
         DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_7.getCompatibilityMode()) == 1) {

@@ -50,7 +50,7 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {
-    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+    if (Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
       diagnosticStorage.addDiagnostic(ctx.moduleVarsList());
     }
     return super.visitModuleVar(ctx);

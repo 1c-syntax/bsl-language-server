@@ -32,11 +32,18 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface DiagnosticMetadata {
   DiagnosticType type() default DiagnosticType.ERROR;
+
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
+
   DiagnosticScope scope() default DiagnosticScope.ALL;
+
   ModuleType[] modules() default {};
+
   int minutesToFix() default 0;
+
   boolean activatedByDefault() default true;
+
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
+
   DiagnosticTag[] tags() default {};
 }

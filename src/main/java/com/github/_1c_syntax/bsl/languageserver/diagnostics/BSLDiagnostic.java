@@ -31,10 +31,10 @@ import java.util.Map;
 /**
  * BSLDiagnostic main purpose is to provide collection of LSP {@link Diagnostic},
  * fired on concrete {@link DocumentContext}.
- *
+ * <p>
  * Each BSLDiagnostic implementation MUST contain constructor with exactly one parameter {@link DiagnosticInfo}.
  * Passed DiagnosticInfo MUST be stored as a object field and returned by {@link #getInfo()}.
- *
+ * <p>
  * {@link #getDiagnostics(DocumentContext)} method SHOULD use {@link DiagnosticStorage} to add and return diagnostics.
  */
 public interface BSLDiagnostic {

@@ -92,8 +92,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         || checkIgnoreOff(IGNORE_ALL_OFF, comment) != null
         || checkIgnoreOn(IGNORE_ALL_ON, comment)
         || checkIgnoreOff(IGNORE_DIAGNOSTIC_OFF, comment) != null
-        || checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment)
-        ;
+        || checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment);
 
     }
 

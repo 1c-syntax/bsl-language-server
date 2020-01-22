@@ -31,11 +31,12 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 
 class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorDiagnostic> {
 
-  ParseErrorDiagnosticTest() { super(ParseErrorDiagnostic.class); }
+  ParseErrorDiagnosticTest() {
+    super(ParseErrorDiagnostic.class);
+  }
 
   @Test
-  void runTest()
-  {
+  void runTest() {
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
 

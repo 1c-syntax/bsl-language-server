@@ -35,7 +35,7 @@ import java.util.List;
 
 @Value
 @Builder(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude="methods")
+@EqualsAndHashCode(exclude = "methods")
 public class RegionSymbol implements Symbol {
   private final String name;
   private final int startLine;

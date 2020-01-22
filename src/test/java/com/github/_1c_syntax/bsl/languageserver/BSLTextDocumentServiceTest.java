@@ -203,7 +203,7 @@ class BSLTextDocumentServiceTest {
     final File testFile = getTestFile();
 
     DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
-    
+
     params.setTextDocument(new VersionedTextDocumentIdentifier(testFile.toURI().toString(), 1));
 
     String fileContent = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);

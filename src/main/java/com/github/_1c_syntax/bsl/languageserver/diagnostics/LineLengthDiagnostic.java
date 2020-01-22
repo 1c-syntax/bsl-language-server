@@ -72,7 +72,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check(DocumentContext documentContext) {
-        tokensInOneLine.clear();
+    tokensInOneLine.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
         if (mustBePutIn(token)) {

@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
   minutesToFix = 2,
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6,
   tags = {DiagnosticTag.DEPRECATED}
-  )
+)
 public class DeprecatedFindDiagnostic extends AbstractFindMethodDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(найти|find)",

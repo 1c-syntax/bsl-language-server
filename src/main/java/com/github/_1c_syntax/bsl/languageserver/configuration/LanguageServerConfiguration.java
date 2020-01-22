@@ -56,7 +56,7 @@ import java.util.stream.Stream;
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 @Data
-@AllArgsConstructor(onConstructor=@__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class LanguageServerConfiguration {

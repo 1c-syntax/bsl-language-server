@@ -38,8 +38,8 @@ import java.util.regex.Pattern;
   minutesToFix = 15,
   scope = DiagnosticScope.BSL,
   tags = {
-		DiagnosticTag.SUSPICIOUS
-	}
+    DiagnosticTag.SUSPICIOUS
+  }
 
 )
 public class OSUsersMethodDiagnostic extends AbstractVisitorDiagnostic {

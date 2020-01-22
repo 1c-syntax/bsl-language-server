@@ -93,15 +93,15 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
 
     ArrayDeque<ParseTree> beginCalls = new ArrayDeque<>();
     for (ParseTree tranCall : allTranCalls) {
-      if(beginTransaction.matcher(((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText()).matches()) {
+      if (beginTransaction.matcher(((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText()).matches()) {
         beginCalls.add(tranCall);
-      } else if(!beginCalls.isEmpty()) {
+      } else if (!beginCalls.isEmpty()) {
         beginCalls.pop();
       } else {
         addDiagnosticWithMessage(tranCall, pairMethods);
       }
     }
-    if(!beginCalls.isEmpty()) {
+    if (!beginCalls.isEmpty()) {
       beginCalls.forEach(tranCall -> addDiagnosticWithMessage(tranCall, pairMethods));
     }
   }

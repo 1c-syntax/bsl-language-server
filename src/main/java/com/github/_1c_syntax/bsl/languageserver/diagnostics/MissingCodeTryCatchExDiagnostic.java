@@ -74,13 +74,13 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitExceptCodeBlock(ctx);
     }
 
-    if(commentAsCode) {
+    if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
       Range rangeTry = Ranges.create(ctx.getParent());
-      if(comments.anyMatch(token ->
-          Ranges.containsRange(
-            rangeTry,
-            Ranges.create(token)))) {
+      if (comments.anyMatch(token ->
+        Ranges.containsRange(
+          rangeTry,
+          Ranges.create(token)))) {
         return super.visitExceptCodeBlock(ctx);
       }
     }

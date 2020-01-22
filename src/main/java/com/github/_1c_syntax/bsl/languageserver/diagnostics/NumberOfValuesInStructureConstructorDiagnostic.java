@@ -47,7 +47,7 @@ import java.util.Map;
     DiagnosticTag.BRAINOVERLOAD
   }
 )
-public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
+public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_VALUES_COUNT = 3;
 
@@ -72,11 +72,11 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
 
-    if (ctx.typeName() == null){
+    if (ctx.typeName() == null) {
       return super.visitNewExpression(ctx);
     }
 
-    if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
+    if (!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
       return super.visitNewExpression(ctx);
     }
 

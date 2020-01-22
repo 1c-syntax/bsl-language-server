@@ -44,6 +44,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<TimeoutsInExternalResourcesDiagnostic> {
   private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/Configuration.xml").toFile();
   private Path tempDir;
+
   TimeoutsInExternalResourcesDiagnosticTest() {
     super(TimeoutsInExternalResourcesDiagnostic.class);
   }

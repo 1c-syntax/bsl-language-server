@@ -179,7 +179,7 @@ public final class Trees {
    * Рекурсивно находит самого верхнего родителя текущей ноды нужно типа
    */
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
-    if(tnc.getParent() == null) {
+    if (tnc.getParent() == null) {
       return null;
     }
 

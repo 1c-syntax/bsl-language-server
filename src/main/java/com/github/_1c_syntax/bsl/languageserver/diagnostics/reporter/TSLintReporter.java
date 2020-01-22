@@ -37,11 +37,11 @@ public class TSLintReporter extends AbstractDiagnosticReporter {
 
   public static final String KEY = "tslint";
 
-  public TSLintReporter(){
+  public TSLintReporter() {
     super();
   }
 
-  public TSLintReporter(Path outputDir){
+  public TSLintReporter(Path outputDir) {
     super(outputDir);
   }
 

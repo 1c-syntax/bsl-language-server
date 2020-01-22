@@ -33,11 +33,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<NestedStatementsDiagnostic> {
 
-  NestedStatementsDiagnosticTest() { super(NestedStatementsDiagnostic.class); }
+  NestedStatementsDiagnosticTest() {
+    super(NestedStatementsDiagnostic.class);
+  }
 
   @Test
-  void runTest()
-  {
+  void runTest() {
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();

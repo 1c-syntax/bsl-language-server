@@ -69,7 +69,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   }
 
   @Test
-  void testQuickFixRemoveCode(){
+  void testQuickFixRemoveCode() {
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0));
 
