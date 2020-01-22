@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 --- | --- | --- | ---
-`maxMethodSize` | `Целое` | `Max method line count.` | `200`
+`maxMethodSize` | `Integer` | `Max method line count.` | `200`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
@@ -30,7 +30,7 @@ There are two rules for refactoring a large method:
 - [Refactoring and opt-out tools](https://v8.1c.ru/o7/201312ref/index.htm)
 - [Refactoring tools in 1C](https://www.koderline.ru/expert/programming/article-vspomogatelnye-funktsii-v-1s/#anchor6)
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
