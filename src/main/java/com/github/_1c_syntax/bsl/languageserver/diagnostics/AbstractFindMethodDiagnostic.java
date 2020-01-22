@@ -22,35 +22,53 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Getter;
+import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
-@DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  scope = DiagnosticScope.BSL,
-  minutesToFix = 5,
-  tags = {
-    DiagnosticTag.BADPRACTICE
+public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagnostic {
+
+  @Getter
+  @Setter
+  private Pattern methodPattern = null;
+
+  AbstractFindMethodDiagnostic(DiagnosticInfo info) {
+    super(info);
   }
 
-)
-public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
-
-  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
-    "ДанныеФормыВЗначение|FormDataToValue",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
-
-  public FormDataToValueDiagnostic(DiagnosticInfo info) {
-    super(info, MESSAGE_PATTERN);
+  AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
+    super(info);
+    methodPattern = pattern;
   }
 
+  protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    return getMethodPattern().matcher(ctx.methodName().getText()).matches();
+  }
+
+  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
+    return getMethodPattern().matcher(ctx.methodName().getText()).matches();
+  }
+
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+
+    if (checkGlobalMethodCall(ctx)) {
+      diagnosticStorage.addDiagnostic(ctx.methodName());
+    }
+
+    return super.visitGlobalMethodCall(ctx);
+  }
+
+  @Override
+  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
+
+    if (checkMethodCall(ctx)) {
+      diagnosticStorage.addDiagnostic(ctx.methodName());
+    }
+
+    return super.visitMethodCall(ctx);
+  }
 }

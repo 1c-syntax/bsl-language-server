@@ -41,24 +41,19 @@ import java.util.regex.Pattern;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6,
   tags = {DiagnosticTag.DEPRECATED}
   )
-public class DeprecatedFindDiagnostic extends AbstractVisitorDiagnostic {
+public class DeprecatedFindDiagnostic extends AbstractFindMethodDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(найти|find)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   public DeprecatedFindDiagnostic(DiagnosticInfo info) {
-    super(info);
+    super(info, messagePattern);
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
+    return false;
   }
 
 }
