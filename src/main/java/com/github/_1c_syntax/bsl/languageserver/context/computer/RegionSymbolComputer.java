@@ -28,10 +28,10 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,8 +41,7 @@ public final class RegionSymbolComputer
   implements Computer<List<RegionSymbol>> {
 
   private final DocumentContext documentContext;
-  private Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
-  private Deque<BSLParser.RegionStartContext> regionStartContextsStack = new ArrayDeque<>();
+  private Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack = new ArrayDeque<>();
   private List<RegionSymbol> regions = new ArrayList<>();
   private List<BSLParserRuleContext> allNodes = new ArrayList<>();
 
@@ -54,14 +53,14 @@ public final class RegionSymbolComputer
   public List<RegionSymbol> compute() {
     regionStack.clear();
     regions.clear();
-    regionStartContextsStack.clear();
     allNodes.clear();
 
     Trees.getDescendants(documentContext.getAst()).stream()
-      .filter(node -> (node instanceof BSLParserRuleContext)
-        && (((BSLParserRuleContext) node).getStop() != null)
-        && (((BSLParserRuleContext) node).getStart() != null))
-      .forEach(node -> allNodes.add((BSLParserRuleContext) node));
+      .filter(node -> node instanceof BSLParserRuleContext)
+      .map(node -> (BSLParserRuleContext) node)
+      .filter(node -> (node.getStop() != null)
+        && (node.getStart() != null))
+      .collect(Collectors.toCollection(() -> allNodes));
 
     visitFile(documentContext.getAst());
 
@@ -78,8 +77,7 @@ public final class RegionSymbolComputer
     builder.name(ctx.regionName().getText());
     builder.nameNode(ctx.regionName());
 
-    regionStack.push(builder);
-    regionStartContextsStack.push(ctx);
+    regionStack.push(Pair.of(builder, ctx));
     return super.visitRegionStart(ctx);
   }
 
@@ -90,11 +88,14 @@ public final class RegionSymbolComputer
       return super.visitRegionEnd(ctx);
     }
 
-    BSLParser.RegionStartContext regionStartContext = regionStartContextsStack.pop();
+    var pair = regionStack.pop();
+
+    RegionSymbol.RegionSymbolBuilder builder = pair.getLeft();
+    BSLParser.RegionStartContext regionStartContext = pair.getRight();
+
     int regionStartLine = regionStartContext.getStart().getLine();
     int regionEndLine = ctx.getStop().getLine();
 
-    RegionSymbol.RegionSymbolBuilder builder = regionStack.pop();
     builder.endNode(ctx);
     builder.endLine(ctx.getStop().getLine());
 
@@ -104,15 +105,13 @@ public final class RegionSymbolComputer
           && node.getStart().getLine() < regionEndLine)
       .collect(Collectors.toList());
 
-    if (!regionNodes.isEmpty()) {
-      builder.childrenNodes(Collections.unmodifiableList(regionNodes));
-    } else {
-      builder.childrenNodes(Collections.unmodifiableList(Collections.emptyList()));
-    }
+    builder.nodes(regionNodes);
 
     RegionSymbol region = builder.build();
-    RegionSymbol.RegionSymbolBuilder parent = regionStack.peek();
-    if (parent != null) {
+
+    var parentPair = regionStack.peek();
+    if (parentPair != null) {
+      RegionSymbol.RegionSymbolBuilder parent = parentPair.getLeft();
       parent.child(region);
     } else {
       regions.add(region);

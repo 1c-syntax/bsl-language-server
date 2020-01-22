@@ -62,7 +62,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   }
 
   private void checkRegion(RegionSymbol region) {
-    if (region.getChildrenNodes().isEmpty()) {
+    if (region.getNodes().isEmpty()) {
       diagnosticStorage.addDiagnostic(
         region.getNode(), info.getMessage(region.getName()));
     } else {
@@ -70,7 +70,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
       if (!children.isEmpty()) {
         // область может быть пустой т.к. в ней находятся только другие области
         // поэтому удалим области из списка и посмотрим, что осталось
-        List<BSLParserRuleContext> parentNodes = new ArrayList<>(region.getChildrenNodes());
+        List<BSLParserRuleContext> parentNodes = new ArrayList<>(region.getNodes());
         children.forEach((RegionSymbol childrenRegion) -> {
           parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode()));
           parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode().getParent()));
