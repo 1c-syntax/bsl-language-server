@@ -401,49 +401,49 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Error</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Critical</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>2</code></td>
-<td align="center"><code>clumsy</code></td>
+<td><code>Error</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Critical</code></td>
+<td><code>Yes</code></td>
+<td><code>2</code></td>
+<td><code>clumsy</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>The absence of an iterator in the loop body indicates either a useless iteration of the collection or an error in the loop body.</p>
+<p>Absence of iterator in the loop body indicates to useless collection iteration or to the error in the loop body.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="codehilite"><pre><span></span><span class="nv">For</span> <span class="k">Each</span> <span class="nv">Iterator</span> <span class="nv">From</span> <span class="nv">Collection</span> <span class="nv">Loop</span>
 
-    <span class="nv">ВыполнитьДействиеНадЭлементом</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
+    <span class="nv">ProcessElement</span><span class="p">(</span><span class="nv">Collection</span><span class="p">);</span>
 
-<span class="k">КонецЦикла</span><span class="p">;</span>
+<span class="nv">EndLoop</span><span class="p">;</span>
 </pre></div>
 
 
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="codehilite"><pre><span></span><span class="nv">For</span> <span class="k">Each</span> <span class="nv">Iterator</span> <span class="nv">From</span> <span class="nv">Collection</span> <span class="nv">Loop</span>
 
-    <span class="nv">ВыполнитьДействиеНадЭлементом</span><span class="p">(</span><span class="nv">Итератор</span><span class="p">);</span>
+    <span class="nv">ProcessElement</span><span class="p">(</span><span class="nv">Iterator</span><span class="p">);</span>
 
-<span class="k">КонецЦикла</span><span class="p">;</span>
+<span class="nv">EndLoop</span><span class="p">;</span>
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span><span class="nv">ВыполнитьДействиеНадКоллекцией</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="nv">ProcessCollection</span><span class="p">(</span><span class="nv">Collection</span><span class="p">);</span>
 </pre></div>
 
 
