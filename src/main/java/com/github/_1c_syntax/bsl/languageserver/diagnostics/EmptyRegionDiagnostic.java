@@ -29,7 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.RuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -41,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -52,6 +54,13 @@ import java.util.Optional;
 )
 public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
+  private static final Set<Integer> REGIONS_NODE_INDEXES = Set.of(
+    BSLParser.RULE_regionName,
+    BSLParser.RULE_regionStart,
+    BSLParser.RULE_regionEnd,
+    BSLParser.RULE_preprocessor
+  );
+
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -62,28 +71,16 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
   }
 
   private void checkRegion(RegionSymbol region) {
-    if (region.getNodes().isEmpty()) {
-      diagnosticStorage.addDiagnostic(
-        region.getNode(), info.getMessage(region.getName()));
-    } else {
-      List<RegionSymbol> children = region.getChildren();
-      if (!children.isEmpty()) {
-        // область может быть пустой т.к. в ней находятся только другие области
-        // поэтому удалим области из списка и посмотрим, что осталось
-        List<BSLParserRuleContext> parentNodes = new ArrayList<>(region.getNodes());
-        children.forEach((RegionSymbol childrenRegion) -> {
-          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode()));
-          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getStartNode().getParent()));
-          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode()));
-          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getEndNode().getParent()));
-          parentNodes.removeIf(parentNode -> parentNode.equals(childrenRegion.getNameNode()));
-        });
+    var hasChildren = region.getNodes().stream()
+      .map(RuleContext::getRuleIndex)
+      .filter(ruleIndex -> !REGIONS_NODE_INDEXES.contains(ruleIndex))
+      .findAny();
 
-        if (parentNodes.isEmpty()) {
-          diagnosticStorage.addDiagnostic(
-            region.getNode(), info.getMessage(region.getName()));
-        }
-      }
+    if (hasChildren.isEmpty()) {
+      diagnosticStorage.addDiagnostic(
+        region.getNode(),
+        info.getMessage(region.getName())
+      );
     }
   }
 
