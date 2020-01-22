@@ -1,10 +1,11 @@
 # Source code parse error (ParseError)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `5` | `error` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `error`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 The error occurs if the source code of the module is written in violation of the language syntax or if the preprocessor instructions are used incorrectly.
@@ -16,32 +17,32 @@ Separate grammatical constructions, expressions, as well as declarations and pla
 Incorrect:
 
 ```bsl
-Процедура Пример1()
-  а = 1
-#Область ИмяОбласти
+Procedure Example1()
+  a = 1
+#Region RegionName
     + 2;
-#КонецОбласти // statement split
-КонецПроцедуры
+#EndRegion // statement split
+EndProcedure
 
-#Область ИмяОбласти
-Процедура Пример2()
+#Region RegionName
+Procedure Example2()
     // ...
-#КонецОбласти // procedure split
-КонецПроцедуры
+#EndRegion // procedure split
+EndProcedure
 
-Если <...> Тогда
+If <...> Then
     // ...
-#Если ВебКлиент Тогда // If-Then block split
-Иначе
+#If webClient Then // If-Then block split
+Else
     // ...
-#КонецЕсли
-КонецЕсли;
+#EndIf
+EndIf;
 
-Результат = Пример4(Параметр1, 
-#Если Клиент Тогда
-  Параметр2, // incorrect function call
-#КонецЕсли
-  Параметр3);
+Result = Example4(Parameter1,
+#If Client Then
+  Parameter2, // incorrect function call
+#EndIf
+  Parameter3);
 ```
 
 ## Reference
@@ -51,6 +52,7 @@ Incorrect:
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
