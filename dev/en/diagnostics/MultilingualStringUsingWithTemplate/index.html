@@ -351,6 +351,40 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    Sources
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snippets" class="md-nav__link">
+    Snippets
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
+    Diagnostic ignorance in code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-for-config" class="md-nav__link">
+    Parameter for config
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
       
       
       
@@ -374,22 +408,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Error</code></td>
-<td align="center"><code>BSL</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>2</code></td>
-<td align="center"><code>error</code><br/><code>localize</code></td>
+<td><code>Error</code></td>
+<td><code>BSL</code></td>
+<td><code>Major</code></td>
+<td><code>Yes</code></td>
+<td><code>2</code></td>
+<td><code>error</code><br><code>localize</code></td>
 </tr>
 </tbody>
 </table>
@@ -397,32 +431,30 @@
 <table>
 <thead>
 <tr>
-<th align="center">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
-<th align="center">Default value</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>declaredLanguages</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>Declared languages</code></td>
-<td align="center"><code>ru</code></td>
+<td><code>declaredLanguages</code></td>
+<td><code>String</code></td>
+<td><code>Declared languages</code></td>
+<td><code>ru</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<h1 id="there-is-a-localized-text-for-all-languages-declared-in-the-configuration">There is a localized text for all languages declared in the configuration<a class="headerlink" href="#there-is-a-localized-text-for-all-languages-declared-in-the-configuration" title="Permanent link">Link</a></h1>
 <p>NStr in a multilingual configuration has different fragments for different languages.
 If you start a session under a language code that is not in the string passed to NStr, it will return an empty string.
 When used with StrTemplate, an empty string returned from NStr will throw an exception.</p>
-<p>Source: [localization requirements] (https://its.1c.ru/db/v8std/content/763/hdoc)</p>
-<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">Link</a></h2>
+<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
-<li><code>Declared languages</code> -<code>String</code> - Comma-separated lines of language codes that support configuration. For example: <code>ru, en</code></li>
+<li><a href="https://its.1c.ru/db/v8std/content/763/hdoc">[localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
