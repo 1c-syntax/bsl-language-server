@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 --- | --- | --- | ---
-`maxIfConditionComplexity` | `Целое` | `Acceptable number of logical expressions in operator If condition` | `3`
+`maxIfConditionComplexity` | `Integer` | `Acceptable number of logical expressions in operator If condition` | `3`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
