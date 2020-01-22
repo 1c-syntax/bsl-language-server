@@ -1,16 +1,17 @@
 # Limit on the number of property values passed to the structure constructor (NumberOfValuesInStructureConstructor)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `10` | `standard`<br/>`brainoverload` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `10` | `standard`<br>`brainoverload`
 
-## Parameters 
+## Parameters
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `maxValuesCount` | `Integer` | ```Max count values in structure construction``` | ```3``` |
+Name | Type | Description | Default value
+--- | --- | --- | ---
+`maxValuesCount` | `Integer` | `Allowed number parameter values passed to structure constructor` | `3`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly.
@@ -68,6 +69,7 @@ Correct:
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
