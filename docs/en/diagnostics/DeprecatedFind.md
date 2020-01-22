@@ -1,36 +1,37 @@
 # Using of the deprecated method "Find" (DeprecatedFind)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Minor` | `Yes` | `2` | `deprecated` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL` | `Minor` | `Yes` | `2` | `deprecated`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 Method "Find" is deprecated. Use "StrFind" instead.
 
 ## Examples
 
-### Noncompliant
+Incorrect:
 
 ```bsl
 If Find(Collaborator.Name, "Boris") > 0 Then
     
-EndIf; 
+EndIf;
 ```
 
-
-### Compliant
+Correct:
 
 ```bsl
 If StrFind(Collaborator.Name, "Boris") > 0 Then
     
-EndIf; 
+EndIf;
 ```
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
