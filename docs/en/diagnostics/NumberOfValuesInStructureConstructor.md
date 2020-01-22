@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 --- | --- | --- | ---
-`maxValuesCount` | `Целое` | `Allowed number parameter values passed to structure constructor` | `3`
+`maxValuesCount` | `Integer` | `Allowed number parameter values passed to structure constructor` | `3`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
