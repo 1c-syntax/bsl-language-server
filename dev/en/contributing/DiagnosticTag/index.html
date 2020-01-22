@@ -38,7 +38,7 @@
     
     
       
-        <title>Тэги диагностик - BSL Language Server Dev</title>
+        <title>Diagnostic Tags - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#diagnostic-tags" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Тэги диагностик
+                Diagnostic Tags
               
             </span>
           
@@ -334,6 +334,22 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tag-description" class="md-nav__link">
+    Tag Description
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -347,7 +363,26 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticTag.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Тэги диагностик<a class="headerlink" href="#_1" title="Permanent link">Link</a></h1>
+                <h1 id="diagnostic-tags">Diagnostic Tags<a class="headerlink" href="#diagnostic-tags" title="Permanent link">Link</a></h1>
+<p>Each diagnostic has a set of tags. They are groups in which diagnostics are included.
+ For the correct tag selection, their detailed description is given below.</p>
+<p><strong>ATTENTION:</strong> diagnostic can have from 1 to 3 tags</p>
+<h2 id="tag-description">Tag Description<a class="headerlink" href="#tag-description" title="Permanent link">Link</a></h2>
+<ul>
+<li><code>STANDARD</code> -  Used in diagnosing violations of 1C COMPANY standards</li>
+<li><code>LOCKINOS</code> - Feature may not work in other OS</li>
+<li><code>SQL</code> - Used in diagnosing any problems with 1C queries</li>
+<li><code>PERFORMANCE</code> - Performance issue detected</li>
+<li><code>BRAINOVERLOAD</code> - Difficult to understand code</li>
+<li><code>BADPRACTICE</code> - Found use of bad programming practices</li>
+<li><code>CLUMSY</code> - Used when detecting unnecessary algorithmic constructs or actions</li>
+<li><code>DESIGN</code> - Errors in solution design, architectural problems</li>
+<li><code>SUSPICIOUS</code> - Used to diagnose strange code that needs attention</li>
+<li><code>UNPREDICTABLE</code> - Must be used when detecting working code that can behave unpredictably</li>
+<li><code>DEPRECATED</code> - For diagnostics that detect the use of legacy functions, methods, method names, etc.</li>
+<li><code>ERROR</code> - Used when detecting code errors (using non-existent language constructs, methods, etc.)</li>
+<li><code>LOCALIZE</code> - For errors and possible problems when localizing the application in other languages</li>
+</ul>
                 
                   
                 

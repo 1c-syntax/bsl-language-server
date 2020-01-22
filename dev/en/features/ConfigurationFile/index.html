@@ -38,7 +38,7 @@
     
     
       
-        <title>Конфигурирование BSL Language Server - BSL Language Server Dev</title>
+        <title>BSL Language Server Configuration - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#bsl-language-server" tabindex="1" class="md-skip">
+      <a href="#bsl-language-server-configuration" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Конфигурирование BSL Language Server
+                BSL Language Server Configuration
               
             </span>
           
@@ -334,6 +334,29 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#settings" class="md-nav__link">
+    Settings
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -347,7 +370,79 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/features/ConfigurationFile.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="bsl-language-server">Конфигурирование BSL Language Server<a class="headerlink" href="#bsl-language-server" title="Permanent link">Link</a></h1>
+                <h1 id="bsl-language-server-configuration">BSL Language Server Configuration<a class="headerlink" href="#bsl-language-server-configuration" title="Permanent link">Link</a></h1>
+<p>BSL Language Server provides the ability to change the settings using a configuration file in json format.
+ The created file must be specified using the key <code>--configuration</code> <em>(or <code>-c</code>)</em>  when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation <em>(this is usually the root of a project or workspace)</em>.</p>
+<h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">Link</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>diagnosticLanguage</code></td>
+<td><code>String</code></td>
+<td>Set the language for displaying diagnosed comments. Supported languages:<br><em> <code>ru</code> - for Russian (</em>default<em>)<br></em> <code>en</code> - for English</td>
+</tr>
+<tr>
+<td><code>showCognitiveComplexityCodeLens</code></td>
+<td><code>Boolean</code></td>
+<td>In code editors/IDE with support codelens<em>(for example <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, enables displaying the value<a href="../../diagnostics/CognitiveComplexity/"> of the cognitive complexity</a> of the method over its definition. By default is enabled (<em>is set to <code>true</code></em>)</td>
+</tr>
+<tr>
+<td><code>showCyclomaticComplexityCodeLens</code></td>
+<td><code>Boolean</code></td>
+<td>Similar to <code>showCognitiveComplexityCodeLens</code>, enables the display of the <a href="../../diagnostics/CyclomaticComplexity/">cyclomatic complexity</a> value   of the method. By default enabled (<em>is set to <code>true</code></em>)</td>
+</tr>
+<tr>
+<td><code>computeDiagnosticsTrigger</code></td>
+<td><code>String</code></td>
+<td>Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br><em> <code>onType</code> -when editing a file (online) <strong><em>on large files can significantly slow down editing </em></strong><br></em> <code>onSave</code> - when saving a file (<em>default</em>)<br>* <code>never</code> - analysis will not be performed</td>
+</tr>
+<tr>
+<td><code>computeDiagnosticsSkipSupport</code></td>
+<td><code>String</code></td>
+<td>This parameter sets <strong>1C configuration</strong> file skipping mode <em>(for example files are not analyzed for issues)</em> which are "on support" from vendor configuration. Possible values:<br><em> <code>withSupport</code> - skip all modules set "on support" </em>(all "locks" types)<em><br></em> <code>withSupportLocked</code> -  skip modules set "on support" with prohibited modification <em>("yellow  closed lock")</em><br><em> <code>never</code> - skip no modules as support mode is not analyzed </em>(set by default)*</td>
+</tr>
+<tr>
+<td><code>traceLog</code></td>
+<td><code>String</code></td>
+<td>To log all requests <em>(incoming and outgoing)</em> between <strong>BSL Language Server</strong> and <strong>Language Client</strong>  from used editor/IDE. this parameter sets log file path. The path can set either absolute or relative <em>(from project root)</em>, by default the value is not set.<br><br><strong>WARNING</strong><br><br><em> When starting <strong>BSL Language Server</strong> overwrites this file <br></em> Speed of interaction between client and server <strong>DRAMATICALLY REDUCED</strong></td>
+</tr>
+<tr>
+<td><code>diagnostics</code></td>
+<td><code>JSON-Object</code></td>
+<td>Parameter is a collection of diagnostics parameters.  Collection items are json-objects with the following structure:<br><em> </em>object key<em> - string, is diagnostic key<br></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type  <code>json-object</code>,  collection of diagnostic parameters.<br><br>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
+</tr>
+</tbody>
+</table>
+<p>You can use the following JSON schema to make it easier to compile and edit a configuration file:</p>
+<div class="codehilite"><pre><span></span><span class="c">https://1c-syntax.github.io/bsl-language-server/configuration/schema.json</span>
+</pre></div>
+
+
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">Link</a></h2>
+<p>The following is an example of a settings:</p>
+<ul>
+<li>Language of diagnostics messages - English;</li>
+<li>Changes the diagnostic setting for <a href="../../diagnostics/LineLength/">LineLength - Line Length limit</a>, set the limit for the length of a string to 140 characters;</li>
+<li>Disable <a href="../../diagnostics/MethodSize/">MethodSize - Method size restriction{/a0 } diagnostic.</a></li>
+</ul>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;diagnosticLanguage&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;LineLength&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span> <span class="mi">140</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span> <span class="kc">false</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
                 
                   
                 
