@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 --- | --- | --- | ---
-`maxLineLength` | `Целое` | `Max length of string in characters` | `120`
+`maxLineLength` | `Integer` | `Max length of string in characters` | `120`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
