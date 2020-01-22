@@ -352,8 +352,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sources" class="md-nav__link">
-    Sources
+  <a href="#reference" class="md-nav__link">
+    Reference
   </a>
   
 </li>
@@ -408,22 +408,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Error</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>15</code></td>
-<td align="center"><code>standard</code></td>
+<td><code>Error</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Major</code></td>
+<td><code>Yes</code></td>
+<td><code>15</code></td>
+<td><code>standard</code></td>
 </tr>
 </tbody>
 </table>
@@ -433,17 +433,17 @@
 <p>Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p><em>Correct</em></p>
-<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIDb</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIB</span><span class="p">()</span>
 
-    <span class="nb">BeginTransaction</span><span class="p">();</span>
+    <span class="nv">StartTransaction</span><span class="p">();</span>
 
     <span class="k">Try</span>
-        <span class="o">...</span> <span class="c c-Singleline">// reading or writing data</span>
+        <span class="o">...</span> <span class="c c-Singleline">// read or write data</span>
         <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Write</span><span class="p">()</span>
         <span class="nb">CommitTransaction</span><span class="p">();</span>
-    <span class="k">Except</span>
+    <span class="k">Raise</span>
         <span class="nb">RollbackTransaction</span><span class="p">();</span>
-        <span class="o">...</span> <span class="c c-Singleline">// additional actions to process the exception</span>
+        <span class="o">...</span> <span class="c c-Singleline">// additional operations to process the exception</span>
     <span class="k">EndTry</span><span class="p">;</span>
 
 <span class="k">EndProcedure</span>
@@ -451,9 +451,9 @@
 
 
 <p><em>Incorrect</em></p>
-<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIDb</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIB</span><span class="p">()</span>
 
-    <span class="nb">Begintransaction</span><span class="p">();</span>
+    <span class="nv">StartTransaction</span><span class="p">();</span>
     <span class="nv">WriteDocument</span><span class="p">();</span>
 
 <span class="k">EndProcedure</span><span class="p">;</span>
@@ -461,19 +461,19 @@
 <span class="nv">Procedure</span> <span class="nv">WriteDocument</span><span class="p">()</span>
 
     <span class="k">Try</span>
-        <span class="o">...</span> <span class="c c-Singleline">// reading or writing data</span>
+        <span class="o">...</span> <span class="c c-Singleline">// read or write data</span>
         <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Write</span><span class="p">()</span>
-        <span class="nv">CommitTransacrion</span><span class="p">();</span>
-    <span class="k">Except</span>
+        <span class="nb">CommitTransaction</span><span class="p">();</span>
+    <span class="k">Raise</span>
         <span class="nb">RollbackTransaction</span><span class="p">();</span>
-    <span class="o">...</span> <span class="c c-Singleline">// additional actions to process the exception</span>
+        <span class="o">...</span> <span class="c c-Singleline">// additional operations to process the exception</span>
     <span class="k">EndTry</span><span class="p">;</span>
 
 <span class="k">EndProcedure</span>
 </pre></div>
 
 
-<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:783:hdoc">Transactions: Terms of Use</a></li>
 </ul>
