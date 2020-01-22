@@ -38,7 +38,7 @@
     
     
       
-        <title>Экранирование кода от диагностик - BSL Language Server Dev</title>
+        <title>Escaping Code from Diagnostic - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#escaping-code-from-diagnostic" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Экранирование кода от диагностик
+                Escaping Code from Diagnostic
               
             </span>
           
@@ -334,6 +334,70 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    Description
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples-and-use-cases" class="md-nav__link">
+    Examples and use cases
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#disable-all-diagnostics-in-the-module" class="md-nav__link">
+    Disable all diagnostics in the module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disable-specific-diagnostics-in-the-module" class="md-nav__link">
+    Disable specific diagnostics in the module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disable-all-diagnostics-for-code-block" class="md-nav__link">
+    Disable all diagnostics for code block
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disable-specific-diagnostics-for-code-block" class="md-nav__link">
+    Disable specific diagnostics for code block
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disable-single-line-diagnostics" class="md-nav__link">
+    Disable single line diagnostics
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -347,7 +411,76 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/features/DiagnosticIgnorance.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Экранирование кода от диагностик<a class="headerlink" href="#_1" title="Permanent link">Link</a></h1>
+                <h1 id="escaping-code-from-diagnostic">Escaping Code from Diagnostic<a class="headerlink" href="#escaping-code-from-diagnostic" title="Permanent link">Link</a></h1>
+<p>The static analyzer detects problems, errors, and flaws in the code in accordance with the rules (diagnostics) embedded in it. As elsewhere, there may be situations in the solution code where you need to deviate from the rules. These situations can occur for various reasons: both due to the architectural features of the solution, and as a result of the inability (for various reasons) to change the code to meet the requirements.</p>
+<p>Instead of manually mark a comment as irrelevant every time, BSL LS provides functionality that allows you to hide or screen individual sections of code from triggering diagnostics.</p>
+<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
+<p>To hide part of the code from the BSL LS analyzer, you must add a special comment to the code.
+ The escaping comment is formed as follows: <code>[Prefix][:DiagnosticKey]-[ActivationFlag]</code>. Now in more detail.</p>
+<ul>
+<li><code>Prefix</code> always is <code>// BSLLS</code></li>
+<li><code>DiagnosticKey</code> can be found in the <a href="../../diagnostics/">list of diagnostics</a> by description.</li>
+<li><code>ActivationFlag</code> string parameter if giagnostic is On or Off. Supported Russian (<code>вкл</code> and <code>выкл</code>) and English (<code>on</code> and <code>off</code>).</li>
+</ul>
+<p>To disable <strong>ALL</strong> diagnostics for part of the code, you must omit the diagnostic key.</p>
+<h2 id="examples-and-use-cases">Examples and use cases<a class="headerlink" href="#examples-and-use-cases" title="Permanent link">Link</a></h2>
+<h3 id="disable-all-diagnostics-in-the-module">Disable all diagnostics in the module<a class="headerlink" href="#disable-all-diagnostics-in-the-module" title="Permanent link">Link</a></h3>
+<p>To disable all diagnostics in the module, i.e. essentially hide the module from the BSL LS analyzer, you need to insert a comment <code>// BSLLS-off</code> at the beginning of the module</p>
+<h3 id="disable-specific-diagnostics-in-the-module">Disable specific diagnostics in the module<a class="headerlink" href="#disable-specific-diagnostics-in-the-module" title="Permanent link">Link</a></h3>
+<p>For disable specific diagnostics in the module (for example, the cognitive complexity <code>CognitiveComplexity</code> and size limit of the method <code>MethodSize</code>), you must insert the comment <code>// BSLLS:CognitiveComplexity-off</code> and <code>// BSLLS:MethodSize-off</code></p>
+<h3 id="disable-all-diagnostics-for-code-block">Disable all diagnostics for code block<a class="headerlink" href="#disable-all-diagnostics-for-code-block" title="Permanent link">Link</a></h3>
+<p>If you want to disable diagnostics for a section of code, leaving the BSL LS option to analyze the remaining ones, you must <code>wrap</code> the hidden section of code</p>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS-off</span>
+<span class="nv">Procedure</span> <span class="nv">SkipByBSLLS</span><span class="p">()</span>
+    <span class="c c-Singleline">// content will be ignored</span>
+<span class="k">EndProcedure</span>
+<span class="c c-Singleline">// BSLLS-on</span>
+
+<span class="nv">Procedure</span> <span class="nv">AnalyzeByBSLLS</span><span class="p">()</span>
+    <span class="c c-Singleline">// content will be  analyzed</span>
+<span class="k">EndProcedure</span>
+</pre></div>
+
+
+<h3 id="disable-specific-diagnostics-for-code-block">Disable specific diagnostics for code block<a class="headerlink" href="#disable-specific-diagnostics-for-code-block" title="Permanent link">Link</a></h3>
+<p>If you need to disable specific diagnostics (for example, the cognitive complexity <code>CognitiveComplexity</code> and the limit on the size of the method <code>MethodSize</code>) for a section of code, you must <code>wrap</code> the hidden section of code for example</p>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<span class="nv">Procedure</span> <span class="nv">SkipedByMethodSizeMethod</span><span class="p">()</span>
+    <span class="c c-Singleline">// Very long code block</span>
+<span class="k">EndProcedure</span>
+<span class="c c-Singleline">// BSLLS:MethodSize-on</span>
+
+<span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<span class="nv">Procedure</span> <span class="nv">SkipedByCognitiveComplexityMethod</span><span class="p">()</span>
+    <span class="c c-Singleline">// Very long and complexity code block</span>
+<span class="k">EndProcedure</span>
+<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+</pre></div>
+
+
+<p>Embedding <code>wrappers</code>, is supported, i.e. it is possible to escape a block of code from several diagnostics, for example</p>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<span class="nv">Procedure</span> <span class="nv">SkipedByMethodSizeCognitiveComplexityMethod</span><span class="p">()</span>
+    <span class="c c-Singleline">// Very long code block</span>
+<span class="k">EndProcedure</span>
+<span class="c c-Singleline">// BSLLS:MethodSize-on</span>
+
+<span class="nv">Procedure</span> <span class="nv">SkipedByCognitiveComplexityПроцедура</span><span class="p">()</span>
+   <span class="c c-Singleline">// Very complex and incomprehensible code block, but not long</span>
+<span class="k">EndProcedure</span>
+<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+</pre></div>
+
+
+<h3 id="disable-single-line-diagnostics">Disable single line diagnostics<a class="headerlink" href="#disable-single-line-diagnostics" title="Permanent link">Link</a></h3>
+<p>To escape a single line, you can use {code 0}wrapper{/code 0} as in the example above, but it is more convenient to use <code>inline comment</code>, i.e. the comment located at the end of the line, example</p>
+<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">SomeMethode</span><span class="p">()</span>
+    <span class="nv">if</span> <span class="kc">true</span> <span class="k">then</span><span class="c c-Singleline">// BSLLS:CanonicalSpellingKeywords-off</span>
+        <span class="c c-Singleline">// Analized content</span>
+    <span class="nv">EndIf</span><span class="p">;</span>
+<span class="k">EndProcedure</span>
+</pre></div>
                 
                   
                 
