@@ -1,20 +1,21 @@
 # Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; (MissingSpace)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `badpractice` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice`
 
-## Parameters 
+## Parameters
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `checkSpaceToRightOfUnary` | `Boolean` | ```Check space right from unary (+ -)``` | ```false``` |
-| `listForCheckRight` | `String` | ```Symbols  for spaces from right side (space separated). Example: ( =``` | ```, ;``` |
-| `listForCheckLeft` | `String` | ```Symbols  for spaces from left side (space separated). Example: ) =``` | `````` |
-| `allowMultipleCommas` | `Boolean` | ```Allow few commas``` | ```false``` |
-| `listForCheckLeftAndRight` | `String` | ```Symbols for spaces from both side(space separated) Example: + - * / = % < >``` | ```+ - * / = % < > <> <= >=``` |
+Name | Type | Description | Default value
+--- | --- | --- | ---
+`checkSpaceToRightOfUnary` | `Boolean` | `Check for space to the right of unary signs (+ -)` | `false`
+`listForCheckRight` | `String` | `List of symbols to check for the space to the right of (separated by space). Example: ) =` | `, ;`
+`listForCheckLeft` | `String` | `List of symbols to check for the space to the left of (separated by space). Example: ) =` | ``````
+`allowMultipleCommas` | `Boolean` | `Allow several comas in a row` | `false`
+`listForCheckLeftAndRight` | `String` | `List of symbols to check for the space from both sides of (separated by space). Example: + - * / = % < >` | `+ - * / = % < > <> <= >=`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.
@@ -44,7 +45,7 @@ EndProcedure
 
 ### Using `checkSpaceToRightOfUnary` parameter
 
-The parameter makes sense only in case the unary operator if listed in one of three base parameters.
+The parameter makes sense only in case the unary operator is listed in one of three base parameters.
 
 If set to `false`
 
@@ -67,20 +68,21 @@ The parameter has sense only if `,` is listed in one of three base parameters
 If set to `false`
 
 ```bsl
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Incorrect
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Incorrect
+CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
 ```
 
 If set to `true`
 
 ```bsl
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Correct
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Correct
+CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
 ```
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
