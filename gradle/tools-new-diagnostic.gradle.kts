@@ -54,8 +54,8 @@ open class ToolsNewDiagnostic @javax.inject.Inject constructor(objects: ObjectFa
         if(inputStr.isNullOrBlank()) {
             throw Throwable("Empty diagnostic tags")
         }
-        var diagnosticTags = inputStr.split(' ').joinToString(",\n\t\tDiagnosticTag.");
-        diagnosticTags = "tags = {\n\t\tDiagnosticTag.$diagnosticTags\n\t}\n";
+        var diagnosticTags = inputStr.split(' ').joinToString(",\n    DiagnosticTag.");
+        diagnosticTags = "tags = {\n    DiagnosticTag.$diagnosticTags\n  }\n";
 
         logger.quiet("Creating new diagnostics files with the key '{}'", key);
         val srcPath = File(outputDir.get().asFile.path, "src");
