@@ -421,22 +421,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>No</code></td>
-<td align="center"><code>15</code></td>
-<td align="center"><code>standard</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code></td>
+<td><code>Major</code></td>
+<td><code>No</code></td>
+<td><code>15</code></td>
+<td><code>standard</code></td>
 </tr>
 </tbody>
 </table>
@@ -506,11 +506,11 @@
 </tbody>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// Пример &quot;Плохо&quot;</span>
-<span class="nb">Предупреждение</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// Example &quot;Incorrect&quot;</span>
+<span class="nv">warning</span><span class="p">(</span><span class="nb">NStr</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 
-<span class="c c-Singleline">// Пример &quot;Хорошо&quot;</span>
-<span class="nb">ПоказатьПредупреждение</span><span class="p">(,</span> <span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
+<span class="c c-Singleline">// Example &quot;Correct&quot;</span>
+<span class="nv">ShowWarning</span><span class="p">(,</span> <span class="nb">NStr</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 </pre></div>
 
 
