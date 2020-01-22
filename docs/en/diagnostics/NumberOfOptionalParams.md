@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 --- | --- | --- | ---
-`maxOptionalParamsCount` | `Integer` | `Max number of optional parameters` | `3`
+`maxOptionalParamsCount` | `Integer` | `Допустимое количество необязательных параметров метода` | `3`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
