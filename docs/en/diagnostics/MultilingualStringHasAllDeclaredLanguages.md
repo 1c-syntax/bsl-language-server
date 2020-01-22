@@ -18,7 +18,7 @@ If you start a session under a language code that is not in the string passed to
 
 ## Sources
 
-- [[localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [localization requirements](https://its.1c.ru/db/v8std/content/763/hdoc)
 
 ## Snippets
 
