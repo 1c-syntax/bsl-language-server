@@ -349,6 +349,26 @@
     Examples
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#incorrect" class="md-nav__link">
+    Incorrect:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#correct" class="md-nav__link">
+    Correct:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -408,30 +428,49 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>1</code></td>
-<td align="center"><code>standard</code><br/><code>unpredictable</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code></td>
+<td><code>Major</code></td>
+<td><code>Yes</code></td>
+<td><code>1</code></td>
+<td><code>standard</code><br><code>unpredictable</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
+<p>All methods of managed forms and commands must have compilation directives.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
+<h4 id="incorrect">Incorrect:<a class="headerlink" href="#incorrect" title="Permanent link">Link</a></h4>
+<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">OnCreateAtServer</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</pre></div>
+
+
+<h4 id="correct">Correct:<a class="headerlink" href="#correct" title="Permanent link">Link</a></h4>
+<div class="codehilite"><pre><span></span><span class="kd">&amp;AtServer</span>
+<span class="nv">Procedure</span> <span class="nv">OnCreateAtServer</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="k">EndProcedure</span>
+</pre></div>
+
+
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
+<ul>
+<li>Helpful information: <a href="https://its.1c.ru/db/pubv8devui#content:189:1">Разработка интерфейса прикладных решений на платформе "1С:Предприятие 8"</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
