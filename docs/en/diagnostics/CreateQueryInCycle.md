@@ -1,27 +1,26 @@
 # Execution query on cycle (CreateQueryInCycle)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `20` | `performance` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `20` | `performance`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
 
-## Описание диагностики
+## Description
 
 Execution query in cycle
 
-## Примеры
+## Examples
 
 Bad
 
 ```Bsl
 
-СписокДокументов = Новый Массив;    
+СписокДокументов = Новый Массив;
 СуммаДокументов = 0;
 Для индекс = 0 По СписокДокументов.ВГраница() Цикл
 	Запрос = Новый Запрос;
-	Запрос.Текст = 
+	Запрос.Текст =
 		"ВЫБРАТЬ
 		|	ПоступлениеТоваровУслуг.СуммаДокумента
 		|ИЗ
@@ -46,11 +45,11 @@ Bad
 Good
 
 ```Bsl
-СписокДокументов = Новый Массив;    
+СписокДокументов = Новый Массив;
 СуммаДокументов = 0;
 
 Запрос = Новый Запрос;
-Запрос.Текст = 
+Запрос.Текст =
 	"ВЫБРАТЬ
 	|	СУММА(ПоступлениеТоваровУслуг.СуммаДокумента) КАК СуммаДокумента
 	|ИЗ
@@ -73,6 +72,7 @@ Good
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
