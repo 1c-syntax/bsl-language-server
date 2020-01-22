@@ -428,22 +428,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>10</code></td>
-<td align="center"><code>standard</code><br/><code>badpractice</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Major</code></td>
+<td><code>Yes</code></td>
+<td><code>10</code></td>
+<td><code>standard</code><br><code>badpractice</code></td>
 </tr>
 </tbody>
 </table>
@@ -451,7 +451,8 @@
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".</p>
-<p>This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.In addition when modifying configuration the number of such checks can increase.</p>
+<p>This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.</p>
+<p>In addition when modifying configuration the number of such checks can increase.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <h3 id="incorrect">Incorrect<a class="headerlink" href="#incorrect" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>

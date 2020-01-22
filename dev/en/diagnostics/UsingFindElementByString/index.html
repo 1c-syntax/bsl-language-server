@@ -401,45 +401,45 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>2</code></td>
-<td align="center"><code>standard</code><br/><code>badpractice</code><br/><code>performance</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code></td>
+<td><code>Major</code></td>
+<td><code>Yes</code></td>
+<td><code>2</code></td>
+<td><code>standard</code><br><code>badpractice</code><br><code>performance</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>The diagnostic finds use of methods FindByName and FindByCode with hardcoded values.</p>
+<p>It is forbidden to use the search methods for elements "FindByName" or "FindByCode".</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><span class="nv">Должность</span> <span class="o">=</span> <span class="nb">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nv">НайтиПоНаименованию</span><span class="p">(</span><span class="s1">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="nv">Position</span> <span class="o">=</span> <span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nv">FindByName</span><span class="p">(</span><span class="s1">&quot;Senior Accountant&quot;</span><span class="p">);</span>
 </pre></div>
 
 
 <p>or</p>
-<div class="codehilite"><pre><span></span><span class="nv">Должность</span> <span class="o">=</span> <span class="nb">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="s1">&quot;00-0000001&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="nv">Position</span> <span class="o">=</span> <span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="s1">&quot;00-0000001&quot;</span><span class="p">);</span>
 </pre></div>
 
 
 <p>Acceptable use:</p>
-<div class="codehilite"><pre><span></span><span class="nb">Справочники</span><span class="o">.</span><span class="nv">Валюты</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Currencies</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="nv">CurrentData</span><span class="o">.</span><span class="nv">CurrencyCodeDigital</span><span class="p">);</span>
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span><span class="nb">Справочники</span><span class="o">.</span><span class="nv">КлассификаторБанков</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="nv">СведенияОБанке</span><span class="o">.</span><span class="nv">БИК</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">BankClassifier</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="nv">BankDetails</span><span class="o">.</span><span class="nv">BIK</span><span class="p">);</span>
 </pre></div>
 
 
