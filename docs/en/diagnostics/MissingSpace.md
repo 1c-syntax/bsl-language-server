@@ -8,10 +8,10 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 --- | --- | --- | ---
-`checkSpaceToRightOfUnary` | `Булево` | `Check for space to the right of unary signs (+ -)` | `false`
+`checkSpaceToRightOfUnary` | `Boolean` | `Check for space to the right of unary signs (+ -)` | `false`
 `listForCheckRight` | `String` | `List of symbols to check for the space to the right of (separated by space). Example: ) =` | `, ;`
 `listForCheckLeft` | `String` | `List of symbols to check for the space to the left of (separated by space). Example: ) =` | ``````
-`allowMultipleCommas` | `Булево` | `Allow several comas in a row` | `false`
+`allowMultipleCommas` | `Boolean` | `Allow several comas in a row` | `false`
 `listForCheckLeftAndRight` | `String` | `List of symbols to check for the space from both sides of (separated by space). Example: + - * / = % < >` | `+ - * / = % < > <> <= >=`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
