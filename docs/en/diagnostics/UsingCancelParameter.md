@@ -1,15 +1,18 @@
 # Using parameter "Cancel" (UsingCancelParameter)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Major` | `Yes` | `10` | `standard`<br/>`badpractice` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `standard`<br>`badpractice`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".
 
-This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.In addition when modifying configuration the number of such checks can increase.
+This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.
+
+In addition when modifying configuration the number of such checks can increase.
 
 ## Examples
 
@@ -43,11 +46,12 @@ Cancel = Cancel Или ЕстьОшибкиЗаполнения();
 
 ## Sources
 
-* [Standart: Working with the "Cancel" option in event handlers(RU)](https://its.1c.ru/db/v8std#content:686:hdoc)
+- [Standart: Working with the "Cancel" option in event handlers(RU)](https://its.1c.ru/db/v8std#content:686:hdoc)
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
