@@ -408,22 +408,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Minor</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>5</code></td>
-<td align="center"><code>brainoverload</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Minor</code></td>
+<td><code>Yes</code></td>
+<td><code>5</code></td>
+<td><code>brainoverload</code></td>
 </tr>
 </tbody>
 </table>
@@ -431,18 +431,18 @@
 <table>
 <thead>
 <tr>
-<th align="center">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
-<th align="center">Default value</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>maxIfConditionComplexity</code></td>
-<td align="center"><code>Integer</code></td>
-<td align="left"><code>Maximum count condition in if statement</code></td>
-<td align="center"><code>3</code></td>
+<td><code>maxIfConditionComplexity</code></td>
+<td><code>Integer</code></td>
+<td><code>Acceptable number of logical expressions in operator If condition</code></td>
+<td><code>3</code></td>
 </tr>
 </tbody>
 </table>
@@ -458,19 +458,19 @@
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr4&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr5&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr6&quot;</span>
-    <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr7&quot;</span> 
+    <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr7&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr8&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr9&quot;</span> <span class="k">Then</span>
 
    <span class="nv">doSomeWork</span><span class="p">();</span>
 
-<span class="nv">EndIf</span><span class="p">;</span> 
+<span class="nv">EndIf</span><span class="p">;</span>
 </pre></div>
 
 
 <p>Good:</p>
 <div class="codehilite"><pre><span></span><span class="nv">If</span> <span class="nv">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span> <span class="k">Then</span>
-   <span class="nv">doSomeWork</span><span class="p">();</span>    
+   <span class="nv">doSomeWork</span><span class="p">();</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 
 <span class="k">Function</span> <span class="nv">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span>
@@ -481,7 +481,7 @@
             <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr4&quot;</span>
             <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr5&quot;</span>
             <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr6&quot;</span>
-            <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr7&quot;</span> 
+            <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr7&quot;</span>
             <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr8&quot;</span>
             <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr9&quot;</span><span class="p">;</span>
 
