@@ -408,22 +408,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Vulnerability</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Critical</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>15</code></td>
-<td align="center"><code>standard</code></td>
+<td><code>Vulnerability</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Critical</code></td>
+<td><code>Yes</code></td>
+<td><code>15</code></td>
+<td><code>standard</code></td>
 </tr>
 </tbody>
 </table>
@@ -431,18 +431,18 @@
 <table>
 <thead>
 <tr>
-<th align="center">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
-<th align="center">Default value</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>searchWordsExclusion</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>Keywords for evolution hardcoded ip search</code></td>
-<td align="center"><code>Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver</code></td>
+<td><code>searchWordsExclusion</code></td>
+<td><code>String</code></td>
+<td><code>Keywords to exclude from search</code></td>
+<td>```Верси</td>
 </tr>
 </tbody>
 </table>
@@ -451,23 +451,27 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>It's forbidden to store in code:
-* Network addresses (ip6, ip4)</p>
-<p>There are several ways to properly store such information:
-* Store in Constants.
-* Store in Information registers.
-* Store in separate module, where this diagnostic is disabled (not recommended).
-* Store in Catalog, Exchange plan node and etc.</p>
+<p>It's forbidden to store in code:</p>
+<ul>
+<li>Network addresses (ip6, ip4)</li>
+</ul>
+<p>There are several ways to properly store such information:</p>
+<ul>
+<li>Store in Constants.</li>
+<li>Store in Information registers.</li>
+<li>Store in separate module, where this diagnostic is disabled (not recommended).</li>
+<li>Store in Catalog, Exchange plan node and etc.</li>
+</ul>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="s1">&quot;192.168.0.1&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><span class="nv">NetworkAddress</span> <span class="o">=</span> <span class="s1">&quot;192.168.0.1&quot;</span><span class="p">;</span>
 </pre></div>
 
 
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="nv">МойМодульПовтИсп</span><span class="o">.</span><span class="nv">СетевойАдресСервера</span><span class="p">();</span>
+<div class="codehilite"><pre><span></span><span class="nv">NetworkAddress</span> <span class="o">=</span> <span class="nv">MyModuleReUse</span><span class="o">.</span><span class="nv">ServerNetworkAddress</span><span class="p">();</span>
 </pre></div>
 
 
