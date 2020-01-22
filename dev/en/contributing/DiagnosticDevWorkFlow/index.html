@@ -38,7 +38,7 @@
     
     
       
-        <title>Процесс (workflow) разработки диагностики - BSL Language Server Dev</title>
+        <title>Diagnostic development workflow - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#workflow" tabindex="1" class="md-skip">
+      <a href="#diagnostic-development-workflow" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Процесс (workflow) разработки диагностики
+                Diagnostic development workflow
               
             </span>
           
@@ -347,7 +347,62 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticDevWorkFlow.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="workflow">Процесс (workflow) разработки диагностики<a class="headerlink" href="#workflow" title="Permanent link">Link</a></h1>
+                <h1 id="diagnostic-development-workflow">Diagnostic development workflow<a class="headerlink" href="#diagnostic-development-workflow" title="Permanent link">Link</a></h1>
+<ol>
+<li>
+<p>Go to the section <a href="https://github.com/1c-syntax/bsl-language-server/issues">issues</a> and select your task from the list.  It is necessary to choose tasks that do not have an executor, i.e. <code>Assignees</code> is not specified (the block is on the right, almost under the heading).</p>
+<ol>
+<li>If there is no task for diagnostics, then you need to create it by clicking the <code>New issue</code> button</li>
+</ol>
+</li>
+<li>
+<p>Write in the comments to the task to the maintainers that you want to take the task to work. After your nickname appears in the task in the <code>Assignees</code> block, you can proceed.</p>
+</li>
+<li>
+<p>You need to create a fork of the repository in <code>GitHub</code>, clone the repository to your computer and create a new feature branch (development by git flow).</p>
+<ol>
+<li>If the fork has already been created earlier, then you need to update the <code>develop</code> branch from the primary repository. The easiest way to do this is as follows<ol>
+<li>The local repository has two remote repository addresses: yours and primary</li>
+<li>Get updates from both repositories <code>git fetch --progress "--all" --prune</code></li>
+<li>In the local repository, switch to the branch <code>develop</code></li>
+<li>Reset the branch state to the state of the primary repository (<code>git reset --hard</code>)</li>
+<li>Pushin the branch to your remote repository</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>
+<p>To create all the necessary files in the right places, you need to run the command <code>gradlew newDiagnostic --key="KeyDiagnostic"</code>, instead <code>KeyDiagnostic</code>  you must specify the key of your diagnostic. Details in help <code>gradlew -q help --task newDiagnostic</code>. Parameters:</p>
+<ul>
+<li><code>--key</code> - Diagnostic key</li>
+<li><code>--nameRu</code> - Russian description</li>
+<li><code>--nameEn</code> - English description</li>
+</ul>
+</li>
+</ol>
+<p>At startup, a list of available diagnostic tags is displayed. You must enter 1-3 tags from the space separated ones.</p>
+<ol>
+<li>To develop</li>
+<li>
+<p>After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks.
+     To simplify, a special command has been created that can be run in the console <code>gradlew precommit</code> or from the Gradle taskbar <code>precommit</code>. Task actions:</p>
+</li>
+<li>
+<p>test - autotesting project</p>
+</li>
+<li>licenseFormat - installation of a license block in java source files</li>
+<li>updateDiagnosticDocs - diagnostic help update</li>
+<li>updateDiagnosticIndex - diagnostic index update</li>
+<li>
+<p>updateJsonSchema - json schema update</p>
+</li>
+<li>
+<p>If everything is done correctly, you need to commit the changes and push to your remote repository.</p>
+</li>
+<li>You need to create <code>Pull request</code> from your feature branch to the <code>develop</code> branch of the primary repository and fill in the information in the description.</li>
+<li>Before closing <code>Pull request</code>, the maintainers will conduct a Code review. Correction of errors must be done in the same feature branch, GitHub will automatically add changes to the created <code>Pull request</code>.</li>
+<li>Closing <code>Pull request</code> confirms the completion of the task.</li>
+</ol>
                 
                   
                 
