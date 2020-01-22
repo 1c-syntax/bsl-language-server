@@ -408,22 +408,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Error</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>15</code></td>
-<td align="center"><code>standard</code><br/><code>badpractice</code></td>
+<td><code>Error</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Major</code></td>
+<td><code>Yes</code></td>
+<td><code>15</code></td>
+<td><code>standard</code><br><code>badpractice</code></td>
 </tr>
 </tbody>
 </table>
@@ -431,43 +431,43 @@
 <table>
 <thead>
 <tr>
-<th align="center">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
-<th align="center">Default value</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>commentAsCode</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left"><code>Comment as code</code></td>
-<td align="center"><code>false</code></td>
+<td><code>commentAsCode</code></td>
+<td><code>Boolean</code></td>
+<td><code>Treat comment in Riase section as code</code></td>
+<td><code>false</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>It is unacceptable to catch any exceptions without a trace for the system administrator</p>
+<p>It is unacceptable to catch any exception, without any trace for system administrator.</p>
 <p><em>Wrong</em></p>
-<div class="codehilite"><pre><span></span><span class="k">Попытка</span> 
-    <span class="c c-Singleline">// код, приводящий к вызову исключения</span>
+<div class="codehilite"><pre><span></span><span class="k">Try</span>
+    <span class="c c-Singleline">// code causing exception</span>
     <span class="o">....</span>
-<span class="k">Исключение</span> <span class="c c-Singleline">// перехват любых исключений</span>
-<span class="k">КонецПопытки</span><span class="p">;</span>
+<span class="k">Raise</span> <span class="c c-Singleline">// catch any exception</span>
+<span class="k">EndTry</span><span class="p">;</span>
 </pre></div>
 
 
 <p>As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.</p>
 <p><em>Right</em></p>
-<div class="codehilite"><pre><span></span><span class="k">Попытка</span> 
-    <span class="c c-Singleline">// код, приводящий к вызову исключения</span>
+<div class="codehilite"><pre><span></span><span class="k">Try</span>
+    <span class="c c-Singleline">// code causing exception</span>
     <span class="o">....</span>
-<span class="k">Исключение</span>
-    <span class="c c-Singleline">// Пояснение причин перехвата всех исключений &quot;незаметно&quot; от пользователя.</span>
+<span class="k">Raise</span>
+    <span class="c c-Singleline">// Explanation why catching all exceptions untraceable for enduser.</span>
     <span class="c c-Singleline">// ....</span>
-    <span class="c c-Singleline">// И запись события в журнал регистрации для системного администратора.</span>
+    <span class="c c-Singleline">// Write to log for system administrator.</span>
     <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выполнение операции&#39;&quot;</span><span class="p">),</span>
        <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,,,</span>
        <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">()));</span>
