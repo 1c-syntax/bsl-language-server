@@ -1,8 +1,8 @@
 # Escaping Code from Diagnostic
 
-Статический анализатор обнаруживает проблемы, ошибки и недочеты в коде в соответствии с заложенными в него правилами (диагностиками). Как и везде, в коде решения могут возникать ситуации, когда необходимо отойти от правил. Данные ситуации могут возникать по разным причинам: как в связи с архитектурными особенностями решения, так и в следствии невозможности (по разным причинам) изменить код для соответствия требованиям.
+The static analyzer detects problems, errors, and flaws in the code in accordance with the rules (diagnostics) embedded in it. As elsewhere, there may be situations in the solution code where you need to deviate from the rules. These situations can occur for various reasons: both due to the architectural features of the solution, and as a result of the inability (for various reasons) to change the code to meet the requirements.
 
-Для того, чтобы не приходилось каждый раз вручную отмечать замечание как неактуальное, BSL LS предоставляет функциональность, посредством которой можно скрыть или заэкранировать отдельные участки кода от срабатывания той или иной диагностики.
+Instead of manually mark a comment as irrelevant every time, BSL LS provides functionality that allows you to hide or screen individual sections of code from triggering diagnostics.
 
 ## Description
 
@@ -19,71 +19,70 @@ To disable **ALL** diagnostics for part of the code, you must omit the diagnosti
 
 ### Disable all diagnostics in the module
 
-Для отключения всех диагностик в модуле, т.е. по-сути скрыть модуль от анализатора BSL LS, необходимо в начале модуля вставить комментарий `// BSLLS-off` (или `// BSLLS-выкл`)
+To disable all diagnostics in the module, i.e. essentially hide the module from the BSL LS analyzer, you need to insert a comment `// BSLLS-off` at the beginning of the module
 
 ### Disable specific diagnostics in the module
 
-Для отключения конкретных диагностик в модуле (возьмем для примера когнитивную сложность `CognitiveComplexity` и ограничение на размер метода `MethodSize`), необходимо в начале модуля вставить комментарий `// BSLLS:CognitiveComplexity-off` и `// BSLLS:MethodSize-off` (или `// BSLLS:CognitiveComplexity-выкл` и `// BSLLS:MethodSize-выкл`)
+For disable specific diagnostics in the module (for example, the cognitive complexity `CognitiveComplexity` and size limit of the method `MethodSize`), you must insert the comment `// BSLLS:CognitiveComplexity-off` and `// BSLLS:MethodSize-off`
 
 ### Disable all diagnostics for code block
 
-Если необходимо отключить диагностики для участка кода, оставив возможность BSL LS анализировать оставшие, необходимо `обернуть` скрываемый участок кода по примеру
+If you want to disable diagnostics for a section of code, leaving the BSL LS option to analyze the remaining ones, you must `wrap` the hidden section of code
 
 ```bsl
 // BSLLS-off
-Процедура СкрываемаяОтBSLLSПроцедура()
-    // Невидимое содержимое процедуры
-КонецПроцедуры
+Procedure SkipByBSLLS()
+    // content will be ignored
+EndProcedure
 // BSLLS-on
 
-Процедура ВидимаяBSLLSПроцедура()
-    // Видимое содержимое процедуры
-КонецПроцедуры
+Procedure AnalyzeByBSLLS()
+    // content will be  analyzed
+EndProcedure
 ```
 
 ### Disable specific diagnostics for code block
 
-Если необходимо отключить конкретные диагностики (возьмем для примера когнитивную сложность `CognitiveComplexity` и ограничение на размер метода `MethodSize`) для участка кода, необходимо `обернуть` скрываемый участок кода по примеру
+If you need to disable specific diagnostics (for example, the cognitive complexity `CognitiveComplexity` and the limit on the size of the method `MethodSize`) for a section of code, you must `wrap` the hidden section of code for example
 
 ```bsl
 // BSLLS:MethodSize-off
-Процедура СкрываемаяОтMethodSizeПроцедура()
-    // Очень длинное тело метода
-КонецПроцедуры
+Procedure SkipedByMethodSizeMethod()
+    // Very long code block
+EndProcedure
 // BSLLS:MethodSize-on
 
 // BSLLS:CognitiveComplexity-off
-Процедура СкрываемаяОтCognitiveComplexityПроцедура()
-    // Очень сложное и непонятное содержимое
-КонецПроцедуры
+Procedure SkipedByCognitiveComplexityMethod()
+    // Very long and complexity code block
+EndProcedure
 // BSLLS:CognitiveComplexity-on
 ```
 
-Поддерживается вложение `оберток`, т.е. возможно экранирование блока кода от нескольких диагностик, пример
+Embedding `wrappers`, is supported, i.e. it is possible to escape a block of code from several diagnostics, for example
 
 ```bsl
 // BSLLS:CognitiveComplexity-off
 // BSLLS:MethodSize-off
-Процедура СкрываемаяОтMethodSizeCognitiveComplexityПроцедура()
-    // Очень длинное тело метода, непонятное никому
-КонецПроцедуры
+Procedure SkipedByMethodSizeCognitiveComplexityMethod()
+    // Very long code block
+EndProcedure
 // BSLLS:MethodSize-on
 
-Процедура СкрываемаяОтCognitiveComplexityПроцедура()
-    // Очень сложное и непонятное содержимое, но не длинное
-КонецПроцедуры
+Procedure SkipedByCognitiveComplexityПроцедура()
+   // Very complex and incomprehensible code block, but not long
+EndProcedure
 // BSLLS:CognitiveComplexity-on
 ```
 
 ### Disable single line diagnostics
 
-Для экранирование одной строки можно использовать `обертку` как в примере выше, но удобнее использовать `висячий комментарий`, т.е. комментарий, расположенный в конце строки, пример
+To escape a single line, you can use {code 0}wrapper{/code 0} as in the example above, but it is more convenient to use `inline comment `, i.e. the comment located at the end of the line, example
 
 ```bsl
-Процедура ВидимаяBSLLS()
-    // С помощью висячего комментария скрыта следующая строка от диагностики "Каноническое написание ключевых слов"
-    Если Истина тогда // BSLLS:CanonicalSpellingKeywords-выкл
-        // Видимое содержимое
-    КонецЕсли;
-КонецПроцедуры
+Procedure SomeMethode()
+    if true then// BSLLS:CanonicalSpellingKeywords-off
+        // Analized content
+    EndIf;
+EndProcedure
 ```
