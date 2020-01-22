@@ -1,17 +1,16 @@
 # Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Error` | `BSL`<br>`OS` | `Major` | `Yes` | `15` | `standard`<br>`badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `15` | `standard`<br/>`badpractice` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
---- | --- | --- | ---
-`commentAsCode` | `Boolean` | `Treat comment in Riase section as code` | `false`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `commentAsCode` | `Boolean` | ```Treat comment in Raise section as code``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 It is unacceptable to catch any exception, without any trace for system administrator.
@@ -51,7 +50,6 @@ Raise
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

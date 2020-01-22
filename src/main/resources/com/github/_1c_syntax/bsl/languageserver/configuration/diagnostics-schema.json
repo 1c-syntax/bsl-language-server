@@ -278,10 +278,10 @@
             "title": "Usage of complex expressions in the \"If\" condition",
             "properties": {
                 "maxIfConditionComplexity": {
-                    "description": "Maximum count condition in if statement",
+                    "description": "Acceptable number of logical expressions in operator If condition",
                     "default": 3,
                     "type": "integer",
-                    "title": "Maximum count condition in if statement"
+                    "title": "Acceptable number of logical expressions in operator If condition"
                 }
             },
             "$id": "#/definitions/IfConditionComplexity"
@@ -336,10 +336,10 @@
             "title": "Line Length limit",
             "properties": {
                 "maxLineLength": {
-                    "description": "Max line length",
+                    "description": "Max length of string in characters",
                     "default": 120,
                     "type": "integer",
-                    "title": "Max line length"
+                    "title": "Max length of string in characters"
                 }
             },
             "$id": "#/definitions/LineLength"
@@ -396,10 +396,10 @@
             "title": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
             "properties": {
                 "commentAsCode": {
-                    "description": "Comment as code",
+                    "description": "Treat comment in Raise section as code",
                     "default": false,
                     "type": "boolean",
-                    "title": "Comment as code"
+                    "title": "Treat comment in Raise section as code"
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
@@ -414,34 +414,34 @@
             "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
             "properties": {
                 "listForCheckLeftAndRight": {
-                    "description": "Symbols for spaces from both side(space separated) Example: + - * / = % < >",
+                    "description": "List of symbols to check for the space from both sides of (separated by space)",
                     "default": "+ - * / = % < > <> <= >=",
                     "type": "string",
-                    "title": "Symbols for spaces from both side(space separated) Example: + - * / = % < >"
+                    "title": "List of symbols to check for the space from both sides of (separated by space)"
                 },
                 "allowMultipleCommas": {
-                    "description": "Allow few commas",
+                    "description": "Allow several commas in a row",
                     "default": false,
                     "type": "boolean",
-                    "title": "Allow few commas"
+                    "title": "Allow several commas in a row"
                 },
                 "checkSpaceToRightOfUnary": {
-                    "description": "Check space right from unary (+ -)",
+                    "description": "Check for space to the right of unary signs (+ -)",
                     "default": false,
                     "type": "boolean",
-                    "title": "Check space right from unary (+ -)"
+                    "title": "Check for space to the right of unary signs (+ -)"
                 },
                 "listForCheckLeft": {
-                    "description": "Symbols  for spaces from left side (space separated). Example: ) =",
+                    "description": "List of symbols to check for the space to the left of (separated by space)",
                     "default": "",
                     "type": "string",
-                    "title": "Symbols  for spaces from left side (space separated). Example: ) ="
+                    "title": "List of symbols to check for the space to the left of (separated by space)"
                 },
                 "listForCheckRight": {
-                    "description": "Symbols  for spaces from right side (space separated). Example: ( =",
+                    "description": "List of symbols to check for the space to the right of (separated by space)",
                     "default": ", ;",
                     "type": "string",
-                    "title": "Symbols  for spaces from right side (space separated). Example: ( ="
+                    "title": "List of symbols to check for the space to the right of (separated by space)"
                 }
             },
             "$id": "#/definitions/MissingSpace"
@@ -456,10 +456,10 @@
             "title": "Missing temporary file deletion after using",
             "properties": {
                 "searchDeleteFileMethod": {
-                    "description": "Keywords for search delete/remove methods",
+                    "description": "Keywords to search for delete/move files methods",
                     "default": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c\u0424\u0430\u0439\u043b\u044b|DeleteFiles|\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c\u0424\u0430\u0439\u043b|MoveFile",
                     "type": "string",
-                    "title": "Keywords for search delete/remove methods"
+                    "title": "Keywords to search for delete/move files methods"
                 }
             },
             "$id": "#/definitions/MissingTemporaryFileDeletion"
@@ -604,10 +604,10 @@
             "title": "Limit on the number of property values passed to the structure constructor",
             "properties": {
                 "maxValuesCount": {
-                    "description": "Max count values in structure construction",
+                    "description": "Allowed number parameter values passed to structure constructor",
                     "default": 3,
                     "type": "integer",
-                    "title": "Max count values in structure construction"
+                    "title": "Allowed number parameter values passed to structure constructor"
                 }
             },
             "$id": "#/definitions/NumberOfValuesInStructureConstructor"
@@ -722,10 +722,10 @@
             "title": "Space at the beginning of the comment",
             "properties": {
                 "commentsAnnotation": {
-                    "description": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)",
+                    "description": "Skip comments-annotations staring with given substrings. List, values separated by comma",
                     "default": "//@,//(c),//\u00a9",
                     "type": "string",
-                    "title": "Skip annotated-comments started from substrings. Coma separated. Example: //@,//(c)"
+                    "title": "Skip comments-annotations staring with given substrings. List, values separated by comma"
                 }
             },
             "$id": "#/definitions/SpaceAtStartComment"
@@ -878,10 +878,10 @@
             "title": "Using hardcode ip addresses in code",
             "properties": {
                 "searchWordsExclusion": {
-                    "description": "Keywords for evolution hardcoded ip search",
+                    "description": "Keywords to exclude from search",
                     "default": "\u0412\u0435\u0440\u0441\u0438|Version|\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u044c\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435|RunApp|\u041f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432|Namespace|\u0414\u0440\u0430\u0439\u0432\u0435\u0440|Driver",
                     "type": "string",
-                    "title": "Keywords for evolution hardcoded ip search"
+                    "title": "Keywords to exclude from search"
                 }
             },
             "$id": "#/definitions/UsingHardcodeNetworkAddress"
@@ -896,10 +896,10 @@
             "title": "Using hardcode file paths in code",
             "properties": {
                 "searchWordsStdPathsUnix": {
-                    "description": "Keywords for search unix dirs",
+                    "description": "Search keywords for standard Unix root folders",
                     "default": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var",
                     "type": "string",
-                    "title": "Keywords for search unix dirs"
+                    "title": "Search keywords for standard Unix root folders"
                 }
             },
             "$id": "#/definitions/UsingHardcodePath"
@@ -914,10 +914,10 @@
             "title": "Storing confidential information in code",
             "properties": {
                 "searchWords": {
-                    "description": "Keywords for search confidential.",
+                    "description": "Search keywords for confidential information in variables, structures, mappings.",
                     "default": "\u041f\u0430\u0440\u043e\u043b\u044c|Password",
                     "type": "string",
-                    "title": "Keywords for search confidential."
+                    "title": "Search keywords for confidential information in variables, structures, mappings."
                 }
             },
             "$id": "#/definitions/UsingHardcodeSecretInformation"

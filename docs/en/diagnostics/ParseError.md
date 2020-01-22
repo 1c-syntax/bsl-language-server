@@ -1,11 +1,10 @@
 # Source code parse error (ParseError)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `error`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `5` | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 The error occurs if the source code of the module is written in violation of the language syntax or if the preprocessor instructions are used incorrectly.
@@ -52,7 +51,6 @@ Result = Example4(Parameter1,
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

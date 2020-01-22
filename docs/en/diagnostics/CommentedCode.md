@@ -1,17 +1,16 @@
 # Commented out code (CommentedCode)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `standard`<br/>`badpractice` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
---- | --- | --- | ---
-`threshold` | `Float` | `Threshold` | `0.9`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `threshold` | `Float` | ```Threshold``` | ```0.9``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Software modules should not have commented out code fragments, as well as fragments,
@@ -51,7 +50,6 @@ A code block is considered commented , if at least one line inside the block is 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

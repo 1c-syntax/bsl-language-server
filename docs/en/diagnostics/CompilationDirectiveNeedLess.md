@@ -1,11 +1,10 @@
 # Needless compilation directive (CompilationDirectiveNeedLess)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL` | `Major` | `Yes` | `1` | `clumsy`<br>`standard`<br>`unpredictable`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `1` | `clumsy`<br/>`standard`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Compilation directives:
@@ -27,7 +26,6 @@ In server or client common modules, the execution context is obvious, so there i
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

@@ -1,11 +1,10 @@
 # Statement should end with semicolon symbol ";" (SemicolonPresence)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `standard`<br/>`badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 In the texts of program procedures and functions, operators should be separated by a semicolon (";"). The end of the line is not a sign of the end of the statement.
@@ -16,7 +15,6 @@ Despite the fact that in some cases the platform allows you to skip the semicolo
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

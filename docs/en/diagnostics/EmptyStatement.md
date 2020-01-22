@@ -1,11 +1,10 @@
 # Empty statement (EmptyStatement)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 An empty statement is an operator consisting only of a semicolon (";"). Usually appears when:
@@ -19,7 +18,6 @@ An empty statement does not lead to code errors, but clutters it, reducing perce
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

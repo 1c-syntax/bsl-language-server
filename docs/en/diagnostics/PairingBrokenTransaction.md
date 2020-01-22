@@ -1,11 +1,10 @@
 # Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Error` | `BSL`<br>`OS` | `Major` | `Yes` | `15` | `standard`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `15` | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.
@@ -62,7 +61,6 @@ EndProcedure
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

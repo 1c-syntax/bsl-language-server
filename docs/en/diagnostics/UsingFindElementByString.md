@@ -1,11 +1,10 @@
 # Using FindByName and FindByCode (UsingFindElementByString)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
---- | --- | --- | --- | --- | ---
-`Code smell` | `BSL` | `Major` | `Yes` | `2` | `standard`<br>`badpractice`<br>`performance`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `2` | `standard`<br/>`badpractice`<br/>`performance` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 It is forbidden to use the search methods for elements "FindByName" or "FindByCode".
@@ -35,7 +34,6 @@ Catalogs.BankClassifier.FindByCode(BankDetails.BIK);
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
