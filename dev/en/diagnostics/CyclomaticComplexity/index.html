@@ -415,22 +415,22 @@
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th>Type</th>
+<th>Scope</th>
+<th>Severity</th>
+<th>Activated<br>by default</th>
+<th>Minutes<br>to fix</th>
+<th>Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
-<td align="center"><code>Critical</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>15</code></td>
-<td align="center"><code>brainoverload</code></td>
+<td><code>Code smell</code></td>
+<td><code>BSL</code><br><code>OS</code></td>
+<td><code>Critical</code></td>
+<td><code>Yes</code></td>
+<td><code>15</code></td>
+<td><code>brainoverload</code></td>
 </tr>
 </tbody>
 </table>
@@ -438,24 +438,24 @@
 <table>
 <thead>
 <tr>
-<th align="center">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
-<th align="center">Default value</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>complexityThreshold</code></td>
-<td align="center"><code>Integer</code></td>
-<td align="left"><code>Complexity threshold</code></td>
-<td align="center"><code>10</code></td>
+<td><code>complexityThreshold</code></td>
+<td><code>Integer</code></td>
+<td><code>Complexity threshold</code></td>
+<td><code>10</code></td>
 </tr>
 <tr>
-<td align="center"><code>checkModuleBody</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left"><code>Check module body</code></td>
-<td align="center"><code>true</code></td>
+<td><code>checkModuleBody</code></td>
+<td><code>Boolean</code></td>
+<td><code>Check module body</code></td>
+<td><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -464,16 +464,75 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>Cyclomatic complexity of the program code is one of the oldest metrics, it was first mentioned by Thomas McCab in 1976.
+ Cyclomatic complexity shows the minimum number of required tests. The most effective way to reduce cyclomatic complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.</p>
+<p>Cyclomatic complexity increases by 1 for each of following constructions:</p>
+<ul>
+<li><code>For ... To .. Do</code></li>
+<li><code>For each ... Of ... Do</code></li>
+<li><code>If ... Then</code></li>
+<li><code>ElsIf ... Then</code></li>
+<li><code>Else</code></li>
+<li><code>Try ... Except ... EndTry</code></li>
+<li><code>GoTo ~Label</code></li>
+<li>Binary operations <code>AND ... OR</code></li>
+<li>Ternary operator</li>
+<li><code>Procedure</code></li>
+<li><code>Function</code></li>
+</ul>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<div class="codehilite"><pre><span></span><span class="k">Функция</span> <span class="nv">СерверныйМодульМенеджера</span><span class="p">(</span><span class="nv">Имя</span><span class="p">)</span>                                                   <span class="c c-Singleline">// 1</span>
+    <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                                <span class="c c-Singleline">// 0</span>
+                                                                                        <span class="c c-Singleline">// 0</span>
+    <span class="nv">ЧастиИмени</span> <span class="o">=</span> <span class="nb">СтрРазделить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">,</span> <span class="s1">&quot;.&quot;</span><span class="p">);</span>                                                <span class="c c-Singleline">// 0</span>
+    <span class="k">Если</span> <span class="nv">ЧастиИмени</span><span class="o">.</span><span class="nv">Количество</span><span class="p">()</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Тогда</span>                                              <span class="c c-Singleline">// 1</span>
+                                                                                        <span class="c c-Singleline">// 0</span>
+        <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">0</span><span class="p">]);</span>                                                  <span class="c c-Singleline">// 0</span>
+        <span class="nv">ИмяОбъекта</span> <span class="o">=</span> <span class="nv">ЧастиИмени</span><span class="p">[</span><span class="m">1</span><span class="p">];</span>                                                     <span class="c c-Singleline">// 0</span>
+                                                                                        <span class="c c-Singleline">// 0</span>
+        <span class="k">Если</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s1">&quot;Константы&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                                          <span class="c c-Singleline">// 1</span>
+            <span class="k">Если</span> <span class="nb">Метаданные</span><span class="o">.</span><span class="nb">Константы</span><span class="o">.</span><span class="nb">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>           <span class="c c-Singleline">// 1</span>
+                <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c c-Singleline">// 0</span>
+            <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c c-Singleline">// 0</span>
+        <span class="k">ИначеЕсли</span> <span class="nv">ИмяВида</span> <span class="o">=</span> <span class="nb">ВРег</span><span class="p">(</span><span class="s1">&quot;РегистрыСведений&quot;</span><span class="p">)</span> <span class="k">Тогда</span>                              <span class="c c-Singleline">// 1</span>
+            <span class="k">Если</span> <span class="nb">Метаданные</span><span class="o">.</span><span class="nb">РегистрыСведений</span><span class="o">.</span><span class="nb">Найти</span><span class="p">(</span><span class="nv">ИмяОбъекта</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="kc">Неопределено</span> <span class="k">Тогда</span>    <span class="c c-Singleline">// 1</span>
+                <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>                                                  <span class="c c-Singleline">// 0</span>
+            <span class="k">КонецЕсли</span><span class="p">;</span>                                                                  <span class="c c-Singleline">// 0</span>
+        <span class="k">Иначе</span>                                                                           <span class="c c-Singleline">// 1</span>
+            <span class="nv">ОбъектНайден</span> <span class="o">=</span> <span class="kc">Ложь</span><span class="p">;</span>                                                        <span class="c c-Singleline">// 0</span>
+        <span class="k">КонецЕсли</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 0</span>
+    <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c c-Singleline">// 0</span>
+                                                                                        <span class="c c-Singleline">// 0</span>
+    <span class="k">Если</span> <span class="k">Не</span> <span class="nv">ОбъектНайден</span> <span class="k">Тогда</span>                                                          <span class="c c-Singleline">// 1</span>
+        <span class="nv">ВызватьИсключение</span> <span class="nv">СтроковыеФункцииКлиентСервер</span><span class="o">.</span><span class="nv">ПодставитьПараметрыВСтроку</span><span class="p">(</span>      <span class="c c-Singleline">// 0</span>
+            <span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Объект метаданных &quot;&quot;%1&quot;&quot; не найден,                             // 0</span>
+                       <span class="s">|либо для него не поддерживается получение модуля менеджера.&#39;&quot;</span><span class="p">),</span> <span class="c c-Singleline">// 0</span>
+            <span class="nv">Имя</span><span class="p">);</span>                                                                       <span class="c c-Singleline">// 0</span>
+    <span class="k">КонецЕсли</span><span class="p">;</span>                                                                          <span class="c c-Singleline">// 0</span>
+    <span class="nb">УстановитьБезопасныйРежим</span><span class="p">(</span><span class="kc">Истина</span><span class="p">);</span>                                                  <span class="c c-Singleline">// 0</span>
+    <span class="nv">Модуль</span> <span class="o">=</span> <span class="nb">Вычислить</span><span class="p">(</span><span class="nv">Имя</span><span class="p">);</span>                                                            <span class="c c-Singleline">// 0</span>
+    <span class="nv">F</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">,</span> <span class="kc">НЕОПРЕДЕЛЕНО</span><span class="p">);</span>                                               <span class="c c-Singleline">// 1</span>
+    <span class="nv">А</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">Условие2</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">НЕОПРЕДЕЛЕНО</span><span class="p">));</span>                            <span class="c c-Singleline">// 2</span>
+    <span class="nv">M</span> <span class="o">=</span> <span class="kc">ИСТИНА</span> <span class="k">ИЛИ</span> <span class="m">7</span><span class="p">;</span>                                                                   <span class="c c-Singleline">// 1</span>
+    <span class="k">Возврат</span> <span class="nv">Модуль</span><span class="p">;</span>                                                                     <span class="c c-Singleline">// 0</span>
+<span class="k">КонецФункции</span>                                                                            <span class="c c-Singleline">// итог 12</span>
+</pre></div>
+
+
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<p><!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-&lt;!-- Примеры источников</p>
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
+<!-- Примеры источников
+
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+
 <ul>
-<li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc">Стандарт: Тексты модулей</a></li>
-<li>Полезная информаця: <a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
-<li>Источник: <a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a> --&gt;</li>
+<li><a href="https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html">Cyclomatic Complexity PHP</a></li>
+<li><a href="https://ru.wikipedia.org/wiki/%D0%A6%D0%B8%D0%BA%D0%BB%D0%BE%D0%BC%D0%B0%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F_%D1%81%D0%BB%D0%BE%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D1%8C">Cyclomatic Complexity (RU)</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
