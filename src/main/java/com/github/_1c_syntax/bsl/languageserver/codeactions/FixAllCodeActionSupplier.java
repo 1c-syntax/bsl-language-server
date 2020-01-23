@@ -64,11 +64,9 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 
     Optional<Class<? extends QuickFixProvider>> quickFixClass = quickFixSupplier.getQuickFixClass(diagnosticCode);
 
-    if (!quickFixClass.isPresent()) {
+    if (quickFixClass.isEmpty()) {
       return Collections.emptyList();
     }
-
-    Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
 
     List<Diagnostic> suitableDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext).stream()
       .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
@@ -89,6 +87,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
     fixAllParams.setRange(params.getRange());
     fixAllParams.setContext(fixAllContext);
 
+    Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
     QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixProviderClass);
 
     return quickFixInstance.getQuickFixes(

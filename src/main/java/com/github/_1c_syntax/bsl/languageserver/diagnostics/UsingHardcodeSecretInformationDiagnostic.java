@@ -266,7 +266,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return getAncestorByRuleIndex(parent, type);
   }
 
-  private boolean parentIsModifierContext(ParserRuleContext ctx) {
+  private static boolean parentIsModifierContext(ParserRuleContext ctx) {
     return ctx.getParent() instanceof BSLParser.ModifierContext;
   }
 

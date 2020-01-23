@@ -191,7 +191,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     return super.visitFile(ctx);
   }
 
-  private void checkNextStatement(
+  private static void checkNextStatement(
     Collection<ParseTree> listNextStatements,
     String variableName,
     AtomicBoolean isContact
@@ -209,7 +209,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     });
   }
 
-  private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
+  private static boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
 
     BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
     if (assignmentContext == null) {

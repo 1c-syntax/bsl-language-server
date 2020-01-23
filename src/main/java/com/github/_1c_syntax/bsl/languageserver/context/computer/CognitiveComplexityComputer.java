@@ -335,7 +335,7 @@ public class CognitiveComplexityComputer
     }
   }
 
-  private void flattenOperation(List<Token> result, BSLParser.OperationContext operation) {
+  private static void flattenOperation(List<Token> result, BSLParser.OperationContext operation) {
     final BSLParser.BoolOperationContext boolOperation = operation.boolOperation();
 
     if (boolOperation != null) {

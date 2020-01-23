@@ -134,7 +134,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       BSLParser.GlobalMethodCallContext localGlobalMethodCall = localCallStatementContext.globalMethodCall();
       // получаем full call method и полное имя вызова
       String fullCallMethod = "";
-      BSLParser.DoCallContext doCallContext = null;
+      BSLParser.DoCallContext doCallContext;
       if (localGlobalMethodCall == null) {
         fullCallMethod = getFullCallMethod(localCallStatementContext);
         doCallContext = getDoCallFromCallStatement(localCallStatementContext);
@@ -153,7 +153,9 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return result;
   }
 
-  private BSLParser.DoCallContext getDoCallFromCallStatement(BSLParser.CallStatementContext callStatementContext) {
+  private static BSLParser.DoCallContext getDoCallFromCallStatement(
+    BSLParser.CallStatementContext callStatementContext
+  ) {
     BSLParser.MethodCallContext methodCallContext = callStatementContext.accessCall().methodCall();
     if (methodCallContext == null) {
       return null;
@@ -161,7 +163,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return methodCallContext.doCall();
   }
 
-  private boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
+  private static boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
 
     BSLParser.CallParamListContext callParamListContext = doCallContext.callParamList();
     if (callParamListContext == null) {
@@ -184,7 +186,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return result;
   }
 
-  private String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
 
     BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
       Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
@@ -202,7 +204,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   }
 
   // TODO: перенести в TREES или в BSL parser
-  private String getFullCallMethod(BSLParser.CallStatementContext ctx) {
+  private static String getFullCallMethod(BSLParser.CallStatementContext ctx) {
     StringBuilder builder = new StringBuilder();
     builder.append(ctx.getStart().getText());
     BSLParser.AccessCallContext accessCallContext = ctx.accessCall();

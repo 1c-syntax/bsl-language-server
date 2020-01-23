@@ -98,7 +98,7 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
       .filter(NestedConstructorsInStructureDeclarationDiagnostic::hasParams)
       .map(newContext -> RelatedInformation.create(
         documentContext.getUri(),
-        Ranges.create((BSLParser.NewExpressionContext) newContext),
+        Ranges.create(newContext),
         relatedMessage
       ))
       .collect(Collectors.toCollection(() -> relatedInformation));

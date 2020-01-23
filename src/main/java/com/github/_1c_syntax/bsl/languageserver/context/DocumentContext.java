@@ -419,14 +419,13 @@ public class DocumentContext {
 
     return Trees.getDescendants(getAst()).stream()
       .filter(node -> !(node instanceof TerminalNodeImpl))
-      .filter(this::mustCovered)
+      .filter(DocumentContext::mustCovered)
       .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
       .distinct().toArray();
 
   }
 
-  private boolean mustCovered(Tree node) {
-
+  private static boolean mustCovered(Tree node) {
     return node instanceof BSLParser.StatementContext
       || node instanceof BSLParser.GlobalMethodCallContext
       || node instanceof BSLParser.Var_nameContext;
