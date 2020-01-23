@@ -127,7 +127,7 @@
             "properties": {
                 "complexityThreshold": {
                     "description": "Complexity threshold",
-                    "default": 10,
+                    "default": 20,
                     "type": "integer",
                     "title": "Complexity threshold"
                 },
