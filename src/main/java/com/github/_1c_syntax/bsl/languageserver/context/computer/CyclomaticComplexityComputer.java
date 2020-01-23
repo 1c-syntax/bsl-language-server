@@ -97,12 +97,12 @@ public class CyclomaticComplexityComputer
   @Override
   public void enterSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
-    if (!methodSymbol.isPresent()) {
+    if (methodSymbol.isEmpty()) {
       return;
     }
     resetMethodComplexityCounters();
     currentMethod = methodSymbol.get();
-    complexityIncrement(ctx.getStart());
+    complexityIncrement(currentMethod.getSubNameRange());
 
     super.enterSub(ctx);
   }
@@ -306,14 +306,18 @@ public class CyclomaticComplexityComputer
   }
 
   private void complexityIncrement(Token token) {
-    complexity += 1;
-    addSecondaryLocation(token);
+    complexityIncrement(Ranges.create(token));
   }
 
-  private void addSecondaryLocation(Token token) {
+  private void complexityIncrement(Range range) {
+    complexity += 1;
+    addSecondaryLocation(range);
+  }
+
+  private void addSecondaryLocation(Range range) {
     String message;
     message = String.format("+%d", 1);
-    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message.intern());
+    SecondaryLocation secondaryLocation = new SecondaryLocation(range, message.intern());
     List<SecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

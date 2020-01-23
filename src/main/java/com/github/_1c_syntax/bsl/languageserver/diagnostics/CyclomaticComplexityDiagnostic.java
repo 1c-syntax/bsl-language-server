@@ -81,14 +81,8 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
     checkModuleBody = (boolean) configuration.getOrDefault("checkModuleBody", checkModuleBody);
   }
 
-  private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol, Integer methodComplexity) {
+  private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-    relatedInformation.add(RelatedInformation.create(
-      documentContext.getUri(),
-      methodSymbol.getSubNameRange(),
-      info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
-    ));
 
     List<CyclomaticComplexityComputer.SecondaryLocation> secondaryLocations =
       documentContext.getCyclomaticComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
@@ -113,32 +107,10 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
       Integer methodComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity().get(methodSymbol);
 
       if (methodComplexity > complexityThreshold) {
-
-        List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-        relatedInformation.add(RelatedInformation.create(
-          documentContext.getUri(),
-          methodSymbol.getSubNameRange(),
-          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
-        ));
-
-        List<CyclomaticComplexityComputer.SecondaryLocation> secondaryLocations =
-          documentContext.getCyclomaticComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
-
-        secondaryLocations.stream()
-          .map((CyclomaticComplexityComputer.SecondaryLocation secondaryLocation) ->
-            RelatedInformation.create(
-              documentContext.getUri(),
-              secondaryLocation.getRange(),
-              secondaryLocation.getMessage()
-            )
-          )
-          .collect(Collectors.toCollection(() -> relatedInformation));
-
         diagnosticStorage.addDiagnostic(
           methodSymbol.getSubNameRange(),
           info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
-          makeRelations(methodSymbol, methodComplexity)
+          makeRelations(methodSymbol)
         );
       }
     });

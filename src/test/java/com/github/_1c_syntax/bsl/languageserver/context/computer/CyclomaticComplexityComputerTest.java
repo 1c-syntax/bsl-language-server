@@ -57,5 +57,9 @@ class CyclomaticComplexityComputerTest {
     MethodSymbol example3 = documentContext.getMethods().get(2);
     Integer example3Complexity = methodsComplexity.get(example3);
     assertThat(example3Complexity).isEqualTo(1);
+
+    MethodSymbol example4 = documentContext.getMethods().get(3);
+    Integer example4Complexity = methodsComplexity.get(example4);
+    assertThat(example4Complexity).isEqualTo(11);
   }
 }
