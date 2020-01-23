@@ -1,16 +1,17 @@
 # Storing confidential information in code (UsingHardcodeSecretInformation)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+--- | --- | --- | --- | --- | ---
+`Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard`
 
-## Parameters 
+## Parameters
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `searchWords` | `String` | ```Search keywords for confidential information in variables, structures, mappings.``` | ```Пароль|Password``` |
+Name | Type | Description | Default value
+--- | --- | --- | ---
+`searchWords` | `String` | `Search keywords for confidential information in variables. structures, mappings.` | ```Пароль
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 It is prohibited to store any confidential information in the code. The confidential information is:
@@ -50,6 +51,7 @@ Password = Passwords.Password;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
