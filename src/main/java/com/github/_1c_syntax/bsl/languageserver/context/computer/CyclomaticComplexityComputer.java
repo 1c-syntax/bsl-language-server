@@ -214,7 +214,7 @@ public class CyclomaticComplexityComputer
     super.enterExpression(ctx);
   }
 
-  private List<Token> flattenExpression(BSLParser.ExpressionContext ctx) {
+  private static List<Token> flattenExpression(BSLParser.ExpressionContext ctx) {
 
     List<Token> result = new ArrayList<>();
 
@@ -235,7 +235,7 @@ public class CyclomaticComplexityComputer
     return result;
   }
 
-  private void flattenMember(List<Token> result, BSLParser.MemberContext member) {
+  private static void flattenMember(List<Token> result, BSLParser.MemberContext member) {
     final BSLParser.ExpressionContext expression = member.expression();
 
     if (expression == null) {
@@ -259,7 +259,7 @@ public class CyclomaticComplexityComputer
     }
   }
 
-  private void flattenOperation(List<Token> result, BSLParser.OperationContext operation) {
+  private static void flattenOperation(List<Token> result, BSLParser.OperationContext operation) {
     final BSLParser.BoolOperationContext boolOperation = operation.boolOperation();
 
     if (boolOperation != null) {

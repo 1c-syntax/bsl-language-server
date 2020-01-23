@@ -36,7 +36,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,10 +48,10 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.INFO,
   scope = DiagnosticScope.BSL,
   minutesToFix = 1,
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1,
   tags = {
     DiagnosticTag.STANDARD
-  },
-  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
+  }
 )
 public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -97,7 +97,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static Map<ModuleType, Set<Pattern>> makeStandardRegions() {
-    Map<ModuleType, Set<Pattern>> standardRegions = new HashMap<>();
+    Map<ModuleType, Set<Pattern>> standardRegions = new EnumMap<>(ModuleType.class);
     for (ModuleType moduleType : ModuleType.values()) {
       standardRegions.put(moduleType, getStandardRegionsByModuleType(moduleType));
     }

@@ -33,11 +33,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   @Getter
   @Setter
-  private Pattern methodPattern = null;
-
-  AbstractFindMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private Pattern methodPattern;
 
   AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
     super(info);

@@ -26,7 +26,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,7 +64,7 @@ public final class MultilingualStringAnalyser {
   private boolean isParentTemplate;
   private String variableName;
   private ArrayList<String> expectedLanguages;
-  private ArrayList<String> expandedMultilingualString = new ArrayList<>();
+  private Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
   public MultilingualStringAnalyser(String declaredLanguages) {
