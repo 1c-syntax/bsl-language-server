@@ -44,13 +44,26 @@ class CyclomaticComplexityDiagnosticTest extends AbstractDiagnosticTest<Cyclomat
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 32);
-    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(12);
+    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(21);
 
   }
 
   @Test
   void testConfigure() {
 
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("complexityThreshold", 8);
+    configuration.put("checkModuleBody", true);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(2);
+
+  }
+
+  @Test
+  void testConfigureOneProperty() {
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("complexityThreshold", 0);
     configuration.put("checkModuleBody", true);
@@ -59,17 +72,5 @@ class CyclomaticComplexityDiagnosticTest extends AbstractDiagnosticTest<Cyclomat
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
-
-  }
-
-  @Test
-  void testConfigureOneProperty() {
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("checkModuleBody", true);
-    diagnosticInstance.configure(configuration);
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics).hasSize(1);
   }
 }
