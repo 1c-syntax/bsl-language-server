@@ -2,13 +2,13 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Yes` | `15` | `brainoverload` |
+| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Yes` | `25` | `brainoverload` |
 
 ## Parameters 
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```10``` |
+| `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```20``` |
 | `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
@@ -102,7 +102,7 @@ Cyclomatic complexity increases by 1 for each of following constructions:
 
 ```json
 "CyclomaticComplexity": {
-    "complexityThreshold": 10,
+    "complexityThreshold": 20,
     "checkModuleBody": true
 }
 ```

@@ -45,13 +45,13 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.CRITICAL,
-  minutesToFix = 15,
+  minutesToFix = 25,
   tags = {
     DiagnosticTag.BRAINOVERLOAD
   }
 )
 public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
-  private static final int COMPLEXITY_THRESHOLD = 10;
+  private static final int COMPLEXITY_THRESHOLD = 20;
   private static final boolean CHECK_MODULE_BODY = true;
 
   @DiagnosticParameter(
