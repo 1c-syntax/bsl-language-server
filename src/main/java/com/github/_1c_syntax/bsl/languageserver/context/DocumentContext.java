@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
@@ -79,9 +80,9 @@ public class DocumentContext {
     = new Lazy<>(this::computeSupportVariants, computeLock);
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
-  private Lazy<CognitiveComplexityComputer.Data> cognitiveComplexityData
+  private Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
-  private Lazy<CyclomaticComplexityComputer.Data> cyclomaticComplexityData
+  private Lazy<ComplexityData> cyclomaticComplexityData
     = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
@@ -229,12 +230,12 @@ public class DocumentContext {
     return fileType;
   }
 
-  public CognitiveComplexityComputer.Data getCognitiveComplexityData() {
+  public ComplexityData getCognitiveComplexityData() {
     return cognitiveComplexityData.getOrCompute();
   }
 
 
-  public CyclomaticComplexityComputer.Data getCyclomaticComplexityData() {
+  public ComplexityData getCyclomaticComplexityData() {
     return cyclomaticComplexityData.getOrCompute();
   }
 
@@ -348,13 +349,13 @@ public class DocumentContext {
     return context.getConfiguration().getModuleSupport(uri);
   }
 
-  private CognitiveComplexityComputer.Data computeCognitiveComplexity() {
-    Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
+  private ComplexityData computeCognitiveComplexity() {
+    Computer<ComplexityData> cognitiveComplexityComputer = new CognitiveComplexityComputer(this);
     return cognitiveComplexityComputer.compute();
   }
 
-  private CyclomaticComplexityComputer.Data computeCyclomaticComplexity() {
-    Computer<CyclomaticComplexityComputer.Data> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
+  private ComplexityData computeCyclomaticComplexity() {
+    Computer<ComplexityData> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this);
     return cyclomaticComplexityComputer.compute();
   }
 

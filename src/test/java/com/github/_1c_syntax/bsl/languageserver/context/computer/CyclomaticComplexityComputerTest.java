@@ -40,9 +40,9 @@ class CyclomaticComplexityComputerTest {
       = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CyclomaticComplexityComputerTest.bsl");
 
     // when
-    Computer<CyclomaticComplexityComputer.Data> cyclomaticComplexityComputer =
+    Computer<ComplexityData> cyclomaticComplexityComputer =
       new CyclomaticComplexityComputer(documentContext);
-    CyclomaticComplexityComputer.Data data = cyclomaticComplexityComputer.compute();
+    ComplexityData data = cyclomaticComplexityComputer.compute();
     final Map<MethodSymbol, Integer> methodsComplexity = data.getMethodsComplexity();
 
     //then

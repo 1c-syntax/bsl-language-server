@@ -28,13 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
-import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,16 +46,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 // See https://www.sonarsource.com/docs/CognitiveComplexity.pdf for details.
 public class CognitiveComplexityComputer
   extends BSLParserBaseListener
-  implements Computer<CognitiveComplexityComputer.Data> {
+  implements Computer<ComplexityData> {
 
   private final DocumentContext documentContext;
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
-  private List<SecondaryLocation> fileBlockComplexitySecondaryLocations;
+  private List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
 
   private Map<MethodSymbol, Integer> methodsComplexity;
-  private Map<MethodSymbol, List<SecondaryLocation>> methodsComplexitySecondaryLocations;
+  private Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
 
   private MethodSymbol currentMethod;
   private int complexity;
@@ -77,7 +74,7 @@ public class CognitiveComplexityComputer
   }
 
   @Override
-  public Data compute() {
+  public ComplexityData compute() {
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;
     resetMethodComplexityCounters();
@@ -87,7 +84,7 @@ public class CognitiveComplexityComputer
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
 
-    return new Data(
+    return new ComplexityData(
       fileComplexity,
       fileCodeBlockComplexity,
       fileBlockComplexitySecondaryLocations,
@@ -99,7 +96,7 @@ public class CognitiveComplexityComputer
   @Override
   public void enterSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
-    if (!methodSymbol.isPresent()) {
+    if (methodSymbol.isEmpty()) {
       return;
     }
 
@@ -384,8 +381,8 @@ public class CognitiveComplexityComputer
     } else {
       message = String.format("+%d", increment);
     }
-    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message.intern());
-    List<SecondaryLocation> locations;
+    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), message.intern());
+    List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(
         currentMethod,
@@ -396,23 +393,5 @@ public class CognitiveComplexityComputer
     }
 
     locations.add(secondaryLocation);
-  }
-
-  @Value
-  @AllArgsConstructor
-  public static class SecondaryLocation {
-    private final Range range;
-    private final String message;
-  }
-
-  @Value
-  @AllArgsConstructor
-  public static class Data {
-    private final int fileComplexity;
-    private final int fileCodeBlockComplexity;
-    private List<SecondaryLocation> fileBlockComplexitySecondaryLocations;
-
-    private final Map<MethodSymbol, Integer> methodsComplexity;
-    private Map<MethodSymbol, List<SecondaryLocation>> methodsComplexitySecondaryLocations;
   }
 }

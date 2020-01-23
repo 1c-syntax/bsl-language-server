@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,16 +33,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CognitiveComplexityComputerTest {
 
   @Test
-  void compute() throws IOException {
-
+  void compute() {
     // given
     DocumentContext documentContext
       = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CognitiveComplexityComputerTest.bsl");
 
     // when
-    Computer<CognitiveComplexityComputer.Data> cognitiveComplexityComputer =
+    Computer<ComplexityData> cognitiveComplexityComputer =
       new CognitiveComplexityComputer(documentContext);
-    CognitiveComplexityComputer.Data data = cognitiveComplexityComputer.compute();
+    ComplexityData data = cognitiveComplexityComputer.compute();
     final Map<MethodSymbol, Integer> methodsComplexity = data.getMethodsComplexity();
 
     //then

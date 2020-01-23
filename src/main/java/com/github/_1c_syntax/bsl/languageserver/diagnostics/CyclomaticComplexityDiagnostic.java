@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -84,11 +84,11 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
-    List<CyclomaticComplexityComputer.SecondaryLocation> secondaryLocations =
+    List<ComplexitySecondaryLocation> secondaryLocations =
       documentContext.getCyclomaticComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
 
     secondaryLocations.stream()
-      .map((CyclomaticComplexityComputer.SecondaryLocation secondaryLocation) ->
+      .map((ComplexitySecondaryLocation secondaryLocation) ->
         RelatedInformation.create(
           documentContext.getUri(),
           secondaryLocation.getRange(),
@@ -149,11 +149,11 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
         info.getMessage("body", fileCodeBlockComplexity, complexityThreshold)
       ));
 
-      List<CyclomaticComplexityComputer.SecondaryLocation> secondaryLocations =
+      List<ComplexitySecondaryLocation> secondaryLocations =
         documentContext.getCyclomaticComplexityData().getFileBlockComplexitySecondaryLocations();
 
       secondaryLocations.stream()
-        .map((CyclomaticComplexityComputer.SecondaryLocation secondaryLocation) ->
+        .map((ComplexitySecondaryLocation secondaryLocation) ->
           RelatedInformation.create(
             documentContext.getUri(),
             secondaryLocation.getRange(),
