@@ -14,8 +14,8 @@ plugins {
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
     id("io.franzbecker.gradle-lombok") version "3.2.0"
-    id("me.qoomon.git-versioning") version "2.1.0"
-    id("com.github.ben-manes.versions") version "0.25.0"
+    id("me.qoomon.git-versioning") version "2.1.1"
+    id("com.github.ben-manes.versions") version "0.27.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
@@ -46,7 +46,7 @@ group = "com.github.1c-syntax"
 
 gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     preferTags = true
-    branchVersionDescription(closureOf<VersionDescription> {
+    branch(closureOf<VersionDescription> {
         pattern = "^(?!v[0-9]+).*"
         versionFormat = "\${branch}-\${commit.short}\${dirty}"
     })
@@ -59,8 +59,8 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.10.0"
-val junitVersion = "5.5.2"
+val jacksonVersion = "2.10.2"
+val junitVersion = "5.6.0"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
@@ -83,15 +83,15 @@ dependencies {
 
     // https://github.com/1c-syntax/bsl-language-server/issues/369
     // Excude jline and use fixed one.
-    implementation("me.tongfei", "progressbar", "0.7.4") { exclude(group = "org.jline") }
-    implementation("org.jline", "jline", "3.13.1")
+    implementation("me.tongfei", "progressbar", "0.8.0") { exclude(group = "org.jline") }
+    implementation("org.jline", "jline", "3.13.3")
 
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "86bbfc5ab44002b7d82228660292722ad2512731") {
+    implementation("com.github.1c-syntax", "bsl-parser", "0.12.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -107,7 +107,7 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
-    testImplementation("org.assertj", "assertj-core", "3.13.2")
+    testImplementation("org.assertj", "assertj-core", "3.14.0")
     testImplementation("org.mockito", "mockito-core", "3.2.4")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
