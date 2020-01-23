@@ -334,6 +334,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#required-software" class="md-nav__link">
+    Required Software
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#intellij-idea-settings" class="md-nav__link">
+    IntelliJ IDEA Settings
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -348,6 +377,27 @@
                 
                 
                 <h1 id="_1">Требования к окружению<a class="headerlink" href="#_1" title="Permanent link">Link</a></h1>
+<p>Development is underway using <a href="https://www.jetbrains.com/idea/">IntelliJ IDEA Community Edition</a>.</p>
+<h2 id="required-software">Required Software<a class="headerlink" href="#required-software" title="Permanent link">Link</a></h2>
+<ul>
+<li>Java Development Kit 11</li>
+<li><a href="https://www.jetbrains.com/idea/download/">IntelliJ IDEA Community Edition</a></li>
+<li>Plugins IntelliJ IDEA<ul>
+<li>Lombok Plugin</li>
+<li>EditorConfig Plugin</li>
+</ul>
+</li>
+</ul>
+<p>Please note that plugins do not have to be installed - if you have Internet access, they will be installed automatically when you import the project.</p>
+<h3 id="intellij-idea-settings">IntelliJ IDEA Settings<a class="headerlink" href="#intellij-idea-settings" title="Permanent link">Link</a></h3>
+<ul>
+<li>Configure <a href="https://www.jetbrains.com/help/idea/sdk.html#manage_sdks">Java SDK на JDK11</a></li>
+<li>Enable annotation processing: <code>File -&gt; Settings -&gt; Build, Execution, Deployment -&gt; Compiler -&gt; Annotation Processors -&gt; Enable annotation processing</code></li>
+<li>Configure auto import settings, details in the <a href="https://www.jetbrains.com/help/idea/creating-and-optimizing-imports.html">article</a>. Attention:<ul>
+<li>There is no need to start optimization of imports of the entire project, this is followed by maintainers.</li>
+</ul>
+</li>
+</ul>
                 
                   
                 
