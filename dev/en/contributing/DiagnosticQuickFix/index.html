@@ -38,7 +38,7 @@
     
     
       
-        <title>Добавление "Быстрых исправлений" - BSL Language Server Dev</title>
+        <title>Adding "Quick Fixes" - BSL Language Server Dev</title>
       
     
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#adding-quick-fixes" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Добавление "Быстрых исправлений"
+                Adding "Quick Fixes"
               
             </span>
           
@@ -334,6 +334,22 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#developing" class="md-nav__link">
+    Developing
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -347,7 +363,11 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/DiagnosticQuickFix.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Добавление "Быстрых исправлений"<a class="headerlink" href="#_1" title="Permanent link">Link</a></h1>
+                <h1 id="adding-quick-fixes">Adding "Quick Fixes"<a class="headerlink" href="#adding-quick-fixes" title="Permanent link">Link</a></h1>
+<p>"Quick fix" is an action on the code that modifies the text in the editor according to the selected menu item. For example: “Delete commented-out code” allows one-click removal of the code found by the diagnostics “Modules should not contain commented-out code”.</p>
+<h2 id="developing">Developing<a class="headerlink" href="#developing" title="Permanent link">Link</a></h2>
+<p>Quick fixes are provided by classes that implement the QuickFixProvider interface. Currently, only diagnostic classes can be such classes.</p>
+<p>To add a quick fix to any diagnostics, implement the QuickFixProvider interface in it.</p>
                 
                   
                 
