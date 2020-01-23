@@ -38,12 +38,9 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 // idea from https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html
 public class CyclomaticComplexityComputer
@@ -61,7 +58,6 @@ public class CyclomaticComplexityComputer
 
   private MethodSymbol currentMethod;
   private int complexity;
-  private Set<BSLParserRuleContext> ignoredContexts;
 
   public CyclomaticComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -71,7 +67,6 @@ public class CyclomaticComplexityComputer
     resetMethodComplexityCounters();
     methodsComplexity = new HashMap<>();
     methodsComplexitySecondaryLocations = new HashMap<>();
-    ignoredContexts = new HashSet<>();
   }
 
   @Override
@@ -80,7 +75,6 @@ public class CyclomaticComplexityComputer
     fileCodeBlockComplexity = 0;
     resetMethodComplexityCounters();
     methodsComplexity.clear();
-    ignoredContexts.clear();
 
     ParseTreeWalker walker = new ParseTreeWalker();
     walker.walk(this, documentContext.getAst());
@@ -97,12 +91,12 @@ public class CyclomaticComplexityComputer
   @Override
   public void enterSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
-    if (!methodSymbol.isPresent()) {
+    if (methodSymbol.isEmpty()) {
       return;
     }
     resetMethodComplexityCounters();
     currentMethod = methodSymbol.get();
-    complexityIncrement(ctx.getStart());
+    complexityIncrement(currentMethod.getSubNameRange());
 
     super.enterSub(ctx);
   }
@@ -114,7 +108,6 @@ public class CyclomaticComplexityComputer
       methodsComplexity.put(currentMethod, complexity);
     }
     currentMethod = null;
-    ignoredContexts.clear();
     super.exitSub(ctx);
   }
 
@@ -128,7 +121,6 @@ public class CyclomaticComplexityComputer
   public void exitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
     incrementFileComplexity();
     incrementFileCodeBlockComplexity();
-    ignoredContexts.clear();
     super.exitFileCodeBlockBeforeSub(ctx);
   }
 
@@ -142,7 +134,6 @@ public class CyclomaticComplexityComputer
   public void exitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     incrementFileComplexity();
     incrementFileCodeBlockComplexity();
-    ignoredContexts.clear();
     super.exitFileCodeBlock(ctx);
   }
 
@@ -216,31 +207,14 @@ public class CyclomaticComplexityComputer
   @Override
   public void enterExpression(BSLParser.ExpressionContext ctx) {
 
-    if (ignoredContexts.contains(ctx)) {
-      return;
-    }
-
-    final List<Token> flattenExpression = flattenExpression(ctx);
-
     int emptyTokenType = -1;
-    AtomicInteger lastOperationType = new AtomicInteger(emptyTokenType);
-
-    flattenExpression.forEach((Token token) -> {
-      int currentOperationType = token.getType();
-      if (lastOperationType.get() != currentOperationType) {
-        lastOperationType.set(currentOperationType);
-        if (currentOperationType != emptyTokenType) {
-          complexityIncrement(token);
-        }
-      }
-    });
-
+    flattenExpression(ctx).stream()
+      .filter((Token token) -> token.getType() != emptyTokenType)
+      .forEach(this::complexityIncrement);
     super.enterExpression(ctx);
   }
 
   private List<Token> flattenExpression(BSLParser.ExpressionContext ctx) {
-
-    ignoredContexts.add(ctx);
 
     List<Token> result = new ArrayList<>();
 
@@ -306,14 +280,18 @@ public class CyclomaticComplexityComputer
   }
 
   private void complexityIncrement(Token token) {
-    complexity += 1;
-    addSecondaryLocation(token);
+    complexityIncrement(Ranges.create(token));
   }
 
-  private void addSecondaryLocation(Token token) {
+  private void complexityIncrement(Range range) {
+    complexity += 1;
+    addSecondaryLocation(range);
+  }
+
+  private void addSecondaryLocation(Range range) {
     String message;
     message = String.format("+%d", 1);
-    SecondaryLocation secondaryLocation = new SecondaryLocation(Ranges.create(token), message.intern());
+    SecondaryLocation secondaryLocation = new SecondaryLocation(range, message.intern());
     List<SecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(
