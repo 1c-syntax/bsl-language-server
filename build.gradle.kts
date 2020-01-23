@@ -172,12 +172,9 @@ tasks.processResources {
     from("docs/en/diagnostics") {
         into("com/github/_1c_syntax/bsl/languageserver/diagnostics/en")
     }
-}
 
-// native2ascii gradle replacement
-tasks.withType<ProcessResources>().forEach { task ->
-    task.from(task.source) {
-        include("**/*.properties")
+    // native2ascii gradle replacement
+    filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
     }
 }
