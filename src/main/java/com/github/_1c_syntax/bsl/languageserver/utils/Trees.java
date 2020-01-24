@@ -206,7 +206,7 @@ public final class Trees {
   }
 
   /**
-   * Получает дчерние ноды с нужными типами
+   * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
     List<ParserRuleContext> nodes = new ArrayList<>();
