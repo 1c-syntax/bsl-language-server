@@ -29,9 +29,11 @@ import org.antlr.v4.runtime.tree.Tree;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public final class Trees {
 
@@ -190,4 +192,51 @@ public final class Trees {
     }
   }
 
+  /**
+   * Получает детей с нужными типами
+   */
+  public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
+    List<Integer> indexes = Arrays.asList(ruleIndex);
+    return IntStream.range(0, t.getChildCount())
+      .mapToObj(t::getChild)
+      .filter((Tree child) ->
+        child instanceof BSLParserRuleContext
+          && indexes.contains(((BSLParserRuleContext) child).getRuleIndex()))
+      .map(child -> (BSLParserRuleContext) child)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Получает дочерние ноды с нужными типами
+   */
+  public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
+    List<ParserRuleContext> nodes = new ArrayList<>();
+    List<Integer> indexes = Arrays.asList(index);
+
+    if (t instanceof ParserRuleContext
+      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
+      nodes.add((ParserRuleContext) t);
+    }
+
+    IntStream.range(0, t.getChildCount())
+      .mapToObj(i -> findAllRuleNodes(t.getChild(i), index))
+      .forEachOrdered(nodes::addAll);
+
+    return nodes;
+  }
+
+  /**
+   * Проверяет наличие дочерней ноды с указанным типом
+   */
+  public static boolean nodeContains(ParseTree t, Integer... index) {
+    List<Integer> indexes = Arrays.asList(index);
+
+    if (t instanceof ParserRuleContext
+      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
+      return true;
+    }
+
+    return IntStream.range(0, t.getChildCount())
+      .anyMatch(i -> nodeContains(t.getChild(i), index));
+  }
 }
