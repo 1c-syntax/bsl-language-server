@@ -193,7 +193,7 @@ public final class Trees {
   }
 
   /**
-   * Получает детей с нужными типомами
+   * Получает детей с нужными типами
    */
   public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
     return IntStream.range(0, t.getChildCount())
