@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Builder;
-import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
@@ -32,13 +32,13 @@ import java.util.Optional;
 
 @Value
 @Builder
+@EqualsAndHashCode(exclude = "region")
 public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
   private final Optional<MethodDescription> description;
 
-  @ToString.Exclude
   private final Optional<RegionSymbol> region;
 
   @NonFinal
