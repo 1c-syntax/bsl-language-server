@@ -80,4 +80,8 @@ public final class Ranges {
   public static boolean containsRange(Range bigger, Range smaller) {
     return org.eclipse.lsp4j.util.Ranges.containsRange(bigger, smaller);
   }
+
+  public static boolean containsPosition(Range range, Position position) {
+    return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
+  }
 }
