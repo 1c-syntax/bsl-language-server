@@ -179,7 +179,7 @@ public class DiagnosticInfo {
       simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
     }
 
-    return simpleName;
+    return simpleName.intern();
   }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
