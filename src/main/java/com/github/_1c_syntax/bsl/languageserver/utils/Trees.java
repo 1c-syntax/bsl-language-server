@@ -193,7 +193,7 @@ public final class Trees {
   }
 
   /**
-   * Получает детей с нужными типомами
+   * Получает детей с нужными типами
    */
   public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
     List<Integer> indexes = Arrays.asList(ruleIndex)
@@ -207,7 +207,7 @@ public final class Trees {
   }
 
   /**
-   * Получает дчерние ноды с нужными типами
+   * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
     List<ParserRuleContext> nodes = new ArrayList<>();
