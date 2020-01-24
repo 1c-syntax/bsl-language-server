@@ -5,7 +5,7 @@ on:
         types: [published, edited]
 
 jobs:
-    build:
+    jpackage:
         strategy:
             fail-fast: true
             matrix:
@@ -40,7 +40,7 @@ jobs:
               with:
                 java-version: 13
             - name: Build with Gradle
-              run: ./gradlew build
+              run: ./gradlew build -Punshadow
             - name: Download jpackage
                 # We need to download jpackage from https://jdk.java.net/jpackage/
               run: |
@@ -133,9 +133,19 @@ jobs:
               with:
                   files: './bsl-language-server_${{ matrix.prefix }}.zip'
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
-            - name: Upload jar to release
-              if: matrix.prefix == 'nix'
-              uses: AButler/upload-release-assets@v1.0
-              with:
-                  files: './build/libs/*.jar'
-                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+    jar:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout source
+            uses: actions/checkout@v2
+          - name: Set up JDK
+            uses: actions/setup-java@v1
+            with:
+              java-version: 11
+          - name: Build with Gradle
+            run: ./gradlew build
+          - name: Upload jar to release
+            uses: AButler/upload-release-assets@v1.0
+            with:
+              files: './build/libs/*.jar'
+              repo-token: ${{ secrets.GITHUB_TOKEN }}
