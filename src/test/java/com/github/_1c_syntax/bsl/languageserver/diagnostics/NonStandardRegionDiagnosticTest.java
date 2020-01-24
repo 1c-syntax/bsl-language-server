@@ -86,13 +86,12 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
     List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.FormModule));
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(7, 1, 7, 29)
       .hasRange(11, 1, 11, 38)
       .hasRange(20, 1, 20, 21)
       .hasRange(24, 1, 24, 16)
-      .hasRange(36, 1, 36, 63)
       .hasRange(44, 1, 44, 27)
     ;
   }
