@@ -130,10 +130,8 @@ tasks.jar {
         attributes["Implementation-Version"] = archiveVersion.get()
     }
 
-    if (!properties.containsKey("unshadow")) {
-        enabled = false
-        dependsOn(tasks.shadowJar)
-    }
+    enabled = false
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.shadowJar {
