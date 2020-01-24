@@ -196,7 +196,7 @@ public final class Trees {
    * Получает детей с нужными типами
    */
   public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
-    List<Integer> indexes = Arrays.asList(ruleIndex)
+    List<Integer> indexes = Arrays.asList(ruleIndex);
     return IntStream.range(0, t.getChildCount())
       .mapToObj(t::getChild)
       .filter((Tree child) ->
@@ -223,5 +223,20 @@ public final class Trees {
       .forEachOrdered(nodes::addAll);
 
     return nodes;
+  }
+
+  /**
+   * Проверяет наличие дочерней ноды с указанным типом
+   */
+  public static boolean nodeContains(ParseTree t, Integer... index) {
+    List<Integer> indexes = Arrays.asList(index);
+
+    if (t instanceof ParserRuleContext
+      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
+      return true;
+    }
+
+    return IntStream.range(0, t.getChildCount())
+      .anyMatch(i -> nodeContains(t.getChild(i), index));
   }
 }
