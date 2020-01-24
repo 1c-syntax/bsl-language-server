@@ -172,8 +172,11 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
     List<ParseTree> statements = Trees.findAllRuleNodes(ppNodeParent, BSLParser.RULE_statement)
       .stream()
-      .filter(node -> ((BSLParser.StatementContext) node).getStart().getType() != BSLLexer.SEMICOLON)
-      .filter(node -> node.getParent().equals(ppNodeParent))
+      .filter(node ->
+        ((BSLParser.StatementContext) node).getStart().getType() != BSLLexer.SEMICOLON
+          && Trees.findAllRuleNodes(node, BSLParser.RULE_regionStart).isEmpty()
+          && Trees.findAllRuleNodes(node, BSLParser.RULE_regionEnd).isEmpty()
+          && node.getParent().equals(ppNodeParent))
       .collect(Collectors.toList());
 
     // если в блоке кода есть еще стейты кроме текущего
