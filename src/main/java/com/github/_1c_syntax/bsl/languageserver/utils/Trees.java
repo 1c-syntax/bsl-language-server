@@ -196,11 +196,12 @@ public final class Trees {
    * Получает детей с нужными типомами
    */
   public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
+    List<Integer> indexes = Arrays.asList(ruleIndex)
     return IntStream.range(0, t.getChildCount())
       .mapToObj(t::getChild)
       .filter((Tree child) ->
         child instanceof BSLParserRuleContext
-          && Arrays.asList(ruleIndex).contains(((BSLParserRuleContext) child).getRuleIndex()))
+          && indexes.contains(((BSLParserRuleContext) child).getRuleIndex()))
       .map(child -> (BSLParserRuleContext) child)
       .collect(Collectors.toList());
   }
