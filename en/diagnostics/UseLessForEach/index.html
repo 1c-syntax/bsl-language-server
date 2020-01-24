@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Useless collection iteration - BSL Language Server</title>
+        <title>Useless collection iteration (UseLessForEach) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#useless-collection-iteration" tabindex="1" class="md-skip">
+      <a href="#useless-collection-iteration-uselessforeach" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Useless collection iteration
+                Useless collection iteration (UseLessForEach)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Features" class="md-nav__link">
+      Features
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
       Russian
     </a>
@@ -339,6 +351,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#snippets" class="md-nav__link">
+    Snippets
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
+    Diagnostic ignorance in code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-for-config" class="md-nav__link">
+    Parameter for config
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
       
       
       
@@ -358,7 +397,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/UseLessForEach.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="useless-collection-iteration">Useless collection iteration<a class="headerlink" href="#useless-collection-iteration" title="Permanent link">Link</a></h1>
+                <h1 id="useless-collection-iteration-uselessforeach">Useless collection iteration (UseLessForEach)<a class="headerlink" href="#useless-collection-iteration-uselessforeach" title="Permanent link">Link</a></h1>
 <table>
 <thead>
 <tr>
@@ -384,30 +423,45 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>The absence of an iterator in the loop body indicates either a useless iteration of the collection or an error in the loop body.</p>
+<p>Absence of iterator in the loop body indicates to useless collection iteration or to the error in the loop body.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="codehilite"><pre><span></span><span class="nv">For</span> <span class="k">Each</span> <span class="nv">Iterator</span> <span class="nv">From</span> <span class="nv">Collection</span> <span class="nv">Loop</span>
 
-    <span class="nv">ВыполнитьДействиеНадЭлементом</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
+    <span class="nv">ProcessElement</span><span class="p">(</span><span class="nv">Collection</span><span class="p">);</span>
 
-<span class="k">КонецЦикла</span><span class="p">;</span>
+<span class="nv">EndLoop</span><span class="p">;</span>
 </pre></div>
 
 
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="codehilite"><pre><span></span><span class="nv">For</span> <span class="k">Each</span> <span class="nv">Iterator</span> <span class="nv">From</span> <span class="nv">Collection</span> <span class="nv">Loop</span>
 
-    <span class="nv">ВыполнитьДействиеНадЭлементом</span><span class="p">(</span><span class="nv">Итератор</span><span class="p">);</span>
+    <span class="nv">ProcessElement</span><span class="p">(</span><span class="nv">Iterator</span><span class="p">);</span>
 
-<span class="k">КонецЦикла</span><span class="p">;</span>
+<span class="nv">EndLoop</span><span class="p">;</span>
 </pre></div>
 
 
-<div class="codehilite"><pre><span></span><span class="nv">ВыполнитьДействиеНадКоллекцией</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><span class="nv">ProcessCollection</span><span class="p">(</span><span class="nv">Collection</span><span class="p">);</span>
+</pre></div>
+
+
+<h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UseLessForEach-off</span>
+<span class="c c-Singleline">// BSLLS:UseLessForEach-on</span>
+</pre></div>
+
+
+<h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UseLessForEach&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </pre></div>
                 
                   
+                
                 
               
               
@@ -449,7 +503,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

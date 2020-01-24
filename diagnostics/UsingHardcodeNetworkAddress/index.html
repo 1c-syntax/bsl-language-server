@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Хранение ip-адресов в коде - BSL Language Server</title>
+        <title>Хранение ip-адресов в коде (UsingHardcodeNetworkAddress) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#ip-" tabindex="1" class="md-skip">
+      <a href="#ip-usinghardcodenetworkaddress" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Хранение ip-адресов в коде
+                Хранение ip-адресов в коде (UsingHardcodeNetworkAddress)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -346,6 +358,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
       
       
       
@@ -365,7 +404,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/UsingHardcodeNetworkAddress.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="ip-">Хранение ip-адресов в коде<a class="headerlink" href="#ip-" title="Permanent link">&para;</a></h1>
+                <h1 id="ip-usinghardcodenetworkaddress">Хранение ip-адресов в коде (UsingHardcodeNetworkAddress)<a class="headerlink" href="#ip-usinghardcodenetworkaddress" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -401,9 +440,9 @@
 <tbody>
 <tr>
 <td align="center"><code>searchWordsExclusion</code></td>
-<td align="center"><code>Регулярное выражение</code></td>
+<td align="center"><code>Строка</code></td>
 <td align="left"><code>Ключевые слова поиска для исключения выражений при поиске IP адресов</code></td>
-<td align="center"><code>"Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver"</code></td>
+<td align="center"><code>Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver</code></td>
 </tr>
 </tbody>
 </table>
@@ -434,8 +473,25 @@
 <p>Правильно:</p>
 <div class="codehilite"><pre><span></span><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="nv">МойМодульПовтИсп</span><span class="o">.</span><span class="nv">СетевойАдресСервера</span><span class="p">();</span>
 </pre></div>
+
+
+<h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-off</span>
+<span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-on</span>
+</pre></div>
+
+
+<h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;UsingHardcodeNetworkAddress&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;searchWordsExclusion&quot;</span><span class="p">:</span> <span class="s2">&quot;Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver&quot;</span>
+<span class="p">}</span>
+</pre></div>
                 
                   
+                
                 
               
               
@@ -477,7 +533,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

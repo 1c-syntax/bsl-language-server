@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Features" class="md-nav__link">
+      Features
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
       Russian
     </a>
@@ -363,27 +375,28 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Output the analize result in stdout and/or attached logger. Output result, returned <code>toString()</code> method of object <a href="https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/reporter/AnalysisInfo.java">AnalysisInfo</a></p>
 <h2 id="sample-output">Sample output<a class="headerlink" href="#sample-output" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><span class="nv">Analysis</span> <span class="nv">date</span>: <span class="mi">2019</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">28</span><span class="nv">T15</span>:<span class="mi">32</span>:<span class="mi">06</span>.<span class="mi">856</span>
-[<span class="nv">FileInfo</span><span class="ss">(</span><span class="nv">path</span><span class="o">=</span><span class="nv">C</span>:\<span class="nv">src</span>\<span class="nv">cf</span>\<span class="nv">Catalogs</span>\МойСправочник\<span class="nv">Ext</span>\<span class="nv">ManagerModule</span>.<span class="nv">bsl</span>, <span class="nv">diagnostics</span><span class="o">=</span>[]<span class="ss">)</span>, <span class="nv">FileInfo</span><span class="ss">(</span><span class="nv">path</span><span class="o">=</span><span class="nv">C</span>:\<span class="nv">src</span>\<span class="nv">cf</span>\<span class="nv">Catalogs</span>\АккредитационныеКомиссии\<span class="nv">Ext</span>\<span class="nv">ObjectModule</span>.<span class="nv">bsl</span>, <span class="nv">diagnostics</span><span class="o">=</span>[<span class="nv">Diagnostic</span> [
-  <span class="nv">range</span> <span class="o">=</span> <span class="nv">Range</span> [
-    <span class="nv">start</span> <span class="o">=</span> <span class="nv">Position</span> [
-      <span class="nv">line</span> <span class="o">=</span> <span class="mi">55</span>
-      <span class="nv">character</span> <span class="o">=</span> <span class="mi">0</span>
-    ]
-    <span class="k">end</span> <span class="o">=</span> <span class="nv">Position</span> [
-      <span class="nv">line</span> <span class="o">=</span> <span class="mi">55</span>
-      <span class="nv">character</span> <span class="o">=</span> <span class="mi">140</span>
-    ]
-  ]
-  <span class="nv">severity</span> <span class="o">=</span> <span class="nv">Information</span>
-  <span class="nv">code</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">LineLengthDiagnostic</span><span class="s2">&quot;</span>
-  <span class="nv">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">bsl-language-server</span><span class="s2">&quot;</span>
-  <span class="nv">message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">Превышена длина строки</span><span class="s2">&quot;</span>
-  <span class="nv">relatedInformation</span> <span class="o">=</span> <span class="nv">null</span>
-]]<span class="ss">)</span>]
+<div class="codehilite"><pre><span></span><span class="err">Analysis date: 2019-01-28T15:32:06.856</span>
+<span class="err">[FileInfo(path=C:\src\cf\Catalogs\МойСправочник\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [</span>
+<span class="err">  range = Range [</span>
+<span class="err">    start = Position [</span>
+<span class="err">      line = 55</span>
+<span class="err">      character = 0</span>
+<span class="err">    ]</span>
+<span class="err">    end = Position [</span>
+<span class="err">      line = 55</span>
+<span class="err">      character = 140</span>
+<span class="err">    ]</span>
+<span class="err">  ]</span>
+<span class="err">  severity = Information</span>
+<span class="err">  code = &quot;LineLengthDiagnostic&quot;</span>
+<span class="err">  source = &quot;bsl-language-server&quot;</span>
+<span class="err">  message = &quot;Превышена длина строки&quot;</span>
+<span class="err">  relatedInformation = null</span>
+<span class="err">]])]</span>
 </pre></div>
                 
                   
+                
                 
               
               
@@ -425,7 +438,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

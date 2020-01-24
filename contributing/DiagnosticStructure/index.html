@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -343,6 +355,13 @@
           <li class="md-nav__item">
   <a href="#bsldiagnostic" class="md-nav__link">
     Класс диагностики, реализующий интерфейс BSLDiagnostic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abstractdiagnostic" class="md-nav__link">
+    Класс диагностики, унаследованный от AbstractDiagnostic
   </a>
   
 </li>
@@ -447,6 +466,7 @@
 <li><a href="#%d0%a1%d0%be%d1%81%d1%82%d0%b0%d0%b2-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Состав диагностики</a></li>
 <li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d0%b0%d1%86%d0%b8%d0%b8-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8">Класс реализации диагностики</a><ul>
 <li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d1%83%d1%8e%d1%89%d0%b8%d0%b9-%d0%b8%d0%bd%d1%82%d0%b5%d1%80%d1%84%d0%b5%d0%b9%d1%81-bsldiagnostic">Класс диагностики, реализующий интерфейс BSLDiagnostic</a></li>
+<li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractdiagnostic">Класс диагностики, унаследованный от AbstractDiagnostic</a></li>
 <li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractvisitordiagnostic">Класс диагностики, унаследованный от AbstractVisitorDiagnostic</a></li>
 <li><a href="#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95">Класс диагностики, унаследованный от AbstractListenerDiagnostic <strong>(В РАЗРАБОТКЕ)</strong></a></li>
 </ul>
@@ -478,7 +498,7 @@
 <h2 id="_3">Класс реализации диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Диагностика реализуется посредством добавления java-класса в пакет <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> в каталоге <code>src/main/java</code>.  </p>
 <p>В теле файла, нужно указать пакет, в который добавлен класс и блок импорта <em>(при использовании ide список импорта обновляется автоматически)</em>. Необходимо следить за тем, чтобы импортировались <strong>только</strong> то, что необходимо для реализации, все неиспользуемое должно быть <strong>удалено</strong> <em>(если <a href="../EnvironmentSetting/">настройки</a> выполнены верно, то ide сделает все автоматически)</em>.</p>
-<p>Каждый класс диагностики должен иметь аннотацию <code>@DiagnosticMetadata</code>, содержащую метаданные диагностики. Актуальное содержимое всегда можно получить изучив <a href="src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java">файл</a>.</p>
+<p>Каждый класс диагностики должен иметь аннотацию <code>@DiagnosticMetadata</code>, содержащую метаданные диагностики. Актуальное содержимое всегда можно получить изучив <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java">файл</a>.</p>
 <p>На момент написания статьи имеются следующие свойства:</p>
 <ul>
 <li>Тип диагностики <code>type</code> и ее важность <code>severity</code>, для каждой диагностики обязательно их определение. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к <a href="../DiagnosticTypeAndSeverity/">статье</a>.</li>
@@ -490,27 +510,32 @@
 </ul>
 <p>Последние два могут быть опущены.</p>
 <p>Пример аннотации</p>
-<div class="codehilite"><pre><span></span><span class="nd">@DiagnosticMetadata</span><span class="o">(</span>
-  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="o">.</span><span class="na">CODE_SMELL</span><span class="o">,</span>    <span class="c1">// Тип Дефект кода</span>
-  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="o">.</span><span class="na">MINOR</span><span class="o">,</span> <span class="c1">// Важность Незначительный</span>
-  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="o">,</span>                    <span class="c1">// Время на исправление 1 минута</span>
-  <span class="n">activatedByDefault</span> <span class="o">=</span> <span class="kc">false</span><span class="o">,</span>          <span class="c1">// По умолчанию деактивирована</span>
-  <span class="n">scope</span> <span class="o">=</span> <span class="n">DiagnosticScope</span><span class="o">.</span><span class="na">BSL</span><span class="o">,</span>         <span class="c1">// Применяется только для BSL</span>
-  <span class="n">compatibilityMode</span> <span class="o">=</span> <span class="n">DiagnosticCompatibilityMode</span><span class="o">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="o">,</span> <span class="c1">// Режим проверки совместимости с 8.3.3</span>
-  <span class="n">tags</span> <span class="o">=</span> <span class="o">{</span>
-    <span class="n">DiagnosticTag</span><span class="o">.</span><span class="na">STANDARD</span>             <span class="c1">// Относится к диагностикам нарушения стандарта 1С</span>
-  <span class="o">}</span>
-<span class="o">)</span>
+<div class="codehilite"><pre><span></span><span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>    <span class="c1">// Тип Дефект кода</span>
+  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span> <span class="c1">// Важность Незначительный</span>
+  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>                    <span class="c1">// Время на исправление 1 минута</span>
+  <span class="n">activatedByDefault</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>          <span class="c1">// По умолчанию деактивирована</span>
+  <span class="n">scope</span> <span class="o">=</span> <span class="n">DiagnosticScope</span><span class="p">.</span><span class="na">BSL</span><span class="p">,</span>         <span class="c1">// Применяется только для BSL</span>
+  <span class="n">compatibilityMode</span> <span class="o">=</span> <span class="n">DiagnosticCompatibilityMode</span><span class="p">.</span><span class="na">COMPATIBILITY_MODE_8_3_3</span><span class="p">,</span> <span class="c1">// Режим проверки совместимости с 8.3.3</span>
+  <span class="n">tags</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span>             <span class="c1">// Относится к диагностикам нарушения стандарта 1С</span>
+  <span class="p">}</span>
+<span class="p">)</span>
 </pre></div>
 
 
 <p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>
 <ul>
+<li>для простых диагностик (проверка контекста модуля) стоит использовать наследование <code>AbstractVisitor</code> с реализацией единственного метода <code>check</code></li>
 <li>при необходимости анализа посещения узла / последовательности узлов, использовать стратегию <code>слушателя</code> нужно наслодовать класс от <code>AbstractListenerDiagnostic</code></li>
 <li>в остальных случаях нужно использовать стратегию <code>визитера</code> и <code>AbstractVisitorDiagnostic</code></li>
 </ul>
 <p>Примеры</p>
 <div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractDiagnostic</span>
 </pre></div>
 
 
@@ -524,7 +549,11 @@
 
 <p>Диагностика может предоставлять т.н. <code>быстрые исправления</code>, для чего класс диагностики должен реализовывать интерфейс <code>QuickFixProvider</code>. Подробно о добавлении <code>быстрых исправлений</code> в диагностику написано <a href="../DiagnosticQuickFix/">статье</a>.</p>
 <p>Примеры</p>
-<div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="o">,</span> <span class="n">QuickFixProvider</span>
+<div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
 </pre></div>
 
 
@@ -540,8 +569,8 @@
 <p>Ниже приведены отличия в реализации классов диагностик.</p>
 <h3 id="bsldiagnostic">Класс диагностики, реализующий интерфейс BSLDiagnostic<a class="headerlink" href="#bsldiagnostic" title="Permanent link">&para;</a></h3>
 <p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
-<div class="codehilite"><pre><span></span> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
-<span class="kd">private</span> <span class="kd">final</span> <span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="kd">private</span> <span class="kd">final</span> <span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">;</span>
 </pre></div>
 
 
@@ -553,21 +582,43 @@
 </ul>
 <p>Ниже приведена общая структура метода <code>getDiagnostics</code></p>
 <div class="codehilite"><pre><span></span>  <span class="nd">@Override</span>
-  <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="nf">getDiagnostics</span><span class="o">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="o">)</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="nf">getDiagnostics</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Очистка хранилища диагностик</span>
-    <span class="n">diagnosticStorage</span><span class="o">.</span><span class="na">clearDiagnostics</span><span class="o">();</span>
+    <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">clearDiagnostics</span><span class="p">();</span>
 
-    <span class="n">documentContext</span><span class="o">.</span><span class="na">getComments</span><span class="o">()</span>  <span class="c1">// Получение коллекции токенов, в примере комментариев</span>
-      <span class="o">.</span><span class="na">parallelStream</span><span class="o">()</span>
-      <span class="o">.</span><span class="na">filter</span><span class="o">((</span><span class="n">Token</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span>         <span class="c1">// Поиск &quot;нужных&quot;, т.е. тех, на обнаружение которых направлена диагностика</span>
-        <span class="o">!</span><span class="n">goodCommentPattern</span><span class="o">.</span><span class="na">matcher</span><span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">getText</span><span class="o">()).</span><span class="na">matches</span><span class="o">())</span>
-      <span class="o">.</span><span class="na">sequential</span><span class="o">()</span>
-      <span class="o">.</span><span class="na">forEach</span><span class="o">((</span><span class="n">Token</span> <span class="n">t</span><span class="o">)</span> <span class="o">-&gt;</span>        <span class="c1">// Добавление замечаний, в примере на каждый токен отдельное замечание</span>
-        <span class="n">diagnosticStorage</span><span class="o">.</span><span class="na">addDiagnostic</span><span class="o">(</span><span class="n">t</span><span class="o">));</span>
+    <span class="n">documentContext</span><span class="p">.</span><span class="na">getComments</span><span class="p">()</span>  <span class="c1">// Получение коллекции токенов, в примере комментариев</span>
+      <span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>         <span class="c1">// Поиск &quot;нужных&quot;, т.е. тех, на обнаружение которых направлена диагностика</span>
+        <span class="o">!</span><span class="n">goodCommentPattern</span><span class="p">.</span><span class="na">matcher</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">()).</span><span class="na">matches</span><span class="p">())</span>
+      <span class="p">.</span><span class="na">sequential</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">forEach</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>        <span class="c1">// Добавление замечаний, в примере на каждый токен отдельное замечание</span>
+        <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">t</span><span class="p">));</span>
 
     <span class="c1">// Возврат обнаруженных замечаний</span>
-    <span class="k">return</span> <span class="n">diagnosticStorage</span><span class="o">.</span><span class="na">getDiagnostics</span><span class="o">();</span>
-  <span class="o">}</span>
+    <span class="k">return</span> <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">getDiagnostics</span><span class="p">();</span>
+  <span class="p">}</span>
+</pre></div>
+
+
+<h3 id="abstractdiagnostic">Класс диагностики, унаследованный от AbstractDiagnostic<a class="headerlink" href="#abstractdiagnostic" title="Permanent link">&para;</a></h3>
+<p>Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. 
+В классе диагностики необходимо переопределить метод <code>check</code>, принимающий в качестве параметра контекст анализируемоего файла <code>DocumentContext</code>, и конструктор с инициализацией свойства <code>info</code> базового класса   </p>
+<p>Метод <code>check</code> должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
+<p>Пример:</p>
+<div class="codehilite"><pre><span></span>  <span class="nd">@Override</span>
+  <span class="kd">public</span> <span class="nf">TemplateDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nd">@Override</span>
+  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">documentContext</span><span class="p">.</span><span class="na">getTokensFromDefaultChannel</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
+      <span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>
+        <span class="n">t</span><span class="p">.</span><span class="na">getType</span><span class="p">()</span> <span class="o">==</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">IDENTIFIER</span> <span class="o">&amp;&amp;</span>
+          <span class="n">t</span><span class="p">.</span><span class="na">getText</span><span class="p">().</span><span class="na">toUpperCase</span><span class="p">(</span><span class="n">Locale</span><span class="p">.</span><span class="na">ENGLISH</span><span class="p">).</span><span class="na">contains</span><span class="p">(</span><span class="s">&quot;Ё&quot;</span><span class="p">))</span>
+      <span class="p">.</span><span class="na">forEach</span><span class="p">(</span><span class="n">token</span> <span class="o">-&gt;</span> <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">token</span><span class="p">));</span>
+  <span class="p">}</span>
 </pre></div>
 
 
@@ -575,9 +626,9 @@
 <p>В классе должен быть реализован конструктор для инициализации свойства <code>info</code> базового класса</p>
 <p>Пример:</p>
 <div class="codehilite"><pre><span></span>  <span class="nd">@Override</span>
-  <span class="kd">public</span> <span class="nf">TemplateDiagnostic</span><span class="o">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="o">)</span> <span class="o">{</span>
-    <span class="kd">super</span><span class="o">(</span><span class="n">info</span><span class="o">);</span>
-  <span class="o">}</span>
+  <span class="kd">public</span> <span class="nf">TemplateDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+  <span class="p">}</span>
 </pre></div>
 
 
@@ -585,12 +636,12 @@
 <p>В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище <code>diagnosticStorage</code> <em>(поле уже определено в абстрактном классе)</em>. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.</p>
 <p>Примерная структура метода</p>
 <div class="codehilite"><pre><span></span>  <span class="nd">@Override</span>
-  <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitModuleVar</span><span class="o">(</span><span class="n">BSLParser</span><span class="o">.</span><span class="na">ModuleVarContext</span> <span class="n">ctx</span><span class="o">)</span> <span class="o">{</span>                 <span class="c1">// Визитер для переменных модуля</span>
-    <span class="k">if</span><span class="o">(</span><span class="n">Trees</span><span class="o">.</span><span class="na">findAllRuleNodes</span><span class="o">(</span><span class="n">ctx</span><span class="o">,</span> <span class="n">BSLParser</span><span class="o">.</span><span class="na">RULE_compilerDirective</span><span class="o">).</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>  <span class="c1">// Поиск нужных дочерних узлов</span>
-      <span class="n">diagnosticStorage</span><span class="o">.</span><span class="na">addDiagnostic</span><span class="o">(</span><span class="n">ctx</span><span class="o">);</span>                                         <span class="c1">// Добавление замечания на весь узел</span>
-    <span class="o">}</span>
-    <span class="k">return</span> <span class="n">ctx</span><span class="o">;</span>
-  <span class="o">}</span>
+  <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitModuleVar</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">ModuleVarContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span>                 <span class="c1">// Визитер для переменных модуля</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">Trees</span><span class="p">.</span><span class="na">findAllRuleNodes</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">BSLParser</span><span class="p">.</span><span class="na">RULE_compilerDirective</span><span class="p">).</span><span class="na">size</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// Поиск нужных дочерних узлов</span>
+      <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>                                         <span class="c1">// Добавление замечания на весь узел</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ctx</span><span class="p">;</span>
+  <span class="p">}</span>
 </pre></div>
 
 
@@ -609,22 +660,22 @@
 <p>В теле файла, нужно указать пакет, в который добавлен класс и блок импорта <em>(аналогично классу реализации диагностики)</em>.<br />
 В файле необходимо создать одноименный файлу класс, унаследованый от класса <code>AbstractDiagnosticTest</code> для созданного класса диагностики.</p>
 <p>Пример тестового класса</p>
-<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="kn">import</span> <span class="nn">org.eclipse.lsp4j.Diagnostic</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.utils.Ranges</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">org.junit.jupiter.api.Test</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">org.eclipse.lsp4j.Diagnostic</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.utils.Ranges</span><span class="p">;</span>
+<span class="kn">import</span> <span class="nn">org.junit.jupiter.api.Test</span><span class="p">;</span>
 
-<span class="kn">import</span> <span class="nn">java.util.List</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.List</span><span class="p">;</span>
 
-<span class="kn">import static</span> <span class="nn">org.assertj.core.api.Assertions.assertThat</span><span class="o">;</span>
+<span class="kn">import static</span> <span class="nn">org.assertj.core.api.Assertions.assertThat</span><span class="p">;</span>
 
-<span class="kd">class</span> <span class="nc">TemplateDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">TemplateDiagnostic</span><span class="o">&gt;</span> <span class="o">{</span>
+<span class="kd">class</span> <span class="nc">TemplateDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">TemplateDiagnostic</span><span class="o">&gt;</span> <span class="p">{</span>
 
-    <span class="n">TemplateDiagnosticTest</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kd">super</span><span class="o">(</span><span class="n">TemplateDiagnostic</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
+    <span class="n">TemplateDiagnosticTest</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">super</span><span class="p">(</span><span class="n">TemplateDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -648,31 +699,31 @@
 В случае использования шаблонного текста сообщения об ошибке замечания, необходимо в тесте проверить и его, получив текст сообщения об ошибке методом <code>getMessage()</code> диагностики.</p>
 <p>Пример тестового метода</p>
 <div class="codehilite"><pre><span></span>    <span class="nd">@Test</span>
-    <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
-      <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="o">();</span>   <span class="c1">// получение списка замечаний диагностики</span>
+    <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+      <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>   <span class="c1">// получение списка замечаний диагностики</span>
 
-      <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">).</span><span class="na">hasSize</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>                <span class="c1">// проверка количества обнаруженных замечаний</span>
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                <span class="c1">// проверка количества обнаруженных замечаний</span>
 
       <span class="c1">// проверка частных случаев</span>
-      <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">anyMatch</span><span class="o">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="o">.</span><span class="na">getRange</span><span class="o">().</span><span class="na">equals</span><span class="o">(</span><span class="n">Ranges</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="mi">27</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">27</span><span class="o">,</span> <span class="mi">29</span><span class="o">)))</span>
-        <span class="o">.</span><span class="na">anyMatch</span><span class="o">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="o">.</span><span class="na">getRange</span><span class="o">().</span><span class="na">equals</span><span class="o">(</span><span class="n">Ranges</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="mi">40</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">40</span><span class="o">,</span> <span class="mi">29</span><span class="o">)));</span>
-    <span class="o">}</span>
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)))</span>
+        <span class="p">.</span><span class="na">anyMatch</span><span class="p">(</span><span class="n">diagnostic</span> <span class="o">-&gt;</span> <span class="n">diagnostic</span><span class="p">.</span><span class="na">getRange</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="n">Ranges</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">)));</span>
+    <span class="p">}</span>
 </pre></div>
 
 
 <p>Для упрощена написания тестов, сокращения объема кода, можно использовать хелпер <code>util.Assertions.assertThat</code> и тогда пример выше будет выглядеть следующим образом:</p>
 <div class="codehilite"><pre><span></span>    <span class="nd">@Test</span>
-    <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
-      <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="o">();</span>   <span class="c1">// получение списка замечаний диагностики</span>
+    <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+      <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>   <span class="c1">// получение списка замечаний диагностики</span>
 
-      <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">).</span><span class="na">hasSize</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>                <span class="c1">// проверка количества обнаруженных замечаний</span>
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                <span class="c1">// проверка количества обнаруженных замечаний</span>
 
       <span class="c1">// проверка частных случаев</span>
-      <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">,</span> <span class="kc">true</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">hasRange</span><span class="o">(</span><span class="mi">27</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">27</span><span class="o">,</span> <span class="mi">29</span><span class="o">)</span>
-        <span class="o">.</span><span class="na">hasRange</span><span class="o">(</span><span class="mi">40</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">40</span><span class="o">,</span> <span class="mi">29</span><span class="o">);</span>
-    <span class="o">}</span>
+      <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
+        <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
+    <span class="p">}</span>
 </pre></div>
 
 
@@ -681,22 +732,22 @@
 Перед установкой новых значений параметров диагностики, необходимо получить настройки диагностики по умолчанию методом <code>getDefaultDiagnosticConfiguration()</code>, используя информацию текущего объекта диагностики <code>diagnosticInstance.getInfo()</code>. Полученный результат представляет собой соответствие, в котором, методом <code>put</code>, необходимо изменить значения нужных параметров. Применение измененных настроек выполняется методом <code>configure()</code> текущего объекта диагностики <code>diagnosticInstance</code>.</p>
 <p>Пример тестового метода</p>
 <div class="codehilite"><pre><span></span>    <span class="nd">@Test</span>
-    <span class="kt">void</span> <span class="nf">testConfigure</span><span class="o">()</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">testConfigure</span><span class="p">()</span> <span class="p">{</span>
         <span class="c1">// получение настроек диагностики по умолчанию</span>
-        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="o">.</span><span class="na">getInfo</span><span class="o">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="o">();</span>
+        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultDiagnosticConfiguration</span><span class="p">();</span>
 
-        <span class="n">configuration</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&quot;templateParem&quot;</span><span class="o">,</span> <span class="s">&quot;newValue&quot;</span><span class="o">);</span>     <span class="c1">// установка параметру &quot;templateParem&quot; значения &quot;newValue&quot;</span>
-        <span class="n">diagnosticInstance</span><span class="o">.</span><span class="na">configure</span><span class="o">(</span><span class="n">configuration</span><span class="o">);</span>        <span class="c1">// применение настроек</span>
+        <span class="n">configuration</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;templateParem&quot;</span><span class="p">,</span> <span class="s">&quot;newValue&quot;</span><span class="p">);</span>     <span class="c1">// установка параметру &quot;templateParem&quot; значения &quot;newValue&quot;</span>
+        <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>        <span class="c1">// применение настроек</span>
 
-        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="o">();</span>    <span class="c1">// получение списка замечаний диагностики</span>
+        <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span>    <span class="c1">// получение списка замечаний диагностики</span>
 
-        <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">).</span><span class="na">hasSize</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>                 <span class="c1">// проверка количества обнаруженных замечаний</span>
+        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>                 <span class="c1">// проверка количества обнаруженных замечаний</span>
 
         <span class="c1">// проверка частных случаев</span>
-        <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">,</span> <span class="kc">true</span><span class="o">)</span>
-          <span class="o">.</span><span class="na">hasRange</span><span class="o">(</span><span class="mi">27</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">27</span><span class="o">,</span> <span class="mi">29</span><span class="o">)</span>
-          <span class="o">.</span><span class="na">hasRange</span><span class="o">(</span><span class="mi">40</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">40</span><span class="o">,</span> <span class="mi">29</span><span class="o">);</span>
-    <span class="o">}</span>
+        <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+          <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">27</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
+          <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">29</span><span class="p">);</span>
+    <span class="p">}</span>
 </pre></div>
 
 
@@ -728,6 +779,7 @@
 <p>Кроме непосредственно создания файлов описания диагностики, необходимо обновлять индекс-файлы <code>index.md</code> для каждого языка, добавляя диагностику в таблицу реализованных.</p>
                 
                   
+                
                 
               
               
@@ -769,7 +821,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

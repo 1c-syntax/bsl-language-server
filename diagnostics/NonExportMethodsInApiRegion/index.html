@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс - BSL Language Server</title>
+        <title>Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс (NonExportMethodsInApiRegion) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#nonexportmethodsinapiregion" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс
+                Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс (NonExportMethodsInApiRegion)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -326,16 +338,43 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Источники
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -358,7 +397,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/NonExportMethodsInApiRegion.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="nonexportmethodsinapiregion">Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс (NonExportMethodsInApiRegion)<a class="headerlink" href="#nonexportmethodsinapiregion" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -383,7 +422,7 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
 <p>Раздел «Программный интерфейс» содержит экспортные процедуры и функции, предназначенные для использования другими объектами конфигурации или другими программами (например, через внешнее соединение).</p>
@@ -392,12 +431,25 @@
 <p>Раздел «Служебный программный интерфейс» предназначен для модулей, которые являются частью некоторой функциональной подсистемы. В нем должны быть размещены экспортные процедуры и функции, которые допустимо вызывать только из других функциональных подсистем этой же библиотеки.</p>
 </li>
 </ul>
-<h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Источники<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:455:hdoc">Структура модуля</a></li>
 </ul>
+<h2 id="_3">Сниппеты<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_4">Экранирование кода<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:NonExportMethodsInApiRegion-off</span>
+<span class="c c-Singleline">// BSLLS:NonExportMethodsInApiRegion-on</span>
+</pre></div>
+
+
+<h3 id="_5">Параметр конфигурационного файла<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;NonExportMethodsInApiRegion&quot;</span><span class="err">:</span> <span class="kc">false</span>
+</pre></div>
                 
                   
+                
                 
               
               
@@ -439,7 +491,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

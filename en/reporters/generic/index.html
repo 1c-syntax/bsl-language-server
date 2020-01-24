@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Features" class="md-nav__link">
+      Features
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
       Russian
     </a>
@@ -363,30 +375,31 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Output the analize result to file <code>bsl-generic-json.json</code> in the current workspace directory. See more <a href="https://docs.sonarqube.org/latest/analysis/generic-issue/">Generic Issue</a>.</p>
 <h2 id="sample-output">Sample output<a class="headerlink" href="#sample-output" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><span class="err">{</span>
-    <span class="ss">&quot;issues&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="err">{</span>
-            <span class="ss">&quot;engineId&quot;</span><span class="p">:</span> <span class="ss">&quot;bsl-language-server&quot;</span><span class="p">,</span>
-            <span class="ss">&quot;ruleId&quot;</span><span class="p">:</span> <span class="ss">&quot;FunctionShouldHaveReturn&quot;</span><span class="p">,</span>
-            <span class="ss">&quot;severity&quot;</span><span class="p">:</span> <span class="ss">&quot;CRITICAL&quot;</span><span class="p">,</span>
-            <span class="ss">&quot;type&quot;</span><span class="p">:</span> <span class="ss">&quot;BUG&quot;</span><span class="p">,</span>
-            <span class="ss">&quot;primaryLocation&quot;</span><span class="p">:</span> <span class="err">{</span>
-                <span class="ss">&quot;message&quot;</span><span class="p">:</span> <span class="ss">&quot;Функция не содержит \&quot;</span><span class="err">Возврат\</span><span class="ss">&quot;&quot;</span><span class="p">,</span>
-                <span class="ss">&quot;filePath&quot;</span><span class="p">:</span> <span class="ss">&quot;project/src/DataProcessors/ОбменДанными/Ext/ObjectModule.bsl&quot;</span><span class="p">,</span>
-                <span class="ss">&quot;textRange&quot;</span><span class="p">:</span> <span class="err">{</span>
-                    <span class="ss">&quot;startLine&quot;</span><span class="p">:</span> <span class="mi">66</span><span class="p">,</span>
-                    <span class="ss">&quot;endLine&quot;</span><span class="p">:</span> <span class="mi">66</span><span class="p">,</span>
-                    <span class="ss">&quot;startColumn&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
-                    <span class="ss">&quot;endColumn&quot;</span><span class="p">:</span> <span class="mi">31</span>
-                <span class="err">}</span>
-            <span class="err">}</span><span class="p">,</span>
-            <span class="ss">&quot;effortMinutes&quot;</span><span class="p">:</span> <span class="mi">0</span>
-        <span class="err">}</span>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;issues&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;engineId&quot;</span><span class="p">:</span> <span class="s2">&quot;bsl-language-server&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;ruleId&quot;</span><span class="p">:</span> <span class="s2">&quot;FunctionShouldHaveReturn&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;severity&quot;</span><span class="p">:</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;BUG&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;primaryLocation&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Function should have \&quot;Return\&quot;&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;filePath&quot;</span><span class="p">:</span> <span class="s2">&quot;project/src/DataProcessors/Exchange/Ext/ObjectModule.bsl&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;textRange&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="nt">&quot;startLine&quot;</span><span class="p">:</span> <span class="mi">66</span><span class="p">,</span>
+                    <span class="nt">&quot;endLine&quot;</span><span class="p">:</span> <span class="mi">66</span><span class="p">,</span>
+                    <span class="nt">&quot;startColumn&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+                    <span class="nt">&quot;endColumn&quot;</span><span class="p">:</span> <span class="mi">31</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;effortMinutes&quot;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
     <span class="p">]</span>
-<span class="err">}</span>
+<span class="p">}</span>
 </pre></div>
                 
                   
+                
                 
               
               
@@ -428,7 +441,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -389,6 +401,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#security_hotspot" class="md-nav__link">
+    Потенциальная уязвимость (SECURITY_HOTSPOT)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#code_smell" class="md-nav__link">
     Дефект кода (CODE_SMELL)
   </a>
@@ -451,6 +470,14 @@
 <li>компрометация персональных данных является блокирующей уязвимостью, т.к. кроме нарушения законодальства, полученная информация может быть использована в различных противоправных действиях.</li>
 <li>компрометация настроек отчетов пользователя относится к критичной уязвимости, т.к. может подсказать злоумышленнику как собрать важный отчет, но не дает доступа для выполнения запроса.</li>
 </ul>
+<h3 id="security_hotspot">Потенциальная уязвимость (SECURITY_HOTSPOT)<a class="headerlink" href="#security_hotspot" title="Permanent link">&para;</a></h3>
+<p>В отличие от уязвимостей, диагностики с данным типом выделяют фрагменты кода, чуствительные к безопасности, требующие дополнительного ручного анализа. После анализа либо будет обнаружена проблема, которую необходимо исправить, либо проблемы нет и стоит отметить замечание как неактуальное.
+Диагностики с данным типом всегда должны иметь важность <code>Критичный</code>.</p>
+<p>Примеры</p>
+<ul>
+<li>обращение к параметрам операционной системы, комьютера пользователя не всегда является уязвимостью, так например версия архитектуры ОС может быть использована для загрузки нужной версии библиотки, входящей в состав приложения.</li>
+<li>повышение привилегий пользователя может происходить запланировано, на время выполнения операции в соответствии с бизнес-процессом, что не явлется уязвимостью, в отличие от ситуации отключения контроля прав доступа пользователя полностью.</li>
+</ul>
 <h3 id="code_smell">Дефект кода (CODE_SMELL)<a class="headerlink" href="#code_smell" title="Permanent link">&para;</a></h3>
 <p><code>Дефект кода</code> не приводит к ошибкам в программе, но усложняет дальнейшую разработку, возможность адаптировать и расширять функционал. Может иметь любую важность, кроме <code>Блокирующий</code> и <code>Критичный</code>. Требует исправления по мере важности в процессе рефакторинга.</p>
 <h3 id="error">Ошибка (ERROR)<a class="headerlink" href="#error" title="Permanent link">&para;</a></h3>
@@ -461,6 +488,7 @@
 </ul>
                 
                   
+                
                 
               
               
@@ -502,7 +530,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

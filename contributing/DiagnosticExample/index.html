@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -440,33 +452,33 @@
 <h3 id="_5">Класс реализации диагностики<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <p>В соответствии с правилами, каталоге <code>src/main/java</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> создадим файл <code>SemicolonPresenceDiagnostic.java</code> класса диагностики.<br />
 В файле создаем одноименный класс, унаследованный от класса <code>AbstractVisitorDiagnostic</code>. Обратите внимание, что для каждого класса диагностики необходимо создать конструктор. В результате имеем следующее</p>
-<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="o">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="o">)</span> <span class="o">{</span>
-    <span class="kd">super</span><span class="o">(</span><span class="n">info</span><span class="o">);</span>
-  <span class="o">}</span>
-<span class="o">}</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
+  <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
 <p>Каждая диагностика должна иметь аннотацию класса <code>@DiagnosticMetadata</code>, содержащую метаданные диагностики. Подробная информация об аннотациях в [статье][DiagnosticStructure].<br />
 В примере у нас реализуется диагностика, относящаяся к качеству кода (<code>CODE_SMELL</code>), низкого приоритета (<code>MINOR</code>), требующая для исправления 1 минуту и относящаяся к стандарту 1С. Итоговый вид класса с аннотацией</p>
-<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="nd">@DiagnosticMetadata</span><span class="o">(</span>
-  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="o">.</span><span class="na">CODE_SMELL</span><span class="o">,</span>
-  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="o">.</span><span class="na">MINOR</span><span class="o">,</span>
-  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="o">,</span>
-  <span class="n">tag</span> <span class="o">=</span> <span class="o">{</span>
-    <span class="n">DiagnosticTag</span><span class="o">.</span><span class="na">STANDARD</span>
-  <span class="o">}</span>
-<span class="o">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="o">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="o">)</span> <span class="o">{</span>
-    <span class="kd">super</span><span class="o">(</span><span class="n">info</span><span class="o">);</span>
-  <span class="o">}</span>
-<span class="o">}</span>
+<span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
+  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
+  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="n">tag</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span>
+  <span class="p">}</span>
+<span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
+  <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -503,13 +515,13 @@
 <p>В каталоге <code>src/test/java</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> создаем файл <code>SemicolonPresenceDiagnosticTest.java</code> для тестового класса диагностики.<br />
 В файле необходимо создаем одноименный класс, унаследованый от класса <code>AbstractDiagnosticTest</code> для созданного класса диагностики.<br />
 В результате имеем следующее</p>
-<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;{</span>
-    <span class="n">SemicolonPresenceDiagnosticTest</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kd">super</span><span class="o">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-    <span class="o">}</span>
-<span class="o">}</span>
+<span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span><span class="p">{</span>
+    <span class="n">SemicolonPresenceDiagnosticTest</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">super</span><span class="p">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -526,22 +538,22 @@
 <li>Для проверки каждого обнаруженного элемента, необходимо сравнить найденный диапазон символов с ожидаемым.</li>
 </ul>
 <p>Полученный класс теста выглядит следующим образом</p>
-<div class="codehilite"><pre><span></span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span> <span class="o">{</span>
+<div class="codehilite"><pre><span></span><span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnosticTest</span> <span class="kd">extends</span> <span class="n">AbstractDiagnosticTest</span><span class="o">&lt;</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">&gt;</span> <span class="p">{</span>
 
-  <span class="n">SemicolonPresenceDiagnosticTest</span><span class="o">()</span> <span class="o">{</span>
-    <span class="kd">super</span><span class="o">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
-  <span class="o">}</span>
+  <span class="n">SemicolonPresenceDiagnosticTest</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">super</span><span class="p">(</span><span class="n">SemicolonPresenceDiagnostic</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+  <span class="p">}</span>
 
   <span class="nd">@Test</span>
-  <span class="kt">void</span> <span class="nf">test</span><span class="o">()</span> <span class="o">{</span>
-    <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="o">();</span> <span class="c1">// Получение диагностик</span>
+  <span class="kt">void</span> <span class="nf">test</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Diagnostic</span><span class="o">&gt;</span> <span class="n">diagnostics</span> <span class="o">=</span> <span class="n">getDiagnostics</span><span class="p">();</span> <span class="c1">// Получение диагностик</span>
 
-    <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">).</span><span class="na">hasSize</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span> <span class="c1">// Проверка количества</span>
-    <span class="n">assertThat</span><span class="o">(</span><span class="n">diagnostics</span><span class="o">,</span> <span class="kc">true</span><span class="o">)</span>
-      <span class="o">.</span><span class="na">hasRange</span><span class="o">(</span><span class="mi">4</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">9</span><span class="o">)</span>  <span class="c1">// Проверка конкретного случая</span>
-      <span class="o">.</span><span class="na">hasRange</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">6</span><span class="o">,</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">7</span><span class="o">);</span> <span class="c1">// Проверка конкретного случая</span>
-  <span class="o">}</span>
-<span class="o">}</span>
+    <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">).</span><span class="na">hasSize</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span> <span class="c1">// Проверка количества</span>
+    <span class="n">assertThat</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+      <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>  <span class="c1">// Проверка конкретного случая</span>
+      <span class="p">.</span><span class="na">hasRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span> <span class="c1">// Проверка конкретного случая</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -549,32 +561,32 @@
 <p>В соответствии грамматикой языка, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>, для нашего примера необходимо анализировать узлы с типом <code>statement</code>, следовательно нужно использовать визитер <code>visitStatement</code>. Каждый выбранный узел должен содержать конечную "точку с запятой", представленную узлом <code>SEMICOLON</code>.</p>
 <p>Таким образом, проверка будет состоять в том, чтобы в каждом узле <code>statement</code> найти токен <code>SEMICOLON</code>. Если токен не будет найден, то необходимо зарегистрировать замечание.<br />
 После реализации проверки, файл примет следующий вид</p>
-<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="o">;</span>
+<div class="codehilite"><pre><span></span><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
-<span class="nd">@DiagnosticMetadata</span><span class="o">(</span>
-  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="o">.</span><span class="na">CODE_SMELL</span><span class="o">,</span>
-  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="o">.</span><span class="na">MINOR</span><span class="o">,</span>
-  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="o">,</span>
-  <span class="n">tag</span> <span class="o">=</span> <span class="o">{</span>
-    <span class="n">DiagnosticTag</span><span class="o">.</span><span class="na">STANDARD</span>
-  <span class="o">}</span>
-<span class="o">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="o">{</span>
-    <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="o">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="o">)</span> <span class="o">{</span>
-      <span class="kd">super</span><span class="o">(</span><span class="n">info</span><span class="o">);</span>
-    <span class="o">}</span>
+<span class="nd">@DiagnosticMetadata</span><span class="p">(</span>
+  <span class="n">type</span> <span class="o">=</span> <span class="n">DiagnosticType</span><span class="p">.</span><span class="na">CODE_SMELL</span><span class="p">,</span>
+  <span class="n">severity</span> <span class="o">=</span> <span class="n">DiagnosticSeverity</span><span class="p">.</span><span class="na">MINOR</span><span class="p">,</span>
+  <span class="n">minutesToFix</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="n">tag</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">DiagnosticTag</span><span class="p">.</span><span class="na">STANDARD</span>
+  <span class="p">}</span>
+<span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
+    <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+    <span class="p">}</span>
 
     <span class="nd">@Override</span>
-    <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitStatement</span><span class="o">(</span><span class="n">BSLParser</span><span class="o">.</span><span class="na">StatementContext</span> <span class="n">ctx</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// выбранный визитер</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">ctx</span><span class="o">.</span><span class="na">SEMICOLON</span><span class="o">()</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>                                <span class="c1">// получение дочернего узла SEMICOLON</span>
-            <span class="n">diagnosticStorage</span><span class="o">.</span><span class="na">addDiagnostic</span><span class="o">(</span><span class="n">ctx</span><span class="o">);</span>                     <span class="c1">// добавление замечания</span>
-        <span class="o">}</span>
+    <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitStatement</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">StatementContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// выбранный визитер</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="na">SEMICOLON</span><span class="p">()</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>                                <span class="c1">// получение дочернего узла SEMICOLON</span>
+            <span class="n">diagnosticStorage</span><span class="p">.</span><span class="na">addDiagnostic</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>                     <span class="c1">// добавление замечания</span>
+        <span class="p">}</span>
         <span class="c1">// Для не-терминальных выражений в качестве возвращаемого значения</span>
         <span class="c1">// обязательно должен вызываться super-метод.</span>
-        <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">visitStatement</span><span class="o">(</span><span class="n">ctx</span><span class="o">);</span>
-    <span class="o">}</span>
+        <span class="k">return</span> <span class="kd">super</span><span class="p">.</span><span class="na">visitStatement</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
+    <span class="p">}</span>
 
-<span class="o">}</span>
+<span class="p">}</span>
 </pre></div>
 
 
@@ -587,6 +599,7 @@
 Чтобы не забыть все действия, которые необходимо выполнить перед окончание разработки, стоит воспользоваться специальной команда, запускаемой <code>gradlew precommit</code> из командной строки либо <code>precommit</code> из панели задач Gradle в IDE. </p>
                 
                   
+                
                 
               
               
@@ -628,7 +641,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

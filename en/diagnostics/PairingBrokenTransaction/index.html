@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" - BSL Language Server</title>
+        <title>Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#violation-of-pairing-using-methods-begintransaction-committransaction-rollbacktransaction" tabindex="1" class="md-skip">
+      <a href="#violation-of-pairing-using-methods-begintransaction-committransaction-rollbacktransaction-pairingbrokentransaction" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
+                Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Features" class="md-nav__link">
+      Features
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
       Russian
     </a>
@@ -340,9 +352,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sources" class="md-nav__link">
-    Sources
+  <a href="#reference" class="md-nav__link">
+    Reference
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snippets" class="md-nav__link">
+    Snippets
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
+    Diagnostic ignorance in code
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-for-config" class="md-nav__link">
+    Parameter for config
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -365,7 +404,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/PairingBrokenTransaction.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="violation-of-pairing-using-methods-begintransaction-committransaction-rollbacktransaction">Violation of pairing using methods "BeginTransaction()" &amp; "CommitTransaction()" / "RollbackTransaction()"<a class="headerlink" href="#violation-of-pairing-using-methods-begintransaction-committransaction-rollbacktransaction" title="Permanent link">Link</a></h1>
+                <h1 id="violation-of-pairing-using-methods-begintransaction-committransaction-rollbacktransaction-pairingbrokentransaction">Violation of pairing using methods "BeginTransaction()" &amp; "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)<a class="headerlink" href="#violation-of-pairing-using-methods-begintransaction-committransaction-rollbacktransaction-pairingbrokentransaction" title="Permanent link">Link</a></h1>
 <table>
 <thead>
 <tr>
@@ -394,17 +433,17 @@
 <p>Beginning of transaction and it's committing (rollback) have to be executed withing context of the same method.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p><em>Correct</em></p>
-<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIDb</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIB</span><span class="p">()</span>
 
-    <span class="nb">BeginTransaction</span><span class="p">();</span>
+    <span class="nv">StartTransaction</span><span class="p">();</span>
 
     <span class="k">Try</span>
-        <span class="o">...</span> <span class="c c-Singleline">// reading or writing data</span>
+        <span class="o">...</span> <span class="c c-Singleline">// read or write data</span>
         <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Write</span><span class="p">()</span>
         <span class="nb">CommitTransaction</span><span class="p">();</span>
-    <span class="k">Except</span>
+    <span class="k">Raise</span>
         <span class="nb">RollbackTransaction</span><span class="p">();</span>
-        <span class="o">...</span> <span class="c c-Singleline">// additional actions to process the exception</span>
+        <span class="o">...</span> <span class="c c-Singleline">// additional operations to process the exception</span>
     <span class="k">EndTry</span><span class="p">;</span>
 
 <span class="k">EndProcedure</span>
@@ -412,9 +451,9 @@
 
 
 <p><em>Incorrect</em></p>
-<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIDb</span><span class="p">()</span>
+<div class="codehilite"><pre><span></span><span class="nv">Procedure</span> <span class="nv">WriteDataToIB</span><span class="p">()</span>
 
-    <span class="nb">Begintransaction</span><span class="p">();</span>
+    <span class="nv">StartTransaction</span><span class="p">();</span>
     <span class="nv">WriteDocument</span><span class="p">();</span>
 
 <span class="k">EndProcedure</span><span class="p">;</span>
@@ -422,24 +461,37 @@
 <span class="nv">Procedure</span> <span class="nv">WriteDocument</span><span class="p">()</span>
 
     <span class="k">Try</span>
-        <span class="o">...</span> <span class="c c-Singleline">// reading or writing data</span>
+        <span class="o">...</span> <span class="c c-Singleline">// read or write data</span>
         <span class="nv">DocumentObject</span><span class="o">.</span><span class="nv">Write</span><span class="p">()</span>
-        <span class="nv">CommitTransacrion</span><span class="p">();</span>
-    <span class="k">Except</span>
+        <span class="nb">CommitTransaction</span><span class="p">();</span>
+    <span class="k">Raise</span>
         <span class="nb">RollbackTransaction</span><span class="p">();</span>
-    <span class="o">...</span> <span class="c c-Singleline">// additional actions to process the exception</span>
+        <span class="o">...</span> <span class="c c-Singleline">// additional operations to process the exception</span>
     <span class="k">EndTry</span><span class="p">;</span>
 
 <span class="k">EndProcedure</span>
 </pre></div>
 
 
-<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:783:hdoc">Transactions: Terms of Use</a></li>
 </ul>
+<h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:PairingBrokenTransaction-off</span>
+<span class="c c-Singleline">// BSLLS:PairingBrokenTransaction-on</span>
+</pre></div>
+
+
+<h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;PairingBrokenTransaction&quot;</span><span class="err">:</span> <span class="kc">false</span>
+</pre></div>
                 
                   
+                
                 
               
               
@@ -481,7 +533,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

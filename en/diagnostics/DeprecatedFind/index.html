@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Using of the deprecated method "Find" - BSL Language Server</title>
+        <title>Using of the deprecated method "Find" (DeprecatedFind) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#using-of-the-deprecated-method-find" tabindex="1" class="md-skip">
+      <a href="#using-of-the-deprecated-method-find-deprecatedfind" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Using of the deprecated method "Find"
+                Using of the deprecated method "Find" (DeprecatedFind)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Features" class="md-nav__link">
+      Features
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
       Russian
     </a>
@@ -337,19 +349,26 @@
     Examples
   </a>
   
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snippets" class="md-nav__link">
+    Snippets
+  </a>
+  
     <nav class="md-nav">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#noncompliant" class="md-nav__link">
-    Noncompliant
+  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
+    Diagnostic ignorance in code
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#compliant" class="md-nav__link">
-    Compliant
+  <a href="#parameter-for-config" class="md-nav__link">
+    Parameter for config
   </a>
   
 </li>
@@ -378,7 +397,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/DeprecatedFind.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="using-of-the-deprecated-method-find">Using of the deprecated method "Find"<a class="headerlink" href="#using-of-the-deprecated-method-find" title="Permanent link">Link</a></h1>
+                <h1 id="using-of-the-deprecated-method-find-deprecatedfind">Using of the deprecated method "Find" (DeprecatedFind)<a class="headerlink" href="#using-of-the-deprecated-method-find-deprecatedfind" title="Permanent link">Link</a></h1>
 <table>
 <thead>
 <tr>
@@ -406,20 +425,35 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Method "Find" is deprecated. Use "StrFind" instead.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<h3 id="noncompliant">Noncompliant<a class="headerlink" href="#noncompliant" title="Permanent link">Link</a></h3>
+<p>Incorrect:</p>
 <div class="codehilite"><pre><span></span><span class="nv">If</span> <span class="nv">Find</span><span class="p">(</span><span class="nv">Collaborator</span><span class="o">.</span><span class="nv">Name</span><span class="p">,</span> <span class="s1">&quot;Boris&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
-<span class="nv">EndIf</span><span class="p">;</span> 
+<span class="nv">EndIf</span><span class="p">;</span>
 </pre></div>
 
 
-<h3 id="compliant">Compliant<a class="headerlink" href="#compliant" title="Permanent link">Link</a></h3>
+<p>Correct:</p>
 <div class="codehilite"><pre><span></span><span class="nv">If</span> <span class="nb">StrFind</span><span class="p">(</span><span class="nv">Collaborator</span><span class="o">.</span><span class="nv">Name</span><span class="p">,</span> <span class="s1">&quot;Boris&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
-<span class="nv">EndIf</span><span class="p">;</span> 
+<span class="nv">EndIf</span><span class="p">;</span>
+</pre></div>
+
+
+<h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:DeprecatedFind-off</span>
+<span class="c c-Singleline">// BSLLS:DeprecatedFind-on</span>
+</pre></div>
+
+
+<h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;DeprecatedFind&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </pre></div>
                 
                   
+                
                 
               
               
@@ -461,7 +495,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

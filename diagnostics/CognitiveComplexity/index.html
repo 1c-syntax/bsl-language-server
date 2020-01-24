@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Когнитивная сложность - BSL Language Server</title>
+        <title>Когнитивная сложность (CognitiveComplexity) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#cognitivecomplexity" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Когнитивная сложность
+                Когнитивная сложность (CognitiveComplexity)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -326,14 +338,14 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Параметры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     Описание диагностики
   </a>
   
@@ -341,7 +353,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     Подсчет Когнитивной сложности
   </a>
   
@@ -356,14 +368,14 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении
   </a>
   
@@ -380,16 +392,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     Примеры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     Источники
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -412,7 +451,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/CognitiveComplexity.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Когнитивная сложность<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="cognitivecomplexity">Когнитивная сложность (CognitiveComplexity)<a class="headerlink" href="#cognitivecomplexity" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -435,7 +474,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_2">Параметры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -447,27 +486,27 @@
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>complexityThreshold</code></td>
-<td align="center"><code>Число</code></td>
-<td align="left"><code>Допустимая когнитивная сложность метода</code></td>
-<td align="center"><code>15</code></td>
-</tr>
-<tr>
 <td align="center"><code>checkModuleBody</code></td>
 <td align="center"><code>Булево</code></td>
 <td align="left"><code>Проверять тело модуля</code></td>
 <td align="center"><code>true</code></td>
 </tr>
+<tr>
+<td align="center"><code>complexityThreshold</code></td>
+<td align="center"><code>Целое</code></td>
+<td align="left"><code>Допустимая когнитивная сложность метода</code></td>
+<td align="center"><code>15</code></td>
+</tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_3">Описание диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Когнитивная сложность показывает на сколько сложно воспринимать написанный код.<br />
 Высокая когнитивная сложность явно указывает на необходимость проведения рефакторинга кода для облегчения его будущей поддержки.<br />
 Наиболее эффективным способом снижения когнитивной сложности является декомпозиция кода, дробление методов на более простые, а также оптимизация логических выражений.</p>
-<h3 id="_4">Подсчет Когнитивной сложности<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<p>Ниже приведены правила анализа когда, условия повышения когнитивной сложности.</p>
+<h3 id="_3">Подсчет Когнитивной сложности<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>Ниже приведены правила анализа кода, условия повышения когнитивной сложности.</p>
 <h4 id="1">Каждый следующий блок увеличивает сложность на 1<a class="headerlink" href="#1" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>                <span class="c c-Singleline">// +1</span>
@@ -524,7 +563,7 @@
 </pre></div>
 
 
-<h4 id="_5">За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<h4 id="_4">За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
 <div class="codehilite"><pre><span></span><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
@@ -554,8 +593,8 @@
 </pre></div>
 
 
-<h4 id="_6">Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
-<h2 id="_7">Примеры<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<h4 id="_5">Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<h2 id="_6">Примеры<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <p>Ниже на примерах кода произведен рассчет когнитивной сложности методов.</p>
 <div class="codehilite"><pre><span></span><span class="k">Функция</span> <span class="nv">Пример1</span><span class="p">(</span><span class="nv">ТипКласса</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">ТипКласса</span><span class="o">.</span><span class="nv">Неизвестен</span><span class="p">()</span> <span class="k">Тогда</span>                                                  <span class="c c-Singleline">// +1, условие, вложенности нет</span>
@@ -647,12 +686,28 @@
 </pre></div>
 
 
-<h2 id="_8">Источники<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<h2 id="_7">Источники<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a></li>
 </ul>
+<h2 id="_8">Сниппеты<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_9">Экранирование кода<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
+</pre></div>
+
+
+<h3 id="_10">Параметр конфигурационного файла<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;CognitiveComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">15</span>
+<span class="p">}</span>
+</pre></div>
                 
                   
+                
                 
               
               
@@ -694,7 +749,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         

@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -372,6 +372,18 @@
 
 
   <li class="md-nav__item">
+    <a href="features/" title="Features" class="md-nav__link">
+      Features
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="Russian" class="md-nav__link">
       Russian
     </a>
@@ -477,6 +489,7 @@
 <li><a href="#configuration">Configuration file</a></li>
 <li><a href="reporters">Reporters</a></li>
 <li><a href="diagnostics">Diagnostics</a></li>
+<li><a href="features">Features</a></li>
 <li><a href="#thanks">Special thanks</a></li>
 </ul>
 <p><a id="capabilities"></a></p>
@@ -538,46 +551,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 
 <p><a id="configuration"></a></p>
 <h2 id="configuration-file">Configuration file<a class="headerlink" href="#configuration-file" title="Permanent link">Link</a></h2>
-<p>Configuration file is a file in JSON format. The file can contain the following blocks:</p>
-<ul>
-<li><code>diagnosticLanguage</code> - <code>String</code> - diagnostics text language. Valid values: <code>en</code> or <code>ru</code>. By default set to <code>ru</code>.</li>
-<li><code>showCognitiveComplexityCodeLens</code> - <code>Boolean</code> - show cognitive complexity score above method definition (codeLens). By default set to <code>true</code>.</li>
-<li><code>computeDiagnostics</code> - <code>String</code> - trigger for the computation of diagnostics. Valid values: <code>onType</code> (on file edit), <code>onSave</code> (on file save), <code>never</code>. By default set to <code>onSave</code>.</li>
-<li><code>traceLog</code> - <code>String</code> - path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE. Can be absolute or relative (to the project root). If set <strong> significantly slows down</strong> communication speed between server and client. Dy default - not set.</li>
-<li><code>diagnostics</code> - <code>Object</code> - diagnostics settings collection. Collection items are objects with the structure as following:<ul>
-<li>object key - <code>String</code> - diagnostics key, as given in section <a href="#diagnostics">Diagnostics</a>.</li>
-<li>object value<ul>
-<li><code>Boolean</code> - <code>false</code> to disable diagnostics, <code>true</code> - to enable diagnostics without additional settings. By default set to <code>true</code>.</li>
-<li><code>Object</code> - Structure of settings for each diagnostics. Available parameters are give in each diagnostics section.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p>You may use this JSON-schema to simplify file editing:</p>
-<div class="codehilite"><pre><span></span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="p">.</span><span class="n">githubusercontent</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="mi">1</span><span class="k">c</span><span class="o">-</span><span class="n">syntax</span><span class="o">/</span><span class="n">bsl</span><span class="o">-</span><span class="k">language</span><span class="o">-</span><span class="n">server</span><span class="o">/</span><span class="n">master</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">github</span><span class="o">/</span><span class="n">_1c_syntax</span><span class="o">/</span><span class="n">bsl</span><span class="o">/</span><span class="n">languageserver</span><span class="o">/</span><span class="n">configuration</span><span class="o">/</span><span class="k">schema</span><span class="p">.</span><span class="n">json</span>
-</pre></div>
-
-
-<p>Configuration file example, setting:</p>
-<ul>
-<li>diagnostics text language - Russian;</li>
-<li><a href="diagnostics/LineLength/">LineLength - Line length limit</a> diagnostics settings - max line length set to 140 characters;</li>
-<li><a href="diagnostics/MethodSize/">MethodSize - Method size limit</a> diagnostics settings - disabled;</li>
-</ul>
-<div class="codehilite"><pre><span></span><span class="p">{</span>
-  <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;diagnosticLanguage&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;LineLength&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span> <span class="mi">140</span>
-    <span class="p">},</span>
-    <span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span> <span class="kc">false</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
+<p>A detailed description of the configuration file is given on <a href="features/ConfigurationFile/">this page</a></p>
 <p><a id="thanks"></a></p>
 <h2 id="special-thanks">Special thanks<a class="headerlink" href="#special-thanks" title="Permanent link">Link</a></h2>
 <p>Many thanks to all <a href="https://github.com/1c-syntax/bsl-language-server/graphs/contributors">contributors</a> to the project, to all who participated in the discussions, who helped with the testing.</p>
@@ -587,11 +561,12 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <p><a href="https://www.yourkit.com"><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></a>  </p>
 <p><a href="https://www.yourkit.com">YourKit, LLC</a> is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license <code>YourKit Java Profiler</code> for <code>BSL Language Server</code> to improve its performance. </p>
 <hr />
-<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="../assets/images/jetbrains-variant-4.png" /></a>  </p>
+<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/assets/images/jetbrains-variant-4.png" /></a>  </p>
 <p><a href="https://www.jetbrains.com">JetBrains</a> is the creator of professional software for development. JetBrains has offered an open source license for his products, including <code>IntelliJ IDEA Ultimate</code>.</p>
 <p><code>IntelliJ IDEA Ultimate</code> is one of the best tools in its class.</p>
                 
                   
+                
                 
               
               
@@ -654,7 +629,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
       
     </div>
     
-      <script src="assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="assets/javascripts/application.808e90bb.js"></script>
       
         
         

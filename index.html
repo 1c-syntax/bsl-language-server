@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -372,6 +372,18 @@
 
 
   <li class="md-nav__item">
+    <a href="features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -477,6 +489,7 @@
 <li><a href="#configuration">Конфигурационный файл</a></li>
 <li><a href="reporters">Репортеры</a></li>
 <li><a href="diagnostics">Диагностики</a></li>
+<li><a href="features">Дополнительные возможности</a></li>
 <li><a href="#thanks">Благодарности</a></li>
 </ul>
 <p><a id="capabilities"></a></p>
@@ -486,7 +499,7 @@
 <li>Форматирование выбранного диапазона</li>
 <li>Определение символов текущего файла (области, процедуры, функции, переменные, объявленные через <code>Перем</code>)</li>
 <li>Определение сворачиваемых областей - <code>#Область</code>, <code>#Если</code>, процедуры и функции, блоки кода</li>
-<li>Показ когнитивной сложности метода</li>
+<li>Показ когнитивной и цикломатической сложности метода</li>
 <li>Диагностики</li>
 <li>"Быстрые исправления" (quick fixes) для ряда диагностик</li>
 <li>Запуск движка диагностик из командной строки</li>
@@ -537,43 +550,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 
 <p><a id="configuration"></a></p>
 <h2 id="_5">Конфигурационный файл<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>Конфигурационный файл представляет собой файл в формате JSON. Файл может содержать следующие настройки:</p>
-<ul>
-<li><code>diagnosticLanguage</code> - <code>Строка</code> - язык сообщений от движка диагностик. Допустимые значения - <code>en</code> и <code>ru</code>. По умолчанию - <code>ru</code>.</li>
-<li><code>showCognitiveComplexityCodeLens</code> - <code>Булево</code> - показывать когнитивную сложность метода над определением метода (codeLens). По умолчанию - <code>true</code>.</li>
-<li><code>computeDiagnostics</code> - <code>Строка</code> - триггер для вызова процедуры рассчета диагностик. Допустимые значения - <code>onType</code> (при редактировании файла), <code>onSave</code> (при сохранении файла), <code>never</code> (никогда). По умолчанию - <code>onSave</code>.</li>
-<li><code>traceLog</code> - <code>Строка</code> - путь к файлу для логирования всех входящих и исходящих запросов между BSL Language Server и Language Client из используемой IDE. Может быть абсолютным или относительным (от корня проекта). Заполнение настройки <strong>значительно замедляет</strong> скорость взаимодействия между сервером и клиентом. По умолчанию - значение не заполнено.</li>
-<li><code>diagnostics</code> - <code>Объект</code> - коллекция настроек диагностик. Элементами коллекции являются объекты со следующей структурой:<ul>
-<li>ключ объекта - <code>Строка</code> - ключ диагностики, как он описан в разделе <a href="#diagnostics">Диагностики</a>.</li>
-<li>значение объекта</li>
-<li><code>Булево</code> - <code>false</code> для отключения диагностики, <code>true</code> - для включения диагностики без дополнительных настроек. По умолчанию - <code>true</code>.  </li>
-<li><code>Объект</code> - Структура настроек каждой диагностики. Описание возможных параметров каждой диагностики приведено в ее описании.</li>
-</ul>
-</li>
-</ul>
-<p>Вы можете использовать следующую JSON-схему для упрощения редактирования файла:</p>
-<div class="codehilite"><pre><span></span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="p">.</span><span class="n">githubusercontent</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="mi">1</span><span class="k">c</span><span class="o">-</span><span class="n">syntax</span><span class="o">/</span><span class="n">bsl</span><span class="o">-</span><span class="k">language</span><span class="o">-</span><span class="n">server</span><span class="o">/</span><span class="n">master</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">github</span><span class="o">/</span><span class="n">_1c_syntax</span><span class="o">/</span><span class="n">bsl</span><span class="o">/</span><span class="n">languageserver</span><span class="o">/</span><span class="n">configuration</span><span class="o">/</span><span class="k">schema</span><span class="p">.</span><span class="n">json</span>
-</pre></div>
-
-
-<p>Ниже приведен пример настройки, устанавливающий:
-* язык сообщений диагностик - русский;
-* настройка диагностики <a href="diagnostics/LineLength/">LineLength - Ограничение на длину строки</a> - установка предела длины строки в 140 символов;
-* настройка диагностики <a href="diagnostics/MethodSize/">MethodSize - Ограничение на размер метода</a> - отключение диагностики.</p>
-<div class="codehilite"><pre><span></span><span class="p">{</span>
-  <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://raw.githubusercontent.com/1c-syntax/bsl-language-server/master/src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;diagnosticLanguage&quot;</span><span class="p">:</span> <span class="s2">&quot;ru&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;LineLength&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span> <span class="mi">140</span>
-    <span class="p">},</span>
-    <span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span> <span class="kc">false</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-
-
-<p><a id="thanks"></a></p>
+<p>Подробное описание конфигурационного файла приведено на <a href="features/ConfigurationFile/">этой странице</a></p>
 <h2 id="_6">Благодарности<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <p>Огромное спасибо всем <a href="https://github.com/1c-syntax/bsl-language-server/graphs/contributors">контрибьюторам</a> проекта, всем участвовавшим в обсуждениях, помогавшим с тестированием.</p>
 <p>Вы потрясающие!  </p>
@@ -588,6 +565,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <p><code>IntelliJ IDEA Ultimate</code> один из лучших инструментов в своем классе.</p>
                 
                   
+                
                 
               
               
@@ -650,7 +628,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
       
     </div>
     
-      <script src="assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="assets/javascripts/application.808e90bb.js"></script>
       
         
         

@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -337,6 +337,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -391,14 +403,15 @@
                 
                 <h1 id="_1">Диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>Используются для проверки кода на соответствие стандартам кодирования и для поиска возможных ошибок.</p>
-<p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="/#configuration">конфигурационный файл</a>.</p>
+<p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>63</strong></p>
+<p>Общее количество: <strong>76</strong></p>
 <ul>
-<li>Дефект кода: <strong>38</strong></li>
+<li>Дефект кода: <strong>48</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
-<li>Ошибка: <strong>23</strong></li>
+<li>Ошибка: <strong>25</strong></li>
+<li>Потенциальная уязвимость: <strong>1</strong></li>
 </ul>
 <table>
 <thead>
@@ -429,6 +442,14 @@
 <td><code>standard</code></td>
 </tr>
 <tr>
+<td><a href="CodeOutOfRegion/">CodeOutOfRegion</a></td>
+<td>Код расположен вне области</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
 <td><a href="CognitiveComplexity/">CognitiveComplexity</a></td>
 <td>Когнитивная сложность</td>
 <td align="center">Да</td>
@@ -451,6 +472,38 @@
 <td>Важный</td>
 <td>Ошибка</td>
 <td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="CompilationDirectiveLost/">CompilationDirectiveLost</a></td>
+<td>Директивы компиляции методов</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="CompilationDirectiveNeedLess/">CompilationDirectiveNeedLess</a></td>
+<td>Лишняя директива компиляции</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>clumsy</code><br/><code>standard</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="CreateQueryInCycle/">CreateQueryInCycle</a></td>
+<td>Выполнение запроса в цикле</td>
+<td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
+<td><code>performance</code></td>
+</tr>
+<tr>
+<td><a href="CyclomaticComplexity/">CyclomaticComplexity</a></td>
+<td>Цикломатическая сложность</td>
+<td align="center">Да</td>
+<td>Критичный</td>
+<td>Дефект кода</td>
+<td><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="DeletingCollectionItem/">DeletingCollectionItem</a></td>
@@ -477,12 +530,28 @@
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
+<td><a href="DuplicateRegion/">DuplicateRegion</a></td>
+<td>Повторяющиеся разделы модуля</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
 <td><a href="EmptyCodeBlock/">EmptyCodeBlock</a></td>
 <td>Пустой блок кода</td>
 <td align="center">Да</td>
 <td>Важный</td>
 <td>Дефект кода</td>
 <td><code>badpractice</code><br/><code>suspicious</code></td>
+</tr>
+<tr>
+<td><a href="EmptyRegion/">EmptyRegion</a></td>
+<td>Область не должна быть пустой</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="EmptyStatement/">EmptyStatement</a></td>
@@ -501,12 +570,28 @@
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
+<td><a href="FormDataToValue/">FormDataToValue</a></td>
+<td>Использование метода ДанныеФормыВЗначение</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="FunctionShouldHaveReturn/">FunctionShouldHaveReturn</a></td>
 <td>Функция должна содержать возврат</td>
 <td align="center">Да</td>
 <td>Важный</td>
 <td>Ошибка</td>
 <td><code>suspicious</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="GetFormMethod/">GetFormMethod</a></td>
+<td>Использование метода ПолучитьФорму</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>
@@ -566,7 +651,7 @@
 </tr>
 <tr>
 <td><a href="MagicNumber/">MagicNumber</a></td>
-<td>Использование магического числа</td>
+<td>Магические числа</td>
 <td align="center">Да</td>
 <td>Незначительный</td>
 <td>Дефект кода</td>
@@ -610,7 +695,7 @@
 <td align="center">Да</td>
 <td>Незначительный</td>
 <td>Ошибка</td>
-<td><code>error</code></td>
+<td><code>error</code><br/><code>localize</code></td>
 </tr>
 <tr>
 <td><a href="MultilingualStringUsingWithTemplate/">MultilingualStringUsingWithTemplate</a></td>
@@ -618,7 +703,7 @@
 <td align="center">Да</td>
 <td>Важный</td>
 <td>Ошибка</td>
-<td><code>error</code></td>
+<td><code>error</code><br/><code>localize</code></td>
 </tr>
 <tr>
 <td><a href="NestedConstructorsInStructureDeclaration/">NestedConstructorsInStructureDeclaration</a></td>
@@ -653,6 +738,14 @@
 <td><code>standard</code></td>
 </tr>
 <tr>
+<td><a href="NonStandardRegion/">NonStandardRegion</a></td>
+<td>Нестандартные разделы модуля</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
 <td><a href="NumberOfOptionalParams/">NumberOfOptionalParams</a></td>
 <td>Ограничение на количество не обязательных параметров метода</td>
 <td align="center">Да</td>
@@ -675,6 +768,14 @@
 <td>Незначительный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br/><code>brainoverload</code></td>
+</tr>
+<tr>
+<td><a href="OSUsersMethod/">OSUsersMethod</a></td>
+<td>Использование метода ПользователиОС</td>
+<td align="center">Да</td>
+<td>Критичный</td>
+<td>Потенциальная уязвимость</td>
+<td><code>suspicious</code></td>
 </tr>
 <tr>
 <td><a href="OneStatementPerLine/">OneStatementPerLine</a></td>
@@ -773,6 +874,14 @@
 <td><code>unpredictable</code><br/><code>standard</code></td>
 </tr>
 <tr>
+<td><a href="TooManyReturns/">TooManyReturns</a></td>
+<td>Метод не должен содержать много возвратов</td>
+<td align="center">Нет</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
+<td><code>brainoverload</code></td>
+</tr>
+<tr>
 <td><a href="TryNumber/">TryNumber</a></td>
 <td>Приведение к числу в попытке</td>
 <td align="center">Да</td>
@@ -811,6 +920,14 @@
 <td>Важный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br/><code>suspicious</code></td>
+</tr>
+<tr>
+<td><a href="UnusedParameters/">UnusedParameters</a></td>
+<td>Неиспользуемый параметр</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>design</code></td>
 </tr>
 <tr>
 <td><a href="UseLessForEach/">UseLessForEach</a></td>
@@ -921,6 +1038,7 @@
                 
                   
                 
+                
               
               
                 
@@ -953,6 +1071,20 @@
           </a>
         
         
+          <a href="../features/" title="Дополнительные возможности" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Вперед
+                </span>
+                Дополнительные возможности
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
       </nav>
     </div>
   
@@ -982,7 +1114,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../assets/javascripts/application.808e90bb.js"></script>
       
         
         

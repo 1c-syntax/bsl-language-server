@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.5.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
-        <title>Пустой оператор - BSL Language Server</title>
+        <title>Пустой оператор (EmptyStatement) - BSL Language Server</title>
       
     
     
@@ -58,7 +58,7 @@
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#_1" tabindex="1" class="md-skip">
+      <a href="#emptystatement" tabindex="1" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -140,7 +140,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Пустой оператор
+                Пустой оператор (EmptyStatement)
               
             </span>
           
@@ -299,6 +299,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="https://1c-syntax.github.io/bsl-language-server/en" title="English" class="md-nav__link">
       English
     </a>
@@ -326,9 +338,36 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     Описание диагностики
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    Сниппеты
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Экранирование кода
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Параметр конфигурационного файла
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -351,7 +390,7 @@
                   <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/EmptyStatement.md" title="Редактировать страницу" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="_1">Пустой оператор<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+                <h1 id="emptystatement">Пустой оператор (EmptyStatement)<a class="headerlink" href="#emptystatement" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -376,7 +415,7 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Пустой оператор - это оператор, состоящий только из точки с запятой (";"). Появляется он в обычно</p>
 <ul>
 <li>при рефакторинге, когда разработчик удалил часть кода, но забыл удалить последнюю ";"</li>
@@ -384,8 +423,21 @@
 <li>при невнимательности, когда разработчик дважды (а то и больше) раз напечатал символ ";"</li>
 </ul>
 <p>Пустой оператор не приводит к ошибкам работы кода, но захламляет его, снижая восприятие.</p>
+<h2 id="_2">Сниппеты<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+
+<h3 id="_3">Экранирование кода<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:EmptyStatement-off</span>
+<span class="c c-Singleline">// BSLLS:EmptyStatement-on</span>
+</pre></div>
+
+
+<h3 id="_4">Параметр конфигурационного файла<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><span class="s2">&quot;EmptyStatement&quot;</span><span class="err">:</span> <span class="kc">false</span>
+</pre></div>
                 
                   
+                
                 
               
               
@@ -427,7 +479,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.a8b5e56f.js"></script>
+      <script src="../../assets/javascripts/application.808e90bb.js"></script>
       
         
         
