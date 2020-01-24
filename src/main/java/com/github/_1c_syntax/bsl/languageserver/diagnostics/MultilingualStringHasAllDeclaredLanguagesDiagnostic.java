@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,7 +34,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
   scope = DiagnosticScope.BSL,
   minutesToFix = 2,
   tags = {
-    DiagnosticTag.ERROR
+    DiagnosticTag.ERROR,
+    DiagnosticTag.LOCALIZE
   }
 )
 public class MultilingualStringHasAllDeclaredLanguagesDiagnostic extends AbstractMultilingualStringDiagnostic {

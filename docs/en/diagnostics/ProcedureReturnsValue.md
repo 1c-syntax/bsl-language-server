@@ -1,4 +1,4 @@
-# Procedure should not return Value
+# Procedure should not return Value (ProcedureReturnsValue)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -7,4 +7,20 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-The diagnostics finds procedures with returning Values.
+`Procedure` , unlike a `Function` cannot return values. This diagnostic finds procedures where there is a `Return` statement with a value.
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:ProcedureReturnsValue-off
+// BSLLS:ProcedureReturnsValue-on
+```
+
+### Parameter for config
+
+```json
+"ProcedureReturnsValue": false
+```

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -199,11 +199,14 @@ class BSLTextDocumentServiceTest {
 
   @Test
   void didChange() throws IOException {
+
+    final File testFile = getTestFile();
+
     DidChangeTextDocumentParams params = new DidChangeTextDocumentParams();
 
-    params.setTextDocument(new VersionedTextDocumentIdentifier());
+    params.setTextDocument(new VersionedTextDocumentIdentifier(testFile.toURI().toString(), 1));
 
-    String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
+    String fileContent = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
     TextDocumentContentChangeEvent changeEvent = new TextDocumentContentChangeEvent(fileContent);
 
     List<TextDocumentContentChangeEvent> contentChanges = new ArrayList<>();

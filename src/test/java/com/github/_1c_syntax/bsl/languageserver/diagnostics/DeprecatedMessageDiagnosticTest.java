@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,8 +44,8 @@ class DeprecatedMessageDiagnosticTest extends AbstractDiagnosticTest<DeprecatedM
     // then
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .hasRange(4, 8, 4, 20)
-      .hasRange(10, 0, 10, 13);
+      .hasRange(4, 8, 4, 15)
+      .hasRange(10, 0, 10, 8);
 
   }
 }

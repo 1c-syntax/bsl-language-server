@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-public enum  DiagnosticType {
+public enum DiagnosticType {
   ERROR,
   CODE_SMELL,
-  VULNERABILITY
+  VULNERABILITY,
+  SECURITY_HOTSPOT
 }

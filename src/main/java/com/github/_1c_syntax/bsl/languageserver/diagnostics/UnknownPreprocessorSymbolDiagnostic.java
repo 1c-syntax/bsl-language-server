@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -46,7 +46,7 @@ public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitPreproc_unknownSymbol(BSLParser.Preproc_unknownSymbolContext ctx) {
-    diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(ctx.getText()));
+    diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
     return super.visitPreproc_unknownSymbol(ctx);
   }
 

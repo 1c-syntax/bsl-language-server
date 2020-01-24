@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -62,6 +62,9 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     // check that actual value we want to make assertions on is not null.
     isNotNull();
 
+    // saving original state
+    String cachedContent = documentContext.getContent();
+
     // apply edits from quick fix
     final List<TextEdit> textEdits = getTextEdits();
 
@@ -101,6 +104,9 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     // check if expected diagnostic is not present in new diagnostic list
     Assertions.assertThat(diagnostics).doesNotContain(diagnostic);
 
+    // returning to original state
+    documentContext.rebuild(cachedContent);
+
     return this;
   }
 
@@ -132,7 +138,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
   }
 
   private List<TextEdit> getTextEdits() {
-    final List<TextEdit> textEdits = actual.getEdit().getChanges().get(documentContext.getUri());
+    final List<TextEdit> textEdits = actual.getEdit().getChanges().get(documentContext.getUri().toString());
     Objects.requireNonNull(textEdits);
     return textEdits;
   }

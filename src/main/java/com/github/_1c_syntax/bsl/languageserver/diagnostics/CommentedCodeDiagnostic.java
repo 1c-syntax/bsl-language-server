@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,7 +44,7 @@ import org.eclipse.lsp4j.TextEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -64,8 +64,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
 
   @DiagnosticParameter(
     type = Float.class,
-    defaultValue = "" + COMMENTED_CODE_THRESHOLD,
-    description = "Порог чуствительности"
+    defaultValue = "" + COMMENTED_CODE_THRESHOLD
   )
   private float threshold = COMMENTED_CODE_THRESHOLD;
 
@@ -94,7 +93,8 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     methodDescriptions = documentContext.getMethods()
       .stream()
       .map(MethodSymbol::getDescription)
-      .filter(Objects::nonNull)
+      .filter(Optional::isPresent)
+      .map(Optional::get)
       .collect(Collectors.toList());
 
     groupComments(documentContext.getComments())
@@ -204,7 +204,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     }
 
     return true;
-}
+  }
 
   private static String uncomment(String comment) {
     if (comment.startsWith(COMMENT_START)) {
@@ -214,13 +214,14 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   @Override
-  public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
+  ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach(diagnostic -> {
-      textEdits.add(new TextEdit(diagnostic.getRange(), ""));
-    });
+    List<TextEdit> textEdits = diagnostics.stream()
+      .map(Diagnostic::getRange)
+      .map(range -> new TextEdit(range, ""))
+      .collect(Collectors.toList());
 
     return CodeActionProvider.createCodeActions(
       textEdits,

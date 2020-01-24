@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,8 +33,10 @@ public class MetricStorage {
   private int functions;
   private int lines;
   private int ncloc;
+  private int comments;
   private int statements;
   private int[] nclocData;
   private int[] covlocData;
   private int cognitiveComplexity;
+  private int cyclomaticComplexity;
 }

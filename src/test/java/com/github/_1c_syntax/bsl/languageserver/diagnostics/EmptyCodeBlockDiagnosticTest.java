@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -63,7 +63,7 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("commentAsCode", true);
     diagnosticInstance.configure(configuration);
 
@@ -78,7 +78,7 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
   @Test
   void testConfigureFile() {
 
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("commentAsCode", true);
     diagnosticInstance.configure(configuration);
 

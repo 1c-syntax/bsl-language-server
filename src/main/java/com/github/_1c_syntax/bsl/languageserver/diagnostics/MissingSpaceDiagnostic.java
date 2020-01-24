@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -68,41 +69,37 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private static final int INDEX_WORD_LEFT = 0;
   private static final int INDEX_WORD_RIGHT = 1;
   private static final int INDEX_WORD_LEFT_RIGHT = 2;
+  private static final int COUNT_WORDS = 3;
 
-  private final String[] sampleMessage = new String[3];
+  private final String[] sampleMessage = new String[COUNT_WORDS];
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT,
-    description = "Список символов для проверки слева (разделенные пробелом). Например: ) ="
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
   )
   private String listForCheckLeft = getRegularString(DEFAULT_LIST_FOR_CHECK_LEFT);
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT,
-    description = "Список символов для проверки справа (разделенные пробелом). Например: ( ="
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT
   )
   private String listForCheckRight = getRegularString(DEFAULT_LIST_FOR_CHECK_RIGHT);
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT,
-    description = "Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >"
+    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
   )
   private String listForCheckLeftAndRight = getRegularString(DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY,
-    description = "Проверять наличие пробела справа от унарных знаков (+ -)"
+    defaultValue = "" + DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY
   )
   private Boolean checkSpaceToRightOfUnary = DEFAULT_CHECK_SPACE_TO_RIGHT_OF_UNARY;
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_ALLOW_MULTIPLE_COMMAS,
-    description = "Разрешать несколько запятых подряд"
+    defaultValue = "" + DEFAULT_ALLOW_MULTIPLE_COMMAS
   )
   private Boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS;
 
@@ -245,7 +242,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
 
     Token previousToken = tokens.get(t.getTokenIndex() - 1);
-    return patternNotSpace.matcher(previousToken.getText()).matches();
+    return previousToken.getType() != BSLParser.LPAREN
+      && patternNotSpace.matcher(previousToken.getText()).matches();
   }
 
   private boolean noSpaceRight(List<Token> tokens, Token t) {
@@ -294,7 +292,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   private String getErrorMessage(int errCode, String tokenText) {
-    return info.getDiagnosticMessage(sampleMessage[errCode], tokenText);
+    return info.getMessage(sampleMessage[errCode], tokenText);
   }
 
   @Override

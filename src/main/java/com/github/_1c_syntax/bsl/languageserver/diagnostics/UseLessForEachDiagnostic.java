@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,11 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.ComplexIdentifierContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.LValueContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -48,19 +50,23 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
+  private static Predicate<ParseTree> parentClassMatchTo(Class<?> clazzName) {
+    return e -> e.getParent().getClass().equals(clazzName);
+  }
+
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
     TerminalNode iterator = ctx.IDENTIFIER();
-    List<ParseTree> childIdentifiers = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
+    String iteratorIdName = iterator.getText();
+    boolean hasUsage = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
       .stream()
-      .filter(node -> node.getParent().getClass() == BSLParser.ComplexIdentifierContext.class
-        || node.getParent().getClass() == BSLParser.LValueContext.class
-        || node.getParent().getClass() == BSLParser.CallStatementContext.class)
-      .filter(node -> node.getText().equalsIgnoreCase(iterator.getText()))
-      .collect(Collectors.toList());
+      .filter(node -> iteratorIdName.equalsIgnoreCase(node.getText()))
+      .anyMatch(parentClassMatchTo(ComplexIdentifierContext.class)
+        .or(parentClassMatchTo(LValueContext.class))
+        .or(parentClassMatchTo(CallStatementContext.class)));
 
-    if (childIdentifiers.isEmpty()) {
+    if (!hasUsage) {
       diagnosticStorage.addDiagnostic(iterator.getSymbol());
     }
 

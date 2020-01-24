@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,16 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
-import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -43,12 +41,8 @@ public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
 
-  private final Map<String, Set<Diagnostic>> computedDiagnostics;
+  private final Map<URI, Set<Diagnostic>> computedDiagnostics;
   private final DiagnosticSupplier diagnosticSupplier;
-
-  public DiagnosticProvider() {
-    this(new DiagnosticSupplier(LanguageServerConfiguration.create()));
-  }
 
   public DiagnosticProvider(DiagnosticSupplier diagnosticSupplier) {
     this.diagnosticSupplier = diagnosticSupplier;
@@ -58,32 +52,26 @@ public final class DiagnosticProvider {
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = computeDiagnostics(documentContext);
 
-    client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri(), diagnostics));
+    client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics));
   }
 
   public void publishEmptyDiagnosticList(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = new ArrayList<>();
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
     client.publishDiagnostics(
-      new PublishDiagnosticsParams(documentContext.getUri(), diagnostics)
+      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics)
     );
   }
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-
-    FileType fileType = documentContext.getFileType();
-    CompatibilityMode contextCompatibilityMode = documentContext
-      .getServerContext()
-      .getConfiguration()
-      .getCompatibilityMode();
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     List<Diagnostic> diagnostics =
-      diagnosticSupplier.getDiagnosticInstances(fileType, contextCompatibilityMode).parallelStream()
-      .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
-      .filter((Diagnostic diagnostic) ->
-        !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-      .collect(Collectors.toList());
+      diagnosticSupplier.getDiagnosticInstances(documentContext).parallelStream()
+        .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+        .filter((Diagnostic diagnostic) ->
+          !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
+        .collect(Collectors.toList());
 
     computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
 
@@ -101,5 +89,4 @@ public final class DiagnosticProvider {
   public void clearAllComputedDiagnostics() {
     computedDiagnostics.clear();
   }
-
 }

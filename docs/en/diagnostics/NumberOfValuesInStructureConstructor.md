@@ -1,4 +1,4 @@
-# Limit on the number of property values passed to the structure constructor
+# Limit on the number of property values passed to the structure constructor (NumberOfValuesInStructureConstructor)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxValuesCount` | `int` | ```Допустимое количество значений свойств, передаваемых в конструктор структуры``` | ```3``` |
+| `maxValuesCount` | `Integer` | ```Allowed number parameter values passed to structure constructor``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -64,3 +64,21 @@ Correct:
 ## Reference
 
 - [Standard: Using objects of type Structure](https://its.1c.ru/db/v8std#content:693:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:NumberOfValuesInStructureConstructor-off
+// BSLLS:NumberOfValuesInStructureConstructor-on
+```
+
+### Parameter for config
+
+```json
+"NumberOfValuesInStructureConstructor": {
+    "maxValuesCount": 3
+}
+```

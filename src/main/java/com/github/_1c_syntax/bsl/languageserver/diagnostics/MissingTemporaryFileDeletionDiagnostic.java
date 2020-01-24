@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -59,8 +59,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = REGEX_DELETION_FILE,
-    description = "Ключевые слова поиска методов удаления / перемещения файлов"
+    defaultValue = REGEX_DELETION_FILE
   )
   private Pattern searchDeleteFileMethod = Pattern.compile(
     "^(" + REGEX_DELETION_FILE + ")",
@@ -135,7 +134,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
       BSLParser.GlobalMethodCallContext localGlobalMethodCall = localCallStatementContext.globalMethodCall();
       // получаем full call method и полное имя вызова
       String fullCallMethod = "";
-      BSLParser.DoCallContext doCallContext = null;
+      BSLParser.DoCallContext doCallContext;
       if (localGlobalMethodCall == null) {
         fullCallMethod = getFullCallMethod(localCallStatementContext);
         doCallContext = getDoCallFromCallStatement(localCallStatementContext);
@@ -154,7 +153,9 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return result;
   }
 
-  private BSLParser.DoCallContext getDoCallFromCallStatement(BSLParser.CallStatementContext callStatementContext) {
+  private static BSLParser.DoCallContext getDoCallFromCallStatement(
+    BSLParser.CallStatementContext callStatementContext
+  ) {
     BSLParser.MethodCallContext methodCallContext = callStatementContext.accessCall().methodCall();
     if (methodCallContext == null) {
       return null;
@@ -162,14 +163,14 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return methodCallContext.doCall();
   }
 
-  private boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
+  private static boolean foundVariableInCallParams(BSLParser.DoCallContext doCallContext, String variableName) {
 
     BSLParser.CallParamListContext callParamListContext = doCallContext.callParamList();
     if (callParamListContext == null) {
       return false;
     }
 
-    List<BSLParser.CallParamContext> list = callParamListContext.callParam();
+    List<? extends BSLParser.CallParamContext> list = callParamListContext.callParam();
     if (list.isEmpty()) {
       return false;
     }
@@ -185,7 +186,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     return result;
   }
 
-  private String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
 
     BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
       Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
@@ -203,7 +204,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   }
 
   // TODO: перенести в TREES или в BSL parser
-  private String getFullCallMethod(BSLParser.CallStatementContext ctx) {
+  private static String getFullCallMethod(BSLParser.CallStatementContext ctx) {
     StringBuilder builder = new StringBuilder();
     builder.append(ctx.getStart().getText());
     BSLParser.AccessCallContext accessCallContext = ctx.accessCall();

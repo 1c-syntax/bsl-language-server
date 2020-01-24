@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
+import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -60,19 +62,33 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   );
   private static final int COMMENT_LENGTH = 2;
 
+  private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
   protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  private CodeRecognizer codeRecognizer;
   private DiagnosticInfo info;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION,
-    description = "Пропускать комментарии-аннотации, начинающиеся с указанных подстрок."
-      + " Список через запятую. Например: //@,//(c)"
+    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
   )
   private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
 
   public SpaceAtStartCommentDiagnostic(DiagnosticInfo info) {
     this.info = info;
+    this.codeRecognizer = new CodeRecognizer(COMMENTED_CODE_THRESHOLD, new BSLFootprint());
+  }
+
+  private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
+    StringJoiner stringJoiner = new StringJoiner("|");
+    for (String elem : patternParts) {
+      String commentsAnnotationPatternString = "(?:^" + Pattern.quote(elem) + ".*)";
+      stringJoiner.add(commentsAnnotationPatternString);
+    }
+
+    return Pattern.compile(
+      stringJoiner.toString(),
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
   }
 
   @Override
@@ -94,7 +110,8 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
       .parallelStream()
       .filter((Token t) ->
         !goodCommentPattern.matcher(t.getText()).matches()
-          && !commentsAnnotation.matcher(t.getText()).matches())
+          && !commentsAnnotation.matcher(t.getText()).matches()
+          && !codeRecognizer.meetsCondition(t.getText()))
       .sequential()
       .forEach((Token t) ->
         diagnosticStorage.addDiagnostic(t));
@@ -105,19 +122,6 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   @Override
   public DiagnosticInfo getInfo() {
     return info;
-  }
-
-  private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
-    StringJoiner stringJoiner = new StringJoiner("|");
-    for (String elem : patternParts) {
-      String commentsAnnotationPatternString = "(?:^" + Pattern.quote(elem) + ".*)";
-      stringJoiner.add(commentsAnnotationPatternString);
-    }
-
-    return Pattern.compile(
-      stringJoiner.toString(),
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
   }
 
   @Override

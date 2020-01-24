@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -35,7 +35,7 @@ import java.util.List;
 
 @Value
 @Builder(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude="methods")
+@EqualsAndHashCode(exclude = "methods")
 public class RegionSymbol implements Symbol {
   private final String name;
   private final int startLine;
@@ -51,6 +51,7 @@ public class RegionSymbol implements Symbol {
   @Singular
   private final List<RegionSymbol> children;
   private final List<MethodSymbol> methods = new ArrayList<>();
+  private final List<BSLParserRuleContext> nodes;
 
   @NonFinal
   private BSLParserRuleContext node;

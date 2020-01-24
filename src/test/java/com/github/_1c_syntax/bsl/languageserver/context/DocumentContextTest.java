@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,16 +42,16 @@ class DocumentContextTest {
   void testRebuild() throws IOException {
 
     DocumentContext documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
-    assertThat(documentContext.getTokens()).hasSize(48);
+    assertThat(documentContext.getTokens()).hasSize(38);
 
     File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
     String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     documentContext.rebuild(fileContent);
-    assertThat(documentContext.getTokens()).hasSize(19);
+    assertThat(documentContext.getTokens()).hasSize(15);
   }
 
   @Test
-  void testClearASTData() throws IOException, IllegalAccessException {
+  void testClearASTData() throws IllegalAccessException {
     // given
     DocumentContext documentContext = getDocumentContext();
 
@@ -60,7 +64,7 @@ class DocumentContextTest {
   }
 
   @Test
-  void testMethodCompute() throws IOException {
+  void testMethodCompute() {
 
     DocumentContext documentContext = getDocumentContext();
 
@@ -78,18 +82,48 @@ class DocumentContextTest {
 
   }
 
-  public DocumentContext getDocumentContext() throws IOException {
+  @Test
+  void testRegionsAdjustingCompute() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+
+    // when
+    List<RegionSymbol> regions = documentContext.getRegions();
+
+    // then
+    assertThat(regions).anyMatch(regionSymbol -> regionSymbol.getMethods().size() > 0);
+  }
+
+  @Test
+  void testMethodsAdjustingCompute() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+
+    // when
+    List<MethodSymbol> methods = documentContext.getMethods();
+
+    // then
+    assertThat(methods)
+      .anyMatch(methodSymbol -> methodSymbol.getRegion().isPresent())
+      .anySatisfy(methodSymbol -> methodSymbol.getRegion().ifPresent(
+        regionSymbol -> assertThat(regionSymbol.getMethods()).contains(methodSymbol)
+        )
+      )
+    ;
+  }
+
+  @SneakyThrows
+  public DocumentContext getDocumentContext() {
 
     return getDocumentContext("./src/test/resources/context/DocumentContextTest.bsl");
   }
 
-  private DocumentContext getDocumentContext(String filePath) throws IOException {
-
+  private DocumentContext getDocumentContext(String filePath) {
     return TestUtils.getDocumentContextFromFile(filePath);
   }
 
   @Test
-  void testComputeMetricsLocForCover() throws IOException {
+  void testComputeMetricsLocForCover() {
 
     DocumentContext documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextLocForCoverTest.bsl");
@@ -97,5 +131,16 @@ class DocumentContextTest {
     assertThat(documentContext.getMetrics().getCovlocData()).containsSequence(5, 6, 10, 11, 12, 18, 26, 28, 31, 32, 35, 37);
 
   }
+
+  @Test
+  void testComputeMetricsComments() {
+
+    DocumentContext documentContext =
+      getDocumentContext("./src/test/resources/context/DocumentContextCommentsTest.bsl");
+
+    assertThat(documentContext.getMetrics().getComments()).isEqualTo(8);
+
+  }
+
 
 }

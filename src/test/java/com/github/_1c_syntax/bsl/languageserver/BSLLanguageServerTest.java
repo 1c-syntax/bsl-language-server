@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -42,7 +42,7 @@ class BSLLanguageServerTest {
   }
 
   @Test
-  void initialize() throws ExecutionException, InterruptedException {
+  void initialize() {
     // given
     InitializeParams params = new InitializeParams();
 

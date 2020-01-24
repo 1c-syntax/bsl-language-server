@@ -1,4 +1,4 @@
-# Storing confidential information in code
+# Storing confidential information in code (UsingHardcodeSecretInformation)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `searchWords` | `Pattern` | ```Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях.``` | ```"Пароль|Password"``` |
+| `searchWords` | `String` | ```Search keywords for confidential information in variables, structures, mappings.``` | ```Пароль|Password``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -46,3 +46,21 @@ Password = Passwords.Password;
 ## Reference
 
 - [Standard: Store passwords safe](https://its.1c.ru/db/v8std#content:740:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingHardcodeSecretInformation-off
+// BSLLS:UsingHardcodeSecretInformation-on
+```
+
+### Parameter for config
+
+```json
+"UsingHardcodeSecretInformation": {
+    "searchWords": "Пароль|Password"
+}
+```

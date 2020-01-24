@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,17 +26,20 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class MultilingualStringAnalyser {
 
-  private static final Byte VALID_LANG_PARTS = 2;
   private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
   private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)";
-  private static final Pattern nStrMethodName = Pattern.compile(
+  private static final String NSTR_LANG_REGEX = "\\w+\\s*=\\s*['|\"{2}]";
+  private static final String NSTR_LANG_CUT_REGEX = "\\s*=\\s*['|\"{2}]";
+  private static final String WHITE_SPACE_REGEX = "\\s";
+  private static final Pattern NSTR_METHOD_NAME_PATTERN = Pattern.compile(
     NSTR_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
@@ -44,22 +47,35 @@ public final class MultilingualStringAnalyser {
     TEMPLATE_METHOD_NAME,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private static final Pattern NSTR_LANG_PATTERN = Pattern.compile(
+    NSTR_LANG_REGEX,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final Pattern NSTR_LANG_CUT_PATTERN = Pattern.compile(
+    NSTR_LANG_CUT_REGEX,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+  private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile(
+    WHITE_SPACE_REGEX,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
   private String variableName;
   private ArrayList<String> expectedLanguages;
-  private Map<String, String> expandedMultilingualString = new HashMap<>();
+  private Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
   public MultilingualStringAnalyser(String declaredLanguages) {
 
-    this.expectedLanguages = new ArrayList<>(Arrays.asList(declaredLanguages.replaceAll("\\s", "").split(",")));
+    Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
+    this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
 
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    return !nStrMethodName.matcher(globalMethodCallContext.methodName().getText()).find();
+    return !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
@@ -111,13 +127,15 @@ public final class MultilingualStringAnalyser {
   }
 
   private void expandMultilingualString() {
-    String[] languagesStrings = getMultilingualString().split("('|\"{2});");
-    for (String s : languagesStrings) {
-      String[] parts = s.split("=\\s*('|\"{2})");
-      if (parts.length >= VALID_LANG_PARTS) {
-        expandedMultilingualString.put(parts[0].replaceAll("\\W+|\\s*", ""), parts[1]);
-      }
+
+    Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString());
+
+    while (matcher.find()) {
+      Matcher cutMatcher = NSTR_LANG_CUT_PATTERN.matcher(matcher.group());
+      String langKey = cutMatcher.replaceAll("");
+      expandedMultilingualString.add(langKey);
     }
+
   }
 
   private String getMultilingualString() {
@@ -131,7 +149,7 @@ public final class MultilingualStringAnalyser {
     }
 
     for (String lang : expectedLanguages) {
-      if (!expandedMultilingualString.containsKey(lang)) {
+      if (!expandedMultilingualString.contains(lang)) {
         missingLanguages.add(lang);
       }
     }

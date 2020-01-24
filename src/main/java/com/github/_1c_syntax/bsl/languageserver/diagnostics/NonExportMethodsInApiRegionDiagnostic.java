@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -56,27 +55,22 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
-    Optional<MethodSymbol> methodSymbolOption = documentContext.getMethodSymbol(ctx);
-    if (methodSymbolOption.isPresent()) {
-
-      MethodSymbol methodSymbol = methodSymbolOption.get();
-      if (!methodSymbol.isExport()) {
-
-        RegionSymbol methodRegion = methodSymbol.getRegion();
-        if (methodRegion != null) {
-
-          documentContext.getRegions()
-            .stream()
-            .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
-            .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
-            .findFirst()
-            .ifPresent((RegionSymbol regionSymbol) -> {
-              String message = info.getDiagnosticMessage(methodSymbol.getName(), regionSymbol.getName());
-              diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-            });
-        }
+    documentContext.getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+      if (methodSymbol.isExport()) {
+        return;
       }
-    }
+
+      methodSymbol.getRegion().ifPresent(methodRegion ->
+        documentContext.getRegions()
+          .stream()
+          .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
+          .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
+          .findFirst()
+          .ifPresent((RegionSymbol regionSymbol) -> {
+            String message = info.getMessage(methodSymbol.getName(), regionSymbol.getName());
+            diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
+          }));
+    });
 
     return ctx;
   }

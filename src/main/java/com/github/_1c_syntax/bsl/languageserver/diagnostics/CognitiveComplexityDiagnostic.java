@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -57,15 +57,13 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + COMPLEXITY_THRESHOLD,
-    description = "Допустимая когнитивная сложность метода"
+    defaultValue = "" + COMPLEXITY_THRESHOLD
   )
   private int complexityThreshold = COMPLEXITY_THRESHOLD;
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + CHECK_MODULE_BODY,
-    description = "Проверять тело модуля"
+    defaultValue = "" + CHECK_MODULE_BODY
   )
   private boolean checkModuleBody = CHECK_MODULE_BODY;
 
@@ -90,14 +88,14 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
     relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
       methodSymbol.getSubNameRange(),
-      info.getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+      info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
     ));
 
-    List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
+    List<ComplexitySecondaryLocation> secondaryLocations =
       documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
 
     secondaryLocations.stream()
-      .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
+      .map((ComplexitySecondaryLocation secondaryLocation) ->
         RelatedInformation.create(
           documentContext.getUri(),
           secondaryLocation.getRange(),
@@ -122,14 +120,14 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
         relatedInformation.add(RelatedInformation.create(
           documentContext.getUri(),
           methodSymbol.getSubNameRange(),
-          info.getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
+          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
         ));
 
-        List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
+        List<ComplexitySecondaryLocation> secondaryLocations =
           documentContext.getCognitiveComplexityData().getMethodsComplexitySecondaryLocations().get(methodSymbol);
 
         secondaryLocations.stream()
-          .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
+          .map((ComplexitySecondaryLocation secondaryLocation) ->
             RelatedInformation.create(
               documentContext.getUri(),
               secondaryLocation.getRange(),
@@ -140,7 +138,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
         diagnosticStorage.addDiagnostic(
           methodSymbol.getSubNameRange(),
-          info.getDiagnosticMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
+          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
           makeRelations(methodSymbol, methodComplexity)
         );
       }
@@ -177,14 +175,14 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
       relatedInformation.add(RelatedInformation.create(
         documentContext.getUri(),
         Ranges.create(ctx.getStart()),
-        info.getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold)
+        info.getMessage("body", fileCodeBlockComplexity, complexityThreshold)
       ));
 
-      List<CognitiveComplexityComputer.SecondaryLocation> secondaryLocations =
+      List<ComplexitySecondaryLocation> secondaryLocations =
         documentContext.getCognitiveComplexityData().getFileBlockComplexitySecondaryLocations();
 
       secondaryLocations.stream()
-        .map((CognitiveComplexityComputer.SecondaryLocation secondaryLocation) ->
+        .map((ComplexitySecondaryLocation secondaryLocation) ->
           RelatedInformation.create(
             documentContext.getUri(),
             secondaryLocation.getRange(),
@@ -195,7 +193,7 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
       diagnosticStorage.addDiagnostic(
         ctx.getStart(),
-        info.getDiagnosticMessage("body", fileCodeBlockComplexity, complexityThreshold),
+        info.getMessage("body", fileCodeBlockComplexity, complexityThreshold),
         relatedInformation
       );
     }

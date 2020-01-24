@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,6 +25,7 @@ public interface Command {
 
   /**
    * Execute given command.
+   *
    * @return Result code. 0 - if success, >0 in case of error, <0 in case of pending multithreaded task.
    */
   int execute();

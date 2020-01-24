@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,9 @@ class DiagnosticProviderTest {
   @Test
   void testComputeDiagnostics() {
     // given
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider();
+
+    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
+    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
     final DocumentContext documentContext
       = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
 

@@ -6,6 +6,7 @@
   - [Состав диагностики](#%d0%a1%d0%be%d1%81%d1%82%d0%b0%d0%b2-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
   - [Класс реализации диагностики](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d0%b0%d1%86%d0%b8%d0%b8-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
     - [Класс диагностики, реализующий интерфейс BSLDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d1%83%d1%8e%d1%89%d0%b8%d0%b9-%d0%b8%d0%bd%d1%82%d0%b5%d1%80%d1%84%d0%b5%d0%b9%d1%81-bsldiagnostic)
+    - [Класс диагностики, унаследованный от AbstractDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractdiagnostic)
     - [Класс диагностики, унаследованный от AbstractVisitorDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractvisitordiagnostic)
     - [Класс диагностики, унаследованный от AbstractListenerDiagnostic **(В РАЗРАБОТКЕ)**](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Класс теста диагностики](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
@@ -38,7 +39,7 @@
 
 В теле файла, нужно указать пакет, в который добавлен класс и блок импорта _(при использовании ide список импорта обновляется автоматически)_. Необходимо следить за тем, чтобы импортировались **только** то, что необходимо для реализации, все неиспользуемое должно быть **удалено** _(если [настройки](EnvironmentSetting.md) выполнены верно, то ide сделает все автоматически)_.
 
-Каждый класс диагностики должен иметь аннотацию `@DiagnosticMetadata`, содержащую метаданные диагностики. Актуальное содержимое всегда можно получить изучив [файл](src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
+Каждый класс диагностики должен иметь аннотацию `@DiagnosticMetadata`, содержащую метаданные диагностики. Актуальное содержимое всегда можно получить изучив [файл](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/diagnostics/metadata/DiagnosticMetadata.java).
 
 На момент написания статьи имеются следующие свойства:
 
@@ -69,6 +70,7 @@
 
 Класс должен реализовывать интерфейс `BSLDiagnostic`. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих `BSLDiagnostic`:
 
+- для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
 - при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наслодовать класс от `AbstractListenerDiagnostic`
 - в остальных случаях нужно использовать стратегию `визитера` и `AbstractVisitorDiagnostic`
 
@@ -79,12 +81,15 @@ public class TemplateDiagnostic implements BSLDiagnostic
 ```
 
 ```java
+public class TemplateDiagnostic extends AbstractDiagnostic
+```
+
+```java
 public class TemplateDiagnostic extends AbstractVisitorDiagnostic
 ```
 
 ```java
 public class TemplateDiagnostic extends AbstractListenerDiagnostic
-
 ```
 
 Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
@@ -93,6 +98,10 @@ public class TemplateDiagnostic extends AbstractListenerDiagnostic
 
 ```java
 public class TemplateDiagnostic implements BSLDiagnostic, QuickFixProvider
+```
+
+```java
+public class TemplateDiagnostic extends AbstractDiagnostic implements QuickFixProvider
 ```
 
 ```java
@@ -140,6 +149,32 @@ private final DiagnosticInfo info;
 
     // Возврат обнаруженных замечаний
     return diagnosticStorage.getDiagnostics();
+  }
+```
+
+### Класс диагностики, унаследованный от AbstractDiagnostic
+
+Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. 
+В классе диагностики необходимо переопределить метод `check`, принимающий в качестве параметра контекст анализируемоего файла `DocumentContext`, и конструктор с инициализацией свойства `info` базового класса   
+
+Метод `check` должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в `diagnosticStorage`.
+
+Пример:
+
+```java
+  @Override
+  public TemplateDiagnostic(DiagnosticInfo info) {
+    super(info);
+  }
+
+  @Override
+  protected void check(DocumentContext documentContext) {
+    documentContext.getTokensFromDefaultChannel()
+      .parallelStream()
+      .filter((Token t) ->
+        t.getType() == BSLParser.IDENTIFIER &&
+          t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
+      .forEach(token -> diagnosticStorage.addDiagnostic(token));
   }
 ```
 

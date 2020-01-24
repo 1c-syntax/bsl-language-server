@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
@@ -33,8 +34,6 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,9 +42,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(BSLLanguageServer.class.getSimpleName());
 
   private final LanguageServerConfiguration configuration;
   private BSLTextDocumentService textDocumentService;

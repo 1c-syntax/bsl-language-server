@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -47,8 +47,7 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_PARAMS_COUNT,
-    description = "Допустимое количество параметров метода"
+    defaultValue = "" + MAX_PARAMS_COUNT
   )
   private int maxParamsCount = MAX_PARAMS_COUNT;
 
@@ -69,7 +68,7 @@ public class NumberOfParamsDiagnostic extends AbstractVisitorDiagnostic {
 
     int paramCount = ctx.param().size();
     if (paramCount > maxParamsCount) {
-      diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(paramCount, maxParamsCount));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(paramCount, maxParamsCount));
     }
 
     return ctx;

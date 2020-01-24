@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,21 +38,22 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(14);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics, true)
-      .hasRange(12, 12, 12, 20)
-      .hasRange(21, 12, 21, 20)
-      .hasRange(30, 12, 30, 20)
+      .hasRange(12,12, 20)
+      .hasRange(21, 12, 20)
+      .hasRange(30, 12, 20)
       .hasRange(37, 4, 41, 15)
       .hasRange(46, 4, 51, 15)
-      .hasRange(58, 12, 58, 20)
+      .hasRange(58, 12, 20)
       .hasRange(67, 12, 69, 21)
       .hasRange(82, 16, 84, 25)
-      .hasRange(93, 8, 93, 16)
-      .hasRange(102, 8, 102, 17)
+      .hasRange(93, 8, 16)
+      .hasRange(102, 8, 17)
       .hasRange(108, 16, 112, 26)
-      .hasRange(134, 4, 134, 13)
-      .hasRange(139, 4, 141, 13)
-      .hasRange(145, 0, 145, 9);
+      .hasRange(138, 4, 16)
+      .hasRange(161, 4, 13)
+      .hasRange(166, 4, 168, 13)
+      .hasRange(172, 0, 9);
   }
 }

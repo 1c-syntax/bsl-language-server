@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -61,8 +61,8 @@ class CodeActionProviderTest {
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
       .filter(diagnostic -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(CanonicalSpellingKeywordsDiagnostic.class, configuration);
-        String diagnosticCode = diagnosticInfo.getDiagnosticCode();
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(CanonicalSpellingKeywordsDiagnostic.class, configuration.getDiagnosticLanguage());
+        String diagnosticCode = diagnosticInfo.getCode();
         return diagnostic.getCode().equals(diagnosticCode);
       })
       .collect(Collectors.toList());
@@ -70,7 +70,7 @@ class CodeActionProviderTest {
     CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
-    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
 
@@ -105,7 +105,7 @@ class CodeActionProviderTest {
     CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
-    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri());
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
 

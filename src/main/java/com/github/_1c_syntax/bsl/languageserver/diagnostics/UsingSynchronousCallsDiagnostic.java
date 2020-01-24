@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -134,7 +134,7 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
           SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {
 
         diagnosticStorage.addDiagnostic(ctx,
-          info.getDiagnosticMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
+          info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
       }
     }
     return super.visitGlobalMethodCall(ctx);

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -47,8 +47,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_METHOD_SIZE,
-    description = "Максимальная длина метода в строках"
+    defaultValue = "" + MAX_METHOD_SIZE
   )
   private int maxMethodSize = MAX_METHOD_SIZE;
 
@@ -71,7 +70,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (methodSizeExceedsLimit(methodSize)) {
       diagnosticStorage.addDiagnostic(
         ctx.procDeclaration().subName(),
-        info.getDiagnosticMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
+        info.getMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;
@@ -84,7 +83,7 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     if (methodSizeExceedsLimit(methodSize)) {
       diagnosticStorage.addDiagnostic(
         ctx.funcDeclaration().subName(),
-        info.getDiagnosticMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
+        info.getMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
     }
 
     return ctx;

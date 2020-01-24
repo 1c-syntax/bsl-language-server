@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -51,7 +51,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("complexityThreshold", 0);
     configuration.put("checkModuleBody", true);
     diagnosticInstance.configure(configuration);
@@ -63,7 +63,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
 
   @Test
   void testConfigureOneProperty() {
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("checkModuleBody", true);
     diagnosticInstance.configure(configuration);
 

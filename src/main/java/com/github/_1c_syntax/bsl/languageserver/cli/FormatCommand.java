@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import lombok.SneakyThrows;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -34,9 +35,9 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class FormatCommand implements Command {
 
     String srcDirOption = cmd.getOptionValue("srcDir", "");
 
-    Path srcDir = Paths.get(srcDirOption).toAbsolutePath();
+    Path srcDir = Absolute.path(srcDirOption);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
@@ -74,7 +75,7 @@ public class FormatCommand implements Command {
   @SneakyThrows
   private void formatFile(File file) {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    final String uri = file.toURI().toString();
+    final URI uri = file.toURI();
 
     DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
 

@@ -1,4 +1,4 @@
-# Usage of complex expressions in the "If" condition
+# Usage of complex expressions in the "If" condition (IfConditionComplexity)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxIfConditionComplexity` | `int` | ```Допустимое количество логических конструкций в условии оператора Если``` | ```3``` |
+| `maxIfConditionComplexity` | `Integer` | ```Acceptable number of logical expressions in operator If condition``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -27,20 +27,20 @@ If Id = "Expr1"
     Or Id = "Expr4"
     Or Id = "Expr5"
     Or Id = "Expr6"
-    Or Id = "Expr7" 
+    Or Id = "Expr7"
     Or Id = "Expr8"
     Or Id = "Expr9" Then
 	
    doSomeWork();
 	
-EndIf; 
+EndIf;
 ```
 
 Good:
 
 ```bsl
 If IsCorrectId(Id) Then
-   doSomeWork();	
+   doSomeWork();
 КонецЕсли;
 
 Function IsCorrectId(Id)
@@ -51,9 +51,27 @@ Function IsCorrectId(Id)
             Or Id = "Expr4"
             Or Id = "Expr5"
             Or Id = "Expr6"
-            Or Id = "Expr7" 
+            Or Id = "Expr7"
             Or Id = "Expr8"
             Or Id = "Expr9";
 
 EndFunction
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:IfConditionComplexity-off
+// BSLLS:IfConditionComplexity-on
+```
+
+### Parameter for config
+
+```json
+"IfConditionComplexity": {
+    "maxIfConditionComplexity": 3
+}
 ```

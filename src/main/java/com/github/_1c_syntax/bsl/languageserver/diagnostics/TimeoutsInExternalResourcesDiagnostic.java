@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -50,13 +52,15 @@ import java.util.stream.Collectors;
 )
 public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern patternTimeout = Pattern.compile("^.(Таймаут|Timeout)",
+  private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^.(Таймаут|Timeout)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final Pattern patternNewExpression = Pattern.compile(
+  private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
     "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|" +
       "WSПрокси|WSProxy|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final int DEFAULT_NUMBER_TIMEOUT = 5;
+  private int defaultNumberTimeout = 5;
+  private int defaultNumberTimeoutFtp = 6;
+  private int defaultNumberTimeoutWsd = 4;
 
   public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -78,7 +82,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     if (typeNameContext == null) {
       return false;
     }
-    return patternNewExpression.matcher(typeNameContext.getText()).find();
+    return PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText()).find();
   }
 
   private static boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
@@ -87,6 +91,10 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
   private static boolean isFTPConnection(BSLParser.NewExpressionContext newExpression) {
     return newExpression.typeName() != null && DiagnosticHelper.isFTPConnectionType(newExpression.typeName());
+  }
+
+  private static boolean isInternetMailProfile(BSLParser.NewExpressionContext newExpression) {
+    return newExpression.typeName() != null && DiagnosticHelper.isInternetMailProfileType(newExpression.typeName());
   }
 
   private static boolean isNumberOrVariable(BSLParser.MemberContext member) {
@@ -105,16 +113,16 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
     int numberTimeout;
     if (isWSDefinitions(newExpression)) {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT - 1; // 5-й
-    }
-    else if (isFTPConnection(newExpression)) {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT + 1; // 7-ой
-    }
-    else {
-      numberTimeout = DEFAULT_NUMBER_TIMEOUT; // 6-ой
+      numberTimeout = defaultNumberTimeoutWsd;
+    } else if (isFTPConnection(newExpression)) {
+      numberTimeout = defaultNumberTimeoutFtp;
+    } else if (isInternetMailProfile(newExpression)) {
+      numberTimeout = 5;
+    } else {
+      numberTimeout = defaultNumberTimeout;
     }
 
-    List<BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
+    List<? extends BSLParser.CallParamContext> listParams = doCallContext.callParamList().callParam();
     if (listParams == null || listParams.size() <= numberTimeout) {
       return true;
     }
@@ -151,14 +159,39 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
           checkNextStatement(listNextStatements, variableName, isContact);
         }
         if (isContact.get()) {
-          diagnosticStorage.addDiagnostic(newExpression, info.getDiagnosticMessage());
+          diagnosticStorage.addDiagnostic(newExpression, info.getMessage());
         }
       }
     });
     return ctx;
   }
 
-  private void checkNextStatement(
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    CompatibilityMode diagnosticCompatibility = documentContext
+      .getServerContext()
+      .getConfiguration()
+      .getCompatibilityMode();
+
+    if (diagnosticCompatibility != null
+      && CompatibilityMode.compareTo(diagnosticCompatibility,
+      DiagnosticCompatibilityMode.UNDEFINED.getCompatibilityMode()) != 0) {
+
+      if (CompatibilityMode.compareTo(diagnosticCompatibility,
+        DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_7.getCompatibilityMode()) == 1) {
+        defaultNumberTimeout = 4;
+        defaultNumberTimeoutWsd = 3;
+      }
+      if (CompatibilityMode.compareTo(diagnosticCompatibility,
+        DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_9.getCompatibilityMode()) == 1) {
+        defaultNumberTimeoutFtp = 5;
+      }
+    }
+
+    return super.visitFile(ctx);
+  }
+
+  private static void checkNextStatement(
     Collection<ParseTree> listNextStatements,
     String variableName,
     AtomicBoolean isContact
@@ -176,7 +209,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     });
   }
 
-  private boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
+  private static boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
 
     BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
     if (assignmentContext == null) {
@@ -193,7 +226,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
         if (!allRuleNodes.isEmpty()) {
 
           BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.get(0);
-          return patternTimeout.matcher(accessProperty.getText()).find();
+          return PATTERN_TIMEOUT.matcher(accessProperty.getText()).find();
 
         }
       }

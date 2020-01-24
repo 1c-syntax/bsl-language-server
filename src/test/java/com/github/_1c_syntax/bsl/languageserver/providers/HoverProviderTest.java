@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,23 +23,19 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.parser.BSLExtendedParser;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class HoverProviderTest {
 
-  private BSLExtendedParser parser = new BSLExtendedParser();
-
   @Test
-  void getEmptyHover() throws IOException {
+  void getEmptyHover() {
     TextDocumentPositionParams params = new TextDocumentPositionParams();
     params.setPosition(new Position(0, 0));
 
@@ -50,7 +46,7 @@ class HoverProviderTest {
   }
 
   @Test
-  void getHoverOverSubName() throws IOException {
+  void getHoverOverSubName() {
     TextDocumentPositionParams params = new TextDocumentPositionParams();
     params.setPosition(new Position(0, 20));
 

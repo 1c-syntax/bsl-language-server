@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -84,7 +84,7 @@ public class DiagnosticStorage {
   protected void addDiagnostic(Range range) {
     addDiagnostic(
       range,
-      diagnostic.getInfo().getDiagnosticMessage()
+      diagnostic.getInfo().getMessage()
     );
   }
 
@@ -119,6 +119,10 @@ public class DiagnosticStorage {
     addDiagnostic(terminalNode.getSymbol());
   }
 
+  protected void addDiagnostic(TerminalNode terminalNode, String diagnosticMessage) {
+    addDiagnostic(terminalNode.getSymbol(), diagnosticMessage);
+  }
+
   protected void addDiagnostic(TerminalNode startTerminalNode, TerminalNode stopTerminalNode) {
     addDiagnostic(startTerminalNode.getSymbol(), stopTerminalNode.getSymbol());
   }
@@ -130,7 +134,7 @@ public class DiagnosticStorage {
 
     addDiagnostic(
       node,
-      diagnostic.getInfo().getDiagnosticMessage(),
+      diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
@@ -138,7 +142,7 @@ public class DiagnosticStorage {
   public void addDiagnostic(Token token, List<DiagnosticRelatedInformation> relatedInformation) {
     addDiagnostic(
       token,
-      diagnostic.getInfo().getDiagnosticMessage(),
+      diagnostic.getInfo().getMessage(),
       relatedInformation
     );
   }
@@ -195,9 +199,9 @@ public class DiagnosticStorage {
     Diagnostic diagnostic = new Diagnostic(
       range,
       diagnosticMessage,
-      bslDiagnostic.getInfo().getLSPDiagnosticSeverity(),
+      bslDiagnostic.getInfo().getLSPSeverity(),
       SOURCE,
-      bslDiagnostic.getInfo().getDiagnosticCode()
+      bslDiagnostic.getInfo().getCode()
     );
 
     if (relatedInformation != null) {

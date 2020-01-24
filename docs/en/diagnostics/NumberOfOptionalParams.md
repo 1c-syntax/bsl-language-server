@@ -1,4 +1,4 @@
-# Limit number of optional parameters in method
+# Limit number of optional parameters in method (NumberOfOptionalParams)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxOptionalParamsCount` | `int` | ```Допустимое количество необязательных параметров метода``` | ```3``` |
+| `maxOptionalParamsCount` | `Integer` | ```Max number of optional parameters``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -43,3 +43,21 @@ EndProcedure
 ## Sources
 
 - [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:NumberOfOptionalParams-off
+// BSLLS:NumberOfOptionalParams-on
+```
+
+### Parameter for config
+
+```json
+"NumberOfOptionalParams": {
+    "maxOptionalParamsCount": 3
+}
+```

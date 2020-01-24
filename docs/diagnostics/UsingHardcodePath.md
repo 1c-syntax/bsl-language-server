@@ -1,4 +1,4 @@
-# Хранение путей к файлам в коде
+# Хранение путей к файлам в коде (UsingHardcodePath)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Имя | Тип | Описание | Значение по умолчанию |
 | :-: | :-: | :-- | :-: |
-| `searchWordsStdPathsUnix` | `Регулярное выражение` | ```Ключевые слова поиска стандартных корневых каталогов Unix``` | ```"bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"``` |
+| `searchWordsStdPathsUnix` | `Строка` | ```Ключевые слова поиска стандартных корневых каталогов Unix``` | ```bin|boot|dev|etc|home|lib|lost\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -49,4 +49,22 @@
 
 ```bsl
 КаталогОбмена = ОбменДаннымиПовтИсп.КаталогОбмена();
+```
+
+## Сниппеты
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Экранирование кода
+
+```bsl
+// BSLLS:UsingHardcodePath-off
+// BSLLS:UsingHardcodePath-on
+```
+
+### Параметр конфигурационного файла
+
+```json
+"UsingHardcodePath": {
+    "searchWordsStdPathsUnix": "bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var"
+}
 ```

@@ -1,4 +1,4 @@
-# One statement per line
+# One statement per line (OneStatementPerLine)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -15,3 +15,19 @@ For example:
 ## Sources
 
 * [Standard: Modules texts(RU)](https://its.1c.ru/db/v8std#content:456:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:OneStatementPerLine-off
+// BSLLS:OneStatementPerLine-on
+```
+
+### Parameter for config
+
+```json
+"OneStatementPerLine": false
+```

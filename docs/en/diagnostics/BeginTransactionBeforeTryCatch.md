@@ -1,4 +1,4 @@
-# Violating transaction rules for the 'BeginTransaction' method
+# Violating transaction rules for the 'BeginTransaction' method (BeginTransactionBeforeTryCatch)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -12,3 +12,19 @@ The Start Transaction method must be outside the Attempt-Exclusion block immedia
 ## Sources
 
 - [Transactions: Rules of Use](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:BeginTransactionBeforeTryCatch-off
+// BSLLS:BeginTransactionBeforeTryCatch-on
+```
+
+### Parameter for config
+
+```json
+"BeginTransactionBeforeTryCatch": false
+```

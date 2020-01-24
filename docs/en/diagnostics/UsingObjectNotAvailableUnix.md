@@ -1,4 +1,4 @@
-# Using unavailable in Unix objects
+# Using unavailable in Unix objects (UsingObjectNotAvailableUnix)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -50,3 +50,19 @@ EndIf;
 
 - [Features of the development of cross-platform applied solutions](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001208)
 - [Features of the client application running Linux](https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001283)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:UsingObjectNotAvailableUnix-off
+// BSLLS:UsingObjectNotAvailableUnix-on
+```
+
+### Parameter for config
+
+```json
+"UsingObjectNotAvailableUnix": false
+```

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -60,7 +60,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
     if (((ErrorNodeImpl) node).symbol.getTokenIndex() == -1) {
       diagnosticStorage.addDiagnostic(
         ((BSLParserRuleContext) node.getParent()).getStart(),
-        info.getDiagnosticMessage(node.getText())
+        info.getMessage(node.getText())
       );
     }
   }
@@ -84,7 +84,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
         diagnosticStorage.addDiagnostic(
           node.exception.getOffendingToken(),
-          info.getDiagnosticMessage(initialExpectedString + sj.toString())
+          info.getMessage(initialExpectedString + sj.toString())
         );
       });
   }

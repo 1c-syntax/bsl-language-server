@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.StringJoiner;
@@ -46,8 +47,8 @@ class FormatProviderTest {
   @Test
   void testRangeFormat() throws IOException {
     // given
-    int startLine = 3;
-    int endLine = 23;
+    int startLine = 4;
+    int endLine = 24;
 
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -67,7 +68,11 @@ class FormatProviderTest {
 
     formattedFileContent = joiner.toString();
 
-    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent, new ServerContext());
+    DocumentContext documentContext = new DocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent,
+      new ServerContext()
+    );
 
     // when
     List<TextEdit> textEdits = FormatProvider.getRangeFormatting(params, documentContext);
@@ -89,7 +94,10 @@ class FormatProviderTest {
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
     String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
 
-    DocumentContext documentContext = new DocumentContext(params.getTextDocument().getUri(), fileContent, new ServerContext());
+    DocumentContext documentContext = new DocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent, new ServerContext()
+    );
 
     // when
     List<TextEdit> textEdits = FormatProvider.getFormatting(params, documentContext);

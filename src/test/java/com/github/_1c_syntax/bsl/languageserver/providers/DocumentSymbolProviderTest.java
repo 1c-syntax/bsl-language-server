@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,7 +30,6 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,13 +37,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentSymbolProviderTest {
 
   @Test
-  void testDocumentSymbol() throws IOException {
+  void testDocumentSymbol() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbol(documentContext);
 
-    assertThat(documentSymbols).hasSize(8);
+    assertThat(documentSymbols).hasSize(7);
 
     // global variables
     assertThat(documentSymbols)
@@ -59,12 +58,11 @@ class DocumentSymbolProviderTest {
     // methods
     assertThat(documentSymbols)
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Method))
-      .hasSize(4)
+      .hasSize(3)
       .extracting(Either::getRight)
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(4, 0, 5, 14)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(30, 0, 34, 35)))
       .anyMatch(documentSymbol -> documentSymbol.getChildren().size() == 3)
     ;
 

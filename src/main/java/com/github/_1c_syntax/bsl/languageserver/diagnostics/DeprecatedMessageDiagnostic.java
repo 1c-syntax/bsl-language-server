@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
@@ -42,24 +41,19 @@ import java.util.regex.Pattern;
     DiagnosticTag.DEPRECATED
   }
 )
-public class DeprecatedMessageDiagnostic extends AbstractVisitorDiagnostic {
+public class DeprecatedMessageDiagnostic extends AbstractFindMethodDiagnostic {
   private static final Pattern messagePattern = Pattern.compile(
     "(сообщить|message)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
   public DeprecatedMessageDiagnostic(DiagnosticInfo info) {
-    super(info);
+    super(info, messagePattern);
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
+    return false;
   }
 
 }

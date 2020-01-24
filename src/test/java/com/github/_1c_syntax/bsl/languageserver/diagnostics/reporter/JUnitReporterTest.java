@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -88,12 +88,13 @@ class JUnitReporterTest {
     ));
 
     DocumentContext documentContext = new DocumentContext(
-      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri().toString(),
+      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       "",
       new ServerContext()
     );
-    FileInfo fileInfo = new FileInfo(documentContext, diagnostics);
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), ".");
+    String sourceDir = ".";
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics);
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     AbstractDiagnosticReporter reporter = new JUnitReporter();
 

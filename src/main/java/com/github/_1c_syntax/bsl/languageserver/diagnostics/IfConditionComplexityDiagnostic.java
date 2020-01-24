@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -49,10 +49,8 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY,
-    description = "Допустимое количество логических конструкций в условии оператора Если"
+    defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY
   )
-
   private int maxIfConditionComplexity = MAX_IF_CONDITION_COMPLEXITY;
 
   public IfConditionComplexityDiagnostic(DiagnosticInfo info) {

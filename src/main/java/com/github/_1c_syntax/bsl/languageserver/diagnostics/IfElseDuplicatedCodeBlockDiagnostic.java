@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -93,7 +93,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
     BSLParser.CodeBlockContext currentCodeBlock = codeBlockContexts.get(i);
 
     List<BSLParser.CodeBlockContext> identicalCodeBlocks = codeBlockContexts.stream()
-      .skip((long) i)
+      .skip(i)
       .filter(codeBlockContext ->
         !codeBlockContext.equals(currentCodeBlock)
           && !(currentCodeBlock.children == null && codeBlockContext.children == null)
@@ -123,7 +123,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
           relatedMessage
         )
       )
-    .collect(Collectors.toCollection(() -> relatedInformation));
+      .collect(Collectors.toCollection(() -> relatedInformation));
 
     diagnosticStorage.addDiagnostic(currentCodeBlock, relatedInformation);
   }

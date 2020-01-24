@@ -4,6 +4,7 @@ nav:
   - Contributing: contributing/index.md
   - Reporters: reporters/index.md
   - Diagnostics: diagnostics/index.md
+  - Features: features/index.md
   - Russian: https://1c-syntax.github.io/bsl-language-server
 theme: 
   name: material

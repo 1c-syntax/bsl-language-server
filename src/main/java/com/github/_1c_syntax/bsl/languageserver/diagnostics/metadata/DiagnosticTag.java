@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,9 +33,12 @@ public enum DiagnosticTag {
   SUSPICIOUS("Подозрительный код"),
   UNPREDICTABLE("Непредсказуемо работающий код"),
   DEPRECATED("Устаревшая функциональность"),
-  ERROR("Ошибочная конструкция")
-  ;
+  ERROR("Ошибочная конструкция"),
+  LOCALIZE("Проблемы локализации");
 
-  DiagnosticTag(String ru) {
+  private final String description;
+
+  DiagnosticTag(String descriptionRu) {
+    this.description = descriptionRu;
   }
 }

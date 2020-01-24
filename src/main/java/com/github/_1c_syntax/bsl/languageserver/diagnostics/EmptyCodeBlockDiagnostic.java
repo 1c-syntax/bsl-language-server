@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -56,8 +56,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_COMMENT_AS_CODE,
-    description = "Считать комментарий в блоке кодом"
+    defaultValue = "" + DEFAULT_COMMENT_AS_CODE
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
 
@@ -91,7 +90,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
       Stream<Token> comments = documentContext.getComments().stream();
       Range rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
       if (comments.anyMatch(token ->
-        org.eclipse.lsp4j.util.Ranges.containsRange(
+        Ranges.containsRange(
           rangeCodeBlock,
           Ranges.create(token)))) {
         return super.visitCodeBlock(ctx);

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,21 +23,23 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Builder;
-import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
+import java.util.Optional;
+
 @Value
 @Builder
+@EqualsAndHashCode(exclude = "region")
 public class MethodSymbol implements Symbol {
   private final String name;
   private final boolean export;
   private final boolean function;
-  private final MethodDescription description;
+  private final Optional<MethodDescription> description;
 
-  @ToString.Exclude
-  private final RegionSymbol region;
+  private final Optional<RegionSymbol> region;
 
   @NonFinal
   private BSLParserRuleContext node;

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -50,7 +50,7 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {
-    if(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+    if (Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
       diagnosticStorage.addDiagnostic(ctx.moduleVarsList());
     }
     return super.visitModuleVar(ctx);

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -49,12 +49,12 @@ class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
 
   @Test
   void testRuAndEn() {
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("declaredLanguages", "ru,en");
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(8);
 
     assertThat(diagnostics, true)
       .hasRange(12, 16, 12, 22)
@@ -63,6 +63,7 @@ class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
       .hasRange(15, 27, 15, 65)
       .hasRange(27, 37, 27, 75)
       .hasRange(31, 67, 31, 86)
-      .hasRange(33, 69, 33, 97);
+      .hasRange(33, 69, 33, 97)
+      .hasRange(42, 8, 42, 89);
   }
 }

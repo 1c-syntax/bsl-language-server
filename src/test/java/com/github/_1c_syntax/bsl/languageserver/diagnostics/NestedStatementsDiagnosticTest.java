@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,11 +33,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<NestedStatementsDiagnostic> {
 
-  NestedStatementsDiagnosticTest() { super(NestedStatementsDiagnostic.class); }
+  NestedStatementsDiagnosticTest() {
+    super(NestedStatementsDiagnostic.class);
+  }
 
   @Test
-  void runTest()
-  {
+  void runTest() {
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();
@@ -54,7 +55,7 @@ public class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<Neste
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("maxAllowedLevel", 6);
     diagnosticInstance.configure(configuration);
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,6 +39,14 @@ public class DiagnosticsAssert extends AbstractListAssert<DiagnosticsAssert, Lis
 
     return anySatisfy(diagnostic ->
       assertFactory.createAssert(diagnostic).hasRange(startLine, startChar, endLine, endChar)
+    );
+
+  }
+
+  public DiagnosticsAssert hasRange(int startLine, int startChar, int endChar) {
+
+    return anySatisfy(diagnostic ->
+      assertFactory.createAssert(diagnostic).hasRange(startLine, startChar, startLine, endChar)
     );
 
   }

@@ -1,4 +1,4 @@
-# Commented out code
+# Commented out code (CommentedCode)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `threshold` | `float` | ```Порог чуствительности``` | ```0.9F``` |
+| `threshold` | `Float` | ```Threshold``` | ```0.9``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -39,10 +39,28 @@ EndProcedure
 
 Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.
 
-**ATTENTION** : 
+**ATTENTION** :
 
 A code block is considered commented , if at least one line inside the block is defined as code.
 
 ## Sources
 
 - [Source](https://its.1c.ru/db/v8std/content/456/hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:CommentedCode-off
+// BSLLS:CommentedCode-on
+```
+
+### Parameter for config
+
+```json
+"CommentedCode": {
+    "threshold": 0.9
+}
+```

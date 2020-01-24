@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -48,5 +48,15 @@ class CommitTransactionOutsideTryCatchDiagnosticTest extends AbstractDiagnosticT
       .hasRange(86, 8, 86, 34)
       .hasRange(98, 8, 98, 34)
       .hasRange(106, 0, 106, 26);
+  }
+
+  @Test
+  void testSingleSub() {
+
+    List<Diagnostic> diagnostics = getDiagnostics("CommitTransactionOutsideTryCatchDiagnosticSingleSub");
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(3, 4, 3, 30);
   }
 }

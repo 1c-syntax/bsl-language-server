@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -63,8 +63,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = REGEX_STD_PATHS_UNIX,
-    description = "Ключевые слова поиска стандартных корневых каталогов Unix"
+    defaultValue = REGEX_STD_PATHS_UNIX
   )
   private Pattern searchWordsStdPathsUnix = getLocalPattern("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 

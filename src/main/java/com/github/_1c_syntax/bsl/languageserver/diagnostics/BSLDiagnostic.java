@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,10 +31,10 @@ import java.util.Map;
 /**
  * BSLDiagnostic main purpose is to provide collection of LSP {@link Diagnostic},
  * fired on concrete {@link DocumentContext}.
- *
+ * <p>
  * Each BSLDiagnostic implementation MUST contain constructor with exactly one parameter {@link DiagnosticInfo}.
  * Passed DiagnosticInfo MUST be stored as a object field and returned by {@link #getInfo()}.
- *
+ * <p>
  * {@link #getDiagnostics(DocumentContext)} method SHOULD use {@link DiagnosticStorage} to add and return diagnostics.
  */
 public interface BSLDiagnostic {

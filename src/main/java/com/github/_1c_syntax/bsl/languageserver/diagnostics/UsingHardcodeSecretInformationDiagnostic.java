@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -69,8 +69,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = FIND_WORD_DEFAULT,
-    description = "Ключевые слова поиска конфиденциальной информации в переменных, структурах, соответствиях."
+    defaultValue = FIND_WORD_DEFAULT
   )
   private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
@@ -158,7 +157,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
     Matcher matcherMethod = PATTERN_METHOD_INSERT.matcher(ctx.methodName().getText());
     if (matcherMethod.find()) {
-      List<BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
+      List<? extends BSLParser.CallParamContext> list = ctx.doCall().callParamList().callParam();
       Matcher matcher = searchWords.matcher(getClearString(list.get(0).getText()));
       if (matcher.find() && list.size() > 1 && isNotEmptyStringByToken(list.get(1).getStart())) {
         addDiagnosticByAssignment(ctx, BSLParser.RULE_statement);
@@ -182,7 +181,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     if (matcherTypeName.find()) {
       BSLParser.DoCallContext doCallContext = ctx.doCall();
       if (doCallContext != null) {
-        List<BSLParser.CallParamContext> list = doCallContext.callParamList().callParam();
+        List<? extends BSLParser.CallParamContext> list = doCallContext.callParamList().callParam();
         if (!list.isEmpty()) {
           processCheckNewExpression(ctx, list, typeNameContext.getText());
         }
@@ -192,7 +191,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void processCheckNewExpression(BSLParser.NewExpressionContext ctx,
-                                         List<BSLParser.CallParamContext> list, String typeName) {
+                                         List<? extends BSLParser.CallParamContext> list, String typeName) {
     Matcher matcherTypeNameConnection = PATTERN_NEW_EXPRESSION_CONNECTION.matcher(typeName);
     if (matcherTypeNameConnection.find()) {
       if (list.size() >= 4 && isNotEmptyStringByToken(list.get(3).getStart())) {
@@ -213,12 +212,15 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       if (assignment != null
         && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
         && isNotEmptyStringByToken(assignment.getStop())) {
-        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getDiagnosticMessage());
+        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getMessage());
       }
     }
   }
 
-  private void processParameterList(BSLParser.NewExpressionContext ctx, List<BSLParser.CallParamContext> list) {
+  private void processParameterList(
+    BSLParser.NewExpressionContext ctx,
+    List<? extends BSLParser.CallParamContext> list
+  ) {
     String[] arr = list.get(0).getText().split(",");
     for (int index = 0; index < arr.length; index++) {
       Matcher matcher = searchWords.matcher(getClearString(arr[index]));
@@ -232,7 +234,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
     ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
     if (assignment != null) {
-      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getDiagnosticMessage());
+      diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getMessage());
     }
   }
 
@@ -264,7 +266,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     return getAncestorByRuleIndex(parent, type);
   }
 
-  private boolean parentIsModifierContext(ParserRuleContext ctx) {
+  private static boolean parentIsModifierContext(ParserRuleContext ctx) {
     return ctx.getParent() instanceof BSLParser.ModifierContext;
   }
 

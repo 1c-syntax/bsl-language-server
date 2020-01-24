@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,10 +32,18 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface DiagnosticMetadata {
   DiagnosticType type() default DiagnosticType.ERROR;
+
   DiagnosticSeverity severity() default DiagnosticSeverity.MINOR;
+
   DiagnosticScope scope() default DiagnosticScope.ALL;
+
+  ModuleType[] modules() default {};
+
   int minutesToFix() default 0;
+
   boolean activatedByDefault() default true;
+
   DiagnosticCompatibilityMode compatibilityMode() default DiagnosticCompatibilityMode.UNDEFINED;
+
   DiagnosticTag[] tags() default {};
 }

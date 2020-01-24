@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FoldingRangeProviderTest {
 
   @Test
-  void testFoldingRange() throws IOException {
+  void testFoldingRange() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -58,7 +58,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.info.getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
     configuration.put("threshold", 1f);
     diagnosticInstance.configure(configuration);
 
@@ -69,7 +69,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
   }
 
   @Test
-  void testQuickFixRemoveCode(){
+  void testQuickFixRemoveCode() {
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(diagnostics.get(0));
 

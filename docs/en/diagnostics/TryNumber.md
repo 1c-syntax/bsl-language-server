@@ -1,4 +1,4 @@
-# Cast to number of try catch block
+# Cast to number of try catch block (TryNumber)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -31,3 +31,19 @@ NumberDaysAllowance = TypeDescription.CastValue(Value);
 ## Reference
 
 - [Standard: Catch exceptions in code](https://its.1c.ru/db/v8std#content:499:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:TryNumber-off
+// BSLLS:TryNumber-on
+```
+
+### Parameter for config
+
+```json
+"TryNumber": false
+```

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -51,8 +51,7 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + DEFAULT_COMMENT_AS_CODE,
-    description = "Считать комментарий в исключении кодом"
+    defaultValue = "" + DEFAULT_COMMENT_AS_CODE
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
 
@@ -75,13 +74,13 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitExceptCodeBlock(ctx);
     }
 
-    if(commentAsCode) {
+    if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
       Range rangeTry = Ranges.create(ctx.getParent());
-      if(comments.anyMatch(token ->
-          org.eclipse.lsp4j.util.Ranges.containsRange(
-            rangeTry,
-            Ranges.create(token)))) {
+      if (comments.anyMatch(token ->
+        Ranges.containsRange(
+          rangeTry,
+          Ranges.create(token)))) {
         return super.visitExceptCodeBlock(ctx);
       }
     }

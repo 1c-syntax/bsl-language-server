@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -93,15 +93,15 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
 
     ArrayDeque<ParseTree> beginCalls = new ArrayDeque<>();
     for (ParseTree tranCall : allTranCalls) {
-      if(beginTransaction.matcher(((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText()).matches()) {
+      if (beginTransaction.matcher(((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText()).matches()) {
         beginCalls.add(tranCall);
-      } else if(!beginCalls.isEmpty()) {
+      } else if (!beginCalls.isEmpty()) {
         beginCalls.pop();
       } else {
         addDiagnosticWithMessage(tranCall, pairMethods);
       }
     }
-    if(!beginCalls.isEmpty()) {
+    if (!beginCalls.isEmpty()) {
       beginCalls.forEach(tranCall -> addDiagnosticWithMessage(tranCall, pairMethods));
     }
   }
@@ -109,7 +109,7 @@ public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnosti
   private void addDiagnosticWithMessage(ParseTree tranCall, HashMap<String, String> pairMethods) {
     String methodName = ((BSLParser.GlobalMethodCallContext) tranCall).methodName().getText();
     diagnosticStorage.addDiagnostic((BSLParser.GlobalMethodCallContext) tranCall,
-      info.getDiagnosticMessage(pairMethods.get(methodName.toUpperCase(Locale.ENGLISH)), methodName));
+      info.getMessage(pairMethods.get(methodName.toUpperCase(Locale.ENGLISH)), methodName));
   }
 
 }

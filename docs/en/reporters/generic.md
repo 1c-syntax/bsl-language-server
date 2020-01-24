@@ -8,7 +8,7 @@ Output the analize result to file `bsl-generic-json.json` in the current workspa
 
 ## Sample output
 
-```
+```json
 
 {
     "issues": [
@@ -18,8 +18,8 @@ Output the analize result to file `bsl-generic-json.json` in the current workspa
             "severity": "CRITICAL",
             "type": "BUG",
             "primaryLocation": {
-                "message": "Функция не содержит \"Возврат\"",
-                "filePath": "project/src/DataProcessors/ОбменДанными/Ext/ObjectModule.bsl",
+                "message": "Function should have \"Return\"",
+                "filePath": "project/src/DataProcessors/Exchange/Ext/ObjectModule.bsl",
                 "textRange": {
                     "startLine": 66,
                     "endLine": 66,

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -56,21 +56,21 @@ public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
-    if(ctx.globalMethodCall() != null) {
+    if (ctx.globalMethodCall() != null) {
       return ctx;
     }
 
     String identifier = ctx.IDENTIFIER().getText().trim();
     BSLParser.MethodCallContext methodCall = ctx.accessCall().methodCall();
 
-    if(deletePattern.matcher(methodCall.methodName().getText()).matches()) {
-      List<BSLParser.CallParamContext> callParams = methodCall
+    if (deletePattern.matcher(methodCall.methodName().getText()).matches()) {
+      List<? extends BSLParser.CallParamContext> callParams = methodCall
         .doCall()
         .callParamList()
         .callParam();
 
-      for(BSLParser.CallParamContext param : callParams) {
-        if(param.getText().trim().equals(identifier)) {
+      for (BSLParser.CallParamContext param : callParams) {
+        if (param.getText().trim().equals(identifier)) {
           diagnosticStorage.addDiagnostic(ctx);
         }
       }

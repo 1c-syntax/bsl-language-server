@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -63,7 +63,7 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
       if (param.children == null ||
         param.getStart().getType() == BSLParser.STRING ||
         param.getStart().getType() == BSLParser.DECIMAL) {
-        diagnosticStorage.addDiagnostic(ctx, info.getDiagnosticMessage(matcher.group(0)));
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));
       }
     }
     return ctx;

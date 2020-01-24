@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,7 +28,6 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -41,30 +40,57 @@ public final class CodeLensProvider {
   }
 
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return getCognitiveComplexityCodeLenses(documentContext);
+    List<CodeLens> codeLenses = new ArrayList<>();
+    codeLenses.addAll(getCognitiveComplexityCodeLenses(documentContext));
+    codeLenses.addAll(getCyclomaticComplexityCodeLenses(documentContext));
+    return codeLenses;
   }
 
   private List<CodeLens> getCognitiveComplexityCodeLenses(DocumentContext documentContext) {
-    if (!configuration.isShowCognitiveComplexityCodeLens()) {
-      return Collections.emptyList();
-    }
-
     List<CodeLens> codeLenses = new ArrayList<>();
 
-    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
+    if (configuration.isShowCognitiveComplexityCodeLens()) {
+      Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData()
+        .getMethodsComplexity();
 
-    methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
-      String title = String.format("Cognitive complexity is %d", complexity);
-      Command command = new Command(title, "");
-      CodeLens codeLens = new CodeLens(
-        methodSymbol.getSubNameRange(),
-        command,
-        null
-      );
+      methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
+        String title = String.format("Cognitive complexity is %d", complexity);
+        Command command = new Command(title, "");
+        CodeLens codeLens = new CodeLens(
+          methodSymbol.getSubNameRange(),
+          command,
+          null
+        );
 
-      codeLenses.add(codeLens);
-    });
+        codeLenses.add(codeLens);
+      });
+    }
 
     return codeLenses;
   }
+
+  private List<CodeLens> getCyclomaticComplexityCodeLenses(DocumentContext documentContext) {
+    List<CodeLens> codeLenses = new ArrayList<>();
+
+    if (configuration.isShowCyclomaticComplexityCodeLens()) {
+
+      Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCyclomaticComplexityData()
+        .getMethodsComplexity();
+
+      methodsComplexity.forEach((MethodSymbol methodSymbol, Integer complexity) -> {
+        String title = String.format("Cyclomatic complexity is %d", complexity);
+        Command command = new Command(title, "");
+        CodeLens codeLens = new CodeLens(
+          methodSymbol.getSubNameRange(),
+          command,
+          null
+        );
+
+        codeLenses.add(codeLens);
+      });
+    }
+
+    return codeLenses;
+  }
+
 }

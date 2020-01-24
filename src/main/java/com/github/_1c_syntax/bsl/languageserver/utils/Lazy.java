@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
@@ -28,20 +29,28 @@ import static java.util.Objects.requireNonNull;
 public final class Lazy<T> {
 
   private Supplier<T> supplier;
+  private ReentrantLock lock;
   private volatile T value;
 
-  public Lazy() {
-    // no need to initialize lazy-value
+  public Lazy(Supplier<T> supplier) {
+    this(supplier, new ReentrantLock());
   }
 
-  public Lazy(Supplier<T> supplier) {
+  public Lazy(Supplier<T> supplier, ReentrantLock lock) {
     // no need to initialize lazy-value
     this.supplier = supplier;
+    this.lock = lock;
   }
 
   public T getOrCompute(Supplier<T> supplier) {
     final T result = value; // Just one volatile read
-    return result == null ? maybeCompute(supplier) : result;
+    if (result == null) {
+      lock.lock();
+      T localResult = maybeCompute(supplier);
+      lock.unlock();
+      return localResult;
+    }
+    return result;
   }
 
   public T getOrCompute() {
@@ -57,7 +66,7 @@ public final class Lazy<T> {
     value = null;
   }
 
-  private synchronized T maybeCompute(Supplier<T> supplier) {
+  private T maybeCompute(Supplier<T> supplier) {
     if (value == null) {
       requireNonNull(supplier);
       value = requireNonNull(supplier.get());

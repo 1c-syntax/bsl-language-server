@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -47,14 +47,13 @@ import java.util.Map;
     DiagnosticTag.BRAINOVERLOAD
   }
 )
-public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic{
+public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MAX_VALUES_COUNT = 3;
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_VALUES_COUNT,
-    description = "Допустимое количество значений свойств, передаваемых в конструктор структуры"
+    defaultValue = "" + MAX_VALUES_COUNT
   )
   private int maxValuesCount = MAX_VALUES_COUNT;
 
@@ -73,11 +72,11 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
 
-    if (ctx.typeName() == null){
+    if (ctx.typeName() == null) {
       return super.visitNewExpression(ctx);
     }
 
-    if(!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))){
+    if (!(DiagnosticHelper.isStructureType(ctx.typeName()) || DiagnosticHelper.isFixedStructureType(ctx.typeName()))) {
       return super.visitNewExpression(ctx);
     }
 

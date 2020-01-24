@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,9 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
 
-import java.util.List;
 import java.util.Locale;
 
 @DiagnosticMetadata(
@@ -42,32 +40,20 @@ import java.util.Locale;
     DiagnosticTag.STANDARD
   }
 )
-public class YoLetterUsageDiagnostic implements BSLDiagnostic {
-
-  private final DiagnosticInfo info;
-  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+public class YoLetterUsageDiagnostic extends AbstractDiagnostic {
 
   public YoLetterUsageDiagnostic(DiagnosticInfo info) {
-    this.info = info;
+    super(info);
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
-    diagnosticStorage.clearDiagnostics();
-
+  protected void check(DocumentContext documentContext) {
     documentContext.getTokensFromDefaultChannel()
       .parallelStream()
       .filter((Token t) ->
         t.getType() == BSLParser.IDENTIFIER &&
           t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
       .forEach(token -> diagnosticStorage.addDiagnostic(token));
-
-    return diagnosticStorage.getDiagnostics();
   }
 
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
-  }
 }

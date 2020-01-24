@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -88,7 +88,7 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
     BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
 
     List<BSLParser.ExpressionContext> identicalExpressions = expressionContexts.stream()
-      .skip((long) i)
+      .skip(i)
       .filter(expressionContext ->
         !expressionContext.equals(currentExpression)
           && DiagnosticHelper.equalNodes(currentExpression, expressionContext))

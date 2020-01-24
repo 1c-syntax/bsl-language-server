@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,23 +46,20 @@ import java.util.Map;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class LineLengthDiagnostic implements BSLDiagnostic {
+public class LineLengthDiagnostic extends AbstractDiagnostic {
 
   private static final int MAX_LINE_LENGTH = 120;
   private int prevTokenType = 0;
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_LINE_LENGTH,
-    description = "Максимальная длина строки в символах"
+    defaultValue = "" + MAX_LINE_LENGTH
   )
   private int maxLineLength = MAX_LINE_LENGTH;
   private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
-  private final DiagnosticInfo info;
-  private DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
 
   public LineLengthDiagnostic(DiagnosticInfo info) {
-    this.info = info;
+    super(info);
   }
 
   @Override
@@ -75,9 +71,7 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
-    diagnosticStorage.clearDiagnostics();
+  protected void check(DocumentContext documentContext) {
     tokensInOneLine.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {
@@ -95,17 +89,10 @@ public class LineLengthDiagnostic implements BSLDiagnostic {
       if (maxCharPosition > maxLineLength) {
         diagnosticStorage.addDiagnostic(
           Ranges.create(key, 0, key, maxCharPosition),
-          info.getDiagnosticMessage(maxCharPosition, maxLineLength)
+          info.getMessage(maxCharPosition, maxLineLength)
         );
       }
     });
-
-    return diagnosticStorage.getDiagnostics();
-  }
-
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
   }
 
   private boolean mustBePutIn(Token token) {

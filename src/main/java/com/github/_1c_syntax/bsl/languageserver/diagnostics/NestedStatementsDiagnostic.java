@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -60,8 +60,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_ALLOWED_LEVEL,
-    description = "Максимальный уровень вложенности конструкций"
+    defaultValue = "" + MAX_ALLOWED_LEVEL
   )
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 

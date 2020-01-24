@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
 
 class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtStartCommentDiagnostic> {
@@ -55,7 +56,7 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
   @Test
   void testConfigure() {
 
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("commentsAnnotation", "//@,//(c),//(с)");
     diagnosticInstance.configure(configuration);
 
@@ -89,7 +90,7 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().startsWith("// ")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().startsWith("// ")
       );
   }
 
@@ -112,7 +113,7 @@ class SpaceAtStartCommentDiagnosticTest extends AbstractDiagnosticTest<SpaceAtSt
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().startsWith("// ")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().startsWith("// ")
       );
   }
 }

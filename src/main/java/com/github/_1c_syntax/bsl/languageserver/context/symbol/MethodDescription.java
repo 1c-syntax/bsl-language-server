@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 public class MethodDescription {
 
+  private static final int COMMENT_LENGTH = 2;
   private final int startLine;
   private final int endLine;
   @Getter
@@ -63,7 +64,7 @@ public class MethodDescription {
   private static String uncomment(String text) {
     String result = text;
     if (result.startsWith("//")) {
-      result = result.substring(2);
+      result = result.substring(COMMENT_LENGTH);
     }
     return result;
   }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -39,8 +39,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -59,11 +57,8 @@ class JUnitTestSuites {
   @JacksonXmlElementWrapper(useWrapping = false)
   private final List<JUnitTestSuite> testsuite;
 
-  private static Path sourceDir = Paths.get(".");
-
   public JUnitTestSuites(AnalysisInfo analysisInfo) {
     name = "bsl-language-server";
-    setSourceDir(Paths.get(analysisInfo.getSourceDir()).toAbsolutePath());
 
     testsuite = analysisInfo.getFileinfos().stream()
       .filter(fileInfo -> !fileInfo.getDiagnostics().isEmpty())
@@ -79,10 +74,6 @@ class JUnitTestSuites {
     this.testsuite = new ArrayList<>(testsuite);
   }
 
-  private static void setSourceDir(Path path) {
-    sourceDir = path;
-  }
-
   @Value
   static class JUnitTestSuite {
 
@@ -93,7 +84,7 @@ class JUnitTestSuites {
     private final List<JUnitTestCase> testcase;
 
     public JUnitTestSuite(FileInfo fileInfo) {
-      this.name = sourceDir.relativize(fileInfo.getPath().toAbsolutePath()).toString();
+      this.name = fileInfo.getPath().toString();
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
@@ -134,7 +125,7 @@ class JUnitTestSuites {
       String type = "";
       String message = "";
 
-      for (Diagnostic diagnostic: diagnostics) {
+      for (Diagnostic diagnostic : diagnostics) {
         type = diagnostic.getSeverity().toString().toLowerCase(Locale.ENGLISH);
         Position startRange = diagnostic.getRange().getStart();
         message = diagnostic.getMessage();
@@ -150,7 +141,7 @@ class JUnitTestSuites {
     }
 
     public JUnitTestCase(
-      @JsonProperty("name") String  name,
+      @JsonProperty("name") String name,
       @JsonProperty("classname") String classname,
       @JsonProperty("failure") JUnitFailure failure
     ) {

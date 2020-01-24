@@ -1,4 +1,4 @@
-# Timeouts working with external resources
+# Timeouts working with external resources (TimeoutsInExternalResources)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -46,3 +46,19 @@ HTTPConnection.Timeout = 1;
 ## Reference
 
 - [Timeouts when working with external resources](https://its.1c.ru/db/v8std#content:748:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:TimeoutsInExternalResources-off
+// BSLLS:TimeoutsInExternalResources-on
+```
+
+### Parameter for config
+
+```json
+"TimeoutsInExternalResources": false
+```

@@ -1,4 +1,4 @@
-# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()"
+# Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" (PairingBrokenTransaction)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -14,17 +14,17 @@ Beginning of transaction and it's committing (rollback) have to be executed with
 *Correct*
 
 ```bsl
-Procedure WriteDataToIDb()
+Procedure WriteDataToIB()
 
-    BeginTransaction();
+    StartTransaction();
 
     Try
-        ... // reading or writing data
+        ... // read or write data
         DocumentObject.Write()
         CommitTransaction();
-    Except
+    Raise
         RollbackTransaction();
-        ... // additional actions to process the exception
+        ... // additional operations to process the exception
     EndTry;
 
 EndProcedure
@@ -33,9 +33,9 @@ EndProcedure
 *Incorrect*
 
 ```bsl
-Procedure WriteDataToIDb()
+Procedure WriteDataToIB()
  
-    Begintransaction();
+    StartTransaction();
     WriteDocument();
 
 EndProcedure;
@@ -43,17 +43,33 @@ EndProcedure;
 Procedure WriteDocument()
 
     Try
-        ... // reading or writing data
+        ... // read or write data
         DocumentObject.Write()
-        CommitTransacrion();
-    Except
+        CommitTransaction();
+    Raise
         RollbackTransaction();
-    ... // additional actions to process the exception
+        ... // additional operations to process the exception
     EndTry;
 
 EndProcedure
 ```
 
-## Sources
+## Reference
 
-* [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
+- [Transactions: Terms of Use](https://its.1c.ru/db/v8std#content:783:hdoc)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:PairingBrokenTransaction-off
+// BSLLS:PairingBrokenTransaction-on
+```
+
+### Parameter for config
+
+```json
+"PairingBrokenTransaction": false
+```

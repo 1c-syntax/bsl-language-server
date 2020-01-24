@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,17 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
 
+@Slf4j
 public class ParseExceptionCommand implements Command {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ParseExceptionCommand.class.getSimpleName());
 
   private final Options options;
   private final ParseException e;

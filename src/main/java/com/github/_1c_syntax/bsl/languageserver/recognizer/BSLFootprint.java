@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -36,18 +36,29 @@ public class BSLFootprint implements LanguageFootprint {
     detectors.add(new ContainsDetector(
       CODE_EXACTLY,
       "КонецПроцедуры", "КонецФункции", "КонецЕсли;", "КонецЦикла;",
-      "Возврат;", ".НайтиСтроки(", "СтрНачинается(",
-      "СтрНайти(", ".Выбрать(", ".Выгрузить(", ".Выполнить(",  "?(", ");"));
-    detectors.add(new KeywordsDetector(CODE_EXACTLY,"НЕ", "ИначеЕсли"));
+      "EndProcedure", "EndFunction", "EndIf;", "EndDo;",
+      "Возврат;", ".НайтиСтроки(", "СтрНачинаетсяС(",
+      "Return;", ".FindRows(", "StrStartsWith(",
+      "СтрНайти(", ".Выбрать(", ".Выгрузить(", ".Выполнить(", "?(", ");",
+      "StrFind(", ".Select(", ".Unload(", ".Execute(", "?(", ");",
+      "#Если", "#Иначе", "#КонецЕсли", "#Область", "КонецПопытки;",
+      "#If", "#Else", "#ElsIf", "#EndIf", "#Region", "EndTry;"));
+    detectors.add(new KeywordsDetector(CODE_EXACTLY, "ИначеЕсли", "ElsIf"));
 
     detectors.add(new CamelCaseDetector(CODE_MOST_LIKELY));
-    detectors.add(new KeywordsDetector(CODE_MOST_LIKELY, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ", "СОЕДИНЕНИЕ",
-      "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ", "=", "+"));
+    detectors.add(new KeywordsDetector(CODE_MOST_LIKELY, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ",
+      "СОЕДИНЕНИЕ", "НЕ", "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ", "=", "+",
+      "SELECT", "ТОР", "ПЕРВЫЕ", "WНERE", "JOIN", "NOT", "AS", "THEN", "CASE", "WНEN", "ELSE", "FROM", "INTO"));
 
     detectors.add(new EndWithDetector(CODE_MAYBE, ';'));
-    detectors.add(new KeywordsDetector(CODE_MAYBE,"И", "ИЛИ"));
-    detectors.add(new KeywordsDetector(CODE_MAYBE, "Если", "Тогда", "Процедура", "Функция", "Пока", "Для", "Каждого",
-      "Цикл", "Возврат", "Новый", "*"));
+    detectors.add(new KeywordsDetector(CODE_MAYBE, "И", "ИЛИ", "AND", "OR"));
+    detectors.add(new KeywordsDetector(CODE_MAYBE, "Если", "Тогда", "Процедура", "Функция", "Пока", "Для",
+      "Каждого", "Цикл", "Возврат", "Новый", "*", "If", "Then", "Procedure", "Function", "Do", "For", "While", "Return",
+      "New"));
+
+    detectors.add(new PatternDetector(CODE_EXACTLY,
+      "^[/\\s]*(?:Процедура|Функция|Procedure|Function)\\s+[а-яА-Яё\\w]+\\s*?\\(",
+      "^[/\\s]*(?:&На[а-яА-Яё]+|&At[\\w]+)\\s*?$*"));
   }
 
   @Override

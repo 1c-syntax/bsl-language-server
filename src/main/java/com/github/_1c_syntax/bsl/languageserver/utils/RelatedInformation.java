@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,14 +25,16 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
+import java.net.URI;
+
 public class RelatedInformation {
 
   private RelatedInformation() {
     // Utility class
   }
 
-  public static DiagnosticRelatedInformation create(String uri, Range range, String message) {
-    Location location = new Location(uri, range);
+  public static DiagnosticRelatedInformation create(URI uri, Range range, String message) {
+    Location location = new Location(uri.toString(), range);
     return new DiagnosticRelatedInformation(location, message);
   }
 }

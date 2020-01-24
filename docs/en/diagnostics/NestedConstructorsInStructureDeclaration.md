@@ -1,4 +1,4 @@
-# Nested constructors with parameters in structure declaration
+# Nested constructors with parameters in structure declaration (NestedConstructorsInStructureDeclaration)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -34,6 +34,22 @@ Correct:
                                                           Новый Структура("Номенклатура", "ХарактеристикиИспользуются"));
 ПараметрыЗаполненияРеквизитов.Вставить("ЗаполнитьПризнакТипНоменклатуры",
                                                           Новый Структура("Номенклатура", "ТипНоменклатуры"));
-НоменклатураСервер.ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции(Объект.Товары, 
+НоменклатураСервер.ЗаполнитьСлужебныеРеквизитыПоНоменклатуреВКоллекции(Объект.Товары,
                                                           ПараметрыЗаполненияРеквизитов);
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:NestedConstructorsInStructureDeclaration-off
+// BSLLS:NestedConstructorsInStructureDeclaration-on
+```
+
+### Parameter for config
+
+```json
+"NestedConstructorsInStructureDeclaration": false
 ```

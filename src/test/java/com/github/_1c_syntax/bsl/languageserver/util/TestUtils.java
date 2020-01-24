@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,15 +23,18 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 public class TestUtils {
 
-  public static final String FAKE_DOCUMENT_URI = "file:///fake-uri.bsl";
+  public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
 
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
@@ -41,7 +44,7 @@ public class TestUtils {
       StandardCharsets.UTF_8
     );
 
-    return new DocumentContext(filePath, fileContent, new ServerContext());
+    return new DocumentContext(Path.of(filePath).toAbsolutePath().toUri(), fileContent, new ServerContext());
   }
 
   @SneakyThrows

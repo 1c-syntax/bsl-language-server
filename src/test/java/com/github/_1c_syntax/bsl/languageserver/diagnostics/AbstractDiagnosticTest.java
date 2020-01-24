@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -80,7 +80,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   private List<CodeAction> getQuickFixes(DocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
-    TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri());
+    TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
     codeActionContext.setDiagnostics(diagnostics);

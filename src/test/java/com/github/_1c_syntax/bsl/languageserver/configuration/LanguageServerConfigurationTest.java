@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,11 +34,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import static com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.DEFAULT_DIAGNOSTIC_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
+  private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   @BeforeEach
@@ -92,17 +95,35 @@ class LanguageServerConfigurationTest {
   }
 
   @Test
+  void createFromEmptyFile() {
+
+    // given
+    File configurationFile = new File(PATH_TO_EMPTY_CONFIGURATION_FILE);
+
+    // when
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+
+    // then
+    DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
+
+    assertThat(diagnosticLanguage).isEqualTo(DEFAULT_DIAGNOSTIC_LANGUAGE);
+    assertThat(diagnostics).isEmpty();
+
+  }
+
+  @Test
   void test_GetCustomConfigurationRoot() {
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
     Path path = Paths.get(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
-    assertThat(configurationRoot.toAbsolutePath()).isEqualTo(path.toAbsolutePath());
+    assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
     configuration = LanguageServerConfiguration.create(configurationFile);
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
-    assertThat(configurationRoot.toAbsolutePath()).isEqualTo(path.toAbsolutePath());
+    assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
   }
 

@@ -1,4 +1,4 @@
-# Cognitive complexity
+# Cognitive complexity (CognitiveComplexity)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,8 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `complexityThreshold` | `int` | ```Допустимая когнитивная сложность метода``` | ```15``` |
-| `checkModuleBody` | `boolean` | ```Проверять тело модуля``` | ```true``` |
+| `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` |
+| `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```15``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -214,3 +214,22 @@ EndFunction
 ## Sources
 
 * [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:CognitiveComplexity-off
+// BSLLS:CognitiveComplexity-on
+```
+
+### Parameter for config
+
+```json
+"CognitiveComplexity": {
+    "checkModuleBody": true,
+    "complexityThreshold": 15
+}
+```

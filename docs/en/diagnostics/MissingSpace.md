@@ -1,4 +1,4 @@
-# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;
+# Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; (MissingSpace)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -8,11 +8,11 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `listForCheckLeft` | `String` | ```Список символов для проверки слева (разделенные пробелом). Например: ) =``` | ```""``` |
-| `listForCheckRight` | `String` | ```Список символов для проверки справа (разделенные пробелом). Например: ( =``` | ```", ;"``` |
-| `listForCheckLeftAndRight` | `String` | ```Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >``` | ```"+ - * / = % < > <> <= >="``` |
-| `checkSpaceToRightOfUnary` | `Boolean` | ```Проверять наличие пробела справа от унарных знаков (+ -)``` | ```false``` |
-| `allowMultipleCommas` | `Boolean` | ```Разрешать несколько запятых подряд``` | ```false``` |
+| `checkSpaceToRightOfUnary` | `Boolean` | ```Check for space to the right of unary signs (+ -)``` | ```false``` |
+| `listForCheckRight` | `String` | ```List of symbols to check for the space to the right of (separated by space)``` | ```, ;``` |
+| `listForCheckLeft` | `String` | ```List of symbols to check for the space to the left of (separated by space)``` | `````` |
+| `allowMultipleCommas` | `Boolean` | ```Allow several commas in a row``` | ```false``` |
+| `listForCheckLeftAndRight` | `String` | ```List of symbols to check for the space from both sides of (separated by space)``` | ```+ - * / = % < > <> <= >=``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -44,7 +44,7 @@ EndProcedure
 
 ### Using `checkSpaceToRightOfUnary` parameter
 
-The parameter makes sense only in case the unary operator if listed in one of three base parameters.
+The parameter makes sense only in case the unary operator is listed in one of three base parameters.
 
 If set to `false`
 
@@ -67,13 +67,35 @@ The parameter has sense only if `,` is listed in one of three base parameters
 If set to `false`
 
 ```bsl
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Incorrect
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Incorrect
+CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
 ```
 
 If set to `true`
 
 ```bsl
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Correct
-ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Correct
+CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Correct
+CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
+```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:MissingSpace-off
+// BSLLS:MissingSpace-on
+```
+
+### Parameter for config
+
+```json
+"MissingSpace": {
+    "checkSpaceToRightOfUnary": false,
+    "listForCheckRight": ", ;",
+    "listForCheckLeft": "",
+    "allowMultipleCommas": false,
+    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >="
+}
 ```

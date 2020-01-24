@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -46,12 +46,14 @@ import java.util.regex.Pattern;
 public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки"
-    + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG";
+    + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
+    + "|Вставить\\s*содержимое\\s*обработчика"
+    + "|Paste\\s*handler\\s*content|Insert\\s*handler\\s*code"
+    + "|Insert\\s*handler\\s*content|Insert\\s*handler\\s*contents";
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + SERVICE_TAGS_DEFAULT,
-    description = "Служебные теги"
+    defaultValue = "" + SERVICE_TAGS_DEFAULT
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
@@ -88,7 +90,7 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
         matcher.find();
         diagnosticStorage.addDiagnostic(
           token,
-          info.getDiagnosticMessage(matcher.group(0))
+          info.getMessage(matcher.group(0))
         );
       });
 

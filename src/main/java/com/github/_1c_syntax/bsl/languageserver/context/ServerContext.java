@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,21 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
-import com.github._1c_syntax.mdclasses.metadata.ConfigurationBuilder;
-import com.github._1c_syntax.mdclasses.metadata.configurations.AbstractConfiguration;
-import com.github._1c_syntax.mdclasses.metadata.configurations.EmptyConfiguration;
+import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import org.eclipse.lsp4j.TextDocumentItem;
 
 import javax.annotation.CheckForNull;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServerContext {
-  private final Map<String, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
-  private final Lazy<AbstractConfiguration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
+  private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
+  private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   private Path configurationRoot;
 
@@ -47,21 +47,27 @@ public class ServerContext {
     this.configurationRoot = configurationRoot;
   }
 
-  public Map<String, DocumentContext> getDocuments() {
+  public Map<URI, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
   }
 
   @CheckForNull
   public DocumentContext getDocument(String uri) {
-    return documents.get(uri);
+    return getDocument(URI.create(uri));
   }
 
-  public DocumentContext addDocument(String uri, String content) {
+  @CheckForNull
+  public DocumentContext getDocument(URI uri) {
+    return documents.get(Absolute.uri(uri));
+  }
 
-    DocumentContext documentContext = documents.get(uri);
+  public DocumentContext addDocument(URI uri, String content) {
+    URI absoluteURI = Absolute.uri(uri);
+
+    DocumentContext documentContext = getDocument(absoluteURI);
     if (documentContext == null) {
-      documentContext = new DocumentContext(uri, content, this);
-      documents.put(uri, documentContext);
+      documentContext = new DocumentContext(absoluteURI, content, this);
+      documents.put(absoluteURI, documentContext);
     } else {
       documentContext.rebuild(content);
     }
@@ -70,11 +76,11 @@ public class ServerContext {
   }
 
   public DocumentContext addDocument(TextDocumentItem textDocumentItem) {
-    return addDocument(textDocumentItem.getUri(), textDocumentItem.getText());
+    return addDocument(URI.create(textDocumentItem.getUri()), textDocumentItem.getText());
   }
 
-  public void removeDocument(String uri) {
-    documents.remove(uri);
+  public void removeDocument(URI uri) {
+    documents.remove(Absolute.uri(uri));
   }
 
   public void clear() {
@@ -86,19 +92,17 @@ public class ServerContext {
     this.configurationRoot = configurationRoot;
   }
 
-  public AbstractConfiguration getConfiguration() {
+  public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
-  private AbstractConfiguration computeConfigurationMetadata() {
+  private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return new EmptyConfiguration();
+      return Configuration.newBuilder().build();
     }
 
-    ConfigurationBuilder configurationBuilder =
-      new ConfigurationBuilder(configurationRoot);
-
-    return configurationBuilder.build();
+    return Configuration.newBuilder(configurationRoot).build();
   }
+
 
 }

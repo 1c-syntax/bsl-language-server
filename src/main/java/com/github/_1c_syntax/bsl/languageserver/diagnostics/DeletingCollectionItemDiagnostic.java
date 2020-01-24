@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,9 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext;
+import com.github._1c_syntax.bsl.parser.BSLParser.MethodCallContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Locale;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -44,45 +47,21 @@ import java.util.regex.Pattern;
 )
 public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern deletePattern = Pattern.compile(
+  private static final Pattern DELETE_CALL_PATTERN = Pattern.compile(
     "(удалить|delete)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private static final Predicate<MethodCallContext> MATCH_METHOD_CALL_DELETE
+    = e -> DELETE_CALL_PATTERN.matcher(e.methodName().getText()).matches();
 
   public DeletingCollectionItemDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
-  @Override
-  public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
-
-    String expression = ctx.expression().getText();
-
-    Trees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
-      .stream()
-      .filter(node -> deletePattern.matcher(
-        ((BSLParser.MethodCallContext) node).methodName().getText()).matches()
-      )
-      .map(node -> node.getParent().getParent())
-      .filter(callStatement -> namesEqual(callStatement, expression))
-      .forEach(callStatement -> diagnosticStorage.addDiagnostic(
-          (BSLParser.CallStatementContext) callStatement, info.getDiagnosticMessage(expression))
-      );
-
-    return super.visitForEachStatement(ctx);
-
-  }
-
-  private static boolean namesEqual(ParseTree node, String expression) {
-
-    if (!(node instanceof BSLParser.CallStatementContext)) {
-      return false;
-    }
-
-    BSLParser.CallStatementContext callStatement = (BSLParser.CallStatementContext) node;
+  private static boolean namesEqual(CallStatementContext callStatement, String collectionExpression) {
 
     String callStatementText = callStatement.getText().toLowerCase(Locale.getDefault());
-    String prefix = expression.toLowerCase(Locale.getDefault())
+    String prefix = collectionExpression.toLowerCase(Locale.getDefault())
       + "."
       + callStatement.accessCall().methodCall().methodName().getText().toLowerCase(Locale.getDefault())
       + "(";
@@ -90,4 +69,24 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
 
   }
 
+  @Override
+  public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+
+    String collectionExpression = ctx.expression().getText();
+    Trees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
+      .stream()
+      .filter(MethodCallContext.class::isInstance)
+      .map(MethodCallContext.class::cast)
+      .filter(MATCH_METHOD_CALL_DELETE)
+      .map(node -> node.getParent().getParent())
+      .filter(CallStatementContext.class::isInstance)
+      .map(CallStatementContext.class::cast)
+      .filter(callStatement -> namesEqual(callStatement, collectionExpression))
+      .forEach(callStatement -> diagnosticStorage.addDiagnostic(
+        callStatement, info.getMessage(collectionExpression))
+      );
+
+    return super.visitForEachStatement(ctx);
+
+  }
 }

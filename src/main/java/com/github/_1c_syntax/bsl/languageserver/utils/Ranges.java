@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -41,13 +42,17 @@ public final class Ranges {
     return create(ruleContext.getStart(), ruleContext.getStop());
   }
 
+  public static Range create(RegionSymbol regionSymbol) {
+    return create(regionSymbol.getStartNode().getStart(), regionSymbol.getEndNode().getStop());
+  }
+
   public static Range create(Token startToken, Token endToken) {
     int startLine = startToken.getLine() - 1;
     int startChar = startToken.getCharPositionInLine();
     int endLine = endToken.getLine() - 1;
     int endChar;
     if (endToken.getType() == Token.EOF) {
-      endChar = 0;
+      endChar = endToken.getCharPositionInLine();
     } else {
       endChar = endToken.getCharPositionInLine() + endToken.getText().length();
     }
@@ -72,4 +77,11 @@ public final class Ranges {
     return create(startLine, startChar, endLine, endChar);
   }
 
+  public static boolean containsRange(Range bigger, Range smaller) {
+    return org.eclipse.lsp4j.util.Ranges.containsRange(bigger, smaller);
+  }
+
+  public static boolean containsPosition(Range range, Position position) {
+    return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
+  }
 }

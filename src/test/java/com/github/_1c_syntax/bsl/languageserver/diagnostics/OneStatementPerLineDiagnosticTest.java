@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
 class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatementPerLineDiagnostic> {
 
@@ -42,11 +42,24 @@ class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatem
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(3, 8, 3, 14)
-      .hasRange(3, 8, 3, 14)
-      .hasRange(3, 8, 3, 14);
+      .hasRange(8, 18, 8, 32)
+      .hasRange(8, 33, 8, 37)
+      .hasRange(12, 5, 12, 9)
+      .hasRange(12, 10, 12, 14);
+  }
+
+  @Test
+  void testEndFile() {
+    List<Diagnostic> diagnostics = getDiagnostics("OneStatementPerLineDiagnosticEndFile");
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 5, 1, 9)
+      .hasRange(1, 10, 1, 14);
+    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(1);
   }
 
   @Test
@@ -68,7 +81,7 @@ class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatem
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
       .matches(codeAction ->
-        codeAction.getEdit().getChanges().get("file:///fake-uri.bsl").get(0).getNewText().startsWith("\n")
+        codeAction.getEdit().getChanges().get(FAKE_DOCUMENT_URI.toString()).get(0).getNewText().startsWith("\n")
       );
   }
 }

@@ -5,8 +5,8 @@
       <profile default="true" name="Default" enabled="true" />
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="org.github._1c_syntax.bsl-language-server.main" target="1.8" />
-      <module name="org.github._1c_syntax.bsl-language-server.test" target="1.8" />
+      <module name="bsl-language-server.main" target="11" />
+      <module name="bsl-language-server.test" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

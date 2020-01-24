@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright © 2018-2019
+ * Copyright © 2018-2020
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -92,8 +92,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         || checkIgnoreOff(IGNORE_ALL_OFF, comment) != null
         || checkIgnoreOn(IGNORE_ALL_ON, comment)
         || checkIgnoreOff(IGNORE_DIAGNOSTIC_OFF, comment) != null
-        || checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment)
-        ;
+        || checkIgnoreOn(IGNORE_DIAGNOSTIC_ON, comment);
 
     }
 
