@@ -77,7 +77,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME =
     createPattern(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU,
       Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN,
-      "^(?:%s|%s)[\\w]*$");
+      "^(?:%s|%s)[\\wа-яёЁ]*$");
 
   private static final Pattern FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME =
     createPattern(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
