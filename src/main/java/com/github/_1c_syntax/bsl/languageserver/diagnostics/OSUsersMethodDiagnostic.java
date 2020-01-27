@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
@@ -42,7 +41,7 @@ import java.util.regex.Pattern;
   }
 
 )
-public class OSUsersMethodDiagnostic extends AbstractVisitorDiagnostic {
+public class OSUsersMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
   private static final Pattern messagePattern = Pattern.compile(
     "ПользователиОС|OSUsers",
@@ -50,17 +49,12 @@ public class OSUsersMethodDiagnostic extends AbstractVisitorDiagnostic {
   );
 
   public OSUsersMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
+    super(info, messagePattern);
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (messagePattern.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitGlobalMethodCall(ctx);
+  protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
+    return false;
   }
-
 
 }

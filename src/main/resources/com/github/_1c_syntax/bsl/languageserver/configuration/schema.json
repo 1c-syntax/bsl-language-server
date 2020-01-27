@@ -137,6 +137,9 @@
                 "DeprecatedFind": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedFind"
                 },
+                "DeprecatedManagedForm": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedManagedForm"
+                },
                 "DeprecatedMessage": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
                 },

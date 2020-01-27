@@ -160,6 +160,16 @@
             "title": "Using of the deprecated method \"Find\"",
             "$id": "#/definitions/DeprecatedFind"
         },
+        "DeprecatedManagedForm": {
+            "description": "Deprecated ManagedForm attribute",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deprecated ManagedForm attribute",
+            "$id": "#/definitions/DeprecatedManagedForm"
+        },
         "DeprecatedMessage": {
             "description": "Restriction on the use of deprecated \"Message\" method",
             "default": null,
