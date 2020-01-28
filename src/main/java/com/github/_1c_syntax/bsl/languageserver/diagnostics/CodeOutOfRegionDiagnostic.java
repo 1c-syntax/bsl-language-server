@@ -71,14 +71,11 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
 
       List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);
-
-      var ctxStart = ctx.getStart();
-      diagnosticStorage.addDiagnostic(
-        Ranges.create(ctxStart.getLine(),
-          ctxStart.getCharPositionInLine(),
-          ctxStart.getLine(),
-          ctxStart.getCharPositionInLine()),
-        relatedInformation);
+      if(!relatedInformation.isEmpty()) {
+        diagnosticStorage.addDiagnostic(
+          relatedInformation.get(0).getLocation().getRange(),
+          relatedInformation);
+      }
       return ctx;
     }
 
