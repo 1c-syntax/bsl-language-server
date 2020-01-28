@@ -17,12 +17,13 @@ class UnusedLocalVariableDiagnosticTest extends AbstractDiagnosticTest<UnusedLoc
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(14, 10, 14, 13)
       .hasRange(16, 1, 16, 12)
       .hasRange(45, 4, 45, 17)
-      .hasRange(51, 8, 51, 10);
+      .hasRange(51, 8, 51, 10)
+      .hasRange(60, 4, 60, 17);
 
   }
 }

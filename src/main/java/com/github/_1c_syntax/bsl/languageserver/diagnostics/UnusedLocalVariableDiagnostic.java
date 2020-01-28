@@ -56,10 +56,46 @@ public class UnusedLocalVariableDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
+    updateCurrentSubTokens(ctx);
+    updateSubParam(ctx);
+    return super.visitSub(ctx);
+
+  }
+
+  private void updateSubParam(BSLParser.SubContext ctx) {
+
+    subParam.clear();
+    BSLParser.FunctionContext func = ctx.function();
+
+    if (func != null) {
+      BSLParser.ParamListContext paramList = func.funcDeclaration().paramList();
+
+      if (paramList != null) {
+        for (BSLParser.ParamContext param : paramList.param()) {
+          subParam.add(param.getText());
+        }
+      }
+    }
+
+    BSLParser.ProcedureContext proc = ctx.procedure();
+
+    if (proc != null) {
+      BSLParser.ParamListContext paramList = proc.procDeclaration().paramList();
+
+      if (paramList != null) {
+        for (BSLParser.ParamContext param : paramList.param()) {
+          subParam.add(param.getText());
+        }
+      }
+    }
+
+  }
+
+  private void updateCurrentSubTokens(BSLParser.SubContext ctx) {
+
     currentSubTokens = documentContext
       .getTokens()
       .subList(ctx.start.getTokenIndex(), ctx.stop.getTokenIndex());
-    return super.visitSub(ctx);
 
   }
 
@@ -83,7 +119,7 @@ public class UnusedLocalVariableDiagnostic extends AbstractVisitorDiagnostic {
 
     String variableName = ctx.getText();
 
-    if (moduleVariables.contains(variableName)) {
+    if (moduleVariables.contains(variableName) || subParam.contains(variableName)) {
       return ctx;
     }
 
