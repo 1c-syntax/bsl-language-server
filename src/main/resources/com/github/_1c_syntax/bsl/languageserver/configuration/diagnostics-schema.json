@@ -171,13 +171,13 @@
             "$id": "#/definitions/DeprecatedMessage"
         },
         "DeprecatedTypeManagedForm": {
-            "description": "Deprecated ManagedForm attribute",
+            "description": "Deprecated ManagedForm type",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Deprecated ManagedForm attribute",
+            "title": "Deprecated ManagedForm type",
             "$id": "#/definitions/DeprecatedTypeManagedForm"
         },
         "DuplicateRegion": {

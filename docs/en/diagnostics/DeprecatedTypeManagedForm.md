@@ -1,4 +1,4 @@
-# Deprecated ManagedForm attribute (DeprecatedTypeManagedForm)
+# Deprecated ManagedForm type (DeprecatedTypeManagedForm)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
