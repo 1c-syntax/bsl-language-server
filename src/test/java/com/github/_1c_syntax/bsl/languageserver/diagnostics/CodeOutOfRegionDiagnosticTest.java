@@ -67,7 +67,12 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(4, 0, 22, 0);
+      .hasRange(5, 0, 0)
+    ;
+    assertThat(diagnostics.get(0).getRelatedInformation())
+      .isNotNull()
+      .isNotEmpty();
+    assertThat(diagnostics.get(0).getRelatedInformation().size()).isEqualTo(4);
 
   }
 
@@ -78,7 +83,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(0, 0, 0, 23);
+      .hasRange(1, 0, 0);
 
   }
 
