@@ -31,16 +31,19 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
+import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -66,7 +69,16 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
     // если областей нет, то и смысла дальше анализировть тоже нет
     if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
-      diagnosticStorage.addDiagnostic(ctx);
+
+      List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);
+
+      var ctxStart = ctx.getStart();
+      diagnosticStorage.addDiagnostic(
+        Ranges.create(ctxStart.getLine(),
+          ctxStart.getCharPositionInLine(),
+          ctxStart.getLine(),
+          ctxStart.getCharPositionInLine()),
+        relatedInformation);
       return ctx;
     }
 
@@ -74,6 +86,52 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
     return super.visitFile(ctx);
 
+  }
+
+  private List<DiagnosticRelatedInformation> createRelatedInformations(BSLParser.FileContext ctx) {
+    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
+
+    // замечание будет на первой строке модуля, остальные блоки - в релейшенах
+
+    // 1. блок переменных
+    // 2. блок кода до методов
+    addChildrenToRelatedInformation(ctx, relatedInformation,
+      BSLParser.RULE_moduleVars, BSLParser.RULE_fileCodeBlockBeforeSub);
+
+    // 3. методы
+    documentContext.getMethods().stream()
+      .map(node ->
+        RelatedInformation.create(
+          documentContext.getUri(),
+          node.getSubNameRange(),
+          "+1"
+        )
+      )
+      .collect(Collectors.toCollection(() -> relatedInformation));
+
+    // 4. блок кода после методов
+    addChildrenToRelatedInformation(ctx, relatedInformation, BSLParser.RULE_fileCodeBlock);
+    return relatedInformation;
+  }
+
+  private void addChildrenToRelatedInformation(
+    BSLParser.FileContext ctx,
+    List<DiagnosticRelatedInformation> relatedInformation,
+    Integer... ruleIndex
+  ) {
+    Trees.getChildren(ctx, ruleIndex).stream()
+      .filter(node ->
+        node.getStart() != null
+          && node.getStop() != null
+          && (node.getStart().getLine() <= node.getStop().getLine())) // todo исправить костыль
+      .map(node ->
+        RelatedInformation.create(
+          documentContext.getUri(),
+          Ranges.create(node),
+          "+1"
+        )
+      )
+      .collect(Collectors.toCollection(() -> relatedInformation));
   }
 
   @Override

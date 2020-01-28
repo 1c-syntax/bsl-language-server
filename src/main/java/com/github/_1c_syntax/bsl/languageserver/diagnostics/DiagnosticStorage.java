@@ -178,6 +178,17 @@ public class DiagnosticStorage {
 
   public void addDiagnostic(
     Range range,
+    List<DiagnosticRelatedInformation> relatedInformation
+  ) {
+    addDiagnostic(
+      range,
+      diagnostic.getInfo().getMessage(),
+      relatedInformation
+    );
+  }
+
+  public void addDiagnostic(
+    Range range,
     String diagnosticMessage,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
