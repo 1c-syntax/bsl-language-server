@@ -1,4 +1,4 @@
-# Deprecated ManagedForm attribute (DeprecatedManagedForm)
+# Deprecated ManagedForm attribute (DeprecatedTypeManagedForm)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -23,12 +23,12 @@ Starting from the platform version 8.3.14, the "ManagedForm" type has been renam
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:DeprecatedManagedForm-off
-// BSLLS:DeprecatedManagedForm-on
+// BSLLS:DeprecatedTypeManagedForm-off
+// BSLLS:DeprecatedTypeManagedForm-on
 ```
 
 ### Parameter for config
 
 ```json
-"DeprecatedManagedForm": false
+"DeprecatedTypeManagedForm": false
 ```

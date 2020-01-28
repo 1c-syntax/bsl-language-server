@@ -30,9 +30,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class DeprecatedManagedFormDiagnosticTest extends AbstractDiagnosticTest<DeprecatedManagedFormDiagnostic> {
-  DeprecatedManagedFormDiagnosticTest() {
-    super(DeprecatedManagedFormDiagnostic.class);
+class DeprecatedTypeManagedFormDiagnosticTest extends AbstractDiagnosticTest<DeprecatedTypeManagedFormDiagnostic> {
+  DeprecatedTypeManagedFormDiagnosticTest() {
+    super(DeprecatedTypeManagedFormDiagnostic.class);
   }
 
   @Test

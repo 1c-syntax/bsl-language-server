@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
   }
 
 )
-public class DeprecatedManagedFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final Pattern paramPattern = Pattern.compile(
     "(УправляемаяФорма|ManagedForm)",
@@ -67,7 +67,7 @@ public class DeprecatedManagedFormDiagnostic extends AbstractVisitorDiagnostic i
 
   private boolean isTypeMethod = false;
 
-  public DeprecatedManagedFormDiagnostic(DiagnosticInfo info) {
+  public DeprecatedTypeManagedFormDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 

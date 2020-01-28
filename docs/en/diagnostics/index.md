@@ -29,8 +29,8 @@ Total: **77**
 | [CyclomaticComplexity](CyclomaticComplexity.md) | Cyclomatic complexity | Yes | Critical | Code smell | `brainoverload` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | Major | Error | `standard`<br/>`error` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
-| [DeprecatedManagedForm](DeprecatedManagedForm.md) | Deprecated ManagedForm attribute | Yes | Info | Code smell | `standard`<br/>`deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
+| [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Deprecated ManagedForm attribute | Yes | Info | Code smell | `standard`<br/>`deprecated` |
 | [DuplicateRegion](DuplicateRegion.md) | Duplicate regions | Yes | Info | Code smell | `standard` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br/>`suspicious` |
 | [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` |

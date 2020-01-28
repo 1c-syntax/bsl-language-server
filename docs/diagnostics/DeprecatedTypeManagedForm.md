@@ -1,4 +1,4 @@
-# Устаревшее использование "УправляемаяФорма" (DeprecatedManagedForm)
+# Устаревшее использование "УправляемаяФорма" (DeprecatedTypeManagedForm)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -24,12 +24,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:DeprecatedManagedForm-off
-// BSLLS:DeprecatedManagedForm-on
+// BSLLS:DeprecatedTypeManagedForm-off
+// BSLLS:DeprecatedTypeManagedForm-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"DeprecatedManagedForm": false
+"DeprecatedTypeManagedForm": false
 ```
