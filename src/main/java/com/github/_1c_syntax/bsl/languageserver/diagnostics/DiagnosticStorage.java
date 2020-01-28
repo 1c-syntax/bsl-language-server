@@ -180,12 +180,11 @@ public class DiagnosticStorage {
     Range range,
     List<DiagnosticRelatedInformation> relatedInformation
   ) {
-    diagnosticList.add(createDiagnostic(
-      diagnostic,
+    addDiagnostic(
       range,
       diagnostic.getInfo().getMessage(),
       relatedInformation
-    ));
+    );
   }
 
   public void addDiagnostic(
