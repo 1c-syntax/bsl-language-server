@@ -23,7 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,6 +48,33 @@ public class SmokyTest {
     BSLLSPLauncher.main(args);
 
     assertThat(true).isTrue(); // TODO что проверять?
-
   }
+
+  @Test
+  void testIdenticalRanges() {
+
+    var configuration = LanguageServerConfiguration.create();
+    var diagnosticSupplier = new DiagnosticSupplier(configuration);
+    var srcDir = "./src/test/resources/";
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    FileUtils.listFiles(Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
+      .forEach(filePath -> {
+        var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
+        var diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
+        diagnosticProvider.computeDiagnostics(documentContext).stream()
+          .filter(diagnostic ->
+            (diagnostic.getRange() != null
+                && diagnostic.getRange().getEnd().equals(diagnostic.getRange().getStart()))
+              || (diagnostic.getRelatedInformation() != null
+                && diagnostic.getRelatedInformation().stream()
+                  .anyMatch(relation -> relation.getLocation() != null
+                    && relation.getLocation().getRange() != null
+                    && relation.getLocation().getRange().getEnd().equals(relation.getLocation().getRange().getStart())))
+          )
+          .collect(Collectors.toCollection(() -> diagnostics));
+      });
+
+    assertThat(diagnostics).isEmpty();
+  }
+
 }

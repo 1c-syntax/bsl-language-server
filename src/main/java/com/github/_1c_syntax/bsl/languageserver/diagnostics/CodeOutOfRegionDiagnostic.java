@@ -117,10 +117,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     Integer... ruleIndex
   ) {
     Trees.getChildren(ctx, ruleIndex).stream()
-      .filter(node ->
-        node.getStart() != null
-          && node.getStop() != null
-          && (node.getStart().getLine() <= node.getStop().getLine())) // todo исправить костыль
+      .filter(node -> !node.getTokens().isEmpty())
       .map(node ->
         RelatedInformation.create(
           documentContext.getUri(),
