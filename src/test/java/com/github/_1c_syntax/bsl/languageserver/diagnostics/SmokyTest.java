@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
@@ -31,12 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,37 +87,26 @@ public class SmokyTest {
   @Test
   void testIAllDiagnostics() {
 
-    var tempDir = Files.createTempDirectory("bslls");
-    var tempCfg = Paths.get(tempDir.toAbsolutePath().toString(), "fake-bslls-cong.json").toFile();
-
-    Map<String, Boolean> diagnosticCodes = new HashMap<>();
-
-    // получим все возможные коды диагностик и положим в мапу "выключенным"
-    DiagnosticSupplier.getDiagnosticClasses().stream()
-      .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
-      .forEach(diagnosticCode -> diagnosticCodes.put(diagnosticCode, false));
-
-    Map<String, Map<File, Exception>> diagnosticErrors = new HashMap<>();
-
+    // прочитаем все файлы ресурсов
     var srcDir = "./src/test/resources/";
     var fixtures = FileUtils.listFiles(
       Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true);
 
-    // обработаем КАЖДУЮ дианостику отдельно на всех фикстурах
-    diagnosticCodes.forEach((key, value) -> {
+    // получим все возможные коды диагностик и положим в мапу "выключенным"
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = new HashMap<>();
+    DiagnosticSupplier.getDiagnosticClasses().stream()
+      .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
+      .forEach(diagnosticCode -> diagnostics.put(diagnosticCode, Either.forLeft(false)));
+
+    // обработаем КАЖДУЮ дианостику отдельно на всех файлах
+    Map<String, Map<File, Exception>> diagnosticErrors = new HashMap<>();
+    diagnostics.forEach((key, value) -> {
+
       // создадим новый конфиг, в котором включена только текущая диагностика
-      var diagnosticCodesCopy = new HashMap<>(diagnosticCodes);
-      diagnosticCodesCopy.put(key, true);
-      Map<String, Map<String, Boolean>> conf = new HashMap<>();
-      conf.put("diagnostics", diagnosticCodesCopy);
-      var objectMapper = new ObjectMapper();
-      try {
-        FileUtils.writeStringToFile(tempCfg, objectMapper.writeValueAsString(conf), StandardCharsets.UTF_8);
-      } catch (IOException e) {
-        // nop
-        return;
-      }
-      var configuration = LanguageServerConfiguration.create(tempCfg);
+      var diagnosticsCopy = new HashMap<>(diagnostics);
+      diagnosticsCopy.put(key, Either.forLeft(true));
+      var configuration = LanguageServerConfiguration.create();
+      configuration.setDiagnostics(diagnosticsCopy);
       var diagnosticSupplier = new DiagnosticSupplier(configuration);
 
       // для каждой фикстуры расчитаем диагностику
@@ -139,7 +125,6 @@ public class SmokyTest {
       }
     });
 
-    FileUtils.deleteDirectory(tempDir.toFile());
     assertThat(diagnosticErrors).isEmpty();
   }
 
