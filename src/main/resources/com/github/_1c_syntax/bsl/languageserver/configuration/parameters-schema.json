@@ -1216,6 +1216,16 @@
             "title": "Unused local method",
             "$id": "#/definitions/UnusedLocalMethod"
         },
+        "UnusedLocalVariable": {
+            "description": "Unused local variable",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused local variable",
+            "$id": "#/definitions/UnusedLocalVariable"
+        },
         "UnusedParameters": {
             "description": "Unused parameter",
             "default": true,
