@@ -31,10 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.Tree;
-import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -42,9 +39,7 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -80,19 +75,17 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
     if (!methodPattern.matcher(ctx.methodName().getText()).matches()) {
       return super.visitGlobalMethodCall(ctx);
     }
-    Optional<Tree> found = Trees.getChildren(ctx).stream().filter(tree -> tree instanceof BSLParser.DoCallContext).findFirst();
+    BSLParser.DoCallContext found = ctx.getChild(BSLParser.DoCallContext.class, 0);
 
-    if (found.isEmpty()) {
-      return super.visitGlobalMethodCall(ctx);
+    if (found == null) return super.visitGlobalMethodCall(ctx);
+
+    BSLParser.CallParamListContext callCtx = found.getChild(BSLParser.CallParamListContext.class, 0);
+
+    if (callCtx == null) return super.visitGlobalMethodCall(ctx);
+
+    if (paramPattern.matcher(callCtx.getText().replaceAll("\"", "")).matches()) {
+      diagnosticStorage.addDiagnostic(callCtx);
     }
-
-    Tree callCtx = found.get();
-    List<Tree> list = Trees.getChildren(callCtx).stream()
-      .filter(e -> e instanceof BSLParser.CallParamListContext)
-      .filter(e -> paramPattern.matcher(((BSLParser.CallParamListContext) e).getText().replaceAll("\"", "")).matches())
-      .collect(Collectors.toList());
-
-    list.forEach(e -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) e));
 
     return super.visitGlobalMethodCall(ctx);
   }
