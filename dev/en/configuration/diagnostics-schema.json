@@ -170,6 +170,16 @@
             "title": "Restriction on the use of deprecated \"Message\" method",
             "$id": "#/definitions/DeprecatedMessage"
         },
+        "DeprecatedTypeManagedForm": {
+            "description": "Deprecated ManagedForm type",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deprecated ManagedForm type",
+            "$id": "#/definitions/DeprecatedTypeManagedForm"
+        },
         "DuplicateRegion": {
             "description": "Duplicate regions",
             "default": null,

@@ -140,6 +140,9 @@
                 "DeprecatedMessage": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
                 },
+                "DeprecatedTypeManagedForm": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedTypeManagedForm"
+                },
                 "DuplicateRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/DuplicateRegion"
                 },
