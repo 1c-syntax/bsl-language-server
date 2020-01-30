@@ -31,7 +31,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.Tree;
+import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -39,7 +42,9 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -65,29 +70,31 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
-  private boolean isTypeMethod = false;
-
   public DeprecatedTypeManagedFormDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx ) {
-    if (methodPattern.matcher(ctx.methodName().getText()).matches()) {
-      isTypeMethod = true;
-    }
-    return super.visitGlobalMethodCall(ctx);
-  }
 
-  @Override
-  public ParseTree visitCallParamList(BSLParser.CallParamListContext ctx) {
-    if (isTypeMethod) {
-      if (paramPattern.matcher(ctx.getText().replaceAll("\"", "")).matches()) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-      isTypeMethod = false;
+    if (!methodPattern.matcher(ctx.methodName().getText()).matches()) {
+      return super.visitGlobalMethodCall(ctx);
     }
-    return super.visitCallParamList(ctx);
+    Optional<Tree> found = Trees.getChildren(ctx).stream().filter(tree -> tree instanceof BSLParser.DoCallContext).findFirst();
+
+    if (found.isEmpty()) {
+      return super.visitGlobalMethodCall(ctx);
+    }
+
+    Tree callCtx = found.get();
+    List<Tree> list = Trees.getChildren(callCtx).stream()
+      .filter(e -> e instanceof BSLParser.CallParamListContext)
+      .filter(e -> paramPattern.matcher(((BSLParser.CallParamListContext) e).getText().replaceAll("\"", "")).matches())
+      .collect(Collectors.toList());
+
+    list.forEach(e -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) e));
+
+    return super.visitGlobalMethodCall(ctx);
   }
 
   @Override
