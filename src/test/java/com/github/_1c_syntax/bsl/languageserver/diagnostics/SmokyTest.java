@@ -89,39 +89,30 @@ public class SmokyTest {
 
     // прочитаем все файлы ресурсов
     var srcDir = "./src/test/resources/";
-    var fixtures = FileUtils.listFiles(
-      Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true);
+    var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "выключенным"
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = new HashMap<>();
-    DiagnosticSupplier.getDiagnosticClasses().stream()
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = DiagnosticSupplier.getDiagnosticClasses().stream()
       .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
-      .forEach(diagnosticCode -> diagnostics.put(diagnosticCode, Either.forLeft(false)));
+      .collect(Collectors.toMap(
+        diagnosticCode -> diagnosticCode,
+        diagnosticCode -> Either.forLeft(true),
+        (a, b) -> b));
 
-    // обработаем КАЖДУЮ дианостику отдельно на всех файлах
-    Map<String, Map<File, Exception>> diagnosticErrors = new HashMap<>();
-    diagnostics.forEach((key, value) -> {
+    // создадим новый конфиг, в котором включим все диагностики
+    var configuration = LanguageServerConfiguration.create();
+    configuration.setDiagnostics(diagnostics);
+    var diagnosticSupplier = new DiagnosticSupplier(configuration);
 
-      // создадим новый конфиг, в котором включена только текущая диагностика
-      var diagnosticsCopy = new HashMap<>(diagnostics);
-      diagnosticsCopy.put(key, Either.forLeft(true));
-      var configuration = LanguageServerConfiguration.create();
-      configuration.setDiagnostics(diagnosticsCopy);
-      var diagnosticSupplier = new DiagnosticSupplier(configuration);
-
-      // для каждой фикстуры расчитаем диагностику
-      // если упадет, запомним файл и текст ошибки
-      Map<File, Exception> errors = new HashMap<>();
-      fixtures.forEach(filePath -> {
-        try {
-          (new DiagnosticProvider(diagnosticSupplier))
-            .computeDiagnostics(TestUtils.getDocumentContextFromFile(filePath.toString()));
-        } catch (Exception e) {
-          errors.put(filePath, e);
-        }
-      });
-      if (!errors.isEmpty()) {
-        diagnosticErrors.put(key, errors);
+    // для каждой фикстуры расчитаем диагностики
+    // если упадет, запомним файл и текст ошибки
+    Map<File, Exception> diagnosticErrors = new HashMap<>();
+    fixtures.forEach(filePath -> {
+      try {
+        (new DiagnosticProvider(diagnosticSupplier))
+          .computeDiagnostics(TestUtils.getDocumentContextFromFile(filePath.toString()));
+      } catch (Exception e) {
+        diagnosticErrors.put(filePath, e);
       }
     });
 
