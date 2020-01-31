@@ -75,7 +75,8 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
     if (!methodPattern.matcher(ctx.methodName().getText()).matches()) {
       return super.visitGlobalMethodCall(ctx);
     }
-    BSLParser.DoCallContext found = ctx.getChild(BSLParser.DoCallContext.class, 0);
+
+    BSLParser.DoCallContext found = ctx.doCall();
 
     if (found == null) return super.visitGlobalMethodCall(ctx);
 
