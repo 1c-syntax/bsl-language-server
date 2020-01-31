@@ -24,15 +24,21 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,17 +70,53 @@ public class SmokyTest {
         diagnosticProvider.computeDiagnostics(documentContext).stream()
           .filter(diagnostic ->
             (diagnostic.getRange() != null
-                && diagnostic.getRange().getEnd().equals(diagnostic.getRange().getStart()))
+              && diagnostic.getRange().getEnd().equals(diagnostic.getRange().getStart()))
               || (diagnostic.getRelatedInformation() != null
-                && diagnostic.getRelatedInformation().stream()
-                  .anyMatch(relation -> relation.getLocation() != null
-                    && relation.getLocation().getRange() != null
-                    && relation.getLocation().getRange().getEnd().equals(relation.getLocation().getRange().getStart())))
+              && diagnostic.getRelatedInformation().stream()
+              .anyMatch(relation -> relation.getLocation() != null
+                && relation.getLocation().getRange() != null
+                && relation.getLocation().getRange().getEnd().equals(relation.getLocation().getRange().getStart())))
           )
           .collect(Collectors.toCollection(() -> diagnostics));
       });
 
     assertThat(diagnostics).isEmpty();
+  }
+
+  @SneakyThrows
+  @Test
+  void testIAllDiagnostics() {
+
+    // прочитаем все файлы ресурсов
+    var srcDir = "./src/test/resources/";
+    var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
+
+    // получим все возможные коды диагностик и положим в мапу "выключенным"
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = DiagnosticSupplier.getDiagnosticClasses().stream()
+      .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
+      .collect(Collectors.toMap(
+        diagnosticCode -> diagnosticCode,
+        diagnosticCode -> Either.forLeft(true),
+        (a, b) -> b));
+
+    // создадим новый конфиг, в котором включим все диагностики
+    var configuration = LanguageServerConfiguration.create();
+    configuration.setDiagnostics(diagnostics);
+    var diagnosticSupplier = new DiagnosticSupplier(configuration);
+
+    // для каждой фикстуры расчитаем диагностики
+    // если упадет, запомним файл и текст ошибки
+    Map<File, Exception> diagnosticErrors = new HashMap<>();
+    fixtures.forEach(filePath -> {
+      try {
+        (new DiagnosticProvider(diagnosticSupplier))
+          .computeDiagnostics(TestUtils.getDocumentContextFromFile(filePath.toString()));
+      } catch (Exception e) {
+        diagnosticErrors.put(filePath, e);
+      }
+    });
+
+    assertThat(diagnosticErrors).isEmpty();
   }
 
 }
