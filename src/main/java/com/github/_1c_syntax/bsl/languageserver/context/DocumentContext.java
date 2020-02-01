@@ -28,9 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticCompl
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.VariableSymbolComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
 import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -80,6 +82,7 @@ public class DocumentContext {
     = new Lazy<>(this::computeSupportVariants, computeLock);
   private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
   private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
+  private Lazy<List<VariableSymbol>> variables = new Lazy<>(this::computeVariables, computeLock);
   private Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private Lazy<ComplexityData> cyclomaticComplexityData
@@ -152,6 +155,15 @@ public class DocumentContext {
     }
 
     return Optional.ofNullable(getNodeToMethodsMap().get(methodNode));
+  }
+
+  public List<VariableSymbol> getVariables() {
+    final List<VariableSymbol> variablesUnboxed = variables.getOrCompute();
+    if (!regionsAdjusted && !adjustingRegions) {
+      adjustingRegions = true;
+      adjustRegions();
+    }
+    return new ArrayList<>(variablesUnboxed);
   }
 
   public List<RegionSymbol> getRegions() {
@@ -332,6 +344,11 @@ public class DocumentContext {
   private List<MethodSymbol> computeMethods() {
     Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
     return methodSymbolComputer.compute();
+  }
+
+  private List<VariableSymbol> computeVariables() {
+    Computer<List<VariableSymbol>> variableSymbolComputer = new VariableSymbolComputer(this);
+    return  variableSymbolComputer.compute();
   }
 
   private Map<BSLParserRuleContext, MethodSymbol> computeNodeToMethodsMap() {
