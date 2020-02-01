@@ -43,16 +43,14 @@ class DocumentSymbolProviderTest {
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbol(documentContext);
 
-    assertThat(documentSymbols).hasSize(7);
+    assertThat(documentSymbols).hasSize(6);
 
     // global variables
     assertThat(documentSymbols)
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Variable))
-      .hasSize(3)
+      .hasSize(1)
       .extracting(Either::getRight)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(0, 6, 0, 7)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 6, 2, 7)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 9, 2, 10)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(8, 6, 8, 8)))
     ;
 
     // methods
@@ -60,9 +58,9 @@ class DocumentSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Method))
       .hasSize(3)
       .extracting(Either::getRight)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(4, 0, 5, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 11, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(13, 0, 14, 12)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(16, 0, 19, 14)))
       .anyMatch(documentSymbol -> documentSymbol.getChildren().size() == 3)
     ;
 
@@ -72,19 +70,19 @@ class DocumentSymbolProviderTest {
       .extracting(Either::getRight)
       .flatExtracting(DocumentSymbol::getChildren)
       .hasSize(3)
-      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(11, 10, 11, 11)))
-      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 10, 12, 11)))
-      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 12, 12, 13)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(17, 10, 17, 11)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(18, 10, 18, 11)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(18, 12, 18, 13)))
     ;
 
     // regions
     assertThat(documentSymbols)
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Namespace))
       .extracting(Either::getRight)
-      .hasSize(1)
+      .hasSize(2)
 
       .flatExtracting(DocumentSymbol::getChildren)
-      .hasSize(2)
+      .hasSize(5)
       .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Namespace))
       .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
 
@@ -92,7 +90,7 @@ class DocumentSymbolProviderTest {
       .flatExtracting(DocumentSymbol::getChildren)
       .hasSize(1)
       .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
-      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(23, 0, 25, 14)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(29, 0, 31, 14)))
     ;
 
   }
