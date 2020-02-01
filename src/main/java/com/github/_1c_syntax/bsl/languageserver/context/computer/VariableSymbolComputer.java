@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
@@ -60,13 +61,12 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
         var startNode = declaration.getStart();
         var stopNode = declaration.getStop();
-        var description = ""; // TODO: получить описание
 
         VariableSymbol variableSymbol = VariableSymbol.builder()
           .name(declaration.var_name().getText())
           .export(declaration.EXPORT_KEYWORD() != null)
           .node(moduleVar)
-          .description(description)
+          .description(findDescription(getStartIndexSearchComments(declaration)))
           .range(Ranges.create(startNode, stopNode))
           .region(findRegion(startNode, stopNode))
           .build();
@@ -93,6 +93,20 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .filter(regionSymbol -> regionSymbol.getStartLine() < startLine && regionSymbol.getEndLine() > endLine)
       .max(Comparator.comparingInt(RegionSymbol::getStartLine));
 
+  }
+
+  private List<Token> findDescription(int startIndex) {
+    // TODO: нужно ли парсить комментарии в отдельную структуру и использовать Optional?
+    return Trees.getComments(documentContext.getTokens(), startIndex, new ArrayList<>());
+  }
+
+  private int getStartIndexSearchComments(BSLParser.ModuleVarDeclarationContext declaration) {
+    var startTokenIndex = 0;
+    var parent = Trees.getAncestorByRuleIndex(declaration, BSLParser.RULE_moduleVar);
+    if (parent != null) {
+      startTokenIndex = parent.getStart().getTokenIndex();
+    }
+    return startTokenIndex;
   }
 
 }

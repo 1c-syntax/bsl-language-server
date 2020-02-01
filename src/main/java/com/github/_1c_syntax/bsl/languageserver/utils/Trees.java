@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -32,10 +34,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class Trees {
+
+  public static final Set<Integer> VALID_TOKEN_TYPES = Set.of(
+    BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
+    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
+    BSLParser.ANNOTATION_ATSERVER_SYMBOL,
+    BSLParser.ANNOTATION_CUSTOM_SYMBOL,
+    BSLParser.ANNOTATION_UKNOWN,
+    BSLParser.LINE_COMMENT,
+    BSLParser.WHITE_SPACE,
+    BSLParser.RULE_annotationParams
+  );
 
   private Trees() {
     // only statics
@@ -239,4 +255,45 @@ public final class Trees {
     return IntStream.range(0, t.getChildCount())
       .anyMatch(i -> nodeContains(t.getChild(i), index));
   }
+
+  /**
+   * Поиск комментариев в токенах до указанного индекса токета
+   *
+   * @param tokens - список токетов DocumentContext
+   * @param index  - текущий индекс токена
+   * @param lines  - список найденных токенов комментариев
+   * @return - список найденных комментариев lines
+   */
+  public static List<Token> getComments(List<Token> tokens, int index, List<Token> lines) {
+
+    if (index == 0) {
+      return lines;
+    }
+
+    Token previousToken = tokens.get(index - 1);
+    Token currentToken = tokens.get(index);
+
+    if (abortSearchComments(previousToken, currentToken)) {
+      return lines;
+    }
+
+    lines = getComments(tokens, previousToken.getTokenIndex(), lines);
+    int type = previousToken.getType();
+    if (type == BSLParser.LINE_COMMENT) {
+      lines.add(previousToken);
+    }
+    return lines;
+  }
+
+  private static boolean abortSearchComments(Token previousToken, Token currentToken) {
+    int type = previousToken.getType();
+    return !VALID_TOKEN_TYPES.contains(type) || isBlankLine(previousToken, currentToken);
+  }
+
+  private static boolean isBlankLine(Token previousToken, Token currentToken) {
+    return previousToken.getType() == BSLParser.WHITE_SPACE
+      && (previousToken.getTokenIndex() == 0
+      || (previousToken.getLine() + 1) != currentToken.getLine());
+  }
+
 }

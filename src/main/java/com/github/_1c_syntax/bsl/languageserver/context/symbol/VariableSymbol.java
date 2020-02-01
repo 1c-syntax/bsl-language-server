@@ -26,8 +26,10 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 
+import java.util.List;
 import java.util.Optional;
 
 @Value
@@ -36,7 +38,7 @@ import java.util.Optional;
 public class VariableSymbol implements Symbol {
   private final String name;
   private final boolean export;
-  private final String description;
+  private final List<Token> description;
   private final Optional<RegionSymbol> region;
   @NonFinal
   private BSLParserRuleContext node;
