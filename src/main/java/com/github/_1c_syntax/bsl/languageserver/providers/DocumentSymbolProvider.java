@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -74,6 +75,12 @@ public final class DocumentSymbolProvider {
     );
 
     List<DocumentSymbol> children = new ArrayList<>();
+
+    documentContext.getVariables().stream()
+      .filter(variableSymbol ->
+        variableSymbol.getRegion().isPresent() && variableSymbol.getRegion().get().equals(regionSymbol))
+      .forEach(variableSymbol -> addVariable(children, variableSymbol));
+
     regionSymbol.getChildren().forEach(childRegionSymbol -> addRegion(documentContext, children, childRegionSymbol));
 
     documentContext.getMethods().stream()
@@ -99,6 +106,16 @@ public final class DocumentSymbolProvider {
 
     documentSymbol.setChildren(subVariables);
 
+    symbols.add(documentSymbol);
+  }
+
+  private static void addVariable(Collection<DocumentSymbol> symbols, VariableSymbol variableSymbol){
+    var documentSymbol = new DocumentSymbol(
+      variableSymbol.getName(),
+      SymbolKind.Variable,
+      variableSymbol.getRange(),
+      variableSymbol.getRange()
+    );
     symbols.add(documentSymbol);
   }
 
@@ -131,20 +148,18 @@ public final class DocumentSymbolProvider {
   }
 
   private static List<DocumentSymbol> getGlobalVariables(DocumentContext documentContext) {
-    BSLParser.ModuleVarsContext moduleVarsContext = documentContext.getAst().moduleVars();
 
-    if (moduleVarsContext == null) {
-      return Collections.emptyList();
+    List<DocumentSymbol> children = new ArrayList<>();
+
+    var globalVariables = documentContext.getVariables().stream()
+      .filter(variableSymbol -> variableSymbol.getRegion().isEmpty())
+      .collect(Collectors.toList());
+
+    if (globalVariables.isEmpty()) {
+      return children;
     }
 
-    return moduleVarsContext.moduleVar().stream()
-      .flatMap(moduleVarContext -> moduleVarContext.moduleVarsList().moduleVarDeclaration().stream())
-      .map(moduleVarDeclarationContext -> new DocumentSymbol(
-        moduleVarDeclarationContext.var_name().getText(),
-        SymbolKind.Variable,
-        Ranges.create(moduleVarDeclarationContext),
-        Ranges.create(moduleVarDeclarationContext.var_name())
-      ))
-      .collect(Collectors.toList());
+    globalVariables.stream().forEach(variableSymbol -> addVariable(children, variableSymbol));
+    return children;
   }
 }
