@@ -44,11 +44,14 @@ public class TestUtils {
       StandardCharsets.UTF_8
     );
 
-    return new DocumentContext(Path.of(filePath).toAbsolutePath().toUri(), fileContent, new ServerContext());
+    return getDocumentContext(Path.of(filePath).toUri(), fileContent);
   }
 
-  @SneakyThrows
+  public static DocumentContext getDocumentContext(URI uri, String fileContent) {
+    return new DocumentContext(uri, fileContent, new ServerContext());
+  }
+
   public static DocumentContext getDocumentContext(String fileContent) {
-    return new DocumentContext(FAKE_DOCUMENT_URI, fileContent, new ServerContext());
+    return getDocumentContext(FAKE_DOCUMENT_URI, fileContent);
   }
 }

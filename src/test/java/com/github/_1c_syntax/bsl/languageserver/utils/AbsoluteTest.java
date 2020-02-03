@@ -21,48 +21,50 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
 
-public final class Absolute {
+import static org.assertj.core.api.Assertions.assertThat;
 
-  private Absolute() {
-    // Utility class
+class AbsoluteTest {
+
+  @Test
+  void testUriFromFile() {
+    // given
+    var file = new File("/fake.bsl");
+
+    // when
+    var uri = Absolute.uri(file.toURI());
+
+    // then
+    assertThat(uri).hasScheme("file");
+    assertThat(uri.getPath()).endsWith("fake.bsl");
   }
 
-  @SneakyThrows
-  public static URI uri(URI uri) {
-    if (!"file".equals(uri.getScheme())) {
-      return uri;
-    }
-    return path(uri).toUri();
+  @Test
+  void testUriFromUntitledSchema() {
+    // given
+    var uriString = "untitled:///fake.bsl";
+
+    // when
+    var uri = Absolute.uri(uriString);
+
+    // then
+    assertThat(uri).hasScheme("untitled");
+    assertThat(uri.getPath()).endsWith("fake.bsl");
   }
 
-  @SneakyThrows
-  public static URI uri(String uri) {
-    return uri(URI.create(uri));
+  @Test
+  void testUriFromUntitledFromVSC() {
+    // given
+    var uriString = "untitled:Untitled-1";
+
+    // when
+    var uri = Absolute.uri(uriString);
+
+    // then
+    assertThat(uri).hasScheme("untitled");
   }
 
-  @SneakyThrows
-  public static Path path(URI uri) {
-    return path(new File(uri));
-  }
-
-  @SneakyThrows
-  public static Path path(String path) {
-    return path(new File(path));
-  }
-
-  @SneakyThrows
-  public static Path path(Path path) {
-    return path(path.toFile());
-  }
-
-  @SneakyThrows
-  public static Path path(File file) {
-    return file.getCanonicalFile().toPath().toAbsolutePath();
-  }
 }
