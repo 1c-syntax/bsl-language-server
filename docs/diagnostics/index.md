@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **77**
+Общее количество: **78**
 
-* Дефект кода: **49**
+* Дефект кода: **50**
 * Уязвимость: **2**
 * Ошибка: **25**
 * Потенциальная уязвимость: **1**
@@ -76,6 +76,7 @@
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Таймауты при работе с внешними ресурсами | Да | Критичный | Ошибка | `unpredictable`<br/>`standard` |
 | [TooManyReturns](TooManyReturns.md) | Метод не должен содержать много возвратов | Нет | Незначительный | Дефект кода | `brainoverload` |
 | [TryNumber](TryNumber.md) | Приведение к числу в попытке | Да | Важный | Дефект кода | `standard` |
+| [Typo](Typo.md) | Опечатка | Да | Информационный | Дефект кода | `badpractice` |
 | [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Унарный плюс в конкатенации строк | Да | Блокирующий | Ошибка | `suspicious`<br/>`brainoverload` |
 | [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да | Критичный | Ошибка | `standard`<br/>`error` |
 | [UnreachableCode](UnreachableCode.md) | Недостижимый код | Да | Незначительный | Ошибка | `design`<br/>`suspicious` |

@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **77**
+Total: **78**
 
 * Error: **25**
-* Code smell: **49**
+* Code smell: **50**
 * Vulnerability: **2**
 * Security Hotspot: **1**
 
@@ -76,6 +76,7 @@ Total: **77**
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Timeouts working with external resources | Yes | Critical | Error | `unpredictable`<br/>`standard` |
 | [TooManyReturns](TooManyReturns.md) | Methods should not have too many return statements | No | Minor | Code smell | `brainoverload` |
 | [TryNumber](TryNumber.md) | Cast to number of try catch block | Yes | Major | Code smell | `standard` |
+| [Typo](Typo.md) | Typo | Yes | Info | Code smell | `badpractice` |
 | [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Unary Plus sign in string concatenation | Yes | Blocker | Error | `suspicious`<br/>`brainoverload` |
 | [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes | Critical | Error | `standard`<br/>`error` |
 | [UnreachableCode](UnreachableCode.md) | Unreachable Code | Yes | Minor | Error | `design`<br/>`suspicious` |

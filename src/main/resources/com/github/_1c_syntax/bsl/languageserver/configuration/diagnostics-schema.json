@@ -788,6 +788,16 @@
             "title": "Cast to number of try catch block",
             "$id": "#/definitions/TryNumber"
         },
+        "Typo": {
+            "description": "Typo",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Typo",
+            "$id": "#/definitions/Typo"
+        },
         "UnaryPlusInConcatenation": {
             "description": "Unary Plus sign in string concatenation",
             "default": null,

@@ -278,6 +278,9 @@
                 "TryNumber": {
                     "$ref": "diagnostics-schema.json#/definitions/TryNumber"
                 },
+                "Typo": {
+                    "$ref": "diagnostics-schema.json#/definitions/Typo"
+                },
                 "UnaryPlusInConcatenation": {
                     "$ref": "diagnostics-schema.json#/definitions/UnaryPlusInConcatenation"
                 },
