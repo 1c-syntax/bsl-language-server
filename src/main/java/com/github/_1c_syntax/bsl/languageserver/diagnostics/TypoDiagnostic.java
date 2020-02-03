@@ -31,12 +31,10 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.extern.slf4j.Slf4j;
-import lombok.extern.slf4j.XSlf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
-import org.languagetool.language.BritishEnglish;
 import org.languagetool.language.Russian;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
@@ -65,11 +63,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     List<RuleMatch> matches;
 
     String lang = info.getResourceString("diagnosticLanguage");
-    JLanguageTool langTool = null;
+    JLanguageTool langTool;
     if (lang.equals("en")) {
       langTool = new JLanguageTool(new AmericanEnglish());
     } else {
-      langTool = new JLanguageTool(new BritishEnglish());
+      langTool = new JLanguageTool(new Russian());
     }
 
     langTool.getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
