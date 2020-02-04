@@ -50,7 +50,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -95,22 +94,11 @@ public class DocumentContext {
     = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
-    final Path absolutePath = Absolute.path(uri);
-    this.uri = absolutePath.toUri();
+    this.uri = Absolute.uri(uri);
     this.content = content;
     this.context = context;
     this.tokenizer = new Tokenizer(content);
-
-    FileType fileTypeFromUri;
-    try {
-      fileTypeFromUri = FileType.valueOf(
-        FilenameUtils.getExtension(absolutePath.toString()).toUpperCase(Locale.ENGLISH)
-      );
-    } catch (IllegalArgumentException ignored) {
-      fileTypeFromUri = FileType.BSL;
-    }
-
-    fileType = fileTypeFromUri;
+    this.fileType = computeFileType(this.uri);
   }
 
   public ServerContext getServerContext() {
@@ -292,6 +280,24 @@ public class DocumentContext {
 
   private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
     return nodeToMethodsMap.getOrCompute();
+  }
+
+  private static FileType computeFileType(URI uri) {
+    String uriPath = uri.getPath();
+    if (uriPath == null) {
+      return FileType.BSL;
+    }
+
+    FileType fileTypeFromUri;
+    try {
+      fileTypeFromUri = FileType.valueOf(
+        FilenameUtils.getExtension(uriPath).toUpperCase(Locale.ENGLISH)
+      );
+    } catch (IllegalArgumentException ignored) {
+      fileTypeFromUri = FileType.BSL;
+    }
+
+    return fileTypeFromUri;
   }
 
   private String[] computeContentList() {
