@@ -23,7 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -36,7 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+@Slf4j
 public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
@@ -68,7 +72,20 @@ public final class DiagnosticProvider {
 
     List<Diagnostic> diagnostics =
       diagnosticSupplier.getDiagnosticInstances(documentContext).parallelStream()
-        .flatMap(diagnostic -> diagnostic.getDiagnostics(documentContext).stream())
+        .flatMap((BSLDiagnostic diagnostic) -> {
+          try {
+            return diagnostic.getDiagnostics(documentContext).stream();
+          } catch (RuntimeException e) {
+            String message = String.format(
+              "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
+              documentContext.getUri(),
+              diagnostic.getInfo().getCode()
+            );
+            LOGGER.error(message, e);
+
+            return Stream.empty();
+          }
+        })
         .filter((Diagnostic diagnostic) ->
           !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
         .collect(Collectors.toList());
