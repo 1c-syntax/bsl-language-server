@@ -78,11 +78,15 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
 
     BSLParser.DoCallContext found = ctx.doCall();
 
-    if (found == null) return super.visitGlobalMethodCall(ctx);
+    if (found == null) {
+      return super.visitGlobalMethodCall(ctx);
+    }
 
-    BSLParser.CallParamListContext callCtx = found.getChild(BSLParser.CallParamListContext.class, 0);
+    BSLParser.CallParamListContext callCtx = found.callParamList();
 
-    if (callCtx == null) return super.visitGlobalMethodCall(ctx);
+    if (callCtx == null) {
+      return super.visitGlobalMethodCall(ctx);
+    }
 
     if (paramPattern.matcher(callCtx.getText().replaceAll("\"", "")).matches()) {
       diagnosticStorage.addDiagnostic(callCtx);
