@@ -38,7 +38,7 @@ import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
-
+import org.languagetool.rules.spelling.SpellingCheckRule;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +58,13 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     super(info);
   }
 
+  private ArrayList<String> getWordsToIgnore() {
+    ArrayList<String> wordsToIgnore = new ArrayList<>();
+    wordsToIgnore.add("Знч");
+
+    return wordsToIgnore;
+  }
+
   @Override
   protected void check(DocumentContext documentContext) {
     List<RuleMatch> matches;
@@ -71,6 +78,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     }
 
     langTool.getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
+    ArrayList<String> wordsToIgnore = getWordsToIgnore();
+    langTool.getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     BSLParser.FileContext tree = documentContext.getAst();
     List<ParseTree> list = new ArrayList<>();

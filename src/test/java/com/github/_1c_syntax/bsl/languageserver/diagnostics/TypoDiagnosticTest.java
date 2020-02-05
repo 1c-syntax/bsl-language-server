@@ -38,10 +38,9 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-//    assertThat(diagnostics).hasSize(1);
-//    assertThat(diagnostics, true)
-//      .hasRange(6, 0, 6, 20);
-
-
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 13, 1, 21)
+      .hasRange(5, 8, 5, 22);
   }
 }
