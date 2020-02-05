@@ -43,6 +43,45 @@ class AbsoluteTest {
   }
 
   @Test
+  void testUNCURI() {
+    // given
+    var uriString = "file://server/c%24/fake.bsl";
+
+    // when
+    var uri = Absolute.uri(uriString);
+
+    // then
+    assertThat(uri)
+      .hasScheme("file")
+      .hasHost("server")
+    ;
+    assertThat(uri.getPath())
+      .endsWith("fake.bsl")
+      .contains("$")
+    ;
+  }
+
+  @Test
+  void testUNCWithPortURI() {
+    // given
+    var uriString = "file://server:1234/c%24/fake.bsl";
+
+    // when
+    var uri = Absolute.uri(uriString);
+
+    // then
+    assertThat(uri)
+      .hasScheme("file")
+      .hasHost("server")
+      .hasPort(1234)
+    ;
+    assertThat(uri.getPath())
+      .endsWith("fake.bsl")
+      .contains("$")
+    ;
+  }
+
+  @Test
   void testUriFromUntitledSchema() {
     // given
     var uriString = "untitled:///fake.bsl";
