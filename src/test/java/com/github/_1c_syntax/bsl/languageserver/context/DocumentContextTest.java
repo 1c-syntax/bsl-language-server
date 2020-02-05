@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -110,6 +111,32 @@ class DocumentContextTest {
         )
       )
     ;
+  }
+
+  @Test
+  void testUntitledSchema() {
+    // given
+    URI uri = URI.create("untitled:///fake.bsl");
+    String fileContent = "";
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(uri, fileContent);
+
+    // then
+    assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
+  }
+
+  @Test
+  void testUntitledSchemaFromVSC() {
+    // given
+    URI uri = URI.create("untitled:Untitled-1");
+    String fileContent = "";
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(uri, fileContent);
+
+    // then
+    assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
   }
 
   @SneakyThrows

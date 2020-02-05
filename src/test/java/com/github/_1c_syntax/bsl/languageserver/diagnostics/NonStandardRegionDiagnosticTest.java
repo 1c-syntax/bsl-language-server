@@ -59,6 +59,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     pathByModuleType.put(ModuleType.ExternalConnectionModule, "ExternalConnectionModule.bsl");
     pathByModuleType.put(ModuleType.FormModule, "Form/Module.bsl");
     pathByModuleType.put(ModuleType.CommonModule, "Module.bsl");
+    pathByModuleType.put(ModuleType.RecordSetModule, "RecordSetModule.bsl");
   }
 
   @Test
@@ -217,12 +218,32 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     ;
   }
 
+  @Test
+  void testRecordSetModule() throws IOException {
+
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.RecordSetModule));
+
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics, true)
+      .hasRange(28, 1, 32)
+      .hasRange(32, 1, 46)
+      .hasRange(36, 1, 63)
+      .hasRange(40, 1, 31)
+    ;
+  }
+
   private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
-    Path tempFile = Paths.get(tempDir.toAbsolutePath().toString(),
-      "fake", pathByModuleType.getOrDefault(moduleType, "Module.bsl"));
+    Path tempFile = Paths.get(
+      tempDir.toAbsolutePath().toString(),
+      "fake",
+      pathByModuleType.getOrDefault(moduleType, "Module.bsl")
+    );
 
     FileUtils.copyFile(testFile.toFile(), tempFile.toFile());
-    FileUtils.copyFile(CONFIGURATION_FILE_PATH, Paths.get(tempDir.toAbsolutePath().toString(), "Configuration.xml").toFile());
+    FileUtils.copyFile(
+      CONFIGURATION_FILE_PATH,
+      Paths.get(tempDir.toAbsolutePath().toString(), "Configuration.xml").toFile()
+    );
 
     return new DocumentContext(
       tempFile.toUri(),

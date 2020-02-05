@@ -34,28 +34,28 @@ public final class Absolute {
   }
 
   @SneakyThrows
-  public static URI uri(URI uri) {
-    return path(uri).toUri();
-  }
-
-  @SneakyThrows
   public static URI uri(String uri) {
     return uri(URI.create(uri));
   }
 
   @SneakyThrows
-  public static Path path(URI uri) {
-    return path(new File(uri));
+  public static URI uri(URI uri) {
+    return URI.create(uri.getScheme() + ":" + uri.getSchemeSpecificPart());
   }
 
   @SneakyThrows
   public static Path path(String path) {
-    return path(new File(path));
+    return path(Path.of(path));
+  }
+
+  @SneakyThrows
+  public static Path path(URI uri) {
+    return path(Path.of(uri(uri)));
   }
 
   @SneakyThrows
   public static Path path(Path path) {
-    return path(path.toUri());
+    return path(path.toFile());
   }
 
   @SneakyThrows

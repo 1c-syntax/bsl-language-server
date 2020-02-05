@@ -120,9 +120,16 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
         standardRegions.add(FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME);
         standardRegions.add(FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME);
         standardRegions.add(FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME);
+        standardRegions.add(INITIALIZE_REGION_NAME);
         break;
       case ObjectModule:
       case RecordSetModule:
+        standardRegions.add(VARIABLES_REGION_NAME);
+        standardRegions.add(PUBLIC_REGION_NAME);
+        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
+        standardRegions.add(INTERNAL_REGION_NAME);
+        standardRegions.add(INITIALIZE_REGION_NAME);
+        break;
       case ValueManagerModule:
         standardRegions.add(VARIABLES_REGION_NAME);
         standardRegions.add(PUBLIC_REGION_NAME);
@@ -159,11 +166,6 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
 
     // у всех типов модулей есть такая область
     standardRegions.add(PRIVATE_REGION_NAME);
-
-    if (moduleType == ModuleType.FormModule
-      || moduleType == ModuleType.ObjectModule) {
-      standardRegions.add(INITIALIZE_REGION_NAME);
-    }
     return standardRegions;
   }
 

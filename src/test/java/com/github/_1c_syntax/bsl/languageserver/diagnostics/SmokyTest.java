@@ -107,10 +107,10 @@ public class SmokyTest {
     // для каждой фикстуры расчитаем диагностики
     // если упадет, запомним файл и текст ошибки
     Map<File, Exception> diagnosticErrors = new HashMap<>();
+    var provider = new DiagnosticProvider(diagnosticSupplier);
     fixtures.forEach(filePath -> {
       try {
-        (new DiagnosticProvider(diagnosticSupplier))
-          .computeDiagnostics(TestUtils.getDocumentContextFromFile(filePath.toString()));
+        provider.computeDiagnostics(TestUtils.getDocumentContextFromFile(filePath.toString()));
       } catch (Exception e) {
         diagnosticErrors.put(filePath, e);
       }
