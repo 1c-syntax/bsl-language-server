@@ -65,29 +65,34 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
-  private boolean isTypeMethod = false;
-
   public DeprecatedTypeManagedFormDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx ) {
-    if (methodPattern.matcher(ctx.methodName().getText()).matches()) {
-      isTypeMethod = true;
-    }
-    return super.visitGlobalMethodCall(ctx);
-  }
 
-  @Override
-  public ParseTree visitCallParamList(BSLParser.CallParamListContext ctx) {
-    if (isTypeMethod) {
-      if (paramPattern.matcher(ctx.getText().replaceAll("\"", "")).matches()) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-      isTypeMethod = false;
+    if (!methodPattern.matcher(ctx.methodName().getText()).matches()) {
+      return super.visitGlobalMethodCall(ctx);
     }
-    return super.visitCallParamList(ctx);
+
+    BSLParser.DoCallContext found = ctx.doCall();
+
+    if (found == null) {
+      return super.visitGlobalMethodCall(ctx);
+    }
+
+    BSLParser.CallParamListContext callCtx = found.callParamList();
+
+    if (callCtx == null) {
+      return super.visitGlobalMethodCall(ctx);
+    }
+
+    if (paramPattern.matcher(callCtx.getText().replaceAll("\"", "")).matches()) {
+      diagnosticStorage.addDiagnostic(callCtx);
+    }
+
+    return super.visitGlobalMethodCall(ctx);
   }
 
   @Override
