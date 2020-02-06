@@ -31,8 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolCom
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
-import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.utils.Lazy;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
