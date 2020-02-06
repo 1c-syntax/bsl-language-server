@@ -246,7 +246,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     );
 
     return new DocumentContext(
-      tempFile.toUri(),
+      tempFile.toRealPath().toUri(),
       FileUtils.readFileToString(tempFile.toFile(), StandardCharsets.UTF_8),
       new ServerContext(tempDir.toRealPath())
     );
