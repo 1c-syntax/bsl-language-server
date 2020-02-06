@@ -30,7 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.utils.Absolute;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;

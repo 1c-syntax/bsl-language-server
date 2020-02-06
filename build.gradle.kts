@@ -100,7 +100,8 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
 
-    implementation("com.github.1c-syntax:mdclasses:0.2.2")
+    implementation("com.github.1c-syntax", "utils", "0.2.0")
+    implementation("com.github.1c-syntax", "mdclasses", "0.2.4")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 

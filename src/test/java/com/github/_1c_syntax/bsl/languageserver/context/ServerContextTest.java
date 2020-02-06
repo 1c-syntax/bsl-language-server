@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;

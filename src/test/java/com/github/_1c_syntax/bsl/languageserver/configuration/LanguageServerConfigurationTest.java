@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

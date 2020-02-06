@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
