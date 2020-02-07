@@ -41,6 +41,7 @@ import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.spelling.SpellingCheckRule;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -59,10 +60,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   private ArrayList<String> getWordsToIgnore() {
-    ArrayList<String> wordsToIgnore = new ArrayList<>();
-    wordsToIgnore.add("Знч");
-
-    return wordsToIgnore;
+    String exceptions = info.getResourceString("diagnosticExceptions");
+    return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
   @Override
