@@ -107,6 +107,9 @@
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
+                "CodeBlockBeforeSub": {
+                    "$ref": "diagnostics-schema.json#/definitions/CodeBlockBeforeSub"
+                },
                 "CodeOutOfRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/CodeOutOfRegion"
                 },
