@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -29,12 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
-import lombok.val;
-import org.antlr.v4.runtime.tree.ParseTree;
+
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -47,48 +45,30 @@ import java.util.regex.Pattern;
   }
 
 )
-public class FormDataToValueDiagnostic extends AbstractVisitorDiagnostic {
+public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
   private static final Pattern MESSAGE_PATTERN = Pattern.compile(
     "ДанныеФормыВЗначение|FormDataToValue",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
-  private static final Pattern DIRECTIVE_PATTERN = Pattern.compile(
-    "&НаСервереБезКонтекста|&НаКлиентеНаСервереБезКонтекста|&AtServerNoContext|&AtClientAtServerNoContext",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
-
   public FormDataToValueDiagnostic(DiagnosticInfo info) {
-    super(info);
+    super(info, MESSAGE_PATTERN);
   }
 
   @Override
-  public ParseTree visitSub(BSLParser.SubContext ctx) {
+  protected boolean checkGlobalMethodCall(GlobalMethodCallContext ctx) {
+    var parentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
+    var compileList = new ArrayList<>(Trees.findAllRuleNodes(parentNode, BSLParser.RULE_compilerDirective));
 
-    Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
-    val directivesList = new ArrayList<ParseTree>(Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective));
+    if (compileList.isEmpty()
+      || (((BSLParser.CompilerDirectiveContext) compileList.get(0)).getStop().getType() != BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+      && ((BSLParser.CompilerDirectiveContext) compileList.get(0)).getStop().getType() != BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL)) {
 
-    if (methodSymbol.isPresent()
-      && (directivesList.isEmpty() || !DIRECTIVE_PATTERN.matcher(directivesList.get(0).getText()).matches())) {
-
-      val subNode = methodSymbol.get().getNode();
-      Trees.findAllRuleNodes(subNode, BSLParser.RULE_globalMethodCall).stream()
-        .map(GlobalMethodCallContext.class::cast)
-        .filter(node -> MESSAGE_PATTERN.matcher(node.methodName().getText()).matches()).forEach(node -> diagnosticStorage.addDiagnostic(node.methodName()));
+      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
     }
 
-    return super.visitSub(ctx);
-  }
-
-  @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-
-    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
-    }
-
-    return super.visitMethodCall(ctx);
+    return false;
   }
 
 }
