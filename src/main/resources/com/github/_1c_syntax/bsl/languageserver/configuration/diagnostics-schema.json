@@ -758,6 +758,14 @@
                 "object"
             ],
             "title": "Timeouts working with external resources",
+            "properties": {
+                "analyzingMailZeroTimeout": {
+                    "description": "Analyze the timeout for \"InternetMailProfile\"",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Analyze the timeout for \"InternetMailProfile\""
+                }
+            },
             "$id": "#/definitions/TimeoutsInExternalResources"
         },
         "TooManyReturns": {

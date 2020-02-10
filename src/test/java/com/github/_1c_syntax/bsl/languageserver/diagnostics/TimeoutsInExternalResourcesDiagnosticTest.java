@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -208,4 +209,27 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
   }
 
+  @Test
+  void testConfigure() {
+
+    Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
+    configuration.put("analyzingMailZeroTimeout", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics).hasSize(6);
+
+    // check ranges
+    assertThat(diagnostics, true)
+      .hasRange(3, 20, 3, 75)
+      .hasRange(5, 20, 5, 92)
+      .hasRange(9, 18, 9, 72)
+      .hasRange(13, 16, 13, 80)
+      .hasRange(21, 21, 21, 65)
+      .hasRange(71, 26, 71, 114)
+    ;
+
+  }
 }
