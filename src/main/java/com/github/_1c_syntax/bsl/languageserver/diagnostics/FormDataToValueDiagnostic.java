@@ -58,7 +58,7 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
   @Override
   protected boolean checkGlobalMethodCall(GlobalMethodCallContext ctx) {
-    var parentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
+    var parentNode = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
 
     if (parentNode == null) {
       return false;
@@ -66,10 +66,10 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
     var compileList = new ArrayList<>();
 
-    if (((BSLParser.SubContext) parentNode).procedure() == null) {
-      compileList.addAll(((BSLParser.SubContext) parentNode).function().funcDeclaration().compilerDirective());
+    if (parentNode.procedure() == null) {
+      compileList.addAll(parentNode.function().funcDeclaration().compilerDirective());
     } else {
-      compileList.addAll(((BSLParser.SubContext) parentNode).procedure().procDeclaration().compilerDirective());
+      compileList.addAll(parentNode.procedure().procDeclaration().compilerDirective());
     }
 
     if (compileList.isEmpty()
