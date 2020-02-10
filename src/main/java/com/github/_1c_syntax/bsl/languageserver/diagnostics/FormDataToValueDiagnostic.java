@@ -59,7 +59,18 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
   @Override
   protected boolean checkGlobalMethodCall(GlobalMethodCallContext ctx) {
     var parentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
-    var compileList = new ArrayList<>(Trees.findAllRuleNodes(parentNode, BSLParser.RULE_compilerDirective));
+
+    if (parentNode == null) {
+      return false;
+    }
+
+    var compileList = new ArrayList<>();
+
+    if (((BSLParser.SubContext) parentNode).procedure() == null) {
+      compileList.addAll(((BSLParser.SubContext) parentNode).function().funcDeclaration().compilerDirective());
+    } else {
+      compileList.addAll(((BSLParser.SubContext) parentNode).procedure().procDeclaration().compilerDirective());
+    }
 
     if (compileList.isEmpty()
       || (((BSLParser.CompilerDirectiveContext) compileList.get(0)).getStop().getType() != BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL

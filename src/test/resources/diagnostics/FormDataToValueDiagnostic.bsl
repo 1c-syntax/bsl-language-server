@@ -4,9 +4,9 @@
 КонецПроцедуры
 
 &НаСервере
-Процедура Тест2()
+Функция Тест2()
     ДФ = ДанныеФормыВЗначение(Объект, Тип("ТаблицаЗначений")); // Срабатывание здесь
-КонецПроцедуры
+КонецФункции
 
 &НаСервереБезКонтекста
 Процедура Тест2()
@@ -23,6 +23,6 @@ Procedure Test()
     FD = Form.FormDataToValue(Object, Type("ValueTable")); // срабатывание здесь
 EndProcedure
 
-Procedure Test2()
+Function Test2()
     FormDataToValue(Object, Type("ValueTable")); // срабатывание здесь
-EndProcedure
+EndFunction
