@@ -41,9 +41,9 @@ class FormDataToValueDiagnosticTest extends AbstractDiagnosticTest<FormDataToVal
     assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(2, 15, 2, 35)
-      .hasRange(6, 9, 6, 29)
-      .hasRange(11, 14, 11, 29)
-      .hasRange(15, 4, 15, 19);
+      .hasRange(7, 9, 7, 29)
+      .hasRange(22, 14, 22, 29)
+      .hasRange(26, 4, 26, 19);
 
   }
 }
