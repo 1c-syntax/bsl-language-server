@@ -32,7 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -64,17 +64,17 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
       return false;
     }
 
-    var compileList = new ArrayList<>();
+    List<? extends BSLParser.CompilerDirectiveContext> compileList;
 
     if (parentNode.procedure() == null) {
-      compileList.addAll(parentNode.function().funcDeclaration().compilerDirective());
+      compileList = parentNode.function().funcDeclaration().compilerDirective();
     } else {
-      compileList.addAll(parentNode.procedure().procDeclaration().compilerDirective());
+      compileList = parentNode.procedure().procDeclaration().compilerDirective();
     }
 
     if (compileList.isEmpty()
-      || (((BSLParser.CompilerDirectiveContext) compileList.get(0)).getStop().getType() != BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
-      && ((BSLParser.CompilerDirectiveContext) compileList.get(0)).getStop().getType() != BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL)) {
+      || (compileList.get(0).getStop().getType() != BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+      && compileList.get(0).getStop().getType() != BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL)) {
 
       return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
     }
