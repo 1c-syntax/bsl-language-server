@@ -213,7 +213,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
   void testConfigure() {
 
     Map<String, Object> configuration = diagnosticInstance.info.getDefaultConfiguration();
-    configuration.put("analyzingMailZeroTimeout", false);
+    configuration.put("analyzeInternetMailProfileZeroTimeout", false);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();

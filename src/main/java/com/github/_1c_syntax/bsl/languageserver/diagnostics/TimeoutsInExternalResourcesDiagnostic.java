@@ -56,9 +56,13 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
   private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^.(Таймаут|Timeout)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final String REGEX_NEW_EXPRESSION = "FTPСоединение|FTPConnection|HTTPСоединение|" +
-    "HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy";
-  private static final String REGEX_NEW_EXPRESSION_MAIL = "ИнтернетПочтовыйПрофиль|InternetMailProfile";
+  private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
+    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern PATTERN_NEW_EXPRESSION_WITH_MAIL = Pattern.compile(
+    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy" +
+      "|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final boolean ANALYZING_MAIL = true;
 
@@ -70,21 +74,18 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     type = Boolean.class,
     defaultValue = "" + ANALYZING_MAIL
   )
-  private boolean analyzingMailZeroTimeout = ANALYZING_MAIL;
-  private Pattern patternNewExpression = makePatternNewExpression(analyzingMailZeroTimeout);
+  private boolean analyzeInternetMailProfileZeroTimeout = ANALYZING_MAIL;
 
   public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
-  private static Pattern makePatternNewExpression(boolean analyzingMail) {
-    var regexString = REGEX_NEW_EXPRESSION;
-    if (analyzingMail) {
-      regexString += "|" + REGEX_NEW_EXPRESSION_MAIL;
+  private Pattern getPatternNewExpression() {
+    if (analyzeInternetMailProfileZeroTimeout) {
+      return PATTERN_NEW_EXPRESSION_WITH_MAIL;
+    } else {
+      return PATTERN_NEW_EXPRESSION;
     }
-    return Pattern.compile(
-      "^(" + regexString + ")",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
   private static String getVariableName(BSLParser.StatementContext statement) {
@@ -103,7 +104,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     if (typeNameContext == null) {
       return false;
     }
-    return patternNewExpression.matcher(typeNameContext.getText()).find();
+    return getPatternNewExpression().matcher(typeNameContext.getText()).find();
   }
 
   private static boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
@@ -210,9 +211,8 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     if (configuration == null) {
       return;
     }
-    analyzingMailZeroTimeout =
-      (boolean) configuration.getOrDefault("analyzingMailZeroTimeout", ANALYZING_MAIL);
-    patternNewExpression = makePatternNewExpression(analyzingMailZeroTimeout);
+    analyzeInternetMailProfileZeroTimeout =
+      (boolean) configuration.getOrDefault("analyzeInternetMailProfileZeroTimeout", ANALYZING_MAIL);
   }
 
   @Override
