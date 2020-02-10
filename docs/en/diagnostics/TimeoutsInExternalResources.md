@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `analyzingMailZeroTimeout` | `Boolean` | ```Analyze the timeout for "InternetMailProfile"``` | ```true``` |
+| `analyzeInternetMailProfileZeroTimeout` | `Boolean` | ```Analyze the timeout for "InternetMailProfile"``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -67,6 +67,6 @@ HTTPConnection.Timeout = 1;
 
 ```json
 "TimeoutsInExternalResources": {
-    "analyzingMailZeroTimeout": true
+    "analyzeInternetMailProfileZeroTimeout": true
 }
 ```

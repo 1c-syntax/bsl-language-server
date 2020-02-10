@@ -8,7 +8,7 @@
 
 | Имя | Тип | Описание | Значение по умолчанию |
 | :-: | :-: | :-- | :-: |
-| `analyzingMailZeroTimeout` | `Булево` | ```Анализировать таймаут у "ИнтернетПочтовыйПрофиль"``` | ```true``` |
+| `analyzeInternetMailProfileZeroTimeout` | `Булево` | ```Анализировать таймаут у "ИнтернетПочтовыйПрофиль"``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -69,6 +69,6 @@ HTTPСоединение.Таймаут = 1;
 
 ```json
 "TimeoutsInExternalResources": {
-    "analyzingMailZeroTimeout": true
+    "analyzeInternetMailProfileZeroTimeout": true
 }
 ```
