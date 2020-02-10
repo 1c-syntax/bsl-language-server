@@ -243,7 +243,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     Token previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
-      && patternNotSpace.matcher(previousToken.getText()).matches();
+      && patternNotSpace.matcher(previousToken.getText()).find();
   }
 
   private boolean noSpaceRight(List<Token> tokens, Token t) {
@@ -263,7 +263,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       if (!Boolean.TRUE.equals(allowMultipleCommas)
         || t.getType() != BSLLexer.COMMA
         || nextToken.getType() != BSLLexer.COMMA) {
-        return patternNotSpace.matcher(nextToken.getText()).matches();
+        return patternNotSpace.matcher(nextToken.getText()).find();
       }
     }
     return false;
@@ -282,8 +282,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     int currentIndex = t.getTokenIndex() - 1;
     while (currentIndex > 0) {
 
-      if (patternNotSpace.matcher(tokens.get(currentIndex).getText()).matches()) {
-        return checkChar.matcher(tokens.get(currentIndex).getText()).matches();
+      if (patternNotSpace.matcher(tokens.get(currentIndex).getText()).find()) {
+        return checkChar.matcher(tokens.get(currentIndex).getText()).find();
       }
 
       currentIndex--;
