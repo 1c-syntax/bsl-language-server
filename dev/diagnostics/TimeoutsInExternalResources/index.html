@@ -339,27 +339,34 @@
       
         <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
-    Описание диагностики
+    Параметры
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
-    Примеры
+    Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
-    Источники
+    Примеры
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
+    Источники
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     Сниппеты
   </a>
   
@@ -367,14 +374,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     Экранирование кода
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     Параметр конфигурационного файла
   </a>
   
@@ -427,10 +434,30 @@
 </tr>
 </tbody>
 </table>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="left">Описание</th>
+<th align="center">Значение по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>analyzeInternetMailProfileZeroTimeout</code></td>
+<td align="center"><code>Булево</code></td>
+<td align="left"><code>Анализировать таймаут у "ИнтернетПочтовыйПрофиль"</code></td>
+<td align="center"><code>true</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>При работе с внешними ресурсами с помощью объектов WSОпределения, WSПрокси, HTTPСоединение, FTPСоединение, ИнтернетПочтовыйПрофиль следует задавать таймаут – предельное время ожидания выполнения операции. В противном случае, в результате бесконечного ожидания программа зависнет или часть функционала программы станет недоступна.</p>
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>При работе с внешними ресурсами с помощью объектов WSОпределения, WSПрокси, HTTPСоединение, FTPСоединение следует задавать таймаут – предельное время ожидания выполнения операции. В противном случае, в результате бесконечного ожидания программа зависнет или часть функционала программы станет недоступна.<br />
+Для ИнтернетПочтовыйПрофиль платформа устанавливает значение таймаута по умолчанию в 30 секунд, но, несмотря на это, стоит явно указывать значение таймаута при использовании.</p>
 <p>Установка таймаута является защитой от целого ряда внешних факторов:</p>
 <ul>
 <li>нестабильного подключения к Интернету, когда регулярно происходит прерывание связи, и система не может получить цельный ответ сервера, к которому выполняется подключение;</li>
@@ -438,7 +465,7 @@
 <li>неправильной настройки прокси-сервера;</li>
 <li>ненадежной работы веб-сервера из-за возросшей нагрузки или некорректной работы скриптов.</li>
 </ul>
-<h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">HTTPСоединение</span><span class="p">(</span><span class="s1">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span>
 </code></pre></div>
@@ -460,21 +487,24 @@
 </code></pre></div>
 
 
-<h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:748:hdoc">Таймауты при работе с внешними ресурсами</a></li>
+<li><a href="https://its.1c.ru/db/metod8dev/content/2358/hdoc">У ИнтернетПочтовыйПрофиль таймаут по умолчанию есть</a></li>
 </ul>
-<h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
-<h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TimeoutsInExternalResources-off</span>
 <span class="c c-Singleline">// BSLLS:TimeoutsInExternalResources-on</span>
 </code></pre></div>
 
 
-<h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;TimeoutsInExternalResources&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;TimeoutsInExternalResources&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;analyzeInternetMailProfileZeroTimeout&quot;</span><span class="p">:</span> <span class="kc">true</span>
+<span class="p">}</span>
 </code></pre></div>
                 
                   
