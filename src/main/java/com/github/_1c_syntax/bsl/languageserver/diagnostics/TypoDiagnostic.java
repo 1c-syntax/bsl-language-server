@@ -98,7 +98,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
         for (String s : arr) {
           if (!isTypo) {
             matches = langTool.check(s);
-            if (!matches.isEmpty()) {
+            if (!matches.isEmpty() && !matches.get(0).getSuggestedReplacements().isEmpty()) {
               diagnosticStorage.addDiagnostic((BSLParserRuleContext) element.getParent(), info.getMessage(element.getText().replaceAll("\"", "")));
               isTypo = true;
             }
