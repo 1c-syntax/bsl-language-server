@@ -64,13 +64,10 @@ public class DiagnosticSupplier {
 
   public List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext) {
 
-    Map<SupportConfiguration, SupportVariant> supportVariants = documentContext.getSupportVariants();
-    var moduleSupportVariant = supportVariants.values().stream()
-      .max(Comparator.naturalOrder())
-      .orElse(SupportVariant.NONE);
+
     var configuredSkipSupport = configuration.getComputeDiagnosticsSkipSupport();
 
-    if (needToComputeDiagnostics(moduleSupportVariant, configuredSkipSupport)) {
+    if (needToComputeDiagnostics(documentContext, configuredSkipSupport)) {
       FileType fileType = documentContext.getFileType();
       CompatibilityMode compatibilityMode = documentContext
         .getServerContext()
@@ -185,10 +182,19 @@ public class DiagnosticSupplier {
   }
 
   private static boolean needToComputeDiagnostics(
-    SupportVariant moduleSupportVariant,
+    DocumentContext documentContext,
     ComputeDiagnosticsSkipSupport configuredSkipSupport
   ) {
-    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.NEVER || moduleSupportVariant == SupportVariant.NONE) {
+    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.NEVER) {
+      return true;
+    }
+
+    Map<SupportConfiguration, SupportVariant> supportVariants = documentContext.getSupportVariants();
+    var moduleSupportVariant = supportVariants.values().stream()
+      .max(Comparator.naturalOrder())
+      .orElse(SupportVariant.NONE);
+
+    if (moduleSupportVariant == SupportVariant.NONE) {
       return true;
     }
 
