@@ -759,7 +759,7 @@
             ],
             "title": "Timeouts working with external resources",
             "properties": {
-                "analyzingMailZeroTimeout": {
+                "analyzeInternetMailProfileZeroTimeout": {
                     "description": "Analyze the timeout for \"InternetMailProfile\"",
                     "default": true,
                     "type": "boolean",
