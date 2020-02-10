@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.2">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#bsl-language-server-configuration" tabindex="1" class="md-skip">
+      <a href="#bsl-language-server-configuration" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,9 +123,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" aria-label="BSL Language Server Dev" class="md-header-nav__button md-logo">
           
-            <img src="../../assets/images/logo.png" width="24" height="24">
+            <img alt="logo" src="../../assets/images/logo.png" width="24" height="24">
           
         </a>
       </div>
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -217,7 +217,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo">
       
-        <img src="../../assets/images/logo.png" width="48" height="48">
+        <img alt="logo" src="../../assets/images/logo.png" width="48" height="48">
       
     </a>
     BSL Language Server Dev
@@ -401,7 +401,7 @@
 <tr>
 <td><code>computeDiagnosticsTrigger</code></td>
 <td><code>String</code></td>
-<td>Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br><em> <code>onType</code> -when editing a file (online) <strong><em>on large files can significantly slow down editing </em></strong><br></em> <code>onSave</code> - when saving a file (<em>default</em>)<br>* <code>never</code> - analysis will not be performed</td>
+<td>Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br><em> <code>onType</code> -when editing a file (online) </em><strong>on large files can significantly slow down editing </strong><em><br></em> <code>onSave</code> - when saving a file (<em>default</em>)<br>* <code>never</code> - analysis will not be performed</td>
 </tr>
 <tr>
 <td><code>computeDiagnosticsSkipSupport</code></td>
@@ -411,7 +411,7 @@
 <tr>
 <td><code>traceLog</code></td>
 <td><code>String</code></td>
-<td>To log all requests <em>(incoming and outgoing)</em> between <strong>BSL Language Server</strong> and <strong>Language Client</strong>  from used editor/IDE. this parameter sets log file path. The path can set either absolute or relative <em>(from project root)</em>, by default the value is not set.<br><br><strong>WARNING</strong><br><br><em> When starting <strong>BSL Language Server</strong> overwrites this file <br></em> Speed of interaction between client and server <strong>DRAMATICALLY REDUCED</strong></td>
+<td>To log all requests <em>(incoming and outgoing)</em> between <strong>BSL Language Server</strong> and <strong>Language Client</strong>  from used editor/IDE. this parameter sets log file path. The path can set either absolute or relative <em>(from project root)</em>, by default the value is not set.<br><br><strong>WARNING</strong><br><br><em> When starting </em><em>BSL Language Server</em><em> overwrites this file <br></em> Speed of interaction between client and server <strong>DRAMATICALLY REDUCED</strong></td>
 </tr>
 <tr>
 <td><code>diagnostics</code></td>
@@ -421,8 +421,8 @@
 </tbody>
 </table>
 <p>You can use the following JSON schema to make it easier to compile and edit a configuration file:</p>
-<div class="codehilite"><pre><span></span><span class="c">https://1c-syntax.github.io/bsl-language-server/configuration/schema.json</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="c">https://1c-syntax.github.io/bsl-language-server/configuration/schema.json</span>
+</code></pre></div>
 
 
 <h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">Link</a></h2>
@@ -432,7 +432,7 @@
 <li>Changes the diagnostic setting for <a href="../../diagnostics/LineLength/">LineLength - Line Length limit</a>, set the limit for the length of a string to 140 characters;</li>
 <li>Disable <a href="../../diagnostics/MethodSize/">MethodSize - Method size restriction{/a0 } diagnostic.</a></li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
   <span class="nt">&quot;diagnosticLanguage&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
   <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -442,7 +442,7 @@
     <span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span> <span class="kc">false</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
                 
                   
                 
@@ -466,18 +466,18 @@
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
   <div class="md-footer-social">
     <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/1c-syntax" class="md-footer-social__link fa fa-github"></a>
+      <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github" class="md-footer-social__link fa fa-github"></a>
     
-      <a href="https://t.me/bsl_language_server" class="md-footer-social__link fa fa-telegram"></a>
+      <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="telegram" class="md-footer-social__link fa fa-telegram"></a>
     
   </div>
 
@@ -487,7 +487,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.808e90bb.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
         
         

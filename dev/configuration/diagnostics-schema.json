@@ -24,6 +24,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeBlockBeforeSub": {
+            "description": "Method definitions must be placed before the module body operators",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Method definitions must be placed before the module body operators",
+            "$id": "#/definitions/CodeBlockBeforeSub"
+        },
         "CodeOutOfRegion": {
             "description": "Code out of region",
             "default": null,
