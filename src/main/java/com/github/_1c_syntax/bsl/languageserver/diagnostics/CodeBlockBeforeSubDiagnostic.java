@@ -44,7 +44,10 @@ public class CodeBlockBeforeSubDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
-    diagnosticStorage.addDiagnostic(ctx);
+    // todo надо править парсер ибо данный узел есть даже когда его нет. ниже попытка обойти это
+    if(!ctx.getTokens().isEmpty()) {
+      diagnosticStorage.addDiagnostic(ctx);
+    }
     return ctx;
   }
 }
