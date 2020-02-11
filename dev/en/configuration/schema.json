@@ -302,6 +302,9 @@
                 "UsingCancelParameter": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingCancelParameter"
                 },
+                "UsingExternalCodeTools": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingExternalCodeTools"
+                },
                 "UsingFindElementByString": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingFindElementByString"
                 },

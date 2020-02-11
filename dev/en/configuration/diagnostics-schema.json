@@ -876,6 +876,16 @@
             "title": "Using parameter \"Cancel\"",
             "$id": "#/definitions/UsingCancelParameter"
         },
+        "UsingExternalCodeTools": {
+            "description": "Using external code tools",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using external code tools",
+            "$id": "#/definitions/UsingExternalCodeTools"
+        },
         "UsingFindElementByString": {
             "description": "Using FindByName and FindByCode",
             "default": null,
