@@ -33,16 +33,21 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
 import org.languagetool.rules.Rule;
-import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.spelling.SpellingCheckRule;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -55,6 +60,10 @@ import java.util.List;
 )
 @Slf4j
 public class TypoDiagnostic extends AbstractDiagnostic {
+
+  private static final Russian ruLang = new Russian();
+  private static final AmericanEnglish enLang = new AmericanEnglish();
+
   public TypoDiagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -66,19 +75,22 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check(DocumentContext documentContext) {
-    List<RuleMatch> matches;
 
     String lang = info.getResourceString("diagnosticLanguage");
     JLanguageTool langTool;
     if (lang.equals("en")) {
-      langTool = new JLanguageTool(new AmericanEnglish());
+      langTool = new JLanguageTool(enLang);
     } else {
-      langTool = new JLanguageTool(new Russian());
+      langTool = new JLanguageTool(ruLang);
     }
 
-    langTool.getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
+    langTool.getAllRules().stream().filter(rule1 -> !rule1.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
+
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
     langTool.getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
+
+    StringBuilder text = new StringBuilder();
+    Map<String, List<ParseTree>> tokensMap = new HashMap<>();
 
     BSLParser.FileContext tree = documentContext.getAst();
     List<ParseTree> list = new ArrayList<>();
@@ -89,24 +101,41 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     tokens.stream().map(token -> Trees.findAllTokenNodes(tree, token)).forEach(list::addAll);
 
-    for (ParseTree element : list) {
-
-      try {
-        String[] arr = StringUtils.splitByCharacterTypeCamelCase(element.getText());
-        boolean isTypo = false;
-
-        for (String s : arr) {
-          if (!isTypo) {
-            matches = langTool.check(s);
-            if (!matches.isEmpty() && !matches.get(0).getSuggestedReplacements().isEmpty()) {
-              diagnosticStorage.addDiagnostic((BSLParserRuleContext) element.getParent(), info.getMessage(element.getText().replaceAll("\"", "")));
-              isTypo = true;
-            }
-          }
+    list.forEach(parseTree -> {
+      String curText = parseTree.getText().replaceAll("\"", "");
+      var splitList = StringUtils.splitByCharacterTypeCamelCase(curText);
+      Arrays.stream(splitList).forEach(element -> {
+        if (tokensMap.get(element) != null) {
+          tokensMap.get(element).add(parseTree);
+          return;
         }
-      } catch(IOException e){
-        LOGGER.error(e.getMessage(), e);
+        List<ParseTree> v = new ArrayList<>();
+        v.add(parseTree);
+        tokensMap.put(element, v);
+      });
+      text.append(" ");
+      text.append(String.join(" ", splitList));
+    });
+
+    String result = Arrays.stream(text.toString().trim().split("\\s+")).distinct().collect(Collectors.joining(" "));
+
+    try {
+      final var matches = langTool.check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
+      if (!matches.isEmpty() && !matches.get(0).getSuggestedReplacements().isEmpty()) {
+        var usedNodes = new ArrayList<ParseTree>();
+
+        matches.stream()
+          .map(ruleMatch -> result.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
+          .map(tokensMap::get).filter(Objects::nonNull)
+          .forEach(nodeList -> nodeList.stream()
+            .filter(parseTree -> !usedNodes.contains(parseTree))
+            .forEach(parseTree -> {
+          diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree.getParent(), info.getMessage(parseTree.getText()));
+          usedNodes.add(parseTree);
+        }));
       }
+    } catch(IOException e){
+      LOGGER.error(e.getMessage(), e);
     }
   }
 }
