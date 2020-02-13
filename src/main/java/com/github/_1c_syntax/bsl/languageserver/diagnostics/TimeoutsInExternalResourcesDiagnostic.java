@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -37,6 +38,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,15 +57,35 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^.(Таймаут|Timeout)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
-    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|" +
-      "WSПрокси|WSProxy|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
+    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern PATTERN_NEW_EXPRESSION_WITH_MAIL = Pattern.compile(
+    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy" +
+      "|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final boolean ANALYZING_MAIL = true;
+
   private int defaultNumberTimeout = 5;
   private int defaultNumberTimeoutFtp = 6;
   private int defaultNumberTimeoutWsd = 4;
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + ANALYZING_MAIL
+  )
+  private boolean analyzeInternetMailProfileZeroTimeout = ANALYZING_MAIL;
+
   public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
     super(info);
+  }
+
+  private Pattern getPatternNewExpression() {
+    if (analyzeInternetMailProfileZeroTimeout) {
+      return PATTERN_NEW_EXPRESSION_WITH_MAIL;
+    } else {
+      return PATTERN_NEW_EXPRESSION;
+    }
   }
 
   private static String getVariableName(BSLParser.StatementContext statement) {
@@ -77,12 +99,12 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     return variableName;
   }
 
-  private static boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
+  private boolean isSpecificTypeName(BSLParser.NewExpressionContext newExpression) {
     BSLParser.TypeNameContext typeNameContext = newExpression.typeName();
     if (typeNameContext == null) {
       return false;
     }
-    return PATTERN_NEW_EXPRESSION.matcher(typeNameContext.getText()).find();
+    return getPatternNewExpression().matcher(typeNameContext.getText()).find();
   }
 
   private static boolean isWSDefinitions(BSLParser.NewExpressionContext newExpression) {
@@ -140,6 +162,59 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     return needContinue;
   }
 
+  private static void checkNextStatement(
+    Collection<ParseTree> listNextStatements,
+    String variableName,
+    AtomicBoolean isContact
+  ) {
+    listNextStatements.forEach((ParseTree element) -> {
+      BSLParser.StatementContext localStatement = (BSLParser.StatementContext) element;
+      String thisVariableName = getVariableName(localStatement);
+      if (thisVariableName.equalsIgnoreCase(variableName)
+        && isTimeoutModifer(localStatement)
+        && isNumberOrVariable(localStatement.assignment().expression().member(0))) {
+
+        isContact.set(false);
+
+      }
+    });
+  }
+
+  private static boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
+
+    BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
+    if (assignmentContext == null) {
+      return false;
+    }
+
+    BSLParser.LValueContext lValue = assignmentContext.lValue();
+    if (!lValue.isEmpty()) {
+
+      BSLParser.AcceptorContext acceptor = lValue.acceptor();
+      if (acceptor != null) {
+
+        List<ParseTree> allRuleNodes = new ArrayList<>(Trees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
+        if (!allRuleNodes.isEmpty()) {
+
+          BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.get(0);
+          return PATTERN_TIMEOUT.matcher(accessProperty.getText()).find();
+
+        }
+      }
+    }
+
+    return false;
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    analyzeInternetMailProfileZeroTimeout =
+      (boolean) configuration.getOrDefault("analyzeInternetMailProfileZeroTimeout", ANALYZING_MAIL);
+  }
+
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
     Collection<ParseTree> list = Trees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression);
@@ -189,49 +264,5 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     }
 
     return super.visitFile(ctx);
-  }
-
-  private static void checkNextStatement(
-    Collection<ParseTree> listNextStatements,
-    String variableName,
-    AtomicBoolean isContact
-  ) {
-    listNextStatements.forEach((ParseTree element) -> {
-      BSLParser.StatementContext localStatement = (BSLParser.StatementContext) element;
-      String thisVariableName = getVariableName(localStatement);
-      if (thisVariableName.equalsIgnoreCase(variableName)
-        && isTimeoutModifer(localStatement)
-        && isNumberOrVariable(localStatement.assignment().expression().member(0))) {
-
-        isContact.set(false);
-
-      }
-    });
-  }
-
-  private static boolean isTimeoutModifer(BSLParser.StatementContext localStatement) {
-
-    BSLParser.AssignmentContext assignmentContext = localStatement.assignment();
-    if (assignmentContext == null) {
-      return false;
-    }
-
-    BSLParser.LValueContext lValue = assignmentContext.lValue();
-    if (!lValue.isEmpty()) {
-
-      BSLParser.AcceptorContext acceptor = lValue.acceptor();
-      if (acceptor != null) {
-
-        List<ParseTree> allRuleNodes = new ArrayList<>(Trees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
-        if (!allRuleNodes.isEmpty()) {
-
-          BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.get(0);
-          return PATTERN_TIMEOUT.matcher(accessProperty.getText()).find();
-
-        }
-      }
-    }
-
-    return false;
   }
 }

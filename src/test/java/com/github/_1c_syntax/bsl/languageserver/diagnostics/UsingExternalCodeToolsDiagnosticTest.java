@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class FormDataToValueDiagnosticTest extends AbstractDiagnosticTest<FormDataToValueDiagnostic> {
-  FormDataToValueDiagnosticTest() {
-    super(FormDataToValueDiagnostic.class);
+class UsingExternalCodeToolsDiagnosticTest extends AbstractDiagnosticTest<UsingExternalCodeToolsDiagnostic> {
+  UsingExternalCodeToolsDiagnosticTest() {
+    super(UsingExternalCodeToolsDiagnostic.class);
   }
 
   @Test
@@ -38,12 +38,16 @@ class FormDataToValueDiagnosticTest extends AbstractDiagnosticTest<FormDataToVal
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(2, 15, 2, 35)
-      .hasRange(7, 9, 7, 29)
-      .hasRange(22, 14, 22, 29)
-      .hasRange(26, 4, 26, 19);
+      .hasRange(1, 19, 70)
+      .hasRange(2, 16, 54)
+      .hasRange(4, 16, 53)
+      .hasRange(5, 12, 45)
+      .hasRange(7, 17, 64)
+      .hasRange(9, 30, 78)
+      .hasRange(15, 4, 56)
+    ;
 
   }
 }

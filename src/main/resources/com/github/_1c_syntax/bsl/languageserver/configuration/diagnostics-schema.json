@@ -24,6 +24,16 @@
             "title": "Canonical keyword writing",
             "$id": "#/definitions/CanonicalSpellingKeywords"
         },
+        "CodeBlockBeforeSub": {
+            "description": "Method definitions must be placed before the module body operators",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Method definitions must be placed before the module body operators",
+            "$id": "#/definitions/CodeBlockBeforeSub"
+        },
         "CodeOutOfRegion": {
             "description": "Code out of region",
             "default": null,
@@ -758,6 +768,14 @@
                 "object"
             ],
             "title": "Timeouts working with external resources",
+            "properties": {
+                "analyzeInternetMailProfileZeroTimeout": {
+                    "description": "Analyze the timeout for \"InternetMailProfile\"",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Analyze the timeout for \"InternetMailProfile\""
+                }
+            },
             "$id": "#/definitions/TimeoutsInExternalResources"
         },
         "TooManyReturns": {
@@ -875,6 +893,16 @@
             ],
             "title": "Using parameter \"Cancel\"",
             "$id": "#/definitions/UsingCancelParameter"
+        },
+        "UsingExternalCodeTools": {
+            "description": "Using external code tools",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using external code tools",
+            "$id": "#/definitions/UsingExternalCodeTools"
         },
         "UsingFindElementByString": {
             "description": "Using FindByName and FindByCode",

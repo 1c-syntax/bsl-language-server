@@ -27,7 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -49,6 +54,32 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
   public FormDataToValueDiagnostic(DiagnosticInfo info) {
     super(info, MESSAGE_PATTERN);
+  }
+
+  @Override
+  protected boolean checkGlobalMethodCall(GlobalMethodCallContext ctx) {
+    var parentNode = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
+
+    if (parentNode == null) {
+      return false;
+    }
+
+    List<? extends BSLParser.CompilerDirectiveContext> compileList;
+
+    if (parentNode.procedure() == null) {
+      compileList = parentNode.function().funcDeclaration().compilerDirective();
+    } else {
+      compileList = parentNode.procedure().procDeclaration().compilerDirective();
+    }
+
+    if (compileList.isEmpty()
+      || (compileList.get(0).getStop().getType() != BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
+      && compileList.get(0).getStop().getType() != BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL)) {
+
+      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
+    }
+
+    return false;
   }
 
 }
