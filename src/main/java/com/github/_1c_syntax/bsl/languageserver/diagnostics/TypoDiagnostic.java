@@ -28,11 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
@@ -106,18 +104,14 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     langTool.getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     StringBuilder text = new StringBuilder();
-    Map<String, List<ParseTree>> tokensMap = new HashMap<>();
+    Map<String, List<Token>> tokensMap = new HashMap<>();
 
-    BSLParser.FileContext tree = documentContext.getAst();
-    List<ParseTree> tokens = new ArrayList<>();
+    List<Token> tokens = documentContext.getTokens().stream()
+      .filter(token -> token.getType() == BSLParser.STRING
+        || token.getType() == BSLParser.IDENTIFIER)
+      .collect(Collectors.toList());
 
-    List<Integer> tokensFilter = new ArrayList<>();
-    tokensFilter.add(BSLParser.STRING);
-    tokensFilter.add(BSLParser.IDENTIFIER);
-
-    tokensFilter.stream().map(token -> Trees.findAllTokenNodes(tree, token)).forEach(tokens::addAll);
-
-    for (ParseTree token : tokens) {
+    for (Token token : tokens) {
       String curText = token.getText().replaceAll("\"", "");
       var splitList = StringUtils.splitByCharacterTypeCamelCase(curText);
       for (String element : splitList) {
@@ -129,7 +123,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
           });
 
           tokensMap.computeIfAbsent(element, key -> {
-            List<ParseTree> value = new ArrayList<>();
+            List<Token> value = new ArrayList<>();
             value.add(token);
             return value;
           });
@@ -145,7 +139,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     try {
       final var matches = langTool.check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
       if (!matches.isEmpty()) {
-        var usedNodes = new HashSet<ParseTree>();
+        var usedNodes = new HashSet<Token>();
 
         matches.stream()
           .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
@@ -153,9 +147,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
           .map(tokensMap::get).filter(Objects::nonNull)
           .forEach(nodeList -> nodeList.stream()
             .filter(parseTree -> !usedNodes.contains(parseTree))
-            .forEach(parseTree -> {
-              diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree.getParent(), info.getMessage(parseTree.getText()));
-              usedNodes.add(parseTree);
+            .forEach(token -> {
+              diagnosticStorage.addDiagnostic(token, info.getMessage(token.getText()));
+              usedNodes.add(token);
         }));
       }
     } catch(IOException e){
