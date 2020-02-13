@@ -55,8 +55,8 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.BADPRACTICE
   }
-
 )
+
 @Slf4j
 public class TypoDiagnostic extends AbstractDiagnostic {
 
@@ -106,16 +106,15 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     StringBuilder text = new StringBuilder();
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
-    List<Token> tokens = documentContext.getTokens().stream()
+    documentContext.getTokens().stream()
       .filter(token -> token.getType() == BSLParser.STRING
         || token.getType() == BSLParser.IDENTIFIER)
-      .collect(Collectors.toList());
-
-    for (Token token : tokens) {
-      String curText = token.getText().replaceAll("\"", "");
-      var splitList = StringUtils.splitByCharacterTypeCamelCase(curText);
-      for (String element : splitList) {
-        if (element.length() >= minWordLength) {
+      .forEach(token -> {
+        String curText = token.getText().replaceAll("\"", "");
+        var splitList = Arrays.asList(StringUtils.splitByCharacterTypeCamelCase(curText));
+        splitList.stream()
+          .filter(element -> element.length() >= minWordLength)
+          .forEach(element -> {
 
           tokensMap.computeIfPresent(element, (key, value) -> {
             value.add(token);
@@ -126,13 +125,14 @@ public class TypoDiagnostic extends AbstractDiagnostic {
             List<Token> value = new ArrayList<>();
             value.add(token);
             return value;
-          });
 
-        }
-      }
-      text.append(" ");
-      text.append(String.join(" ", splitList));
-    }
+          });
+        });
+
+        text.append(" ");
+        text.append(String.join(" ", splitList));
+
+      });
 
     String result = Arrays.stream(text.toString().trim().split("\\s+")).distinct().collect(Collectors.joining(" "));
 
