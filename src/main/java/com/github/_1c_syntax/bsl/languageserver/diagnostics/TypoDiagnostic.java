@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -33,7 +34,6 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
@@ -63,13 +63,28 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final Russian ruLang = new Russian();
   private static final AmericanEnglish enLang = new AmericanEnglish();
+  private static final int DEFAULT_MIN_WORD_LENGTH = 2;
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + DEFAULT_MIN_WORD_LENGTH
+  )
+  private int minWordLength = DEFAULT_MIN_WORD_LENGTH;
 
   public TypoDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) {
+      return;
+    }
+    minWordLength = (int) configuration.getOrDefault("diagnosticMinWordLength", minWordLength);
+  }
+
   private ArrayList<String> getWordsToIgnore() {
-    String exceptions = info.getResourceString("diagnosticExceptions");
+    String exceptions = info.getResourceString("diagnosticExceptions").replaceAll("\n", "");
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
@@ -84,7 +99,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       langTool = new JLanguageTool(ruLang);
     }
 
-    langTool.getAllRules().stream().filter(rule1 -> !rule1.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
+    langTool.getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
 
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
     langTool.getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
@@ -105,6 +120,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       String curText = parseTree.getText().replaceAll("\"", "");
       var splitList = StringUtils.splitByCharacterTypeCamelCase(curText);
       Arrays.stream(splitList).forEach(element -> {
+        if (element.length() < minWordLength) {
+          return;
+        }
         if (tokensMap.get(element) != null) {
           tokensMap.get(element).add(parseTree);
           return;
