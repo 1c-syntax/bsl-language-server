@@ -8,17 +8,18 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **78**
+Total: **80**
 
-* Error: **25**
+* Error: **26**
 * Code smell: **50**
 * Vulnerability: **2**
-* Security Hotspot: **1**
+* Security Hotspot: **2**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
 | [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` |
 | [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` |
+| [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Method definitions must be placed before the module body operators | Yes | Blocker | Error | `error` |
 | [CodeOutOfRegion](CodeOutOfRegion.md) | Code out of region | Yes | Info | Code smell | `standard` |
 | [CognitiveComplexity](CognitiveComplexity.md) | Cognitive complexity | Yes | Critical | Code smell | `brainoverload` |
 | [CommentedCode](CommentedCode.md) | Commented out code | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
@@ -84,6 +85,7 @@ Total: **78**
 | [UnusedParameters](UnusedParameters.md) | Unused parameter | Yes | Major | Code smell | `design` |
 | [UseLessForEach](UseLessForEach.md) | Useless collection iteration | Yes | Critical | Error | `clumsy` |
 | [UsingCancelParameter](UsingCancelParameter.md) | Using parameter "Cancel" | Yes | Major | Code smell | `standard`<br/>`badpractice` |
+| [UsingExternalCodeTools](UsingExternalCodeTools.md) | Using external code tools | Yes | Critical | Security Hotspot | `standard`<br/>`design` |
 | [UsingFindElementByString](UsingFindElementByString.md) | Using FindByName and FindByCode | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`performance` |
 | [UsingGoto](UsingGoto.md) | "goto" statement should not be used | Yes | Critical | Code smell | `standard`<br/>`badpractice` |
 | [UsingHardcodeNetworkAddress](UsingHardcodeNetworkAddress.md) | Using hardcode ip addresses in code | Yes | Critical | Vulnerability | `standard` |
