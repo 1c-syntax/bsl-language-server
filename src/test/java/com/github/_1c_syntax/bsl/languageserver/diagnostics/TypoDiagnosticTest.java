@@ -25,6 +25,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -35,6 +36,21 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
 
   @Test
   void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 13, 1, 21)
+      .hasRange(5, 8, 5, 22);
+  }
+
+  @Test
+  void testConfigure() {
+    // given
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("minWordLength", 2);
+    diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 

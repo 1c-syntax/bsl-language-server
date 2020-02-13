@@ -796,6 +796,14 @@
                 "object"
             ],
             "title": "Typo",
+            "properties": {
+                "minWordLength": {
+                    "description": "Minimum length for checked words",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Minimum length for checked words"
+                }
+            },
             "$id": "#/definitions/Typo"
         },
         "UnaryPlusInConcatenation": {

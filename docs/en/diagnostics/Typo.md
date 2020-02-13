@@ -4,6 +4,12 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `badpractice` |
 
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```2``` |
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -32,5 +38,7 @@
 ### Parameter for config
 
 ```json
-"Typo": false
+"Typo": {
+    "minWordLength": 2
+}
 ```
