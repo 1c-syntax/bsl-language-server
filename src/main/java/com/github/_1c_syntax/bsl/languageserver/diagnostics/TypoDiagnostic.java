@@ -109,32 +109,36 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     Map<String, List<ParseTree>> tokensMap = new HashMap<>();
 
     BSLParser.FileContext tree = documentContext.getAst();
-    List<ParseTree> list = new ArrayList<>();
+    List<ParseTree> tokens = new ArrayList<>();
 
-    List<Integer> tokens = new ArrayList<>();
-    tokens.add(BSLParser.STRING);
-    tokens.add(BSLParser.IDENTIFIER);
+    List<Integer> tokensFilter = new ArrayList<>();
+    tokensFilter.add(BSLParser.STRING);
+    tokensFilter.add(BSLParser.IDENTIFIER);
 
-    tokens.stream().map(token -> Trees.findAllTokenNodes(tree, token)).forEach(list::addAll);
+    tokensFilter.stream().map(token -> Trees.findAllTokenNodes(tree, token)).forEach(tokens::addAll);
 
-    list.forEach(parseTree -> {
-      String curText = parseTree.getText().replaceAll("\"", "");
+    for (ParseTree token : tokens) {
+      String curText = token.getText().replaceAll("\"", "");
       var splitList = StringUtils.splitByCharacterTypeCamelCase(curText);
-      Arrays.stream(splitList).forEach(element -> {
-        if (element.length() < minWordLength) {
-          return;
+      for (String element : splitList) {
+        if (element.length() >= minWordLength) {
+
+          tokensMap.computeIfPresent(element, (key, value) -> {
+            value.add(token);
+            return value;
+          });
+
+          tokensMap.computeIfAbsent(element, key -> {
+            List<ParseTree> value = new ArrayList<>();
+            value.add(token);
+            return value;
+          });
+
         }
-        if (tokensMap.get(element) != null) {
-          tokensMap.get(element).add(parseTree);
-          return;
-        }
-        List<ParseTree> v = new ArrayList<>();
-        v.add(parseTree);
-        tokensMap.put(element, v);
-      });
+      }
       text.append(" ");
       text.append(String.join(" ", splitList));
-    });
+    }
 
     String result = Arrays.stream(text.toString().trim().split("\\s+")).distinct().collect(Collectors.joining(" "));
 
