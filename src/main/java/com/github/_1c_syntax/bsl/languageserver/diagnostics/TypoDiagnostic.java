@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -139,17 +140,18 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     try {
       final var matches = langTool.check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
-      if (!matches.isEmpty() && !matches.get(0).getSuggestedReplacements().isEmpty()) {
-        var usedNodes = new ArrayList<ParseTree>();
+      if (!matches.isEmpty()) {
+        var usedNodes = new HashSet<ParseTree>();
 
         matches.stream()
+          .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
           .map(ruleMatch -> result.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
           .map(tokensMap::get).filter(Objects::nonNull)
           .forEach(nodeList -> nodeList.stream()
             .filter(parseTree -> !usedNodes.contains(parseTree))
             .forEach(parseTree -> {
-          diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree.getParent(), info.getMessage(parseTree.getText()));
-          usedNodes.add(parseTree);
+              diagnosticStorage.addDiagnostic((BSLParserRuleContext) parseTree.getParent(), info.getMessage(parseTree.getText()));
+              usedNodes.add(parseTree);
         }));
       }
     } catch(IOException e){
