@@ -36,6 +36,7 @@ import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
 import org.languagetool.rules.Rule;
+import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.spelling.SpellingCheckRule;
 
 import java.io.IOException;
@@ -62,6 +63,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final Russian ruLang = new Russian();
   private static final AmericanEnglish enLang = new AmericanEnglish();
+  private static final JLanguageTool ruLangTool = new JLanguageTool(ruLang);
+  private static final JLanguageTool enLangTool = new JLanguageTool(enLang);
+  private static Map<String, JLanguageTool> languageToolMap = new HashMap<>();
+
   private static final int DEFAULT_MIN_WORD_LENGTH = 2;
 
   @DiagnosticParameter(
@@ -91,17 +96,13 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   protected void check(DocumentContext documentContext) {
 
     String lang = info.getResourceString("diagnosticLanguage");
-    JLanguageTool langTool;
-    if (lang.equals("en")) {
-      langTool = new JLanguageTool(enLang);
-    } else {
-      langTool = new JLanguageTool(ruLang);
-    }
-
-    langTool.getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(langTool::disableRule);
-
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
-    langTool.getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
+
+    languageToolMap.put("ru", ruLangTool);
+    languageToolMap.put("en", enLangTool);
+
+    languageToolMap.get(lang).getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(ruLangTool::disableRule);
+    languageToolMap.get(lang).getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     StringBuilder text = new StringBuilder();
     Map<String, List<Token>> tokensMap = new HashMap<>();
@@ -137,7 +138,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String result = Arrays.stream(text.toString().trim().split("\\s+")).distinct().collect(Collectors.joining(" "));
 
     try {
-      final var matches = langTool.check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
+      List<RuleMatch> matches;
+
+      synchronized (languageToolMap.get(lang)) {
+        matches = languageToolMap.get(lang).check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
+      }
+
       if (!matches.isEmpty()) {
         var usedNodes = new HashSet<Token>();
 
