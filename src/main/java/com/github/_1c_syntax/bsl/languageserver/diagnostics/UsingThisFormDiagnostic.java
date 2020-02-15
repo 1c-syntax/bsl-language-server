@@ -162,8 +162,10 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
-    if (pattern.matcher(ctx.IDENTIFIER().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.IDENTIFIER());
+
+    TerminalNode identifier = ctx.IDENTIFIER();
+    if (identifier != null && pattern.matcher(identifier.getText()).matches()) {
+      diagnosticStorage.addDiagnostic(identifier);
     }
     return super.visitLValue(ctx);
   }
