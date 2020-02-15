@@ -40,7 +40,7 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
   @Test
   void runTest() {
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(15);
+    assertThat(diagnostics).hasSize(16);
 
     assertThat(diagnostics, true)
       .hasRange(3, 20, 3, 28)
@@ -51,6 +51,7 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
       .hasRange(14, 20, 14, 28)
       .hasRange(15, 33, 15, 41)
       .hasRange(16, 12, 16, 20)
+      .hasRange(16, 12, 16, 20)
       .hasRange(40, 16, 40, 24)
       .hasRange(41, 25, 41, 33)
       .hasRange(42, 0, 42, 8)
@@ -58,6 +59,7 @@ class UsingThisFormDiagnosticTest extends AbstractDiagnosticTest<UsingThisFormDi
       .hasRange(45, 8, 45, 16)
       .hasRange(47, 14, 47, 22)
       .hasRange(47, 24, 47, 32)
+      .hasRange(54, 0, 54, 8)
     ;
   }
 
