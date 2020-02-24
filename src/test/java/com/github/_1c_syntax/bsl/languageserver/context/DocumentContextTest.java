@@ -84,6 +84,14 @@ class DocumentContextTest {
   }
 
   @Test
+  void testGetRegionsFlatComputesAllLevels() {
+    DocumentContext documentContext = getDocumentContext();
+
+    assertThat(documentContext.getRegions()).hasSize(2);
+    assertThat(documentContext.getRegionsFlat()).hasSize(4);
+  }
+
+  @Test
   void testRegionsAdjustingCompute() {
     // given
     DocumentContext documentContext = getDocumentContext();

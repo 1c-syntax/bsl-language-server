@@ -311,15 +311,21 @@ public class DocumentContext {
 
   private List<RegionSymbol> computeRegionsFlat() {
     return getRegions().stream()
-      .map((RegionSymbol regionSymbol) -> {
-        List<RegionSymbol> list = new ArrayList<>();
-        list.add(regionSymbol);
-        list.addAll(regionSymbol.getChildren());
-
-        return list;
-      })
+      .map(this::getSelfAndChildrenRecursive)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+  }
+
+  private List<RegionSymbol> getSelfAndChildrenRecursive(RegionSymbol regionSymbol) {
+    var list = new ArrayList<RegionSymbol>();
+        list.add(regionSymbol);
+
+    regionSymbol.getChildren().stream()
+      .map(this::getSelfAndChildrenRecursive)
+      .flatMap(Collection::stream)
+      .collect(Collectors.toCollection(() -> list));
+
+        return list;
   }
 
   private List<RegionSymbol> computeFileLevelRegions() {
