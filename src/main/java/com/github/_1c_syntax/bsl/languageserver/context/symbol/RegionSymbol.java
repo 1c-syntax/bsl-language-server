@@ -27,6 +27,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
+import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 
@@ -36,6 +37,7 @@ import java.util.List;
 @Value
 @Builder(access = AccessLevel.PUBLIC)
 @EqualsAndHashCode(exclude = "methods")
+@ToString(exclude = "methods")
 public class RegionSymbol implements Symbol {
   private final String name;
   private final int startLine;
