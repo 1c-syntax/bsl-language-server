@@ -252,11 +252,14 @@ public class DocumentContext {
 
     nodeToMethodsMap.clear();
 
-    if (regions.isPresent()) {
-      getRegions().forEach(Symbol::clearASTData);
-    }
     if (regionsFlat.isPresent()) {
-      getRegionsFlat().forEach(Symbol::clearASTData);
+      // TODO: Найти причину различия экземпляров MethodSymbol в regionsFlat и в methods
+      getRegionsFlat().stream()
+        .peek(Symbol::clearASTData)
+        .map(RegionSymbol::getMethods)
+        .flatMap(List::stream)
+        .forEach(Symbol::clearASTData)
+      ;
     }
     if (methods.isPresent()) {
       getMethods().forEach(Symbol::clearASTData);
@@ -318,14 +321,14 @@ public class DocumentContext {
 
   private List<RegionSymbol> getSelfAndChildrenRecursive(RegionSymbol regionSymbol) {
     var list = new ArrayList<RegionSymbol>();
-        list.add(regionSymbol);
+    list.add(regionSymbol);
 
     regionSymbol.getChildren().stream()
       .map(this::getSelfAndChildrenRecursive)
       .flatMap(Collection::stream)
       .collect(Collectors.toCollection(() -> list));
 
-        return list;
+    return list;
   }
 
   private List<RegionSymbol> computeFileLevelRegions() {
