@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **79**
+Общее количество: **80**
 
-* Дефект кода: **49**
+* Дефект кода: **50**
 * Уязвимость: **2**
 * Ошибка: **26**
 * Потенциальная уязвимость: **2**
@@ -68,6 +68,7 @@
 | [PairingBrokenTransaction](PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да | Важный | Ошибка | `standard` |
 | [ParseError](ParseError.md) | Ошибка разбора исходного кода | Да | Критичный | Ошибка | `error` |
 | [ProcedureReturnsValue](ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | Блокирующий | Ошибка | `error` |
+| [PublicMethodsDescription](PublicMethodsDescription.md) | Все методы программного интерфейса должны иметь описание | Да | Информационный | Дефект кода | `standard`<br/>`brainoverload`<br/>`badpractice` |
 | [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` |
 | [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br/>`unpredictable`<br/>`performance` |
 | [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |

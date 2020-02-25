@@ -1,8 +1,14 @@
-# <Diagnostic name> (<DiagnosticKey>)
+# Все методы программного интерфейса должны иметь описание (PublicMethodsDescription)
 
-<Metadata>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Дефект кода` | `BSL`<br/>`OS` | `Информационный` | `Да` | `1` | `standard`<br/>`brainoverload`<br/>`badpractice` |
 
-## <Params>
+## Параметры 
+
+| Имя | Тип | Описание | Значение по умолчанию |
+| :-: | :-: | :-- | :-: |
+| `checkAllRegion` | `Булево` | ```Проверять методы без учета областей в которых они располагаются``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -12,17 +18,19 @@
 * [Стандарт "Описание процедур и функций". Пункт 2](https://its.1c.ru/db/v8std#content:453:hdoc)
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:PublicMethodsDescription-off
+// BSLLS:PublicMethodsDescription-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"PublicMethodsDescription": {
+    "checkAllRegion": false
+}
 ```

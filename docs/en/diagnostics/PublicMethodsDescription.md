@@ -1,8 +1,14 @@
-# All public methods must have a description
+# All public methods must have a description (PublicMethodsDescription)
 
-<Metadata>
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `standard`<br/>`brainoverload`<br/>`badpractice` |
 
-## <Params>
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `checkAllRegion` | `Boolean` | ```Test methods without regard to the areas in which they are located``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -17,17 +23,19 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:PublicMethodsDescription-off
+// BSLLS:PublicMethodsDescription-on
 ```
 
 ### Parameter for config
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"PublicMethodsDescription": {
+    "checkAllRegion": false
+}
 ```
