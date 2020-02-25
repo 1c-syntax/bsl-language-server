@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -60,27 +61,16 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
         return;
       }
 
-      methodSymbol.getRegion().ifPresent(methodRegion ->
-        documentContext.getRegions()
-          .stream()
-          .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
-          .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
-          .findFirst()
-          .ifPresent((RegionSymbol regionSymbol) -> {
-            String message = info.getMessage(methodSymbol.getName(), regionSymbol.getName());
+      methodSymbol.getRegion().flatMap(mr -> Regions.getRootRegion(documentContext.getRegions(), mr))
+        .ifPresent(rootRegion -> {
+          if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
+            String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
             diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-          }));
+          }
+        });
     });
 
     return ctx;
-  }
-
-  private static boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
-    if (parent.equals(toFind)) {
-      return true;
-    }
-
-    return parent.getChildren().stream().anyMatch(regionSymbol -> findRecursivelyRegion(regionSymbol, (toFind)));
   }
 
 }
