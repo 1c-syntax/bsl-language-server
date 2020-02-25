@@ -264,13 +264,7 @@ public class DocumentContext {
     nodeToMethodsMap.clear();
 
     if (regionsFlat.isPresent()) {
-      // TODO: Найти причину различия экземпляров MethodSymbol в regionsFlat и в methods
-      getRegionsFlat().stream()
-        .peek(Symbol::clearASTData)
-        .map(RegionSymbol::getMethods)
-        .flatMap(List::stream)
-        .forEach(Symbol::clearASTData)
-      ;
+      getRegionsFlat().forEach(Symbol::clearASTData);
     }
     if (methods.isPresent()) {
       getMethods().forEach(Symbol::clearASTData);
