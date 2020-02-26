@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **79**
+Total: **80**
 
 * Error: **26**
-* Code smell: **49**
+* Code smell: **50**
 * Vulnerability: **2**
 * Security Hotspot: **2**
 
@@ -68,6 +68,7 @@ Total: **79**
 | [PairingBrokenTransaction](PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes | Major | Error | `standard` |
 | [ParseError](ParseError.md) | Source code parse error | Yes | Critical | Error | `error` |
 | [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` |
+| [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br/>`brainoverload`<br/>`badpractice` |
 | [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` |
 | [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br/>`unpredictable`<br/>`performance` |
 | [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
