@@ -27,6 +27,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;
+import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 
@@ -36,6 +37,7 @@ import java.util.List;
 @Value
 @Builder(access = AccessLevel.PUBLIC)
 @EqualsAndHashCode(exclude = "methods")
+@ToString(exclude = "methods")
 public class RegionSymbol implements Symbol {
   private final String name;
   private final int startLine;
@@ -47,11 +49,12 @@ public class RegionSymbol implements Symbol {
   private BSLParser.RegionStartContext startNode;
   @NonFinal
   private BSLParser.RegionEndContext endNode;
+  @NonFinal
+  private List<BSLParserRuleContext> nodes;
 
   @Singular
   private final List<RegionSymbol> children;
   private final List<MethodSymbol> methods = new ArrayList<>();
-  private final List<BSLParserRuleContext> nodes;
 
   @NonFinal
   private BSLParserRuleContext node;
@@ -62,5 +65,6 @@ public class RegionSymbol implements Symbol {
     nameNode = null;
     startNode = null;
     endNode = null;
+    nodes = null;
   }
 }

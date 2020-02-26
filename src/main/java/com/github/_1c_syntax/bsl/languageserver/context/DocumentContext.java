@@ -31,8 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolCom
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.utils.Absolute;
-import com.github._1c_syntax.utils.Lazy;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -42,6 +40,8 @@ import com.github._1c_syntax.bsl.parser.Tokenizer;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
+import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -85,7 +85,6 @@ public class DocumentContext {
     = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
-  private boolean adjustingRegions;
   private boolean regionsAdjusted;
   private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
   private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
@@ -120,10 +119,16 @@ public class DocumentContext {
   }
 
   public List<MethodSymbol> getMethods() {
+
+    // если первый раз, то получим все области
+    if (!regionsAdjusted) {
+      regions.getOrCompute();
+    }
+
     final List<MethodSymbol> methodsUnboxed = methods.getOrCompute();
-    if (!regionsAdjusted && !adjustingRegions) {
-      adjustingRegions = true;
-      adjustRegions();
+    // если первый раз, то соединим методы и области
+    if (!regionsAdjusted) {
+      adjustRegions(methodsUnboxed);
     }
     return new ArrayList<>(methodsUnboxed);
   }
@@ -143,11 +148,16 @@ public class DocumentContext {
   }
 
   public List<RegionSymbol> getRegions() {
+    // всегда получим области
     final List<RegionSymbol> regionsUnboxed = regions.getOrCompute();
-    if (!regionsAdjusted && !adjustingRegions) {
-      adjustingRegions = true;
-      adjustRegions();
+
+    // если методы еще не получали, получим их принудительно
+    if (!regionsAdjusted) {
+      // чтобы не зацикливать, принудительно соединим методы и области
+      regionsAdjusted = true;
+      adjustRegions(getMethods());
     }
+
     return new ArrayList<>(regionsUnboxed);
   }
 
@@ -222,7 +232,6 @@ public class DocumentContext {
     return cognitiveComplexityData.getOrCompute();
   }
 
-
   public ComplexityData getCyclomaticComplexityData() {
     return cyclomaticComplexityData.getOrCompute();
   }
@@ -240,9 +249,11 @@ public class DocumentContext {
   }
 
   public void rebuild(String content) {
+    computeLock.lock();
     clear();
     this.content = content;
     tokenizer = new Tokenizer(content);
+    computeLock.unlock();
   }
 
   public void clearASTData() {
@@ -252,9 +263,6 @@ public class DocumentContext {
 
     nodeToMethodsMap.clear();
 
-    if (regions.isPresent()) {
-      getRegions().forEach(Symbol::clearASTData);
-    }
     if (regionsFlat.isPresent()) {
       getRegionsFlat().forEach(Symbol::clearASTData);
     }
@@ -311,15 +319,21 @@ public class DocumentContext {
 
   private List<RegionSymbol> computeRegionsFlat() {
     return getRegions().stream()
-      .map((RegionSymbol regionSymbol) -> {
-        List<RegionSymbol> list = new ArrayList<>();
-        list.add(regionSymbol);
-        list.addAll(regionSymbol.getChildren());
-
-        return list;
-      })
+      .map(this::getSelfAndChildrenRecursive)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
+  }
+
+  private List<RegionSymbol> getSelfAndChildrenRecursive(RegionSymbol regionSymbol) {
+    var list = new ArrayList<RegionSymbol>();
+    list.add(regionSymbol);
+
+    regionSymbol.getChildren().stream()
+      .map(this::getSelfAndChildrenRecursive)
+      .flatMap(Collection::stream)
+      .collect(Collectors.toCollection(() -> list));
+
+    return list;
   }
 
   private List<RegionSymbol> computeFileLevelRegions() {
@@ -365,8 +379,8 @@ public class DocumentContext {
     return cyclomaticComplexityComputer.compute();
   }
 
-  private void adjustRegions() {
-    getMethods().forEach((MethodSymbol methodSymbol) ->
+  private void adjustRegions(List<MethodSymbol> methodSymbols) {
+    methodSymbols.forEach((MethodSymbol methodSymbol) ->
       methodSymbol.getRegion().ifPresent(region ->
         region.getMethods().add(methodSymbol)
       )
