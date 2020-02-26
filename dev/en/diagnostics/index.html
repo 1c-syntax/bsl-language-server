@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
     
     
       
-        <title>BSL Language Server Dev</title>
+        <title>Diagnostics - BSL Language Server Dev</title>
       
     
     
@@ -406,10 +406,10 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>79</strong></p>
+<p>Total: <strong>80</strong></p>
 <ul>
 <li>Error: <strong>26</strong></li>
-<li>Code smell: <strong>49</strong></li>
+<li>Code smell: <strong>50</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>2</strong></li>
 </ul>
@@ -834,6 +834,14 @@
 <td><code>error</code></td>
 </tr>
 <tr>
+<td><a href="PublicMethodsDescription/">PublicMethodsDescription</a></td>
+<td>All public methods must have a description</td>
+<td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>standard</code><br/><code>brainoverload</code><br/><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="SelfAssign/">SelfAssign</a></td>
 <td>Variable is assigned to itself</td>
 <td align="center">Yes</td>
@@ -1159,7 +1167,7 @@
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      <script>app.initialize({version:"1.1",url:{base:".."}})</script>
       
     
   </body>

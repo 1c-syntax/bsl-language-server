@@ -254,6 +254,9 @@
                 "ProcedureReturnsValue": {
                     "$ref": "diagnostics-schema.json#/definitions/ProcedureReturnsValue"
                 },
+                "PublicMethodsDescription": {
+                    "$ref": "diagnostics-schema.json#/definitions/PublicMethodsDescription"
+                },
                 "SelfAssign": {
                     "$ref": "diagnostics-schema.json#/definitions/SelfAssign"
                 },

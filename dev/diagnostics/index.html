@@ -34,11 +34,11 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
     
     
       
-        <title>BSL Language Server Dev</title>
+        <title>Диагностики - BSL Language Server Dev</title>
       
     
     
@@ -406,9 +406,9 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>79</strong></p>
+<p>Общее количество: <strong>80</strong></p>
 <ul>
-<li>Дефект кода: <strong>49</strong></li>
+<li>Дефект кода: <strong>50</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
 <li>Ошибка: <strong>26</strong></li>
 <li>Потенциальная уязвимость: <strong>2</strong></li>
@@ -834,6 +834,14 @@
 <td><code>error</code></td>
 </tr>
 <tr>
+<td><a href="PublicMethodsDescription/">PublicMethodsDescription</a></td>
+<td>Все методы программного интерфейса должны иметь описание</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br/><code>brainoverload</code><br/><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="SelfAssign/">SelfAssign</a></td>
 <td>Присвоение переменной самой себе</td>
 <td align="center">Да</td>
@@ -1159,7 +1167,7 @@
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      <script>app.initialize({version:"1.1",url:{base:".."}})</script>
       
     
   </body>

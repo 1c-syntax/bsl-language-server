@@ -692,6 +692,24 @@
             "title": "Procedure should not return Value",
             "$id": "#/definitions/ProcedureReturnsValue"
         },
+        "PublicMethodsDescription": {
+            "description": "All public methods must have a description",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All public methods must have a description",
+            "properties": {
+                "checkAllRegion": {
+                    "description": "Test methods without regard to the areas in which they are located",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Test methods without regard to the areas in which they are located"
+                }
+            },
+            "$id": "#/definitions/PublicMethodsDescription"
+        },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
             "default": null,
