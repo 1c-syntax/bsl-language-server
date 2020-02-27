@@ -36,20 +36,23 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
 
   @Test
   void test() {
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
-//    assertThat(diagnostics, true)
-//      .hasRange(1, 14, 1, 18);
-//      //.hasRange(5, 8, 5, 22);
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(1, 13, 1, 21)
+      .hasRange(5, 8, 5, 22)
+      .hasRange(8, 13, 8, 17);
   }
 
   @Test
-  void testConfigure() {
+  void testConfigureWordLength() {
     // given
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("minWordLength", 2);
+    configuration.put("minWordLength", 3);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
@@ -58,5 +61,21 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
     assertThat(diagnostics, true)
       .hasRange(1, 13, 1, 21)
       .hasRange(5, 8, 5, 22);
+
+  }
+
+  @Test
+  void testConfigureUserWordsToIgnore() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("userWordsToIgnore", "Варинаты");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(1, 13, 1, 21)
+      .hasRange(8, 13, 8, 17);
   }
 }

@@ -68,12 +68,18 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private static Map<String, JLanguageTool> languageToolMap = new HashMap<>();
 
   private static final int DEFAULT_MIN_WORD_LENGTH = 2;
+  private static final String DEFAULT_USER_WORDS_TO_IGNORE = "";
 
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + DEFAULT_MIN_WORD_LENGTH
   )
   private int minWordLength = DEFAULT_MIN_WORD_LENGTH;
+
+  @DiagnosticParameter(
+    type = String.class
+  )
+  private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;
 
   public TypoDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -84,11 +90,17 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     if (configuration == null) {
       return;
     }
-    minWordLength = (int) configuration.getOrDefault("diagnosticMinWordLength", minWordLength);
+    minWordLength = (int) configuration.getOrDefault("minWordLength", minWordLength);
+    userWordsToIgnore = (String) configuration.getOrDefault("userWordsToIgnore", userWordsToIgnore);
   }
 
   private ArrayList<String> getWordsToIgnore() {
     String exceptions = info.getResourceString("diagnosticExceptions").replaceAll("\n", "");
+    return new ArrayList<>(Arrays.asList(exceptions.split(",")));
+  }
+
+  private ArrayList<String> getUserWordsToIgnore() {
+    String exceptions = userWordsToIgnore.replaceAll("\n", "");
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
@@ -103,6 +115,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     languageToolMap.get(lang).getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(languageToolMap.get(lang)::disableRule);
     languageToolMap.get(lang).getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
+
+    if (!userWordsToIgnore.equals("")) {
+      ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
+      languageToolMap.get(lang).getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
+    }
 
     StringBuilder text = new StringBuilder();
     Map<String, List<Token>> tokensMap = new HashMap<>();

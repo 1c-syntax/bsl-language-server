@@ -833,6 +833,12 @@
             ],
             "title": "Typo",
             "properties": {
+                "userWordsToIgnore": {
+                    "description": "Dictionary for excluding words",
+                    "default": "",
+                    "type": "string",
+                    "title": "Dictionary for excluding words"
+                },
                 "minWordLength": {
                     "description": "Minimum length for checked words",
                     "default": 2,
