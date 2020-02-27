@@ -160,6 +160,16 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     );
   }
 
+  @Override
+  public ParseTree visitLValue(BSLParser.LValueContext ctx) {
+
+    TerminalNode identifier = ctx.IDENTIFIER();
+    if (identifier != null && pattern.matcher(identifier.getText()).matches()) {
+      diagnosticStorage.addDiagnostic(identifier);
+    }
+    return super.visitLValue(ctx);
+  }
+
   private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
     Range range = diagnostic.getRange();
     String currentText = documentContext.getText(range);

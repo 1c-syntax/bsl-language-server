@@ -19,38 +19,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
-import org.eclipse.lsp4j.Range;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 
+import java.util.List;
 import java.util.Optional;
 
-@Value
-@Builder
-@EqualsAndHashCode(exclude = "region")
-@ToString(exclude = "region")
-public class MethodSymbol implements Symbol {
-  private final String name;
-  private final boolean export;
-  private final boolean function;
-  private final Optional<MethodDescription> description;
+public final class Regions {
 
-  private final Optional<RegionSymbol> region;
-
-  @NonFinal
-  private BSLParserRuleContext node;
-
-  private final Range range;
-  private final Range subNameRange;
-
-  @Override
-  public void clearASTData() {
-    node = null;
+  public static Optional<RegionSymbol> getRootRegion(List<RegionSymbol> regions, RegionSymbol currentRegion) {
+    return regions.stream()
+      .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, currentRegion))
+      .findFirst();
   }
+
+  private static boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
+    if (parent.equals(toFind)) {
+      return true;
+    }
+
+    return parent.getChildren().stream().anyMatch(regionSymbol -> findRecursivelyRegion(regionSymbol, (toFind)));
+  }
+
 }
