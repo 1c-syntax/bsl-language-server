@@ -66,11 +66,13 @@ dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.8.1")
 
+    implementation("org.languagetool", "languagetool-core", "4.2")
+
     // https://mvnrepository.com/artifact/org.languagetool/language-en
-    implementation("org.languagetool", "language-en", "4.8")
+    implementation("org.languagetool", "language-en", "4.2")
 
     // https://mvnrepository.com/artifact/org.languagetool/language-ru
-    implementation("org.languagetool", "language-ru", "4.8")
+    implementation("org.languagetool", "language-ru", "4.2")
 
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     implementation("commons-cli", "commons-cli", "1.4")
