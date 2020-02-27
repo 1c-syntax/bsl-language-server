@@ -101,7 +101,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     languageToolMap.put("ru", ruLangTool);
     languageToolMap.put("en", enLangTool);
 
-    languageToolMap.get(lang).getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(ruLangTool::disableRule);
+    languageToolMap.get(lang).getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(languageToolMap.get(lang)::disableRule);
     languageToolMap.get(lang).getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     StringBuilder text = new StringBuilder();
