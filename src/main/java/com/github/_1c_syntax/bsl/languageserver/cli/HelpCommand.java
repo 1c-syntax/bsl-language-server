@@ -28,7 +28,14 @@ import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
 
 /**
  * Вывод справки
- * TODO: дописать
+ * Ключ команды:
+ *  -h, (--help)
+ * Параметры:
+ *  Без параметров
+ * Выводимая информация:
+ *  Выводит справку консольного приложения
+ *
+ * TODO: подумать о развитии справки, текущая куцая, не информативная
  */
 public class HelpCommand implements Command {
 

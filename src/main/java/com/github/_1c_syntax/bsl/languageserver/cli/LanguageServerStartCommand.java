@@ -40,7 +40,15 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * TODO: дописать
+ * Запускает приложение в режиме Language Server
+ * Ключ команды:
+ *  без ключа
+ * Параметры:
+ *  -c, (--configuration) <arg> - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то будут использованы настройки по умолчанию.
+ * Выводимая информация:
+ *  Данный режим используется для взаимодействия с клиентом по протоколу LSP.
  */
 @Slf4j
 public class LanguageServerStartCommand implements Command {

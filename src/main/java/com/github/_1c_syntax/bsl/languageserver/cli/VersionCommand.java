@@ -30,7 +30,12 @@ import java.util.jar.Manifest;
 
 /**
  * Вывод версии приложения
- * TODO: дописать
+ * Ключ команды:
+ *  -v, (--version)
+ * Параметры:
+ *  Без параметров
+ * Выводимая информация:
+ *  Выводит версию приожения в консоль в формате "version: version_bslls"
  */
 @Slf4j
 public class VersionCommand implements Command {
