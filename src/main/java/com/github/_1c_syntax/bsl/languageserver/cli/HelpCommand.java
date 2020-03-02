@@ -26,6 +26,10 @@ import org.apache.commons.cli.Options;
 
 import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
 
+/**
+ * Вывод справки
+ * TODO: дописать
+ */
 public class HelpCommand implements Command {
 
   private final Options options;

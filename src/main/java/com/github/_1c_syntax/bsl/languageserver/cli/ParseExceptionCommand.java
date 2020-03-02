@@ -28,6 +28,9 @@ import org.apache.commons.cli.ParseException;
 
 import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
 
+/**
+ * TODO: дописать
+ */
 @Slf4j
 public class ParseExceptionCommand implements Command {
 

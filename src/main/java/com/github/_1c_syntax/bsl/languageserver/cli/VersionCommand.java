@@ -28,6 +28,10 @@ import java.io.InputStream;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+/**
+ * Вывод версии приложения
+ * TODO: дописать
+ */
 @Slf4j
 public class VersionCommand implements Command {
 

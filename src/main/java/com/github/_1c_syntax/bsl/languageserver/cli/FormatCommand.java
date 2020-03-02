@@ -41,6 +41,10 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Форматирование кода в исходниках
+ * TODO: дописать
+ */
 public class FormatCommand implements Command {
 
   private CommandLine cmd;

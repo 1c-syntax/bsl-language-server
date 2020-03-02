@@ -47,6 +47,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Выполнение анализа
+ * TODO: дописать
+ */
 public class AnalyzeCommand implements Command {
 
   private CommandLine cmd;
