@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.BLOCKER,
@@ -52,16 +51,17 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
     if (childZero == null) {
       return super.visitMember(ctx);
     }
-    ParseTree previousNode = Trees.getPreviousNode(ctx.parent, childZero, BSLParser.RULE_operation);
-    if (
-      (childZero instanceof BSLParser.UnaryModifierContext)
+
+    if (childZero instanceof BSLParser.UnaryModifierContext
         && ctx.getChildCount() > 1
         && !(ctx.getChild(1).getChild(0) instanceof BSLParser.NumericContext)
-        && "+".equals(childZero.getText())
-        && !previousNode.equals(childZero)
-        && "+".equals(previousNode.getText())
-    ) {
-      diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).start);
+        && "+".equals(childZero.getText())) {
+
+      ParseTree previousNode = Trees.getPreviousNode(ctx.getParent(), childZero, BSLParser.RULE_operation);
+      if (!previousNode.equals(childZero)
+        && "+".equals(previousNode.getText())) {
+        diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).getStart());
+      }
     }
 
     return super.visitMember(ctx);
