@@ -9,7 +9,7 @@
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
 | `userWordsToIgnore` | `String` | ```Dictionary for excluding words``` | `````` |
-| `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```2``` |
+| `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```3``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -41,6 +41,6 @@
 ```json
 "Typo": {
     "userWordsToIgnore": "",
-    "minWordLength": 2
+    "minWordLength": 3
 }
 ```

@@ -841,7 +841,7 @@
                 },
                 "minWordLength": {
                     "description": "Minimum length for checked words",
-                    "default": 2,
+                    "default": 3,
                     "type": "integer",
                     "title": "Minimum length for checked words"
                 }
