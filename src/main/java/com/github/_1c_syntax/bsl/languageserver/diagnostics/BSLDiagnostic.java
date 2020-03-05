@@ -23,10 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import org.eclipse.lsp4j.Diagnostic;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * BSLDiagnostic main purpose is to provide collection of LSP {@link Diagnostic},
@@ -44,6 +47,28 @@ public interface BSLDiagnostic {
   DiagnosticInfo getInfo();
 
   default void configure(Map<String, Object> configuration) {
-  }
+    if (configuration == null || configuration.isEmpty()) {
+      return;
+    }
 
+    Set<Class> types = new HashSet<>();
+    types.add(Boolean.class);
+    types.add(Integer.class);
+    types.add(String.class);
+
+    getInfo().getParameters().stream()
+      .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())
+        && (diagnosticParameterInfo.getType().isPrimitive()
+        || types.contains(diagnosticParameterInfo.getType())))
+      .forEach((DiagnosticParameterInfo diagnosticParameterInfo) -> {
+        try {
+          var field = getClass().getDeclaredField(diagnosticParameterInfo.getName());
+          if (field.trySetAccessible()) {
+            field.set(this, configuration.get(field.getName()));
+          }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          e.printStackTrace();
+        }
+      });
+  }
 }
