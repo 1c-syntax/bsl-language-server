@@ -21,11 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+@Slf4j
 public final class DiagnosticHelper {
 
   private DiagnosticHelper() {
@@ -81,5 +90,45 @@ public final class DiagnosticHelper {
   public static boolean isInternetMailProfileType(ParseTree tnc) {
     return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText())
       || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
+  }
+
+  public static void configureDiagnostic(BSLDiagnostic diagnostic, Map<String, Object> configuration) {
+    if (configuration == null || configuration.isEmpty()) {
+      return;
+    }
+
+    Set<Class> types = new HashSet<>();
+    types.add(Boolean.class);
+    types.add(Integer.class);
+    types.add(String.class);
+
+    diagnostic.getInfo().getParameters().stream()
+      .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())
+        && (diagnosticParameterInfo.getType().isPrimitive()
+        || types.contains(diagnosticParameterInfo.getType())))
+      .forEach((DiagnosticParameterInfo diagnosticParameterInfo) -> {
+        try {
+          var field = diagnostic.getClass().getDeclaredField(diagnosticParameterInfo.getName());
+          if (field.trySetAccessible()) {
+            field.set(diagnostic, configuration.get(field.getName()));
+          }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          LOGGER.error("Can't set param.", e);
+        }
+      });
+  }
+
+  public static void configureDiagnostic(BSLDiagnostic diagnostic,
+                                         Map<String, Object> configuration,
+                                         String... filter)
+  {
+    Map<String, Object> newConfiguration = new HashMap<>();
+    for (String name : filter) {
+      if (configuration.containsKey(name)) {
+        newConfiguration.put(name, configuration.get(name));
+      }
+    }
+
+    configureDiagnostic(diagnostic, newConfiguration);
   }
 }

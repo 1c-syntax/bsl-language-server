@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -70,15 +69,6 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   public CyclomaticComplexityDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    complexityThreshold = (int) configuration.getOrDefault("complexityThreshold", complexityThreshold);
-    checkModuleBody = (boolean) configuration.getOrDefault("checkModuleBody", checkModuleBody);
   }
 
   private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol) {

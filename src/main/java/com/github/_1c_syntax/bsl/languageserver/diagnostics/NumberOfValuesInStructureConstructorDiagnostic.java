@@ -32,8 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
-
 /**
  * @author Leon Chagelishvili <lChagelishvily@gmail.com>
  */
@@ -59,14 +57,6 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
 
   public NumberOfValuesInStructureConstructorDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    maxValuesCount = (int) configuration.getOrDefault("maxValuesCount", maxValuesCount);
   }
 
   @Override

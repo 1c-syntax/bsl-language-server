@@ -38,7 +38,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -204,15 +203,6 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     }
 
     return false;
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    analyzeInternetMailProfileZeroTimeout =
-      (boolean) configuration.getOrDefault("analyzeInternetMailProfileZeroTimeout", ANALYZING_MAIL);
   }
 
   @Override
