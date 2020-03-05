@@ -530,6 +530,16 @@
             "title": "Nested constructors with parameters in structure declaration",
             "$id": "#/definitions/NestedConstructorsInStructureDeclaration"
         },
+        "NestedFunctionInParameters": {
+            "description": "Passing parameters to methods and constructors using nested methods and constructors with parameters",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Passing parameters to methods and constructors using nested methods and constructors with parameters",
+            "$id": "#/definitions/NestedFunctionInParameters"
+        },
         "NestedStatements": {
             "description": "Control flow statements should not be nested too deep",
             "default": null,
