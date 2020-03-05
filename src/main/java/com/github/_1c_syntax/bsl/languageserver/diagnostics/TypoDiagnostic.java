@@ -66,7 +66,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private static final JLanguageTool enLangTool = new JLanguageTool(enLang);
   private static Map<String, JLanguageTool> languageToolMap = new HashMap<>();
 
-  private static final int DEFAULT_MIN_WORD_LENGTH = 2;
+  private static final int DEFAULT_MIN_WORD_LENGTH = 3;
   private static final String DEFAULT_USER_WORDS_TO_IGNORE = "";
 
   @DiagnosticParameter(

@@ -45,14 +45,14 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
     assertThat(diagnostics, true)
       .hasRange(1, 13, 1, 21)
       .hasRange(5, 8, 5, 22)
-      .hasRange(8, 13, 8, 17);
+      .hasRange(8, 13, 8, 18);
   }
 
   @Test
   void testConfigureWordLength() {
     // given
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("minWordLength", 3);
+    configuration.put("minWordLength", 4);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
@@ -76,6 +76,6 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
       .hasRange(1, 13, 1, 21)
-      .hasRange(8, 13, 8, 17);
+      .hasRange(8, 13, 8, 18);
   }
 }
