@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -167,13 +166,17 @@ public class TypoDiagnostic extends AbstractDiagnostic {
         matches.stream()
           .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
           .map(ruleMatch -> result.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
-          .map(tokensMap::get).filter(Objects::nonNull)
-          .forEach(nodeList -> nodeList.stream()
-            .filter(parseTree -> !usedNodes.contains(parseTree))
-            .forEach(token -> {
-              diagnosticStorage.addDiagnostic(token, info.getMessage(token.getText()));
-              usedNodes.add(token);
-        }));
+          .forEach(substring -> {
+          List<Token> nodeList = tokensMap.get(substring);
+          if (nodeList != null) {
+            nodeList.stream()
+              .filter(parseTree -> !usedNodes.contains(parseTree))
+              .forEach(parseTree -> {
+              diagnosticStorage.addDiagnostic(parseTree, info.getMessage(substring));
+              usedNodes.add(parseTree);
+            });
+          }
+        });
       }
     } catch(IOException e){
       LOGGER.error(e.getMessage(), e);
