@@ -41,3 +41,22 @@ Spelling error.
     "minWordLength": 3
 }
 ```
+
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
+### Diagnostic ignorance in code
+
+```bsl
+// BSLLS:Typo-off
+// BSLLS:Typo-on
+```
+
+### Parameter for config
+
+```json
+"Typo": {
+    "userWordsToIgnore": "",
+    "minWordLength": 3
+}
+```
