@@ -89,7 +89,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     if (configuration == null) {
       return;
     }
-    minWordLength = (int) configuration.getOrDefault("minWordLength", minWordLength);
+    minWordLength = Math.max((int) configuration.getOrDefault("minWordLength", minWordLength), 2);
     userWordsToIgnore = (String) configuration.getOrDefault("userWordsToIgnore", userWordsToIgnore);
   }
 
@@ -103,25 +103,30 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
-  @Override
-  protected void check(DocumentContext documentContext) {
-
-    String lang = info.getResourceString("diagnosticLanguage");
+  private void languageToolPreparation(String lang) {
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
 
     languageToolMap.put("ru", ruLangTool);
     languageToolMap.put("en", enLangTool);
 
-    languageToolMap.get(lang).getAllRules().stream().filter(rule -> !rule.isDictionaryBasedSpellingRule()).map(Rule::getId).forEach(languageToolMap.get(lang)::disableRule);
-    languageToolMap.get(lang).getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
+    languageToolMap.get(lang).getAllRules().stream()
+      .filter(rule -> !rule.isDictionaryBasedSpellingRule())
+      .map(Rule::getId)
+      .forEach(languageToolMap.get(lang)::disableRule);
+
+
+    languageToolMap.get(lang).getAllActiveRules()
+      .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     if (!userWordsToIgnore.equals("")) {
       ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
-      languageToolMap.get(lang).getAllActiveRules().forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
+      languageToolMap.get(lang).getAllActiveRules()
+        .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
     }
+  }
 
+  private String getTokenizedStringFromTokens(DocumentContext documentContext, Map<String, List<Token>> tokensMap) {
     StringBuilder text = new StringBuilder();
-    Map<String, List<Token>> tokensMap = new HashMap<>();
 
     documentContext.getTokens().stream()
       .filter(token -> token.getType() == BSLParser.STRING
@@ -133,25 +138,37 @@ public class TypoDiagnostic extends AbstractDiagnostic {
           .filter(element -> element.length() >= minWordLength)
           .forEach(element -> {
 
-          tokensMap.computeIfPresent(element, (key, value) -> {
-            value.add(token);
-            return value;
-          });
+            tokensMap.computeIfPresent(element, (key, value) -> {
+              value.add(token);
+              return value;
+            });
 
-          tokensMap.computeIfAbsent(element, key -> {
-            List<Token> value = new ArrayList<>();
-            value.add(token);
-            return value;
+            tokensMap.computeIfAbsent(element, key -> {
+              List<Token> value = new ArrayList<>();
+              value.add(token);
+              return value;
 
+            });
           });
-        });
 
         text.append(" ");
         text.append(String.join(" ", splitList));
 
       });
 
-    String result = Arrays.stream(text.toString().trim().split("\\s+")).distinct().collect(Collectors.joining(" "));
+    return Arrays.stream(text.toString().trim()
+      .split("\\s+")).distinct()
+      .collect(Collectors.joining(" "));
+  }
+
+  @Override
+  protected void check(DocumentContext documentContext) {
+
+    String lang = info.getResourceString("diagnosticLanguage");
+    Map<String, List<Token>> tokensMap = new HashMap<>();
+
+    languageToolPreparation(lang);
+    String result = getTokenizedStringFromTokens(documentContext, tokensMap);
 
     try {
       List<RuleMatch> matches;
@@ -182,4 +199,5 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       LOGGER.error(e.getMessage(), e);
     }
   }
+
 }

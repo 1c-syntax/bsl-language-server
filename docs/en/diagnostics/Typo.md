@@ -14,7 +14,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Spelling error.
+Spellchecking is using LanguageTool. Strings are divided by camelCase
+and checked in the built-in dictionary.
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -23,8 +24,8 @@ Spelling error.
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-[American English Dictionary](https://dictionary.cambridge.org/dictionary/essential-american-english/)
-
+* [American English Dictionary](https://dictionary.cambridge.org/dictionary/essential-american-english/)
+* [Source](https://languagetool.org/en/)
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
