@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -144,6 +146,26 @@ public final class Trees {
     }
 
     return tnc;
+  }
+
+  /**
+   * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
+   * @param tokenIndex - индекс текущего токена в переданном списке токенов
+   * @return предыдущий токен, если он был найден
+   */
+  public static Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex) {
+    while (true) {
+      if (tokenIndex == 0) {
+        return Optional.empty();
+      }
+      Token token = tokens.get(tokenIndex);
+      if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+        tokenIndex = tokenIndex - 1;
+        continue;
+      }
+
+      return Optional.of(token);
+    }
   }
 
   /**
