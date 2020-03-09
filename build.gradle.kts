@@ -66,6 +66,14 @@ dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.8.1")
 
+    implementation("org.languagetool", "languagetool-core", "4.2")
+
+    // https://mvnrepository.com/artifact/org.languagetool/language-en
+    implementation("org.languagetool", "language-en", "4.2")
+
+    // https://mvnrepository.com/artifact/org.languagetool/language-ru
+    implementation("org.languagetool", "language-ru", "4.2")
+
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     implementation("commons-cli", "commons-cli", "1.4")
     // https://mvnrepository.com/artifact/commons-io/commons-io
@@ -91,7 +99,7 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "0.12.0") {
+    implementation("com.github.1c-syntax", "bsl-parser", "71be3f1d205b0202fc4d4ef0f5e5ba351f472475") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
