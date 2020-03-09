@@ -124,7 +124,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   private ArrayList<String> getWordsToIgnore() {
-    String exceptions = info.getResourceString("diagnosticExceptions").replaceAll("\n", "");
+    String exceptions = info.getResourceString("diagnosticExceptions").replaceAll("\n", "").intern();
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
