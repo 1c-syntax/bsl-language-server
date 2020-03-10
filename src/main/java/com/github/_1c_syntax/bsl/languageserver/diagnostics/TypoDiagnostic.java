@@ -31,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
@@ -64,23 +66,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TypoDiagnostic extends AbstractDiagnostic {
 
-  private static final Russian ruLang = new Russian();
-  private static final AmericanEnglish enLang = new AmericanEnglish();
-  private static final JLanguageTool ruLangTool = new JLanguageTool(ruLang);
-  private static final JLanguageTool enLangTool = new JLanguageTool(enLang);
-  private static final Map<String, JLanguageTool> languageToolMap = Map.of(
-    "en", enLangTool,
-    "ru", ruLangTool
-  );
-
-  static {
-    languageToolMap.forEach((lang, languageTool) ->
-      languageTool.getAllRules().stream()
-        .filter(rule -> !rule.isDictionaryBasedSpellingRule())
-        .map(Rule::getId)
-        .forEach(languageTool::disableRule)
-    );
-  }
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  private static final JLanguageTool ruLangTool = new JLanguageTool(new Russian());
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  private static final JLanguageTool enLangTool = new JLanguageTool(new AmericanEnglish());
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  private static final Map<String, JLanguageTool> languageToolMap = initializeLanguageToolMap();
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
@@ -136,12 +127,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private void languageToolPreparation(String lang) {
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
 
-    languageToolMap.get(lang).getAllActiveRules()
+    getLanguageToolMap().get(lang).getAllActiveRules()
       .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     if (!userWordsToIgnore.equals("")) {
       ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
-      languageToolMap.get(lang).getAllActiveRules()
+      getLanguageToolMap().get(lang).getAllActiveRules()
         .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
     }
   }
@@ -183,8 +174,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     try {
       List<RuleMatch> matches;
 
-      synchronized (languageToolMap.get(lang)) {
-        matches = languageToolMap.get(lang).check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
+      synchronized (getLanguageToolMap().get(lang)) {
+        matches = getLanguageToolMap().get(lang).check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
       }
 
       if (!matches.isEmpty()) {
@@ -208,4 +199,19 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     }
   }
 
+  private static Map<String, JLanguageTool> initializeLanguageToolMap() {
+    var tempLanguageToolMap = Map.of(
+      "en", getEnLangTool(),
+      "ru", getRuLangTool()
+    );
+
+    tempLanguageToolMap.forEach((lang, languageTool) ->
+      languageTool.getAllRules().stream()
+        .filter(rule -> !rule.isDictionaryBasedSpellingRule())
+        .map(Rule::getId)
+        .forEach(languageTool::disableRule)
+    );
+
+    return tempLanguageToolMap;
+  }
 }
