@@ -406,9 +406,9 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>82</strong></p>
+<p>Total: <strong>83</strong></p>
 <ul>
-<li>Error: <strong>26</strong></li>
+<li>Error: <strong>27</strong></li>
 <li>Code smell: <strong>52</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>2</strong></li>
@@ -885,7 +885,7 @@
 <td><a href="TempFilesDir/">TempFilesDir</a></td>
 <td>TempFilesDir() method call</td>
 <td align="center">Yes</td>
-<td>Info</td>
+<td>Major</td>
 <td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
@@ -1072,6 +1072,14 @@
 <td>Minor</td>
 <td>Code smell</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
+</tr>
+<tr>
+<td><a href="WrongUseOfRollbackTransactionMethod/">WrongUseOfRollbackTransactionMethod</a></td>
+<td>Not recommended using of RollbackTransaction method</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="YoLetterUsage/">YoLetterUsage</a></td>

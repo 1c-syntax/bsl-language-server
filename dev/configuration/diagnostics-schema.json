@@ -1070,6 +1070,16 @@
             "title": "Using deprecated property \"ThisForm\"",
             "$id": "#/definitions/UsingThisForm"
         },
+        "WrongUseOfRollbackTransactionMethod": {
+            "description": "Not recommended using of RollbackTransaction method",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Not recommended using of RollbackTransaction method",
+            "$id": "#/definitions/WrongUseOfRollbackTransactionMethod"
+        },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",
             "default": null,

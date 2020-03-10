@@ -406,11 +406,11 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>82</strong></p>
+<p>Общее количество: <strong>83</strong></p>
 <ul>
 <li>Дефект кода: <strong>52</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
-<li>Ошибка: <strong>26</strong></li>
+<li>Ошибка: <strong>27</strong></li>
 <li>Потенциальная уязвимость: <strong>2</strong></li>
 </ul>
 <table>
@@ -885,7 +885,7 @@
 <td><a href="TempFilesDir/">TempFilesDir</a></td>
 <td>Вызов функции КаталогВременныхФайлов()</td>
 <td align="center">Да</td>
-<td>Информационный</td>
+<td>Важный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
 </tr>
@@ -1072,6 +1072,14 @@
 <td>Незначительный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br/><code>deprecated</code></td>
+</tr>
+<tr>
+<td><a href="WrongUseOfRollbackTransactionMethod/">WrongUseOfRollbackTransactionMethod</a></td>
+<td>Некорректное использование метода ОтменитьТранзакцию()</td>
+<td align="center">Да</td>
+<td>Критичный</td>
+<td>Ошибка</td>
+<td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="YoLetterUsage/">YoLetterUsage</a></td>
