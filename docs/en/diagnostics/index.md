@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **82**
+Total: **83**
 
-* Error: **26**
+* Error: **27**
 * Code smell: **52**
 * Vulnerability: **2**
 * Security Hotspot: **2**
@@ -74,7 +74,7 @@ Total: **82**
 | [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br/>`error` |
 | [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` |
-| [TempFilesDir](TempFilesDir.md) | TempFilesDir() method call | Yes | Info | Code smell | `standard`<br/>`badpractice` |
+| [TempFilesDir](TempFilesDir.md) | TempFilesDir() method call | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [TernaryOperatorUsage](TernaryOperatorUsage.md) | Ternary operator usage | No | Minor | Code smell | `brainoverload` |
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Timeouts working with external resources | Yes | Critical | Error | `unpredictable`<br/>`standard` |
 | [TooManyReturns](TooManyReturns.md) | Methods should not have too many return statements | No | Minor | Code smell | `brainoverload` |
@@ -98,5 +98,5 @@ Total: **82**
 | [UsingServiceTag](UsingServiceTag.md) | Using service tags | Yes | Info | Code smell | `badpractice` |
 | [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | No | Major | Code smell | `standard` |
 | [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
-| [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Info | Code smell | `error`<br/>`standard` |
+| [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` |
 | [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` |

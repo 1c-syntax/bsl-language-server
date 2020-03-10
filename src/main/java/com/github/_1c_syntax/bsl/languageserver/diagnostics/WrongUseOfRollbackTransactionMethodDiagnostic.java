@@ -34,12 +34,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.CRITICAL,
   minutesToFix = 1,
   scope = DiagnosticScope.BSL,
   tags = {
-    DiagnosticTag.ERROR,
     DiagnosticTag.STANDARD
   }
 
