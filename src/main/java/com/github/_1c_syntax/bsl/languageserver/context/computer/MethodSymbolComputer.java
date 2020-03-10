@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
@@ -37,24 +38,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
-
-  private static final Set<Integer> VALID_TOKEN_TYPES = Set.of(
-    BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
-    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
-    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
-    BSLParser.ANNOTATION_ATSERVER_SYMBOL,
-    BSLParser.ANNOTATION_CUSTOM_SYMBOL,
-    BSLParser.ANNOTATION_UKNOWN,
-    BSLParser.LINE_COMMENT,
-    BSLParser.WHITE_SPACE,
-    BSLParser.RULE_annotationParams
-  );
 
   private final DocumentContext documentContext;
   private List<MethodSymbol> methods = new ArrayList<>();
@@ -87,13 +74,13 @@ public final class MethodSymbolComputer
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
-      .export(declaration.EXPORT_KEYWORD() != null)
-      .function(true)
       .node(ctx)
       .region(findRegion(startNode, stopNode))
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(declaration.subName()))
-      .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
+      .function(true)
+      .export(declaration.EXPORT_KEYWORD() != null)
+      .description(createDescription(startNode.getSymbol()))
       .build();
 
     methods.add(methodSymbol);
@@ -118,13 +105,13 @@ public final class MethodSymbolComputer
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
-      .export(declaration.EXPORT_KEYWORD() != null)
-      .function(false)
       .node(ctx)
       .region(findRegion(startNode, stopNode))
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(declaration.subName()))
-      .description(findMethodDescription(startNode.getSymbol().getTokenIndex()))
+      .function(false)
+      .export(declaration.EXPORT_KEYWORD() != null)
+      .description(createDescription(startNode.getSymbol()))
       .build();
 
     methods.add(methodSymbol);
@@ -132,8 +119,8 @@ public final class MethodSymbolComputer
     return ctx;
   }
 
-  private Optional<RegionSymbol> findRegion(TerminalNode start, TerminalNode stop) {
-
+  private Optional<MethodDescription> createDescription(Token token) {
+    List<Token> comments = Trees.getComments(documentContext.getTokens(), token);
     if (start == null || stop == null) {
       return Optional.empty();
     }
@@ -147,8 +134,6 @@ public final class MethodSymbolComputer
 
   }
 
-  private Optional<MethodDescription> findMethodDescription(int startIndex) {
-    List<Token> comments = getMethodComments(startIndex, new ArrayList<>());
     if (comments.isEmpty()) {
       return Optional.empty();
     }
@@ -156,34 +141,4 @@ public final class MethodSymbolComputer
     return Optional.of(new MethodDescription(comments));
   }
 
-  private List<Token> getMethodComments(int index, List<Token> lines) {
-    if (index == 0) {
-      return lines;
     }
-
-    Token previousToken = documentContext.getTokens().get(index - 1);
-    Token currentToken = documentContext.getTokens().get(index);
-
-    if (abortSearch(previousToken, currentToken)) {
-      return lines;
-    }
-
-    lines = getMethodComments(previousToken.getTokenIndex(), lines);
-    int type = previousToken.getType();
-    if (type == BSLParser.LINE_COMMENT) {
-      lines.add(previousToken);
-    }
-    return lines;
-  }
-
-  private static boolean abortSearch(Token previousToken, Token currentToken) {
-    int type = previousToken.getType();
-    return !VALID_TOKEN_TYPES.contains(type) || isBlankLine(previousToken, currentToken);
-  }
-
-  private static boolean isBlankLine(Token previousToken, Token currentToken) {
-    return previousToken.getType() == BSLParser.WHITE_SPACE
-      && (previousToken.getTokenIndex() == 0
-      || (previousToken.getLine() + 1) != currentToken.getLine());
-  }
-}

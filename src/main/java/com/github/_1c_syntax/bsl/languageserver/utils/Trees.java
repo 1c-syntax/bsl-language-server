@@ -21,7 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -39,11 +41,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@UtilityClass
 public final class Trees {
 
-  private Trees() {
-    // only statics
-  }
+  private static final Set<Integer> VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH = Set.of(
+    BSLParser.ANNOTATION_ATCLIENT_SYMBOL,
+    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL,
+    BSLParser.ANNOTATION_ATSERVER_SYMBOL,
+    BSLParser.ANNOTATION_CUSTOM_SYMBOL,
+    BSLParser.ANNOTATION_UKNOWN,
+    BSLParser.LINE_COMMENT,
+    BSLParser.WHITE_SPACE,
+    BSLParser.RULE_annotationParams
+  );
 
   /**
    * Обертки Trees
@@ -278,5 +290,88 @@ public final class Trees {
 
     return IntStream.range(0, t.getChildCount())
       .anyMatch(i -> nodeContains(t.getChild(i), exclude, index));
+  }
+
+  public static Optional<Token> getTrailingComment(List<Token> tokens, Token token) {
+    int index = token.getTokenIndex();
+    int size = tokens.size();
+    int currentIndex = index + 1;
+    int line = token.getLine();
+
+    while (currentIndex < size) {
+      var nextToken = tokens.get(currentIndex);
+      if (nextToken.getLine() > line) {
+        break;
+      }
+      if (nextToken.getType() == BSLParser.LINE_COMMENT) {
+        return Optional.of(nextToken);
+      }
+      currentIndex++;
+    }
+
+    return Optional.empty();
+
+  }
+
+  /**
+   * Поиск комментариев назад от указанного токена
+   *
+   * @param tokens - список токетов DocumentContext
+   * @param token  - токен, для которого требуется найти комментарии
+   * @return - список найденных комментариев lines
+   */
+  public static List<Token> getComments(List<Token> tokens, Token token) {
+    List<Token> comments = new ArrayList<>();
+    fillCommentsCollection(tokens, token, comments);
+    return comments;
+  }
+
+  private static void fillCommentsCollection(List<Token> tokens, Token currentToken, List<Token> lines) {
+
+    int index = currentToken.getTokenIndex();
+
+    if (index == 0) {
+      return;
+    }
+
+    Token previousToken = tokens.get(index - 1);
+
+    if (abortSearchComments(previousToken, currentToken)) {
+      return;
+    }
+
+    fillCommentsCollection(tokens, previousToken, lines);
+    int type = previousToken.getType();
+    if (type == BSLParser.LINE_COMMENT) {
+      lines.add(previousToken);
+    }
+  }
+
+  private static boolean abortSearchComments(Token previousToken, Token currentToken) {
+    int type = previousToken.getType();
+    return !VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH.contains(type) || isBlankLine(previousToken, currentToken);
+  }
+
+  private static boolean isBlankLine(Token previousToken, Token currentToken) {
+    return previousToken.getType() == BSLParser.WHITE_SPACE
+      && (previousToken.getTokenIndex() == 0
+      || (previousToken.getLine() + 1) != currentToken.getLine());
+  }
+
+
+  private static boolean treeContainsErrors(ParseTree tnc, boolean recursive) {
+    if (!(tnc instanceof BSLParserRuleContext)) {
+      return false;
+    }
+
+    BSLParserRuleContext ruleContext = (BSLParserRuleContext) tnc;
+
+    if (ruleContext.exception != null) {
+      return true;
+    }
+
+    return recursive
+      && ruleContext.children != null
+      && ruleContext.children.stream().anyMatch(Trees::treeContainsErrors);
   }
 }
