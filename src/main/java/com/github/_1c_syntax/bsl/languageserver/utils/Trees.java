@@ -122,24 +122,21 @@ public final class Trees {
   }
 
   /**
-   * Проверяет среди дочерних элементов наличие ноды с ошибкой
+   * Проверяет среди всех дочерних элементов (рекурсивно) наличие узла с ошибкой
    *
-   * @return true - если есть нода с ошибкой
+   * @return true - если есть узел с ошибкой
    */
-  public static boolean findErrorNode(ParseTree tnc) {
+  public static boolean treeContainsErrors(ParseTree tnc) {
+    return treeContainsErrors(tnc, true);
+  }
 
-    if (tnc instanceof BSLParserRuleContext) {
-      if (((BSLParserRuleContext) tnc).exception != null) {
-        return true;
-      }
-
-      for (int i = 0; i < tnc.getChildCount(); i++) {
-        if (findErrorNode(tnc.getChild(i))) {
-          return true;
-        }
-      }
-    }
-    return false;
+  /**
+   * Проверяет среди дочерних элементов узла наличие узла с ошибкой
+   *
+   * @return true - если есть узел с ошибкой
+   */
+  public static boolean nodeContainsErrors(ParseTree tnc) {
+    return treeContainsErrors(tnc, false);
   }
 
   /**

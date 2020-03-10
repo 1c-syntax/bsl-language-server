@@ -60,7 +60,7 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (Trees.findErrorNode(ctx)) {
+    if (Trees.treeContainsErrors(ctx)) {
       return ctx;
     }
 

@@ -60,7 +60,7 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
 
     if (ctx.getChildCount() == 1
       && ctx.SEMICOLON() != null
-      && !Trees.findErrorNode(
+      && !Trees.treeContainsErrors(
       Trees.getPreviousNode(
         Trees.getRootParent(ctx),
         ctx,
