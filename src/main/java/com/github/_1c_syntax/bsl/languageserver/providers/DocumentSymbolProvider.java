@@ -44,7 +44,7 @@ public final class DocumentSymbolProvider {
     // only statics
   }
 
-  public static List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbol(DocumentContext documentContext) {
+  public static List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
 
     List<DocumentSymbol> globalVariables = getGlobalVariables(documentContext);
 
