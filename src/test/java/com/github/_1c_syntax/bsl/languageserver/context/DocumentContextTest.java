@@ -57,7 +57,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    documentContext.clearASTData();
+    documentContext.clearParseTreeData();
 
     // then
     final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
@@ -69,7 +69,7 @@ class DocumentContextTest {
 
     DocumentContext documentContext = getDocumentContext();
 
-    assertThat(documentContext.getMethods().size()).isEqualTo(2);
+    assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(2);
 
   }
 
@@ -79,7 +79,7 @@ class DocumentContextTest {
     DocumentContext documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextParseErrorTest.bsl");
 
-    assertThat(documentContext.getMethods().isEmpty()).isTrue();
+    assertThat(documentContext.getSymbolTree().getMethods().isEmpty()).isTrue();
 
   }
 
@@ -87,8 +87,8 @@ class DocumentContextTest {
   void testGetRegionsFlatComputesAllLevels() {
     DocumentContext documentContext = getDocumentContext();
 
-    assertThat(documentContext.getRegions()).hasSize(2);
-    assertThat(documentContext.getRegionsFlat()).hasSize(4);
+    assertThat(documentContext.getSymbolTree().getModuleLevelRegions()).hasSize(2);
+    assertThat(documentContext.getSymbolTree().getRegionsFlat()).hasSize(6);
   }
 
   @Test
@@ -97,7 +97,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    List<RegionSymbol> regions = documentContext.getRegions();
+    List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
 
     // then
     assertThat(regions).anyMatch(regionSymbol -> regionSymbol.getMethods().size() > 0);
@@ -109,7 +109,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    List<MethodSymbol> methods = documentContext.getMethods();
+    List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     // then
     assertThat(methods)
