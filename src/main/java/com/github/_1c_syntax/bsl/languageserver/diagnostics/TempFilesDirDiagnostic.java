@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 5,
   scope = DiagnosticScope.BSL,
   tags = {
