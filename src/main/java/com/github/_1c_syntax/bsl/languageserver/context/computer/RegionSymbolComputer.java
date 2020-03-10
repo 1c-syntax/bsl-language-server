@@ -23,12 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -64,18 +66,19 @@ public final class RegionSymbolComputer
 
     visitFile(documentContext.getAst());
 
+    regionStack.clear();
+    allNodes.clear();
+
     return new ArrayList<>(regions);
   }
 
   @Override
   public ParseTree visitRegionStart(BSLParser.RegionStartContext ctx) {
 
-    RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder();
-    builder.node(ctx);
-    builder.startNode(ctx);
-    builder.startLine(ctx.getStart().getLine());
-    builder.name(ctx.regionName().getText());
-    builder.nameNode(ctx.regionName());
+    RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
+      .name(ctx.regionName().getText())
+      .regionNameRange(Ranges.create(ctx.regionName()))
+      .startRange(Ranges.create(ctx));
 
     regionStack.push(Pair.of(builder, ctx));
     return super.visitRegionStart(ctx);
@@ -93,12 +96,15 @@ public final class RegionSymbolComputer
     RegionSymbol.RegionSymbolBuilder builder = pair.getLeft();
     BSLParser.RegionStartContext regionStartContext = pair.getRight();
 
-    int regionStartLine = regionStartContext.getStart().getLine();
-    int regionEndLine = ctx.getStop().getLine();
+    Range range = Ranges.create(regionStartContext, ctx);
+    builder
+      .range(range)
+      .endRange(Ranges.create(ctx))
+    ;
 
-    builder.endNode(ctx);
-    builder.endLine(ctx.getStop().getLine());
-
+    // zero-based ranges
+    int regionStartLine = range.getStart().getLine() + 1;
+    int regionEndLine = range.getEnd().getLine() + 1;
     List<BSLParserRuleContext> regionNodes = allNodes.stream()
       .filter(node ->
         node.getStart().getLine() > regionStartLine
@@ -109,13 +115,7 @@ public final class RegionSymbolComputer
 
     RegionSymbol region = builder.build();
 
-    var parentPair = regionStack.peek();
-    if (parentPair != null) {
-      RegionSymbol.RegionSymbolBuilder parent = parentPair.getLeft();
-      parent.child(region);
-    } else {
-      regions.add(region);
-    }
+    regions.add(region);
 
     return super.visitRegionEnd(ctx);
   }

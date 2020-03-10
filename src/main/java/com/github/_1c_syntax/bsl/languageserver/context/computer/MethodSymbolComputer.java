@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -35,7 +34,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,8 +72,6 @@ public final class MethodSymbolComputer
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
-      .node(ctx)
-      .region(findRegion(startNode, stopNode))
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(declaration.subName()))
       .function(true)
@@ -105,8 +101,6 @@ public final class MethodSymbolComputer
 
     MethodSymbol methodSymbol = MethodSymbol.builder()
       .name(declaration.subName().getText())
-      .node(ctx)
-      .region(findRegion(startNode, stopNode))
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(declaration.subName()))
       .function(false)
@@ -121,19 +115,6 @@ public final class MethodSymbolComputer
 
   private Optional<MethodDescription> createDescription(Token token) {
     List<Token> comments = Trees.getComments(documentContext.getTokens(), token);
-    if (start == null || stop == null) {
-      return Optional.empty();
-    }
-
-    int startLine = start.getSymbol().getLine();
-    int endLine = stop.getSymbol().getLine();
-
-    return documentContext.getRegionsFlat().stream()
-      .filter(regionSymbol -> regionSymbol.getStartLine() < startLine && regionSymbol.getEndLine() > endLine)
-      .max(Comparator.comparingInt(RegionSymbol::getStartLine));
-
-  }
-
     if (comments.isEmpty()) {
       return Optional.empty();
     }
@@ -141,4 +122,4 @@ public final class MethodSymbolComputer
     return Optional.of(new MethodDescription(comments));
   }
 
-    }
+}
