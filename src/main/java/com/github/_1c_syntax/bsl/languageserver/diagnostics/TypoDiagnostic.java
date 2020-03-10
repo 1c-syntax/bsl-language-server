@@ -75,6 +75,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
+  private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\n");
 
   private static final Integer[] rulesToFind = new Integer[]{
     BSLParser.RULE_string,
@@ -115,12 +116,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   private ArrayList<String> getWordsToIgnore() {
-    String exceptions = info.getResourceString("diagnosticExceptions").replaceAll("\n", "").intern();
+    String exceptions = NEWLINE_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("").intern();
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
   private ArrayList<String> getUserWordsToIgnore() {
-    String exceptions = userWordsToIgnore.replaceAll("\n", "");
+    String exceptions = NEWLINE_PATTERN.matcher(userWordsToIgnore).replaceAll("").intern();
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
@@ -130,7 +131,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     getLanguageToolMap().get(lang).getAllActiveRules()
       .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
-    if (!userWordsToIgnore.equals("")) {
+    if (!"".equals(userWordsToIgnore)) {
       ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
       getLanguageToolMap().get(lang).getAllActiveRules()
         .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
@@ -185,7 +186,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
           .stream()
           .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
           .map(ruleMatch -> result.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
-          .forEach(substring -> {
+          .forEach((String substring) -> {
             List<Token> tokens = tokensMap.get(substring);
             if (tokens != null) {
               tokens.stream()
@@ -194,7 +195,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
             }
           });
       }
-    } catch(IOException e){
+    } catch (IOException e) {
       LOGGER.error(e.getMessage(), e);
     }
   }
