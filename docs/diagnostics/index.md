@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **81**
+Общее количество: **82**
 
-* Дефект кода: **51**
+* Дефект кода: **52**
 * Уязвимость: **2**
 * Ошибка: **26**
 * Потенциальная уязвимость: **2**
@@ -74,6 +74,7 @@
 | [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да | Критичный | Ошибка | `unpredictable`<br/>`error` |
 | [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` |
+| [TempFilesDir](TempFilesDir.md) | Вызов функции КаталогВременныхФайлов() | Да | Информационный | Дефект кода | `standard`<br/>`badpractice` |
 | [TernaryOperatorUsage](TernaryOperatorUsage.md) | Использование тернарного оператора | Нет | Незначительный | Дефект кода | `brainoverload` |
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Таймауты при работе с внешними ресурсами | Да | Критичный | Ошибка | `unpredictable`<br/>`standard` |
 | [TooManyReturns](TooManyReturns.md) | Метод не должен содержать много возвратов | Нет | Незначительный | Дефект кода | `brainoverload` |

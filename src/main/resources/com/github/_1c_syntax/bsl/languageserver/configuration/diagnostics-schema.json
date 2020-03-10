@@ -768,6 +768,16 @@
             },
             "$id": "#/definitions/SpaceAtStartComment"
         },
+        "TempFilesDir": {
+            "description": "TempFilesDir() method call",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "TempFilesDir() method call",
+            "$id": "#/definitions/TempFilesDir"
+        },
         "TernaryOperatorUsage": {
             "description": "Ternary operator usage",
             "default": null,
