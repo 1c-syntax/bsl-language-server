@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -56,13 +55,12 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
-    documentContext.getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+    documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
       if (methodSymbol.isExport()) {
         return;
       }
 
-      methodSymbol.getRegion().flatMap(mr -> Regions.getRootRegion(documentContext.getRegions(), mr))
-        .ifPresent(rootRegion -> {
+      methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
           if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
             String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
             diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);

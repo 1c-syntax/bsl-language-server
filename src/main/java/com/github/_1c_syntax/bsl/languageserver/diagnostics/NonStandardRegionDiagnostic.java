@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -190,7 +189,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    List<RegionSymbol> regions = documentContext.getFileLevelRegions();
+    List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
 
     // чтобы не было лишних FP, анализировать модуль без областей не будем
     // вешать диагностику тож не будем, пусть вешается "CodeOutOfRegionDiagnostic"
@@ -202,7 +201,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
     regions.forEach((RegionSymbol region) -> {
       if (standardRegions.stream().noneMatch(regionName -> regionName.matcher(region.getName()).find())) {
         diagnosticStorage.addDiagnostic(
-          Ranges.create(region.getStartNode().getStart(), region.getStartNode().getStop()),
+          region.getStartRange(),
           info.getMessage(region.getName())
         );
       }

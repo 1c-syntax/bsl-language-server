@@ -64,7 +64,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    List<RegionSymbol> regions = documentContext.getFileLevelRegions();
+    List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
     regionsRanges.clear();
 
     // если областей нет, то и смысла дальше анализировть тоже нет
@@ -79,7 +79,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    regions.forEach(region -> regionsRanges.add(Ranges.create(region)));
+    regions.forEach(region -> regionsRanges.add(region.getRange()));
 
     return super.visitFile(ctx);
 
@@ -96,7 +96,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
       BSLParser.RULE_moduleVars, BSLParser.RULE_fileCodeBlockBeforeSub);
 
     // 3. методы
-    documentContext.getMethods().stream()
+    documentContext.getSymbolTree().getMethods().stream()
       .map(node ->
         RelatedInformation.create(
           documentContext.getUri(),
@@ -147,7 +147,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    documentContext.getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+    documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
       if (methodSymbol.getRegion().isEmpty()) {
         diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
       }

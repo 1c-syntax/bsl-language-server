@@ -51,8 +51,8 @@ class CodeLensProviderTest {
     Map<MethodSymbol, Integer> methodsCognitiveComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
     Map<MethodSymbol, Integer> methodsCyclomaticComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity();
 
-    MethodSymbol firstMethod = documentContext.getMethods().get(0);
-    MethodSymbol secondMethod = documentContext.getMethods().get(1);
+    MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol secondMethod = documentContext.getSymbolTree().getMethods().get(1);
     int cognitiveComplexityFirstMethod = methodsCognitiveComplexity.get(firstMethod);
     int cognitiveComplexitySecondMethod = methodsCognitiveComplexity.get(secondMethod);
     int cyclomaticComplexityFirstMethod = methodsCyclomaticComplexity.get(firstMethod);

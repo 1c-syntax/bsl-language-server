@@ -90,7 +90,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
 
-    methodDescriptions = documentContext.getMethods()
+    methodDescriptions = documentContext.getSymbolTree().getMethods()
       .stream()
       .map(MethodSymbol::getDescription)
       .filter(Optional::isPresent)

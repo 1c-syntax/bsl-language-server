@@ -110,7 +110,7 @@ public class AnalyzeCommand implements Command {
     FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
-    documentContext.clearASTData();
+    documentContext.clearParseTreeData();
     diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;
