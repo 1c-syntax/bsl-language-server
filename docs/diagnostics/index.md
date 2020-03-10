@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **83**
+Общее количество: **84**
 
-* Дефект кода: **52**
+* Дефект кода: **53**
 * Уязвимость: **2**
 * Ошибка: **27**
 * Потенциальная уязвимость: **2**
@@ -55,7 +55,7 @@
 | [MultilingualStringHasAllDeclaredLanguages](MultilingualStringHasAllDeclaredLanguages.md) | Есть локализованный текст для всех заявленных в конфигурации языков | Да | Незначительный | Ошибка | `error`<br/>`localize` |
 | [MultilingualStringUsingWithTemplate](MultilingualStringUsingWithTemplate.md) | Частично локализованный текст используется в функции СтрШаблон | Да | Важный | Ошибка | `error`<br/>`localize` |
 | [NestedConstructorsInStructureDeclaration](NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да | Незначительный | Дефект кода | `badpractice`<br/>`brainoverload` |
-| [NestedFunctionInParameters](NestedFunctionInParameters.md) | Передача параметров в методы и конструкторы вложенными методами и конструкторами с параметрами | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload`<br/>`badpractice` |
+| [NestedFunctionInParameters](NestedFunctionInParameters.md) | Инициализация параметров методов и конструкторов вызовом вложенных методов | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload`<br/>`badpractice` |
 | [NestedStatements](NestedStatements.md) | Управляющие конструкции не должны быть вложены слишком глубоко | Да | Критичный | Дефект кода | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](NestedTernaryOperator.md) | Вложенный тернарный оператор | Да | Важный | Дефект кода | `brainoverload` |
 | [NonExportMethodsInApiRegion](NonExportMethodsInApiRegion.md) | Неэкспортные методы в областях ПрограммныйИнтерфейс и СлужебныйПрограммныйИнтерфейс | Да | Важный | Дефект кода | `standard` |

@@ -531,13 +531,13 @@
             "$id": "#/definitions/NestedConstructorsInStructureDeclaration"
         },
         "NestedFunctionInParameters": {
-            "description": "Passing parameters to methods and constructors using nested methods and constructors with parameters",
+            "description": "Initialization of method and constructor parameters by calling nested methods",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Passing parameters to methods and constructors using nested methods and constructors with parameters",
+            "title": "Initialization of method and constructor parameters by calling nested methods",
             "$id": "#/definitions/NestedFunctionInParameters"
         },
         "NestedStatements": {

@@ -1,4 +1,4 @@
-# Passing parameters to methods and constructors using nested methods and constructors with parameters (NestedFunctionInParameters)
+# Initialization of method and constructor parameters by calling nested methods (NestedFunctionInParameters)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **83**
+Total: **84**
 
 * Error: **27**
-* Code smell: **52**
+* Code smell: **53**
 * Vulnerability: **2**
 * Security Hotspot: **2**
 
@@ -55,7 +55,7 @@ Total: **83**
 | [MultilingualStringHasAllDeclaredLanguages](MultilingualStringHasAllDeclaredLanguages.md) | There is a localized text for all languages declared in the configuration | Yes | Minor | Error | `error`<br/>`localize` |
 | [MultilingualStringUsingWithTemplate](MultilingualStringUsingWithTemplate.md) | Partially localized text is used in the StrTemplate function | Yes | Major | Error | `error`<br/>`localize` |
 | [NestedConstructorsInStructureDeclaration](NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes | Minor | Code smell | `badpractice`<br/>`brainoverload` |
-| [NestedFunctionInParameters](NestedFunctionInParameters.md) | Passing parameters to methods and constructors using nested methods and constructors with parameters | Yes | Minor | Code smell | `standard`<br/>`brainoverload`<br/>`badpractice` |
+| [NestedFunctionInParameters](NestedFunctionInParameters.md) | Initialization of method and constructor parameters by calling nested methods | Yes | Minor | Code smell | `standard`<br/>`brainoverload`<br/>`badpractice` |
 | [NestedStatements](NestedStatements.md) | Control flow statements should not be nested too deep | Yes | Critical | Code smell | `badpractice`<br/>`brainoverload` |
 | [NestedTernaryOperator](NestedTernaryOperator.md) | Nested ternary operator | Yes | Major | Code smell | `brainoverload` |
 | [NonExportMethodsInApiRegion](NonExportMethodsInApiRegion.md) | Non export methods in API regions | Yes | Major | Code smell | `standard` |
