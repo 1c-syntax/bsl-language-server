@@ -215,6 +215,9 @@
                 "NestedConstructorsInStructureDeclaration": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedConstructorsInStructureDeclaration"
                 },
+                "NestedFunctionInParameters": {
+                    "$ref": "diagnostics-schema.json#/definitions/NestedFunctionInParameters"
+                },
                 "NestedStatements": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedStatements"
                 },

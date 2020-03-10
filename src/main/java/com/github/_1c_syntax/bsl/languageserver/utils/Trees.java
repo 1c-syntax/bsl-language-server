@@ -32,8 +32,10 @@ import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -251,7 +253,7 @@ public final class Trees {
    * Проверяет наличие дочерней ноды с указанным типом
    */
   public static boolean nodeContains(ParseTree t, Integer... index) {
-    List<Integer> indexes = Arrays.asList(index);
+    Set<Integer> indexes = new HashSet<>(Arrays.asList(index));
 
     if (t instanceof ParserRuleContext
       && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
@@ -260,5 +262,21 @@ public final class Trees {
 
     return IntStream.range(0, t.getChildCount())
       .anyMatch(i -> nodeContains(t.getChild(i), index));
+  }
+
+  /**
+   * Проверяет наличие дочерней ноды с указанным типом исключая переданную
+   */
+  public static boolean nodeContains(ParseTree t, ParseTree exclude, Integer... index) {
+    Set<Integer> indexes = new HashSet<>(Arrays.asList(index));
+
+    if (t instanceof ParserRuleContext
+      && !t.equals(exclude)
+      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
+      return true;
+    }
+
+    return IntStream.range(0, t.getChildCount())
+      .anyMatch(i -> nodeContains(t.getChild(i), exclude, index));
   }
 }
