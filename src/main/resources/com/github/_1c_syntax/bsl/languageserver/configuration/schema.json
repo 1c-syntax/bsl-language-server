@@ -341,6 +341,9 @@
                 "UsingThisForm": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingThisForm"
                 },
+                "WrongUseOfRollbackTransactionMethod": {
+                    "$ref": "diagnostics-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
+                },
                 "YoLetterUsage": {
                     "$ref": "diagnostics-schema.json#/definitions/YoLetterUsage"
                 }
