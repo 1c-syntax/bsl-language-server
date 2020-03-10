@@ -272,6 +272,9 @@
                 "SpaceAtStartComment": {
                     "$ref": "diagnostics-schema.json#/definitions/SpaceAtStartComment"
                 },
+                "TempFilesDir": {
+                    "$ref": "diagnostics-schema.json#/definitions/TempFilesDir"
+                },
                 "TernaryOperatorUsage": {
                     "$ref": "diagnostics-schema.json#/definitions/TernaryOperatorUsage"
                 },

@@ -74,6 +74,7 @@ Total: **82**
 | [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br/>`error` |
 | [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` |
+| [TempFilesDir](TempFilesDir.md) | TempFilesDir() method call | Yes | Info | Code smell | `standard`<br/>`badpractice` |
 | [TernaryOperatorUsage](TernaryOperatorUsage.md) | Ternary operator usage | No | Minor | Code smell | `brainoverload` |
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Timeouts working with external resources | Yes | Critical | Error | `unpredictable`<br/>`standard` |
 | [TooManyReturns](TooManyReturns.md) | Methods should not have too many return statements | No | Minor | Code smell | `brainoverload` |
