@@ -38,7 +38,7 @@ class NestedFunctionInParametersDiagnosticTest extends AbstractDiagnosticTest<Ne
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(1,22, 30)
       .hasRange(3,11, 19)
@@ -46,6 +46,7 @@ class NestedFunctionInParametersDiagnosticTest extends AbstractDiagnosticTest<Ne
       .hasRange(8,4, 12)
       .hasRange(13,35, 42)
       .hasRange(17,22, 31)
+      .hasRange(36,14, 19)
     ;
 
   }
