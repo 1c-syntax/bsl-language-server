@@ -258,6 +258,16 @@
             "title": "FormDataToValue method call",
             "$id": "#/definitions/FormDataToValue"
         },
+        "FunctionNameStartWithGet": {
+            "description": "Function name must't start with Get",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Function name must't start with Get",
+            "$id": "#/definitions/FunctionNameStartWithGet"
+        },
         "FunctionShouldHaveReturn": {
             "description": "The function should have return",
             "default": null,

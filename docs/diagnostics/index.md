@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **84**
+Общее количество: **85**
 
-* Дефект кода: **53**
+* Дефект кода: **54**
 * Уязвимость: **2**
 * Ошибка: **27**
 * Потенциальная уязвимость: **2**
@@ -38,6 +38,7 @@
 | [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` |
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` |
+| [FunctionNameStartWithGet](FunctionNameStartWithGet.md) | Имя функции не должно начинаться с "Получить" | Да | Информационный | Дефект кода | `standard` |
 | [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | Важный | Ошибка | `suspicious`<br/>`unpredictable` |
 | [GetFormMethod](GetFormMethod.md) | Использование метода ПолучитьФорму | Да | Важный | Ошибка | `error` |
 | [IdenticalExpressions](IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да | Важный | Ошибка | `suspicious` |

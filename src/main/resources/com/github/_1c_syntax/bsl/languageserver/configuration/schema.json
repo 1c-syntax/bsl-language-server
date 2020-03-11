@@ -164,6 +164,9 @@
                 "FormDataToValue": {
                     "$ref": "diagnostics-schema.json#/definitions/FormDataToValue"
                 },
+                "FunctionNameStartWithGet": {
+                    "$ref": "diagnostics-schema.json#/definitions/FunctionNameStartWithGet"
+                },
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
                 },
