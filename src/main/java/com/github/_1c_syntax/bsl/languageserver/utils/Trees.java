@@ -289,6 +289,11 @@ public final class Trees {
       .anyMatch(i -> nodeContains(t.getChild(i), exclude, index));
   }
 
+  /**
+   * @param tokens - список токенов из DocumentContext
+   * @param token - токен, на строке которого требуется найти висячий комментарий
+   * @return - токен с комментарием, если он найден
+   */
   public static Optional<Token> getTrailingComment(List<Token> tokens, Token token) {
     int index = token.getTokenIndex();
     int size = tokens.size();
@@ -313,7 +318,7 @@ public final class Trees {
   /**
    * Поиск комментариев назад от указанного токена
    *
-   * @param tokens - список токетов DocumentContext
+   * @param tokens - список токенов DocumentContext
    * @param token  - токен, для которого требуется найти комментарии
    * @return - список найденных комментариев lines
    */
