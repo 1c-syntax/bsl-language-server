@@ -19,27 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.context.symbol.variable;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import lombok.Builder;
+import lombok.Value;
+import org.eclipse.lsp4j.Range;
 
-import java.util.List;
 import java.util.Optional;
 
-public final class Regions {
-
-  public static Optional<RegionSymbol> getRootRegion(List<RegionSymbol> regions, RegionSymbol currentRegion) {
-    return regions.stream()
-      .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, currentRegion))
-      .findFirst();
-  }
-
-  private static boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
-    if (parent.equals(toFind)) {
-      return true;
-    }
-
-    return parent.getChildren().stream().anyMatch(regionSymbol -> findRecursivelyRegion(regionSymbol, (toFind)));
-  }
-
+@Value
+@Builder
+public class VariableDescription {
+  String description;
+  Range range;
+  Optional<VariableDescription> trailingDescription;
 }

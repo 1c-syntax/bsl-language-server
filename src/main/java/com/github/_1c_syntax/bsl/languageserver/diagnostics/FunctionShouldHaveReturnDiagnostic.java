@@ -52,7 +52,7 @@ public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnosti
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
     if (ctx.ENDFUNCTION_KEYWORD() == null
-      || Trees.findErrorNode(ctx)) {
+      || Trees.treeContainsErrors(ctx)) {
       return ctx;
     }
 

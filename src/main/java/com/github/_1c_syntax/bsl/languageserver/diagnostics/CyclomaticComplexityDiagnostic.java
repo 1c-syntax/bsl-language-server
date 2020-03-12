@@ -102,7 +102,7 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getMethodSymbol(ctx);
+    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
       Integer methodComplexity = documentContext.getCyclomaticComplexityData().getMethodsComplexity().get(methodSymbol);
 

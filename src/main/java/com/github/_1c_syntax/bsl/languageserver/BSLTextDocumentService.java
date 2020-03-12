@@ -151,7 +151,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> DocumentSymbolProvider.getDocumentSymbol(documentContext));
+    return CompletableFuture.supplyAsync(() -> DocumentSymbolProvider.getDocumentSymbols(documentContext));
   }
 
   @Override
@@ -257,7 +257,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    documentContext.clearASTData();
+    documentContext.clearParseTreeData();
     diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
   }
 

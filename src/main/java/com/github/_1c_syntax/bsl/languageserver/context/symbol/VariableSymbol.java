@@ -21,40 +21,40 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public interface Symbol {
+@Value
+@Builder
+@EqualsAndHashCode(exclude = {"children", "parent"})
+@ToString(exclude = {"children", "parent"})
+public class VariableSymbol implements Symbol {
+  String name;
+  Range range;
+  Range variableNameRange;
 
-  String getName();
+  @Getter
+  @Setter
+  @Builder.Default
+  @NonFinal
+  Optional<Symbol> parent = Optional.empty();
 
-  Range getRange();
+  @Builder.Default
+  List<Symbol> children = Collections.emptyList();
 
-  Optional<Symbol> getParent();
-  void setParent(Optional<Symbol> symbol);
-
-  List<Symbol> getChildren();
-
-  default void clearParseTreeData() {
-  }
-
-  default Optional<Symbol> getRootParent() {
-    return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
-  }
-
-  static Symbol emptySymbol() {
-    return new Symbol() {
-      @Getter private String name = "empty";
-      @Getter private Range range = Ranges.create(-1, 0, -1, 0);
-      @Getter @Setter private Optional<Symbol> parent = Optional.empty();
-      @Getter private List<Symbol> children = Collections.emptyList();
-    };
-  }
-
+  VariableKind kind;
+  boolean export;
+  Optional<VariableDescription> description;
 }

@@ -91,7 +91,7 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getMethodSymbol(ctx);
+    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
       Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
 

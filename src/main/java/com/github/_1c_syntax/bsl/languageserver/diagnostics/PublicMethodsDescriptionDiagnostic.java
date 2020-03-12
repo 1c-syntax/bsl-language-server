@@ -23,13 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -77,13 +77,12 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
-    documentContext.getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+    documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
       if (methodSymbol.isExport() && methodSymbol.getDescription().isEmpty()) {
         if (checkAllRegion) {
           diagnosticStorage.addDiagnostic(methodSymbol.getRange());
         } else {
-          methodSymbol.getRegion().flatMap(mr -> Regions.getRootRegion(documentContext.getRegions(), mr))
-            .ifPresent(rootRegion -> {
+          methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
               if (isAPIRegion(rootRegion)) {
                 diagnosticStorage.addDiagnostic(methodSymbol.getRange());
               }
@@ -95,7 +94,7 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
     return ctx;
   }
 
-  private static boolean isAPIRegion(RegionSymbol region) {
-    return API_REGION_NAME.matcher(region.getName()).matches();
+  private static boolean isAPIRegion(Symbol symbol) {
+    return symbol instanceof RegionSymbol && API_REGION_NAME.matcher(symbol.getName()).matches();
   }
 }

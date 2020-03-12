@@ -24,127 +24,66 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class DocumentSymbolProvider {
+
+  private static final Map<Class<? extends Symbol>, SymbolKind> symbolKinds = Map.of(
+    MethodSymbol.class, SymbolKind.Method,
+    RegionSymbol.class, SymbolKind.Namespace,
+    VariableSymbol.class, SymbolKind.Variable
+  );
 
   private DocumentSymbolProvider() {
     // only statics
   }
 
-  public static List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbol(DocumentContext documentContext) {
-
-    List<DocumentSymbol> globalVariables = getGlobalVariables(documentContext);
-
-    List<DocumentSymbol> symbols = new ArrayList<>(globalVariables);
-
-    documentContext.getRegions().forEach(regionSymbol -> addRegion(documentContext, symbols, regionSymbol));
-
-    documentContext.getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.getRegion().isEmpty())
-      .forEach((MethodSymbol methodSymbol) -> addMethod(symbols, methodSymbol));
-
-    return symbols.stream()
+  public static List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
+    return documentContext.getSymbolTree().getChildren().stream()
+      .map(DocumentSymbolProvider::toDocumentSymbol)
       .map(Either::<SymbolInformation, DocumentSymbol>forRight)
       .collect(Collectors.toList());
   }
 
-  private static void addRegion(
-    DocumentContext documentContext,
-    Collection<DocumentSymbol> symbols,
-    RegionSymbol regionSymbol
-  ) {
-    DocumentSymbol documentSymbol = new DocumentSymbol(
-      regionSymbol.getName(),
-      SymbolKind.Namespace,
-      Ranges.create(regionSymbol.getStartNode().getStart(), regionSymbol.getEndNode().getStop()),
-      Ranges.create(regionSymbol.getNameNode())
+  private static DocumentSymbol toDocumentSymbol(Symbol symbol) {
+    var documentSymbol = new DocumentSymbol(
+      symbol.getName(),
+      symbolKinds.get(symbol.getClass()),
+      symbol.getRange(),
+      getSelectionRange(symbol)
     );
 
-    List<DocumentSymbol> children = new ArrayList<>();
-    regionSymbol.getChildren().forEach(childRegionSymbol -> addRegion(documentContext, children, childRegionSymbol));
-
-    documentContext.getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.getRegion().isPresent())
-      .filter(methodSymbol -> regionSymbol.equals(methodSymbol.getRegion().get()))
-      .forEach(methodSymbol -> addMethod(children, methodSymbol));
+    List<DocumentSymbol> children = symbol.getChildren().stream()
+      .map(DocumentSymbolProvider::toDocumentSymbol)
+      .collect(Collectors.toList());
 
     documentSymbol.setChildren(children);
 
-    symbols.add(documentSymbol);
+    return documentSymbol;
   }
 
-  private static void addMethod(Collection<DocumentSymbol> symbols, MethodSymbol methodSymbol) {
-    DocumentSymbol documentSymbol = new DocumentSymbol(
-      methodSymbol.getName(),
-      SymbolKind.Method,
-      methodSymbol.getRange(),
-      methodSymbol.getSubNameRange()
-    );
-
-    BSLParser.SubVarsContext subVariablesContext = getSubVarsContext(methodSymbol);
-    List<DocumentSymbol> subVariables = getSubVariables(subVariablesContext);
-
-    documentSymbol.setChildren(subVariables);
-
-    symbols.add(documentSymbol);
-  }
-
-  private static BSLParser.SubVarsContext getSubVarsContext(MethodSymbol methodSymbol) {
-    BSLParser.SubVarsContext subVariablesContext;
-    if (methodSymbol.isFunction()) {
-      subVariablesContext = ((BSLParser.FunctionContext) methodSymbol.getNode()).subCodeBlock().subVars();
+  private static Range getSelectionRange(Symbol symbol) {
+    Range selectionRange;
+    if (symbol instanceof MethodSymbol) {
+      selectionRange = ((MethodSymbol) symbol).getSubNameRange();
+    } else if (symbol instanceof RegionSymbol) {
+      selectionRange = ((RegionSymbol) symbol).getRegionNameRange();
+    } else if (symbol instanceof VariableSymbol) {
+      selectionRange = ((VariableSymbol) symbol).getVariableNameRange();
     } else {
-      subVariablesContext = ((BSLParser.ProcedureContext) methodSymbol.getNode()).subCodeBlock().subVars();
+      selectionRange = symbol.getRange();
     }
-    return subVariablesContext;
+    return selectionRange;
   }
 
-  private static List<DocumentSymbol> getSubVariables(@Nullable BSLParser.SubVarsContext subVariablesContext) {
-
-    if (subVariablesContext == null) {
-      return Collections.emptyList();
-    }
-
-    return subVariablesContext.subVar().stream()
-      .filter(subVarContext -> subVarContext.subVarsList() != null)
-      .flatMap(subVarContext -> subVarContext.subVarsList().subVarDeclaration().stream())
-      .map(subVarDeclarationContext -> new DocumentSymbol(
-        subVarDeclarationContext.var_name().getText(),
-        SymbolKind.Variable,
-        Ranges.create(subVarDeclarationContext),
-        Ranges.create(subVarDeclarationContext.var_name())
-      ))
-      .collect(Collectors.toList());
-  }
-
-  private static List<DocumentSymbol> getGlobalVariables(DocumentContext documentContext) {
-    BSLParser.ModuleVarsContext moduleVarsContext = documentContext.getAst().moduleVars();
-
-    if (moduleVarsContext == null) {
-      return Collections.emptyList();
-    }
-
-    return moduleVarsContext.moduleVar().stream()
-      .flatMap(moduleVarContext -> moduleVarContext.moduleVarsList().moduleVarDeclaration().stream())
-      .map(moduleVarDeclarationContext -> new DocumentSymbol(
-        moduleVarDeclarationContext.var_name().getText(),
-        SymbolKind.Variable,
-        Ranges.create(moduleVarDeclarationContext),
-        Ranges.create(moduleVarDeclarationContext.var_name())
-      ))
-      .collect(Collectors.toList());
-  }
 }

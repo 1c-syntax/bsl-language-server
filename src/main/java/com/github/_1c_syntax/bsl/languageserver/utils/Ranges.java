@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -42,8 +41,8 @@ public final class Ranges {
     return create(ruleContext.getStart(), ruleContext.getStop());
   }
 
-  public static Range create(RegionSymbol regionSymbol) {
-    return create(regionSymbol.getStartNode().getStart(), regionSymbol.getEndNode().getStop());
+  public static Range create(ParserRuleContext startCtx, ParserRuleContext endCtx) {
+    return create(startCtx.getStart(), endCtx.getStop());
   }
 
   public static Range create(Token startToken, Token endToken) {

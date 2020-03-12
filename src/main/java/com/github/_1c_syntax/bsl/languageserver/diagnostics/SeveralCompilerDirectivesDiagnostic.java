@@ -58,7 +58,7 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
+    Optional<MethodSymbol> methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     if (methodSymbol.isPresent()
       && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
       diagnosticStorage.addDiagnostic(methodSymbol.get().getSubNameRange());

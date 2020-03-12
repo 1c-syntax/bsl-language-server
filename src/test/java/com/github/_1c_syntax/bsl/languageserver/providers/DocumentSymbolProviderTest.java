@@ -41,9 +41,9 @@ class DocumentSymbolProviderTest {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
-    List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbol(documentContext);
+    List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbols(documentContext);
 
-    assertThat(documentSymbols).hasSize(7);
+    assertThat(documentSymbols).hasSize(8);
 
     // global variables
     assertThat(documentSymbols)
@@ -63,7 +63,7 @@ class DocumentSymbolProviderTest {
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(4, 0, 5, 14)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getChildren().size() == 3)
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
     ;
 
     // sub vars
@@ -71,6 +71,7 @@ class DocumentSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Method))
       .extracting(Either::getRight)
       .flatExtracting(DocumentSymbol::getChildren)
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable)
       .hasSize(3)
       .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(11, 10, 11, 11)))
       .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 10, 12, 11)))
@@ -79,20 +80,44 @@ class DocumentSymbolProviderTest {
 
     // regions
     assertThat(documentSymbols)
-      .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Namespace))
+      .filteredOn(documentSymbol -> documentSymbol.getRight().getKind() == SymbolKind.Namespace)
       .extracting(Either::getRight)
-      .hasSize(1)
-
-      .flatExtracting(DocumentSymbol::getChildren)
       .hasSize(2)
-      .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Namespace))
-      .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
 
-      .filteredOn(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Namespace))
       .flatExtracting(DocumentSymbol::getChildren)
+      .hasSize(3)
+      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)
+      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      .hasSize(2)
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(17, 0, 19, 14)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(36, 0, 42, 14)))
+    ;
+
+    DocumentSymbol externalRegion = documentSymbols.stream()
+      .map(Either::getRight)
+      .filter(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)
+      .filter(documentSymbol -> documentSymbol.getName().equals("ВнешняяОбласть"))
+      .findFirst().get();
+
+    assertThat(externalRegion.getChildren())
       .hasSize(1)
-      .anyMatch(documentSymbol -> documentSymbol.getKind().equals(SymbolKind.Method))
-      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(23, 0, 25, 14)))
+      .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+    ;
+
+    DocumentSymbol method = externalRegion.getChildren().get(0);
+    assertThat(method.getChildren())
+      .hasSize(1)
+      .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)
+      .allMatch(documentSymbol -> documentSymbol.getName().equals("ВнутренняяОбласть1"))
+    ;
+
+    DocumentSymbol internalRegion1 = method.getChildren().get(0);
+    assertThat(internalRegion1.getChildren())
+      .hasSize(1)
+      .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)
+      .allMatch(documentSymbol -> documentSymbol.getName().equals("ВнутренняяОбласть2"))
     ;
 
   }
