@@ -40,26 +40,30 @@ import java.util.regex.Pattern;
   }
 
 )
-public class FunctionNameStartWithGetDiagnostic extends AbstractVisitorDiagnostic {
+public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern get = Pattern.compile(
-    "^(Получить|get).*$",
+    "^Получить.*$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
-  public FunctionNameStartWithGetDiagnostic(DiagnosticInfo info) {
+  public FunctionNameStartsWithGetDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   public ParseTree visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
 
+    BSLParser.SubNameContext subName = ctx.subName();
 
-
-    if (get.matcher(ctx.subName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx.subName());
+    if (subName == null) {
+      return ctx;
     }
 
-    return super.visitFuncDeclaration(ctx);
+    if (get.matcher(subName.getText()).matches()) {
+      diagnosticStorage.addDiagnostic(subName);
+    }
+
+    return ctx;
 
   }
 }

@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class FunctionNameStartWithGetDiagnosticTest extends AbstractDiagnosticTest<FunctionNameStartWithGetDiagnostic> {
-  FunctionNameStartWithGetDiagnosticTest() {
-    super(FunctionNameStartWithGetDiagnostic.class);
+class FunctionNameStartsWithGetDiagnosticTest extends AbstractDiagnosticTest<FunctionNameStartsWithGetDiagnostic> {
+  FunctionNameStartsWithGetDiagnosticTest() {
+    super(FunctionNameStartsWithGetDiagnostic.class);
   }
 
   @Test
@@ -38,11 +38,9 @@ class FunctionNameStartWithGetDiagnosticTest extends AbstractDiagnosticTest<Func
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 25);
-    assertThat(diagnostics, true)
-      .hasRange(16, 9, 16, 22);
 
   }
 }

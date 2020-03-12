@@ -1,4 +1,4 @@
-# Function name must't start with Get (FunctionNameStartWithGet)
+# Function name shouldn't start with "Получить" (FunctionNameStartsWithGet)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -18,7 +18,7 @@ Function NameByCode()
 ```
 
 ## Sources
-* Source: [Standard: Names of procedures and functions](its.1c.ru/db/v8std#content:647:hdoc)
+* Source: [Standard: Names of procedures and functions c 6.1](its.1c.ru/db/v8std#content:647:hdoc)
 
 ## Snippets
 
@@ -26,12 +26,12 @@ Function NameByCode()
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:FunctionNameStartWithGet-off
-// BSLLS:FunctionNameStartWithGet-on
+// BSLLS:FunctionNameStartsWithGet-off
+// BSLLS:FunctionNameStartsWithGet-on
 ```
 
 ### Parameter for config
 
 ```json
-"FunctionNameStartWithGet": false
+"FunctionNameStartsWithGet": false
 ```

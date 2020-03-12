@@ -1,4 +1,4 @@
-# Имя функции не должно начинаться с "Получить" (FunctionNameStartWithGet)
+# Имя функции не должно начинаться с "Получить" (FunctionNameStartsWithGet)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -11,16 +11,16 @@
 
 ## Примеры
 ```bsl
-//Не правильно: 
+// Не правильно: 
 Функция ПолучитьИмяПоКоду()
 
-//Правильно: 
+// Правильно: 
 Функция ИмяПоКоду()
 ```
 
 
 ## Источники
-* Источник: [Стандарт: Имена процедур и функций](its.1c.ru/db/v8std#content:647:hdoc)
+* Источник: [Стандарт: Имена процедур и функций п 6.1](its.1c.ru/db/v8std#content:647:hdoc)
 
 ## Сниппеты
 
@@ -28,12 +28,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:FunctionNameStartWithGet-off
-// BSLLS:FunctionNameStartWithGet-on
+// BSLLS:FunctionNameStartsWithGet-off
+// BSLLS:FunctionNameStartsWithGet-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"FunctionNameStartWithGet": false
+"FunctionNameStartsWithGet": false
 ```
