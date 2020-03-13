@@ -41,8 +41,8 @@ class PublicMethodsDescriptionDiagnosticTest extends AbstractDiagnosticTest<Publ
 
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .hasRange(41, 0, 45, 12)
-      .hasRange(55, 0, 59, 12);
+      .hasRange(41, 8, 41, 25)
+      .hasRange(55, 8, 55, 25);
 
   }
 
@@ -56,8 +56,8 @@ class PublicMethodsDescriptionDiagnosticTest extends AbstractDiagnosticTest<Publ
 
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(41, 0, 45, 12)
-      .hasRange(55, 0, 59, 12)
-      .hasRange(103, 0, 107, 12);
+      .hasRange(41, 8, 41, 25)
+      .hasRange(55, 8, 55, 25)
+      .hasRange(103, 8, 103, 25);
   }
 }

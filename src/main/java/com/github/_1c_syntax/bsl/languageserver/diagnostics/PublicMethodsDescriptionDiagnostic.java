@@ -80,11 +80,11 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
     documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
       if (methodSymbol.isExport() && methodSymbol.getDescription().isEmpty()) {
         if (checkAllRegion) {
-          diagnosticStorage.addDiagnostic(methodSymbol.getRange());
+          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
         } else {
           methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
               if (isAPIRegion(rootRegion)) {
-                diagnosticStorage.addDiagnostic(methodSymbol.getRange());
+                diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
               }
             });
         }
