@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
+import org.languagetool.Language;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
 import org.languagetool.rules.Rule;
@@ -67,11 +68,15 @@ import java.util.stream.Collectors;
 public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final JLanguageTool ruLangTool = new JLanguageTool(new Russian());
+  private static final Language ruLang = new Russian();
+
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final JLanguageTool enLangTool = new JLanguageTool(new AmericanEnglish());
-  @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final Map<String, JLanguageTool> languageToolMap = initializeLanguageToolMap();
+  private static final Language enLang = new AmericanEnglish();
+
+  private final JLanguageTool ruLangTool = new JLanguageTool(getRuLang());
+  private final JLanguageTool enLangTool = new JLanguageTool(getEnLang());
+
+  private final Map<String, JLanguageTool> languageToolMap = initializeLanguageToolMap();
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
@@ -128,12 +133,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private void languageToolPreparation(String lang) {
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
 
-    getLanguageToolMap().get(lang).getAllActiveRules()
+    languageToolMap.get(lang).getAllActiveRules()
       .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     if (!"".equals(userWordsToIgnore)) {
       ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
-      getLanguageToolMap().get(lang).getAllActiveRules()
+      languageToolMap.get(lang).getAllActiveRules()
         .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
     }
   }
@@ -173,11 +178,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String result = getTokenizedStringFromTokens(documentContext, tokensMap);
 
     try {
-      List<RuleMatch> matches;
-
-      synchronized (getLanguageToolMap().get(lang)) {
-        matches = getLanguageToolMap().get(lang).check(result, true, JLanguageTool.ParagraphHandling.ONLYNONPARA);
-      }
+      List<RuleMatch> matches = languageToolMap.get(lang).check(
+        result,
+        true,
+        JLanguageTool.ParagraphHandling.ONLYNONPARA
+      );
 
       if (!matches.isEmpty()) {
 
@@ -200,10 +205,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     }
   }
 
-  private static Map<String, JLanguageTool> initializeLanguageToolMap() {
+  private Map<String, JLanguageTool> initializeLanguageToolMap() {
     var tempLanguageToolMap = Map.of(
-      "en", getEnLangTool(),
-      "ru", getRuLangTool()
+      "en", enLangTool,
+      "ru", ruLangTool
     );
 
     tempLanguageToolMap.forEach((lang, languageTool) ->
