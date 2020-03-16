@@ -14,7 +14,7 @@
 
 КонецПроцедуры
 
-Function GetNameByCode() // Срабатывание
+Function GetNameByCode()
 
 EndFunction
 
