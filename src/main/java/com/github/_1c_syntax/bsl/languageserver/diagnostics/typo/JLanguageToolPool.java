@@ -19,19 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
+import com.github._1c_syntax.bsl.languageserver.utils.AbstractObjectPool;
 import lombok.AllArgsConstructor;
-import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 
 @AllArgsConstructor
-public class JLanguageToolPool extends AbstractObjectPool<JLanguageTool> {
+public class JLanguageToolPool extends AbstractObjectPool<JLanguageToolPoolEntry> {
 
   private Language language;
 
   @Override
-  protected JLanguageTool create() {
-    return new JLanguageTool(language);
+  protected JLanguageToolPoolEntry create() {
+    return new JLanguageToolPoolEntry(language);
   }
 }

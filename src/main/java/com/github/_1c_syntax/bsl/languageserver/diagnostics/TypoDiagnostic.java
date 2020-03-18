@@ -28,7 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.JLanguageToolPool;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPool;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPoolEntry;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -40,9 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
-import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
-import org.languagetool.rules.spelling.SpellingCheckRule;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -121,40 +120,21 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     userWordsToIgnore = (String) configuration.getOrDefault("userWordsToIgnore", userWordsToIgnore);
   }
 
-  private ArrayList<String> getWordsToIgnore() {
-    String exceptions = NEWLINE_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("").intern();
-    return new ArrayList<>(Arrays.asList(exceptions.split(",")));
-  }
-
-  private ArrayList<String> getUserWordsToIgnore() {
-    String exceptions = NEWLINE_PATTERN.matcher(userWordsToIgnore).replaceAll("").intern();
-    return new ArrayList<>(Arrays.asList(exceptions.split(",")));
-  }
-
-  private JLanguageTool acquireLanguageTool(String lang) {
-    ArrayList<String> wordsToIgnore = getWordsToIgnore();
-
-    JLanguageTool languageTool = getLanguageToolPoolMap().get(lang).checkOut();
-
-    languageTool.getAllRules().stream()
-        .filter(rule -> !rule.isDictionaryBasedSpellingRule())
-        .map(Rule::getId)
-        .forEach(languageTool::disableRule);
-
-    languageTool.getAllActiveRules()
-      .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
-
-    if (!"".equals(userWordsToIgnore)) {
-      ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
-      languageTool.getAllActiveRules()
-        .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
+  private String getWordsToIgnore() {
+    String exceptions = NEWLINE_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
+    if (!userWordsToIgnore.isEmpty()) {
+      exceptions = exceptions + "," + NEWLINE_PATTERN.matcher(userWordsToIgnore).replaceAll("");
     }
 
-    return languageTool;
+    return exceptions.intern();
   }
 
-  private static void releaseLanguageTool(String lang, JLanguageTool languageTool) {
-    getLanguageToolPoolMap().get(lang).checkIn(languageTool);
+  private JLanguageToolPoolEntry acquireLanguageTool(String lang) {
+    return getLanguageToolPoolMap().get(lang).checkOut();
+  }
+
+  private static void releaseLanguageTool(String lang, JLanguageToolPoolEntry languageToolPoolEntry) {
+    getLanguageToolPoolMap().get(lang).checkIn(languageToolPoolEntry);
   }
 
   private String getTokenizedStringFromTokens(DocumentContext documentContext, Map<String, List<Token>> tokensMap) {
@@ -188,7 +168,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
-    JLanguageTool languageTool = acquireLanguageTool(lang);
+    JLanguageToolPoolEntry languageToolPoolEntry = acquireLanguageTool(lang);
+    JLanguageTool languageTool = languageToolPoolEntry.getLanguageTool(getWordsToIgnore());
+
     String result = getTokenizedStringFromTokens(documentContext, tokensMap);
 
     try {
@@ -218,7 +200,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       LOGGER.error(e.getMessage(), e);
     }
 
-    releaseLanguageTool(lang, languageTool);
+    releaseLanguageTool(lang, languageToolPoolEntry);
   }
 
 }
