@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.JLanguageToolPool;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -37,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
-import org.languagetool.Language;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.language.Russian;
 import org.languagetool.rules.Rule;
@@ -68,15 +68,16 @@ import java.util.stream.Collectors;
 public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final Language ruLang = new Russian();
+  private static final JLanguageToolPool ruLangPool = new JLanguageToolPool(new Russian());
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final Language enLang = new AmericanEnglish();
+  private static final JLanguageToolPool enLangPool = new JLanguageToolPool(new AmericanEnglish());
 
-  private final JLanguageTool ruLangTool = new JLanguageTool(getRuLang());
-  private final JLanguageTool enLangTool = new JLanguageTool(getEnLang());
-
-  private final Map<String, JLanguageTool> languageToolMap = initializeLanguageToolMap();
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  private static final Map<String, JLanguageToolPool> languageToolPoolMap = Map.of(
+    "en", getEnLangPool(),
+    "ru", getRuLangPool()
+  );
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
@@ -130,17 +131,30 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     return new ArrayList<>(Arrays.asList(exceptions.split(",")));
   }
 
-  private void languageToolPreparation(String lang) {
+  private JLanguageTool acquireLanguageTool(String lang) {
     ArrayList<String> wordsToIgnore = getWordsToIgnore();
 
-    languageToolMap.get(lang).getAllActiveRules()
+    JLanguageTool languageTool = getLanguageToolPoolMap().get(lang).checkOut();
+
+    languageTool.getAllRules().stream()
+        .filter(rule -> !rule.isDictionaryBasedSpellingRule())
+        .map(Rule::getId)
+        .forEach(languageTool::disableRule);
+
+    languageTool.getAllActiveRules()
       .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(wordsToIgnore));
 
     if (!"".equals(userWordsToIgnore)) {
       ArrayList<String> usersWordsToIgnore = getUserWordsToIgnore();
-      languageToolMap.get(lang).getAllActiveRules()
+      languageTool.getAllActiveRules()
         .forEach(rule -> ((SpellingCheckRule) rule).addIgnoreTokens(usersWordsToIgnore));
     }
+
+    return languageTool;
+  }
+
+  private static void releaseLanguageTool(String lang, JLanguageTool languageTool) {
+    getLanguageToolPoolMap().get(lang).checkIn(languageTool);
   }
 
   private String getTokenizedStringFromTokens(DocumentContext documentContext, Map<String, List<Token>> tokensMap) {
@@ -174,11 +188,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, List<Token>> tokensMap = new HashMap<>();
 
-    languageToolPreparation(lang);
+    JLanguageTool languageTool = acquireLanguageTool(lang);
     String result = getTokenizedStringFromTokens(documentContext, tokensMap);
 
     try {
-      List<RuleMatch> matches = languageToolMap.get(lang).check(
+      List<RuleMatch> matches = languageTool.check(
         result,
         true,
         JLanguageTool.ParagraphHandling.ONLYNONPARA
@@ -203,21 +217,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     } catch (IOException e) {
       LOGGER.error(e.getMessage(), e);
     }
+
+    releaseLanguageTool(lang, languageTool);
   }
 
-  private Map<String, JLanguageTool> initializeLanguageToolMap() {
-    var tempLanguageToolMap = Map.of(
-      "en", enLangTool,
-      "ru", ruLangTool
-    );
-
-    tempLanguageToolMap.forEach((lang, languageTool) ->
-      languageTool.getAllRules().stream()
-        .filter(rule -> !rule.isDictionaryBasedSpellingRule())
-        .map(Rule::getId)
-        .forEach(languageTool::disableRule)
-    );
-
-    return tempLanguageToolMap;
-  }
 }
