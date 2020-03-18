@@ -67,15 +67,9 @@ import java.util.stream.Collectors;
 public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final JLanguageToolPool ruLangPool = new JLanguageToolPool(new Russian());
-
-  @Getter(lazy = true, value = AccessLevel.PRIVATE)
-  private static final JLanguageToolPool enLangPool = new JLanguageToolPool(new AmericanEnglish());
-
-  @Getter(lazy = true, value = AccessLevel.PRIVATE)
   private static final Map<String, JLanguageToolPool> languageToolPoolMap = Map.of(
-    "en", getEnLangPool(),
-    "ru", getRuLangPool()
+    "en", new JLanguageToolPool(new AmericanEnglish()),
+    "ru", new JLanguageToolPool(new Russian())
   );
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
