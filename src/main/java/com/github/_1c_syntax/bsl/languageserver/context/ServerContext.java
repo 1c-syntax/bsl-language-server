@@ -98,11 +98,9 @@ public class ServerContext {
 
   private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return Configuration.newBuilder().build();
+      return Configuration.create();
     }
 
-    return Configuration.newBuilder(configurationRoot).build();
+    return Configuration.create(configurationRoot);
   }
-
-
 }
