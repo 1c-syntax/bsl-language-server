@@ -257,7 +257,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    documentContext.clearParseTreeData();
+    documentContext.clearSecondaryData();
     diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
   }
 

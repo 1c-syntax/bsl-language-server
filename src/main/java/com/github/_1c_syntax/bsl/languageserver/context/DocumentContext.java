@@ -195,7 +195,7 @@ public class DocumentContext {
     computeLock.unlock();
   }
 
-  public void clearParseTreeData() {
+  public void clearSecondaryData() {
     content = null;
     contentList.clear();
     tokenizer = null;
@@ -203,16 +203,16 @@ public class DocumentContext {
     if (symbolTree.isPresent()) {
       getSymbolTree().getChildrenFlat().forEach(Symbol::clearParseTreeData);
     }
+    cognitiveComplexityData.clear();
+    cyclomaticComplexityData.clear();
+    metrics.clear();
+    diagnosticIgnoranceData.clear();
   }
 
   private void clear() {
-    clearParseTreeData();
+    clearSecondaryData();
 
-    metrics.clear();
-    cognitiveComplexityData.clear();
-    cyclomaticComplexityData.clear();
     symbolTree.clear();
-    diagnosticIgnoranceData.clear();
   }
 
   private static FileType computeFileType(URI uri) {

@@ -57,7 +57,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    documentContext.clearParseTreeData();
+    documentContext.clearSecondaryData();
 
     // then
     final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
