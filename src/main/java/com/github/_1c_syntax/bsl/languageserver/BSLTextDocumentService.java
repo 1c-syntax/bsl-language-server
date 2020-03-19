@@ -248,17 +248,17 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @Override
   public void didClose(DidCloseTextDocumentParams params) {
-    if (client == null) {
-      return;
-    }
-
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return;
     }
 
-    documentContext.clearParseTreeData();
-    diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
+    documentContext.clearSecondaryData();
+    diagnosticProvider.clearComputedDiagnostics(documentContext);
+
+    if (client != null) {
+      diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
+    }
   }
 
   @Override
