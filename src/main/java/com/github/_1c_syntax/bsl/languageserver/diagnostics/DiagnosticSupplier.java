@@ -191,7 +191,7 @@ public class DiagnosticSupplier {
 
     Map<SupportConfiguration, SupportVariant> supportVariants = documentContext.getSupportVariants();
     var moduleSupportVariant = supportVariants.values().stream()
-      .max(Comparator.naturalOrder())
+      .min(Comparator.naturalOrder())
       .orElse(SupportVariant.NONE);
 
     if (moduleSupportVariant == SupportVariant.NONE) {
