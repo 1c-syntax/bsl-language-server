@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 3,
+  activatedByDefault = false,
   tags = {
     DiagnosticTag.STANDARD
   }
