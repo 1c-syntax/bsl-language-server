@@ -530,6 +530,16 @@
             "title": "Nested constructors with parameters in structure declaration",
             "$id": "#/definitions/NestedConstructorsInStructureDeclaration"
         },
+        "NestedFunctionInParameters": {
+            "description": "Initialization of method and constructor parameters by calling nested methods",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Initialization of method and constructor parameters by calling nested methods",
+            "$id": "#/definitions/NestedFunctionInParameters"
+        },
         "NestedStatements": {
             "description": "Control flow statements should not be nested too deep",
             "default": null,

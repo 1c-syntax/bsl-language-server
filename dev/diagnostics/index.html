@@ -406,9 +406,9 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>83</strong></p>
+<p>Общее количество: <strong>84</strong></p>
 <ul>
-<li>Дефект кода: <strong>52</strong></li>
+<li>Дефект кода: <strong>53</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
 <li>Ошибка: <strong>27</strong></li>
 <li>Потенциальная уязвимость: <strong>2</strong></li>
@@ -728,6 +728,14 @@
 <td>Незначительный</td>
 <td>Дефект кода</td>
 <td><code>badpractice</code><br/><code>brainoverload</code></td>
+</tr>
+<tr>
+<td><a href="NestedFunctionInParameters/">NestedFunctionInParameters</a></td>
+<td>Инициализация параметров методов и конструкторов вызовом вложенных методов</td>
+<td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br/><code>brainoverload</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="NestedStatements/">NestedStatements</a></td>
