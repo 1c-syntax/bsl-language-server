@@ -79,7 +79,7 @@ public class DiagnosticSupplier {
         .map(this::createDiagnosticInfo)
         .filter(this::isEnabled)
         .filter(info -> inScope(info, fileType))
-        .filter(info -> correctModuleType(info, moduleType))
+        .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(this::createDiagnosticInstance)
         .peek(this::configureDiagnostic)
@@ -148,7 +148,12 @@ public class DiagnosticSupplier {
     return scope == DiagnosticScope.ALL || scope == fileScope;
   }
 
-  private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype) {
+  private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype, FileType fileType) {
+
+    if (fileType == FileType.OS) {
+      return true;
+    }
+
     ModuleType[] diagnosticModules = diagnosticInfo.getModules();
 
     if (diagnosticModules.length == 0) {
