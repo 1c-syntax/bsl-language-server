@@ -42,7 +42,7 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(9, 0, 9, 18);
+      .hasRange(9, 8, 9, 16);
 
   }
 
