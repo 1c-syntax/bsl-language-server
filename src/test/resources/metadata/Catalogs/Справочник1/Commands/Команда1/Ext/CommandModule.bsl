@@ -52,7 +52,7 @@
 
 #Region Initialize
 
-SupportEmail = "v8@1c.ru";
-Ctor();
+//SupportEmail = "v8@1c.ru";
+//Ctor();
 
 #EndRegion
