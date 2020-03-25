@@ -44,7 +44,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
   NonStandardRegionDiagnosticTest() {
     super(NonStandardRegionDiagnostic.class);
-    // TODO пока не работает pathByModuleType.put(ModuleType.CommandModule, "Catalogs/Catalog/Commands/Command/Ext/CommandModule.bsl");
+    pathByModuleType.put(ModuleType.CommandModule, "Catalogs/Справочник1/Commands/Команда1/Ext/CommandModule.bsl");
     pathByModuleType.put(ModuleType.ObjectModule, "Catalogs/Справочник1/Ext/ObjectModule.bsl");
     pathByModuleType.put(ModuleType.ManagerModule, "Catalogs/Справочник1/Ext/ManagerModule.bsl");
     pathByModuleType.put(ModuleType.ManagedApplicationModule, "Ext/ManagedApplicationModule.bsl");
@@ -183,21 +183,20 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
   @Test
   void testCommandModule() throws IOException {
 
-    // TODO пока не работает
-//    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.CommandModule));
-//
-//    assertThat(diagnostics).hasSize(9);
-//    assertThat(diagnostics, true)
-//      .hasRange(0, 1, 27)
-//      .hasRange(7, 1, 29)
-//      .hasRange(11, 1, 38)
-//      .hasRange(24, 1, 16)
-//      .hasRange(28, 1, 32)
-//      .hasRange(32, 1, 46)
-//      .hasRange(36, 1, 63)
-//      .hasRange(40, 1, 31)
-//      .hasRange(52, 1, 18)
-//    ;
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.CommandModule));
+
+    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics, true)
+      .hasRange(0, 1, 27)
+      .hasRange(7, 1, 29)
+      .hasRange(11, 1, 38)
+      .hasRange(24, 1, 16)
+      .hasRange(28, 1, 32)
+      .hasRange(32, 1, 46)
+      .hasRange(36, 1, 63)
+      .hasRange(40, 1, 31)
+      .hasRange(52, 1, 18)
+    ;
   }
 
   @Test
