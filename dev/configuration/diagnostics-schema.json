@@ -258,6 +258,16 @@
             "title": "FormDataToValue method call",
             "$id": "#/definitions/FormDataToValue"
         },
+        "FunctionNameStartsWithGet": {
+            "description": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
+            "$id": "#/definitions/FunctionNameStartsWithGet"
+        },
         "FunctionShouldHaveReturn": {
             "description": "The function should have return",
             "default": null,
