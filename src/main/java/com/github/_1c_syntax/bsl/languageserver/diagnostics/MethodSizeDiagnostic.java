@@ -31,8 +31,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -53,14 +51,6 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
   public MethodSizeDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    maxMethodSize = (int) configuration.getOrDefault("maxMethodSize", maxMethodSize);
   }
 
   @Override

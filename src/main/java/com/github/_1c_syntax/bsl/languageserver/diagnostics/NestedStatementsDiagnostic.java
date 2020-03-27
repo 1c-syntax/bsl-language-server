@@ -39,7 +39,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -70,15 +69,6 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   public NestedStatementsDiagnostic(DiagnosticInfo info) {
     super(info);
     relatedMessage = this.info.getResourceString("parentStatementRelatedMessage");
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
-    maxAllowedLevel = (int) configuration.getOrDefault("maxAllowedLevel", MAX_ALLOWED_LEVEL);
   }
 
   @Override

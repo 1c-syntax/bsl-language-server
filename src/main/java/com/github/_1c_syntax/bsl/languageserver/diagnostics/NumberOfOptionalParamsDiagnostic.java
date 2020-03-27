@@ -30,8 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
@@ -53,15 +51,6 @@ public class NumberOfOptionalParamsDiagnostic extends AbstractVisitorDiagnostic 
 
   public NumberOfOptionalParamsDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    maxOptionalParamsCount =
-      (int) configuration.getOrDefault("maxOptionalParamsCount", maxOptionalParamsCount);
   }
 
   @Override

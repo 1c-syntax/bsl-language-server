@@ -34,6 +34,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DiagnosticSupplier {
 
   private final LanguageServerConfiguration configuration;
@@ -63,7 +65,6 @@ public class DiagnosticSupplier {
   }
 
   public List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext) {
-
 
     var configuredSkipSupport = configuration.getComputeDiagnosticsSkipSupport();
 
@@ -113,6 +114,7 @@ public class DiagnosticSupplier {
   private void configureDiagnostic(BSLDiagnostic diagnostic) {
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
       configuration.getDiagnostics().get(diagnostic.getInfo().getCode());
+
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       diagnostic.configure(diagnosticConfiguration.getRight());
     }
@@ -233,5 +235,4 @@ public class DiagnosticSupplier {
   public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
     return new ArrayList<>(diagnosticClasses);
   }
-
 }

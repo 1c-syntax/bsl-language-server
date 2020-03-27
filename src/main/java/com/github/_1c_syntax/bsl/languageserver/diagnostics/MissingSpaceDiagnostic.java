@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
@@ -217,6 +218,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return;
     }
 
+    DiagnosticHelper.configureDiagnostic(this, configuration,
+      "checkSpaceToRightOfUnary", "allowMultipleCommas");
+
     String listLParam =
       (String) configuration.getOrDefault("listForCheckLeft", DEFAULT_LIST_FOR_CHECK_LEFT);
     listForCheckLeft = getRegularString(listLParam);
@@ -232,11 +236,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     listForCheckLeftAndRight = getRegularString(listLRParam);
     patternLr = compilePattern(listForCheckLeftAndRight);
 
-    checkSpaceToRightOfUnary =
-      (boolean) configuration.getOrDefault("checkSpaceToRightOfUnary", checkSpaceToRightOfUnary);
-
-    allowMultipleCommas =
-      (boolean) configuration.getOrDefault("allowMultipleCommas", allowMultipleCommas);
   }
 
   private boolean noSpaceLeft(List<Token> tokens, Token t) {

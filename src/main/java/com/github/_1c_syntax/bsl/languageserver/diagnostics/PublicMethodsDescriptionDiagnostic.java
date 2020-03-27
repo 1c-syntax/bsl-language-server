@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -63,15 +62,6 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
 
   public PublicMethodsDescriptionDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
-    checkAllRegion = (boolean) configuration.getOrDefault("checkAllRegion", DEFAULT_CHECK_ALL_REGION);
   }
 
   @Override

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
@@ -44,6 +45,6 @@ public interface BSLDiagnostic {
   DiagnosticInfo getInfo();
 
   default void configure(Map<String, Object> configuration) {
+    DiagnosticHelper.configureDiagnostic(this, configuration);
   }
-
 }

@@ -37,7 +37,6 @@ import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Range;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,14 +61,6 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   public EmptyCodeBlockDiagnostic(DiagnosticInfo info) {
     super(info);
-  }
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    commentAsCode = (boolean) configuration.getOrDefault("commentAsCode", commentAsCode);
   }
 
   @Override

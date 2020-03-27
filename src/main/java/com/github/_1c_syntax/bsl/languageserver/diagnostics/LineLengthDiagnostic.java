@@ -63,14 +63,6 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    maxLineLength = (int) configuration.getOrDefault("maxLineLength", maxLineLength);
-  }
-
-  @Override
   protected void check(DocumentContext documentContext) {
     tokensInOneLine.clear();
 
