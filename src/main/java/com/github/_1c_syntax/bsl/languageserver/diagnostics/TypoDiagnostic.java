@@ -107,11 +107,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    minWordLength = Math.max((int) configuration.getOrDefault("minWordLength", minWordLength), DEFAULT_MIN_WORD_LENGTH);
-    userWordsToIgnore = (String) configuration.getOrDefault("userWordsToIgnore", userWordsToIgnore);
+    super.configure(configuration);
+    minWordLength = Math.max(minWordLength, DEFAULT_MIN_WORD_LENGTH);
   }
 
   private String getWordsToIgnore() {

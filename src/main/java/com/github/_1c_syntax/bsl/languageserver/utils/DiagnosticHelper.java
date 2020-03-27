@@ -97,15 +97,15 @@ public final class DiagnosticHelper {
       return;
     }
 
-    Set<Class> types = new HashSet<>();
-    types.add(Boolean.class);
+    Set<Class<?>> types = new HashSet<>();
     types.add(Integer.class);
+    types.add(Boolean.class);
+    types.add(Float.class);
     types.add(String.class);
 
     diagnostic.getInfo().getParameters().stream()
       .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())
-        && (diagnosticParameterInfo.getType().isPrimitive()
-        || types.contains(diagnosticParameterInfo.getType())))
+        && types.contains(diagnosticParameterInfo.getType()))
       .forEach((DiagnosticParameterInfo diagnosticParameterInfo) -> {
         try {
           var field = diagnostic.getClass().getDeclaredField(diagnosticParameterInfo.getName());
