@@ -39,6 +39,7 @@ import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -51,12 +52,11 @@ import java.util.regex.Pattern;
     DiagnosticTag.STANDARD,
     DiagnosticTag.DEPRECATED
   }
-
 )
 public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
   private static final Pattern paramPattern = Pattern.compile(
-    "(УправляемаяФорма|ManagedForm)",
+    "\"(УправляемаяФорма|ManagedForm)\"",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
@@ -71,26 +71,12 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx ) {
-
-    if (!methodPattern.matcher(ctx.methodName().getText()).matches()) {
-      return super.visitGlobalMethodCall(ctx);
-    }
-
-    BSLParser.DoCallContext found = ctx.doCall();
-
-    if (found == null) {
-      return super.visitGlobalMethodCall(ctx);
-    }
-
-    BSLParser.CallParamListContext callCtx = found.callParamList();
-
-    if (callCtx == null) {
-      return super.visitGlobalMethodCall(ctx);
-    }
-
-    if (paramPattern.matcher(callCtx.getText().replaceAll("\"", "")).matches()) {
-      diagnosticStorage.addDiagnostic(callCtx);
-    }
+    Optional.of(ctx)
+      .filter(it -> methodPattern.matcher(it.methodName().getText()).matches())
+      .map(BSLParser.GlobalMethodCallContext::doCall)
+      .map(BSLParser.DoCallContext::callParamList)
+      .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
+      .ifPresent(callParamList -> diagnosticStorage.addDiagnostic(callParamList));
 
     return super.visitGlobalMethodCall(ctx);
   }

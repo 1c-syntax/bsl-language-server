@@ -127,7 +127,9 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
         return;
       }
 
-      if (skipStatement(ctx, BSLParser.RULE_statement) || skipStatement(ctx, BSLParser.RULE_param) || itVersionReturn(ctx)) {
+      if (skipStatement(ctx, BSLParser.RULE_statement)
+        || skipStatement(ctx, BSLParser.RULE_param)
+        || itVersionReturn(ctx)) {
         return;
       }
 
