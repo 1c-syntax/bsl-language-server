@@ -13,9 +13,9 @@ plugins {
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
-    id("io.franzbecker.gradle-lombok") version "3.2.0"
-    id("me.qoomon.git-versioning") version "2.1.1"
-    id("com.github.ben-manes.versions") version "0.27.0"
+    id("io.franzbecker.gradle-lombok") version "3.3.0"
+    id("me.qoomon.git-versioning") version "3.0.0"
+    id("com.github.ben-manes.versions") version "0.28.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
@@ -41,12 +41,12 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.10.2"
-val junitVersion = "5.6.0"
+val jacksonVersion = "2.10.3"
+val junitVersion = "5.6.1"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.8.1")
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
 
     implementation("org.languagetool", "languagetool-core", "4.2")
 
@@ -60,7 +60,7 @@ dependencies {
     implementation("commons-cli", "commons-cli", "1.4")
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io", "commons-io", "2.6")
-    implementation("org.apache.commons", "commons-lang3", "3.9")
+    implementation("org.apache.commons", "commons-lang3", "3.10")
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
 
@@ -71,17 +71,14 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
 
-    // https://github.com/1c-syntax/bsl-language-server/issues/369
-    // Excude jline and use fixed one.
-    implementation("me.tongfei", "progressbar", "0.8.0") { exclude(group = "org.jline") }
-    implementation("org.jline", "jline", "3.13.3")
+    implementation("me.tongfei", "progressbar", "0.8.1")
 
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "71be3f1d205b0202fc4d4ef0f5e5ba351f472475") {
+    implementation("com.github.1c-syntax", "bsl-parser", "0.13.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -98,8 +95,8 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
-    testImplementation("org.assertj", "assertj-core", "3.14.0")
-    testImplementation("org.mockito", "mockito-core", "3.2.4")
+    testImplementation("org.assertj", "assertj-core", "3.15.0")
+    testImplementation("org.mockito", "mockito-core", "3.3.3")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }

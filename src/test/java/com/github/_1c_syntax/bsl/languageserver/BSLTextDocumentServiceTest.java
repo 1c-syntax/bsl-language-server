@@ -32,11 +32,11 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
@@ -84,7 +84,7 @@ class BSLTextDocumentServiceTest {
     // given
     doOpen();
 
-    TextDocumentPositionParams params = new TextDocumentPositionParams();
+    HoverParams params = new HoverParams();
     params.setTextDocument(getTextDocumentIdentifier());
     params.setPosition(new Position(0, 0));
 
@@ -101,7 +101,7 @@ class BSLTextDocumentServiceTest {
     // given
     doOpen();
 
-    TextDocumentPositionParams params = new TextDocumentPositionParams();
+    HoverParams params = new HoverParams();
     params.setTextDocument(getTextDocumentIdentifier());
     params.setPosition(new Position(0, 20));
 

@@ -38,9 +38,9 @@ import java.util.List;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileInfo {
-  private final Path path;
-  private final List<Diagnostic> diagnostics;
-  private MetricStorage metrics;
+  Path path;
+  List<Diagnostic> diagnostics;
+  MetricStorage metrics;
 
   public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
     URI uri = documentContext.getUri();

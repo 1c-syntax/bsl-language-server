@@ -131,7 +131,7 @@ public class GenericIssueReport {
 
 
       engineId = diagnostic.getSource();
-      ruleId = diagnostic.getCode();
+      ruleId = diagnostic.getCode().get().toString();
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);

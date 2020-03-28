@@ -211,9 +211,10 @@ public class DiagnosticStorage {
       range,
       diagnosticMessage,
       bslDiagnostic.getInfo().getLSPSeverity(),
-      SOURCE,
-      bslDiagnostic.getInfo().getCode()
+      SOURCE
     );
+
+    diagnostic.setCode(bslDiagnostic.getInfo().getCode());
 
     if (relatedInformation != null) {
       diagnostic.setRelatedInformation(relatedInformation);

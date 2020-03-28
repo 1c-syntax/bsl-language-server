@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -36,7 +36,7 @@ class HoverProviderTest {
 
   @Test
   void getEmptyHover() {
-    TextDocumentPositionParams params = new TextDocumentPositionParams();
+    HoverParams params = new HoverParams();
     params.setPosition(new Position(0, 0));
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
@@ -47,7 +47,7 @@ class HoverProviderTest {
 
   @Test
   void getHoverOverSubName() {
-    TextDocumentPositionParams params = new TextDocumentPositionParams();
+    HoverParams params = new HoverParams();
     params.setPosition(new Position(0, 20));
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");

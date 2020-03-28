@@ -95,7 +95,7 @@ public class SmokyTest {
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = DiagnosticSupplier.getDiagnosticClasses().stream()
       .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
       .collect(Collectors.toMap(
-        diagnosticCode -> diagnosticCode,
+        diagnosticCode -> diagnosticCode.get().toString(),
         diagnosticCode -> Either.forLeft(true),
         (a, b) -> b));
 

@@ -29,6 +29,7 @@ import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,7 +58,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
   }
 
   private List<CodeAction> getFixAllCodeAction(
-    String diagnosticCode,
+    Either<String, Number> diagnosticCode,
     CodeActionParams params,
     DocumentContext documentContext
   ) {

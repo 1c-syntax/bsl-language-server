@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
 
-  private static final String ALL_DIAGNOSTICS_KEY = "all";
+  private static final Either<String, Number> ALL_DIAGNOSTICS_KEY = Either.forLeft("all");
 
   private static final Pattern IGNORE_ALL_ON = Pattern.compile(
     "BSLLS-(?:вкл|on)"
@@ -63,8 +64,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private final DocumentContext documentContext;
 
-  private Map<String, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
-  private Map<String, Deque<Integer>> ignoranceStack = new HashMap<>();
+  private Map<Either<String, Number>, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
+  private Map<Either<String, Number>, Deque<Integer>> ignoranceStack = new HashMap<>();
 
   public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -97,7 +98,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     }
 
     int lastTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
-    ignoranceStack.forEach((String diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
+    ignoranceStack.forEach((Either<String, Number> diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
       ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
     );
 
@@ -110,7 +111,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       return false;
     }
 
-    String key = checkIgnoreOff(IGNORE_ALL_OFF, comment);
+    Either<String, Number> key = checkIgnoreOff(IGNORE_ALL_OFF, comment);
     if (key == null) {
       key = checkIgnoreOff(IGNORE_DIAGNOSTIC_OFF, comment);
     }
@@ -127,7 +128,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   }
 
   @CheckForNull
-  private String checkIgnoreOff(
+  private Either<String, Number> checkIgnoreOff(
     Pattern ignoreOff,
     Token comment
   ) {
@@ -137,7 +138,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       return null;
     }
 
-    String key = getKey(matcher);
+    Either<String, Number> key = getKey(matcher);
 
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
     stack.push(comment.getLine());
@@ -155,7 +156,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       return false;
     }
 
-    String key = getKey(matcher);
+    Either<String, Number> key = getKey(matcher);
 
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
     if (stack.isEmpty()) {
@@ -170,17 +171,17 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     return true;
   }
 
-  private void addIgnoredRange(String diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
+  private void addIgnoredRange(Either<String, Number> diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
     // convert antlr4 line numbers (1..n) to lsp (0..n)
     Range<Integer> ignoreRange = Range.between(ignoreRangeStart - 1, ignoreRangeEnd - 1);
     final List<Range<Integer>> ranges = diagnosticIgnorance.computeIfAbsent(diagnosticKey, s -> new ArrayList<>());
     ranges.add(ignoreRange);
   }
 
-  private static String getKey(Matcher matcher) {
-    String key;
+  private static Either<String, Number> getKey(Matcher matcher) {
+    Either<String, Number> key;
     if (matcher.groupCount() != 0) {
-      key = matcher.group(1);
+      key = Either.forLeft(matcher.group(1));
     } else {
       key = ALL_DIAGNOSTICS_KEY;
     }
@@ -189,7 +190,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   @AllArgsConstructor
   public static class Data {
-    private final Map<String, List<Range<Integer>>> diagnosticIgnorance;
+    private final Map<Either<String, Number>, List<Range<Integer>>> diagnosticIgnorance;
 
     public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
       if (diagnosticIgnorance.isEmpty()) {
@@ -198,9 +199,9 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
       int line = diagnostic.getRange().getStart().getLine();
 
-      Predicate<Map.Entry<String, List<Range<Integer>>>> ignoreAll =
+      Predicate<Map.Entry<Either<String, Number>, List<Range<Integer>>>> ignoreAll =
         entry -> entry.getKey().equals(ALL_DIAGNOSTICS_KEY);
-      Predicate<Map.Entry<String, List<Range<Integer>>>> ignoreConcreteDiagnostic =
+      Predicate<Map.Entry<Either<String, Number>, List<Range<Integer>>>> ignoreConcreteDiagnostic =
         entry -> entry.getKey().equals(diagnostic.getCode());
 
       return diagnosticIgnorance.entrySet().stream()

@@ -37,6 +37,7 @@ import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -88,11 +89,11 @@ class JUnitTestSuites {
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
-      Map<String, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
+      Map<Either<String, Number>, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
         .collect(Collectors.groupingBy(Diagnostic::getCode, Collectors.toList()));
 
       groupedDiagnostics.forEach((code, diagnosticsList) ->
-        testcase.add(new JUnitTestCase(diagnosticsList, code, name))
+        testcase.add(new JUnitTestCase(diagnosticsList, code.get().toString(), name))
       );
     }
 

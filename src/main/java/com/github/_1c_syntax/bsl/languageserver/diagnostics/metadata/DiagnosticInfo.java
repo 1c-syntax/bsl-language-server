@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +52,7 @@ public class DiagnosticInfo {
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final DiagnosticLanguage diagnosticLanguage;
 
-  private final String diagnosticCode;
+  private final Either<String, Number> diagnosticCode;
   private DiagnosticMetadata diagnosticMetadata;
   private List<DiagnosticParameterInfo> diagnosticParameters;
 
@@ -72,7 +73,7 @@ public class DiagnosticInfo {
     return diagnosticClass;
   }
 
-  public String getCode() {
+  public Either<String, Number> getCode() {
     return diagnosticCode;
   }
 
@@ -83,7 +84,7 @@ public class DiagnosticInfo {
   public String getDescription() {
     String langCode = diagnosticLanguage.getLanguageCode();
 
-    String resourceName = langCode + "/" + diagnosticCode + ".md";
+    String resourceName = langCode + "/" + diagnosticCode.get().toString() + ".md";
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
 
     if (descriptionStream == null) {
@@ -173,13 +174,13 @@ public class DiagnosticInfo {
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
 
-  private String createDiagnosticCode() {
+  private Either<String, Number> createDiagnosticCode() {
     String simpleName = diagnosticClass.getSimpleName();
     if (simpleName.endsWith("Diagnostic")) {
       simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
     }
 
-    return simpleName.intern();
+    return Either.forLeft(simpleName.intern());
   }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
