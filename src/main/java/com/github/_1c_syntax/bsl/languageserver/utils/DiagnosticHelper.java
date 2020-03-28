@@ -120,8 +120,7 @@ public final class DiagnosticHelper {
 
   public static void configureDiagnostic(BSLDiagnostic diagnostic,
                                          Map<String, Object> configuration,
-                                         String... filter)
-  {
+                                         String... filter) {
     Map<String, Object> newConfiguration = new HashMap<>();
     for (String name : filter) {
       if (configuration.containsKey(name)) {
