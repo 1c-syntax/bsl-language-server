@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import lombok.Getter;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -52,12 +53,11 @@ class TSLintReportEntry {
     severityMap.put(DiagnosticSeverity.Warning, "warn");
   }
 
-
   TSLintReportEntry(String fileName, Diagnostic diagnostic) {
     endPosition = new EntryPosition(diagnostic.getRange().getEnd());
     failure = diagnostic.getMessage();
     name = fileName;
-    ruleName = diagnostic.getCode().get().toString();
+    ruleName = DiagnosticCode.getStringValue(diagnostic.getCode());
     ruleSeverity = severityMap.get(diagnostic.getSeverity());
     startPosition = new EntryPosition(diagnostic.getRange().getStart());
   }

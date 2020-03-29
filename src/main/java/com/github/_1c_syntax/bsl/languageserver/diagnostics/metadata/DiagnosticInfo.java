@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +51,7 @@ public class DiagnosticInfo {
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final DiagnosticLanguage diagnosticLanguage;
 
-  private final Either<String, Number> diagnosticCode;
+  private final DiagnosticCode diagnosticCode;
   private DiagnosticMetadata diagnosticMetadata;
   private List<DiagnosticParameterInfo> diagnosticParameters;
 
@@ -73,7 +72,7 @@ public class DiagnosticInfo {
     return diagnosticClass;
   }
 
-  public Either<String, Number> getCode() {
+  public DiagnosticCode getCode() {
     return diagnosticCode;
   }
 
@@ -84,7 +83,7 @@ public class DiagnosticInfo {
   public String getDescription() {
     String langCode = diagnosticLanguage.getLanguageCode();
 
-    String resourceName = langCode + "/" + diagnosticCode.get().toString() + ".md";
+    String resourceName = langCode + "/" + diagnosticCode.getStringValue() + ".md";
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
 
     if (descriptionStream == null) {
@@ -174,13 +173,13 @@ public class DiagnosticInfo {
       .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
   }
 
-  private Either<String, Number> createDiagnosticCode() {
+  private DiagnosticCode createDiagnosticCode() {
     String simpleName = diagnosticClass.getSimpleName();
     if (simpleName.endsWith("Diagnostic")) {
       simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
     }
 
-    return Either.forLeft(simpleName.intern());
+    return new DiagnosticCode(simpleName.intern());
   }
 
   private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {

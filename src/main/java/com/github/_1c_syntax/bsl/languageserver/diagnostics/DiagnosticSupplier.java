@@ -58,7 +58,9 @@ public class DiagnosticSupplier {
     this.configuration = configuration;
   }
 
-  public Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(Either<String, Number> diagnosticCode) {
+  public <T extends Either<String, Number>> Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(
+    T diagnosticCode
+  ) {
     return diagnosticClasses.stream()
       .filter(diagnosticClass -> createDiagnosticInfo(diagnosticClass).getCode().equals(diagnosticCode))
       .findAny();

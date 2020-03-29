@@ -91,11 +91,11 @@ public class SmokyTest {
     var srcDir = "./src/test/resources/";
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
-    // получим все возможные коды диагностик и положим в мапу "выключенным"
+    // получим все возможные коды диагностик и положим в мапу "включенным"
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = DiagnosticSupplier.getDiagnosticClasses().stream()
       .map(diagnosticClass -> (new DiagnosticInfo(diagnosticClass).getCode()))
       .collect(Collectors.toMap(
-        diagnosticCode -> diagnosticCode.get().toString(),
+        diagnosticCode -> diagnosticCode.getStringValue(),
         diagnosticCode -> Either.forLeft(true),
         (a, b) -> b));
 
