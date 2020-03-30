@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
@@ -52,12 +53,13 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
   ) {
     return diagnosticStream
       .map(Diagnostic::getCode)
+      .map(code -> (DiagnosticCode) code)
       .distinct()
       .flatMap(diagnosticCode -> getFixAllCodeAction(diagnosticCode, params, documentContext).stream());
   }
 
   private List<CodeAction> getFixAllCodeAction(
-    String diagnosticCode,
+    DiagnosticCode diagnosticCode,
     CodeActionParams params,
     DocumentContext documentContext
   ) {

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -50,9 +51,9 @@ public class QuickFixSupplier {
   }
 
   @SuppressWarnings("unchecked")
-  public Optional<Class<? extends QuickFixProvider>> getQuickFixClass(String diagnosticCode) {
+  public Optional<Class<? extends QuickFixProvider>> getQuickFixClass(DiagnosticCode diagnosticCode) {
     Optional<Class<? extends BSLDiagnostic>> diagnosticClass = diagnosticSupplier.getDiagnosticClass(diagnosticCode);
-    if (!diagnosticClass.isPresent()) {
+    if (diagnosticClass.isEmpty()) {
       return Optional.empty();
     }
 

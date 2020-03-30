@@ -19,39 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.databind;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.FileInfoObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import org.eclipse.lsp4j.Diagnostic;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-
-@Slf4j
-public class JsonReporter extends AbstractDiagnosticReporter {
-
-  public static final String KEY = "json";
-
-  public JsonReporter() {
+/**
+ * Преднастроенный object mapper для (де)сериализации класса {@link FileInfo}
+ */
+public class FileInfoObjectMapper extends ObjectMapper {
+  public FileInfoObjectMapper() {
     super();
-  }
-
-  public JsonReporter(Path outputDir) {
-    super(outputDir);
-  }
-
-  @Override
-  public void report(AnalysisInfo analysisInfo) {
-    ObjectMapper mapper = new FileInfoObjectMapper();
-
-    try {
-      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
-      mapper.writeValue(reportFile, analysisInfo);
-      LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    _mixIns.addLocalDefinition(Diagnostic.class, DiagnosticMixIn.class);
   }
 }

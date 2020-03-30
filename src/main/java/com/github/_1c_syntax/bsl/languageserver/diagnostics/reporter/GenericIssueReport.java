@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.Getter;
 import lombok.Value;
@@ -131,7 +132,8 @@ public class GenericIssueReport {
 
 
       engineId = diagnostic.getSource();
-      ruleId = diagnostic.getCode();
+
+      ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
       severity = severityMap.get(localSeverity);
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);

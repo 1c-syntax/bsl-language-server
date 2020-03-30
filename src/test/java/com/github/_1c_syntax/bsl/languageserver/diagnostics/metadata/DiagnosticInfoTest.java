@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import org.assertj.core.api.Assertions;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -38,7 +39,7 @@ class DiagnosticInfoTest {
 
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class);
 
-    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo("EmptyCodeBlock");
+    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage("")).isNotEmpty();

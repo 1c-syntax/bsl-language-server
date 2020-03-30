@@ -42,12 +42,14 @@ import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -55,13 +57,14 @@ import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -111,23 +114,23 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
-    DocumentContext documentContext = context.getDocument(position.getTextDocument().getUri());
+  public CompletableFuture<Hover> hover(HoverParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = HoverProvider.getHover(position, documentContext);
+    Optional<Hover> hover = HoverProvider.getHover(params, documentContext);
     return CompletableFuture.completedFuture(hover.orElse(null));
   }
 
   @Override
-  public CompletableFuture<SignatureHelp> signatureHelp(TextDocumentPositionParams position) {
+  public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
-    TextDocumentPositionParams position
+    DefinitionParams params
   ) {
     throw new UnsupportedOperationException();
   }
@@ -138,7 +141,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(TextDocumentPositionParams position) {
+  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
     throw new UnsupportedOperationException();
   }
 
