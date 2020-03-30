@@ -57,7 +57,7 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
   ) {
 
     Optional<Class<? extends QuickFixProvider>> quickFixClass =
-      quickFixSupplier.getQuickFixClass((DiagnosticCode) diagnostic.getCode());
+      quickFixSupplier.getQuickFixClass(diagnostic.getCode());
 
     if (quickFixClass.isEmpty()) {
       return Collections.emptyList();
