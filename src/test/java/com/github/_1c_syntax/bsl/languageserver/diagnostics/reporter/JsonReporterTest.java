@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.FileInfoObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -76,7 +77,8 @@ class JsonReporterTest {
     reporter.report(analysisInfo);
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new FileInfoObjectMapper();
+
     mapper.findAndRegisterModules();
     AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
 

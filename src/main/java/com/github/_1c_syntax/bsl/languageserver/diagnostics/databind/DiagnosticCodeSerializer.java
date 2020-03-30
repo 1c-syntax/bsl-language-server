@@ -19,39 +19,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.databind;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.FileInfoObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 
-@Slf4j
-public class JsonReporter extends AbstractDiagnosticReporter {
-
-  public static final String KEY = "json";
-
-  public JsonReporter() {
-    super();
-  }
-
-  public JsonReporter(Path outputDir) {
-    super(outputDir);
-  }
-
+/**
+ * Сериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
+ * См. {@link DiagnosticCode}
+ */
+public class DiagnosticCodeSerializer extends JsonSerializer<Either<String, Number>> {
   @Override
-  public void report(AnalysisInfo analysisInfo) {
-    ObjectMapper mapper = new FileInfoObjectMapper();
-
-    try {
-      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
-      mapper.writeValue(reportFile, analysisInfo);
-      LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+  public void serialize(
+    Either<String, Number> value,
+    JsonGenerator gen,
+    SerializerProvider serializers
+  ) throws IOException {
+    gen.writeString(DiagnosticCode.getStringValue(value));
   }
 }
