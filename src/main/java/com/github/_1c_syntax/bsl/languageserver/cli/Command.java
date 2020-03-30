@@ -26,7 +26,7 @@ public interface Command {
   /**
    * Execute given command.
    *
-   * @return Result code. 0 - if success, >0 in case of error, <0 in case of pending multithreaded task.
+   * @return Result code. 0 - if success, &gt;0 in case of error, &lt;0 in case of pending multithreaded task.
    */
   int execute();
 }

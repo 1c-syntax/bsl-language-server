@@ -105,6 +105,7 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
     withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.withType<JavaCompile> {
@@ -210,4 +211,27 @@ tasks.register("precommit") {
     dependsOn(":updateDiagnosticDocs")
     dependsOn(":updateDiagnosticsIndex")
     dependsOn(":updateJsonSchema")
+}
+
+tasks {
+    val delombok by registering(io.franzbecker.gradle.lombok.task.DelombokTask::class) {
+        dependsOn(compileJava)
+        val outputDir by extra { file("$buildDir/delombok") }
+        outputs.dir(outputDir)
+        sourceSets["main"].java.srcDirs.forEach {
+            inputs.dir(it)
+            args(it, "-d", outputDir)
+        }
+        doFirst {
+            outputDir.delete()
+        }
+    }
+
+    javadoc {
+        dependsOn(delombok)
+        val outputDir: File by delombok.get().extra
+        source = fileTree(outputDir)
+        isFailOnError = false
+        options.encoding = "UTF-8"
+    }
 }

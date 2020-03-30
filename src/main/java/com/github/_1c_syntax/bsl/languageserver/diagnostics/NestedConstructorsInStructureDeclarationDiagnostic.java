@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author Leon Chagelishvili <lChagelishvily@gmail.com>
+ * @author Leon Chagelishvili &lt;lChagelishvily@gmail.com&gt;
  */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,

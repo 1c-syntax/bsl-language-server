@@ -33,7 +33,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
- * @author Leon Chagelishvili <lChagelishvily@gmail.com>
+ * @author Leon Chagelishvili &lt;lChagelishvily@gmail.com&gt;
  */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
