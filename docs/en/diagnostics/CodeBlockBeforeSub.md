@@ -22,7 +22,7 @@ Based on the structure described above, the location of the program code before 
 
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Неправильно
+Wrong
 
 ```bsl
 Method();
