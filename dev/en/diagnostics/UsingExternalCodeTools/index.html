@@ -342,6 +342,19 @@
     Description
   </a>
   
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    Limitations
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -432,16 +445,29 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>For application solutions it is forbidden to execute in unsafe mode any code on the 1C:Enterprise server that is not part of the application solution (configuration) itself.</p>
+<p>The restriction does not apply to the code that has passed the audit, and to the code executed on the client.</p>
+<p>Examples of invalid execution of "external" code in unsafe mode:</p>
+<ul>
+<li>external reports and processings (print forms, etc.)</li>
+<li>configuration extensions</li>
+</ul>
+<h3 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">Link</a></h3>
+<p>At the moment, the server context is not analyzed, so diagnostic works both at client and server contexts</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<p><!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-&lt;!-- Примеры источников</p>
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
+<!-- Примеры источников
+
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+
 <ul>
-<li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc">Стандарт: Тексты модулей</a></li>
-<li>Полезная информаця: <a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
-<li>Источник: <a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a> --&gt;</li>
+<li><a href="https://its.1c.ru/db/v8std#content:669:hdoc">Restriction on the execution of "external" code</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

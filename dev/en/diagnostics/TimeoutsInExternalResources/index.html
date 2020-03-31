@@ -456,7 +456,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>When working with external resources using the objects WSDefinitions, WSProxy, HTTPConnection, FTPConnection, InternetMailProfile, a timeout should be set - the time limit for the operation to be completed. Otherwise, as a result of endless waiting, the program will freeze or some of the functionality of the program will become unavailable.</p>
+<p>When working with external resources using the WSDefinitions, WSProxy, HTTPConnection, FTPConnection there should be a time out - the time limit for the operation to be completed. Otherwise, as a result of endless waiting, the program will freeze or some of the functionality of the program will become unavailable.</p>
+<p>For the InternetMailProfile the platform sets the default timeout value to 30 seconds, but despite this, it is worth explicitly specifying the timeout value when using it.</p>
 <p>Setting a timeout protects against external factors:</p>
 <ul>
 <li>unstable Internet connection, when the connection is interrupted regularly, and the system cannot receive a complete response from the server to which the connection is made;</li>
@@ -489,6 +490,7 @@
 <h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:748:hdoc">Timeouts when working with external resources</a></li>
+<li><a href="https://its.1c.ru/db/metod8dev/content/2358/hdoc">InternetMail Profilehas a default timeout</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

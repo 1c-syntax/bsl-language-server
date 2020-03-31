@@ -501,7 +501,7 @@
 <li>Selected region formatting</li>
 <li>Symbol definition for current file (regions, procedures, functions, variables, defined via <code>Var</code> keyword)</li>
 <li>Folding regions definition <code>#Region</code>, <code>#If</code>, procedures and functions, code blocks</li>
-<li>Methods "Cognitive Complexity" score</li>
+<li>Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores</li>
 <li>Diagnostics</li>
 <li>Quick fixes for several diagnostics</li>
 <li>Run diagnostics engine from command line</li>
@@ -528,8 +528,7 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>diagnosticLanguage</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
 <h2 id="run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#run-in-analyzer-mode" title="Permanent link">Link</a></h2>
-<p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>). To set source code folder for analysis use parameter
-<code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder.</p>
+<p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>). To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder.</p>
 <p>To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
 <p>Command line example to run analysis:</p>
 <div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
@@ -558,12 +557,13 @@ usage: BSL language server <span class="o">[</span>-a<span class="o">]</span> <s
 <h2 id="special-thanks">Special thanks<a class="headerlink" href="#special-thanks" title="Permanent link">Link</a></h2>
 <p>Many thanks to all <a href="https://github.com/1c-syntax/bsl-language-server/graphs/contributors">contributors</a> to the project, to all who participated in the discussions, who helped with the testing.</p>
 <p>You are awesome!</p>
-<p>Thanks to companies supporting open source projects, and especially to those who supported us: </p>
+<p>Thanks to companies supporting open source projects, and especially to those who supported us:</p>
 <hr />
-<p><a href="https://www.yourkit.com"><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></a>  </p>
-<p><a href="https://www.yourkit.com">YourKit, LLC</a> is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license <code>YourKit Java Profiler</code> for <code>BSL Language Server</code> to improve its performance. </p>
+<p><a href="https://www.yourkit.com"><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></a></p>
+<p><a href="https://www.yourkit.com">YourKit, LLC</a> is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license <code>YourKit Java Profiler</code> for <code>BSL Language Server</code> to improve its performance.</p>
+<p>With <code>YourKit Java Profiler</code> we profile and improve project performance.</p>
 <hr />
-<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/assets/images/jetbrains-variant-4.png" /></a>  </p>
+<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/assets/images/jetbrains-variant-4.png?raw=true" /></a></p>
 <p><a href="https://www.jetbrains.com">JetBrains</a> is the creator of professional software for development. JetBrains has offered an open source license for his products, including <code>IntelliJ IDEA Ultimate</code>.</p>
 <p><code>IntelliJ IDEA Ultimate</code> is one of the best tools in its class.</p>
                 

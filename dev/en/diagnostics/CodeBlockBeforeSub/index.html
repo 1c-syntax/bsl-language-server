@@ -432,16 +432,37 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>The structure of the software module <em>(in general form)</em> is clearly defined:</p>
+<ul>
+<li>first comes the variable definition block</li>
+<li>then definitions of procedures and functions</li>
+<li>then the module code block.</li>
+</ul>
+<p>Based on the structure described above, the location of the program code before the definition of methods is unacceptable.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>Wrong</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">Method</span><span class="p">();</span>
+<span class="nb">Message</span><span class="p">(</span><span class="s1">&quot;Before methods&quot;</span><span class="p">);</span>
+
+<span class="nv">Procedure</span> <span class="nv">Method</span><span class="p">()</span>
+<span class="c c-Singleline">// Method body</span>
+<span class="k">EndProcedure</span>
+</code></pre></div>
+
+
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<p><!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-&lt;!-- Примеры источников</p>
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
+<!-- Примеры источников
+
+* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
+* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+
 <ul>
-<li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc">Стандарт: Тексты модулей</a></li>
-<li>Полезная информаця: <a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
-<li>Источник: <a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a> --&gt;</li>
+<li><a href="https://its.1c.ru/db/v8std/content/455/hdoc">Module structure</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
