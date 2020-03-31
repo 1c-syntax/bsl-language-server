@@ -18,7 +18,7 @@ All public methods located inside regions must have a description.
 
 ## Sources
 
-- [Стандарт "Описание процедур и функций". Пункт 2](https://its.1c.ru/db/v8std#content:453:hdoc)
+- ["Procedure and function defenition" standard. Paragraph 2 (RU)](https://its.1c.ru/db/v8std#content:453:hdoc)
 
 ## Snippets
 
