@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -34,8 +35,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
@@ -70,14 +73,30 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
-    MethodSymbol methodSymbol = MethodSymbol.builder()
+    MethodSymbol.MethodSymbolBuilder builder = MethodSymbol.builder()
       .name(declaration.subName().getText())
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(declaration.subName()))
       .function(true)
       .export(declaration.EXPORT_KEYWORD() != null)
-      .description(createDescription(startNode.getSymbol()))
-      .build();
+      .description(createDescription(startNode.getSymbol()));
+
+    List<ParameterDefinition> parameters = Optional.ofNullable(declaration.paramList())
+      .map(paramList -> paramList.param().stream()
+        .filter(param -> param.IDENTIFIER() != null)
+        .map(param ->
+          ParameterDefinition.builder()
+            .name(param.IDENTIFIER().getText())
+            .byValue(param.VAL_KEYWORD() != null)
+            .optional(param.defaultValue() != null)
+            .build()
+        ).collect(Collectors.toList())
+      )
+      .orElseGet(Collections::emptyList);
+
+    builder.parameters(parameters);
+
+    MethodSymbol methodSymbol = builder.build();
 
     methods.add(methodSymbol);
 
@@ -99,14 +118,32 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
-    MethodSymbol methodSymbol = MethodSymbol.builder()
+    MethodSymbol.MethodSymbolBuilder builder = MethodSymbol.builder()
       .name(declaration.subName().getText())
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(declaration.subName()))
       .function(false)
       .export(declaration.EXPORT_KEYWORD() != null)
-      .description(createDescription(startNode.getSymbol()))
-      .build();
+      .description(createDescription(startNode.getSymbol()));
+
+    List<ParameterDefinition> parameters = Optional.ofNullable(declaration.paramList())
+      .map(paramList -> paramList.param().stream()
+        .filter(param -> param.IDENTIFIER() != null)
+        .map(param ->
+          ParameterDefinition.builder()
+            .name(param
+              .IDENTIFIER()
+              .getText())
+            .byValue(param.VAL_KEYWORD() != null)
+            .optional(param.defaultValue() != null)
+            .build()
+        ).collect(Collectors.toList())
+      )
+      .orElseGet(Collections::emptyList);
+
+    builder.parameters(parameters);
+
+    MethodSymbol methodSymbol = builder.build();
 
     methods.add(methodSymbol);
 
