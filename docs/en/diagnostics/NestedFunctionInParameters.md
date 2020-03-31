@@ -20,7 +20,7 @@ At the same time, if the code with nested calls is compact (does not require the
 
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Неправильно:
+Wrong:
 
 ```bsl
 Attachments.Insert(
