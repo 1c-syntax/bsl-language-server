@@ -1,21 +1,20 @@
 # Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; (MissingSpace)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `badpractice` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
-:-: | :-: | :-- | :-:
-`checkSpaceToRightOfUnary` | `Boolean` | `Check for space to the right of unary signs (+ -)` | `false`
-`listForCheckRight` | `String` | `List of symbols to check for the space to the right of (separated by space)` | `, ;`
-`listForCheckLeft` | `String` | `List of symbols to check for the space to the left of (separated by space)` | ``````
-`allowMultipleCommas` | `Boolean` | `Allow several commas in a row` | `false`
-`listForCheckLeftAndRight` | `String` | `List of symbols to check for the space from both sides of (separated by space)` | `+ - * / = % < > <> <= >=`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `checkSpaceToRightOfUnary` | `Boolean` | ```Check for space to the right of unary signs (+ -)``` | ```false``` |
+| `listForCheckRight` | `String` | ```List of symbols to check for the space to the right of (separated by space)``` | ```, ;``` |
+| `listForCheckLeft` | `String` | ```List of symbols to check for the space to the left of (separated by space)``` | `````` |
+| `allowMultipleCommas` | `Boolean` | ```Allow several commas in a row``` | ```false``` |
+| `listForCheckLeftAndRight` | `String` | ```List of symbols to check for the space from both sides of (separated by space)``` | ```+ - * / = % < > <> <= >=``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.
@@ -82,7 +81,6 @@ CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correc
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

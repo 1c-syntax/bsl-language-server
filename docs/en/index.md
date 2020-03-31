@@ -99,6 +99,8 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 
 A detailed description of the configuration file is given on [this page](features/ConfigurationFile.md)
 
+<a id="thanks"></a>
+
 ## Special thanks
 
 Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-server/graphs/contributors) to the project, to all who participated in the discussions, who helped with the testing.
