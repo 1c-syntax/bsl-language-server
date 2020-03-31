@@ -31,7 +31,7 @@
 - Selected region formatting
 - Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
 - Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
-- Methods "Cognitive Complexity" score
+- Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
@@ -113,7 +113,7 @@ Thanks to companies supporting open source projects, and especially to those who
 
 [YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license `YourKit Java Profiler` for `BSL Language Server` to improve its performance.
 
-С помощью `YourKit Java Profiler` мы мониторим и улучшаем производительность проекта.
+With `YourKit Java Profiler` we profile and improve project performance.
 
 ---
 
