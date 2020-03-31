@@ -6,7 +6,7 @@ BSL Language Server provides the ability to change the settings using a configur
 ## Settings
 
 Name | Type | Description
---- | --- | ---
+:-- | :-: | :--
 `diagnosticLanguage` | `String` | Set the language for displaying diagnosed comments. Supported languages:<br>* `ru` - for Russian (*default*)<br>* `en` - for English
 `showCognitiveComplexityCodeLens` | `Boolean` | In code editors/IDE with support codelens*(for example [Visual Studio Code](https://code.visualstudio.com/))*, enables displaying the value[ of the cognitive complexity](../diagnostics/CognitiveComplexity.md) of the method over its definition. By default is enabled (*is set to `true`*)
 `showCyclomaticComplexityCodeLens` | `Boolean` | Similar to `showCognitiveComplexityCodeLens`, enables the display of the [cyclomatic complexity](../diagnostics/CyclomaticComplexity.md) value   of the method. By default enabled (*is set to `true`*)

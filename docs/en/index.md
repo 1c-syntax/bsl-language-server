@@ -31,7 +31,7 @@
 - Selected region formatting
 - Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
 - Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
-- Methods "Cognitive Complexity" score
+- Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
 - Diagnostics
 - Quick fixes for several diagnostics
 - Run diagnostics engine from command line
@@ -65,8 +65,7 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 
 ## Run in analyzer mode
 
-To run in analyzer mode use parameter `--analyze` (short `-a`). To set source code folder for analysis use parameter
-`--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
+To run in analyzer mode use parameter `--analyze` (short `-a`). To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
 
 To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
 
@@ -108,17 +107,19 @@ Many thanks to all [contributors](https://github.com/1c-syntax/bsl-language-serv
 
 You are awesome!
 
-Thanks to companies supporting open source projects, and especially to those who supported us: 
+Thanks to companies supporting open source projects, and especially to those who supported us:
 
 ---
 
-[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
+[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)
 
-[YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license `YourKit Java Profiler` for `BSL Language Server` to improve its performance. 
+[YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license `YourKit Java Profiler` for `BSL Language Server` to improve its performance.
+
+With `YourKit Java Profiler` we profile and improve project performance.
 
 ---
 
-[![JetBrains](https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
+[![JetBrains](https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/assets/images/jetbrains-variant-4.png?raw=true)](https://www.jetbrains.com)
 
 [JetBrains](https://www.jetbrains.com) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
 
