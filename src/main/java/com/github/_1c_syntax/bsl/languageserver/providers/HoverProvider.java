@@ -27,10 +27,10 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 
 import java.util.Optional;
 
@@ -40,9 +40,9 @@ public final class HoverProvider {
     // only statics
   }
 
-  public static Optional<Hover> getHover(TextDocumentPositionParams position, DocumentContext documentContext) {
+  public static Optional<Hover> getHover(HoverParams params, DocumentContext documentContext) {
 
-    SubNameFinder finder = new SubNameFinder(position.getPosition());
+    SubNameFinder finder = new SubNameFinder(params.getPosition());
     finder.visit(documentContext.getAst());
 
     Token subName = finder.getSubName();

@@ -112,10 +112,16 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
     private fun getDiagnosticMetadata(diagnosticClass: Class<*>, diagnosticInstanceRU: Any, diagnosticInstanceEN: Any, classLoader: ClassLoader): HashMap<String, Any> {
         val diagnosticInfoClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo")
         val diagnosticParameterInfoClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo")
+        val diagnosticeCodeClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode")
+
         val infoRU = diagnosticClass.getMethod("getInfo").invoke(diagnosticInstanceRU)
         val infoEN = diagnosticClass.getMethod("getInfo").invoke(diagnosticInstanceEN)
+
+        val diagnosticCode = diagnosticInfoClass.getMethod("getCode").invoke(infoRU)
+        val code = diagnosticeCodeClass.getMethod("getStringValue").invoke(diagnosticCode)
+
         val metadata = hashMapOf<String, Any>()
-        metadata["key"] = diagnosticInfoClass.getMethod("getCode").invoke(infoRU).toString()
+        metadata["key"] = code
         metadata["type"] = diagnosticInfoClass.getMethod("getType").invoke(infoRU).toString()
         metadata["severity"] = diagnosticInfoClass.getMethod("getSeverity").invoke(infoRU).toString()
         metadata["scope"] = diagnosticInfoClass.getMethod("getScope").invoke(infoRU).toString()

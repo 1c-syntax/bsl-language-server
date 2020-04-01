@@ -123,7 +123,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
       return super.visitAccessIndex(ctx);
     }
 
-    List<Token> list = ctx.getTokens();
+    List<Token> list = ctx.expression().getTokens();
     if (list.size() == 1) {
       processCheckAssignmentKey(ctx, list.get(0).getText());
     }

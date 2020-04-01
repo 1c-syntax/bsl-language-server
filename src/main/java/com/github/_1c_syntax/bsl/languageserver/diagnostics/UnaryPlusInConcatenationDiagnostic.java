@@ -28,8 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -48,21 +50,25 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitMember(BSLParser.MemberContext ctx) {
-    ParseTree childZero = ctx.getChild(0);
-    if (childZero == null) {
+
+    if (ctx.constValue() != null && ctx.constValue().numeric() != null) {
       return super.visitMember(ctx);
     }
-    ParseTree previousNode = Trees.getPreviousNode(ctx.parent, childZero, BSLParser.RULE_operation);
-    if (
-      (childZero instanceof BSLParser.UnaryModifierContext)
-        && ctx.getChildCount() > 1
-        && !(ctx.getChild(1).getChild(0) instanceof BSLParser.NumericContext)
-        && "+".equals(childZero.getText())
-        && !previousNode.equals(childZero)
-        && "+".equals(previousNode.getText())
-    ) {
-      diagnosticStorage.addDiagnostic(((BSLParser.UnaryModifierContext) childZero).start);
+
+    BSLParser.UnaryModifierContext unaryModifier = ctx.unaryModifier();
+    if (unaryModifier == null || unaryModifier.PLUS() == null) {
+      return super.visitMember(ctx);
     }
+
+    int tokenIndex = unaryModifier.getStart().getTokenIndex();
+    if (tokenIndex == 0) {
+      return super.visitMember(ctx);
+    }
+
+    Optional<Token> previousToken = Trees.getPreviousTokenFromDefaultChannel(documentContext.getTokens(), tokenIndex);
+    previousToken
+      .filter(token -> "+".equals(token.getText()))
+      .ifPresent(token -> diagnosticStorage.addDiagnostic(unaryModifier.getStart()));
 
     return super.visitMember(ctx);
   }

@@ -127,16 +127,33 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
         return;
       }
 
-      ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
-      if (parent != null) {
-        matcher = searchWordsExclusion.matcher(parent.getText());
-        if (matcher.find()) {
-          return;
-        }
+      if (skipStatement(ctx, BSLParser.RULE_statement)
+        || skipStatement(ctx, BSLParser.RULE_param)
+        || itVersionReturn(ctx)) {
+        return;
       }
 
       diagnosticStorage.addDiagnostic(ctx);
     }
+  }
+
+  private boolean itVersionReturn(ParserRuleContext ctx) {
+
+    ParserRuleContext returnState = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_returnStatement);
+    if (returnState != null) {
+      return skipStatement(returnState, BSLParser.RULE_function);
+    }
+    return false;
+  }
+
+  private boolean skipStatement(ParserRuleContext ctx, int ruleStatement) {
+
+    ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, ruleStatement);
+    if (parent != null) {
+      Matcher matcher = searchWordsExclusion.matcher(parent.getText());
+      return matcher.find();
+    }
+    return false;
   }
 
   private static Pattern getLocalPattern(String content) {

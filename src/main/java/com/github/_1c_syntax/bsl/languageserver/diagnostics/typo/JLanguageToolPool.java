@@ -19,47 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
-import lombok.SneakyThrows;
+import com.github._1c_syntax.bsl.languageserver.utils.AbstractObjectPool;
+import lombok.AllArgsConstructor;
+import org.languagetool.Language;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
+@AllArgsConstructor
+public class JLanguageToolPool extends AbstractObjectPool<JLanguageToolPoolEntry> {
 
-public final class Absolute {
+  private Language language;
 
-  private Absolute() {
-    // Utility class
-  }
-
-  @SneakyThrows
-  public static URI uri(URI uri) {
-    return path(uri).toUri();
-  }
-
-  @SneakyThrows
-  public static URI uri(String uri) {
-    return uri(URI.create(uri));
-  }
-
-  @SneakyThrows
-  public static Path path(URI uri) {
-    return path(new File(uri));
-  }
-
-  @SneakyThrows
-  public static Path path(String path) {
-    return path(new File(path));
-  }
-
-  @SneakyThrows
-  public static Path path(Path path) {
-    return path(path.toUri());
-  }
-
-  @SneakyThrows
-  public static Path path(File file) {
-    return file.getCanonicalFile().toPath().toAbsolutePath();
+  @Override
+  protected JLanguageToolPoolEntry create() {
+    return new JLanguageToolPoolEntry(language);
   }
 }

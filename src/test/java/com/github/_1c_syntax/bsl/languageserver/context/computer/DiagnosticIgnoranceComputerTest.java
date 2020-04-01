@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DiagnosticIgnoranceComputerTest {
 
   @Test
-  void testDiagnosticIgnorance() throws IOException {
+  void testDiagnosticIgnorance() {
 
     // given
     String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
@@ -70,7 +69,7 @@ class DiagnosticIgnoranceComputerTest {
   private static Diagnostic createDiagnostic(String code, int line) {
     Diagnostic diagnostic = new Diagnostic();
     diagnostic.setCode(code);
-    diagnostic.setRange(Ranges.create(line, 0, line, 0));
+    diagnostic.setRange(Ranges.create(line - 1, 0, line - 1, 0));
 
     return diagnostic;
   }

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -55,9 +56,10 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
     DocumentContext documentContext
   ) {
 
-    Optional<Class<? extends QuickFixProvider>> quickFixClass = quickFixSupplier.getQuickFixClass(diagnostic.getCode());
+    Optional<Class<? extends QuickFixProvider>> quickFixClass =
+      quickFixSupplier.getQuickFixClass(diagnostic.getCode());
 
-    if (!quickFixClass.isPresent()) {
+    if (quickFixClass.isEmpty()) {
       return Collections.emptyList();
     }
 

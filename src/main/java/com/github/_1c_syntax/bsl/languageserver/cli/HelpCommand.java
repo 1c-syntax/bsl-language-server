@@ -26,6 +26,16 @@ import org.apache.commons.cli.Options;
 
 import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
 
+/**
+ * Вывод справки
+ * Ключ команды:
+ *  -h, (--help)
+ * Параметры:
+ *  Без параметров
+ * Выводимая информация:
+ *  Выводит справку консольного приложения
+ *
+ */
 public class HelpCommand implements Command {
 
   private final Options options;

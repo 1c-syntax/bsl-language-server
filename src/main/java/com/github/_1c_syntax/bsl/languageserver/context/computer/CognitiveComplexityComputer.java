@@ -95,7 +95,7 @@ public class CognitiveComplexityComputer
 
   @Override
   public void enterSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> methodSymbol = documentContext.getMethodSymbol(ctx);
+    Optional<MethodSymbol> methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     if (methodSymbol.isEmpty()) {
       return;
     }

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.AnalysisInfoObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class JsonReporter extends AbstractDiagnosticReporter {
 
   @Override
   public void report(AnalysisInfo analysisInfo) {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new AnalysisInfoObjectMapper();
 
     try {
       File reportFile = new File(outputDir.toFile(), "./bsl-json.json");

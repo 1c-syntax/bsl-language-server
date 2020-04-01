@@ -24,9 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,7 +44,7 @@ class FoldingRangeProviderTest {
 
     // regions
     assertThat(foldingRanges)
-      .filteredOn(foldingRange -> foldingRange.getKind().equals("region"))
+      .filteredOn(foldingRange -> foldingRange.getKind().equals(FoldingRangeKind.Region))
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 3 && foldingRange.getEndLine() == 26)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 5 && foldingRange.getEndLine() == 19)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 7 && foldingRange.getEndLine() == 17)
@@ -57,7 +57,7 @@ class FoldingRangeProviderTest {
 
     // comments
     assertThat(foldingRanges)
-      .filteredOn(foldingRange -> foldingRange.getKind().equals("comment"))
+      .filteredOn(foldingRange -> foldingRange.getKind().equals(FoldingRangeKind.Comment))
       .hasSize(2)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 9 && foldingRange.getEndLine() == 10)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 21 && foldingRange.getEndLine() == 22)
@@ -65,7 +65,7 @@ class FoldingRangeProviderTest {
 
     // import
     assertThat(foldingRanges)
-      .filteredOn(foldingRange -> foldingRange.getKind().equals("imports"))
+      .filteredOn(foldingRange -> foldingRange.getKind().equals(FoldingRangeKind.Imports))
       .hasSize(1)
       .anyMatch(foldingRange -> foldingRange.getStartLine() == 0 && foldingRange.getEndLine() == 1)
     ;
@@ -73,7 +73,7 @@ class FoldingRangeProviderTest {
   }
 
   @Test
-  void testFoldingRangeParseError() throws IOException {
+  void testFoldingRangeParseError() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
     List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);

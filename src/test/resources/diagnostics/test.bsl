@@ -21,7 +21,7 @@ B = 0;
 //"SELECT 1";
 //#EndRegion
 
-For Each Str From Table Do
+For Each Str In Table Do
 
 #Region name
 EndDo;

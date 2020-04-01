@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -41,6 +41,19 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Форматирование кода в исходниках
+ * Ключ команды:
+ *  -f, (--format)
+ * Параметры:
+ *  -s, (--srcDir) <arg> -        Путь к каталогу исходных файлов.
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то анализ выполняется в текущем каталоге запуска.
+ * Выводимая информация:
+ *  Выполняет форматирование исходного кода в файлах каталога. Для форматирования используются правила и настройки
+ *  "форматтера" FormatProvider, т.е. пользователь никак не может овлиять на результат.
+ *
+ */
 public class FormatCommand implements Command {
 
   private CommandLine cmd;

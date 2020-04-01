@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -56,7 +57,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    documentContext.clearASTData();
+    documentContext.clearSecondaryData();
 
     // then
     final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
@@ -68,7 +69,7 @@ class DocumentContextTest {
 
     DocumentContext documentContext = getDocumentContext();
 
-    assertThat(documentContext.getMethods().size()).isEqualTo(2);
+    assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(2);
 
   }
 
@@ -78,8 +79,16 @@ class DocumentContextTest {
     DocumentContext documentContext =
       getDocumentContext("./src/test/resources/context/DocumentContextParseErrorTest.bsl");
 
-    assertThat(documentContext.getMethods().isEmpty()).isTrue();
+    assertThat(documentContext.getSymbolTree().getMethods().isEmpty()).isTrue();
 
+  }
+
+  @Test
+  void testGetRegionsFlatComputesAllLevels() {
+    DocumentContext documentContext = getDocumentContext();
+
+    assertThat(documentContext.getSymbolTree().getModuleLevelRegions()).hasSize(2);
+    assertThat(documentContext.getSymbolTree().getRegionsFlat()).hasSize(6);
   }
 
   @Test
@@ -88,7 +97,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    List<RegionSymbol> regions = documentContext.getRegions();
+    List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
 
     // then
     assertThat(regions).anyMatch(regionSymbol -> regionSymbol.getMethods().size() > 0);
@@ -100,7 +109,7 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    List<MethodSymbol> methods = documentContext.getMethods();
+    List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     // then
     assertThat(methods)
@@ -110,6 +119,32 @@ class DocumentContextTest {
         )
       )
     ;
+  }
+
+  @Test
+  void testUntitledSchema() {
+    // given
+    URI uri = URI.create("untitled:///fake.bsl");
+    String fileContent = "";
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(uri, fileContent);
+
+    // then
+    assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
+  }
+
+  @Test
+  void testUntitledSchemaFromVSC() {
+    // given
+    URI uri = URI.create("untitled:Untitled-1");
+    String fileContent = "";
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(uri, fileContent);
+
+    // then
+    assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
   }
 
   @SneakyThrows

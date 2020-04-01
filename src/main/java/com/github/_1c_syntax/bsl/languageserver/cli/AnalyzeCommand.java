@@ -30,7 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
+import com.github._1c_syntax.utils.Absolute;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.cli.CommandLine;
@@ -47,6 +47,27 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Выполнение анализа
+ * Ключ команды:
+ *  -a, (--analyze)
+ * Параметры:
+ *  -s, (--srcDir) <arg> -        Путь к каталогу исходных файлов.
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то анализ выполняется в текущем каталоге запуска.
+ *  -o, (--outputDir) <arg> -     Путь к каталогу размещения отчетов - результатов анализа.
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то файлы отчета будут сохранены в текущем каталоге запуска.
+ *  -c, (--configuration) <arg> - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то будут использованы настройки по умолчанию.
+ * -r, (--reporter) <arg> -       Ключи "Репортеров", т.е. форматов отчетов, котрые необходимо сгенерировать после
+ *                                выполнения анализа. Может быть указано более одного ключа. Если параметр опущен,
+ *                                то вывод результата будет призведен в консоль.
+ * Выводимая информация:
+ *  Выполняет анализ каталога исходных файлов и генерацию файлов отчета. Для каждого указанного ключа "Репортера"
+ *  создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
+ */
 public class AnalyzeCommand implements Command {
 
   private CommandLine cmd;
@@ -110,7 +131,7 @@ public class AnalyzeCommand implements Command {
     FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
-    documentContext.clearASTData();
+    documentContext.clearSecondaryData();
     diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;

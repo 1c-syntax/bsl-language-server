@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -55,32 +55,20 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
-    documentContext.getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+    documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
       if (methodSymbol.isExport()) {
         return;
       }
 
-      methodSymbol.getRegion().ifPresent(methodRegion ->
-        documentContext.getRegions()
-          .stream()
-          .filter(regionSymbol -> findRecursivelyRegion(regionSymbol, methodRegion))
-          .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
-          .findFirst()
-          .ifPresent((RegionSymbol regionSymbol) -> {
-            String message = info.getMessage(methodSymbol.getName(), regionSymbol.getName());
+      methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
+          if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
+            String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
             diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-          }));
+          }
+        });
     });
 
     return ctx;
-  }
-
-  private static boolean findRecursivelyRegion(RegionSymbol parent, RegionSymbol toFind) {
-    if (parent.equals(toFind)) {
-      return true;
-    }
-
-    return parent.getChildren().stream().anyMatch(regionSymbol -> findRecursivelyRegion(regionSymbol, (toFind)));
   }
 
 }

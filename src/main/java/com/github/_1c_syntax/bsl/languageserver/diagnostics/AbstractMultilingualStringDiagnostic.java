@@ -56,17 +56,13 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    try {
-      parser.parse(ctx);
-    } catch (IllegalArgumentException e) {
-      return super.visitGlobalMethodCall(ctx);
-    }
 
-    if (check()) {
+    if (parser.parse(ctx) && check()) {
       diagnosticStorage.addDiagnostic(ctx, info.getMessage(parser.getMissingLanguages()));
     }
 
     return super.visitGlobalMethodCall(ctx);
+
   }
 
   protected boolean check() {

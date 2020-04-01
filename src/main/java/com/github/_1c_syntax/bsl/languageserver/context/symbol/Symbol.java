@@ -21,10 +21,40 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.Getter;
+import lombok.Setter;
+import org.eclipse.lsp4j.Range;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 public interface Symbol {
-  ParseTree getNode();
 
-  void clearASTData();
+  String getName();
+
+  Range getRange();
+
+  Optional<Symbol> getParent();
+  void setParent(Optional<Symbol> symbol);
+
+  List<Symbol> getChildren();
+
+  default void clearParseTreeData() {
+  }
+
+  default Optional<Symbol> getRootParent() {
+    return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
+  }
+
+  static Symbol emptySymbol() {
+    return new Symbol() {
+      @Getter private String name = "empty";
+      @Getter private Range range = Ranges.create(-1, 0, -1, 0);
+      @Getter @Setter private Optional<Symbol> parent = Optional.empty();
+      @Getter private List<Symbol> children = Collections.emptyList();
+    };
+  }
+
 }

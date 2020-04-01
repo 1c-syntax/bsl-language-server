@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsSkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
@@ -201,6 +202,28 @@ class DiagnosticSupplierTest {
     when(documentContext.getModuleType()).thenReturn(ModuleType.Unknown);
     assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
+  }
+
+  @Test
+  void testAllScope() {
+    // given
+    var documentContext = spy(TestUtils.getDocumentContext(""));
+
+    // when-then pairs
+    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
+    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.Unknown);
+    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
+      .noneMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.Unknown);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
   }
 
   @Test

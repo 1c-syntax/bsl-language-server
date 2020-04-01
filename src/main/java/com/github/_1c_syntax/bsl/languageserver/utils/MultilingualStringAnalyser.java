@@ -110,13 +110,13 @@ public final class MultilingualStringAnalyser {
     return null;
   }
 
-  public void parse(BSLParser.GlobalMethodCallContext ctx) {
+  public boolean parse(BSLParser.GlobalMethodCallContext ctx) {
     expandedMultilingualString.clear();
     missingLanguages.clear();
     isParentTemplate = false;
 
     if (isNotMultilingualString(ctx)) {
-      throw new IllegalArgumentException("Method not multilingual string");
+      return false;
     }
 
     globalMethodCallContext = ctx;
@@ -124,6 +124,7 @@ public final class MultilingualStringAnalyser {
     variableName = getVariableName(ctx);
     expandMultilingualString();
     checkDeclaredLanguages();
+    return true;
   }
 
   private void expandMultilingualString() {

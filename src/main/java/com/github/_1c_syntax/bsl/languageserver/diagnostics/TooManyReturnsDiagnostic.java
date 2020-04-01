@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -72,15 +71,6 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
     return inputString.substring(0, MAX_RELATION_TEXT_LENGTH);
   }
 
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
-    maxReturnsCount = (int) configuration.getOrDefault("maxReturnsCount", maxReturnsCount);
-  }
-
   private String getRelatedMessage(BSLParser.ReturnStatementContext context) {
     if (context.getChildCount() > 1) {
       return leftSubStr(documentContext.getText(Ranges.create(context)));
@@ -91,7 +81,7 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getMethodSymbol(ctx);
+    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
       Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
 

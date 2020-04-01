@@ -36,6 +36,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class FoldingRangeProvider {
 
@@ -201,31 +202,27 @@ public final class FoldingRangeProvider {
 
   private static class RegionRangeFinder {
 
-    private List<FoldingRange> regionRanges = new ArrayList<>();
+    private List<FoldingRange> regionRanges;
 
     RegionRangeFinder(DocumentContext documentContext) {
-      documentContext.getRegions().forEach((RegionSymbol regionSymbol) -> {
-        createFoldingRange(regionSymbol);
-        regionSymbol.getChildren().forEach(this::createFoldingRange);
-      });
-
+      regionRanges = documentContext.getSymbolTree().getRegionsFlat().stream()
+        .map(RegionRangeFinder::toFoldingRange)
+        .collect(Collectors.toList());
     }
 
     List<FoldingRange> getRegionRanges() {
       return new ArrayList<>(regionRanges);
     }
 
-    private void createFoldingRange(RegionSymbol regionSymbol) {
-      BSLParser.RegionStartContext regionStart = regionSymbol.getStartNode();
-      BSLParser.RegionEndContext regionEnd = regionSymbol.getEndNode();
+    private static FoldingRange toFoldingRange(RegionSymbol regionSymbol) {
 
-      int start = regionStart.getStart().getLine();
-      int stop = regionEnd.getStop().getLine();
-
-      FoldingRange foldingRange = new FoldingRange(start - 1, stop - 1);
+      FoldingRange foldingRange = new FoldingRange(
+        regionSymbol.getStartRange().getStart().getLine(),
+        regionSymbol.getEndRange().getEnd().getLine()
+      );
       foldingRange.setKind(FoldingRangeKind.Region);
 
-      regionRanges.add(foldingRange);
+      return foldingRange;
     }
 
   }

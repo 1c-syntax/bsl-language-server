@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
-import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
+import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.utils.Lazy;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import org.eclipse.lsp4j.TextDocumentItem;
 
@@ -98,11 +98,9 @@ public class ServerContext {
 
   private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
-      return Configuration.newBuilder().build();
+      return Configuration.create();
     }
 
-    return Configuration.newBuilder(configurationRoot).build();
+    return Configuration.create(configurationRoot);
   }
-
-
 }

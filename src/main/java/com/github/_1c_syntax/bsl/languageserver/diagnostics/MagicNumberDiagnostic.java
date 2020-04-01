@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -71,13 +72,13 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     if (configuration == null) {
       return;
     }
+    DiagnosticHelper.configureDiagnostic(this, configuration, "allowMagicIndexes");
 
     String authorizedNumbersString =
       (String) configuration.getOrDefault("authorizedNumbers", DEFAULT_AUTHORIZED_NUMBERS);
     for (String s : authorizedNumbersString.split(",")) {
       this.authorizedNumbers.add(s.trim());
     }
-    allowMagicIndexes = (boolean) configuration.getOrDefault("allowMagicIndexes", DEFAULT_ALLOW_MAGIC_NUMBER);
   }
 
   @Override

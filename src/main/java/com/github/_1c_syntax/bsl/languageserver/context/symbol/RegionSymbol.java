@@ -21,46 +21,56 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Singular;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Value
 @Builder(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude = "methods")
+@EqualsAndHashCode(exclude = {"children", "parent", "nodes"})
+@ToString(exclude = {"children", "parent", "nodes"})
 public class RegionSymbol implements Symbol {
-  private final String name;
-  private final int startLine;
-  private final int endLine;
+  String name;
+  Range range;
+  Range startRange;
+  Range endRange;
+  Range regionNameRange;
+
+  @Getter
+  @Setter
+  @Builder.Default
+  @NonFinal
+  Optional<Symbol> parent = Optional.empty();
+
+  @Builder.Default
+  List<Symbol> children = new ArrayList<>();
 
   @NonFinal
-  private BSLParser.RegionNameContext nameNode;
-  @NonFinal
-  private BSLParser.RegionStartContext startNode;
-  @NonFinal
-  private BSLParser.RegionEndContext endNode;
-
-  @Singular
-  private final List<RegionSymbol> children;
-  private final List<MethodSymbol> methods = new ArrayList<>();
-  private final List<BSLParserRuleContext> nodes;
-
-  @NonFinal
-  private BSLParserRuleContext node;
+  @Builder.Default
+  // TODO подумать, как избавиться от этого
+  List<BSLParserRuleContext> nodes = new ArrayList<>();
 
   @Override
-  public void clearASTData() {
-    node = null;
-    nameNode = null;
-    startNode = null;
-    endNode = null;
+  public void clearParseTreeData() {
+    nodes = null;
+  }
+
+  public List<MethodSymbol> getMethods() {
+    return children.stream()
+      .filter(MethodSymbol.class::isInstance)
+      .map(symbol -> (MethodSymbol) symbol)
+      .collect(Collectors.toList());
   }
 }

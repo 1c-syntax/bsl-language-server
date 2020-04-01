@@ -21,34 +21,45 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Value
 @Builder
-@EqualsAndHashCode(exclude = "region")
+@EqualsAndHashCode(exclude = {"children", "parent"})
+@ToString(exclude = {"children", "parent"})
 public class MethodSymbol implements Symbol {
-  private final String name;
-  private final boolean export;
-  private final boolean function;
-  private final Optional<MethodDescription> description;
+  String name;
 
-  private final Optional<RegionSymbol> region;
+  Range range;
+  Range subNameRange;
 
+  @Getter
+  @Setter
+  @Builder.Default
   @NonFinal
-  private BSLParserRuleContext node;
+  Optional<Symbol> parent = Optional.empty();
 
-  private final Range range;
-  private final Range subNameRange;
+  @Builder.Default
+  List<Symbol> children = new ArrayList<>();
 
-  @Override
-  public void clearASTData() {
-    node = null;
+  boolean function;
+  boolean export;
+  Optional<MethodDescription> description;
+
+  public Optional<RegionSymbol> getRegion() {
+    return getParent()
+      .filter(symbol -> symbol instanceof RegionSymbol)
+      .map(symbol -> (RegionSymbol) symbol);
   }
 }

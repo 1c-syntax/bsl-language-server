@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -81,7 +80,7 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
-    List<RegionSymbol> regions = documentContext.getFileLevelRegions();
+    List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
 
     // анализировать модуль без областей не будем
     if (regions.isEmpty()) {
@@ -97,14 +96,13 @@ public class DuplicateRegionDiagnostic extends AbstractVisitorDiagnostic {
 
             List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
             RegionSymbol currentRegion = regionsList.get(0);
-            Range currentRange = Ranges.create(currentRegion.getStartNode().getStart(),
-              currentRegion.getStartNode().getStop());
+            Range currentRange = currentRegion.getStartRange();
 
             regionsList.stream()
               .map(region ->
                 RelatedInformation.create(
                   documentContext.getUri(),
-                  Ranges.create(region.getStartNode().getStart(), region.getStartNode().getStop()),
+                  region.getStartRange(),
                   "+1"
                 )
               )

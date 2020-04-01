@@ -67,7 +67,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
   @Override
   protected void check(DocumentContext documentContext) {
-    documentContext.getRegionsFlat().forEach(this::checkRegion);
+    documentContext.getSymbolTree().getRegionsFlat().forEach(this::checkRegion);
   }
 
   private void checkRegion(RegionSymbol region) {
@@ -78,7 +78,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
     if (hasChildren.isEmpty()) {
       diagnosticStorage.addDiagnostic(
-        region.getNode(),
+        region.getStartRange(),
         info.getMessage(region.getName())
       );
     }
@@ -103,16 +103,16 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
         diagnosticRangeStart.getCharacter() - 1
       );
 
-      Optional<RegionSymbol> optionalRegionSymbol = documentContext.getRegionsFlat()
+      Optional<RegionSymbol> optionalRegionSymbol = documentContext.getSymbolTree().getRegionsFlat()
         .stream()
-        .filter(regionSymbol -> regionSymbol.getStartLine() - 1 == diagnosticStartLine)
+        .filter(regionSymbol -> regionSymbol.getRange().getStart().getLine() == diagnosticStartLine)
         .findFirst();
       if (optionalRegionSymbol.isEmpty()) {
         continue;
       }
       RegionSymbol region = optionalRegionSymbol.get();
 
-      int diagnosticEndLine = region.getEndLine() - 1;
+      int diagnosticEndLine = region.getRange().getEnd().getLine() - 1;
       if (diagnosticEndLine < maxDiagnosticEndLine) {
         continue;
       }

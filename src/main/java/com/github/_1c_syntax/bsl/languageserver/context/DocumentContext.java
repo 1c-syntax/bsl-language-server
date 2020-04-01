@@ -26,14 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
-import com.github._1c_syntax.bsl.languageserver.context.computer.MethodSymbolComputer;
-import com.github._1c_syntax.bsl.languageserver.context.computer.RegionSymbolComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Absolute;
-import com.github._1c_syntax.bsl.languageserver.utils.Lazy;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -42,6 +38,8 @@ import com.github._1c_syntax.bsl.parser.Tokenizer;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
+import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -50,14 +48,9 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -78,39 +71,21 @@ public class DocumentContext {
   private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   private Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
-  private Lazy<List<RegionSymbol>> regions = new Lazy<>(this::computeRegions, computeLock);
-  private Lazy<List<MethodSymbol>> methods = new Lazy<>(this::computeMethods, computeLock);
+  private Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
   private Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
   private Lazy<ComplexityData> cyclomaticComplexityData
     = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
   private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
-  private boolean adjustingRegions;
-  private boolean regionsAdjusted;
   private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
-  private Lazy<List<RegionSymbol>> regionsFlat = new Lazy<>(this::computeRegionsFlat, computeLock);
-  private Lazy<List<RegionSymbol>> fileLevelRegions = new Lazy<>(this::computeFileLevelRegions, computeLock);
-  private Lazy<Map<BSLParserRuleContext, MethodSymbol>> nodeToMethodsMap
-    = new Lazy<>(this::computeNodeToMethodsMap, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
-    final Path absolutePath = Absolute.path(uri);
-    this.uri = absolutePath.toUri();
+    this.uri = Absolute.uri(uri);
     this.content = content;
     this.context = context;
     this.tokenizer = new Tokenizer(content);
-
-    FileType fileTypeFromUri;
-    try {
-      fileTypeFromUri = FileType.valueOf(
-        FilenameUtils.getExtension(absolutePath.toString()).toUpperCase(Locale.ENGLISH)
-      );
-    } catch (IllegalArgumentException ignored) {
-      fileTypeFromUri = FileType.BSL;
-    }
-
-    fileType = fileTypeFromUri;
+    this.fileType = computeFileType(this.uri);
   }
 
   public ServerContext getServerContext() {
@@ -131,46 +106,8 @@ public class DocumentContext {
     return tokenizer.getAst();
   }
 
-  public List<MethodSymbol> getMethods() {
-    final List<MethodSymbol> methodsUnboxed = methods.getOrCompute();
-    if (!regionsAdjusted && !adjustingRegions) {
-      adjustingRegions = true;
-      adjustRegions();
-    }
-    return new ArrayList<>(methodsUnboxed);
-  }
-
-  public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
-    BSLParserRuleContext methodNode;
-    if (ctx instanceof BSLParser.SubContext) {
-      methodNode = ((BSLParser.SubContext) ctx).function();
-      if (methodNode == null) {
-        methodNode = ((BSLParser.SubContext) ctx).procedure();
-      }
-    } else {
-      methodNode = ctx;
-    }
-
-    return Optional.ofNullable(getNodeToMethodsMap().get(methodNode));
-  }
-
-  public List<RegionSymbol> getRegions() {
-    final List<RegionSymbol> regionsUnboxed = regions.getOrCompute();
-    if (!regionsAdjusted && !adjustingRegions) {
-      adjustingRegions = true;
-      adjustRegions();
-    }
-    return new ArrayList<>(regionsUnboxed);
-  }
-
-  public List<RegionSymbol> getRegionsFlat() {
-    final List<RegionSymbol> regionsFlatUnboxed = regionsFlat.getOrCompute();
-    return new ArrayList<>(regionsFlatUnboxed);
-  }
-
-  public List<RegionSymbol> getFileLevelRegions() {
-    final List<RegionSymbol> fileLevelRegionsUnboxed = fileLevelRegions.getOrCompute();
-    return new ArrayList<>(fileLevelRegionsUnboxed);
+  public SymbolTree getSymbolTree() {
+    return symbolTree.getOrCompute();
   }
 
   public List<Token> getTokens() {
@@ -234,7 +171,6 @@ public class DocumentContext {
     return cognitiveComplexityData.getOrCompute();
   }
 
-
   public ComplexityData getCyclomaticComplexityData() {
     return cyclomaticComplexityData.getOrCompute();
   }
@@ -252,94 +188,59 @@ public class DocumentContext {
   }
 
   public void rebuild(String content) {
+    computeLock.lock();
     clear();
     this.content = content;
     tokenizer = new Tokenizer(content);
+    computeLock.unlock();
   }
 
-  public void clearASTData() {
+  public void clearSecondaryData() {
     content = null;
     contentList.clear();
     tokenizer = null;
 
-    nodeToMethodsMap.clear();
-
-    if (regions.isPresent()) {
-      getRegions().forEach(Symbol::clearASTData);
+    if (symbolTree.isPresent()) {
+      getSymbolTree().getChildrenFlat().forEach(Symbol::clearParseTreeData);
     }
-    if (regionsFlat.isPresent()) {
-      getRegionsFlat().forEach(Symbol::clearASTData);
-    }
-    if (methods.isPresent()) {
-      getMethods().forEach(Symbol::clearASTData);
-    }
-
-    regionsAdjusted = false;
-  }
-
-  private void clear() {
-    clearASTData();
-
-    metrics.clear();
     cognitiveComplexityData.clear();
     cyclomaticComplexityData.clear();
-    methods.clear();
-    regions.clear();
-    regionsFlat.clear();
-    fileLevelRegions.clear();
+    metrics.clear();
     diagnosticIgnoranceData.clear();
   }
 
-  private Map<BSLParserRuleContext, MethodSymbol> getNodeToMethodsMap() {
-    return nodeToMethodsMap.getOrCompute();
+  private void clear() {
+    clearSecondaryData();
+
+    symbolTree.clear();
+  }
+
+  private static FileType computeFileType(URI uri) {
+    String uriPath = uri.getPath();
+    if (uriPath == null) {
+      return FileType.BSL;
+    }
+
+    FileType fileTypeFromUri;
+    try {
+      fileTypeFromUri = FileType.valueOf(
+        FilenameUtils.getExtension(uriPath).toUpperCase(Locale.ENGLISH)
+      );
+    } catch (IllegalArgumentException ignored) {
+      fileTypeFromUri = FileType.BSL;
+    }
+
+    return fileTypeFromUri;
   }
 
   private String[] computeContentList() {
     return getContent().split("\n");
   }
 
-  private List<RegionSymbol> computeRegions() {
-    Computer<List<RegionSymbol>> regionSymbolComputer = new RegionSymbolComputer(this);
-    return regionSymbolComputer.compute();
+  private SymbolTree computeSymbolTree() {
+    return new SymbolTreeComputer(this).compute();
   }
 
-  private List<RegionSymbol> computeRegionsFlat() {
-    return getRegions().stream()
-      .map((RegionSymbol regionSymbol) -> {
-        List<RegionSymbol> list = new ArrayList<>();
-        list.add(regionSymbol);
-        list.addAll(regionSymbol.getChildren());
-
-        return list;
-      })
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-  }
-
-  private List<RegionSymbol> computeFileLevelRegions() {
-    List<Range> methodRanges = getMethods().stream()
-      .map(MethodSymbol::getRange).collect(Collectors.toList());
-
-    return getRegions().stream()
-      .filter(region ->
-        region.getStartNode() != null
-          && methodRanges.stream().noneMatch(methodRange ->
-          Ranges.containsRange(methodRange, Ranges.create(region))
-        ))
-      .collect(Collectors.toList());
-  }
-
-  private List<MethodSymbol> computeMethods() {
-    Computer<List<MethodSymbol>> methodSymbolComputer = new MethodSymbolComputer(this);
-    return methodSymbolComputer.compute();
-  }
-
-  private Map<BSLParserRuleContext, MethodSymbol> computeNodeToMethodsMap() {
-    final Map<BSLParserRuleContext, MethodSymbol> nodeToMethodsMapTemp = new HashMap<>();
-    getMethods().forEach(methodSymbol -> nodeToMethodsMapTemp.put(methodSymbol.getNode(), methodSymbol));
-
-    return nodeToMethodsMapTemp;
-  }
 
   private ModuleType computeModuleType() {
     return context.getConfiguration().getModuleType(uri);
@@ -359,18 +260,9 @@ public class DocumentContext {
     return cyclomaticComplexityComputer.compute();
   }
 
-  private void adjustRegions() {
-    getMethods().forEach((MethodSymbol methodSymbol) ->
-      methodSymbol.getRegion().ifPresent(region ->
-        region.getMethods().add(methodSymbol)
-      )
-    );
-    regionsAdjusted = true;
-  }
-
   private MetricStorage computeMetrics() {
     MetricStorage metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = getMethods();
+    final List<MethodSymbol> methodsUnboxed = getSymbolTree().getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());

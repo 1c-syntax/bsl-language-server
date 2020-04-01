@@ -13,33 +13,15 @@ plugins {
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
-    id("io.franzbecker.gradle-lombok") version "3.2.0"
-    id("me.qoomon.git-versioning") version "2.1.1"
-    id("com.github.ben-manes.versions") version "0.27.0"
+    id("io.franzbecker.gradle-lombok") version "3.3.0"
+    id("me.qoomon.git-versioning") version "3.0.0"
+    id("com.github.ben-manes.versions") version "0.28.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
 repositories {
     mavenCentral()
     maven { url = URI("https://jitpack.io") }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/1c-syntax/bsl-language-server")
-            credentials {
-                username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USER")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_DEPLOY_KEY")
-            }
-        }
-    }
-    publications {
-        register("gpr", MavenPublication::class) {
-            from(components["java"])
-        }
-    }
 }
 
 group = "com.github.1c-syntax"
@@ -59,18 +41,26 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.10.2"
-val junitVersion = "5.6.0"
+val jacksonVersion = "2.10.3"
+val junitVersion = "5.6.1"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.8.1")
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
+
+    implementation("org.languagetool", "languagetool-core", "4.2")
+
+    // https://mvnrepository.com/artifact/org.languagetool/language-en
+    implementation("org.languagetool", "language-en", "4.2")
+
+    // https://mvnrepository.com/artifact/org.languagetool/language-ru
+    implementation("org.languagetool", "language-ru", "4.2")
 
     // https://mvnrepository.com/artifact/commons-cli/commons-cli
     implementation("commons-cli", "commons-cli", "1.4")
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io", "commons-io", "2.6")
-    implementation("org.apache.commons", "commons-lang3", "3.9")
+    implementation("org.apache.commons", "commons-lang3", "3.10")
     // https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
 
@@ -81,17 +71,14 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
 
-    // https://github.com/1c-syntax/bsl-language-server/issues/369
-    // Excude jline and use fixed one.
-    implementation("me.tongfei", "progressbar", "0.8.0") { exclude(group = "org.jline") }
-    implementation("org.jline", "jline", "3.13.3")
+    implementation("me.tongfei", "progressbar", "0.8.1")
 
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "0.12.0") {
+    implementation("com.github.1c-syntax", "bsl-parser", "0.13.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -100,15 +87,16 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
 
-    implementation("com.github.1c-syntax:mdclasses:0.2.2")
+    implementation("com.github.1c-syntax", "utils", "0.2.0")
+    implementation("com.github.1c-syntax", "mdclasses", "0.4.1")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
-    testImplementation("org.assertj", "assertj-core", "3.14.0")
-    testImplementation("org.mockito", "mockito-core", "3.2.4")
+    testImplementation("org.assertj", "assertj-core", "3.15.0")
+    testImplementation("org.mockito", "mockito-core", "3.3.3")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
 }
@@ -116,6 +104,8 @@ dependencies {
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.withType<JavaCompile> {
@@ -205,8 +195,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.10"
-    sha256 = "2836e954823bfcbad45e78c18896e3d01058e6f643749810c608b7005ee7b2fa"
+    version = "1.18.12"
+    sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
 }
 
 // custom developers tools
@@ -221,4 +211,28 @@ tasks.register("precommit") {
     dependsOn(":updateDiagnosticDocs")
     dependsOn(":updateDiagnosticsIndex")
     dependsOn(":updateJsonSchema")
+}
+
+tasks {
+    val delombok by registering(io.franzbecker.gradle.lombok.task.DelombokTask::class) {
+        dependsOn(compileJava)
+        jvmArgs = listOf("-Dfile.encoding=UTF-8")
+        val outputDir by extra { file("$buildDir/delombok") }
+        outputs.dir(outputDir)
+        sourceSets["main"].java.srcDirs.forEach {
+            inputs.dir(it)
+            args(it, "-d", outputDir)
+        }
+        doFirst {
+            outputDir.delete()
+        }
+    }
+
+    javadoc {
+        dependsOn(delombok)
+        val outputDir: File by delombok.get().extra
+        source = fileTree(outputDir)
+        isFailOnError = false
+        options.encoding = "UTF-8"
+    }
 }

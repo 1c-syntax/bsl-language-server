@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -62,7 +63,7 @@ class CodeActionProviderTest {
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
       .filter(diagnostic -> {
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(CanonicalSpellingKeywordsDiagnostic.class, configuration.getDiagnosticLanguage());
-        String diagnosticCode = diagnosticInfo.getCode();
+        DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
         return diagnostic.getCode().equals(diagnosticCode);
       })
       .collect(Collectors.toList());

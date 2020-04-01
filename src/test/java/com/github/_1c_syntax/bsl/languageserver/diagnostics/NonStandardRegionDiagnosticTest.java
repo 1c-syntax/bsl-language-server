@@ -24,17 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -44,21 +39,20 @@ import java.util.Map;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
-  private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/Configuration.xml").toFile();
-  private final Path testFile = Paths.get("./src/test/resources/diagnostics/NonStandardRegionDiagnosticTemplate.bsl").toAbsolutePath();
+  private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();
-  private Path tempDir;
 
   NonStandardRegionDiagnosticTest() {
     super(NonStandardRegionDiagnostic.class);
-    pathByModuleType.put(ModuleType.CommandModule, "CommandModule.bsl");
-    pathByModuleType.put(ModuleType.ObjectModule, "ObjectModule.bsl");
-    pathByModuleType.put(ModuleType.ManagerModule, "ManagerModule.bsl");
-    pathByModuleType.put(ModuleType.ManagedApplicationModule, "ManagedApplicationModule.bsl");
-    pathByModuleType.put(ModuleType.SessionModule, "SessionModule.bsl");
-    pathByModuleType.put(ModuleType.ExternalConnectionModule, "ExternalConnectionModule.bsl");
-    pathByModuleType.put(ModuleType.FormModule, "Form/Module.bsl");
-    pathByModuleType.put(ModuleType.CommonModule, "Module.bsl");
+    pathByModuleType.put(ModuleType.CommandModule, "Catalogs/Справочник1/Commands/Команда1/Ext/CommandModule.bsl");
+    pathByModuleType.put(ModuleType.ObjectModule, "Catalogs/Справочник1/Ext/ObjectModule.bsl");
+    pathByModuleType.put(ModuleType.ManagerModule, "Catalogs/Справочник1/Ext/ManagerModule.bsl");
+    pathByModuleType.put(ModuleType.ManagedApplicationModule, "Ext/ManagedApplicationModule.bsl");
+    pathByModuleType.put(ModuleType.SessionModule, "Ext/SessionModule.bsl");
+    pathByModuleType.put(ModuleType.ExternalConnectionModule, "Ext/ExternalConnectionModule.bsl");
+    pathByModuleType.put(ModuleType.FormModule, "Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl");
+    pathByModuleType.put(ModuleType.CommonModule, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    pathByModuleType.put(ModuleType.RecordSetModule, "InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl");
   }
 
   @Test
@@ -69,18 +63,6 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     assertThat(diagnostics).isEmpty();
   }
 
-  @SneakyThrows
-  @BeforeEach
-  void createTmpDir() {
-    tempDir = Files.createTempDirectory("bslls");
-  }
-
-  @SneakyThrows
-  @AfterEach
-  void deleteTmpDir() {
-    FileUtils.deleteDirectory(tempDir.toFile());
-  }
-
   @Test
   void testFormModule() throws IOException {
 
@@ -88,11 +70,11 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
-      .hasRange(7, 1, 7, 29)
-      .hasRange(11, 1, 11, 38)
-      .hasRange(20, 1, 20, 21)
-      .hasRange(24, 1, 24, 16)
-      .hasRange(44, 1, 44, 27)
+      .hasRange(15, 1, 29)
+      .hasRange(19, 1, 38)
+      .hasRange(28, 1, 21)
+      .hasRange(32, 1, 16)
+      .hasRange(52, 1, 27)
     ;
   }
 
@@ -217,17 +199,29 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     ;
   }
 
-  private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
-    Path tempFile = Paths.get(tempDir.toAbsolutePath().toString(),
-      "fake", pathByModuleType.getOrDefault(moduleType, "Module.bsl"));
+  @Test
+  void testRecordSetModule() throws IOException {
 
-    FileUtils.copyFile(testFile.toFile(), tempFile.toFile());
-    FileUtils.copyFile(CONFIGURATION_FILE_PATH, Paths.get(tempDir.toAbsolutePath().toString(), "Configuration.xml").toFile());
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.RecordSetModule));
+
+    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics, true)
+      .hasRange(28, 1, 32)
+      .hasRange(32, 1, 46)
+      .hasRange(36, 1, 63)
+      .hasRange(40, 1, 31)
+    ;
+  }
+
+  private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
+    Path tempFile = Paths.get(CONFIGURATION_PATH.toString(),
+      pathByModuleType.getOrDefault(moduleType, "Module.bsl")
+    );
 
     return new DocumentContext(
-      tempFile.toUri(),
+      tempFile.toRealPath().toUri(),
       FileUtils.readFileToString(tempFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(tempDir.toRealPath())
+      new ServerContext(CONFIGURATION_PATH.toRealPath())
     );
   }
 }
