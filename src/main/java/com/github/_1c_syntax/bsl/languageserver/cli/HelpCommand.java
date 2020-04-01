@@ -35,7 +35,6 @@ import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
  * Выводимая информация:
  *  Выводит справку консольного приложения
  *
- * TODO: подумать о развитии справки, текущая куцая, не информативная
  */
 public class HelpCommand implements Command {
 
