@@ -216,6 +216,7 @@ tasks.register("precommit") {
 tasks {
     val delombok by registering(io.franzbecker.gradle.lombok.task.DelombokTask::class) {
         dependsOn(compileJava)
+        jvmArgs = listOf("-Dfile.encoding=UTF-8")
         val outputDir by extra { file("$buildDir/delombok") }
         outputs.dir(outputDir)
         sourceSets["main"].java.srcDirs.forEach {
