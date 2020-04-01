@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -73,30 +74,14 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
-    MethodSymbol.MethodSymbolBuilder builder = MethodSymbol.builder()
-      .name(declaration.subName().getText())
-      .range(Ranges.create(startNode, stopNode))
-      .subNameRange(Ranges.create(declaration.subName()))
-      .function(true)
-      .export(declaration.EXPORT_KEYWORD() != null)
-      .description(createDescription(startNode.getSymbol()));
-
-    List<ParameterDefinition> parameters = Optional.ofNullable(declaration.paramList())
-      .map(paramList -> paramList.param().stream()
-        .filter(param -> param.IDENTIFIER() != null)
-        .map(param ->
-          ParameterDefinition.builder()
-            .name(param.IDENTIFIER().getText())
-            .byValue(param.VAL_KEYWORD() != null)
-            .optional(param.defaultValue() != null)
-            .build()
-        ).collect(Collectors.toList())
-      )
-      .orElseGet(Collections::emptyList);
-
-    builder.parameters(parameters);
-
-    MethodSymbol methodSymbol = builder.build();
+    MethodSymbol methodSymbol = createMethodSymbol(
+      startNode,
+      stopNode,
+      declaration.subName(),
+      declaration.paramList(),
+      true,
+      declaration.EXPORT_KEYWORD() != null
+    );
 
     methods.add(methodSymbol);
 
@@ -118,36 +103,37 @@ public final class MethodSymbolComputer
       return ctx;
     }
 
-    MethodSymbol.MethodSymbolBuilder builder = MethodSymbol.builder()
-      .name(declaration.subName().getText())
-      .range(Ranges.create(startNode, stopNode))
-      .subNameRange(Ranges.create(declaration.subName()))
-      .function(false)
-      .export(declaration.EXPORT_KEYWORD() != null)
-      .description(createDescription(startNode.getSymbol()));
-
-    List<ParameterDefinition> parameters = Optional.ofNullable(declaration.paramList())
-      .map(paramList -> paramList.param().stream()
-        .filter(param -> param.IDENTIFIER() != null)
-        .map(param ->
-          ParameterDefinition.builder()
-            .name(param
-              .IDENTIFIER()
-              .getText())
-            .byValue(param.VAL_KEYWORD() != null)
-            .optional(param.defaultValue() != null)
-            .build()
-        ).collect(Collectors.toList())
-      )
-      .orElseGet(Collections::emptyList);
-
-    builder.parameters(parameters);
-
-    MethodSymbol methodSymbol = builder.build();
+    MethodSymbol methodSymbol = createMethodSymbol(
+      startNode,
+      stopNode,
+      declaration.subName(),
+      declaration.paramList(),
+      false,
+      declaration.EXPORT_KEYWORD() != null
+    );
 
     methods.add(methodSymbol);
 
     return ctx;
+  }
+
+  private MethodSymbol createMethodSymbol(
+    TerminalNode startNode,
+    TerminalNode stopNode,
+    BSLParser.SubNameContext subName,
+    BSLParser.ParamListContext paramList,
+    boolean function,
+    boolean export
+  ) {
+    return MethodSymbol.builder()
+      .name(subName.getText())
+      .range(Ranges.create(startNode, stopNode))
+      .subNameRange(Ranges.create(subName))
+      .function(function)
+      .export(export)
+      .description(createDescription(startNode.getSymbol()))
+      .parameters(createParameters(paramList))
+      .build();
   }
 
   private Optional<MethodDescription> createDescription(Token token) {
@@ -159,4 +145,24 @@ public final class MethodSymbolComputer
     return Optional.of(new MethodDescription(comments));
   }
 
+  private static List<ParameterDefinition> createParameters(@Nullable BSLParser.ParamListContext paramList) {
+    if (paramList == null) {
+      return Collections.emptyList();
+    }
+
+    return paramList.param().stream()
+      .map(param ->
+        ParameterDefinition.builder()
+          .name(getParameterName(param.IDENTIFIER()))
+          .byValue(param.VAL_KEYWORD() != null)
+          .optional(param.defaultValue() != null)
+          .build()
+      ).collect(Collectors.toList());
+  }
+
+  private static String getParameterName(TerminalNode identifier) {
+    return Optional.ofNullable(identifier)
+      .map(ParseTree::getText)
+      .orElse("<UNKNOWN_IDENTIFIER>");
+  }
 }
