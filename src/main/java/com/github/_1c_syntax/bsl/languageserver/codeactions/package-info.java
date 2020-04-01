@@ -19,36 +19,4 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.cli;
-
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-
-import static com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher.APP_NAME;
-
-/**
- * Вывод справки
- * Ключ команды:
- *  -h, (--help)
- * Параметры:
- *  Без параметров
- * Выводимая информация:
- *  Выводит справку консольного приложения
- *
- */
-public class HelpCommand implements Command {
-
-  private final Options options;
-
-  public HelpCommand(Options options) {
-    this.options = options;
-  }
-
-  @Override
-  public int execute() {
-    HelpFormatter formatter = new HelpFormatter();
-
-    formatter.printHelp(APP_NAME, options, true);
-    return 0;
-  }
-}
+package com.github._1c_syntax.bsl.languageserver.codeactions;

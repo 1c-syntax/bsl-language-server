@@ -28,6 +28,15 @@ import java.io.InputStream;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+/**
+ * Вывод версии приложения
+ * Ключ команды:
+ *  -v, (--version)
+ * Параметры:
+ *  Без параметров
+ * Выводимая информация:
+ *  Выводит версию приожения в консоль в формате "version: version_bslls"
+ */
 @Slf4j
 public class VersionCommand implements Command {
 
