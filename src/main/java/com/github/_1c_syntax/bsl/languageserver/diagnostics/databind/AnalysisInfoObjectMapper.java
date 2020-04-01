@@ -22,14 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.databind;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import org.eclipse.lsp4j.Diagnostic;
 
 /**
- * Преднастроенный object mapper для (де)сериализации класса {@link FileInfo}
+ * Преднастроенный object mapper для (де)сериализации класса {@link AnalysisInfo}
  */
-public class FileInfoObjectMapper extends ObjectMapper {
-  public FileInfoObjectMapper() {
+public class AnalysisInfoObjectMapper extends ObjectMapper {
+  public AnalysisInfoObjectMapper() {
     super();
     _mixIns.addLocalDefinition(Diagnostic.class, DiagnosticMixIn.class);
   }
