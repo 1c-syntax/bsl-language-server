@@ -107,6 +107,9 @@
                 "CanonicalSpellingKeywords": {
                     "$ref": "diagnostics-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
+                "CodeBlockBeforeSub": {
+                    "$ref": "diagnostics-schema.json#/definitions/CodeBlockBeforeSub"
+                },
                 "CodeOutOfRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/CodeOutOfRegion"
                 },
@@ -140,6 +143,9 @@
                 "DeprecatedMessage": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedMessage"
                 },
+                "DeprecatedTypeManagedForm": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedTypeManagedForm"
+                },
                 "DuplicateRegion": {
                     "$ref": "diagnostics-schema.json#/definitions/DuplicateRegion"
                 },
@@ -157,6 +163,9 @@
                 },
                 "FormDataToValue": {
                     "$ref": "diagnostics-schema.json#/definitions/FormDataToValue"
+                },
+                "FunctionNameStartsWithGet": {
+                    "$ref": "diagnostics-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
@@ -209,6 +218,9 @@
                 "NestedConstructorsInStructureDeclaration": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedConstructorsInStructureDeclaration"
                 },
+                "NestedFunctionInParameters": {
+                    "$ref": "diagnostics-schema.json#/definitions/NestedFunctionInParameters"
+                },
                 "NestedStatements": {
                     "$ref": "diagnostics-schema.json#/definitions/NestedStatements"
                 },
@@ -248,6 +260,9 @@
                 "ProcedureReturnsValue": {
                     "$ref": "diagnostics-schema.json#/definitions/ProcedureReturnsValue"
                 },
+                "PublicMethodsDescription": {
+                    "$ref": "diagnostics-schema.json#/definitions/PublicMethodsDescription"
+                },
                 "SelfAssign": {
                     "$ref": "diagnostics-schema.json#/definitions/SelfAssign"
                 },
@@ -263,6 +278,9 @@
                 "SpaceAtStartComment": {
                     "$ref": "diagnostics-schema.json#/definitions/SpaceAtStartComment"
                 },
+                "TempFilesDir": {
+                    "$ref": "diagnostics-schema.json#/definitions/TempFilesDir"
+                },
                 "TernaryOperatorUsage": {
                     "$ref": "diagnostics-schema.json#/definitions/TernaryOperatorUsage"
                 },
@@ -274,6 +292,9 @@
                 },
                 "TryNumber": {
                     "$ref": "diagnostics-schema.json#/definitions/TryNumber"
+                },
+                "Typo": {
+                    "$ref": "diagnostics-schema.json#/definitions/Typo"
                 },
                 "UnaryPlusInConcatenation": {
                     "$ref": "diagnostics-schema.json#/definitions/UnaryPlusInConcatenation"
@@ -295,6 +316,9 @@
                 },
                 "UsingCancelParameter": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingCancelParameter"
+                },
+                "UsingExternalCodeTools": {
+                    "$ref": "diagnostics-schema.json#/definitions/UsingExternalCodeTools"
                 },
                 "UsingFindElementByString": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingFindElementByString"
@@ -325,6 +349,9 @@
                 },
                 "UsingThisForm": {
                     "$ref": "diagnostics-schema.json#/definitions/UsingThisForm"
+                },
+                "WrongUseOfRollbackTransactionMethod": {
+                    "$ref": "diagnostics-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
                 },
                 "YoLetterUsage": {
                     "$ref": "diagnostics-schema.json#/definitions/YoLetterUsage"

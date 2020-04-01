@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#bsl-language-server" tabindex="1" class="md-skip">
+      <a href="#bsl-language-server" tabindex="0" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -123,9 +123,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" aria-label="BSL Language Server" class="md-header-nav__button md-logo">
           
-            <img src="../../assets/images/logo.png" width="24" height="24">
+            <img alt="logo" src="../../assets/images/logo.png" width="24" height="24">
           
         </a>
       </div>
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -217,7 +217,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-nav__button md-logo">
       
-        <img src="../../assets/images/logo.png" width="48" height="48">
+        <img alt="logo" src="../../assets/images/logo.png" width="48" height="48">
       
     </a>
     BSL Language Server
@@ -401,7 +401,7 @@
 <tr>
 <td align="left"><code>computeDiagnosticsTrigger</code></td>
 <td align="center"><code>Строка</code></td>
-<td align="left">С помощью этого параметра можно указать событие, при котором будет вызвана процедура анализа кода для диагностирования замечаний. Возможные значения:<br/><em> <code>onType</code> - при редактировании файла (онлайн) <strong><em>на больших файлах может ЗНАЧИТЕЛЬНО замедлять редактирование</em></strong><br/></em> <code>onSave</code> - при сохранении файла (<em>используется по умолчанию</em>)<br/>* <code>never</code> - анализ выполняться не будет</td>
+<td align="left">С помощью этого параметра можно указать событие, при котором будет вызвана процедура анализа кода для диагностирования замечаний. Возможные значения:<br/><em> <code>onType</code> - при редактировании файла (онлайн) </em><strong>на больших файлах может ЗНАЧИТЕЛЬНО замедлять редактирование</strong><em><br/></em> <code>onSave</code> - при сохранении файла (<em>используется по умолчанию</em>)<br/>* <code>never</code> - анализ выполняться не будет</td>
 </tr>
 <tr>
 <td align="left"><code>computeDiagnosticsSkipSupport</code></td>
@@ -411,7 +411,7 @@
 <tr>
 <td align="left"><code>traceLog</code></td>
 <td align="center"><code>Строка</code></td>
-<td align="left">Для логирования всех запросов <em>(входящих и исходящих)</em> между <strong>BSL Language Server</strong> и <strong>Language Client</strong> из используемого редактора/IDE, в этом параметре можно указать путь к файлу лога. Путь можно указывать как абсолютный, так и относительный <em>(от корня анализируемого проекта)</em>, по умолчанию значение не заполнено.<br/><br/><strong>ВНИМАНИЕ</strong><br/><br/><em> При запуске <strong>BSL Language Server</strong> перезаписывает указанный файл<br/></em> Скорость взаимодействия между клиентом и сервером <strong>ЗНАЧИТЕЛЬНО ЗАМЕДЛЯЕТСЯ</strong></td>
+<td align="left">Для логирования всех запросов <em>(входящих и исходящих)</em> между <strong>BSL Language Server</strong> и <strong>Language Client</strong> из используемого редактора/IDE, в этом параметре можно указать путь к файлу лога. Путь можно указывать как абсолютный, так и относительный <em>(от корня анализируемого проекта)</em>, по умолчанию значение не заполнено.<br/><br/><strong>ВНИМАНИЕ</strong><br/><br/><em> При запуске </em><em>BSL Language Server</em><em> перезаписывает указанный файл<br/></em> Скорость взаимодействия между клиентом и сервером <strong>ЗНАЧИТЕЛЬНО ЗАМЕДЛЯЕТСЯ</strong></td>
 </tr>
 <tr>
 <td align="left"><code>diagnostics</code></td>
@@ -421,8 +421,8 @@
 </tbody>
 </table>
 <p>Для облегчения составления и редактирования конфигурационного файла можно использовать следующую JSON-схему:</p>
-<div class="codehilite"><pre><span></span><span class="c">https://1c-syntax.github.io/bsl-language-server/configuration/schema.json</span>
-</pre></div>
+<div class="codehilite"><pre><span></span><code><span class="c">https://1c-syntax.github.io/bsl-language-server/configuration/schema.json</span>
+</code></pre></div>
 
 
 <h2 id="_2">Пример<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
@@ -432,7 +432,7 @@
 <li>Изменяет настройку диагностики <a href="../../diagnostics/LineLength/">LineLength - Ограничение на длину строки</a>, устанавливая предел длины строки в 140 символов;</li>
 <li>Отключает диагностику <a href="../../diagnostics/MethodSize/">MethodSize - Ограничение на размер метода</a>.</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
   <span class="nt">&quot;diagnosticLanguage&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
   <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -442,7 +442,7 @@
     <span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span> <span class="kc">false</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
                 
                   
                 
@@ -466,18 +466,18 @@
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
   <div class="md-footer-social">
     <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/1c-syntax" class="md-footer-social__link fa fa-github"></a>
+      <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github" class="md-footer-social__link fa fa-github"></a>
     
-      <a href="https://t.me/bsl_language_server" class="md-footer-social__link fa fa-telegram"></a>
+      <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="telegram" class="md-footer-social__link fa fa-telegram"></a>
     
   </div>
 
@@ -487,7 +487,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.808e90bb.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
         
         
@@ -508,7 +508,7 @@
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
       
     
   </body>

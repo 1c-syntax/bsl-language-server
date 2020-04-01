@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#numberofoptionalparams" tabindex="1" class="md-skip">
+      <a href="#numberofoptionalparams" tabindex="0" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -123,9 +123,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" aria-label="BSL Language Server" class="md-header-nav__button md-logo">
           
-            <img src="../../assets/images/logo.png" width="24" height="24">
+            <img alt="logo" src="../../assets/images/logo.png" width="24" height="24">
           
         </a>
       </div>
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -217,7 +217,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-nav__button md-logo">
       
-        <img src="../../assets/images/logo.png" width="48" height="48">
+        <img alt="logo" src="../../assets/images/logo.png" width="48" height="48">
       
     </a>
     BSL Language Server
@@ -460,19 +460,19 @@
 При необходимости передавать в функцию большое число параметров рекомендуется группировать однотипные параметры в один или несколько составных параметров типа Структура.</p>
 <h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
 <span class="k">Процедура</span> <span class="nv">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">Наименование</span><span class="p">,</span> <span class="nv">ТоварУслуга</span><span class="p">,</span> <span class="nv">ЕдиницаИзмерения</span><span class="p">,</span> <span class="nv">ВесНетто</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 
 <span class="k">КонецПроцедуры</span>
-</pre></div>
+</code></pre></div>
 
 
 <p>Правильно:<br />
 Cгруппировать параметры, описывающие значения реквизитов номенклатуры, в структуру ЗначенияРеквизитов.</p>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
 <span class="k">Процедура</span> <span class="nv">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">ЗначенияРеквизитов</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 <span class="k">КонецПроцедуры</span>
-</pre></div>
+</code></pre></div>
 
 
 <h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
@@ -483,16 +483,16 @@ Cгруппировать параметры, описывающие значе�
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
 <h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:NumberOfOptionalParams-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfOptionalParams-off</span>
 <span class="c c-Singleline">// BSLLS:NumberOfOptionalParams-on</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="s2">&quot;NumberOfOptionalParams&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;NumberOfOptionalParams&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxOptionalParamsCount&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
                 
                   
                 
@@ -516,18 +516,18 @@ Cгруппировать параметры, описывающие значе�
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
   <div class="md-footer-social">
     <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/1c-syntax" class="md-footer-social__link fa fa-github"></a>
+      <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github" class="md-footer-social__link fa fa-github"></a>
     
-      <a href="https://t.me/bsl_language_server" class="md-footer-social__link fa fa-telegram"></a>
+      <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="telegram" class="md-footer-social__link fa fa-telegram"></a>
     
   </div>
 
@@ -537,7 +537,7 @@ Cгруппировать параметры, описывающие значе�
       
     </div>
     
-      <script src="../../assets/javascripts/application.808e90bb.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
         
         
@@ -558,7 +558,7 @@ Cгруппировать параметры, описывающие значе�
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
       
     
   </body>

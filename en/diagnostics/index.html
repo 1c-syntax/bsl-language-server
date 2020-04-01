@@ -34,15 +34,15 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
     
     
       
-        <title>BSL Language Server</title>
+        <title>Diagnostics - BSL Language Server</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,7 +53,7 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.268332fc.js"></script>
+      <script src="../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#diagnostics" tabindex="1" class="md-skip">
+      <a href="#diagnostics" tabindex="0" class="md-skip">
         Skip to content
       </a>
     
@@ -123,9 +123,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" aria-label="BSL Language Server" class="md-header-nav__button md-logo">
           
-            <img src="../assets/images/logo.png" width="24" height="24">
+            <img alt="logo" src="../assets/images/logo.png" width="24" height="24">
           
         </a>
       </div>
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -217,7 +217,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-nav__button md-logo">
       
-        <img src="../assets/images/logo.png" width="48" height="48">
+        <img alt="logo" src="../assets/images/logo.png" width="48" height="48">
       
     </a>
     BSL Language Server
@@ -406,12 +406,12 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>76</strong></p>
+<p>Total: <strong>85</strong></p>
 <ul>
-<li>Error: <strong>25</strong></li>
-<li>Code smell: <strong>48</strong></li>
+<li>Error: <strong>27</strong></li>
+<li>Code smell: <strong>54</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
-<li>Security Hotspot: <strong>1</strong></li>
+<li>Security Hotspot: <strong>2</strong></li>
 </ul>
 <table>
 <thead>
@@ -440,6 +440,14 @@
 <td>Info</td>
 <td>Code smell</td>
 <td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="CodeBlockBeforeSub/">CodeBlockBeforeSub</a></td>
+<td>Method definitions must be placed before the module body operators</td>
+<td align="center">Yes</td>
+<td>Blocker</td>
+<td>Error</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="CodeOutOfRegion/">CodeOutOfRegion</a></td>
@@ -530,6 +538,14 @@
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
+<td><a href="DeprecatedTypeManagedForm/">DeprecatedTypeManagedForm</a></td>
+<td>Deprecated ManagedForm type</td>
+<td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>standard</code><br/><code>deprecated</code></td>
+</tr>
+<tr>
 <td><a href="DuplicateRegion/">DuplicateRegion</a></td>
 <td>Duplicate regions</td>
 <td align="center">Yes</td>
@@ -576,6 +592,14 @@
 <td>Info</td>
 <td>Code smell</td>
 <td><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="FunctionNameStartsWithGet/">FunctionNameStartsWithGet</a></td>
+<td>Function name shouldn't start with "Получить"</td>
+<td align="center">No</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>standard</code></td>
 </tr>
 <tr>
 <td><a href="FunctionShouldHaveReturn/">FunctionShouldHaveReturn</a></td>
@@ -714,6 +738,14 @@
 <td><code>badpractice</code><br/><code>brainoverload</code></td>
 </tr>
 <tr>
+<td><a href="NestedFunctionInParameters/">NestedFunctionInParameters</a></td>
+<td>Initialization of method and constructor parameters by calling nested methods</td>
+<td align="center">Yes</td>
+<td>Minor</td>
+<td>Code smell</td>
+<td><code>standard</code><br/><code>brainoverload</code><br/><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="NestedStatements/">NestedStatements</a></td>
 <td>Control flow statements should not be nested too deep</td>
 <td align="center">Yes</td>
@@ -818,6 +850,14 @@
 <td><code>error</code></td>
 </tr>
 <tr>
+<td><a href="PublicMethodsDescription/">PublicMethodsDescription</a></td>
+<td>All public methods must have a description</td>
+<td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>standard</code><br/><code>brainoverload</code><br/><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="SelfAssign/">SelfAssign</a></td>
 <td>Variable is assigned to itself</td>
 <td align="center">Yes</td>
@@ -858,6 +898,14 @@
 <td><code>standard</code></td>
 </tr>
 <tr>
+<td><a href="TempFilesDir/">TempFilesDir</a></td>
+<td>TempFilesDir() method call</td>
+<td align="center">Yes</td>
+<td>Major</td>
+<td>Code smell</td>
+<td><code>standard</code><br/><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="TernaryOperatorUsage/">TernaryOperatorUsage</a></td>
 <td>Ternary operator usage</td>
 <td align="center">No</td>
@@ -888,6 +936,14 @@
 <td>Major</td>
 <td>Code smell</td>
 <td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="Typo/">Typo</a></td>
+<td>Typo</td>
+<td align="center">Yes</td>
+<td>Info</td>
+<td>Code smell</td>
+<td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="UnaryPlusInConcatenation/">UnaryPlusInConcatenation</a></td>
@@ -944,6 +1000,14 @@
 <td>Major</td>
 <td>Code smell</td>
 <td><code>standard</code><br/><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="UsingExternalCodeTools/">UsingExternalCodeTools</a></td>
+<td>Using external code tools</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Security Hotspot</td>
+<td><code>standard</code><br/><code>design</code></td>
 </tr>
 <tr>
 <td><a href="UsingFindElementByString/">UsingFindElementByString</a></td>
@@ -1026,6 +1090,14 @@
 <td><code>standard</code><br/><code>deprecated</code></td>
 </tr>
 <tr>
+<td><a href="WrongUseOfRollbackTransactionMethod/">WrongUseOfRollbackTransactionMethod</a></td>
+<td>Not recommended using of RollbackTransaction method</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>standard</code></td>
+</tr>
+<tr>
 <td><a href="YoLetterUsage/">YoLetterUsage</a></td>
 <td>Using Russian character "yo" ("ё") in code</td>
 <td align="center">Yes</td>
@@ -1093,18 +1165,18 @@
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
   <div class="md-footer-social">
     <link rel="stylesheet" href="../assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/1c-syntax" class="md-footer-social__link fa fa-github"></a>
+      <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github" class="md-footer-social__link fa fa-github"></a>
     
-      <a href="https://t.me/bsl_language_server" class="md-footer-social__link fa fa-telegram"></a>
+      <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="telegram" class="md-footer-social__link fa fa-telegram"></a>
     
   </div>
 
@@ -1114,7 +1186,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application.808e90bb.js"></script>
+      <script src="../assets/javascripts/application.c33a9706.js"></script>
       
         
         
@@ -1135,7 +1207,7 @@
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
+      <script>app.initialize({version:"1.1",url:{base:".."}})</script>
       
     
   </body>

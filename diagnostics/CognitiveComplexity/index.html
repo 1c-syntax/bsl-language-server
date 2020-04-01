@@ -34,7 +34,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
     
     
       
@@ -42,7 +42,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.1b62728e.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
       
         <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -53,7 +53,7 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.268332fc.js"></script>
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
     
     
       
@@ -114,7 +114,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#cognitivecomplexity" tabindex="1" class="md-skip">
+      <a href="#cognitivecomplexity" tabindex="0" class="md-skip">
         Перейти к содержанию
       </a>
     
@@ -123,9 +123,9 @@
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-header-nav__button md-logo">
+        <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" aria-label="BSL Language Server" class="md-header-nav__button md-logo">
           
-            <img src="../../assets/images/logo.png" width="24" height="24">
+            <img alt="logo" src="../../assets/images/logo.png" width="24" height="24">
           
         </a>
       </div>
@@ -154,7 +154,7 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
       <label class="md-icon md-search__icon" for="__search"></label>
       <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
         &#xE5CD;
@@ -217,7 +217,7 @@
   <label class="md-nav__title md-nav__title--site" for="__drawer">
     <a href="https://1c-syntax.github.io/bsl-language-server" title="BSL Language Server" class="md-nav__button md-logo">
       
-        <img src="../../assets/images/logo.png" width="48" height="48">
+        <img alt="logo" src="../../assets/images/logo.png" width="48" height="48">
       
     </a>
     BSL Language Server
@@ -508,7 +508,7 @@
 <h3 id="_3">Подсчет Когнитивной сложности<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p>Ниже приведены правила анализа кода, условия повышения когнитивной сложности.</p>
 <h4 id="1">Каждый следующий блок увеличивает сложность на 1<a class="headerlink" href="#1" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// Цикл `Для каждого`</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>                <span class="c c-Singleline">// +1</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 
@@ -560,11 +560,11 @@
 <span class="nv">Значение</span> <span class="o">=</span> <span class="nv">Одно</span> <span class="k">ИЛИ</span> <span class="nv">Второе</span><span class="p">;</span>                          <span class="c c-Singleline">// +1</span>
 
 <span class="nv">Значение</span> <span class="o">=</span> <span class="nv">А</span> <span class="o">&lt;&gt;</span> <span class="nv">B</span><span class="p">;</span>                                   <span class="c c-Singleline">// +1</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4 id="_4">За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// Цикл `Для каждого`</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 
@@ -590,13 +590,13 @@
 <span class="k">КонецПопытки</span><span class="p">;</span>
 
 <span class="err">~</span><span class="nv">Метка</span><span class="p">:</span>
-</pre></div>
+</code></pre></div>
 
 
 <h4 id="_5">Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
 <h2 id="_6">Примеры<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <p>Ниже на примерах кода произведен рассчет когнитивной сложности методов.</p>
-<div class="codehilite"><pre><span></span><span class="k">Функция</span> <span class="nv">Пример1</span><span class="p">(</span><span class="nv">ТипКласса</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример1</span><span class="p">(</span><span class="nv">ТипКласса</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">ТипКласса</span><span class="o">.</span><span class="nv">Неизвестен</span><span class="p">()</span> <span class="k">Тогда</span>                                                  <span class="c c-Singleline">// +1, условие, вложенности нет</span>
         <span class="k">Возврат</span> <span class="nv">Символы</span><span class="o">.</span><span class="nv">НеизвестныйСимвол</span><span class="p">;</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
@@ -628,10 +628,10 @@
 
     <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецФункции</span>
-</pre></div>
+</code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><span class="k">Функция</span> <span class="nv">Пример2</span><span class="p">(</span><span class="nv">Документ</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример2</span><span class="p">(</span><span class="nv">Документ</span><span class="p">)</span>
     <span class="nb">НачатьТранзакцию</span><span class="p">();</span>
     <span class="nv">НадоПровести</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">Проведен</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span>                                                        <span class="c c-Singleline">// +1, тернарный оператор</span>
                                         <span class="o">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">ПометкаУдаления</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">));</span>                  <span class="c c-Singleline">// +2, вложенный тернарный оператор, вложенность 1</span>
@@ -683,7 +683,7 @@
     <span class="err">~</span><span class="nv">Метка</span><span class="p">:</span>
     <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецФункции</span>
-</pre></div>
+</code></pre></div>
 
 
 <h2 id="_7">Источники<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
@@ -694,17 +694,17 @@
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
 <h3 id="_9">Экранирование кода<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
-</pre></div>
+</code></pre></div>
 
 
 <h3 id="_10">Параметр конфигурационного файла<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="s2">&quot;CognitiveComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;CognitiveComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">15</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
                 
                   
                 
@@ -728,18 +728,18 @@
       <div class="md-footer-copyright">
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs</a>
       </div>
       
   <div class="md-footer-social">
     <link rel="stylesheet" href="../../assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/1c-syntax" class="md-footer-social__link fa fa-github"></a>
+      <a href="https://github.com/1c-syntax" target="_blank" rel="noopener" title="github" class="md-footer-social__link fa fa-github"></a>
     
-      <a href="https://t.me/bsl_language_server" class="md-footer-social__link fa fa-telegram"></a>
+      <a href="https://t.me/bsl_language_server" target="_blank" rel="noopener" title="telegram" class="md-footer-social__link fa fa-telegram"></a>
     
   </div>
 
@@ -749,7 +749,7 @@
       
     </div>
     
-      <script src="../../assets/javascripts/application.808e90bb.js"></script>
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
       
         
         
@@ -770,7 +770,7 @@
           
         
       
-      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
       
     
   </body>
