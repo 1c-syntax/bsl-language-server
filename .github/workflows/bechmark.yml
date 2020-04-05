@@ -1,0 +1,28 @@
+name: Benchmark
+
+on:
+  pull_request:
+
+jobs:
+  QA:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v2
+
+      - name: Setup JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Build with Gradle
+        run: ./gradlew jar
+
+      - name: Download SSL 3.1
+        run: git clone https://github.com/1c-syntax/ssl_3_1.git ssl
+      
+      - name: Setup pytest-benchmark
+        run: pip install pytest pytest-benchmark
+
+      - name: Analyze ssl
+        run: pytest .github/scripts/bech.py --benchmark-json output.json
