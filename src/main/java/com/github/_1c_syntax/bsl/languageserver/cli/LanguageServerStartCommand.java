@@ -44,7 +44,7 @@ import java.nio.charset.StandardCharsets;
  * Ключ команды:
  *  без ключа
  * Параметры:
- *  -c, (--configuration) <arg> - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то будут использованы настройки по умолчанию.
  * Выводимая информация:
