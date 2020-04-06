@@ -1,4 +1,3 @@
-
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
@@ -32,11 +31,11 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
         pattern = "^(?!v[0-9]+).*"
         versionFormat = "\${branch}-\${commit.short}\${dirty}"
     })
-    tag(closureOf<VersionDescription>{
+    tag(closureOf<VersionDescription> {
         pattern = "v(?<tagVersion>[0-9].*)"
         versionFormat = "\${tagVersion}\${dirty}"
     })
-    commit(closureOf<CommitVersionDescription>{
+    commit(closureOf<CommitVersionDescription> {
         versionFormat = "\${commit.short}\${dirty}"
     })
 })
