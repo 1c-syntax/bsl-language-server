@@ -1,4 +1,3 @@
-
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
@@ -32,11 +31,11 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
         pattern = "^(?!v[0-9]+).*"
         versionFormat = "\${branch}-\${commit.short}\${dirty}"
     })
-    tag(closureOf<VersionDescription>{
+    tag(closureOf<VersionDescription> {
         pattern = "v(?<tagVersion>[0-9].*)"
         versionFormat = "\${tagVersion}\${dirty}"
     })
-    commit(closureOf<CommitVersionDescription>{
+    commit(closureOf<CommitVersionDescription> {
         versionFormat = "\${commit.short}\${dirty}"
     })
 })
@@ -87,8 +86,8 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
 
-    implementation("com.github.1c-syntax", "utils", "0.2.0")
-    implementation("com.github.1c-syntax", "mdclasses", "0.4.1")
+    implementation("com.github.1c-syntax", "utils", "0.2.1")
+    implementation("com.github.1c-syntax", "mdclasses", "v0.4.2")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
@@ -234,5 +233,30 @@ tasks {
         source = fileTree(outputDir)
         isFailOnError = false
         options.encoding = "UTF-8"
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifact(tasks["sourcesJar"])
+            artifact(tasks["shadowJar"])
+            artifact(tasks["javadocJar"])
+//            artifact(tasks.shadowJar.get())
+//            artifact(tasks.javadoc.get())
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+                
+                configurations.implementation.get().dependencies.forEach { dependency ->
+                    if (dependency !is SelfResolvingDependency) {
+                        val dependencyNode = dependenciesNode.appendNode("dependency")
+                        dependencyNode.appendNode("groupId", dependency.group)
+                        dependencyNode.appendNode("artifactId", dependency.name)
+                        dependencyNode.appendNode("version", dependency.version)
+                        dependencyNode.appendNode("scope", "runtime")
+                    }
+                }
+            }
+        }
     }
 }
