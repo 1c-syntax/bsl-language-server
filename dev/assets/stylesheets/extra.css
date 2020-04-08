@@ -1,19 +1,22 @@
 .md-content {
-  margin-right: 0;
+    margin-right: 0;
 }
+
 .md-sidebar--secondary {
-  margin-top: 220px;
-  margin-left: 12.1rem;
+    margin-top: 220px;
+    margin-left: 0.5rem;
 }
+
 .md-typeset__table {
-  padding: 0;
+    padding: 0;
 }
+
 .md-typeset table:not([class]) {
-  font-size: .54rem;
+    font-size: .54rem;
 }
 
 @media only screen and (min-width:59.9375em) and (max-width:80em) {
-  .md-sidebar--secondary {
-    display: none;
-  }
+    .md-sidebar--secondary {
+        display: none;
+    }
 }
