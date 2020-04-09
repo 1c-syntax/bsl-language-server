@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -68,9 +70,9 @@ public class DiagnosticSupplier {
 
   public List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext) {
 
-    var configuredSkipSupport = configuration.getDiagnosticsOptions().getSkipSupport();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
-    if (needToComputeDiagnostics(documentContext, configuredSkipSupport)) {
+    if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {
       FileType fileType = documentContext.getFileType();
       CompatibilityMode compatibilityMode = documentContext
         .getServerContext()
@@ -80,7 +82,7 @@ public class DiagnosticSupplier {
 
       return diagnosticClasses.stream()
         .map(this::createDiagnosticInfo)
-        .filter(this::isEnabled)
+        .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
@@ -122,8 +124,13 @@ public class DiagnosticSupplier {
     }
   }
 
-  private boolean isEnabled(DiagnosticInfo diagnosticInfo) {
+  private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
     if (diagnosticInfo == null) {
+      return false;
+    }
+
+    var mode = diagnosticsOptions.getMode();
+    if (mode == Mode.OFF) {
       return false;
     }
 
@@ -135,10 +142,19 @@ public class DiagnosticSupplier {
     boolean enabledDirectly = diagnosticConfiguration != null
       && diagnosticConfiguration.isLeft()
       && diagnosticConfiguration.getLeft();
+    boolean hasDefinedSetting = enabledDirectly || hasCustomConfiguration;
 
-    return activatedByDefault
-      || hasCustomConfiguration
-      || enabledDirectly;
+    boolean passedAllMode = mode == Mode.ALL;
+    boolean passedOnlyMode = mode == Mode.ONLY && hasDefinedSetting;
+    boolean passedExcept = mode == Mode.EXCEPT && !hasDefinedSetting;
+    boolean passedOn = mode == Mode.ON && (activatedByDefault || hasDefinedSetting);
+
+    return passedOn
+      || passedAllMode
+      || passedOnlyMode
+      || passedExcept
+    ;
+
   }
 
   private static boolean inScope(DiagnosticInfo diagnosticInfo, FileType fileType) {
@@ -192,8 +208,16 @@ public class DiagnosticSupplier {
 
   private static boolean needToComputeDiagnostics(
     DocumentContext documentContext,
-    SkipSupport configuredSkipSupport
+    DiagnosticsOptions diagnosticsOptions
   ) {
+    var configuredMode = diagnosticsOptions.getMode();
+
+    if (configuredMode == Mode.OFF) {
+      return false;
+    }
+
+    var configuredSkipSupport = diagnosticsOptions.getSkipSupport();
+
     if (configuredSkipSupport == SkipSupport.NEVER) {
       return true;
     }

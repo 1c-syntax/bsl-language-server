@@ -21,9 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -33,10 +34,12 @@ import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -305,6 +308,104 @@ class DiagnosticSupplierTest {
   @Test
   void TestAllParametersHaveResourcesRU() {
     allParametersHaveResources(Language.RU);
+  }
+
+  @Test
+  void testDiagnosticModeOff() {
+    // given
+    var lsConfiguration = LanguageServerConfiguration.create();
+    var documentContext = TestUtils.getDocumentContext("");
+    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
+
+    // when-then pairs
+    lsConfiguration.getDiagnosticsOptions().setMode(Mode.OFF);
+    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testDiagnosticModeOn() {
+    // given
+    var lsConfiguration = LanguageServerConfiguration.create();
+    var documentContext = TestUtils.getDocumentContext("");
+    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
+
+    // when
+    lsConfiguration.getDiagnosticsOptions().setMode(Mode.ON);
+    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
+
+    assertThat(diagnostics)
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .doesNotContain(TooManyReturnsDiagnostic.class);
+  }
+
+  @Test
+  void testDiagnosticModeAll() {
+    // given
+    var lsConfiguration = LanguageServerConfiguration.create();
+    var documentContext = TestUtils.getDocumentContext("");
+    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
+
+    // when
+    lsConfiguration.getDiagnosticsOptions().setMode(Mode.ALL);
+    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
+
+    assertThat(diagnostics)
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .contains(TooManyReturnsDiagnostic.class);
+  }
+
+  @Test
+  void testDiagnosticModeOnly() {
+    // given
+    var lsConfiguration = LanguageServerConfiguration.create();
+    var documentContext = TestUtils.getDocumentContext("");
+    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
+
+    // when
+    lsConfiguration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
+    rules.put("Typo", Either.forLeft(true));
+    rules.put("TooManyReturns", Either.forLeft(true));
+
+    lsConfiguration.getDiagnosticsOptions().setRules(rules);
+    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
+
+    assertThat(diagnostics)
+      .hasSize(2)
+      .flatExtracting(Object::getClass)
+      .contains(TypoDiagnostic.class)
+      .contains(TooManyReturnsDiagnostic.class)
+    ;
+  }
+
+  @Test
+  void testDiagnosticModeExcept() {
+    // given
+    var lsConfiguration = LanguageServerConfiguration.create();
+    var documentContext = TestUtils.getDocumentContext("");
+    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
+
+    // when
+    lsConfiguration.getDiagnosticsOptions().setMode(Mode.EXCEPT);
+    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
+    rules.put("Typo", Either.forLeft(true));
+    rules.put("TooManyReturns", Either.forLeft(true));
+
+    lsConfiguration.getDiagnosticsOptions().setRules(rules);
+    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
+
+    assertThat(diagnostics)
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .doesNotContain(TypoDiagnostic.class)
+      .doesNotContain(TooManyReturnsDiagnostic.class)
+      .contains(TernaryOperatorUsageDiagnostic.class)
+      .contains(EmptyRegionDiagnostic.class)
+    ;
   }
 
   @Test
