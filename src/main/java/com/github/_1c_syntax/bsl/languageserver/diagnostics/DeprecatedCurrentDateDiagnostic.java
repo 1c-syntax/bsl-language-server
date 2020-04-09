@@ -43,15 +43,15 @@ import java.util.regex.Pattern;
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
-  minutesToFix = 1,
+  minutesToFix = 5,
   tags = {
     DiagnosticTag.STANDARD,
-    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.DEPRECATED,
     DiagnosticTag.UNPREDICTABLE
   }
 
 )
-public class DeprecatedCurrentDateDiagnostic extends AbstractFindMethodDiagnostic implements QuickFixProvider {
+public class DeprecatedCurrentDateDiagnostic extends AbstractFindMethodDiagnostic {
   private static final Pattern currentDatePattern = Pattern.compile(
     "(текущаядата|currentdate)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
@@ -64,28 +64,6 @@ public class DeprecatedCurrentDateDiagnostic extends AbstractFindMethodDiagnosti
   @Override
   protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
     return false;
-  }
-
-  @Override
-  public List<CodeAction> getQuickFixes(
-    List<Diagnostic> diagnostics,
-    CodeActionParams params,
-    DocumentContext documentContext
-  ) {
-
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      TextEdit textEdit = new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
-      textEdits.add(textEdit);
-    });
-
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
   }
 
 }

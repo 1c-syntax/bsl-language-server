@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -44,31 +42,6 @@ class DeprecatedCurrentDateDiagnosticTest extends AbstractDiagnosticTest<Depreca
     assertThat(diagnostics, true)
       .hasRange(2, 19, 2, 30)
       .hasRange(11, 16, 11, 27);
-
-  }
-
-  @Test
-  void testQuickFixes() {
-
-    final DocumentContext documentContext = getDocumentContext();
-    List<Diagnostic> diagnostics = getDiagnostics();
-    final Diagnostic diagnostic = diagnostics.get(0);
-    final String replacementText = "ТекущаяДатаСеанса";
-
-    List<CodeAction> QuickFixes = getQuickFixes(diagnostic);
-    assertThat(QuickFixes).hasSize(1);
-
-    final CodeAction quickFix = QuickFixes.get(0);
-
-    assertThat(quickFix)
-      .of(diagnosticInstance)
-      .in(documentContext)
-      .fixes(diagnostic);
-
-    assertThat(quickFix)
-      .in(documentContext)
-      .hasChanges(1)
-      .hasNewText(replacementText);
 
   }
 
