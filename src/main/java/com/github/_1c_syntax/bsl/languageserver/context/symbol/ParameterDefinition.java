@@ -22,47 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.Value;
-import lombok.experimental.NonFinal;
-import org.eclipse.lsp4j.Range;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+/**
+ * Класс хранит информацию о параметре метода.
+ * См. {@link MethodSymbol}
+ */
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
-@ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements Symbol {
+public class ParameterDefinition {
   String name;
-
-  Range range;
-  Range subNameRange;
-
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<Symbol> parent = Optional.empty();
-
-  @Builder.Default
-  List<Symbol> children = new ArrayList<>();
-
-  boolean function;
-  boolean export;
-  Optional<MethodDescription> description;
-
-  @Builder.Default
-  List<ParameterDefinition> parameters = new ArrayList<>();
-
-  public Optional<RegionSymbol> getRegion() {
-    return getParent()
-      .filter(symbol -> symbol instanceof RegionSymbol)
-      .map(symbol -> (RegionSymbol) symbol);
-  }
+  boolean byValue;
+  boolean optional;
 }
