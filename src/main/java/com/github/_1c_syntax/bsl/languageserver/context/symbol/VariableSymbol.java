@@ -32,6 +32,7 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -57,4 +58,10 @@ public class VariableSymbol implements Symbol {
   VariableKind kind;
   boolean export;
   Optional<VariableDescription> description;
+
+  ArrayList<Usage> usages = new ArrayList<>();
+
+  public void addUsage(Usage usage) {
+    usages.add(usage);
+  }
 }

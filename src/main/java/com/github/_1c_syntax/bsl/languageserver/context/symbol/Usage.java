@@ -19,31 +19,19 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
+import org.eclipse.lsp4j.Range;
 
-import java.util.List;
+public interface Usage {
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+  Range getRange();
 
-class UnusedLocalVariableDiagnosticTest extends AbstractDiagnosticTest<UnusedLocalVariableDiagnostic> {
-  UnusedLocalVariableDiagnosticTest() {
-    super(UnusedLocalVariableDiagnostic.class);
+  Kind getKind();
+
+  enum Kind {
+    PARAMETER,
+    OTHER
   }
 
-  @Test
-  void test() {
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics, true)
-      .hasRange(0, 6, 0, 36)
-      .hasRange(14, 10, 14, 35)
-      .hasRange(14, 37, 14, 63)
-      .hasRange(19, 4, 19, 28)
-      .hasRange(29, 0, 29, 25);
-
-  }
 }

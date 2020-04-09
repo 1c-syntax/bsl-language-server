@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Usage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableUsage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -42,6 +44,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private final DocumentContext documentContext;
   private final List<VariableSymbol> variables = new ArrayList<>();
+  private Range currentMethodRange;
+
 
   public VariableSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -63,11 +67,50 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   @Override
+  public ParseTree visitSub(BSLParser.SubContext ctx) {
+    currentMethodRange = Ranges.create(ctx);
+    ParseTree tree = super.visitSub(ctx);
+    currentMethodRange = null;
+    return tree;
+  }
+
+  @Override
   public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
     var symbol = createVariableSymbol(ctx, ctx.var_name(), false, VariableKind.LOCAL);
     variables.add(symbol);
 
     return ctx;
+  }
+
+  @Override
+  public ParseTree visitLValue(BSLParser.LValueContext ctx) {
+    if (notRegistered(ctx.getText())) {
+      VariableSymbol symbol = VariableSymbol.builder()
+        .name(ctx.getText())
+        .range(Ranges.create(ctx))
+        .variableNameRange(Ranges.create(ctx))
+        .export(false)
+        .kind(VariableKind.LOCAL)
+        .description(createDescription(getTokenToSearchComments(ctx)))
+        .build();
+      variables.add(symbol);
+    }
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    if (ctx.getTokens(BSLParser.IDENTIFIER).size() == 1) {
+      findVariableSymbol(ctx.getText()).ifPresent(symbol -> {
+        Usage usage  = VariableUsage.builder()
+          .range(Ranges.create(ctx))
+          .kind(Usage.Kind.OTHER)
+          .build();
+        symbol.addUsage(usage);
+      });
+    }
+
+    return super.visitComplexIdentifier(ctx);
   }
 
   private VariableSymbol createVariableSymbol(
@@ -132,6 +175,24 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     Token lastElement = tokens.get(tokens.size() - 1);
 
     return Ranges.create(firstElement, lastElement);
+  }
+
+
+  private boolean notRegistered(String variableName) {
+    return variables.stream()
+      .filter(v -> v.getKind() == VariableKind.GLOBAL
+        || currentMethodRange == null
+        || Ranges.containsRange(currentMethodRange, v.getRange()))
+      .noneMatch(v -> v.getName().equals(variableName));
+  }
+
+  private Optional<VariableSymbol> findVariableSymbol(String variableName) {
+    return variables.stream()
+      .filter(v -> v.getKind() == VariableKind.GLOBAL
+        || currentMethodRange == null
+        || Ranges.containsRange(currentMethodRange, v.getRange()))
+      .filter(v -> v.getName().equals(variableName))
+      .findFirst();
   }
 
 }
