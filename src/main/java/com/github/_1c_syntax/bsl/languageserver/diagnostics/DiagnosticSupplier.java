@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsSkipSupport;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -68,7 +68,7 @@ public class DiagnosticSupplier {
 
   public List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext) {
 
-    var configuredSkipSupport = configuration.getComputeDiagnosticsSkipSupport();
+    var configuredSkipSupport = configuration.getDiagnosticsOptions().getSkipSupport();
 
     if (needToComputeDiagnostics(documentContext, configuredSkipSupport)) {
       FileType fileType = documentContext.getFileType();
@@ -94,7 +94,7 @@ public class DiagnosticSupplier {
   }
 
   public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
-    DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, configuration.getDiagnosticLanguage());
+    DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, configuration.getDiagnosticsOptions().getLanguage());
     BSLDiagnostic diagnosticInstance = createDiagnosticInstance(info);
     configureDiagnostic(diagnosticInstance);
 
@@ -110,12 +110,12 @@ public class DiagnosticSupplier {
   }
 
   private DiagnosticInfo createDiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
-    return new DiagnosticInfo(diagnosticClass, configuration.getDiagnosticLanguage());
+    return new DiagnosticInfo(diagnosticClass, configuration.getDiagnosticsOptions().getLanguage());
   }
 
   private void configureDiagnostic(BSLDiagnostic diagnostic) {
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnostics().get(diagnostic.getInfo().getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getRules().get(diagnostic.getInfo().getCode().getStringValue());
 
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       diagnostic.configure(diagnosticConfiguration.getRight());
@@ -128,7 +128,7 @@ public class DiagnosticSupplier {
     }
 
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnostics().get(diagnosticInfo.getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getRules().get(diagnosticInfo.getCode().getStringValue());
 
     boolean activatedByDefault = diagnosticConfiguration == null && diagnosticInfo.isActivatedByDefault();
     boolean hasCustomConfiguration = diagnosticConfiguration != null && diagnosticConfiguration.isRight();
@@ -192,9 +192,9 @@ public class DiagnosticSupplier {
 
   private static boolean needToComputeDiagnostics(
     DocumentContext documentContext,
-    ComputeDiagnosticsSkipSupport configuredSkipSupport
+    SkipSupport configuredSkipSupport
   ) {
-    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.NEVER) {
+    if (configuredSkipSupport == SkipSupport.NEVER) {
       return true;
     }
 
@@ -207,11 +207,11 @@ public class DiagnosticSupplier {
       return true;
     }
 
-    if (configuredSkipSupport == ComputeDiagnosticsSkipSupport.WITH_SUPPORT_LOCKED) {
+    if (configuredSkipSupport == SkipSupport.WITH_SUPPORT_LOCKED) {
       return moduleSupportVariant != SupportVariant.NOT_EDITABLE;
     }
 
-    return configuredSkipSupport != ComputeDiagnosticsSkipSupport.WITH_SUPPORT;
+    return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
   }
 
   @SuppressWarnings("unchecked")

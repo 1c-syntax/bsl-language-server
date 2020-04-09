@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -74,7 +74,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameterEn() {
 
-    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, DiagnosticLanguage.EN);
+    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, Language.EN);
     assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())
       .isEqualTo("Comment as code");
 

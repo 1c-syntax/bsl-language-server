@@ -101,7 +101,7 @@ public class SmokyTest {
 
     // создадим новый конфиг, в котором включим все диагностики
     var configuration = LanguageServerConfiguration.create();
-    configuration.setDiagnostics(diagnostics);
+    configuration.getDiagnosticsOptions().setRules(diagnostics);
     var diagnosticSupplier = new DiagnosticSupplier(configuration);
 
     // для каждой фикстуры расчитаем диагностики

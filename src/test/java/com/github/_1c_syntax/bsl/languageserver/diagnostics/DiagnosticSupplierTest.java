@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsSkipSupport;
-import com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
@@ -236,7 +236,7 @@ class DiagnosticSupplierTest {
     var supportConfiguration = mock(SupportConfiguration.class);
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
-    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.NEVER);
+    lsConfiguration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
     when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
     assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
       .isNotEmpty();
@@ -258,7 +258,7 @@ class DiagnosticSupplierTest {
       .isNotEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
-    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.WITH_SUPPORT_LOCKED);
+    lsConfiguration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
     when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
     assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
       .isNotEmpty();
@@ -280,7 +280,7 @@ class DiagnosticSupplierTest {
       .isEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
-    lsConfiguration.setComputeDiagnosticsSkipSupport(ComputeDiagnosticsSkipSupport.WITH_SUPPORT);
+    lsConfiguration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
     when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
     assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
       .isNotEmpty();
@@ -304,15 +304,15 @@ class DiagnosticSupplierTest {
 
   @Test
   void TestAllParametersHaveResourcesRU() {
-    allParametersHaveResources(DiagnosticLanguage.RU);
+    allParametersHaveResources(Language.RU);
   }
 
   @Test
   void TestAllParametersHaveResourcesEN() {
-    allParametersHaveResources(DiagnosticLanguage.EN);
+    allParametersHaveResources(com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language.EN);
   }
 
-  void allParametersHaveResources(DiagnosticLanguage language) {
+  void allParametersHaveResources(Language language) {
 
     // when
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();

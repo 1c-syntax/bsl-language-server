@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.DEFAULT_DIAGNOSTIC_LANGUAGE;
+import static com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language.DEFAULT_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerConfigurationTest {
@@ -58,8 +60,8 @@ class LanguageServerConfigurationTest {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
 
     // then
-    assertThat(configuration.getDiagnosticLanguage()).isEqualTo(DiagnosticLanguage.RU);
-    assertThat(configuration.getDiagnostics()).isEmpty();
+    assertThat(configuration.getDiagnosticsOptions().getLanguage()).isEqualTo(com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language.RU);
+    assertThat(configuration.getDiagnosticsOptions().getRules()).isEmpty();
   }
 
   @Test
@@ -72,10 +74,11 @@ class LanguageServerConfigurationTest {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
 
     // then
-    DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    Language language = diagnosticsOptions.getLanguage();
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticsOptions.getRules();
 
-    assertThat(diagnosticLanguage).isEqualTo(DiagnosticLanguage.EN);
+    assertThat(language).isEqualTo(Language.EN);
     assertThat(diagnostics).hasSize(2);
 
     Either<Boolean, Map<String, Object>> lineLength = diagnostics.get("LineLength");
@@ -104,11 +107,12 @@ class LanguageServerConfigurationTest {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
 
     // then
-    DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    Language language = diagnosticsOptions.getLanguage();
+    Map<String, Either<Boolean, Map<String, Object>>> rules = diagnosticsOptions.getRules();
 
-    assertThat(diagnosticLanguage).isEqualTo(DEFAULT_DIAGNOSTIC_LANGUAGE);
-    assertThat(diagnostics).isEmpty();
+    assertThat(language).isEqualTo(DEFAULT_LANGUAGE);
+    assertThat(rules).isEmpty();
 
   }
 

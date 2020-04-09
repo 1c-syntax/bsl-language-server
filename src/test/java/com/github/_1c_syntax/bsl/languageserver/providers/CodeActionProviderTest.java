@@ -62,7 +62,7 @@ class CodeActionProviderTest {
     DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
       .filter(diagnostic -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(CanonicalSpellingKeywordsDiagnostic.class, configuration.getDiagnosticLanguage());
+        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(CanonicalSpellingKeywordsDiagnostic.class, configuration.getDiagnosticsOptions().getLanguage());
         DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
         return diagnostic.getCode().equals(diagnosticCode);
       })

@@ -19,11 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration;
+package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public enum ComputeDiagnosticsSkipSupport {
+public enum SkipSupport {
   @JsonProperty("withSupportLocked")
   WITH_SUPPORT_LOCKED,
   @JsonProperty("withSupport")
