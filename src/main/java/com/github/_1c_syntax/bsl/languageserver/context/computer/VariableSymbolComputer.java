@@ -44,6 +44,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private final DocumentContext documentContext;
   private final List<VariableSymbol> variables = new ArrayList<>();
+  private ArrayList<String> currentMethodParameters = new ArrayList<>();
   private Range currentMethodRange;
 
 
@@ -71,7 +72,14 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     currentMethodRange = Ranges.create(ctx);
     ParseTree tree = super.visitSub(ctx);
     currentMethodRange = null;
+    currentMethodParameters.clear();
     return tree;
+  }
+
+  @Override
+  public ParseTree visitParam(BSLParser.ParamContext ctx) {
+    currentMethodParameters.add(ctx.getText());
+    return ctx;
   }
 
   @Override
@@ -84,7 +92,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
-    if (notRegistered(ctx.getText())) {
+    if (notParameter(ctx.getText()) && notRegistered(ctx.getText())) {
       VariableSymbol symbol = VariableSymbol.builder()
         .name(ctx.getText())
         .range(Ranges.create(ctx))
@@ -177,6 +185,9 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     return Ranges.create(firstElement, lastElement);
   }
 
+  private boolean notParameter(String variableName) {
+    return !currentMethodParameters.contains(variableName);
+  }
 
   private boolean notRegistered(String variableName) {
     return variables.stream()
