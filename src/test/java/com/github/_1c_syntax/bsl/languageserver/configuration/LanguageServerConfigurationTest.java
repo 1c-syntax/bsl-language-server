@@ -60,7 +60,7 @@ class LanguageServerConfigurationTest {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
 
     // then
-    assertThat(configuration.getDiagnosticsOptions().getLanguage()).isEqualTo(com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language.RU);
+    assertThat(configuration.getDiagnosticsOptions().getLanguage()).isEqualTo(Language.RU);
     assertThat(configuration.getDiagnosticsOptions().getRules()).isEmpty();
   }
 
