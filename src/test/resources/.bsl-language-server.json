@@ -7,6 +7,7 @@
     "language": "en",
     "computeTrigger": "onType",
     "skipSupport": "withSupportLocked",
+    "mode": "only",
     "rules": {
       "LineLength": {
         "maxLineLength": 140
