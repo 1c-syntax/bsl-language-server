@@ -137,6 +137,9 @@
                 "DeletingCollectionItem": {
                     "$ref": "diagnostics-schema.json#/definitions/DeletingCollectionItem"
                 },
+                "DeprecatedCurrentDate": {
+                    "$ref": "diagnostics-schema.json#/definitions/DeprecatedCurrentDate"
+                },
                 "DeprecatedFind": {
                     "$ref": "diagnostics-schema.json#/definitions/DeprecatedFind"
                 },
