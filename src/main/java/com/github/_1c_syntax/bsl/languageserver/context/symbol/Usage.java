@@ -30,8 +30,8 @@ public interface Usage {
   Kind getKind();
 
   enum Kind {
-    PARAMETER,
-    OTHER
+    OTHER,
+    OBJECT
   }
 
 }

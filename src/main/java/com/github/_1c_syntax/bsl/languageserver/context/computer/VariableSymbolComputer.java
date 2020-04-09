@@ -107,11 +107,25 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   @Override
-  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-    if (ctx.getTokens(BSLParser.IDENTIFIER).size() == 1) {
-      findVariableSymbol(ctx.getText()).ifPresent(symbol -> {
+  public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
+    if(ctx.getStart().getType() == BSLParser.IDENTIFIER) {
+      findVariableSymbol(ctx.getStart().getText()).ifPresent(symbol -> {
         Usage usage  = VariableUsage.builder()
-          .range(Ranges.create(ctx))
+          .range(Ranges.create(ctx.getStart()))
+          .kind(Usage.Kind.OBJECT)
+          .build();
+        symbol.addUsage(usage);
+      });
+    }
+    return super.visitCallStatement(ctx);
+  }
+
+  @Override
+  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    if (ctx.getStart().getType() == BSLParser.IDENTIFIER) {
+      findVariableSymbol(ctx.getStart().getText()).ifPresent(symbol -> {
+        Usage usage  = VariableUsage.builder()
+          .range(Ranges.create(ctx.getStart()))
           .kind(Usage.Kind.OTHER)
           .build();
         symbol.addUsage(usage);
