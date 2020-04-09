@@ -35,9 +35,9 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 1,
   tags = {
-		DiagnosticTag.BRAINOVERLOAD,
-		DiagnosticTag.BADPRACTICE
-	},
+    DiagnosticTag.BRAINOVERLOAD,
+    DiagnosticTag.BADPRACTICE
+  },
   modules = {
     ModuleType.CommandModule,
     ModuleType.CommonModule,
