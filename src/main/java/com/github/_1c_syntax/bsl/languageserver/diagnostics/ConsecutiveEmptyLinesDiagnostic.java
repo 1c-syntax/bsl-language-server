@@ -59,27 +59,24 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
     if (allTokens.isEmpty()) {
       return;
     }
-    int prevLine = -100;
-    for (int i = 0; i < allTokens.size() - 1; i++) {
-      Token token = allTokens.get(i);
+    int prevLine = 1;
+    int i = -1;
+    for (Token token : allTokens){
+      i++;
 
       final var currLine = token.getLine();
-      if (currLine == 1) {
+      if (currLine > prevLine + 2) {
+        addIssue(prevLine + 1);
+      } else if (currLine == 1) {
         if (isOnlyWhiteSpacesLines(token)) {
           addIssue(1);
         }
-      } else if (currLine > prevLine + 2) {
-        addIssue(prevLine + 1);
+      } else if (i == allTokens.size() - 1 && isOnlyWhiteSpacesLines(token)) {
+        // парсер, если в конце файла пустые строки, может вернуть последний токен с номером строки,
+        // где есть последнее использование идентификаторов. в тесте этот кейс проверяется
+        addIssue(currLine + 1);
       }
       prevLine = currLine;
-    }
-
-    //последнюю строку нужно проверять уже подробнее,
-    // т.к. парсер, если в конце файла пустые строки, может вернуть последний токен с номером строки,
-    // где есть последнее использование идентификаторов. в тесте этот кейс проверяется
-    Token lastToken = allTokens.get(allTokens.size() - 1);
-    if (isOnlyWhiteSpacesLines(lastToken)) {
-      addIssue(lastToken.getLine() + 1);
     }
 
   }
