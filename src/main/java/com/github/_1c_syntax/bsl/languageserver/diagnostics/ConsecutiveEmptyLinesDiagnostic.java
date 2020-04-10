@@ -45,8 +45,8 @@ import java.util.regex.Pattern;
 
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*\\n\\s*){2,}");
-  private static final Pattern EMPTY_LINES_WITH_PREV_LINE_REGEX = Pattern.compile("^(\\s*\\n\\s*){3,}");
+  private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
+  private static final Pattern EMPTY_LINES_WITH_PREV_LINE_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){3,}");
   private static final int WHITESPACE_TOKEN_TYPE = 2;
 
   public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
