@@ -73,10 +73,10 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
           diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
         } else {
           methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
-              if (isAPIRegion(rootRegion)) {
-                diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
-              }
-            });
+            if (isAPIRegion(rootRegion)) {
+              diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
+            }
+          });
         }
       }
     });

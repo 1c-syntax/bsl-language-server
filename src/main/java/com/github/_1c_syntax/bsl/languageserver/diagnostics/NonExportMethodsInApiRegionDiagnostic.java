@@ -61,11 +61,11 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
       }
 
       methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
-          if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
-            String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
-            diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-          }
-        });
+        if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
+          String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
+          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
+        }
+      });
     });
 
     return ctx;

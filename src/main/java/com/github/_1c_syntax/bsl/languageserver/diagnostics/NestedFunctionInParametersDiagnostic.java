@@ -62,7 +62,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
 
     if (findNestedCall(ctx, ctx.doCall())) {
-      if(ctx.typeName() != null) {
+      if (ctx.typeName() != null) {
         diagnosticStorage.addDiagnostic(
           ctx.typeName(),
           info.getMessage(
