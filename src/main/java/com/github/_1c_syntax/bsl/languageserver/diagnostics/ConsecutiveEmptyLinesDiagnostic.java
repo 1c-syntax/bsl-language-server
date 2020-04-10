@@ -28,10 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 
-import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -45,7 +45,6 @@ import java.util.regex.Pattern;
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
   private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
-  private static final int WHITESPACE_TOKEN_TYPE = 2;
 
   public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -54,18 +53,24 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check(DocumentContext documentContext) {
 
-    int prevLine = 1;
+    final var tokens = documentContext.getTokens();
+    final var lastIndex = tokens.size() - 1;
+
+    int prevLine = 0;
     int i = -1;
-    for (Token token : documentContext.getTokens()){
+    for (var token : tokens){
       i++;
 
       final var currLine = token.getLine();
+      if (currLine == prevLine && i < lastIndex) {
+        continue;
+      }
       if (currLine > prevLine + 2) {
           addIssue(prevLine + 1);
       } else if (prevLine == 1 && currLine > 2) {
         // если как минимум первые две строки пустые
         addIssue(1);
-      } else if (i == documentContext.getTokens().size() - 1 && isOnlyWhiteSpacesLines(token)) {
+      } else if (i == lastIndex && isOnlyWhiteSpacesLines(token)) {
         // парсер, если в конце файла пустые строки, может вернуть последний токен с тем же номером строки,
         // что и токен, где есть последнее использование идентификаторов. в тесте этот кейс проверяется.
         addIssue(currLine + 1);
@@ -76,7 +81,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
   }
 
   private static boolean isOnlyWhiteSpacesLines(Token token) {
-    return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == WHITESPACE_TOKEN_TYPE
+    return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == BSLLexer.WHITE_SPACE
       && EMPTY_LINES_REGEX.matcher(token.getText()).matches();
   }
 
