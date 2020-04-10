@@ -116,6 +116,16 @@
             "title": "Needless compilation directive",
             "$id": "#/definitions/CompilationDirectiveNeedLess"
         },
+        "ConsecutiveEmptyLines": {
+            "description": "Consecutive empty lines",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Consecutive empty lines",
+            "$id": "#/definitions/ConsecutiveEmptyLines"
+        },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
             "default": null,
