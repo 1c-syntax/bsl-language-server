@@ -45,7 +45,6 @@ import java.util.regex.Pattern;
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
   private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
-  private static final Pattern EMPTY_LINES_WITH_PREV_LINE_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){3,}");
   private static final int WHITESPACE_TOKEN_TYPE = 2;
 
   public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
@@ -60,39 +59,34 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
     if (allTokens.isEmpty()) {
       return;
     }
-    int prevLine = -1;
+    int prevLine = -100;
     for (int i = 0; i < allTokens.size() - 1; i++) {
       Token token = allTokens.get(i);
 
       final var currLine = token.getLine();
-      if (!isOnlyWhiteSpacesLines(token)) {
-        prevLine = currLine;
-        continue;
-      }
-
-      final var tokenText = token.getText();
-      if (currLine == prevLine) {
-
-        if (EMPTY_LINES_WITH_PREV_LINE_REGEX.matcher(tokenText).matches()) {
-          addIssue(currLine + 1);
+      if (currLine == 1) {
+        if (isOnlyWhiteSpacesLines(token)) {
+          addIssue(1);
         }
-      } else {
-        prevLine = currLine;
-        if (EMPTY_LINES_REGEX.matcher(tokenText).matches()) {
-          addIssue(currLine);
-        }
+      } else if (currLine > prevLine + 2) {
+        addIssue(prevLine + 1);
       }
+      prevLine = currLine;
     }
 
+    //последнюю строку нужно проверять уже подробнее,
+    // т.к. парсер, если в конце файла пустые строки, может вернуть последний токен с номером строки,
+    // где есть последнее использование идентификаторов. в тесте этот кейс проверяется
     Token lastToken = allTokens.get(allTokens.size() - 1);
-    if (isOnlyWhiteSpacesLines(lastToken) && EMPTY_LINES_REGEX.matcher(lastToken.getText()).matches()) {
+    if (isOnlyWhiteSpacesLines(lastToken)) {
       addIssue(lastToken.getLine() + 1);
     }
 
   }
 
-  private static boolean isOnlyWhiteSpacesLines(Token lastToken) {
-    return lastToken.getChannel() == Token.HIDDEN_CHANNEL && lastToken.getType() == WHITESPACE_TOKEN_TYPE;
+  private static boolean isOnlyWhiteSpacesLines(Token token) {
+    return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == WHITESPACE_TOKEN_TYPE
+      && EMPTY_LINES_REGEX.matcher(token.getText()).matches();
   }
 
   private void addIssue(int startEmptyLine) {
