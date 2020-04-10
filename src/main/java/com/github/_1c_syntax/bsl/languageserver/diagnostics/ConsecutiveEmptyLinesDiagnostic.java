@@ -45,6 +45,8 @@ import java.util.regex.Pattern;
 
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractVisitorDiagnostic {
+  private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*\\n\\s*){2,}");
+  private static final Pattern EMPTY_LINES_WITH_PREV_LINE_REGEX = Pattern.compile("^(\\s*\\n\\s*){3,}");
   private static final int WHITESPACE_TOKEN_TYPE = 2;
 
   public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
@@ -53,13 +55,49 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+    List<Token> allTokens = documentContext.getTokens();
 
-    documentContext.getTokens().stream()
-      .filter(token -> token.getChannel() == Token.HIDDEN_CHANNEL)
-      .filter(token -> token.getType() == WHITESPACE_TOKEN_TYPE)
-      .map(token -> Ranges.create(token.getLine(), 0, token.getLine() + 1, 0))
-      .forEach(range -> diagnosticStorage.addDiagnostic(range));
+    if (allTokens.isEmpty()) {
+      return ctx;
+    }
+    int prevLine = -1;
+    for (int i = 0; i < allTokens.size() - 1; i++) {
+      Token token = allTokens.get(i);
+
+      final var currLine = token.getLine();
+      if (!isOnlyWhiteSpacesLines(token)) {
+        prevLine = currLine;
+        continue;
+      }
+
+      final var tokenText = token.getText();
+      if (currLine == prevLine) {
+
+        if (EMPTY_LINES_WITH_PREV_LINE_REGEX.matcher(tokenText).matches()) {
+          addIssue(currLine + 1);
+        }
+      } else {
+        prevLine = currLine;
+        if (EMPTY_LINES_REGEX.matcher(tokenText).matches()) {
+          addIssue(currLine);
+        }
+      }
+    }
+
+    Token lastToken = allTokens.get(allTokens.size() - 1);
+    if (isOnlyWhiteSpacesLines(lastToken) && EMPTY_LINES_REGEX.matcher(lastToken.getText()).matches()) {
+      addIssue(lastToken.getLine() + 1);
+    }
 
     return ctx;
+  }
+
+  private static boolean isOnlyWhiteSpacesLines(Token lastToken) {
+    return lastToken.getChannel() == Token.HIDDEN_CHANNEL && lastToken.getType() == WHITESPACE_TOKEN_TYPE;
+  }
+
+  private void addIssue(int startEmptyLine) {
+    Range range = Ranges.create(startEmptyLine, 0, startEmptyLine + 1, 0);
+    diagnosticStorage.addDiagnostic(range);
   }
 }

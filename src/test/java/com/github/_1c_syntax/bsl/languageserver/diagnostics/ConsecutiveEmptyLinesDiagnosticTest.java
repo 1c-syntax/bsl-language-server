@@ -40,14 +40,15 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     assertThat(diagnostics, true)
       .hasRange(1, 0, 2, 0)
-      .hasRange(5, 0, 6, 0)
-      .hasRange(9, 0, 10, 0)
-      .hasRange(13, 0, 14, 0)
-      .hasRange(17, 0, 18, 0)
-      .hasRange(22, 0, 23, 0)
-      .hasRange(26, 0, 27, 0)
-      .hasRange(29, 0, 30, 0)
-      .hasRange(33, 0, 34, 0)
+      .hasRange(6, 0, 7, 0)
+      .hasRange(11, 0, 12, 0)
+      .hasRange(15, 0, 16, 0)
+      .hasRange(18, 0, 19, 0)
+      .hasRange(23, 0, 24, 0)
+      .hasRange(27, 0, 28, 0)
+      .hasRange(30, 0, 31, 0)
+      .hasRange(34, 0, 35, 0)
+      .hasSize(9)
     ;
 
   }
