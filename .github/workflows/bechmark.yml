@@ -44,9 +44,9 @@ jobs:
           tool: 'pytest'
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          alert-threshold: '10%'
+          alert-threshold: '110%'
           comment-on-alert: true
-          fail-on-alert: true
+          fail-on-alert: false
           alert-comment-cc-users: '@otymko'
 
       - name: Store benchmark result into branch
@@ -58,7 +58,7 @@ jobs:
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
-          alert-threshold: '10%'
+          alert-threshold: '110%'
           comment-on-alert: true
-          fail-on-alert: true
+          fail-on-alert: false
           alert-comment-cc-users: '@otymko'
