@@ -54,25 +54,20 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check(DocumentContext documentContext) {
 
-    List<Token> allTokens = documentContext.getTokens();
-
-    if (allTokens.isEmpty()) {
-      return;
-    }
     int prevLine = 1;
     int i = -1;
-    for (Token token : allTokens){
+    for (Token token : documentContext.getTokens()){
       i++;
 
       final var currLine = token.getLine();
       if (currLine > prevLine + 2) {
           addIssue(prevLine + 1);
       } else if (prevLine == 1 && currLine > 2) {
-        // если первые две строки пустые
+        // если как минимум первые две строки пустые
         addIssue(1);
-      } else if (i == allTokens.size() - 1 && isOnlyWhiteSpacesLines(token)) {
-        // парсер, если в конце файла пустые строки, может вернуть последний токен с номером строки,
-        // где есть последнее использование идентификаторов. в тесте этот кейс проверяется
+      } else if (i == documentContext.getTokens().size() - 1 && isOnlyWhiteSpacesLines(token)) {
+        // парсер, если в конце файла пустые строки, может вернуть последний токен с тем же номером строки,
+        // что и токен, где есть последнее использование идентификаторов. в тесте этот кейс проверяется.
         addIssue(currLine + 1);
       }
       prevLine = currLine;
