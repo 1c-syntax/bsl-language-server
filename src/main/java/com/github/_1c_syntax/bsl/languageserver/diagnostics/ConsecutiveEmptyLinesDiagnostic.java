@@ -66,11 +66,10 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
 
       final var currLine = token.getLine();
       if (currLine > prevLine + 2) {
-        addIssue(prevLine + 1);
-      } else if (currLine == 1) {
-        if (isOnlyWhiteSpacesLines(token)) {
-          addIssue(1);
-        }
+          addIssue(prevLine + 1);
+      } else if (prevLine == 1 && currLine > 2) {
+        // если первые две строки пустые
+        addIssue(1);
       } else if (i == allTokens.size() - 1 && isOnlyWhiteSpacesLines(token)) {
         // парсер, если в конце файла пустые строки, может вернуть последний токен с номером строки,
         // где есть последнее использование идентификаторов. в тесте этот кейс проверяется
