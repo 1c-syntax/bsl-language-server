@@ -50,14 +50,8 @@ public class MissingVariablesDescriptionDiagnostic extends AbstractVisitorDiagno
     documentContext
       .getSymbolTree()
       .getVariableSymbol(ctx)
-      .flatMap(VariableSymbol::getDescription)
-      .ifPresent(variableDescription -> {
-        if (variableDescription.getDescription().isEmpty()
-          && variableDescription.getTrailingDescription().isEmpty()) {
-          diagnosticStorage.addDiagnostic(ctx);
-        }
-      }
-      );
+      .filter(variableSymbol -> variableSymbol.getDescription().isEmpty())
+      .ifPresent(noneDescription -> diagnosticStorage.addDiagnostic(ctx));
 
     return ctx;
   }
