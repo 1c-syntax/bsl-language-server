@@ -14,6 +14,8 @@
 
 Сайт проекта - https://1c-syntax.github.io/bsl-language-server
 
+Замеры производительности - [SSL 3.1](https://1c-syntax.github.io/bsl-language-serve/bench/index.html)
+
 [English version](docs/en/index.md)
 
 ## Возможности

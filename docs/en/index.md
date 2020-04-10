@@ -25,6 +25,8 @@
 
 <a id="capabilities"></a>
 
+Perfomance measurement - [SSL 3.1](bench/index.html)
+
 ## Capabilities
 
 - File formatting
