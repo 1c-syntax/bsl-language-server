@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
 
 import java.util.List;
@@ -44,7 +43,7 @@ import java.util.regex.Pattern;
   }
 
 )
-public class ConsecutiveEmptyLinesDiagnostic extends AbstractVisitorDiagnostic {
+public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
   private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
   private static final Pattern EMPTY_LINES_WITH_PREV_LINE_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){3,}");
   private static final int WHITESPACE_TOKEN_TYPE = 2;
@@ -54,11 +53,12 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  protected void check(DocumentContext documentContext) {
+
     List<Token> allTokens = documentContext.getTokens();
 
     if (allTokens.isEmpty()) {
-      return ctx;
+      return;
     }
     int prevLine = -1;
     for (int i = 0; i < allTokens.size() - 1; i++) {
@@ -89,7 +89,6 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractVisitorDiagnostic {
       addIssue(lastToken.getLine() + 1);
     }
 
-    return ctx;
   }
 
   private static boolean isOnlyWhiteSpacesLines(Token lastToken) {
