@@ -212,6 +212,9 @@
                 "MissingTemporaryFileDeletion": {
                     "$ref": "diagnostics-schema.json#/definitions/MissingTemporaryFileDeletion"
                 },
+                "MissingVariablesDescriptionDiagnostic": {
+                    "$ref": "diagnostics-schema.json#/definitions/MissingVariablesDescriptionDiagnostic"
+                },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "diagnostics-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
                 },

@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **86**
+Общее количество: **87**
 
-* Дефект кода: **54**
+* Дефект кода: **55**
 * Уязвимость: **2**
 * Ошибка: **28**
 * Потенциальная уязвимость: **2**
@@ -54,6 +54,7 @@
 | [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br/>`badpractice` |
 | [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` |
 | [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да | Важный | Ошибка | `badpractice`<br/>`standard` |
+| [MissingVariablesDescriptionDiagnostic](MissingVariablesDescriptionDiagnostic.md) | Все объявления переменных должны иметь описание | Да | Незначительный | Дефект кода | `standard` |
 | [MultilingualStringHasAllDeclaredLanguages](MultilingualStringHasAllDeclaredLanguages.md) | Есть локализованный текст для всех заявленных в конфигурации языков | Да | Незначительный | Ошибка | `error`<br/>`localize` |
 | [MultilingualStringUsingWithTemplate](MultilingualStringUsingWithTemplate.md) | Частично локализованный текст используется в функции СтрШаблон | Да | Важный | Ошибка | `error`<br/>`localize` |
 | [NestedConstructorsInStructureDeclaration](NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да | Незначительный | Дефект кода | `badpractice`<br/>`brainoverload` |
