@@ -69,7 +69,38 @@ class DocumentContextTest {
 
     DocumentContext documentContext = getDocumentContext();
 
-    assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(2);
+    assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(3);
+
+  }
+
+  @Test
+  void testMethodParametersComputesCorrectly() {
+    DocumentContext documentContext = getDocumentContext();
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .filteredOn(methodSymbol -> methodSymbol.getName().equals("ФункцияСПараметрами"))
+      .flatExtracting(MethodSymbol::getParameters)
+      .hasSize(4)
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам1")
+        && !parameterDefinition.isByValue()
+        && !parameterDefinition.isOptional()
+      )
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам2")
+          && parameterDefinition.isByValue()
+          && !parameterDefinition.isOptional()
+      )
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам3")
+          && !parameterDefinition.isByValue()
+          && parameterDefinition.isOptional()
+      )
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам4")
+          && parameterDefinition.isByValue()
+          && parameterDefinition.isOptional()
+      )
+    ;
 
   }
 
