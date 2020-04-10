@@ -1,14 +1,14 @@
-# All variables declarations must have a description (MissingVariablesDescriptionDiagnostic)
+# All variables declarations must have a description (MissingVariablesDescription)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `5` | `standard` |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-All module variables and export variables, must have comments. Comments are placed on the same line after the variable.
+All module variables and export variables must have comments.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -22,6 +22,9 @@ Correct:
 
 ```bsl
 Var Context; // Detailed description that explains the purpose of the variable
+
+// Detailed description that explains the purpose of the variable
+Var Context;
 ```
 
 ## Sources
@@ -40,12 +43,12 @@ Var Context; // Detailed description that explains the purpose of the variable
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:MissingVariablesDescriptionDiagnostic-off
-// BSLLS:MissingVariablesDescriptionDiagnostic-on
+// BSLLS:MissingVariablesDescription-off
+// BSLLS:MissingVariablesDescription-on
 ```
 
 ### Parameter for config
 
 ```json
-"MissingVariablesDescriptionDiagnostic": false
+"MissingVariablesDescription": false
 ```

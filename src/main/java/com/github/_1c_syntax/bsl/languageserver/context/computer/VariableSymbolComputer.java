@@ -87,11 +87,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private Optional<VariableDescription> createDescription(Token token) {
     List<Token> tokens = documentContext.getTokens();
-
     List<Token> comments = Trees.getComments(tokens, token);
-    if (comments.isEmpty()) {
-      return Optional.empty();
-    }
 
     String commentsText = comments.stream().map(Token::getText).reduce("", String::concat);
 

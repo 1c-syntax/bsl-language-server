@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class MissingVariablesDescriptionDiagnosticDiagnosticTest extends AbstractDiagnosticTest<MissingVariablesDescriptionDiagnosticDiagnostic> {
+class MissingVariablesDescriptionDiagnosticDiagnosticTest extends AbstractDiagnosticTest<MissingVariablesDescriptionDiagnostic> {
   MissingVariablesDescriptionDiagnosticDiagnosticTest() {
-    super(MissingVariablesDescriptionDiagnosticDiagnostic.class);
+    super(MissingVariablesDescriptionDiagnostic.class);
   }
 
   @Test
@@ -38,9 +38,12 @@ class MissingVariablesDescriptionDiagnosticDiagnosticTest extends AbstractDiagno
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(1, 6, 1, 27);
+      .hasRange(1, 6, 1, 27)
+      .hasRange(3, 6, 3, 45)
+      .hasRange(17, 6, 17, 38)
+      .hasRange(21, 6, 21, 56);
 
   }
 }

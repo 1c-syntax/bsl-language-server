@@ -33,25 +33,27 @@ import org.antlr.v4.runtime.tree.ParseTree;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 5,
+  minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD
   }
 
 )
-public class MissingVariablesDescriptionDiagnosticDiagnostic extends AbstractVisitorDiagnostic {
-  public MissingVariablesDescriptionDiagnosticDiagnostic(DiagnosticInfo info) {
+public class MissingVariablesDescriptionDiagnostic extends AbstractVisitorDiagnostic {
+  public MissingVariablesDescriptionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
+
     documentContext
       .getSymbolTree()
       .getVariableSymbol(ctx)
       .flatMap(VariableSymbol::getDescription)
       .ifPresent(variableDescription -> {
-        if (variableDescription.getTrailingDescription().isEmpty()){
+        if (variableDescription.getDescription().isEmpty()
+          && variableDescription.getTrailingDescription().isEmpty()) {
           diagnosticStorage.addDiagnostic(ctx);
         }
       }
