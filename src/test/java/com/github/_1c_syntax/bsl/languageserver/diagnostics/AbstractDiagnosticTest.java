@@ -63,7 +63,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<Diagnostic> getDiagnosticsForText(String textDocumentContent) {
-    DocumentContext documentContext = getDocumentContextForText(textDocumentContent);
+    DocumentContext documentContext = TestUtils.getDocumentContext(textDocumentContent);
     return getDiagnostics(documentContext);
   }
 
@@ -123,10 +123,6 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
       StandardCharsets.UTF_8,
       this.getClass().getClassLoader()
     );
-  }
-
-  protected DocumentContext getDocumentContextForText(String textDocumentContent) {
-    return TestUtils.getDocumentContext(textDocumentContent);
   }
 
 }
