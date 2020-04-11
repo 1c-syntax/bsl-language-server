@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `allowedEmptyLinesCount` | `Integer` | ```Minimal allowed consecutive empty lines``` | ```2``` |
+| `allowedEmptyLinesCount` | `Integer` | ```Maximum allowed consecutive empty lines``` | ```1``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -43,6 +43,6 @@
 
 ```json
 "ConsecutiveEmptyLines": {
-    "allowedEmptyLinesCount": 2
+    "allowedEmptyLinesCount": 1
 }
 ```

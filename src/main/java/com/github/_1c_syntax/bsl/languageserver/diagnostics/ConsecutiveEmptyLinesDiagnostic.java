@@ -56,7 +56,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   private static final Pattern DEFAULT_EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
   private Pattern emptyLinesRegex = DEFAULT_EMPTY_LINES_REGEX;
 
-  private static final int DEFAULT_ALLOWED_EMPTY_LINES_COUNT = 2;
+  private static final int DEFAULT_ALLOWED_EMPTY_LINES_COUNT = 1;
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + DEFAULT_ALLOWED_EMPTY_LINES_COUNT
@@ -74,7 +74,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     }
     this.allowedEmptyLinesCount = (Integer) configuration.getOrDefault("allowedEmptyLinesCount", allowedEmptyLinesCount);
     emptyLinesRegex = Pattern.compile(DEFAULT_EMPTY_LINES_REGEX.pattern()
-      .replace("2", "" + allowedEmptyLinesCount));
+      .replace("2", "" + (allowedEmptyLinesCount + 1)));
   }
 
   @Override
@@ -85,16 +85,17 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
       return;
     }
 
+    final int nonAllowedEmptyLinesCount = allowedEmptyLinesCount + 1;
     final int[] prevLineStorage = {0};
     tokens.stream()
       .map(Token::getLine)
       .distinct()
-      .forEach(currLine -> {
+      .forEachOrdered(currLine -> {
 
         var prevLine = prevLineStorage[0];
-        if (currLine > prevLine + allowedEmptyLinesCount) {
+        if (currLine > prevLine + nonAllowedEmptyLinesCount) {
             addIssue(prevLine, currLine - 1);
-        } else if (prevLine == 1 && currLine > allowedEmptyLinesCount) {
+        } else if (prevLine == 1 && currLine > nonAllowedEmptyLinesCount) {
           // если как минимум первые две строки пустые
           addIssue(0, currLine - 1);
         }

@@ -76,7 +76,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   @Test
   void test_ConfigureEmptyLineParam() {
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("allowedEmptyLinesCount", 3);
+    configuration.put("allowedEmptyLinesCount", 2);
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
