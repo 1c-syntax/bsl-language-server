@@ -40,6 +40,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -113,6 +114,11 @@ public class DocumentContext {
   public List<Token> getTokens() {
     requireNonNull(content);
     return tokenizer.getTokens();
+  }
+
+  public List<Token> getTokensWithEOF() {
+    requireNonNull(content);
+    return tokenizer.getTokensWithEOF();
   }
 
   public List<Token> getTokensFromDefaultChannel() {

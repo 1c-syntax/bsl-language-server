@@ -116,6 +116,24 @@
             "title": "Needless compilation directive",
             "$id": "#/definitions/CompilationDirectiveNeedLess"
         },
+        "ConsecutiveEmptyLines": {
+            "description": "Consecutive empty lines",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Consecutive empty lines",
+            "properties": {
+                "maxEmptyLineCount": {
+                    "description": "Max empty line count",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Max empty line count"
+                }
+            },
+            "$id": "#/definitions/ConsecutiveEmptyLines"
+        },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
             "default": null,
