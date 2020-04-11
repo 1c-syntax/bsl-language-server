@@ -88,6 +88,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     final int nonAllowedEmptyLinesCount = allowedEmptyLinesCount + 1;
     final int[] prevLineStorage = {0};
     tokens.stream()
+      .filter(token -> !isWhiteSpace(token))
       .map(Token::getLine)
       .distinct()
       .forEachOrdered(currLine -> {
@@ -116,8 +117,12 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   private boolean isOnlyWhiteSpacesLines(Token token) {
-    return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == BSLLexer.WHITE_SPACE
+    return isWhiteSpace(token)
       && emptyLinesRegex.matcher(token.getText()).matches();
+  }
+
+  private static boolean isWhiteSpace(Token token) {
+    return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == BSLLexer.WHITE_SPACE;
   }
 
   private void addIssue(int startEmptyLine, int lastEmptyLine) {
