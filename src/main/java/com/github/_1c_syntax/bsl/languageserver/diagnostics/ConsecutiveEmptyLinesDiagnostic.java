@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -33,6 +34,7 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -45,10 +47,28 @@ import java.util.regex.Pattern;
 
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
-  private static final Pattern EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
+  private static final Pattern DEFAULT_EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
+  private Pattern emptyLinesRegex = DEFAULT_EMPTY_LINES_REGEX;
+
+  private static final int DEFAULT_ALLOWED_EMPTY_LINES_COUNT = 2;
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + DEFAULT_ALLOWED_EMPTY_LINES_COUNT
+  )
+  private int allowedEmptyLinesCount = DEFAULT_ALLOWED_EMPTY_LINES_COUNT;
 
   public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
     super(info);
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null){
+      return;
+    }
+    this.allowedEmptyLinesCount = (Integer) configuration.getOrDefault("allowedEmptyLinesCount", allowedEmptyLinesCount);
+    emptyLinesRegex = Pattern.compile(DEFAULT_EMPTY_LINES_REGEX.pattern()
+      .replace("2", "" + allowedEmptyLinesCount));
   }
 
   @Override
@@ -66,9 +86,9 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
       .forEach(currLine -> {
 
         var prevLine = prevLineStorage[0];
-        if (currLine > prevLine + 2) {
+        if (currLine > prevLine + allowedEmptyLinesCount) {
             addIssue(prevLine + 1);
-        } else if (prevLine == 1 && currLine > 2) {
+        } else if (prevLine == 1 && currLine > allowedEmptyLinesCount) {
           // если как минимум первые две строки пустые
           addIssue(1);
         }
@@ -87,9 +107,9 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
     }
   }
 
-  private static boolean isOnlyWhiteSpacesLines(Token token) {
+  private boolean isOnlyWhiteSpacesLines(Token token) {
     return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == BSLLexer.WHITE_SPACE
-      && EMPTY_LINES_REGEX.matcher(token.getText()).matches();
+      && emptyLinesRegex.matcher(token.getText()).matches();
   }
 
   private void addIssue(int startEmptyLine) {

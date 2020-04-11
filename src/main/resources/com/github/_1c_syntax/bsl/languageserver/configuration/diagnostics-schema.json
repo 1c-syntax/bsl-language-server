@@ -124,6 +124,14 @@
                 "object"
             ],
             "title": "Consecutive empty lines",
+            "properties": {
+                "allowedEmptyLinesCount": {
+                    "description": "Minimal allowed consecutive empty lines  ",
+                    "default": 2,
+                    "type": "integer",
+                    "title": "Minimal allowed consecutive empty lines  "
+                }
+            },
             "$id": "#/definitions/ConsecutiveEmptyLines"
         },
         "CreateQueryInCycle": {
