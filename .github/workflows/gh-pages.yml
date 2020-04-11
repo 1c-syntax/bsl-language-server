@@ -32,6 +32,7 @@ jobs:
       run: |
         wget https://github.com/${{ github.repository }}/archive/gh-pages.zip || true
         unzip gh-pages.zip || true
+        mkdir tmp-bench
     
     - name: Save latest Develop
       if: github.ref == 'refs/heads/master'
@@ -47,6 +48,16 @@ jobs:
         cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public || true
         rm -rf public/dev || true
         mkdir public/dev
+
+    - name: Backup benchmark (master)
+      if: github.ref == 'refs/heads/master'
+      run: |
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/bench/. tmp-bench || true
+
+    - name: Backup benchmark (develop)
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/bench/. tmp-bench || true
             
     - name: Patch Develop
       if: github.ref == 'refs/heads/develop'
@@ -66,7 +77,12 @@ jobs:
         rm -rf temp/docs/en
         cd temp
         mkdocs build
-    
+
+    - name: Copy benchmark
+      run: |
+        cp -R tmp-bench/. temp/site/bench
+        rm -rf tmp-bench
+ 
     - name: Public Russian Master
       if: github.ref == 'refs/heads/master'
       run: |
