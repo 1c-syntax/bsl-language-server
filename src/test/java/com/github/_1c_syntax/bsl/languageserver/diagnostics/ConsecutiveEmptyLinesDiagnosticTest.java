@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -56,15 +59,15 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
     assertThat(diagnostics, true)
-      .hasRange(1, 0, 2, 0)
-      .hasRange(6, 0, 7, 0)
-      .hasRange(11, 0, 12, 0)
-      .hasRange(15, 0, 16, 0)
-      .hasRange(18, 0, 19, 0)
-      .hasRange(23, 0, 24, 0)
-      .hasRange(27, 0, 28, 0)
-      .hasRange(30, 0, 31, 0)
-      .hasRange(34, 0, 35, 0)
+      .hasRange(0, 0, 1, 0)
+      .hasRange(5, 0, 6, 0)
+      .hasRange(10, 0, 11, 0)
+      .hasRange(14, 0, 15, 0)
+      .hasRange(17, 0, 18, 0)
+      .hasRange(22, 0, 23, 0)
+      .hasRange(26, 0, 27, 0)
+      .hasRange(29, 0, 31, 0)
+      .hasRange(33, 0, 34, 0)
       .hasSize(9)
     ;
 
@@ -79,8 +82,42 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics, true)
-      .hasRange(30, 0, 31, 0)
+      .hasRange(29, 0, 31, 0)
       .hasSize(1)
     ;
+  }
+
+  @Test
+  void testQuickFix() {
+    String module = getText();
+
+    final DocumentContext documentContext = TestUtils.getDocumentContext(module);
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    List<Diagnostic> usualDiagnostics = diagnostics.subList(0, diagnostics.size() - 2);
+
+    usualDiagnostics.forEach(diagnostic -> checkFix(documentContext, diagnostic, true));
+
+    Diagnostic lastDiagnostic = diagnostics.get(diagnostics.size() - 1);
+    checkFix(documentContext, lastDiagnostic, false);
+
+  }
+
+  private void checkFix(DocumentContext documentContext, Diagnostic diagnostic, boolean haveFix) {
+    List<CodeAction> quickFixes = getQuickFixes(diagnostic);
+
+    assertThat(quickFixes).hasSize(1);
+
+    final CodeAction quickFix = quickFixes.get(0);
+
+    if (haveFix){
+      assertThat(quickFix).of(diagnosticInstance).in(documentContext)
+        .fixes(diagnostic);
+
+      assertThat(quickFix).in(documentContext)
+        .hasChanges(1);
+    } else {
+      assertThat(quickFix).in(documentContext)
+        .hasChanges(0);
+    }
   }
 }

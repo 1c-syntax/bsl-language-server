@@ -28,11 +28,17 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -46,7 +52,7 @@ import java.util.regex.Pattern;
   }
 
 )
-public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
+public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
   private static final Pattern DEFAULT_EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
   private Pattern emptyLinesRegex = DEFAULT_EMPTY_LINES_REGEX;
 
@@ -87,23 +93,24 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
 
         var prevLine = prevLineStorage[0];
         if (currLine > prevLine + allowedEmptyLinesCount) {
-            addIssue(prevLine + 1);
+            addIssue(prevLine, currLine - 1);
         } else if (prevLine == 1 && currLine > allowedEmptyLinesCount) {
           // если как минимум первые две строки пустые
-          addIssue(1);
+          addIssue(0, currLine - 1);
         }
         prevLineStorage[0] = currLine;
       });
 
-    checkLastToken(tokens, prevLineStorage[0]);
+    checkLastToken(tokens, prevLineStorage[0], documentContext);
   }
 
-  private void checkLastToken(List<Token> tokens, int prevLine) {
+  private void checkLastToken(List<Token> tokens, int prevLine, DocumentContext documentContext) {
     // если в конце файла пустые строки, парсер может вернуть последний токен с тем же номером строки,
     // что и токен, где есть последнее использование идентификаторов. в тесте этот кейс проверяется.
     final var lastIndex = tokens.size() - 1;
     if (isOnlyWhiteSpacesLines(tokens.get(lastIndex))) {
-      addIssue(prevLine + 1);
+      var eofToken = documentContext.getTokens().get(documentContext.getTokens().size() - 1).getTokenSource().nextToken();
+      addIssue(prevLine, eofToken.getLine());
     }
   }
 
@@ -112,8 +119,39 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic {
       && emptyLinesRegex.matcher(token.getText()).matches();
   }
 
-  private void addIssue(int startEmptyLine) {
-    Range range = Ranges.create(startEmptyLine, 0, startEmptyLine + 1, 0);
+  private void addIssue(int startEmptyLine, int lastEmptyLine) {
+    Range range = Ranges.create(startEmptyLine, 0, lastEmptyLine - 1, 0);
     diagnosticStorage.addDiagnostic(range);
+  }
+
+  @Override
+  public List<CodeAction> getQuickFixes(
+      List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+      Range range = diagnostic.getRange();
+
+      Range newRange = Ranges.create(range.getStart().getLine(), 0, range.getEnd().getLine() + 1, 0);
+      // из-за того, что в DocumentContext.contentList пропускаются последние пустые строки в файле
+      // приходится делать такую проверку
+      try {
+        documentContext.getText(newRange);
+      } catch (ArrayIndexOutOfBoundsException e){
+        return;
+      }
+
+      TextEdit textEdit = new TextEdit(newRange, "\n");
+      textEdits.add(textEdit);
+
+    });
+
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      info.getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
+    );
   }
 }
