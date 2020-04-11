@@ -1,7 +1,7 @@
 name: Benchmark
 
 on:
-  push: 
+  push:
     branches:
       - develop
       - master
@@ -25,10 +25,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
+          python-version: "3.7"
 
-      - name: Setup pytest-benchmark
-        run: pip install pytest pytest-benchmark
+      - name: Setup Python libs
+        run: pip install pytest pytest-benchmark && pip install pybadges
 
       - name: Download SSL 3.1
         run: git clone https://github.com/1c-syntax/ssl_3_1.git ssl
@@ -36,29 +36,33 @@ jobs:
       - name: Analyze ssl
         run: pytest .github/scripts/bechmark.py --benchmark-min-rounds=1 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
 
+      - name: Generation badge benchmark
+        if: github.event_name == 'push'
+        run: python .github/scripts/gen-bandge.py
+
       - name: Check benchmark result for pull request
         if: github.event_name == 'pull_request'
-        uses: otymko/github-action-benchmark@v1
+        uses: otymko/github-action-benchmark@v1.1
         with:
           name: BSL LS perfomance measurement (SSL 3.1)
-          tool: 'pytest'
+          tool: "pytest"
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          alert-threshold: '110%'
+          alert-threshold: "110%"
           comment-on-alert: true
           fail-on-alert: false
-          alert-comment-cc-users: '@otymko'
+          alert-comment-cc-users: "@otymko"
 
       - name: Store benchmark result into branch
         if: github.event_name == 'push'
-        uses: otymko/github-action-benchmark@v1
+        uses: otymko/github-action-benchmark@v1.1
         with:
           name: BSL LS perfomance measurement (SSL 3.1)
-          tool: 'pytest'
+          tool: "pytest"
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
-          alert-threshold: '110%'
+          alert-threshold: "110%"
           comment-on-alert: true
           fail-on-alert: false
-          alert-comment-cc-users: '@otymko'
+          alert-comment-cc-users: "@otymko"
