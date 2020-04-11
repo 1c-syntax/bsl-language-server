@@ -125,3 +125,4 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
 
 `IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.
+
