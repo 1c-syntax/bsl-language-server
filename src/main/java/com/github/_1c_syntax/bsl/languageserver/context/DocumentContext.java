@@ -98,6 +98,8 @@ public class DocumentContext {
   }
 
   public String[] getContentList() {
+    // есть проблема - в DocumentContext.contentList пропускаются последние пустые строки в файле
+    // смотреть ConsecutiveEmptyLinesDiagnostic - метод getQuickFixes
     return contentList.getOrCompute();
   }
 
