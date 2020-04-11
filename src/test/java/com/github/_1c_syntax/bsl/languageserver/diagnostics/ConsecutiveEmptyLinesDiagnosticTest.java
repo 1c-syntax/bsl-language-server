@@ -34,9 +34,25 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   @Test
-  void test() {
+  void test_CRLF_And_Spaces() {
+    checkModuleText(false);
+  }
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+  @Test
+  void test_CR_And_Spaces_And_Tab() {
+    checkModuleText(true);
+  }
+
+  void checkModuleText(boolean use_CR_WithTab) {
+
+    String module = getText();
+
+    if (use_CR_WithTab){
+      module = module.replace("\n", "\r");
+      module = module.replace("  ", "\t");
+    }
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
 
     assertThat(diagnostics, true)
       .hasRange(1, 0, 2, 0)
