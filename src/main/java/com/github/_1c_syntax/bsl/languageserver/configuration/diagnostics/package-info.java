@@ -19,24 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
-
 /**
- * Триггер для запуска процедуры расчета диагностик.
+ * Пакет содержит настройки для работы {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
  */
-public enum ComputeTrigger {
-  /**
-   * При редактировании файла
-   */
-  ONTYPE,
-
-  /**
-   * При сохранении файла
-   */
-  ONSAVE,
-  
-  /**
-   * Никогда
-   */
-  NEVER
-}
+package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;

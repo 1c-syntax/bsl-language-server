@@ -23,11 +23,25 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Режим пропуска подсчета диагностик в зависимости от режима поддержки модуля
+ */
 public enum SkipSupport {
+  /**
+   * Пропуск файлов на поддержке без возможности изменения.
+   */
   @JsonProperty("withSupportLocked")
   WITH_SUPPORT_LOCKED,
+
+  /**
+   * Пропуск файлов на поддержке без возможности изменения и с возможностью изменения с сохранением поддержки.
+   */
   @JsonProperty("withSupport")
   WITH_SUPPORT,
+
+  /**
+   * Никогда не пропускать файлы.
+   */
   @JsonProperty("never")
   NEVER
 }

@@ -21,18 +21,38 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
+/**
+ * Язык для имен, сообщеий и прочих ресурсов диагностик.
+ */
 public enum Language {
+
+  /**
+   * Русский
+   */
   RU("ru"),
+
+  /**
+   * Английский
+   */
   EN("en");
 
+  /**
+   * Язык по умолчанию
+   */
   public static final Language DEFAULT_LANGUAGE = RU;
 
   private final String languageCode;
 
+  /**
+   * @param languageCode код языка в соответствии с {@link java.util.Locale#getLanguage()}
+   */
   Language(String languageCode) {
     this.languageCode = languageCode;
   }
 
+  /**
+   * @return код языка в соответствии с {@link java.util.Locale#getLanguage()}
+   */
   public String getLanguageCode() {
     return languageCode;
   }

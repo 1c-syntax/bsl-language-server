@@ -21,10 +21,38 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+
+/**
+ * Режим для учета настроек правил.
+ * <p/>
+ * См. {@link DiagnosticsOptions#getRules()}
+ */
 public enum Mode {
+
+  /**
+   * Все диагностики считаются выключенными.
+   */
   OFF,
+
+  /**
+   * Все диагностики, включенные по умолчанию ({@link DiagnosticMetadata#activatedByDefault()}, считаются включенными.
+   * Остальные - в соответствии с конфигурацией настроек правил.
+   */
   ON,
+
+  /**
+   * Все диагностики, кроме указанных в конфигурации настроек правил, считаются включенными.
+   */
   EXCEPT,
+
+  /**
+   * Только диагностики, указанные в конфигурации настроек правил, считаются включенными.
+   */
   ONLY,
+
+  /**
+   * Все диагностики считаются включенными.
+   */
   ALL
 }

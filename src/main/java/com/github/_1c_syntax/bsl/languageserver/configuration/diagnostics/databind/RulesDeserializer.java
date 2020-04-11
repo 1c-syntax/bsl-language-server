@@ -37,8 +37,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Служебный класс-десериализатор для коллекции настроек диагностик.
+ * <p>
+ * См. {@link com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions#getRules()}
+ */
 @Slf4j
 public class RulesDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
+
   @Override
   public Map<String, Either<Boolean, Map<String, Object>>> deserialize(
     JsonParser p,

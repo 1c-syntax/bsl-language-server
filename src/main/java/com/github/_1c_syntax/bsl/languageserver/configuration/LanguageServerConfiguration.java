@@ -46,6 +46,12 @@ import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
+/**
+ * Корневой класс конфигурации BSL Language Server.
+ * <p>
+ * В обычном режиме работы провайдеры и прочие классы могут расчитывать на единственность объекта конфигурации
+ * и безопасно сохранять ссылку на конфигурацию или ее части.
+ */
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @Slf4j
@@ -55,11 +61,14 @@ public final class LanguageServerConfiguration {
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
   @JsonProperty("diagnostics")
-  private DiagnosticsOptions diagnosticsOptions;
+  private final DiagnosticsOptions diagnosticsOptions;
+
   @JsonProperty("codeLens")
-  private CodeLensOptions codeLensOptions;
+  private final CodeLensOptions codeLensOptions;
+
   @Nullable
   private File traceLog;
+
   @Nullable
   private Path configurationRoot;
 

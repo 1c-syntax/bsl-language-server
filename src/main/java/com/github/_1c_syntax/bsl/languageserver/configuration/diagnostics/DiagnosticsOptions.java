@@ -32,6 +32,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
