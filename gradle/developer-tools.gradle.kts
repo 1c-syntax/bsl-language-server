@@ -55,11 +55,21 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
 
     private fun createDiagnosticSupplier(lang: String, classLoader: ClassLoader) : Any {
         val languageServerConfigurationClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration")
-        val diagnosticLanguageClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.DiagnosticLanguage")
-        val lsConfiguration = languageServerConfigurationClass.getDeclaredMethod("create", diagnosticLanguageClass)
-                .invoke(languageServerConfigurationClass,
-                        diagnosticLanguageClass.getMethod("valueOf", classLoader.loadClass("java.lang.String"))
-                                .invoke(diagnosticLanguageClass, lang.toUpperCase()))
+        val diagnosticsOptionsClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions")
+        val languageClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language")
+
+        val lsConfiguration = languageServerConfigurationClass
+                .getDeclaredMethod("create")
+                .invoke(languageServerConfigurationClass)
+        val language = languageClass.getMethod("valueOf", classLoader.loadClass("java.lang.String"))
+                .invoke(languageClass, lang.toUpperCase())
+        val diagnosticOptions = languageServerConfigurationClass
+                .getDeclaredMethod("getDiagnosticsOptions")
+                .invoke(lsConfiguration)
+
+        diagnosticsOptionsClass.getDeclaredMethod("setLanguage", languageClass)
+                .invoke(diagnosticOptions, language)
+
         return classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier").declaredConstructors[0].newInstance(lsConfiguration)
     }
 
