@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -237,11 +238,19 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
-    if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()) {
+    if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()
+      || !currentScope.codeFlowInCycle()) {
       return super.visitAccessCall(ctx);
     }
-    if (!currentScope.codeFlowInCycle()) {
-      return super.visitAccessCall(ctx);
+
+    ParserRuleContext expression = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_expression);
+
+    ParseTree endDo;
+    if (expression != null) {
+      endDo = Trees.getNextNode(expression.getParent(), expression, BSLParser.RULE_codeBlock);
+      if (endDo != null && endDo != expression) {
+        return super.visitAccessCall(ctx);
+      }
     }
 
     String variableName = null;
