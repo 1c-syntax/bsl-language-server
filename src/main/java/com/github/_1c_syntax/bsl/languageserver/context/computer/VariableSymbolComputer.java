@@ -92,6 +92,10 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
+    if (ctx.getChildCount() > 1) {
+      return ctx;
+    }
+
     if (notParameter(ctx.getText()) && notRegistered(ctx.getText())) {
       VariableSymbol symbol = VariableSymbol.builder()
         .name(ctx.getText())
