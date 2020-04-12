@@ -35,6 +35,8 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.List;
@@ -77,8 +79,13 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
       .map(Token::getLine)
       .distinct().forEachOrdered((Integer lineNumber) -> {
       int realLineNumber = lineNumber - 1;
-      if (prevLineNumber[0] + emptyLineDelta[0] < realLineNumber) {
-        diagnosticStorage.addDiagnostic(prevLineNumber[0] + emptyLineDelta[0], 0, realLineNumber, 0);
+      int legalLineNumber = prevLineNumber[0] + emptyLineDelta[0];
+      if (legalLineNumber < realLineNumber) {
+        int startLine = legalLineNumber;
+        if (legalLineNumber == realLineNumber - 1) {
+          startLine = legalLineNumber - 1;
+        }
+        diagnosticStorage.addDiagnostic(startLine, 0, realLineNumber - 1, 0);
       }
       prevLineNumber[0] = realLineNumber;
     });
@@ -91,7 +98,13 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
     List<TextEdit> textEdits = diagnostics.stream()
       .map(Diagnostic::getRange)
-      .map(range -> new TextEdit(range, ""))
+      .map(range -> new TextEdit(
+        new Range(
+          range.getStart(),
+          new Position(range.getEnd().getLine() + 1, range.getEnd().getCharacter())
+        ),
+        "")
+      )
       .collect(Collectors.toList());
 
     return CodeActionProvider.createCodeActions(

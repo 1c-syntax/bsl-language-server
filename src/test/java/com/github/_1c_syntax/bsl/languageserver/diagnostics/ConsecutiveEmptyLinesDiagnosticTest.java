@@ -42,14 +42,14 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics, true)
-      .hasRange(2, 0, 4, 0)
-      .hasRange(7, 0, 8, 0)
-      .hasRange(15, 0, 16, 0)
-      .hasRange(21, 0, 23, 0)
-      .hasRange(26, 0, 27, 0)
-      .hasRange(35, 0, 40,0)
-      .hasRange(49, 0, 50, 0)
-      .hasRange(53, 0, 55, 0) // 1 line miss
+      .hasRange(2, 0, 3, 0)
+      .hasRange(6, 0, 7, 0)
+      .hasRange(14, 0, 15, 0)
+      .hasRange(21, 0, 22, 0)
+      .hasRange(25, 0, 26, 0)
+      .hasRange(35, 0, 39,0)
+      .hasRange(48, 0, 49, 0)
+      .hasRange(53, 0, 54, 0) // 1 line miss
     ;
 
   }
@@ -64,10 +64,24 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
     List<Diagnostic> diagnostics = getDiagnostics();
     assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(3, 0, 4, 0)
-      .hasRange(22, 0, 23, 0)
-      .hasRange(36, 0, 40, 0)
-      .hasRange(54, 0, 55, 0)
+      .hasRange(2, 0, 3, 0)
+      .hasRange(21, 0, 22, 0)
+      .hasRange(36, 0, 39, 0)
+      .hasRange(53, 0, 54, 0)
+    ;
+  }
+
+  @Test
+  void testConfigure4() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxEmptyLineCount", 4);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(37, 0, 39, 0)
     ;
   }
 
