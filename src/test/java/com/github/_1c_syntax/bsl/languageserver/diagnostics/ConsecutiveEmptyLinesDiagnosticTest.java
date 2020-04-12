@@ -38,16 +38,161 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   @Test
-  void test_CRLF_And_Spaces() {
-    checkModuleText(false);
+  void test_EmptyTwoFirstLines() {
+    String module = "  \n" +
+      "\n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 1, 0)
+      .hasSize(1)
+    ;
   }
 
   @Test
-  void test_CR_And_Spaces_And_Tab() {
-    checkModuleText(true);
+  void test_EmptyThreeFirstLines() {
+    String module = "  \n" +
+      "\n" +
+      "\n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 2, 0)
+      .hasSize(1)
+    ;
   }
 
-  void checkModuleText(boolean use_CR_WithTab) {
+  @Test
+  void test_EmptyTwoInnerLines() {
+    String module = "Процедура Первая()\n" +
+      "\n" +
+      "\n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 2, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_EmptyTwoInnerLinesWithSpaces() {
+    String module = "Процедура Первая()  \n" +
+      " \n" +
+      " \n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 2, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_WorseEmptyTwoInnerLines() {
+    String module = "Процедура Первая()  \n" +
+      "  \n" +
+      "  Метод1(); //комментарии  \n" +
+      "\n" +
+      "  \n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(3, 0, 4, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_EmptyThreeInnerLines() {
+    String module = "Процедура Первая()\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 3, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_EmptyLastLines() {
+    String module = "Перем А;\n" +
+      "\n";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 2, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_ConfigureEmptyLineParam() {
+    setTwoForAllowedEmptyLinesCount();
+
+    String module = "Процедура Первая()\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 0, 3, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_ConfigureEmptyLineParamNoIssue() {
+    setTwoForAllowedEmptyLinesCount();
+
+    String module = "Процедура Первая()\n" +
+      "\n" +
+      "\n" +
+      "КонецПроцедуры";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasSize(0)
+    ;
+  }
+
+  private void setTwoForAllowedEmptyLinesCount() {
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("allowedEmptyLinesCount", 2);
+    diagnosticInstance.configure(configuration);
+  }
+
+  @Test
+  void test_moduleWith_CRLF_And_Spaces() {
+    checkFileText(false);
+  }
+
+  @Test
+  void test_moduleWith_CR_And_Spaces_And_Tab() {
+    checkFileText(true);
+  }
+
+  void checkFileText(boolean use_CR_WithTab) {
 
     String module = getText();
 
@@ -71,20 +216,6 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
       .hasSize(9)
     ;
 
-  }
-
-  @Test
-  void test_ConfigureEmptyLineParam() {
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("allowedEmptyLinesCount", 2);
-    diagnosticInstance.configure(configuration);
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics, true)
-      .hasRange(29, 0, 31, 0)
-      .hasSize(1)
-    ;
   }
 
   @Test

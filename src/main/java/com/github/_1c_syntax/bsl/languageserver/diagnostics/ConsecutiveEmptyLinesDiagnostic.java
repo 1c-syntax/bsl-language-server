@@ -72,6 +72,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     if (configuration == null){
       return;
     }
+    super.configure(configuration);
     this.allowedEmptyLinesCount = (Integer) configuration.getOrDefault("allowedEmptyLinesCount", allowedEmptyLinesCount);
     emptyLinesRegex = Pattern.compile(DEFAULT_EMPTY_LINES_REGEX.pattern()
       .replace("2", "" + (allowedEmptyLinesCount + 1)));
@@ -94,9 +95,9 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
       .forEachOrdered(currLine -> {
 
         var prevLine = prevLineStorage[0];
-        if (currLine > prevLine + nonAllowedEmptyLinesCount) {
+        if (currLine - prevLine > nonAllowedEmptyLinesCount) {
             addIssue(prevLine, currLine - 1);
-        } else if (prevLine == 1 && currLine > nonAllowedEmptyLinesCount) {
+        } else if (prevLine == 1 && currLine - 1 > nonAllowedEmptyLinesCount) {
           // если как минимум первые две строки пустые
           addIssue(0, currLine - 1);
         }
