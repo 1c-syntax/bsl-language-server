@@ -60,6 +60,8 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     defaultValue = "" + MAX_EMPTY_LINE_COUNT
   )
   private int maxEmptyLineCount = MAX_EMPTY_LINE_COUNT;
+  private int emptyLineDelta;
+  private int prevLineNumber = -1;
 
 
   public ConsecutiveEmptyLinesDiagnostic(DiagnosticInfo info) {
@@ -69,27 +71,27 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   @Override
   protected void check(DocumentContext documentContext) {
 
-    final int[] prevLineNumber = {-1};
-    final int[] emptyLineDelta = {maxEmptyLineCount + 1};
+    emptyLineDelta = maxEmptyLineCount + 1;
 
     documentContext.getTokensWithEOF().stream()
-      .filter(token ->
-        token.getChannel() == Lexer.DEFAULT_TOKEN_CHANNEL
-          || token.getType() == BSLLexer.LINE_COMMENT)
+      .filter(token -> token.getChannel() == Lexer.DEFAULT_TOKEN_CHANNEL || token.getType() == BSLLexer.LINE_COMMENT)
       .map(Token::getLine)
-      .distinct().forEachOrdered((Integer lineNumber) -> {
-      int realLineNumber = lineNumber - 1;
-      int legalLineNumber = prevLineNumber[0] + emptyLineDelta[0];
-      if (legalLineNumber < realLineNumber) {
-        int startLine = legalLineNumber;
-        if (legalLineNumber == realLineNumber - 1) {
-          startLine = legalLineNumber - 1;
-        }
-        diagnosticStorage.addDiagnostic(startLine, 0, realLineNumber - 1, 0);
-      }
-      prevLineNumber[0] = realLineNumber;
-    });
+      .distinct().forEachOrdered(this::addDiagnosticIfNeed);
 
+  }
+
+  private void addDiagnosticIfNeed(Integer lineNumber) {
+    int realLineNumber = lineNumber - 1;
+    int legalLineNumber = prevLineNumber + emptyLineDelta;
+    if (legalLineNumber < realLineNumber) {
+      int startLine = legalLineNumber;
+      if (startLine == realLineNumber - 1) {
+        startLine = legalLineNumber - 1;
+      }
+      int endLine = realLineNumber - 1;
+      diagnosticStorage.addDiagnostic(startLine, 0, endLine, 0);
+    }
+    prevLineNumber = realLineNumber;
   }
 
   @Override
