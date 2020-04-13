@@ -30,7 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Lexer;
+import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -73,8 +75,10 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
     emptyLineDelta = maxEmptyLineCount + 1;
 
-    documentContext.getTokensWithEOF().stream()
-      .filter(token -> token.getChannel() == Lexer.DEFAULT_TOKEN_CHANNEL || token.getType() == BSLLexer.LINE_COMMENT)
+    documentContext.getTokens().stream()
+      .filter(token -> token.getChannel() == Lexer.DEFAULT_TOKEN_CHANNEL
+        || token.getType() == BSLLexer.LINE_COMMENT
+        || token.getType() == -1) //EOF
       .map(Token::getLine)
       .distinct().forEachOrdered(this::addDiagnosticIfNeed);
 

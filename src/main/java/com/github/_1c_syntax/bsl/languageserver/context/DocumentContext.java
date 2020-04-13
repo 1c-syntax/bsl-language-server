@@ -115,11 +115,6 @@ public class DocumentContext {
     return tokenizer.getTokens();
   }
 
-  public List<Token> getTokensWithEOF() {
-    requireNonNull(content);
-    return tokenizer.getTokensWithEOF();
-  }
-
   public List<Token> getTokensFromDefaultChannel() {
     return getTokens().stream().filter(token -> token.getChannel() == DEFAULT_CHANNEL).collect(Collectors.toList());
   }

@@ -106,7 +106,7 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
+    assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent.trim());
 
   }
 
