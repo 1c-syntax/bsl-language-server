@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -123,33 +123,28 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
     CodeActionParams params,
     DocumentContext documentContext
   ) {
-    List<TextEdit> textEdits = new ArrayList<>();
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-      Range startLineRange = Ranges.create(
-        range.getStart().getLine(),
-        0,
-        range.getStart().getLine(),
-        range.getStart().getCharacter());
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      (Diagnostic diagnostic) -> getQuickFixText(diagnostic, documentContext)
+    );
+  }
 
-      Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getText(startLineRange));
-      String indent = "";
-      if (matcher.find()) {
-        indent = matcher.group(1);
-      }
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
+    Range range = diagnostic.getRange();
+    Range startLineRange = Ranges.create(
+      range.getStart().getLine(),
+      0,
+      range.getStart().getLine(),
+      range.getStart().getCharacter());
 
-      TextEdit textEdit = new TextEdit(
-        range, "\n" + indent + documentContext.getText(range)
-      );
-      textEdits.add(textEdit);
-    });
+    Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getText(startLineRange));
+    String indent = "";
+    if (matcher.find()) {
+      indent = matcher.group(1);
+    }
 
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
+    return new TextEdit(
+      range, "\n" + indent + documentContext.getText(range)
     );
   }
 }

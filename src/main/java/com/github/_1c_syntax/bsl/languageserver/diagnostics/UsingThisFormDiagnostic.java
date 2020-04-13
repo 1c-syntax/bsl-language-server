@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -42,7 +42,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -146,18 +145,9 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> newTextEdits = new ArrayList<>();
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      (Diagnostic diagnostic) -> getQuickFixText(diagnostic, documentContext));
 
-    for (Diagnostic diagnostic : diagnostics) {
-      newTextEdits.add(getQuickFixText(diagnostic, documentContext));
-    }
-
-    return CodeActionProvider.createCodeActions(
-      newTextEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
   }
 
   @Override

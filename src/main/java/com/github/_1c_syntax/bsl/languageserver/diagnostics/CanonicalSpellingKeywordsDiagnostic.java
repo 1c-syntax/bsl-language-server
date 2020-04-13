@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -606,26 +607,21 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-      String originalText = documentContext.getText(range);
-      String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
-
-      if (canonicalText != null) {
-        TextEdit textEdit = new TextEdit(range, canonicalText);
-        textEdits.add(textEdit);
-      }
-
-    });
-
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      (Diagnostic diagnostic) -> getQuickFixText(diagnostic, documentContext)
     );
 
+  }
+
+  @Nullable
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
+    Range range = diagnostic.getRange();
+    String originalText = documentContext.getText(range);
+    String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
+
+    if (canonicalText != null) {
+      return new TextEdit(range, canonicalText);
+    }
+    return null;
   }
 }

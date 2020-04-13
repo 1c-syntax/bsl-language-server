@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
@@ -39,7 +39,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -80,24 +79,16 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      SemicolonPresenceDiagnostic::getQuickFixText);
+  }
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range diagnosticRange = diagnostic.getRange();
-      Position diagnosticRangeEnd = diagnosticRange.getEnd();
+  private static TextEdit getQuickFixText(Diagnostic diagnostic) {
+    Range diagnosticRange = diagnostic.getRange();
+    Position diagnosticRangeEnd = diagnosticRange.getEnd();
 
-      Range range = new Range(diagnosticRangeEnd, diagnosticRangeEnd);
+    Range range = new Range(diagnosticRangeEnd, diagnosticRangeEnd);
 
-      TextEdit textEdit = new TextEdit(range, ";");
-      textEdits.add(textEdit);
-    });
-
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
-
+    return new TextEdit(range, ";");
   }
 }

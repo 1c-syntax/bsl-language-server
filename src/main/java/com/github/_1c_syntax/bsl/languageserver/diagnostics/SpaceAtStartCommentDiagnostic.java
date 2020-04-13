@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -130,24 +129,18 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      (Diagnostic diagnostic) -> getQuickFixText(diagnostic, documentContext));
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-      String currentText = documentContext.getText(range);
+  }
 
-      TextEdit textEdit = new TextEdit(
-        range,
-        currentText.substring(0, COMMENT_LENGTH) + " " + currentText.substring(COMMENT_LENGTH)
-      );
-      textEdits.add(textEdit);
-    });
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
+    Range range = diagnostic.getRange();
+    String currentText = documentContext.getText(range);
 
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
+    return new TextEdit(
+      range,
+      currentText.substring(0, COMMENT_LENGTH) + " " + currentText.substring(COMMENT_LENGTH)
     );
   }
 }

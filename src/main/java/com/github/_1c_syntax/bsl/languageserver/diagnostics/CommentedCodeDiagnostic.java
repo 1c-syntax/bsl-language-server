@@ -30,9 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
 import org.antlr.v4.runtime.Token;
@@ -218,16 +218,8 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
     List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = diagnostics.stream()
-      .map(Diagnostic::getRange)
-      .map(range -> new TextEdit(range, ""))
-      .collect(Collectors.toList());
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      (Diagnostic diagnostic) -> new TextEdit(diagnostic.getRange(), ""));
 
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
   }
 }

@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
@@ -37,7 +37,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -88,21 +87,14 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-
-      TextEdit textEdit = new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
-      textEdits.add(textEdit);
-
-    });
-
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      (Diagnostic diagnostic) -> getQuickFixText(diagnostic, info)
     );
+
+  }
+
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, DiagnosticInfo info) {
+    return new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
   }
 
 

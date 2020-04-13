@@ -28,7 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.RuleContext;
 import org.eclipse.lsp4j.CodeAction;
@@ -133,12 +133,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
     }
 
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixHelper.createCodeActions(this, textEdits, documentContext, diagnostics);
   }
 }
 

@@ -28,8 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.QuickFixHelper;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
@@ -39,7 +39,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -301,36 +301,32 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
+    return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
+      MissingSpaceDiagnostic::getQuickFixText);
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
+  }
 
-      // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
-      Boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
-      Boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
+  @Nullable
+  private static TextEdit getQuickFixText(Diagnostic diagnostic) {
+    String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
 
-      Range range = diagnostic.getRange();
+    // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
+    Boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
+    Boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
 
-      if (Boolean.TRUE.equals(missedLeft)) {
-        TextEdit textEdit = new TextEdit(
-          new Range(range.getStart(), range.getStart()),
-          " ");
-        textEdits.add(textEdit);
-      }
-      if (Boolean.TRUE.equals(missedRight)) {
-        TextEdit textEdit = new TextEdit(
-          new Range(range.getEnd(), range.getEnd()),
-          " ");
-        textEdits.add(textEdit);
-      }
-    });
+    Range range = diagnostic.getRange();
 
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    TextEdit textEdit = null;
+    if (Boolean.TRUE.equals(missedLeft)) {
+      textEdit = new TextEdit(
+        new Range(range.getStart(), range.getStart()),
+        " ");
+    }
+    if (Boolean.TRUE.equals(missedRight)) {
+      textEdit = new TextEdit(
+        new Range(range.getEnd(), range.getEnd()),
+        " ");
+    }
+    return textEdit;
   }
 }
