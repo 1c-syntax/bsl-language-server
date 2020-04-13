@@ -208,5 +208,16 @@ class DocumentContextTest {
 
   }
 
+  @Test
+  void testContentList() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+
+    // when
+    String[] conten = documentContext.getContentList();
+
+    // then
+    assertThat(conten.length).isEqualTo(40);
+  }
 
 }

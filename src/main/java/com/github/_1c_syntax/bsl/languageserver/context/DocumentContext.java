@@ -234,7 +234,7 @@ public class DocumentContext {
   }
 
   private String[] computeContentList() {
-    return getContent().split("\n");
+    return getContent().split("\n", -1);
   }
 
   private SymbolTree computeSymbolTree() {
