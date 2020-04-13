@@ -504,6 +504,16 @@
             },
             "$id": "#/definitions/MissingTemporaryFileDeletion"
         },
+        "MissingVariablesDescription": {
+            "description": "All variables declarations must have a description",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "All variables declarations must have a description",
+            "$id": "#/definitions/MissingVariablesDescription"
+        },
         "MultilingualStringHasAllDeclaredLanguages": {
             "description": "There is a localized text for all languages declared in the configuration",
             "default": null,
