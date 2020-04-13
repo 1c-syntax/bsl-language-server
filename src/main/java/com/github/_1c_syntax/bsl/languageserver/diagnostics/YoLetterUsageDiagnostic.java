@@ -53,7 +53,7 @@ public class YoLetterUsageDiagnostic extends AbstractDiagnostic {
       .filter((Token t) ->
         t.getType() == BSLParser.IDENTIFIER &&
           t.getText().toUpperCase(Locale.ENGLISH).contains("Ё"))
-      .forEach(token -> diagnosticStorage.addDiagnostic(token));
+      .forEach(diagnosticStorage::addDiagnostic);
   }
 
 }

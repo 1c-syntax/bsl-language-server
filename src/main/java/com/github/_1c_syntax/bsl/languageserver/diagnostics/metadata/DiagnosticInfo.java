@@ -45,15 +45,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DiagnosticInfo {
 
-  private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
+  private static final Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final DiagnosticLanguage diagnosticLanguage;
 
   private final DiagnosticCode diagnosticCode;
-  private DiagnosticMetadata diagnosticMetadata;
-  private List<DiagnosticParameterInfo> diagnosticParameters;
+  private final DiagnosticMetadata diagnosticMetadata;
+  private final List<DiagnosticParameterInfo> diagnosticParameters;
 
   public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, DiagnosticLanguage diagnosticLanguage) {
     this.diagnosticClass = diagnosticClass;

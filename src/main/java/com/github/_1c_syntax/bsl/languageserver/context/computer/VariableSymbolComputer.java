@@ -40,7 +40,7 @@ import java.util.Optional;
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
-  private List<VariableSymbol> variables = new ArrayList<>();
+  private final List<VariableSymbol> variables = new ArrayList<>();
 
   public VariableSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

@@ -64,8 +64,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private final DocumentContext documentContext;
 
-  private Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
-  private Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
+  private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
+  private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
 
   public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

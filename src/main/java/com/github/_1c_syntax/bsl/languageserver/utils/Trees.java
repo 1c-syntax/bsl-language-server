@@ -291,7 +291,7 @@ public final class Trees {
 
   /**
    * @param tokens - список токенов из DocumentContext
-   * @param token - токен, на строке которого требуется найти висячий комментарий
+   * @param token  - токен, на строке которого требуется найти висячий комментарий
    * @return - токен с комментарием, если он найден
    */
   public static Optional<Token> getTrailingComment(List<Token> tokens, Token token) {

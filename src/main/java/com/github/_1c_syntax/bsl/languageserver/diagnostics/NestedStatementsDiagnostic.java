@@ -64,7 +64,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 
   private ParseTree lastCtx;
-  private Deque<ParseTree> nestedParents = new ArrayDeque<>();
+  private final Deque<ParseTree> nestedParents = new ArrayDeque<>();
 
   public NestedStatementsDiagnostic(DiagnosticInfo info) {
     super(info);

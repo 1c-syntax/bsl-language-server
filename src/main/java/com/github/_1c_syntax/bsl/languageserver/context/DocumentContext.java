@@ -62,23 +62,23 @@ public class DocumentContext {
   private final URI uri;
   private final FileType fileType;
   private String content;
-  private ServerContext context;
+  private final ServerContext context;
   private Tokenizer tokenizer;
 
-  private ReentrantLock computeLock = new ReentrantLock();
+  private final ReentrantLock computeLock = new ReentrantLock();
 
-  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
-  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
-  private Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
+  private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
+  private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
-  private Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
-  private Lazy<ComplexityData> cognitiveComplexityData
+  private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
+  private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
-  private Lazy<ComplexityData> cyclomaticComplexityData
+  private final Lazy<ComplexityData> cyclomaticComplexityData
     = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
-  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
+  private final Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
-  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     this.uri = Absolute.uri(uri);

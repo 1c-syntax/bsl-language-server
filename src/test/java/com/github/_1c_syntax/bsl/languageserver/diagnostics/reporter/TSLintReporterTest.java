@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TSLintReporterTest {
 
-  private File file = new File("./bsl-tslint.json");
+  private final File file = new File("./bsl-tslint.json");
 
   @BeforeEach
   void setUp() {

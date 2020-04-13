@@ -36,7 +36,7 @@ import java.util.Optional;
 
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
-  private DocumentContext documentContext;
+  private final DocumentContext documentContext;
 
   public SymbolTreeComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

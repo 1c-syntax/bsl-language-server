@@ -47,19 +47,19 @@ import java.util.stream.Collectors;
 )
 public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern beginTransaction = Pattern.compile("НачатьТранзакцию|BeginTransaction",
+  private final Pattern beginTransaction = Pattern.compile("НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private Pattern beginEndTransaction = Pattern.compile(
+  private final Pattern beginEndTransaction = Pattern.compile(
     "ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private Pattern beginCancelTransaction = Pattern.compile(
+  private final Pattern beginCancelTransaction = Pattern.compile(
     "ОтменитьТранзакцию|RollbackTransaction|НачатьТранзакцию|BeginTransaction",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
-  private HashMap<String, String> pairMethodsBeginCancel = new HashMap<>();
+  private final HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
+  private final HashMap<String, String> pairMethodsBeginCancel = new HashMap<>();
 
   public PairingBrokenTransactionDiagnostic(DiagnosticInfo info) {
     super(info);

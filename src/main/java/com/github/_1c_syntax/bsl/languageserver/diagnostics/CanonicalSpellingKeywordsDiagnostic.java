@@ -53,8 +53,8 @@ import java.util.Map;
 )
 public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
-  private static Map<Integer, List<String>> canonicalKeywords = getPreset();
-  private static Map<String, String> canonicalStrings = getCanonical();
+  private static final Map<Integer, List<String>> canonicalKeywords = getPreset();
+  private static final Map<String, String> canonicalStrings = getCanonical();
 
   public CanonicalSpellingKeywordsDiagnostic(DiagnosticInfo info) {
     super(info);

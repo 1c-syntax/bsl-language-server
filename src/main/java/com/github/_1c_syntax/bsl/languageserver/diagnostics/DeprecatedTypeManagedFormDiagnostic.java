@@ -70,13 +70,13 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx ) {
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     Optional.of(ctx)
       .filter(it -> methodPattern.matcher(it.methodName().getText()).matches())
       .map(BSLParser.GlobalMethodCallContext::doCall)
       .map(BSLParser.DoCallContext::callParamList)
       .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
-      .ifPresent(callParamList -> diagnosticStorage.addDiagnostic(callParamList));
+      .ifPresent(diagnosticStorage::addDiagnostic);
 
     return super.visitGlobalMethodCall(ctx);
   }

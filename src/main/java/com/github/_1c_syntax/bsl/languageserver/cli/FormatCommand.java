@@ -56,8 +56,8 @@ import java.util.List;
  */
 public class FormatCommand implements Command {
 
-  private CommandLine cmd;
-  private ServerContext serverContext;
+  private final CommandLine cmd;
+  private final ServerContext serverContext;
 
   public FormatCommand(CommandLine cmd) {
     this.cmd = cmd;

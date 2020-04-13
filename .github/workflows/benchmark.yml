@@ -34,7 +34,7 @@ jobs:
         run: git clone https://github.com/1c-syntax/ssl_3_1.git ssl
 
       - name: Analyze ssl
-        run: pytest .github/scripts/bechmark.py --benchmark-min-rounds=1 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
+        run: pytest .github/scripts/benchmark.py --benchmark-min-rounds=3 --benchmark-timer=time.time --benchmark-json=output.json --benchmark-verbose
 
       - name: Generation badge benchmark
         if: github.event_name == 'push'

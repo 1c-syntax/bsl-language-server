@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 public class DiagnosticSupplier {
 
   private final LanguageServerConfiguration configuration;
-  private static List<Class<? extends BSLDiagnostic>> diagnosticClasses = createDiagnosticClasses();
+  private static final List<Class<? extends BSLDiagnostic>> diagnosticClasses = createDiagnosticClasses();
 
   public DiagnosticSupplier(LanguageServerConfiguration configuration) {
     this.configuration = configuration;

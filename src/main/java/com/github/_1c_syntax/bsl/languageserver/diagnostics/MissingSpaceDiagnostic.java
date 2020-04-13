@@ -107,7 +107,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private Pattern patternL = compilePattern(listForCheckLeft);
   private Pattern patternR = compilePattern(listForCheckRight);
   private Pattern patternLr = compilePattern(listForCheckLeftAndRight);
-  private Pattern patternNotSpace = compilePattern("\\S+");
+  private final Pattern patternNotSpace = compilePattern("\\S+");
 
   public MissingSpaceDiagnostic(DiagnosticInfo info) {
     super(info);

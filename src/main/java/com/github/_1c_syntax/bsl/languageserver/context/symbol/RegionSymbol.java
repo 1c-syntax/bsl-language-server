@@ -60,7 +60,7 @@ public class RegionSymbol implements Symbol {
   @NonFinal
   @Builder.Default
   // TODO подумать, как избавиться от этого
-  List<BSLParserRuleContext> nodes = new ArrayList<>();
+    List<BSLParserRuleContext> nodes = new ArrayList<>();
 
   @Override
   public void clearParseTreeData() {

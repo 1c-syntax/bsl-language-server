@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
  */
 public class AnalyzeCommand implements Command {
 
-  private CommandLine cmd;
+  private final CommandLine cmd;
   private DiagnosticProvider diagnosticProvider;
   private ServerContext context;
 

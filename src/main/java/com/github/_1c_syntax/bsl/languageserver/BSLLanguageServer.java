@@ -46,10 +46,10 @@ import java.util.concurrent.CompletableFuture;
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   private final LanguageServerConfiguration configuration;
-  private BSLTextDocumentService textDocumentService;
-  private BSLWorkspaceService workspaceService;
+  private final BSLTextDocumentService textDocumentService;
+  private final BSLWorkspaceService workspaceService;
   private boolean shutdownWasCalled;
-  private ServerContext context;
+  private final ServerContext context;
 
   public BSLLanguageServer(LanguageServerConfiguration configuration) {
     this.configuration = configuration;

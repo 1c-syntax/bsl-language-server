@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage;
-  private Set<BSLParser.ExpressionContext> checkedConditions = new HashSet<>();
+  private final Set<BSLParser.ExpressionContext> checkedConditions = new HashSet<>();
 
   public IfElseDuplicatedConditionDiagnostic(DiagnosticInfo info) {
     super(info);

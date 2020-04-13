@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   private final String relatedMessage;
-  private Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
+  private final Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
 
   public IfElseDuplicatedCodeBlockDiagnostic(DiagnosticInfo info) {
     super(info);

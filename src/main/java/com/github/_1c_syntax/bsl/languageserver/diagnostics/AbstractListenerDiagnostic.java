@@ -32,7 +32,7 @@ import java.util.List;
 public abstract class AbstractListenerDiagnostic extends BSLParserBaseListener implements BSLDiagnostic {
 
   protected final DiagnosticInfo info;
-  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
   protected DocumentContext documentContext;
 
   public AbstractListenerDiagnostic(DiagnosticInfo info) {

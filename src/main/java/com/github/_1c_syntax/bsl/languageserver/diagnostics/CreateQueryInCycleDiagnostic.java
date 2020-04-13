@@ -302,8 +302,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @ToString
   public static class VariableDefinition {
-    private String variableName;
-    private Set<String> types = new HashSet<>();
+    private final String variableName;
+    private final Set<String> types = new HashSet<>();
     private ParseTree firstDeclaration;
 
     VariableDefinition(String variableName) {
@@ -324,7 +324,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static class Scope {
     private final String name;
 
-    private HashMap<String, VariableDefinition> variables = new HashMap<>();
+    private final HashMap<String, VariableDefinition> variables = new HashMap<>();
 
     public Scope(String name) {
       this.name = name;
@@ -350,7 +350,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static class VariableScope extends ArrayDeque<Scope> {
-    private Deque<CodeFlowType> flowMode = new ArrayDeque<>();
+    private final Deque<CodeFlowType> flowMode = new ArrayDeque<>();
 
     public boolean codeFlowInCycle() {
       final CodeFlowType flowType = flowMode.peek();
