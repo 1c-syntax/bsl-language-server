@@ -251,4 +251,9 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
         .hasChanges(0);
     }
   }
+
+  private List<Diagnostic> getDiagnosticsForText(String textDocumentContent) {
+    DocumentContext documentContext = TestUtils.getDocumentContext(textDocumentContent);
+    return getDiagnostics(documentContext);
+  }
 }

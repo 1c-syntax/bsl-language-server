@@ -41,7 +41,6 @@ import org.eclipse.lsp4j.TextEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -53,8 +52,6 @@ import java.util.regex.Pattern;
 
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
-  private static final Pattern DEFAULT_EMPTY_LINES_REGEX = Pattern.compile("^(\\s*[\\n\\r]+\\s*){2,}");
-  private Pattern emptyLinesRegex = DEFAULT_EMPTY_LINES_REGEX;
 
   private static final int DEFAULT_ALLOWED_EMPTY_LINES_COUNT = 1;
   @DiagnosticParameter(
@@ -74,8 +71,6 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     }
     super.configure(configuration);
     this.allowedEmptyLinesCount = (Integer) configuration.getOrDefault("allowedEmptyLinesCount", allowedEmptyLinesCount);
-    emptyLinesRegex = Pattern.compile(DEFAULT_EMPTY_LINES_REGEX.pattern()
-      .replace("2", "" + (allowedEmptyLinesCount + 1)));
   }
 
   @Override
@@ -104,22 +99,21 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
         prevLineStorage[0] = currLine;
       });
 
-    checkLastToken(tokens, prevLineStorage[0], documentContext);
+    checkLastToken(tokens, prevLineStorage[0]);
   }
 
-  private void checkLastToken(List<Token> tokens, int prevLine, DocumentContext documentContext) {
+  private void checkLastToken(List<Token> tokens, int prevLine) {
     // если в конце файла пустые строки, парсер может вернуть последний токен с тем же номером строки,
     // что и токен, где есть последнее использование идентификаторов. в тесте этот кейс проверяется.
-    final var lastIndex = tokens.size() - 1;
-    if (isOnlyWhiteSpacesLines(tokens.get(lastIndex))) {
-      var eofToken = documentContext.getTokens().get(documentContext.getTokens().size() - 1).getTokenSource().nextToken();
-      addIssue(prevLine, eofToken.getLine());
+    var eofLine = getEofToken(tokens).getLine();
+    if (eofLine - prevLine > allowedEmptyLinesCount){
+      addIssue(prevLine, eofLine);
     }
   }
 
-  private boolean isOnlyWhiteSpacesLines(Token token) {
-    return isWhiteSpace(token)
-      && emptyLinesRegex.matcher(token.getText()).matches();
+  private static Token getEofToken(List<Token> tokens) {
+    final var lastIndex = tokens.size() - 1;
+    return tokens.get(lastIndex).getTokenSource().nextToken();
   }
 
   private static boolean isWhiteSpace(Token token) {
