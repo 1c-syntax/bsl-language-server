@@ -214,10 +214,10 @@ class DocumentContextTest {
     DocumentContext documentContext = getDocumentContext();
 
     // when
-    String[] conten = documentContext.getContentList();
+    String[] contentList = documentContext.getContentList();
 
     // then
-    assertThat(conten.length).isEqualTo(40);
+    assertThat(contentList).hasSize(40);
   }
 
 }
