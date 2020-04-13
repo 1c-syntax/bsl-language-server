@@ -23,38 +23,90 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class VariableSymbolTest {
 
+  static DocumentContext documentContext;
+  static List<VariableSymbol> variableSymbols;
+
+  static {
+    documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/variableSymbolTest.bsl");
+    variableSymbols = documentContext.getSymbolTree().getVariables();
+  }
+
   @Test
-  void testVariableDescription() {
+  void testVariableSymbolDescription() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/variableSymbol.bsl");
-    List<VariableSymbol> variableSymbols = documentContext.getSymbolTree().getVariables();
-
-    assertThat(variableSymbols).hasSize(4);
+    assertThat(variableSymbols).hasSize(7);
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isEmpty())
-      .hasSize(2)
-      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(1, 6, 1, 27)))
-      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(10, 6, 10, 34)))
+      .hasSize(4)
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(12, 6, 12, 34)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(14, 6, 14, 27)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(16, 6, 16, 17)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(16, 19, 16, 30)))
     ;
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isPresent())
-      .hasSize(2)
-      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(4, 6, 4, 32)))
-      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(6, 6, 6, 33)))
+      .hasSize(3)
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(2, 6, 2, 32)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(6, 6, 6, 32)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(8, 6, 8, 33)))
     ;
 
   }
 
+  @Test
+  void testVariableDescriptionRange() {
+
+    List<VariableDescription> variableDescriptions = variableSymbols.stream()
+      .map(VariableSymbol::getDescription)
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .collect(Collectors.toList());
+
+    assertThat(variableDescriptions).hasSize(3);
+
+    assertThat(variableDescriptions)
+      .filteredOn(variableDescription -> !variableDescription.getDescription().equals(""))
+      .hasSize(2)
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(1, 0, 1, 18)))
+      .anyMatch(variableDescription -> variableDescription.getRange().equals(Ranges.create(4, 0, 5, 23)))
+    ;
+
+    assertThat(variableDescriptions)
+      .extracting(VariableDescription::getTrailingDescription)
+      .filteredOn(Optional::isPresent)
+      .hasSize(1)
+      .extracting(Optional::get)
+      .anyMatch(trailingDescription -> trailingDescription.getRange().equals(Ranges.create(8, 35, 8, 55)))
+    ;
+
+  }
+
+  @Test
+  void testVariableNameRange() {
+
+    assertThat(variableSymbols)
+      .filteredOn(variableSymbol -> variableSymbol.getDescription().isEmpty())
+      .hasSize(4)
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(12, 6, 12, 34)))
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(14, 6, 14, 27)))
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(16, 6, 16, 17)))
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(16, 19, 16, 30)))
+    ;
+  }
 }
