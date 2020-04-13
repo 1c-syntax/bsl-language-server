@@ -77,7 +77,7 @@ public final class MethodSymbolComputer
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
-      declaration.subName(),
+      declaration.subName().getStart(),
       declaration.paramList(),
       true,
       declaration.EXPORT_KEYWORD() != null
@@ -106,7 +106,7 @@ public final class MethodSymbolComputer
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
-      declaration.subName(),
+      declaration.subName().getStart(),
       declaration.paramList(),
       false,
       declaration.EXPORT_KEYWORD() != null
@@ -120,7 +120,7 @@ public final class MethodSymbolComputer
   private MethodSymbol createMethodSymbol(
     TerminalNode startNode,
     TerminalNode stopNode,
-    BSLParser.SubNameContext subName,
+    Token subName,
     BSLParser.ParamListContext paramList,
     boolean function,
     boolean export
