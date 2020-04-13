@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586804777180,
+  "lastUpdate": 1586804798104,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -341,6 +341,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.955904299753347",
             "extra": "mean: 83.80595016479492 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2884518a39c9febd797a189e62aae557665597c",
+          "message": "Merge pull request #1040 from Stepa86/fix/typo_Exceptions\n\nНовые исключения в Typo на основе проверки ERP и БСП",
+          "timestamp": "2020-04-13T21:57:46+03:00",
+          "tree_id": "c91a12743d909566c46c8da39c2da7e4990a0abe",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c2884518a39c9febd797a189e62aae557665597c"
+        },
+        "date": 1586804796764,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 64.5100724697113,
+            "unit": "sec",
+            "range": "stddev: 1.6384966856365597",
+            "extra": "mean: 64.5100724697113 sec\nrounds: 3"
           }
         ]
       }
