@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,23 +88,26 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private Optional<VariableDescription> createDescription(Token token) {
     List<Token> tokens = documentContext.getTokens();
-
     List<Token> comments = Trees.getComments(tokens, token);
-    if (comments.isEmpty()) {
+    Optional<Token> trailingComments = Trees.getTrailingComment(tokens, token);
+
+    if (comments.isEmpty() && trailingComments.isEmpty()) {
       return Optional.empty();
     }
 
     String commentsText = comments.stream().map(Token::getText).reduce("", String::concat);
 
-    var trailingDescription = Trees.getTrailingComment(tokens, token)
+    var trailingDescription = trailingComments
       .map(trailingComment -> VariableDescription.builder()
         .description(trailingComment.getText())
         .range(Ranges.create(trailingComment))
         .build()
       );
 
-    var description = VariableDescription.builder()
+    var description =
+    VariableDescription.builder()
       .description(commentsText)
+      .range(getRangeForDescription(comments))
       .trailingDescription(trailingDescription)
       .build();
 
@@ -116,6 +120,18 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return declaration.getStart();
     }
     return parent.getStart();
+  }
+
+  private static Range getRangeForDescription(List<Token> tokens) {
+
+    if (tokens.isEmpty()) {
+      return null;
+    }
+
+    Token firstElement = tokens.get(0);
+    Token lastElement = tokens.get(tokens.size() - 1);
+
+    return Ranges.create(firstElement, lastElement);
   }
 
 }
