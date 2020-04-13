@@ -371,7 +371,7 @@ class DiagnosticSupplierTest {
     rules.put("Typo", Either.forLeft(true));
     rules.put("TooManyReturns", Either.forLeft(true));
 
-    lsConfiguration.getDiagnosticsOptions().setRules(rules);
+    lsConfiguration.getDiagnosticsOptions().setParameters(rules);
     List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
 
     assertThat(diagnostics)
@@ -395,7 +395,7 @@ class DiagnosticSupplierTest {
     rules.put("Typo", Either.forLeft(true));
     rules.put("TooManyReturns", Either.forLeft(true));
 
-    lsConfiguration.getDiagnosticsOptions().setRules(rules);
+    lsConfiguration.getDiagnosticsOptions().setParameters(rules);
     List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
 
     assertThat(diagnostics)

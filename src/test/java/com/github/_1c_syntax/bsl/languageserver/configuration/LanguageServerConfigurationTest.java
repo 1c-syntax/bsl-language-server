@@ -60,7 +60,7 @@ class LanguageServerConfigurationTest {
 
     // then
     assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
-    assertThat(configuration.getDiagnosticsOptions().getRules()).isEmpty();
+    assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
   }
 
   @Test
@@ -75,19 +75,19 @@ class LanguageServerConfigurationTest {
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
     Language language = configuration.getLanguage();
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticsOptions.getRules();
+    Map<String, Either<Boolean, Map<String, Object>>> parameters = diagnosticsOptions.getParameters();
 
     assertThat(language).isEqualTo(Language.EN);
-    assertThat(diagnostics).hasSize(2);
+    assertThat(parameters).hasSize(2);
 
-    Either<Boolean, Map<String, Object>> lineLength = diagnostics.get("LineLength");
+    Either<Boolean, Map<String, Object>> lineLength = parameters.get("LineLength");
     assertThat(lineLength.isRight()).isTrue();
     assertThat(lineLength.getRight()).isInstanceOfAny(Map.class);
     assertThat(lineLength.getRight())
       .extracting(stringObjectMap -> stringObjectMap.get("maxLineLength"))
       .isEqualTo(140);
 
-    Either<Boolean, Map<String, Object>> methodSize = diagnostics.get("MethodSize");
+    Either<Boolean, Map<String, Object>> methodSize = parameters.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
     assertThat(methodSize.getLeft()).isEqualTo(false);
 
@@ -108,10 +108,10 @@ class LanguageServerConfigurationTest {
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
     Language language = configuration.getLanguage();
-    Map<String, Either<Boolean, Map<String, Object>>> rules = diagnosticsOptions.getRules();
+    Map<String, Either<Boolean, Map<String, Object>>> parameters = diagnosticsOptions.getParameters();
 
     assertThat(language).isEqualTo(DEFAULT_LANGUAGE);
-    assertThat(rules).isEmpty();
+    assertThat(parameters).isEmpty();
 
   }
 

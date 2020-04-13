@@ -8,7 +8,7 @@
     "computeTrigger": "onType",
     "skipSupport": "withSupportLocked",
     "mode": "only",
-    "rules": {
+    "parameters": {
       "LineLength": {
         "maxLineLength": 140
       },

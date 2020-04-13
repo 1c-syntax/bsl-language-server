@@ -117,7 +117,7 @@ public class DiagnosticSupplier {
 
   private void configureDiagnostic(BSLDiagnostic diagnostic) {
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnosticsOptions().getRules().get(diagnostic.getInfo().getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getParameters().get(diagnostic.getInfo().getCode().getStringValue());
 
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       diagnostic.configure(diagnosticConfiguration.getRight());
@@ -135,7 +135,7 @@ public class DiagnosticSupplier {
     }
 
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnosticsOptions().getRules().get(diagnosticInfo.getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getCode().getStringValue());
 
     boolean activatedByDefault = diagnosticConfiguration == null && diagnosticInfo.isActivatedByDefault();
     boolean hasCustomConfiguration = diagnosticConfiguration != null && diagnosticConfiguration.isRight();

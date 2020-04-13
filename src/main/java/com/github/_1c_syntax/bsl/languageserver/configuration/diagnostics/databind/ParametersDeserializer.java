@@ -40,10 +40,10 @@ import java.util.Map;
 /**
  * Служебный класс-десериализатор для коллекции настроек диагностик.
  * <p>
- * См. {@link com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions#getRules()}
+ * См. {@link com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions#getParameters()}
  */
 @Slf4j
-public class RulesDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
+public class ParametersDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
 
   @Override
   public Map<String, Either<Boolean, Map<String, Object>>> deserialize(
