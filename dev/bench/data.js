@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586800647764,
+  "lastUpdate": 1586804769673,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -279,6 +279,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8845486896504238",
             "extra": "mean: 73.00902581214905 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "67f6969d9b8fff668b74e54732cc5e2fe68000e1",
+          "message": "Merge pull request #1042 from artbear/UsingServiceTag-fix\n\nУбрал ненужный дубль проверки строки на регулярку - обработка замечания от инспекции Идеи",
+          "timestamp": "2020-04-13T21:57:22+03:00",
+          "tree_id": "1e5fa221b7ab3195b666812840d712d9acee2add",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/67f6969d9b8fff668b74e54732cc5e2fe68000e1"
+        },
+        "date": 1586804768235,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.9522720972697,
+            "unit": "sec",
+            "range": "stddev: 1.385167640697603",
+            "extra": "mean: 76.9522720972697 sec\nrounds: 3"
           }
         ]
       }
