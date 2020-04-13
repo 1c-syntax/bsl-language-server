@@ -361,15 +361,28 @@
 </code></pre></div>
 
 
-<p>Следующим шагом, необходимо реализовать метод установки значения <code>configure</code>.<br />
-Например</p>
+<p>Если параметр примитивный или типа String и он устанавливается в соответствующее свойство класса диагностики простым сеттером, то на этом все.<br />
+Если же параметр более сложный, например строка-паттерн для регулярного выражения, которое необходимо вычислить перед установкой, то нужно реализовать метод установки значений параметров <code>configure</code>.  </p>
+<p>Например есть два параметра:</p>
+<ul>
+<li><code>commentAsCode</code> - считать комментарии как код, типа булево</li>
+<li><code>excludeMethods</code> - методы, которые не надо проверять, типа ArrayList</li>
+</ul>
+<p>Тогда метод установки значений параметров будет выглядеть:</p>
 <div class="codehilite"><pre><span></span><code> <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="p">)</span> <span class="p">{</span>
+
     <span class="k">if</span> <span class="p">(</span><span class="n">configuration</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="k">this</span><span class="p">.</span><span class="na">commentsAnnotation</span> <span class="o">=</span> <span class="p">(</span><span class="n">String</span><span class="p">)</span> <span class="n">configuration</span><span class="p">.</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">&quot;commentsAnnotation&quot;</span><span class="p">,</span> <span class="n">commentsAnnotation</span><span class="p">);</span>
+    <span class="c1">// для установки &quot;простых свойств&quot;, включая &quot;commentAsCode&quot;</span>
+    <span class="kd">super</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
+
+    <span class="c1">// установка &quot;сложного&quot; свойства &quot;excludeMethods&quot;</span>
+    <span class="n">String</span> <span class="n">excludeMethodsString</span> <span class="o">=</span>
+      <span class="p">(</span><span class="n">String</span><span class="p">)</span> <span class="n">configuration</span><span class="p">.</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">&quot;excludeMethods&quot;</span><span class="p">,</span> <span class="n">EXCLUDE_METHODS_DEFAULT</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="na">excludeMethods</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">asList</span><span class="p">(</span><span class="n">excludeMethodsString</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">)));</span>
   <span class="p">}</span>
 </code></pre></div>
 
