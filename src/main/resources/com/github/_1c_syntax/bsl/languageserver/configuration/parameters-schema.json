@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://example.com/root.json",
+    "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Diagnostic definition part",
+    "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
