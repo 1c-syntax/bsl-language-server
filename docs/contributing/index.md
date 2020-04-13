@@ -8,8 +8,9 @@
   - [Настройка окружения](EnvironmentSetting.md)
   - [Быстрый старт](FastStart.md)
 - Разработка диагностик
-  - [Пример разработки диагностики](DiagnosticExample.md)
   - [Процесс (workflow) разработки диагностики](DiagnosticDevWorkFlow.md)
+  - [Пример разработки диагностики](DiagnosticExample.md)
+  - [Структура диагностики, назначение и содержимое файлов](DiagnosticStructure.md)
   - [Описание типов и важности диагностик](DiagnosticTypeAndSeverity.md)
   - [Тэги диагностик](DiagnosticTag.md)
   - [Добавление параметров диагностике](DiagnostcAddSettings.md)
