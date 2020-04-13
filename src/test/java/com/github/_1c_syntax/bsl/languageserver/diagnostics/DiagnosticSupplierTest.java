@@ -36,6 +36,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -329,6 +330,39 @@ class DiagnosticSupplierTest {
           throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have parameters description in resources", e);
         }
         assertThat(allParametersHaveDescription).isTrue();
+      }
+    )).doesNotThrowAnyException();
+
+  }
+
+  @Test
+  void TestAllQuickFixDiagnosticsHaveQuickFixMessageResourcesRU() {
+    allQuickFixDiagnosticsHaveQuickFixMessageResources(DiagnosticLanguage.RU);
+  }
+
+  @Test
+  void TestAllQuickFixDiagnosticsHaveQuickFixMessageResourcesEN() {
+    allQuickFixDiagnosticsHaveQuickFixMessageResources(DiagnosticLanguage.EN);
+  }
+
+  private void allQuickFixDiagnosticsHaveQuickFixMessageResources(DiagnosticLanguage language) {
+
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
+
+    final var quickFixMessage = "quickFixMessage";
+    assertThatCode(() -> diagnosticClasses.stream()
+      .filter(aClass -> Arrays.stream(aClass.getInterfaces())
+        .anyMatch(interface1 -> interface1.getSimpleName().equals("QuickFixProvider")))
+      .forEach(diagnosticClass -> {
+        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, language);
+        boolean haveResource;
+        try {
+          haveResource = !info.getResourceString(quickFixMessage).isEmpty();
+        } catch (MissingResourceException e) {
+          throw new RuntimeException(diagnosticClass.getSimpleName()
+            + String.format(" does not have parameter %s description in resources", quickFixMessage), e);
+        }
+        assertThat(haveResource).isTrue();
       }
     )).doesNotThrowAnyException();
 
