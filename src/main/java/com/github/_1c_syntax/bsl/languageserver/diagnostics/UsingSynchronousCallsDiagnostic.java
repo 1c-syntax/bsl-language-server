@@ -64,7 +64,7 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
     "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private HashMap<String, String> pairMethods = new HashMap<>();
+  private final HashMap<String, String> pairMethods = new HashMap<>();
 
   public UsingSynchronousCallsDiagnostic(DiagnosticInfo info) {
     super(info);

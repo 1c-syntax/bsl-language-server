@@ -63,9 +63,9 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   private static final int COMMENT_LENGTH = 2;
 
   private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
-  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  private CodeRecognizer codeRecognizer;
-  private DiagnosticInfo info;
+  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  private final CodeRecognizer codeRecognizer;
+  private final DiagnosticInfo info;
 
   @DiagnosticParameter(
     type = String.class,
@@ -113,8 +113,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
           && !commentsAnnotation.matcher(t.getText()).matches()
           && !codeRecognizer.meetsCondition(t.getText()))
       .sequential()
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t));
+      .forEach(diagnosticStorage::addDiagnostic);
 
     return diagnosticStorage.getDiagnostics();
   }

@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
 )
 public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
-  private List<Range> regionsRanges = new ArrayList<>();
+  private final List<Range> regionsRanges = new ArrayList<>();
 
   public CodeOutOfRegionDiagnostic(DiagnosticInfo info) {
     super(info);

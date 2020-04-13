@@ -46,7 +46,7 @@ public final class MethodSymbolComputer
   implements Computer<List<MethodSymbol>> {
 
   private final DocumentContext documentContext;
-  private List<MethodSymbol> methods = new ArrayList<>();
+  private final List<MethodSymbol> methods = new ArrayList<>();
 
   public MethodSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

@@ -40,7 +40,7 @@ public class BSLLSPLauncher {
 
   public static final String APP_NAME = "BSL language server";
 
-  private static Options options = createOptions();
+  private static final Options options = createOptions();
 
   public static void main(String[] args) {
     CommandLineParser parser = new DefaultParser();

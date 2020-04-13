@@ -80,10 +80,10 @@ class JUnitTestSuites {
   static class JUnitTestSuite {
 
     @JacksonXmlProperty(isAttribute = true)
-    private final String name;
+    String name;
 
     @JacksonXmlElementWrapper(useWrapping = false)
-    private final List<JUnitTestCase> testcase;
+    List<JUnitTestCase> testcase;
 
     public JUnitTestSuite(FileInfo fileInfo) {
       this.name = fileInfo.getPath().toString();
@@ -114,13 +114,13 @@ class JUnitTestSuites {
   static class JUnitTestCase {
 
     @JacksonXmlProperty(isAttribute = true)
-    private final String name;
+    String name;
 
     @JacksonXmlProperty(isAttribute = true)
-    private final String classname;
+    String classname;
 
     @JacksonXmlElementWrapper(useWrapping = false)
-    private final JUnitFailure failure;
+    JUnitFailure failure;
 
     public JUnitTestCase(List<Diagnostic> diagnostics, String name, String classname) {
       this.name = name;
@@ -161,14 +161,14 @@ class JUnitTestSuites {
   static class JUnitFailure {
 
     @JacksonXmlProperty(isAttribute = true)
-    private final String type;
+    String type;
 
     @JacksonXmlProperty(isAttribute = true)
-    private final String message;
+    String message;
 
     @JacksonXmlText
     @JacksonXmlCData
-    private final String value;
+    String value;
   }
 
   static class JUnitFailureDeserializer extends JsonDeserializer<JUnitFailure> {

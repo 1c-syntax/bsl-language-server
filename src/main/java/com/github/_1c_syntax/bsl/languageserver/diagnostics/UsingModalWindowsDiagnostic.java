@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 )
 public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern modalityMethods = Pattern.compile(
+  private final Pattern modalityMethods = Pattern.compile(
     "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
       "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
       "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
@@ -54,7 +54,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
       "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private HashMap<String, String> pairMethods = new HashMap<>();
+  private final HashMap<String, String> pairMethods = new HashMap<>();
 
   public UsingModalWindowsDiagnostic(DiagnosticInfo info) {
     super(info);

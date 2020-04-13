@@ -55,10 +55,10 @@ public class GenericIssueReport {
   private static final String SEVERITY_MINOR = "MINOR";
 
   // TODO: пробросить из analyze?
-  private static LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-  private static DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-  private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
-  private static Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
+  private static final LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
+  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
+  private static final Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
+  private static final Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
 
   static {
     severityMap.put(DiagnosticSeverity.Error, SEVERITY_CRITICAL);
@@ -101,13 +101,13 @@ public class GenericIssueReport {
   @Value
   static class GenericIssueEntry {
 
-    private final String engineId;
-    private final String ruleId;
-    private final String severity;
-    private final String type;
-    private final Location primaryLocation;
-    private final int effortMinutes;
-    private final List<Location> secondaryLocations;
+    String engineId;
+    String ruleId;
+    String severity;
+    String type;
+    Location primaryLocation;
+    int effortMinutes;
+    List<Location> secondaryLocations;
 
     public GenericIssueEntry(
       @JsonProperty("engineId") String engineId,
@@ -161,9 +161,9 @@ public class GenericIssueReport {
   @Value
   static class Location {
 
-    private final String message;
-    private final String filePath;
-    private final TextRange textRange;
+    String message;
+    String filePath;
+    TextRange textRange;
 
     public Location(
       @JsonProperty("message") String message,
@@ -191,10 +191,10 @@ public class GenericIssueReport {
   @Value
   static class TextRange {
 
-    private final int startLine;
-    private final int endLine;
-    private final int startColumn;
-    private final int endColumn;
+    int startLine;
+    int endLine;
+    int startColumn;
+    int endColumn;
 
     public TextRange(
       @JsonProperty("startLine") int startLine,

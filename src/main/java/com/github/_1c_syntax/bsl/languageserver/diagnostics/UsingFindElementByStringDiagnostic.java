@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 
 public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern pattern = Pattern.compile(
+  private final Pattern pattern = Pattern.compile(
     "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 

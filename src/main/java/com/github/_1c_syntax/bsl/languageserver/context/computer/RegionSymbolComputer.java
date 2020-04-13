@@ -43,9 +43,9 @@ public final class RegionSymbolComputer
   implements Computer<List<RegionSymbol>> {
 
   private final DocumentContext documentContext;
-  private Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack = new ArrayDeque<>();
-  private List<RegionSymbol> regions = new ArrayList<>();
-  private List<BSLParserRuleContext> allNodes = new ArrayList<>();
+  private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack = new ArrayDeque<>();
+  private final List<RegionSymbol> regions = new ArrayList<>();
+  private final List<BSLParserRuleContext> allNodes = new ArrayList<>();
 
   public RegionSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

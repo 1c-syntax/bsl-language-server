@@ -133,7 +133,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       BSLParser.GlobalMethodCallContext localGlobalMethodCall = localCallStatementContext.globalMethodCall();
       // получаем full call method и полное имя вызова
-      String fullCallMethod = "";
+      String fullCallMethod;
       BSLParser.DoCallContext doCallContext;
       if (localGlobalMethodCall == null) {
         fullCallMethod = getFullCallMethod(localCallStatementContext);

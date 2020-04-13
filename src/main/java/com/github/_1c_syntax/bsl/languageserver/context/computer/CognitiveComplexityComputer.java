@@ -52,15 +52,15 @@ public class CognitiveComplexityComputer
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
-  private List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
+  private final List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
 
-  private Map<MethodSymbol, Integer> methodsComplexity;
-  private Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
+  private final Map<MethodSymbol, Integer> methodsComplexity;
+  private final Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
 
   private MethodSymbol currentMethod;
   private int complexity;
   private int nestedLevel;
-  private Set<BSLParserRuleContext> ignoredContexts;
+  private final Set<BSLParserRuleContext> ignoredContexts;
 
   public CognitiveComplexityComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;

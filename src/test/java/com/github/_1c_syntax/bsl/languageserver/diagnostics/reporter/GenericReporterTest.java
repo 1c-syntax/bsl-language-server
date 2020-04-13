@@ -46,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GenericReporterTest {
 
-  private File file = new File("./bsl-generic-json.json");
+  private final File file = new File("./bsl-generic-json.json");
 
   @BeforeEach
   void setUp() {

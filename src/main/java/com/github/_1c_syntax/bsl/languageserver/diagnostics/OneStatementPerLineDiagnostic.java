@@ -59,7 +59,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
     "^(\\s+?)[^\\s]",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private int previousLineNumber;
-  private List<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
+  private final List<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
 
   public OneStatementPerLineDiagnostic(DiagnosticInfo info) {
     super(info);

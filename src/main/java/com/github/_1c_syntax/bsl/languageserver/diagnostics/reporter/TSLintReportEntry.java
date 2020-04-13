@@ -44,7 +44,7 @@ class TSLintReportEntry {
   @Getter
   private final String ruleSeverity;
 
-  private static Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
+  private static final Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
 
   static {
     severityMap.put(DiagnosticSeverity.Error, "error");

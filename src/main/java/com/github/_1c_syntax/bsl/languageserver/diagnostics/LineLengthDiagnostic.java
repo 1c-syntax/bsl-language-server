@@ -56,7 +56,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     defaultValue = "" + MAX_LINE_LENGTH
   )
   private int maxLineLength = MAX_LINE_LENGTH;
-  private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+  private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
   public LineLengthDiagnostic(DiagnosticInfo info) {
     super(info);

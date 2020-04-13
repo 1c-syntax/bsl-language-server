@@ -63,8 +63,8 @@ public final class MultilingualStringAnalyser {
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
   private String variableName;
-  private ArrayList<String> expectedLanguages;
-  private Set<String> expandedMultilingualString = new HashSet<>();
+  private final ArrayList<String> expectedLanguages;
+  private final Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
   public MultilingualStringAnalyser(String declaredLanguages) {

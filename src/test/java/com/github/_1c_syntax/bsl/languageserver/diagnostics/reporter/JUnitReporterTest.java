@@ -46,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JUnitReporterTest {
 
-  private File file = new File("./bsl-junit.xml");
+  private final File file = new File("./bsl-junit.xml");
 
   @BeforeEach
   void setUp() {

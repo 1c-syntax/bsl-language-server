@@ -76,7 +76,7 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
       .map(BSLParser.GlobalMethodCallContext::doCall)
       .map(BSLParser.DoCallContext::callParamList)
       .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
-      .ifPresent(callParamList -> diagnosticStorage.addDiagnostic(callParamList));
+      .ifPresent(diagnosticStorage::addDiagnostic);
 
     return super.visitGlobalMethodCall(ctx);
   }

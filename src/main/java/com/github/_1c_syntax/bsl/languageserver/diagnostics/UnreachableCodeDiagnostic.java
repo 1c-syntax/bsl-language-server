@@ -54,10 +54,10 @@ import java.util.stream.Collectors;
 public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   // кэш диапазонов зарегистрированных ошибок
-  private List<Range> errorRanges = new ArrayList<>();
+  private final List<Range> errorRanges = new ArrayList<>();
 
   // диапазоны препроцессорных скобок
-  private List<Range> preprocessorRanges = new ArrayList<>();
+  private final List<Range> preprocessorRanges = new ArrayList<>();
 
   public UnreachableCodeDiagnostic(DiagnosticInfo info) {
     super(info);

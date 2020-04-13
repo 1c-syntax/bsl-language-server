@@ -53,7 +53,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class LanguageServerStartCommand implements Command {
 
-  private CommandLine cmd;
+  private final CommandLine cmd;
 
   public LanguageServerStartCommand(CommandLine cmd) {
     this.cmd = cmd;

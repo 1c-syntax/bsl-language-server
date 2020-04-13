@@ -54,7 +54,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 class BSLTextDocumentServiceTest {
 
-  private BSLTextDocumentService textDocumentService = new BSLTextDocumentService(
+  private final BSLTextDocumentService textDocumentService = new BSLTextDocumentService(
     LanguageServerConfiguration.create(),
     new ServerContext());
 
