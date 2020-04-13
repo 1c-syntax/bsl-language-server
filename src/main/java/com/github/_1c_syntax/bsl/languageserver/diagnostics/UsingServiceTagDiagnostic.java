@@ -84,10 +84,11 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
 
     documentContext.getComments()
       .parallelStream()
-      .filter((Token token) -> pattern.matcher(token.getText()).find())
       .forEach((Token token) -> {
         Matcher matcher = pattern.matcher(token.getText());
-        matcher.find();
+        if (!matcher.find()){
+          return;
+        }
         diagnosticStorage.addDiagnostic(
           token,
           info.getMessage(matcher.group(0))
