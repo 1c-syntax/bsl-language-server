@@ -88,12 +88,12 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
   ) {
 
     return QuickFixHelper.getQuickFixes(this, diagnostics, documentContext,
-      (Diagnostic diagnostic) -> getQuickFixText(diagnostic, info)
+      (Diagnostic diagnostic) -> getQuickFixText(diagnostic)
     );
 
   }
 
-  private static TextEdit getQuickFixText(Diagnostic diagnostic, DiagnosticInfo info) {
+  private TextEdit getQuickFixText(Diagnostic diagnostic) {
     return new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
   }
 
