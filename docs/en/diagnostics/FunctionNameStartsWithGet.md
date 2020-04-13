@@ -18,7 +18,7 @@ Function NameByCode()
 ```
 
 ## Sources
-* Source: [Standard: Names of procedures and functions c 6.1](its.1c.ru/db/v8std#content:647:hdoc)
+* Source: [Standard: Names of procedures and functions c 6.1](https://its.1c.ru/db/v8std#content:647:hdoc)
 
 ## Snippets
 
