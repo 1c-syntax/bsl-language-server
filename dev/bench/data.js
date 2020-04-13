@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586765892809,
+  "lastUpdate": 1586784232221,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -186,6 +186,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5018149040124404",
             "extra": "mean: 70.39345208803813 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "maximovvalery@gmail.com",
+            "name": "Maximov Valery",
+            "username": "theshadowco"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8cc23a4de7a15a2305e39ebac98ee00b825129d2",
+          "message": "Merge pull request #1049 from artbear/contrib-doc-fix\n\nВ Руководство контрибьютора нет ссылки на полезную статью \"Структура диагностики, назначение и содержимое файлов\"",
+          "timestamp": "2020-04-13T16:14:51+03:00",
+          "tree_id": "82d35d5a605df4efe98fcb55dcd04b367b469df9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8cc23a4de7a15a2305e39ebac98ee00b825129d2"
+        },
+        "date": 1586784230733,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.91837930679321,
+            "unit": "sec",
+            "range": "stddev: 0.40390016008562496",
+            "extra": "mean: 78.91837930679321 sec\nrounds: 3"
           }
         ]
       }
