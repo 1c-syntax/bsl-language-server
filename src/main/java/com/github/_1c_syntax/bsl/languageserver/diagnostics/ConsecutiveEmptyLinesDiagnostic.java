@@ -30,9 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -80,7 +78,8 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
         || token.getType() == BSLLexer.LINE_COMMENT
         || token.getType() == -1) //EOF
       .map(Token::getLine)
-      .distinct().forEachOrdered(this::addDiagnosticIfNeed);
+      .distinct()
+      .forEachOrdered(this::addDiagnosticIfNeed);
 
   }
 
@@ -89,10 +88,10 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     int legalLineNumber = prevLineNumber + emptyLineDelta;
     if (legalLineNumber < realLineNumber) {
       int startLine = legalLineNumber;
-      if (startLine == realLineNumber - 1) {
+      int endLine = realLineNumber - 1;
+      if (startLine == endLine) {
         startLine = legalLineNumber - 1;
       }
-      int endLine = realLineNumber - 1;
       diagnosticStorage.addDiagnostic(startLine, 0, endLine, 0);
     }
     prevLineNumber = realLineNumber;
