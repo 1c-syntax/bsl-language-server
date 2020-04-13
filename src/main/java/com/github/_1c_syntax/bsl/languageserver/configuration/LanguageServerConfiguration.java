@@ -60,6 +60,8 @@ public final class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
+  private Language language;
+
   @JsonProperty("diagnostics")
   private final DiagnosticsOptions diagnosticsOptions;
 
@@ -74,6 +76,7 @@ public final class LanguageServerConfiguration {
 
   private LanguageServerConfiguration() {
     this(
+      Language.DEFAULT_LANGUAGE,
       new DiagnosticsOptions(),
       new CodeLensOptions(),
       null,

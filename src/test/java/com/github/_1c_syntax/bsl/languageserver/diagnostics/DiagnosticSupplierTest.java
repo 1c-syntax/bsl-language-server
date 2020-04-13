@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -410,7 +410,7 @@ class DiagnosticSupplierTest {
 
   @Test
   void TestAllParametersHaveResourcesEN() {
-    allParametersHaveResources(com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language.EN);
+    allParametersHaveResources(Language.EN);
   }
 
   void allParametersHaveResources(Language language) {

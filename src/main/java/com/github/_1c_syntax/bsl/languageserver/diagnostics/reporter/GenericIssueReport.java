@@ -142,7 +142,7 @@ public class GenericIssueReport {
         diagnosticSupplier.getDiagnosticClass(diagnostic.getCode());
       if (diagnosticClass.isPresent()) {
         DiagnosticInfo info = new DiagnosticInfo(
-          diagnosticClass.get(), configuration.getDiagnosticsOptions().getLanguage()
+          diagnosticClass.get(), configuration.getLanguage()
         );
         effortMinutes = info.getMinutesToFix();
       } else {

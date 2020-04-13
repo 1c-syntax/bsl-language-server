@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Language.DEFAULT_LANGUAGE;
+import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LanguageServerConfigurationTest {
@@ -60,7 +59,7 @@ class LanguageServerConfigurationTest {
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
 
     // then
-    assertThat(configuration.getDiagnosticsOptions().getLanguage()).isEqualTo(Language.RU);
+    assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
     assertThat(configuration.getDiagnosticsOptions().getRules()).isEmpty();
   }
 
@@ -75,7 +74,7 @@ class LanguageServerConfigurationTest {
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
-    Language language = diagnosticsOptions.getLanguage();
+    Language language = configuration.getLanguage();
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticsOptions.getRules();
 
     assertThat(language).isEqualTo(Language.EN);
@@ -108,7 +107,7 @@ class LanguageServerConfigurationTest {
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
-    Language language = diagnosticsOptions.getLanguage();
+    Language language = configuration.getLanguage();
     Map<String, Either<Boolean, Map<String, Object>>> rules = diagnosticsOptions.getRules();
 
     assertThat(language).isEqualTo(DEFAULT_LANGUAGE);

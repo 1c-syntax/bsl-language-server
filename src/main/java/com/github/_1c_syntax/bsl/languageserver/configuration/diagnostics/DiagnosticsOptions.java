@@ -40,7 +40,6 @@ import java.util.Map;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DiagnosticsOptions {
-  private Language language = Language.RU;
   private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
   private SkipSupport skipSupport = SkipSupport.NEVER;
   private Mode mode = Mode.ON;
