@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -274,10 +275,20 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    boolean alreadyInCycle = currentScope.codeFlowInCycle();
+    ParseTree result;
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    ParseTree result = super.visitForEachStatement(ctx);
+    if(alreadyInCycle) {
+      Optional.ofNullable(ctx.expression())
+        .ifPresent( e -> e.accept(this));
+    }
+    Optional.ofNullable(ctx.codeBlock())
+      .map(e -> e.children)
+      .stream().
+      flatMap(Collection::stream)
+      .forEach( t -> t.accept(this));
     currentScope.flowMode.pop();
-    return result;
+    return null;
   }
 
   @Override
@@ -290,10 +301,19 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
+    boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    ParseTree result = super.visitForStatement(ctx);
+    if(alreadyInCycle) {
+      ctx.expression()
+        .forEach( e-> e.accept(this));
+    }
+    Optional.ofNullable(ctx.codeBlock())
+      .map(e -> e.children)
+      .stream()
+      .flatMap(Collection::stream)
+      .forEach( t -> t.accept(this));
     currentScope.flowMode.pop();
-    return result;
+    return null;
   }
 
   public enum CodeFlowType {
