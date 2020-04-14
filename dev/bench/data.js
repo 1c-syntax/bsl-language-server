@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586866969960,
+  "lastUpdate": 1586900213249,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -465,6 +465,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.40065979797498813",
             "extra": "mean: 70.18764797846477 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7d4585534c4746a2b7c7b51a199548179675b820",
+          "message": "Merge pull request #1058 from 1c-syntax/feature/EOF\n\nПарсер отдает EOF в Hidden Channel",
+          "timestamp": "2020-04-15T00:28:53+03:00",
+          "tree_id": "0e005d4fdd7c3ed9c73b573f95f69858c8253394",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7d4585534c4746a2b7c7b51a199548179675b820"
+        },
+        "date": 1586900211885,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.21630811691284,
+            "unit": "sec",
+            "range": "stddev: 1.4232242041767722",
+            "extra": "mean: 70.21630811691284 sec\nrounds: 3"
           }
         ]
       }
