@@ -223,7 +223,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
                     "type" to arrayListOf("boolean", "object"),
                     "title" to itd.value.getOrDefault("description_en", "").toString(),
                     "description" to itd.value.getOrDefault("description_en", "").toString(),
-                    "default" to null)
+                    "default" to itd.value.getOrDefault("activatedByDefault", "false").toString().toBoolean())
             val params = HashMap<String, Any>()
 
             val parameters = itd.value.getOrDefault("parameters", arrayListOf<HashMap<String, String>>()) as ArrayList<*>
