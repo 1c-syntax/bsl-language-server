@@ -291,7 +291,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
-    return null;
+    return ctx;
   }
 
   @Override
@@ -312,7 +312,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
-    return null;
+    return ctx;
   }
 
   public enum CodeFlowType {
