@@ -236,6 +236,14 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
+  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx){
+    Optional.ofNullable(ctx)
+      .map(e -> e.children)
+      .stream()
+      .flatMap(Collection::stream)
+      .forEach( t -> t.accept(this));
+  }
+
   @Override
   public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
     if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()) {
@@ -276,17 +284,12 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
-    ParseTree result;
     currentScope.flowMode.push(CodeFlowType.CYCLE);
     if(alreadyInCycle) {
       Optional.ofNullable(ctx.expression())
         .ifPresent( e -> e.accept(this));
     }
-    Optional.ofNullable(ctx.codeBlock())
-      .map(e -> e.children)
-      .stream().
-      flatMap(Collection::stream)
-      .forEach( t -> t.accept(this));
+    visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
     return null;
   }
@@ -307,11 +310,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       ctx.expression()
         .forEach( e-> e.accept(this));
     }
-    Optional.ofNullable(ctx.codeBlock())
-      .map(e -> e.children)
-      .stream()
-      .flatMap(Collection::stream)
-      .forEach( t -> t.accept(this));
+    visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
     return null;
   }
