@@ -143,6 +143,40 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   @Test
+  void test_EmptyModule() {
+    String module = "";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasSize(0)
+    ;
+  }
+
+  @Test
+  void test_OneLine() {
+    String module = "\n";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasRange(0, 0, 1, 0)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void test_EmptyLinePlusOneFilledLine() {
+    String module = "\n//комментарий";
+
+    List<Diagnostic> diagnostics = getDiagnosticsForText(module);
+
+    assertThat(diagnostics, true)
+      .hasSize(0)
+    ;
+  }
+
+  @Test
   void test_ConfigureEmptyLineParam() {
     setTwoForAllowedEmptyLinesCount();
 
@@ -213,28 +247,43 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
       .hasRange(26, 0, 27, 0)
       .hasRange(29, 0, 31, 0)
       .hasRange(33, 0, 34, 0)
-      .hasSize(9)
-    ;
-
+      .hasSize(9);
   }
 
   @Test
   void testQuickFix() {
     String module = getText();
+    checkQuickFixes(module, true);
+  }
 
+  private void checkQuickFixes(String module, boolean haveFix) {
     final DocumentContext documentContext = TestUtils.getDocumentContext(module);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    List<Diagnostic> usualDiagnostics = diagnostics.subList(0, diagnostics.size() - 2);
 
-    usualDiagnostics.forEach(diagnostic -> checkFix(documentContext, diagnostic, true));
+    diagnostics.forEach(diagnostic -> checkFix(documentContext, diagnostic, haveFix));
+  }
 
-    Diagnostic lastDiagnostic = diagnostics.get(diagnostics.size() - 1);
-    checkFix(documentContext, lastDiagnostic, false);
+  @Test
+  void testQuickFixLastLines() {
+    String module = "Перем А;\n" +
+      "\n";
+    checkQuickFixes(module, true);
+  }
 
+  @Test
+  void testQuickFixEmptyModule() {
+    String module = "";
+    checkQuickFixes(module, false);
+  }
+
+  @Test
+  void testQuickFixOneLine() {
+    String module = "\n";
+    checkQuickFixes(module, true);
   }
 
   private void checkFix(DocumentContext documentContext, Diagnostic diagnostic, boolean haveFix) {
-    List<CodeAction> quickFixes = getQuickFixes(diagnostic);
+    List<CodeAction> quickFixes = getQuickFixes(diagnostic, documentContext);
 
     assertThat(quickFixes).hasSize(1);
 

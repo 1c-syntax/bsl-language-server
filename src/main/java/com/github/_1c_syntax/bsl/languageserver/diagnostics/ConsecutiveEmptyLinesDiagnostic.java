@@ -38,9 +38,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -74,7 +73,9 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
     final int nonAllowedEmptyLinesCount = allowedEmptyLinesCount + 1;
     final int[] prevLineStorage = {0};
-    tokens.stream()
+    // без EOF т.к. его проще и чуть быстрее обработать вне цикла
+    tokens.subList(0, tokens.size() - 1)
+      .stream()
       .filter(token -> !isWhiteSpace(token))
       .map(Token::getLine)
       .distinct()
@@ -90,13 +91,13 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
         prevLineStorage[0] = currLine;
       });
 
-    checkLastToken(tokens, prevLineStorage[0]);
+    var eofLine = getEofToken(tokens).getLine();
+    checkLastToken(eofLine, prevLineStorage[0]);
   }
 
-  private void checkLastToken(List<Token> tokens, int prevLine) {
+  private void checkLastToken(int eofLine, int prevLine) {
     // если в конце файла пустые строки, парсер может вернуть последний токен с тем же номером строки,
     // что и токен, где есть последнее использование идентификаторов. в тесте этот кейс проверяется.
-    var eofLine = getEofToken(tokens).getLine();
     if (eofLine - prevLine > allowedEmptyLinesCount){
       addIssue(prevLine, eofLine);
     }
@@ -104,7 +105,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
   private static Token getEofToken(List<Token> tokens) {
     final var lastIndex = tokens.size() - 1;
-    return tokens.get(lastIndex).getTokenSource().nextToken();
+    return tokens.get(lastIndex);
   }
 
   private static boolean isWhiteSpace(Token token) {
@@ -120,24 +121,11 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   public List<CodeAction> getQuickFixes(
       List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
+    var eofTokenLine = getEofToken(documentContext.getTokens()).getLine();
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-
-      Range newRange = Ranges.create(range.getStart().getLine(), 0, range.getEnd().getLine() + 1, 0);
-      // из-за того, что в DocumentContext.contentList пропускаются последние пустые строки в файле
-      // приходится делать такую проверку
-      try {
-        documentContext.getText(newRange);
-      } catch (ArrayIndexOutOfBoundsException e){
-        return;
-      }
-
-      TextEdit textEdit = new TextEdit(newRange, "\n");
-      textEdits.add(textEdit);
-
-    });
+    var textEdits = diagnostics.stream()
+      .map(diagnostic -> getQuickFixText(diagnostic, eofTokenLine))
+      .collect(Collectors.toList());
 
     return CodeActionProvider.createCodeActions(
       textEdits,
@@ -145,5 +133,18 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
       documentContext.getUri(),
       diagnostics
     );
+  }
+
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, int eofTokenLine) {
+    Range range = diagnostic.getRange();
+
+    int endLine = range.getEnd().getLine() + 1;
+    String newText = "\n";
+    if (endLine == eofTokenLine){
+      endLine--;
+      newText = "";
+    }
+    Range newRange = Ranges.create(range.getStart().getLine(), 0, endLine, 0);
+    return new TextEdit(newRange, newText);
   }
 }
