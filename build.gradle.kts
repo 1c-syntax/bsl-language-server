@@ -77,7 +77,7 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "0.13.0") {
+    implementation("com.github.1c-syntax", "bsl-parser", "01cc1512e10b667a0ec3fdd2307ca0221bf52684") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
