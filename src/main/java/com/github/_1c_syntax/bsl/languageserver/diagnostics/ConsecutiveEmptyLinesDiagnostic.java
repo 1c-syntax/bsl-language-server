@@ -71,45 +71,29 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
       return;
     }
 
-    final int nonAllowedEmptyLinesCount = allowedEmptyLinesCount + 1;
     final int[] prevLineStorage = {0};
-    // без EOF т.к. его проще и чуть быстрее обработать вне цикла
+    // без EOF, т.к. его проще и чуть быстрее обработать вне цикла
     tokens.subList(0, tokens.size() - 1)
       .stream()
-      .filter(token -> !isWhiteSpace(token))
+      .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
       .map(Token::getLine)
       .distinct()
       .forEachOrdered(currLine -> {
-
-        var prevLine = prevLineStorage[0];
-        if (currLine - prevLine > nonAllowedEmptyLinesCount) {
-            addIssue(prevLine, currLine - 1);
-        } else if (prevLine == 1 && currLine - 1 > nonAllowedEmptyLinesCount) {
-          // если как минимум первые две строки пустые
-          addIssue(0, currLine - 1);
-        }
+        checkEmptyLines(currLine - 1, prevLineStorage[0]);
         prevLineStorage[0] = currLine;
       });
 
-    var eofLine = getEofToken(tokens).getLine();
-    checkLastToken(eofLine, prevLineStorage[0]);
+    checkEmptyLines(getEofTokenLine(tokens), prevLineStorage[0]);
   }
 
-  private void checkLastToken(int eofLine, int prevLine) {
-    // если в конце файла пустые строки, парсер может вернуть последний токен с тем же номером строки,
-    // что и токен, где есть последнее использование идентификаторов. в тесте этот кейс проверяется.
+  private void checkEmptyLines(int eofLine, int prevLine) {
     if (eofLine - prevLine > allowedEmptyLinesCount){
       addIssue(prevLine, eofLine);
     }
   }
 
-  private static Token getEofToken(List<Token> tokens) {
-    final var lastIndex = tokens.size() - 1;
-    return tokens.get(lastIndex);
-  }
-
-  private static boolean isWhiteSpace(Token token) {
-    return token.getChannel() == Token.HIDDEN_CHANNEL && token.getType() == BSLLexer.WHITE_SPACE;
+  private static int getEofTokenLine(List<Token> tokens) {
+    return tokens.get(tokens.size() - 1).getLine();
   }
 
   private void addIssue(int startEmptyLine, int lastEmptyLine) {
@@ -121,7 +105,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   public List<CodeAction> getQuickFixes(
       List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
-    var eofTokenLine = getEofToken(documentContext.getTokens()).getLine();
+    var eofTokenLine = getEofTokenLine(documentContext.getTokens());
 
     var textEdits = diagnostics.stream()
       .map(diagnostic -> getQuickFixText(diagnostic, eofTokenLine))

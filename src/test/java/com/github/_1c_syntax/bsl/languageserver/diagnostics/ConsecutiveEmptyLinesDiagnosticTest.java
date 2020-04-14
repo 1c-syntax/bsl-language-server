@@ -155,6 +155,8 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
   @Test
   void test_OneLine() {
+    // если в конце файла есть пустая строка и EOF, то для пользователя это выглядит как 2 пустые строки
+    // и правило должно сработать
     String module = "\n";
 
     List<Diagnostic> diagnostics = getDiagnosticsForText(module);
