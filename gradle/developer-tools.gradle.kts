@@ -8,7 +8,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
     val outputDir: DirectoryProperty = objects.directoryProperty()
 
     private var schemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json"
-    private var diagnosticSchemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/diagnostics-schema.json"
+    private var diagnosticSchemaPath = "src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/parameters-schema.json"
 
     private var templateDocHeader = "# <Description> (<DiagnosticKey>)\n\n<Metadata>\n<Params>" +
             "<!-- Блоки выше заполняются автоматически, не трогать -->\n"
@@ -53,7 +53,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
             "String" to "Строка",
             "Float" to "Число с плавающей точкой")
 
-    private fun createDiagnosticSupplier(lang: String, classLoader: ClassLoader) : Any {
+    private fun createDiagnosticSupplier(lang: String, classLoader: ClassLoader): Any {
         val languageServerConfigurationClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration")
         val languageClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.configuration.Language")
 
@@ -81,7 +81,8 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
 
         val urlsParent: ArrayList<URL> = ArrayList()
         project.configurations.getByName("runtimeClasspath").files.forEach {
-            urlsParent.add(it.toURI().toURL())}
+            urlsParent.add(it.toURI().toURL())
+        }
         val parentCL = URLClassLoader(urlsParent.toTypedArray())
         return URLClassLoader(urls.toTypedArray(), parentCL)
     }
@@ -97,16 +98,18 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
         val result = hashMapOf<String, HashMap<String, Any>>()
         File(project.buildDir, "classes/java/main/com/github/_1c_syntax/bsl/languageserver/diagnostics")
                 .walkTopDown()
-                .filter{it.name.endsWith("Diagnostic.class")
-                        && !it.name.startsWith("Abstract")}
+                .filter {
+                    it.name.endsWith("Diagnostic.class")
+                            && !it.name.startsWith("Abstract")
+                }
                 .forEach {
                     val diagnosticClass = classLoader.loadClass("com.github._1c_syntax.bsl.languageserver.diagnostics.${it.nameWithoutExtension}")
-                    if(!diagnosticClass.toString().startsWith("interface")){
+                    if (!diagnosticClass.toString().startsWith("interface")) {
                         val diagnosticInstanceRU = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticInstance", diagnosticClass.javaClass).invoke(diagnosticSupplierRU, diagnosticClass)
                         val diagnosticInstanceEN = diagnosticSupplierClass.getDeclaredMethod("getDiagnosticInstance", diagnosticClass.javaClass).invoke(diagnosticSupplierEN, diagnosticClass)
 
                         val metadata = getDiagnosticMetadata(diagnosticClass, diagnosticInstanceRU, diagnosticInstanceEN, classLoader)
-                        if(metadata.isNotEmpty() && metadata["key"] is String) {
+                        if (metadata.isNotEmpty() && metadata["key"] is String) {
                             result[metadata["key"] as String] = metadata
                         }
                     }
@@ -139,8 +142,8 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
 
         val params = arrayListOf<HashMap<String, String>>()
         val parameters = diagnosticInfoClass.getMethod("getParameters").invoke(infoRU)
-        if(parameters is ArrayList<*>) {
-            for(parameter in parameters) {
+        if (parameters is ArrayList<*>) {
+            for (parameter in parameters) {
                 val oneParameter = hashMapOf<String, String>()
                 val parameterName = diagnosticParameterInfoClass.getMethod("getName").invoke(parameter).toString()
                 oneParameter["name"] = parameterName
@@ -162,7 +165,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
     @TaskAction
     fun execTask() {
         val diagnosticsMetadata = getDiagnosticsMetadata()
-        if(taskName == "Update diagnostic docs") {
+        if (taskName == "Update diagnostic docs") {
             logger.quiet("Update diagnostic docs")
             diagnosticsMetadata.forEach {
                 updateDocFile("ru",
@@ -173,12 +176,12 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
                         it.key,
                         it.value)
             }
-        } else if(taskName == "Update diagnostics index") {
+        } else if (taskName == "Update diagnostics index") {
             logger.quiet("Update diagnostics index")
             val diagnosticsMetadataSort = diagnosticsMetadata.toSortedMap()
             updateDiagnosticIndex("ru", diagnosticsMetadataSort)
             updateDiagnosticIndex("en", diagnosticsMetadataSort)
-        } else if(taskName == "Update json schema") {
+        } else if (taskName == "Update json schema") {
             val diagnosticMeta = transformMetadata(diagnosticsMetadata)
             var schemaJson = groovy.json.JsonSlurper().parseText(File(outputDir.get().asFile.path, diagnosticSchemaPath).readText(charset("UTF-8")))
             if (schemaJson is Map<*, *>) {
@@ -191,16 +194,16 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
             schemaJson = groovy.json.JsonSlurper().parseText(File(outputDir.get().asFile.path, schemaPath).readText(charset("UTF-8")))
             if (schemaJson is Map<*, *>) {
                 val schema = schemaJson.toMap().toMutableMap()
-                val schemaProperties = schema["properties"]
-                if (schemaProperties != null && schemaProperties is Map<*, *>) {
-                    val schProp = schemaProperties.toMap().toMutableMap()
-                    val schemaPropertiesDiagnostics = schProp["diagnostics"]
-                    if (schemaPropertiesDiagnostics != null && schemaPropertiesDiagnostics is Map<*, *>) {
-                        val schPropDiag = schemaPropertiesDiagnostics.toMap().toMutableMap()
-                        schPropDiag["properties"] = diagnosticMeta["diagnosticsKeys"]
-                        schProp["diagnostics"] = schPropDiag
+                val schemaDefinitions = schema["definitions"]
+                if (schemaDefinitions != null && schemaDefinitions is Map<*, *>) {
+                    val schemaDefinitionInner = schemaDefinitions.toMap().toMutableMap()
+                    val schemaParameters = schemaDefinitionInner["parameters"]
+                    if (schemaParameters != null && schemaParameters is Map<*, *>) {
+                        val schemaParametersInner = schemaParameters.toMap().toMutableMap()
+                        schemaParametersInner["properties"] = diagnosticMeta["diagnosticsKeys"]
+                        schemaDefinitionInner["parameters"] = schemaParametersInner
                     }
-                    schema["properties"] = schProp
+                    schema["definitions"] = schemaDefinitionInner
                 }
 
                 val resultString = groovy.json.JsonBuilder(schema).toPrettyString()
@@ -214,8 +217,8 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
         val diagnostics = sortedMapOf<String, Any>()
         val diagnosticsKeys = sortedMapOf<String, HashMap<String, String>>()
 
-        diagnosticsMetadata.forEach {itd ->
-            diagnosticsKeys[itd.key] = hashMapOf("\$ref" to "diagnostics-schema.json#/definitions/${itd.key}")
+        diagnosticsMetadata.forEach { itd ->
+            diagnosticsKeys[itd.key] = hashMapOf("\$ref" to "parameters-schema.json#/definitions/${itd.key}")
             val diagnostic = hashMapOf("\$id" to "#/definitions/${itd.key}",
                     "type" to arrayListOf("boolean", "object"),
                     "title" to itd.value.getOrDefault("description_en", "").toString(),
@@ -276,7 +279,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
                     .replace("[", "`")
                     .replace("]", "`")
                     .replace(", ", "`<br/>`")
-            if(lang == "ru") {
+            if (lang == "ru") {
                 typeString = typeRuMap.getOrDefault(metadata.getOrDefault("type", ""), "")
                 indexText += templateIndexLine
                         .replace("<Name>", it.key)
@@ -299,7 +302,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
             typeCount[typeString] = typeCount.getOrDefault(typeString, 0) + 1
         }
 
-        val indexPath = if(lang == "ru") {
+        val indexPath = if (lang == "ru") {
             File(outputDir.get().asFile.path, "docs/diagnostics/index.md")
         } else {
             File(outputDir.get().asFile.path, "docs/en/diagnostics/index.md")
@@ -327,7 +330,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
     }
 
     private fun updateDocFile(lang: String, key: String, metadata: HashMap<String, Any>) {
-        val docPath = if(lang == "ru") {
+        val docPath = if (lang == "ru") {
             File(outputDir.get().asFile.path, "docs/diagnostics/${key}.md")
         } else {
             File(outputDir.get().asFile.path, "docs/en/diagnostics/${key}.md")
@@ -465,7 +468,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
 
     private fun makeDiagnosticConfigExample(metadata: HashMap<String, Any>): String {
         val params = metadata.getOrDefault("parameters", arrayListOf<HashMap<String, String>>())
-        if(params is ArrayList<*>) {
+        if (params is ArrayList<*>) {
 
             if (params.isEmpty()) {
                 return "false"
@@ -475,7 +478,7 @@ open class DeveloperTools @javax.inject.Inject constructor(objects: ObjectFactor
             var configDelimiter = ""
             params.forEach {
                 if (it is HashMap<*, *>) {
-                    val qoutes = if(it.getOrDefault("type", "") == "Boolean"
+                    val qoutes = if (it.getOrDefault("type", "") == "Boolean"
                             || it.getOrDefault("type", "") == "Integer"
                             || it.getOrDefault("type", "") == "Float") "" else "\""
                     configBody += "$configDelimiter    \"${it.getOrDefault("name", "")}\": " +
@@ -498,7 +501,7 @@ tasks.register<DeveloperTools>("updateDiagnosticDocs") {
     description = "Updates diagnostic docs after changes"
     outputDir.set(project.layout.projectDirectory)
     taskName = "Update diagnostic docs"
-    outputs.upToDateWhen {false}
+    outputs.upToDateWhen { false }
 }
 
 tasks.register<DeveloperTools>("updateDiagnosticsIndex") {
@@ -507,7 +510,7 @@ tasks.register<DeveloperTools>("updateDiagnosticsIndex") {
     description = "Update diagnostics index after changes"
     outputDir.set(project.layout.projectDirectory)
     taskName = "Update diagnostics index"
-    outputs.upToDateWhen {false}
+    outputs.upToDateWhen { false }
 }
 
 tasks.register<DeveloperTools>("updateJsonSchema") {
@@ -516,5 +519,5 @@ tasks.register<DeveloperTools>("updateJsonSchema") {
     description = "Update json schema"
     outputDir.set(project.layout.projectDirectory)
     taskName = "Update json schema"
-    outputs.upToDateWhen {false}
+    outputs.upToDateWhen { false }
 }
