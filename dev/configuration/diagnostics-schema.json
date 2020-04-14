@@ -409,13 +409,13 @@
             "$id": "#/definitions/MagicNumber"
         },
         "MethodSize": {
-            "description": "Method size ",
+            "description": "Method size",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Method size ",
+            "title": "Method size",
             "properties": {
                 "maxMethodSize": {
                     "description": "Max method line count.",
