@@ -65,15 +65,6 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null){
-      return;
-    }
-    super.configure(configuration);
-    this.allowedEmptyLinesCount = (Integer) configuration.getOrDefault("allowedEmptyLinesCount", allowedEmptyLinesCount);
-  }
-
-  @Override
   protected void check(DocumentContext documentContext) {
 
     final var tokens = documentContext.getTokens();
