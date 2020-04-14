@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586815344045,
+  "lastUpdate": 1586853592984,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -403,6 +403,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.12933625592096532",
             "extra": "mean: 72.54413104057312 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "14696a69d01e9b4b0a80328dcafbc172cf2aec3d",
+          "message": "Merge pull request #1056 from artbear/doc-auto-fix\n\nПропущенные результаты precommit - т.к. при его выполнении правильно удаляется лишний пробел",
+          "timestamp": "2020-04-14T11:29:26+03:00",
+          "tree_id": "708edc31b238e66f7d02b77066ecb9fc4ad4044d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/14696a69d01e9b4b0a80328dcafbc172cf2aec3d"
+        },
+        "date": 1586853590629,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 66.89521845181783,
+            "unit": "sec",
+            "range": "stddev: 1.4015741547607594",
+            "extra": "mean: 66.89521845181783 sec\nrounds: 3"
           }
         ]
       }
