@@ -63,7 +63,10 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic) {
-    DocumentContext documentContext = getDocumentContext();
+    return getQuickFixes(diagnostic, getDocumentContext());
+  }
+
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, DocumentContext documentContext) {
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
   }
 
