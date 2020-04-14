@@ -208,5 +208,16 @@ class DocumentContextTest {
 
   }
 
+  @Test
+  void testContentList() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+
+    // when
+    String[] contentList = documentContext.getContentList();
+
+    // then
+    assertThat(contentList).hasSize(40);
+  }
 
 }

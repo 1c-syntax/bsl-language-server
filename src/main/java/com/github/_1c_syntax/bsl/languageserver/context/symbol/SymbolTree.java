@@ -88,6 +88,30 @@ public class SymbolTree {
       .findAny();
   }
 
+  public List<VariableSymbol> getVariables() {
+    return getChildrenFlat(VariableSymbol.class);
+  }
+
+  public Optional<VariableSymbol> getVariableSymbol(BSLParserRuleContext ctx) {
+
+    BSLParserRuleContext varNameNode;
+
+    if (Trees.nodeContainsErrors(ctx)) {
+      varNameNode = ctx;
+    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext) {
+      varNameNode = ((BSLParser.ModuleVarDeclarationContext) ctx).var_name();
+    } else if (ctx instanceof BSLParser.SubVarDeclarationContext) {
+      varNameNode = ((BSLParser.SubVarDeclarationContext) ctx).var_name();
+    } else {
+      varNameNode = ctx;
+    }
+
+    Range variableNameRange = Ranges.create(varNameNode);
+
+    return getVariables().stream()
+      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange))
+      .findAny();
+  }
 
   private List<Symbol> getSelfAndChildrenRecursive(Symbol symbol) {
     var list = new ArrayList<Symbol>();

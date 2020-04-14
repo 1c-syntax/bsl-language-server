@@ -24,17 +24,31 @@
 
 ```
 
-Следующим шагом, необходимо реализовать метод установки значения `configure`.  
-Например
+Если параметр примитивный или типа String и он устанавливается в соответствующее свойство класса диагностики простым сеттером, то на этом все.  
+Если же параметр более сложный, например строка-паттерн для регулярного выражения, которое необходимо вычислить перед установкой, то нужно реализовать метод установки значений параметров `configure`.  
+
+Например есть два параметра:
+
+- `commentAsCode` - считать комментарии как код, типа булево
+- `excludeMethods` - методы, которые не надо проверять, типа ArrayList
+
+Тогда метод установки значений параметров будет выглядеть:
 
 ```java
  @Override
   public void configure(Map<String, Object> configuration) {
+    
     if (configuration == null) {
       return;
     }
+    
+    // для установки "простых свойств", включая "commentAsCode"
+    super.configure(configuration);
 
-    this.commentsAnnotation = (String) configuration.getOrDefault("commentsAnnotation", commentsAnnotation);
+    // установка "сложного" свойства "excludeMethods"
+    String excludeMethodsString =
+      (String) configuration.getOrDefault("excludeMethods", EXCLUDE_METHODS_DEFAULT);
+    this.excludeMethods = new ArrayList<>(Arrays.asList(excludeMethodsString.split(",")));
   }
 
 ```
