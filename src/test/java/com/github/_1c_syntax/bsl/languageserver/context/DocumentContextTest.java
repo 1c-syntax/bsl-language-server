@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
+import org.antlr.v4.runtime.Lexer;
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
@@ -82,8 +84,8 @@ class DocumentContextTest {
       .hasSize(4)
       .anyMatch(parameterDefinition ->
         parameterDefinition.getName().equals("Парам1")
-        && !parameterDefinition.isByValue()
-        && !parameterDefinition.isOptional()
+          && !parameterDefinition.isByValue()
+          && !parameterDefinition.isOptional()
       )
       .anyMatch(parameterDefinition ->
         parameterDefinition.getName().equals("Парам2")
@@ -220,4 +222,15 @@ class DocumentContextTest {
     assertThat(contentList).hasSize(40);
   }
 
+  @Test
+  void testEOF() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+    // when
+    List<Token> tokens = documentContext.getTokens();
+    Token lastToken = tokens.get(tokens.size() - 1);
+    // then
+    assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
+    assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
+  }
 }
