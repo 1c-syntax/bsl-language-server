@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586959469055,
+  "lastUpdate": 1586965632887,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -558,6 +558,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.301043109178605",
             "extra": "mean: 70.31435871124268 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "int-it@yandex.ru",
+            "name": "Alexey Sosnoviy",
+            "username": "asosnoviy"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2378801f71267827e5abd7f9454e0c8470a67e51",
+          "message": "Merge pull request #1051 from MinimaJack/cqic-fix-1\n\nAnother fix fp запрос в цикле",
+          "timestamp": "2020-04-15T18:38:07+03:00",
+          "tree_id": "f69b12b6699228de7691f1f36a87fe8341978b9d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2378801f71267827e5abd7f9454e0c8470a67e51"
+        },
+        "date": 1586965631417,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.84124422073364,
+            "unit": "sec",
+            "range": "stddev: 0.5293300239154064",
+            "extra": "mean: 74.84124422073364 sec\nrounds: 3"
           }
         ]
       }
