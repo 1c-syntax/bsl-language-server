@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1586965632887,
+  "lastUpdate": 1586967442490,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -589,6 +589,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5293300239154064",
             "extra": "mean: 74.84124422073364 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bbec2f0aec1afa221a38250a0cf2fc40ca6dffec",
+          "message": "Merge pull request #1059 from 1c-syntax/feature/silent\n\nДобавил молчаливый режим консоли",
+          "timestamp": "2020-04-15T19:07:49+03:00",
+          "tree_id": "d262d82374d3cc3e612322b8d4852fdadbe73c2e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bbec2f0aec1afa221a38250a0cf2fc40ca6dffec"
+        },
+        "date": 1586967440797,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.59028649330139,
+            "unit": "sec",
+            "range": "stddev: 1.3442582992913759",
+            "extra": "mean: 81.59028649330139 sec\nrounds: 3"
           }
         ]
       }
