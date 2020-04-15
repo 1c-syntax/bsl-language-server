@@ -29,9 +29,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -98,17 +97,14 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   private List<Diagnostic> getDiagnosticsFiltered(DocumentContext documentContext) {
     DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
 
-    Optional<BSLDiagnostic> first = diagnosticSupplier
+    return diagnosticSupplier
       .getDiagnosticInstances(documentContext)
       .stream()
-      .filter(di -> di instanceof ThisObjectAssignDiagnostic)
-      .findFirst();
+      .filter(ThisObjectAssignDiagnostic.class::isInstance)
+      .findFirst()
+      .map(bslDiagnostic -> bslDiagnostic.getDiagnostics(documentContext))
+      .orElseGet(Collections::emptyList);
 
-    List<Diagnostic> diagnostics = new ArrayList<>();
-    if (first.isPresent()) {
-      diagnostics = first.get().getDiagnostics(documentContext);
-    }
-    return diagnostics;
   }
 
 }
