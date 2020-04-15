@@ -107,6 +107,25 @@ class BSLLSPLauncherTest {
 
   @Test
   @ExpectSystemExitWithStatus(0)
+  void testAnalyzeSilent() {
+    // given
+    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli", "-S"};
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
   void testFormat() {
     // given
     String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli"};
@@ -123,6 +142,25 @@ class BSLLSPLauncherTest {
     assertThat(outContent.toString()).isEmpty();
     // TODO:
     // assertThat(errContent.toString()).contains("100%");
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testFormatSilent() {
+    // given
+    String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli", "-S"};
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
