@@ -132,11 +132,19 @@ public class BSLLSPLauncher {
       "Show version."
     );
 
+    Option silentMode = new Option(
+      "q",
+      "silent",
+      false,
+      "Silent mode"
+    );
+
     createdOptions.addOption(analyze);
     createdOptions.addOption(format);
     createdOptions.addOption(srcDir);
     createdOptions.addOption(outputDir);
     createdOptions.addOption(reporter);
+    createdOptions.addOption(silentMode);
 
     createdOptions.addOption(configurationOption);
     createdOptions.addOption(help);

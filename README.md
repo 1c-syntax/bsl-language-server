@@ -47,6 +47,7 @@ usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <
  -r,--reporter <arg>        Reporter key
  -s,--srcDir <arg>          Source directory
  -v,--version               Version
+ -q,--silent                Silent mode
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP](https://microsoft.github.io/language-server-protocol/). Для взаимодействия используются stdin и stdout.

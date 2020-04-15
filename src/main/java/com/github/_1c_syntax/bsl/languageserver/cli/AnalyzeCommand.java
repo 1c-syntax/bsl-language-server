@@ -61,9 +61,10 @@ import java.util.stream.Collectors;
  *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то будут использованы настройки по умолчанию.
- * -r, (--reporter) &lt;arg&gt; -       Ключи "Репортеров", т.е. форматов отчетов, котрые необходимо сгенерировать после
+ *  -r, (--reporter) &lt;arg&gt; -      Ключи "Репортеров", т.е. форматов отчетов, котрые необходимо сгенерировать после
  *                                выполнения анализа. Может быть указано более одного ключа. Если параметр опущен,
  *                                то вывод результата будет призведен в консоль.
+ *  -q, (--silent)              -       Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
  * Выводимая информация:
  *  Выполняет анализ каталога исходных файлов и генерацию файлов отчета. Для каждого указанного ключа "Репортера"
  *  создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
@@ -83,6 +84,7 @@ public class AnalyzeCommand implements Command {
     String srcDirOption = cmd.getOptionValue("srcDir", "");
     String outputDirOption = cmd.getOptionValue("outputDir", "");
     String configurationOption = cmd.getOptionValue("configuration", "");
+    boolean silentMode = cmd.hasOption("silent");
 
     Path srcDir = Absolute.path(srcDirOption);
     File configurationFile = new File(configurationOption);
@@ -97,13 +99,19 @@ public class AnalyzeCommand implements Command {
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
     List<FileInfo> fileInfos;
-    try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
+    if (silentMode) {
       fileInfos = files.parallelStream()
-        .map((File file) -> {
-          pb.step();
-          return getFileInfoFromFile(srcDir, file);
-        })
+        .map((File file) -> getFileInfoFromFile(srcDir, file))
         .collect(Collectors.toList());
+    } else {
+      try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
+        fileInfos = files.parallelStream()
+          .map((File file) -> {
+            pb.step();
+            return getFileInfoFromFile(srcDir, file);
+          })
+          .collect(Collectors.toList());
+      }
     }
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDirOption);
