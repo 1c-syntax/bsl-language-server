@@ -49,4 +49,16 @@ class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorDiagnost
     assertThat(diagnostics, true).satisfiesAnyOf(onLineFive, onLineEight);
 
   }
+
+  @Test
+  void runTestError() {
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics("ParseErrorDiagnosticEOF");
+
+    // then
+    assertThat(diagnostics.size()).isEqualTo(2); // why 2?
+    assertThat(diagnostics.get(0)).hasRange(3, 0, 3, 3);
+
+  }
+
 }
