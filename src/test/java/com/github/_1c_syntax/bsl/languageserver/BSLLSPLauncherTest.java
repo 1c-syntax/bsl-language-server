@@ -109,7 +109,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testAnalyzeSilent() {
     // given
-    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli", "-S"};
+    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli", "-q"};
 
     // when
     try {
@@ -148,7 +148,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testFormatSilent() {
     // given
-    String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli", "-S"};
+    String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli", "-q"};
 
     // when
     try {

@@ -133,7 +133,7 @@ public class BSLLSPLauncher {
     );
 
     Option silentMode = new Option(
-      "S",
+      "q",
       "silent",
       false,
       "Silent mode"
