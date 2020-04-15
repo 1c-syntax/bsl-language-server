@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -77,8 +76,6 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
 
   }
 
-
-  @NotNull
   private DocumentContext setCompatibilityMode(CompatibilityMode version) {
 
     var documentContext = spy(getDocumentContext());
