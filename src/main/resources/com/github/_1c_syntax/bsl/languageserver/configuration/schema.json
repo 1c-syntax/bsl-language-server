@@ -293,6 +293,9 @@
                 "TernaryOperatorUsage": {
                     "$ref": "diagnostics-schema.json#/definitions/TernaryOperatorUsage"
                 },
+                "ThisObjectAssign": {
+                    "$ref": "diagnostics-schema.json#/definitions/ThisObjectAssign"
+                },
                 "TimeoutsInExternalResources": {
                     "$ref": "diagnostics-schema.json#/definitions/TimeoutsInExternalResources"
                 },

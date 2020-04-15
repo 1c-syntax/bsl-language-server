@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -235,6 +236,14 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
+  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx){
+    Optional.ofNullable(ctx)
+      .map(e -> e.children)
+      .stream()
+      .flatMap(Collection::stream)
+      .forEach( t -> t.accept(this));
+  }
+
   @Override
   public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
     if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()) {
@@ -274,10 +283,15 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    ParseTree result = super.visitForEachStatement(ctx);
+    if(alreadyInCycle) {
+      Optional.ofNullable(ctx.expression())
+        .ifPresent( e -> e.accept(this));
+    }
+    visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
-    return result;
+    return ctx;
   }
 
   @Override
@@ -290,10 +304,15 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
+    boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    ParseTree result = super.visitForStatement(ctx);
+    if(alreadyInCycle) {
+      ctx.expression()
+        .forEach( e-> e.accept(this));
+    }
+    visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
-    return result;
+    return ctx;
   }
 
   public enum CodeFlowType {

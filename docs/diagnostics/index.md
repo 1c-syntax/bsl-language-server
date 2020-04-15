@@ -12,7 +12,7 @@
 
 * Дефект кода: **56**
 * Уязвимость: **2**
-* Ошибка: **28**
+* Ошибка: **29**
 * Потенциальная уязвимость: **2**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -81,6 +81,7 @@
 | [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` |
 | [TempFilesDir](TempFilesDir.md) | Вызов функции КаталогВременныхФайлов() | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [TernaryOperatorUsage](TernaryOperatorUsage.md) | Использование тернарного оператора | Нет | Незначительный | Дефект кода | `brainoverload` |
+| [ThisObjectAssign](ThisObjectAssign.md) | Присвоение заначения свойству ЭтотОбъект | Да | Блокирующий | Ошибка | `error` |
 | [TimeoutsInExternalResources](TimeoutsInExternalResources.md) | Таймауты при работе с внешними ресурсами | Да | Критичный | Ошибка | `unpredictable`<br/>`standard` |
 | [TooManyReturns](TooManyReturns.md) | Метод не должен содержать много возвратов | Нет | Незначительный | Дефект кода | `brainoverload` |
 | [TryNumber](TryNumber.md) | Приведение к числу в попытке | Да | Важный | Дефект кода | `standard` |

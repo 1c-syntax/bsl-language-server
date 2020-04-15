@@ -46,13 +46,13 @@ import java.util.List;
  * Ключ команды:
  *  -f, (--format)
  * Параметры:
- *  -s, (--srcDir) &lt;arg&gt; -        Путь к каталогу исходных файлов.
+ *  -s, (--srcDir) &lt;arg&gt; -  Путь к каталогу исходных файлов.
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то анализ выполняется в текущем каталоге запуска.
+ *  -q, (--silent)             -  Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
  * Выводимая информация:
  *  Выполняет форматирование исходного кода в файлах каталога. Для форматирования используются правила и настройки
  *  "форматтера" FormatProvider, т.е. пользователь никак не может овлиять на результат.
- *
  */
 public class FormatCommand implements Command {
 
@@ -69,17 +69,22 @@ public class FormatCommand implements Command {
     serverContext.clear();
 
     String srcDirOption = cmd.getOptionValue("srcDir", "");
+    boolean silentMode = cmd.hasOption("silent");
 
     Path srcDir = Absolute.path(srcDirOption);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
-    try (ProgressBar pb = new ProgressBar("Formatting files...", files.size(), ProgressBarStyle.ASCII)) {
-      files.parallelStream()
-        .forEach((File file) -> {
-          pb.step();
-          formatFile(file);
-        });
+    if (silentMode) {
+      files.parallelStream().forEach(this::formatFile);
+    } else {
+      try (ProgressBar pb = new ProgressBar("Formatting files...", files.size(), ProgressBarStyle.ASCII)) {
+        files.parallelStream()
+          .forEach((File file) -> {
+            pb.step();
+            formatFile(file);
+          });
+      }
     }
 
     return 0;

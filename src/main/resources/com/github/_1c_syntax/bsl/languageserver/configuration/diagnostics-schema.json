@@ -846,6 +846,16 @@
             "title": "Ternary operator usage",
             "$id": "#/definitions/TernaryOperatorUsage"
         },
+        "ThisObjectAssign": {
+            "description": "ThisObject assign",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "ThisObject assign",
+            "$id": "#/definitions/ThisObjectAssign"
+        },
         "TimeoutsInExternalResources": {
             "description": "Timeouts working with external resources",
             "default": null,
