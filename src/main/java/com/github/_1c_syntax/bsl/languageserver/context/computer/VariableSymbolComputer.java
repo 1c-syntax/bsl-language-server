@@ -56,7 +56,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
-    var symbol = createVariableSymbol(ctx, ctx.var_name(), ctx.EXPORT_KEYWORD() != null, VariableKind.GLOBAL);
+    var symbol = createVariableSymbol(ctx, ctx.var_name(), ctx.EXPORT_KEYWORD() != null, VariableKind.MODULE);
     variables.add(symbol);
 
     return ctx;

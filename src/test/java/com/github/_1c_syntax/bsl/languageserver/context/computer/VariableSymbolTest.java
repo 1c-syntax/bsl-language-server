@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Range;
@@ -48,15 +49,16 @@ public class VariableSymbolTest {
   @Test
   void testVariableSymbolDescription() {
 
-    assertThat(variableSymbols).hasSize(7);
+    assertThat(variableSymbols).hasSize(8);
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isEmpty())
-      .hasSize(4)
+      .hasSize(5)
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(12, 6, 12, 34)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(14, 6, 14, 27)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(16, 6, 16, 17)))
       .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(16, 19, 16, 30)))
+      .anyMatch(variableSymbol -> variableSymbol.getRange().equals(Ranges.create(19, 10, 19, 19)))
     ;
 
     assertThat(variableSymbols)
@@ -102,11 +104,22 @@ public class VariableSymbolTest {
 
     assertThat(variableSymbols)
       .filteredOn(variableSymbol -> variableSymbol.getDescription().isEmpty())
-      .hasSize(4)
+      .hasSize(5)
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(12, 6, 12, 34)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(14, 6, 14, 27)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(16, 6, 16, 17)))
       .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(16, 19, 16, 30)))
+      .anyMatch(variableName -> variableName.getVariableNameRange().equals(Ranges.create(19, 10, 19, 19)))
+
     ;
   }
+
+  @Test
+  void testVariableKind() {
+
+    assertThat(variableSymbols.get(0).getKind()).isEqualTo(VariableKind.MODULE);
+    assertThat(variableSymbols.get(7).getKind()).isEqualTo(VariableKind.LOCAL);
+
+  }
+
 }
