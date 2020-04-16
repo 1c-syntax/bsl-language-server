@@ -41,7 +41,7 @@ class UseLessForEachDiagnosticTest extends AbstractDiagnosticTest<UseLessForEach
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(0, 12, 0, 20);
+      .hasRange(2, 12, 2, 20);
 
   }
 }

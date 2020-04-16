@@ -59,6 +59,15 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
 
     TerminalNode iterator = ctx.IDENTIFIER();
     String iteratorIdName = iterator.getText();
+
+    boolean isVariable = documentContext.getSymbolTree().getVariables()
+      .stream()
+      .anyMatch(variableSymbol -> variableSymbol.getName().equalsIgnoreCase(iteratorIdName));
+
+    if (isVariable) {
+      return super.visitForEachStatement(ctx);
+    }
+
     boolean hasUsage = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
       .stream()
       .filter(node -> iteratorIdName.equalsIgnoreCase(node.getText()))
