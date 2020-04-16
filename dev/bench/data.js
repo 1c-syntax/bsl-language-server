@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587047337015,
+  "lastUpdate": 1587048137267,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -682,6 +682,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.7807064572982356",
             "extra": "mean: 73.69795568784077 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e8de04f671f28ac74c3086367d8114c9c1abccb4",
+          "message": "Merge pull request #1063 from 1c-syntax/fix/uselessFoeEach\n\nuseLessForeach field FP fix",
+          "timestamp": "2020-04-16T17:34:17+03:00",
+          "tree_id": "20e257ce2bbdd909d8ef5fc191aa3947810fd01e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e8de04f671f28ac74c3086367d8114c9c1abccb4"
+        },
+        "date": 1587048135816,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.57601547241211,
+            "unit": "sec",
+            "range": "stddev: 1.4638553938007226",
+            "extra": "mean: 68.57601547241211 sec\nrounds: 3"
           }
         ]
       }
