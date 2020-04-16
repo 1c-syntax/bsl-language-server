@@ -57,7 +57,7 @@ class ParseErrorDiagnosticTest extends AbstractDiagnosticTest<ParseErrorDiagnost
 
     // then
     assertThat(diagnostics.size()).isEqualTo(2); // why 2?
-    assertThat(diagnostics.get(0)).hasRange(3, 0, 3, 3);
+    assertThat(diagnostics, true).hasRange(3, 0, 3, 3);
 
   }
 
