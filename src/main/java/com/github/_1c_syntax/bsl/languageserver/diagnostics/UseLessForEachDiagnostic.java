@@ -63,7 +63,8 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
 
     boolean isVariable = documentContext.getSymbolTree().getVariables()
       .stream()
-      .filter(variableSymbol -> variableSymbol.getKind() == VariableKind.GLOBAL)
+      .filter(variableSymbol -> variableSymbol.getKind() == VariableKind.GLOBAL
+        || variableSymbol.getKind() == VariableKind.MODULE)
       .anyMatch(variableSymbol -> variableSymbol.getName().equalsIgnoreCase(iteratorIdName));
 
     if (isVariable) {
