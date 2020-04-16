@@ -87,7 +87,7 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "0.2.1")
-    implementation("com.github.1c-syntax", "mdclasses", "v0.4.2")
+    implementation("com.github.1c-syntax", "mdclasses", "907eb24da8c174e99bb9bb7d309d43d0c80fd562")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 

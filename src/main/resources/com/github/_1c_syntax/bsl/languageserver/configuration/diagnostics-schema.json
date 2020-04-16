@@ -96,6 +96,16 @@
             "title": "Violating transaction rules for the 'CommitTransaction' method",
             "$id": "#/definitions/CommitTransactionOutsideTryCatch"
         },
+        "CommonModuleAssign": {
+            "description": "CommonModuleAssign",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "CommonModuleAssign",
+            "$id": "#/definitions/CommonModuleAssign"
+        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
             "default": null,

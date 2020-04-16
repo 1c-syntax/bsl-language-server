@@ -24,6 +24,7 @@
 | [CognitiveComplexity](CognitiveComplexity.md) | Когнитивная сложность | Да | Критичный | Дефект кода | `brainoverload` |
 | [CommentedCode](CommentedCode.md) | Закомментированный фрагмент кода | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` |
+| [CommonModuleAssign](CommonModuleAssign.md) | Присвоение общему модулю | Да | Блокирующий | Ошибка | `error` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [CreateQueryInCycle](CreateQueryInCycle.md) | Выполнение запроса в цикле | Да | Критичный | Ошибка | `performance` |
