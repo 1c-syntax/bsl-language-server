@@ -42,7 +42,6 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics, true)
       .hasRange(1, 14, 1, 17)
       .hasRange(2, 15, 2, 18)
@@ -52,7 +51,13 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
       .hasRange(6, 0, 6, 33)
       .hasRange(12, 0, 12, 32)
       .hasRange(14, 15, 14, 18)
-    ;
+      .hasRange(17, 0, 17, 1)
+      .hasRange(20, 0, 20, 1)
+      .hasRange(22, 0, 22, 1)
+      .hasRange(24, 0, 24, 1)
+      .hasRange(26, 0, 26, 1)
+      .hasRange(28, 0, 28, 1)
+      .hasSize(14);
 
   }
 
@@ -69,7 +74,7 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
       .first()
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
-      .matches(codeAction -> codeAction.getDiagnostics().size() == 8)
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 14)
       .matches(codeAction -> codeAction.getDiagnostics().get(3).equals(diagnostics.get(3)))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
@@ -87,7 +92,7 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
       .first()
       .matches(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
 
-      .matches(codeAction -> codeAction.getDiagnostics().size() == 8)
+      .matches(codeAction -> codeAction.getDiagnostics().size() == 14)
       .matches(codeAction -> codeAction.getDiagnostics().get(7).equals(diagnostics.get(7)))
 
       .matches(codeAction -> codeAction.getEdit().getChanges().size() == 1)
