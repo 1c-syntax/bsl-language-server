@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -62,6 +63,7 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
 
     boolean isVariable = documentContext.getSymbolTree().getVariables()
       .stream()
+      .filter(variableSymbol -> variableSymbol.getKind() == VariableKind.GLOBAL)
       .anyMatch(variableSymbol -> variableSymbol.getName().equalsIgnoreCase(iteratorIdName));
 
     if (isVariable) {
