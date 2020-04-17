@@ -41,6 +41,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,7 +83,6 @@ import java.util.stream.Collectors;
   name = "analyze",
   aliases = {"-a", "--analyze"},
   description = "Run analysis and get diagnostic info",
-  mixinStandardHelpOptions = true,
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
 public class AnalyzeCommand implements Callable<Integer> {
@@ -98,6 +98,12 @@ public class AnalyzeCommand implements Callable<Integer> {
       ));
     }
   }
+
+  @picocli.CommandLine.Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  boolean usageHelpRequested;
 
   @picocli.CommandLine.Option(
     names = {"-s", "--srcDir"},
@@ -128,7 +134,7 @@ public class AnalyzeCommand implements Callable<Integer> {
   private String[] reportersOptions;
 
   @picocli.CommandLine.Option(
-    names = {"-q", "--silent"},
+    names = {"--silent"},
     description = "Silent mode")
   private boolean silentMode;
 

@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.VersionProvider;
+import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
@@ -46,16 +46,22 @@ import java.util.concurrent.Callable;
 @picocli.CommandLine.Command(
   name = "",
   description = "BSL language server on LSP server mode",
-  mixinStandardHelpOptions = true,
-  versionProvider = VersionProvider.class,
   subcommands = {
     AnalyzeCommand.class,
-    FormatCommand.class
+    FormatCommand.class,
+    VersionCommand.class
   },
   usageHelpAutoWidth = true,
+  synopsisSubcommandLabel = "[COMMAND [ARGS]]",
   footer = "@|green Copyright(c) 2018-2020|@",
   header = "@|green BSL language server|@")
 public class BSLLSPLauncher implements Callable<Integer> {
+
+  @CommandLine.Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  boolean usageHelpRequested;
 
   @picocli.CommandLine.Option(
     names = {"-c", "--configuration"},

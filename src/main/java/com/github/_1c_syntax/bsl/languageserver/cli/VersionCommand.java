@@ -26,17 +26,25 @@ import picocli.CommandLine;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Callable;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 /**
- * Читает версию из манифеста и формирует строку-версию приложения
+ * Выводит версию приложения
+ * Ключ команды:
+ *  -v, (--version)
  */
 @Slf4j
-public class VersionProvider implements CommandLine.IVersionProvider {
+@picocli.CommandLine.Command(
+  name = "version",
+  aliases = {"-v", "--version"},
+  description = "Print version",
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@")
+public class VersionCommand implements Callable<Integer> {
 
-  @Override
-  public String[] getVersion() {
+  public Integer call() {
     final InputStream mfStream = Thread.currentThread()
       .getContextClassLoader()
       .getResourceAsStream("META-INF/MANIFEST.MF");
@@ -46,13 +54,15 @@ public class VersionProvider implements CommandLine.IVersionProvider {
       manifest.read(mfStream);
     } catch (IOException e) {
       LOGGER.error("Can't read manifest", e);
-      return new String[0];
+      return 1;
     }
 
-    return new String[]{
+    System.out.print(
       String.format(
         "version: %s%n",
         manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
-      )};
+      ));
+
+    return 0;
   }
 }

@@ -50,15 +50,15 @@
 java -jar bsl-language-server.jar --help
 
 BSL language server
-Usage:  [-hV] [-c=<path>] [COMMAND]
+Usage:  [-h] [-c=<path>] [COMMAND [ARGS]]
 BSL language server on LSP server mode
   -c, --configuration=<path>
-                  Path to language server configuration file
-  -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
+               Path to language server configuration file
+  -h, --help   Show this help message and exit
 Commands:
   analyze, -a, --analyze  Run analysis and get diagnostic info
   format, -f, --format    Format files in source directory
+  version, -v, --version  Print version
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
@@ -72,16 +72,16 @@ Commands:
 Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). 
 
 ```sh
-Usage:  analyze [-hqV] [-c=<path>] [-o=<path>] [-s=<path>] [-r=<keys>]...
+Usage:  analyze [-h] [--silent] [-c=<path>] [-o=<path>] [-s=<path>]
+                [-r=<keys>]...
 Run analysis and get diagnostic info
   -c, --configuration=<path>
                            Path to language server configuration file
-  -h, --help               Show this help message and exit.
+  -h, --help               Show this help message and exit
   -o, --outputDir=<path>   Output report directory
-  -q, --silent             Silent mode
   -r, --reporter=<keys>    Reporter key (console, json, junit, tslint, generic)
   -s, --srcDir=<path>      Source directory
-  -V, --version            Print version information and exit.
+      --silent             Silent mode
 ```
 
 Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
@@ -106,12 +106,11 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`).
 
 ```sh
-Usage:  format [-hqV] [-s=<path>]
+Usage:  format [-h] [--silent] [-s=<path>]
 Format files in source directory
-  -h, --help            Show this help message and exit.
-  -q, --silent          Silent mode
+  -h, --help            Show this help message and exit
   -s, --srcDir=<path>   Source directory
-  -V, --version         Print version information and exit.
+      --silent          Silent mode
 ```
 
 Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.

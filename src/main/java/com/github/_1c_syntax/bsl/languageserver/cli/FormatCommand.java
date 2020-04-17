@@ -60,12 +60,17 @@ import java.util.concurrent.Callable;
   name = "format",
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
-  mixinStandardHelpOptions = true,
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
 public class FormatCommand implements Callable<Integer> {
 
   private final ServerContext serverContext;
+
+  @picocli.CommandLine.Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  boolean usageHelpRequested;
 
   @picocli.CommandLine.Option(
     names = {"-s", "--srcDir"},
@@ -75,7 +80,7 @@ public class FormatCommand implements Callable<Integer> {
   private String srcDirOption;
 
   @picocli.CommandLine.Option(
-    names = {"-q", "--silent"},
+    names = {"--silent"},
     description = "Silent mode")
   private boolean silentMode;
 

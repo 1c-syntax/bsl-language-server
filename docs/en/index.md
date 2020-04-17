@@ -50,15 +50,15 @@ jar-files run through `java -jar path/to/file.jar`.
 java -jar bsl-language-server.jar --help
 
 BSL language server
-Usage:  [-hV] [-c=<path>] [COMMAND]
+Usage:  [-h] [-c=<path>] [COMMAND [ARGS]]
 BSL language server on LSP server mode
   -c, --configuration=<path>
-                  Path to language server configuration file
-  -h, --help      Show this help message and exit.
-  -V, --version   Print version information and exit.
+               Path to language server configuration file
+  -h, --help   Show this help message and exit
 Commands:
   analyze, -a, --analyze  Run analysis and get diagnostic info
   format, -f, --format    Format files in source directory
+  version, -v, --version  Print version
 ```
 
 Starting BSL Language Server in standard mode will run the Language Server communicating via [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). stdin and stdout are used for communication.
@@ -72,16 +72,16 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 To run in analyzer mode use parameter `--analyze` (short `-a`). 
 
 ```sh
-Usage:  analyze [-hqV] [-c=<path>] [-o=<path>] [-s=<path>] [-r=<keys>]...
+Usage:  analyze [-h] [--silent] [-c=<path>] [-o=<path>] [-s=<path>]
+                [-r=<keys>]...
 Run analysis and get diagnostic info
   -c, --configuration=<path>
                            Path to language server configuration file
-  -h, --help               Show this help message and exit.
+  -h, --help               Show this help message and exit
   -o, --outputDir=<path>   Output report directory
-  -q, --silent             Silent mode
   -r, --reporter=<keys>    Reporter key (console, json, junit, tslint, generic)
   -s, --srcDir=<path>      Source directory
-  -V, --version            Print version information and exit.
+      --silent             Silent mode
 ```
 
 To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
@@ -107,12 +107,11 @@ java -Xmx4g -jar bsl-language-server.jar ... other parameters
 To run in formatter mode use parameter `--format` (short `-f`). 
 
 ```sh
-Usage:  format [-hqV] [-s=<path>]
+Usage:  format [-h] [--silent] [-s=<path>]
 Format files in source directory
-  -h, --help            Show this help message and exit.
-  -q, --silent          Silent mode
+  -h, --help            Show this help message and exit
   -s, --srcDir=<path>   Source directory
-  -V, --version         Print version information and exit.
+      --silent          Silent mode
 ```
 
 To set source code folder for formatting use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.

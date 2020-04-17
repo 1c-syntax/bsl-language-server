@@ -91,7 +91,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testAnalyzeSilent() {
     // given
-    String[] args = "--analyze --srcDir ./src/test/resources/cli -q".split(" ");
+    String[] args = "--analyze --srcDir ./src/test/resources/cli --silent".split(" ");
 
     // when
     try {
@@ -130,7 +130,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testFormatSilent() {
     // given
-    String[] args = "--format --srcDir ./src/test/resources/cli -q".split(" ");
+    String[] args = "--format --srcDir ./src/test/resources/cli --silent".split(" ");
 
     // when
     try {
@@ -142,6 +142,25 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testVersion() {
+    // given
+    String[] args = {"-v"};
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).startsWith("version:");
     assertThat(errContent.toString()).isEmpty();
   }
 
