@@ -22,135 +22,97 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.Command;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.HelpCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.ParseExceptionCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.github._1c_syntax.bsl.languageserver.cli.VersionProvider;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.jsonrpc.Launcher;
+import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
+import org.eclipse.lsp4j.services.LanguageServer;
+import picocli.CommandLine;
 
-public class BSLLSPLauncher {
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Callable;
 
-  public static final String APP_NAME = "BSL language server";
+@Slf4j
+@picocli.CommandLine.Command(
+  name = "",
+  description = "BSL language server on LSP server mode",
+  mixinStandardHelpOptions = true,
+  versionProvider = VersionProvider.class,
+  subcommands = {
+    AnalyzeCommand.class,
+    FormatCommand.class
+  },
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@",
+  header = "@|green BSL language server|@")
+public class BSLLSPLauncher implements Callable<Integer> {
 
-  private static final Options options = createOptions();
+  @picocli.CommandLine.Option(
+    names = {"-c", "--configuration"},
+    description = "Path to language server configuration file",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String configurationOption;
 
   public static void main(String[] args) {
-    CommandLineParser parser = new DefaultParser();
 
-    Command command;
-    try {
-      CommandLine cmd = parser.parse(options, args);
-
-      if (cmd.hasOption("help")) {
-        command = new HelpCommand(options);
-      } else if (cmd.hasOption("version")) {
-        command = new VersionCommand();
-      } else if (cmd.hasOption("analyze")) {
-        command = new AnalyzeCommand(cmd);
-      } else if (cmd.hasOption("format")) {
-        command = new FormatCommand(cmd);
-      } else {
-        command = new LanguageServerStartCommand(cmd);
-      }
-
-    } catch (ParseException e) {
-      command = new ParseExceptionCommand(options, e);
-    }
-
-    int result = command.execute();
+    int result = new CommandLine(new BSLLSPLauncher()).execute(args);
     if (result >= 0) {
       System.exit(result);
     }
   }
 
-  @VisibleForTesting
-  public static Options createOptions() {
-    Options createdOptions = new Options();
+  public Integer call() {
+    File configurationFile = new File(configurationOption);
 
-    Option configurationOption = new Option(
-      "c",
-      "configuration",
-      true,
-      "Path to language server configuration file"
-    );
-    configurationOption.setRequired(false);
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    LanguageServer server = new BSLLanguageServer(configuration);
 
-    Option help = new Option(
-      "h",
-      "help",
-      false,
-      "Show help."
-    );
+    Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
 
-    Option analyze = new Option(
-      "a",
-      "analyze",
-      false,
-      "Run analysis and get diagnostic info"
-    );
+    LanguageClient client = launcher.getRemoteProxy();
+    ((LanguageClientAware) server).connect(client);
 
-    Option format = new Option(
-      "f",
-      "format",
-      false,
-      "Format files in source directory"
-    );
-
-    Option srcDir = new Option(
-      "s",
-      "srcDir",
-      true,
-      "Source directory"
-    );
-
-    Option reporter = new Option(
-      "r",
-      "reporter",
-      true,
-      "Reporter key"
-    );
-
-    Option outputDir = new Option(
-      "o",
-      "outputDir",
-      true,
-      "Output report directory"
-    );
-
-    Option version = new Option(
-      "v",
-      "version",
-      false,
-      "Show version."
-    );
-
-    Option silentMode = new Option(
-      "q",
-      "silent",
-      false,
-      "Silent mode"
-    );
-
-    createdOptions.addOption(analyze);
-    createdOptions.addOption(format);
-    createdOptions.addOption(srcDir);
-    createdOptions.addOption(outputDir);
-    createdOptions.addOption(reporter);
-    createdOptions.addOption(silentMode);
-
-    createdOptions.addOption(configurationOption);
-    createdOptions.addOption(help);
-    createdOptions.addOption(version);
-
-    return createdOptions;
+    launcher.startListening();
+    return -1;
   }
 
+  private static Launcher<LanguageClient> getLanguageClientLauncher(
+    LanguageServer server,
+    LanguageServerConfiguration configuration
+  ) {
+    InputStream in = System.in;
+    OutputStream out = System.out;
+
+    File logFile = configuration.getTraceLog();
+    if (logFile == null) {
+      return LSPLauncher.createServerLauncher(server, in, out);
+    }
+
+    Launcher<LanguageClient> launcher;
+
+    try {
+      PrintWriter printWriter = new PrintWriter(logFile, StandardCharsets.UTF_8.name());
+      launcher = LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
+    } catch (FileNotFoundException | UnsupportedEncodingException e) {
+      LOGGER.error("Can't create LSP trace file", e);
+      if (logFile.isDirectory()) {
+        LOGGER.error("Trace log setting must lead to file, not directory! {}", logFile.getAbsolutePath());
+      }
+
+      launcher = LSPLauncher.createServerLauncher(server, in, out);
+    }
+
+    return launcher;
+  }
 }

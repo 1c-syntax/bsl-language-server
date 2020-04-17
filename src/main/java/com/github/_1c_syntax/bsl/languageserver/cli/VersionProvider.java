@@ -21,17 +21,38 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import org.junit.jupiter.api.Test;
+import lombok.extern.slf4j.Slf4j;
+import picocli.CommandLine;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-class VersionCommandTest {
+/**
+ * Читает версию из манифеста и формирует строку-версию приложения
+ */
+@Slf4j
+public class VersionProvider implements CommandLine.IVersionProvider {
 
-  @Test
-  void testExecute() {
-    Command command = new VersionCommand();
-    int result = command.execute();
+  @Override
+  public String[] getVersion() {
+    final InputStream mfStream = Thread.currentThread()
+      .getContextClassLoader()
+      .getResourceAsStream("META-INF/MANIFEST.MF");
 
-    assertThat(result).isEqualTo(0);
+    Manifest manifest = new Manifest();
+    try {
+      manifest.read(mfStream);
+    } catch (IOException e) {
+      LOGGER.error("Can't read manifest", e);
+      return new String[0];
+    }
+
+    return new String[]{
+      String.format(
+        "version: %s%n",
+        manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
+      )};
   }
 }

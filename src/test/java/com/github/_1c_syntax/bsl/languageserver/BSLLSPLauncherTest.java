@@ -51,25 +51,7 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
-  void testHelp() {
-    // given
-    String[] args = new String[]{"--help"};
-
-
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
-
-    // then
-    assertThat(outContent.toString()).containsIgnoringCase("usage: ");
-  }
-
-  @Test
-  @ExpectSystemExitWithStatus(1)
+  @ExpectSystemExitWithStatus(2)
   void testParseError() {
     // given
     String[] args = new String[]{"--error"};
@@ -82,14 +64,14 @@ class BSLLSPLauncherTest {
     }
 
     // then
-    assertThat(errContent.toString()).containsIgnoringCase("Unrecognized option: --error");
+    assertThat(errContent.toString()).containsIgnoringCase("Unknown option: '--error'");
   }
 
   @Test
   @ExpectSystemExitWithStatus(0)
   void testAnalyze() {
     // given
-    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli"};
+    String[] args = "--analyze --srcDir ./src/test/resources/cli".split(" ");
 
     // when
     try {
@@ -109,7 +91,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testAnalyzeSilent() {
     // given
-    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli", "-q"};
+    String[] args = "--analyze --srcDir ./src/test/resources/cli -q".split(" ");
 
     // when
     try {
@@ -128,7 +110,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testFormat() {
     // given
-    String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli"};
+    String[] args = "--format --srcDir ./src/test/resources/cli".split(" ");
 
     // when
     try {
@@ -148,7 +130,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testFormatSilent() {
     // given
-    String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli", "-q"};
+    String[] args = "--format --srcDir ./src/test/resources/cli -q".split(" ");
 
     // when
     try {
