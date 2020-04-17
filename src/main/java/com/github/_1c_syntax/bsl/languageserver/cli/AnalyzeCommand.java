@@ -79,7 +79,7 @@ import java.util.stream.Collectors;
  *  создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
  **/
 @Slf4j
-@picocli.CommandLine.Command(
+@CommandLine.Command(
   name = "analyze",
   aliases = {"-a", "--analyze"},
   description = "Run analysis and get diagnostic info",
@@ -99,41 +99,41 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
   }
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"-h", "--help"},
     usageHelp = true,
     description = "Show this help message and exit")
   boolean usageHelpRequested;
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"-s", "--srcDir"},
     description = "Source directory",
     paramLabel = "<path>",
     defaultValue = "")
   private String srcDirOption;
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"-o", "--outputDir"},
     description = "Output report directory",
     paramLabel = "<path>",
     defaultValue = "")
   private String outputDirOption;
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"-c", "--configuration"},
     description = "Path to language server configuration file",
     paramLabel = "<path>",
     defaultValue = "")
   private String configurationOption;
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"-r", "--reporter"},
     paramLabel = "<keys>",
     completionCandidates = ReportersKeys.class,
     description = "Reporter key (${COMPLETION-CANDIDATES})")
   private String[] reportersOptions;
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"--silent"},
     description = "Silent mode")
   private boolean silentMode;

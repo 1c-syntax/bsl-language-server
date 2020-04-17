@@ -43,7 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
 @Slf4j
-@picocli.CommandLine.Command(
+@CommandLine.Command(
   name = "",
   description = "BSL language server on LSP server mode",
   subcommands = {
@@ -63,7 +63,7 @@ public class BSLLSPLauncher implements Callable<Integer> {
     description = "Show this help message and exit")
   boolean usageHelpRequested;
 
-  @picocli.CommandLine.Option(
+  @CommandLine.Option(
     names = {"-c", "--configuration"},
     description = "Path to language server configuration file",
     paramLabel = "<path>",
