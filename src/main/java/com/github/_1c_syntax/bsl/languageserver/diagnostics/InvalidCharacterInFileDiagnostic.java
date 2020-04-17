@@ -86,8 +86,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
     documentContext
       .getTokens()
       .stream()
-      .filter((Token token) -> token.getChannel() == Lexer.HIDDEN || token.getType() == BSLLexer.STRING
-          || token.getType() == BSLLexer.LINE_COMMENT)
+      .filter((Token token) -> token.getChannel() == Lexer.HIDDEN || token.getType() == BSLLexer.STRING)
       .forEach(token ->
         {
           var text = token.getText();
