@@ -61,7 +61,7 @@ public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.commonModuleIsPresent(identifier.getText())) {
+    if (configuration.getCommonModule(identifier.getText()).isPresent()) {
       diagnosticStorage.addDiagnostic(identifier, info.getMessage(identifier.getText()));
     }
 
