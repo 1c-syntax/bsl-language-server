@@ -28,12 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ConsoleReporter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.GenericIssueReporter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.JUnitReporter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.JsonReporter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.TSLintReporter;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -91,13 +85,7 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   private static class ReportersKeys extends ArrayList<String> {
     ReportersKeys() {
-      super(Arrays.asList(
-        ConsoleReporter.KEY,
-        JsonReporter.KEY,
-        JUnitReporter.KEY,
-        TSLintReporter.KEY,
-        GenericIssueReporter.KEY
-      ));
+      super(ReportersAggregator.reporterMap().keySet());
     }
   }
 
@@ -105,7 +93,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     names = {"-h", "--help"},
     usageHelp = true,
     description = "Show this help message and exit")
-  boolean usageHelpRequested;
+  private boolean usageHelpRequested;
 
   @Option(
     names = {"-s", "--srcDir"},

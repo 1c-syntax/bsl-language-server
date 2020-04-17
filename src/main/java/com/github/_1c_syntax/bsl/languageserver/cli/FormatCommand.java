@@ -73,7 +73,7 @@ public class FormatCommand implements Callable<Integer> {
     names = {"-h", "--help"},
     usageHelp = true,
     description = "Show this help message and exit")
-  boolean usageHelpRequested;
+  private boolean usageHelpRequested;
 
   @Option(
     names = {"-s", "--srcDir"},
