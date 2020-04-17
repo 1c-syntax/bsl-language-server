@@ -150,6 +150,16 @@
             },
             "$id": "#/definitions/CyclomaticComplexity"
         },
+        "DataExchangeLoading": {
+            "description": "Add a check for the attribute ExchangeData.Load at the very beginning of the procedure",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Add a check for the attribute ExchangeData.Load at the very beginning of the procedure",
+            "$id": "#/definitions/DataExchangeLoading"
+        },
         "DeletingCollectionItem": {
             "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "default": null,
