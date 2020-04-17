@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import lombok.extern.slf4j.Slf4j;
+import picocli.CommandLine.Command;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +36,7 @@ import java.util.jar.Manifest;
  *  -v, (--version)
  */
 @Slf4j
-@picocli.CommandLine.Command(
+@Command(
   name = "version",
   aliases = {"-v", "--version"},
   description = "Print version",

@@ -41,7 +41,7 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
-import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +55,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
+
+import static picocli.CommandLine.Option;
 
 /**
  * Выполнение анализа
@@ -79,7 +81,7 @@ import java.util.stream.Collectors;
  *  создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
  **/
 @Slf4j
-@CommandLine.Command(
+@Command(
   name = "analyze",
   aliases = {"-a", "--analyze"},
   description = "Run analysis and get diagnostic info",
@@ -99,41 +101,41 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
   }
 
-  @CommandLine.Option(
+  @Option(
     names = {"-h", "--help"},
     usageHelp = true,
     description = "Show this help message and exit")
   boolean usageHelpRequested;
 
-  @CommandLine.Option(
+  @Option(
     names = {"-s", "--srcDir"},
     description = "Source directory",
     paramLabel = "<path>",
     defaultValue = "")
   private String srcDirOption;
 
-  @CommandLine.Option(
+  @Option(
     names = {"-o", "--outputDir"},
     description = "Output report directory",
     paramLabel = "<path>",
     defaultValue = "")
   private String outputDirOption;
 
-  @CommandLine.Option(
+  @Option(
     names = {"-c", "--configuration"},
     description = "Path to language server configuration file",
     paramLabel = "<path>",
     defaultValue = "")
   private String configurationOption;
 
-  @CommandLine.Option(
+  @Option(
     names = {"-r", "--reporter"},
     paramLabel = "<keys>",
     completionCandidates = ReportersKeys.class,
     description = "Reporter key (${COMPLETION-CANDIDATES})")
   private String[] reportersOptions;
 
-  @CommandLine.Option(
+  @Option(
     names = {"--silent"},
     description = "Silent mode")
   private boolean silentMode;

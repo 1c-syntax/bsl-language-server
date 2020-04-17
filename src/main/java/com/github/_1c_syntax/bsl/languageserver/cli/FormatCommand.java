@@ -33,7 +33,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
-import picocli.CommandLine;
 
 import java.io.File;
 import java.net.URI;
@@ -42,6 +41,9 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+import static picocli.CommandLine.Command;
+import static picocli.CommandLine.Option;
 
 /**
  * Форматирование кода в исходниках
@@ -57,7 +59,7 @@ import java.util.concurrent.Callable;
  *  "форматтера" FormatProvider, т.е. пользователь никак не может овлиять на результат.
  */
 @Slf4j
-@CommandLine.Command(
+@Command(
   name = "format",
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
@@ -67,20 +69,20 @@ public class FormatCommand implements Callable<Integer> {
 
   private final ServerContext serverContext;
 
-  @CommandLine.Option(
+  @Option(
     names = {"-h", "--help"},
     usageHelp = true,
     description = "Show this help message and exit")
   boolean usageHelpRequested;
 
-  @CommandLine.Option(
+  @Option(
     names = {"-s", "--srcDir"},
     description = "Source directory",
     paramLabel = "<path>",
     defaultValue = "")
   private String srcDirOption;
 
-  @CommandLine.Option(
+  @Option(
     names = {"--silent"},
     description = "Silent mode")
   private boolean silentMode;
