@@ -49,16 +49,16 @@ jar-files run through `java -jar path/to/file.jar`.
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
- -a,--analyze               Run analysis and get diagnostic info
- -c,--configuration <arg>   Path to language server configuration file
- -f,--format                Format files in source directory
- -h,--help                  Show help.
- -o,--outputDir <arg>       Output report directory
- -r,--reporter <arg>        Reporter key
- -s,--srcDir <arg>          Source directory
- -v,--version               Version
- -q,--silent                Silent mode
+BSL language server
+Usage:  [-hV] [-c=<path>] [COMMAND]
+BSL language server on LSP server mode
+  -c, --configuration=<path>
+                  Path to language server configuration file
+  -h, --help      Show this help message and exit.
+  -V, --version   Print version information and exit.
+Commands:
+  analyze, -a, --analyze  Run analysis and get diagnostic info
+  format, -f, --format    Format files in source directory
 ```
 
 Starting BSL Language Server in standard mode will run the Language Server communicating via [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). stdin and stdout are used for communication.
@@ -69,7 +69,22 @@ By default diagnostics texts are displayed in Russian. To switch the diagnostics
 
 ## Run in analyzer mode
 
-To run in analyzer mode use parameter `--analyze` (short `-a`). To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
+To run in analyzer mode use parameter `--analyze` (short `-a`). 
+
+```sh
+Usage:  analyze [-hqV] [-c=<path>] [-o=<path>] [-s=<path>] [-r=<keys>]...
+Run analysis and get diagnostic info
+  -c, --configuration=<path>
+                           Path to language server configuration file
+  -h, --help               Show this help message and exit.
+  -o, --outputDir=<path>   Output report directory
+  -q, --silent             Silent mode
+  -r, --reporter=<keys>    Reporter key (console, json, junit, tslint, generic)
+  -s, --srcDir=<path>      Source directory
+  -V, --version            Print version information and exit.
+```
+
+To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
 
 To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter `--reporter` or `-r`, followed by reporter key. You may specify several reporters. The list of reporters see in section  **Reporters**.
 
@@ -89,7 +104,18 @@ java -Xmx4g -jar bsl-language-server.jar ... other parameters
 
 ## Run in formatter mode
 
-To run in formatter mode use parameter `--format` (short `-f`). To set source code folder for formatting use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
+To run in formatter mode use parameter `--format` (short `-f`). 
+
+```sh
+Usage:  format [-hqV] [-s=<path>]
+Format files in source directory
+  -h, --help            Show this help message and exit.
+  -q, --silent          Silent mode
+  -s, --srcDir=<path>   Source directory
+  -V, --version         Print version information and exit.
+```
+
+To set source code folder for formatting use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
 
 Command line example to run formatting:
 

@@ -49,16 +49,16 @@
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
- -a,--analyze               Run analysis and get diagnostic info
- -c,--configuration <arg>   Path to language server configuration file
- -f,--format                Format files in source directory
- -h,--help                  Show help.
- -o,--outputDir <arg>       Output report directory
- -r,--reporter <arg>        Reporter key
- -s,--srcDir <arg>          Source directory
- -v,--version               Version
- -q,--silent                Silent mode
+BSL language server
+Usage:  [-hV] [-c=<path>] [COMMAND]
+BSL language server on LSP server mode
+  -c, --configuration=<path>
+                  Path to language server configuration file
+  -h, --help      Show this help message and exit.
+  -V, --version   Print version information and exit.
+Commands:
+  analyze, -a, --analyze  Run analysis and get diagnostic info
+  format, -f, --format    Format files in source directory
 ```
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
@@ -69,8 +69,22 @@ usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <
 
 ## Запуск в режиме анализатора
 
-Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). 
 
+```sh
+Usage:  analyze [-hqV] [-c=<path>] [-o=<path>] [-s=<path>] [-r=<keys>]...
+Run analysis and get diagnostic info
+  -c, --configuration=<path>
+                           Path to language server configuration file
+  -h, --help               Show this help message and exit.
+  -o, --outputDir=<path>   Output report directory
+  -q, --silent             Silent mode
+  -r, --reporter=<keys>    Reporter key (console, json, junit, tslint, generic)
+  -s, --srcDir=<path>      Source directory
+  -V, --version            Print version information and exit.
+```
+
+Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
 Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе **Репортеры**.
 
 Пример строки запуска анализа:
@@ -89,7 +103,18 @@ java -Xmx4g -jar bsl-language-server.jar ...остальные параметр�
 
 ## Запуск в режиме форматтера
 
-Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`). Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`).
+
+```sh
+Usage:  format [-hqV] [-s=<path>]
+Format files in source directory
+  -h, --help            Show this help message and exit.
+  -q, --silent          Silent mode
+  -s, --srcDir=<path>   Source directory
+  -V, --version         Print version information and exit.
+```
+
+Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
 
 Пример строки запуска форматирования:
 
