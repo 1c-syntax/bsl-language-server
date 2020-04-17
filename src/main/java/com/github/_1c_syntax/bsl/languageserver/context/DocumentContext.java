@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
@@ -51,6 +52,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -79,6 +81,7 @@ public class DocumentContext {
   private final Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
   private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private final Lazy<Optional<MDObjectBase>> mdObject = new Lazy<>(this::computeMdObject, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     this.uri = Absolute.uri(uri);
@@ -185,6 +188,10 @@ public class DocumentContext {
 
   public Map<SupportConfiguration, SupportVariant> getSupportVariants() {
     return supportVariants.getOrCompute();
+  }
+
+  public Optional<MDObjectBase> getMdObject() {
+    return mdObject.getOrCompute();
   }
 
   public void rebuild(String content) {
@@ -327,6 +334,10 @@ public class DocumentContext {
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
     Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
     return diagnosticIgnoranceComputer.compute();
+  }
+
+  private Optional<MDObjectBase> computeMdObject() {
+    return Optional.ofNullable(context.getConfiguration().getModulesByURI().get(getUri()));
   }
 
 }
