@@ -13,12 +13,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameClientServerDiagnostic> {
+  private CommonModule module;
+  private DocumentContext documentContext;
+
   CommonModuleNameClientServerDiagnosticTest() {
     super(CommonModuleNameClientServerDiagnostic.class);
   }
@@ -27,40 +31,104 @@ class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
 
-  @SneakyThrows
   @Test
   void test() {
 
-    Path path = Absolute.path(PATH_TO_METADATA);
-    var serverContext = spy(new ServerContext(path));
-    var configuration = spy(serverContext.getConfiguration());
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    getDocumentContextFromFile();
 
-    Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-
-    var documentContext = spy(new DocumentContext(
-      testFile.toUri(),
-      FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      serverContext
-    ));
-    when(documentContext.getServerContext()).thenReturn(serverContext);
-
-
-    var modules = spy(configuration.getModulesByURI());
-    when(configuration.getModulesByURI()).thenReturn(modules);
-
-    var module = spy((CommonModule) modules.get(documentContext.getUri()));
-
+    // given
+    when(module.getName()).thenReturn("ЧтоТо");
     when(module.isServer()).thenReturn(Boolean.TRUE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
 
-    when(modules.get(documentContext.getUri())).thenReturn(module);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
+    // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 0, 0, 1);
 
   }
 
+  @Test
+  void testNegative() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТоКлиентСервер");
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testFalse() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТоКлиентСервер");
+    when(module.isServer()).thenReturn(Boolean.FALSE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testFalse2() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТо");
+    when(module.isServer()).thenReturn(Boolean.FALSE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @SneakyThrows
+  void getDocumentContextFromFile() {
+
+    Path path = Absolute.path(PATH_TO_METADATA);
+    Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+
+    ServerContext serverContext = new ServerContext(path);
+    var configuration = serverContext.getConfiguration();
+    documentContext = spy(new DocumentContext(
+      testFile.toUri(),
+      FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
+      serverContext
+    ));
+
+
+    module = spy((CommonModule) configuration.getModulesByURI().get(documentContext.getUri()));
+
+  }
 }
