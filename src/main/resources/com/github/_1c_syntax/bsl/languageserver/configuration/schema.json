@@ -47,6 +47,9 @@
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
+                "CommonModuleNameGlobal": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameGlobal"
+                },
                 "CommonModuleNameServerCall": {
                     "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameServerCall"
                 },

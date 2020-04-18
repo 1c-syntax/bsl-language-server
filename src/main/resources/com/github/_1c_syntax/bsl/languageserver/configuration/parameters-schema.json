@@ -106,6 +106,16 @@
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
         },
+        "CommonModuleNameGlobal": {
+            "description": "Missed postfix \"Global\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Global\"",
+            "$id": "#/definitions/CommonModuleNameGlobal"
+        },
         "CommonModuleNameServerCall": {
             "description": "Missed postfix \"ServerCall\"",
             "default": null,
