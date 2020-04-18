@@ -106,6 +106,16 @@
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
         },
+        "CommonModuleNameFullAccess": {
+            "description": "Missed postfix \"FullAccess\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"FullAccess\"",
+            "$id": "#/definitions/CommonModuleNameFullAccess"
+        },
         "CommonModuleNameGlobal": {
             "description": "Missed postfix \"Global\"",
             "default": null,
