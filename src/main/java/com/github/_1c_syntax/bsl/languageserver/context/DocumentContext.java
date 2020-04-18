@@ -81,7 +81,6 @@ public class DocumentContext {
   private final Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
   private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
-  private final Lazy<Optional<MDObjectBase>> mdObject = new Lazy<>(this::computeMdObject, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context) {
     this.uri = Absolute.uri(uri);
@@ -191,7 +190,7 @@ public class DocumentContext {
   }
 
   public Optional<MDObjectBase> getMdObject() {
-    return mdObject.getOrCompute();
+    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByURI().get(getUri()));
   }
 
   public void rebuild(String content) {
@@ -334,10 +333,6 @@ public class DocumentContext {
   private DiagnosticIgnoranceComputer.Data computeDiagnosticIgnorance() {
     Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer = new DiagnosticIgnoranceComputer(this);
     return diagnosticIgnoranceComputer.compute();
-  }
-
-  private Optional<MDObjectBase> computeMdObject() {
-    return Optional.ofNullable(context.getConfiguration().getModulesByURI().get(getUri()));
   }
 
 }

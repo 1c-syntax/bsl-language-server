@@ -1,18 +1,16 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Optional;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -27,30 +25,31 @@ import java.util.Optional;
   }
 
 )
-public class CommonModuleNameClientServerDiagnostic extends AbstractVisitorDiagnostic {
+public class CommonModuleNameClientServerDiagnostic extends AbstractDiagnostic {
+
+  private static final Pattern pattern = Pattern.compile(
+    "(КлиентСервер$|ClientServer$)",
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  );
+
   public CommonModuleNameClientServerDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  protected void check(DocumentContext documentContext) {
 
-    Optional<MDObjectBase> commonModuleOptional = documentContext.getMdObject();
-
-    if (commonModuleOptional.isEmpty()
-      || !(commonModuleOptional.get() instanceof CommonModule)) {
-      return super.visitFile(ctx);
+    if (documentContext.getTokens().isEmpty()) {
+      return;
     }
 
-    CommonModule commonModule = (CommonModule) commonModuleOptional.get();
+    documentContext.getMdObject()
+      .map(CommonModule.class::cast)
+      .filter(CommonModule::isServer)
+      .filter(CommonModule::isClientManagedApplication)
+      .filter(commonModule -> !pattern.matcher(commonModule.getName()).matches())
+      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokens().get(0)));
 
-    if (commonModule.isServer()
-      && commonModule.isClientManagedApplication()
-      && !commonModule.getName().endsWith("КлиентСервер")) {
-      diagnosticStorage.addDiagnostic(ctx.getStart());
-    }
-
-    return super.visitFile(ctx);
   }
 
 }
