@@ -27,10 +27,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -38,9 +41,11 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.CRITICAL,
   scope = DiagnosticScope.BSL,
   modules = {
-    ModuleType.ObjectModule
+    ModuleType.ObjectModule,
+    ModuleType.RecordSetModule,
+    ModuleType.ValueManagerModule
   },
-  minutesToFix = 10,
+  minutesToFix = 5,
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.BADPRACTICE,
@@ -50,15 +55,11 @@ import java.util.regex.Pattern;
 )
 public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final String SUB_NAMES = "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$";
-  private static final String CONDITION =
-    "ОбменДанными.Загрузка=Истина|ОбменДанными.Загрузка|DataExchange.Load=True|DataExchange.Load";
-
   private static final Pattern searchSubNames = Pattern.compile(
-    SUB_NAMES,
+    "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final Pattern searchCondition = Pattern.compile(
-    CONDITION,
+    "(ОбменДанными.Загрузка=Истина|ОбменДанными.Загрузка|DataExchange.Load=True|DataExchange.Load)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   public DataExchangeLoadingDiagnostic(DiagnosticInfo info) {
@@ -67,43 +68,51 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
-    var subName = ctx.subName();
-    if (subName != null) {
-      if (searchSubNames.matcher(subName.getText()).matches() && needCreateIssue(ctx)) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
-    }
+    Optional.of(ctx)
+      .map(BSLParser.ProcDeclarationContext::subName)
+      .filter(subName -> searchSubNames.matcher(subName.getText()).find() && needCreateIssue(ctx))
+      .flatMap(context ->
+        Optional.of(documentContext.getSymbolTree())
+          .map(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx)))
+          .get())
+      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange()));
     return ctx;
   }
 
   private boolean needCreateIssue(BSLParser.ProcDeclarationContext ctx) {
-    BSLParser.ProcedureContext procedureContext = (BSLParser.ProcedureContext) ctx.getParent();
-    var statements = procedureContext.subCodeBlock().codeBlock().statement();
-    if (statements != null) {
-      if (!statements.isEmpty()) {
-        return !foundLoadConditionWithReturn(statements.get(0));
-      }
-    }
-    return true;
+    return Optional.of(ctx)
+      .map(BSLParser.ProcDeclarationContext::getParent)
+      .map(BSLParser.ProcedureContext.class::cast)
+      .map(BSLParser.ProcedureContext::subCodeBlock)
+      .map(BSLParser.SubCodeBlockContext::codeBlock)
+      .map(BSLParser.CodeBlockContext::statement)
+      .flatMap(context -> context.stream().findFirst())
+      .filter(context -> !foundLoadConditionWithReturn(context))
+      .isPresent();
   }
 
   private boolean foundLoadConditionWithReturn(BSLParser.StatementContext ctx) {
-    var ifStatement = ctx.compoundStatement().ifStatement();
-    if (ifStatement != null) {
-      var ifBranch = ifStatement.ifBranch();
-      var text = ifBranch.expression().getText();
-      return searchCondition.matcher(text).find() && foundReturnStatement(ifBranch);
-    }
-    return false;
+    return Optional.of(ctx)
+      .map(BSLParser.StatementContext::compoundStatement)
+      .map(BSLParser.CompoundStatementContext::ifStatement)
+      .map(BSLParser.IfStatementContext::ifBranch)
+      .filter(context ->
+        searchCondition.matcher(context.expression().getText()).find()
+          && foundReturnStatement(context))
+      .isPresent();
   }
 
-  private boolean foundReturnStatement(BSLParser.IfBranchContext ctx) {
-    var ifStatements = ctx.codeBlock().statement();
-    if (ifStatements != null) {
-      var itemStatement = ifStatements.get(0);
-      return itemStatement.compoundStatement().returnStatement() != null;
-    }
-    return false;
+  private boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
+    return Optional.of(ifBranch)
+      .map(BSLParser.IfBranchContext::codeBlock)
+      .map(BSLParser.CodeBlockContext::statement)
+      .flatMap(context -> context.stream().findFirst())
+      .map(BSLParser.StatementContext::compoundStatement)
+      .map(BSLParser.CompoundStatementContext::returnStatement)
+      .isPresent();
   }
 
+  private ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
+    return Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
+  }
 }

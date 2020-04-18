@@ -42,11 +42,11 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
     assertThat(diagnostics)
       .hasSize(3)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        Ranges.create(7, 0, 7, 29)))
+        Ranges.create(7, 10, 7, 22)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        Ranges.create(19, 0, 19, 25)))
+        Ranges.create(19, 10, 19, 17)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        Ranges.create(33, 0, 33, 30)));
+        Ranges.create(33, 10, 33, 22)));
 
   }
 }
