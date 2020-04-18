@@ -93,6 +93,17 @@ class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<Common
 
   }
 
+  @Test
+  void testEmptyFile() {
+
+    // when
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
   @SneakyThrows
   void getDocumentContextFromFile() {
 
