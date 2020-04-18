@@ -7,7 +7,7 @@ with open("output.json", "r") as file:
   total = data.get('benchmarks')[0].get('stats').get('mean')
   value = '{:.2f}'.format(total)
 
-svg = badge(left_text='Benckmark (SSL 1.0)', right_text=value)
+svg = badge(left_text='Benchmark (SSL 1.0)', right_text=value)
 f = open('benchmark.svg', 'w')
 f.write(svg)
 f.close()

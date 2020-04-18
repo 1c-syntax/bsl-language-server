@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.IntervalSet;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ErrorNodeImpl;
@@ -49,6 +50,8 @@ import java.util.stream.IntStream;
   }
 )
 public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
+
+  public static final int EOF = -1;
 
   public ParseErrorDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -82,8 +85,13 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
           .mapToObj(ParseErrorDiagnostic::getTokenName)
           .forEachOrdered(sj::add);
 
+        Token errorToken = node.exception.getOffendingToken();
+        if (errorToken.getType() == EOF) {
+          errorToken = node.getStart();
+        }
+
         diagnosticStorage.addDiagnostic(
-          node.exception.getOffendingToken(),
+          errorToken,
           info.getMessage(initialExpectedString + sj.toString())
         );
       });

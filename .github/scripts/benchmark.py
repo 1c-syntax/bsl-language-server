@@ -2,14 +2,17 @@ import pytest
 import os
 import re
 import ntpath
+import json
 
 pattern = r"bsl.+\.jar"
-dirName = os.getcwd() + "/build/libs"  
+thisPath = os.getcwd()
+dirName = thisPath + "/build/libs"  
 
 def test_analyze_ssl31(benchmark):
     benchmark(some_func, None)
 
 def some_func(arg):
+    pathToConfig = createBSLLSConfiguration()
     fullname = get_bslls_jar(dirName)
     cmdArgs = ['java']
     cmdArgs.append('-jar')
@@ -17,6 +20,8 @@ def some_func(arg):
     cmdArgs.append('-a')
     cmdArgs.append('-s')
     cmdArgs.append('ssl')
+    cmdArgs.append('-c')
+    cmdArgs.append(pathToConfig)
     cmd = ' '.join(cmdArgs) 
     os.system(cmd)
 
@@ -27,3 +32,14 @@ def get_bslls_jar(dir):
         if os.path.isfile(fullname) and re.search(pattern, fullname) and fullname.find('sources.jar') == -1 and fullname.find('javadoc.jar') == -1:
             return ntpath.basename(fullname)
     return None
+
+def createBSLLSConfiguration():
+    newPath = thisPath + "/ssl/.bsl-language-server.json"
+    data = {}
+    data['configurationRoot'] = './src'
+    data['diagnostics'] = {'Typo': False}
+
+    with open(newPath, 'w') as outfile:
+        json.dump(data, outfile)
+
+    return newPath
