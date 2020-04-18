@@ -56,20 +56,23 @@ import java.util.regex.Pattern;
 
 public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final Pattern ILLEGAL_DASH_PATTERN = Pattern.compile("([" +
+  public static final String SPACE_REGEX = "(?:" +
+    "\\u00A0" + // 160
+    ")";
+
+  private static final Pattern ILLEGAL_PATTERN = Pattern.compile("(?:[" +
       "\\u00AD" + // 173
       "\\u2012" + // 8210
       "\\u2013" + // 8211
       "\\u2014" + // 8212
       "\\u2015" + // 8213
       "\\u2212" + // 8722
-      "])",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "])" +
+      "|" + SPACE_REGEX,
+    Pattern.UNICODE_CASE);
 
-  private static final Pattern ILLEGAL_SPACE_PATTERN = Pattern.compile("([" +
-      "\\u00A0" + // 160
-      "])",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern ILLEGAL_SPACE_PATTERN = Pattern.compile(SPACE_REGEX,
+    Pattern.UNICODE_CASE);
 
   private final String diagnosticMessageDash;
   private final String diagnosticMessageSpace;
@@ -87,18 +90,16 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
       .getTokens()
       .stream()
       .filter((Token token) -> token.getChannel() == Lexer.HIDDEN || token.getType() == BSLLexer.STRING)
+      .filter((Token token) -> ILLEGAL_PATTERN.matcher(token.getText()).find())
       .forEach(token ->
         {
           var text = token.getText();
-          if (ILLEGAL_SPACE_PATTERN.matcher(text).find()) {
+            String message = diagnosticMessageDash;
+            if (ILLEGAL_SPACE_PATTERN.matcher(text).find()){
+              message = diagnosticMessageSpace;
+            }
+            diagnosticStorage.addDiagnostic(token, message);
 
-            diagnosticStorage.addDiagnostic(token, diagnosticMessageSpace);
-
-          } else if (ILLEGAL_DASH_PATTERN.matcher(text).find()) {
-
-            diagnosticStorage.addDiagnostic(token, diagnosticMessageDash);
-
-          }
         }
       );
 
@@ -129,7 +130,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
-          ILLEGAL_DASH_PATTERN.matcher(documentContext.getText(range)).replaceAll("-"));
+          ILLEGAL_PATTERN.matcher(documentContext.getText(range)).replaceAll("-"));
 
         textEdits.add(textEdit);
       });
