@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -48,31 +47,19 @@ import java.util.regex.Pattern;
   }
 
 )
-public class CommonModuleNameClientServerDiagnostic extends AbstractDiagnostic {
+public class CommonModuleNameClientServerDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final Pattern pattern = Pattern.compile(
-    "^.*клиентсервер|^.*clientserver",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
 
   public CommonModuleNameClientServerDiagnostic(DiagnosticInfo info) {
     super(info);
+    pattern = Pattern.compile(
+      "^.*клиентсервер|^.*clientserver",
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
-
-    if (documentContext.getTokens().isEmpty()) {
-      return;
-    }
-
-    documentContext.getMdObject()
-      .map(CommonModule.class::cast)
-      .filter(CommonModule::isServer)
-      .filter(CommonModule::isClientManagedApplication)
-      .filter(commonModule -> !pattern.matcher(commonModule.getName()).matches())
-      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokens().get(0)));
-
+  protected boolean flagsCheck(CommonModule commonModule) {
+    return commonModule.isServer() && commonModule.isClientManagedApplication();
   }
-
 }
