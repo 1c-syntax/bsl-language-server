@@ -47,6 +47,9 @@
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
+                "CommonModuleNameServerCall": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameServerCall"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
                 },

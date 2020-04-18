@@ -1,8 +1,8 @@
-# <Diagnostic name> (<DiagnosticKey>)
+# Пропущен постфикс "ВызовСервера" (CommonModuleNameServerCall)
 
-<Metadata>
-
-## <Params>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Дефект кода` | `BSL`<br/>`OS` | `Информационный` | `Да` | `1` | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -20,17 +20,17 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:CommonModuleNameServerCall-off
+// BSLLS:CommonModuleNameServerCall-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"CommonModuleNameServerCall": false
 ```

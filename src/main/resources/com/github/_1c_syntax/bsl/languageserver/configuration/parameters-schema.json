@@ -106,6 +106,16 @@
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
         },
+        "CommonModuleNameServerCall": {
+            "description": "Missed postfix \"ServerCall\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"ServerCall\"",
+            "$id": "#/definitions/CommonModuleNameServerCall"
+        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
             "default": true,
