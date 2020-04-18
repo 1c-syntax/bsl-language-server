@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
@@ -59,6 +60,35 @@ class InvalidCharacterInFileDiagnosticTest extends AbstractDiagnosticTest<Invali
       .hasRange(28, 0, 28, 1)
       .hasSize(14);
 
+  }
+
+  @Test
+  void testMultiString() {
+    String module = "//в строке ниже неразрывный пробел\n" +
+      "А = \" \n" +
+      "|// минусы с ошибками\n" +
+      "|//СреднееТире = \n" +
+      "|–;\n" +
+      "|//ЦифровоеТире = \n" +
+      "|‒;\n" +
+      "|//ДлинноеТире = \n" +
+      "|—;\n" +
+      "|//ГоризонтальнаяЛиния = \n" +
+      "|―;\n" +
+      "|//НеправильныйМинус = \n" +
+      "|−;\";\n";
+
+    var documentContext = TestUtils.getDocumentContext(module);
+    var diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics, true)
+      .hasRange(1, 4, 1, 6)
+      .hasRange(4, 0, 4, 3)
+      .hasRange(6, 0, 6, 3)
+      .hasRange(8, 0, 8, 3)
+      .hasRange(10, 0, 10, 3)
+      .hasRange(12, 0, 12, 4)
+      .hasSize(6);
   }
 
   @Test
