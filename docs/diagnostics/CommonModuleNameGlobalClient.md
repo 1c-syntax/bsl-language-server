@@ -1,8 +1,8 @@
-# <Diagnostic name> (<DiagnosticKey>)
+# Глобальный модуль с постфиксом "Клиент" (CommonModuleNameGlobalClient)
 
-<Metadata>
-
-## <Params>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Дефект кода` | `BSL`<br/>`OS` | `Информационный` | `Да` | `1` | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -20,17 +20,17 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:CommonModuleNameGlobalClient-off
+// BSLLS:CommonModuleNameGlobalClient-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"CommonModuleNameGlobalClient": false
 ```

@@ -53,6 +53,9 @@
                 "CommonModuleNameGlobal": {
                     "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameGlobal"
                 },
+                "CommonModuleNameGlobalClient": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameGlobalClient"
+                },
                 "CommonModuleNameServerCall": {
                     "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameServerCall"
                 },

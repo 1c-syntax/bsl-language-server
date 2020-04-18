@@ -126,6 +126,16 @@
             "title": "Missed postfix \"Global\"",
             "$id": "#/definitions/CommonModuleNameGlobal"
         },
+        "CommonModuleNameGlobalClient": {
+            "description": "Global module with postfix \"Client\"",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Global module with postfix \"Client\"",
+            "$id": "#/definitions/CommonModuleNameGlobalClient"
+        },
         "CommonModuleNameServerCall": {
             "description": "Missed postfix \"ServerCall\"",
             "default": null,
