@@ -43,7 +43,7 @@ public class CommonModuleNameGlobalClientDiagnostic extends AbstractCommonModule
   public CommonModuleNameGlobalClientDiagnostic(DiagnosticInfo info) {
     super(info);
     pattern = Pattern.compile(
-      "!?клиент|!?client",
+      "^(?>(?!Клиент|client).)*$",
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
     );
   }
