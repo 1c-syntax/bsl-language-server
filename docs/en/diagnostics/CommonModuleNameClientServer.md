@@ -1,8 +1,8 @@
-# <Diagnostic name>
+# Missed postfix "ClientServer" (CommonModuleNameClientServer)
 
-<Metadata>
-
-## <Params>
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `2` | `badpractice`<br/>`standard`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -20,17 +20,17 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:CommonModuleNameClientServer-off
+// BSLLS:CommonModuleNameClientServer-on
 ```
 
 ### Parameter for config
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"CommonModuleNameClientServer": false
 ```

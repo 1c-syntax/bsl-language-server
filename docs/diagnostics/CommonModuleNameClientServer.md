@@ -1,8 +1,8 @@
-# <Diagnostic name> (<DiagnosticKey>)
+# Пропущен постфикс "КлиентСервер" (CommonModuleNameClientServer)
 
-<Metadata>
-
-## <Params>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Дефект кода` | `BSL` | `Важный` | `Да` | `2` | `badpractice`<br/>`standard`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -33,17 +33,17 @@
 [Правила создания общих модулей](https://its.1c.ru/db/v8std#content:469:hdoc:2.4)
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:CommonModuleNameClientServer-off
+// BSLLS:CommonModuleNameClientServer-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"CommonModuleNameClientServer": false
 ```
