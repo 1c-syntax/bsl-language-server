@@ -3,14 +3,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +34,7 @@ class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<
     Path path = Absolute.path(PATH_TO_METADATA);
     var serverContext = spy(new ServerContext(path));
     var configuration = spy(serverContext.getConfiguration());
+    when(serverContext.getConfiguration()).thenReturn(configuration);
 
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
@@ -44,24 +43,20 @@ class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       serverContext
     ));
-
     when(documentContext.getServerContext()).thenReturn(serverContext);
 
-    when(serverContext.getConfiguration()).thenReturn(configuration);
-    var modules = spy(configuration.getModulesByURI());
 
+    var modules = spy(configuration.getModulesByURI());
     when(configuration.getModulesByURI()).thenReturn(modules);
 
-    CommonModule myModule = (CommonModule) modules.get(documentContext.getUri());
+    var module = spy((CommonModule) modules.get(documentContext.getUri()));
 
-    var spymodule = spy(myModule);
-    when(spymodule.isServer()).thenReturn(Boolean.TRUE);
-    when(spymodule.isClientManagedApplication()).thenReturn(Boolean.TRUE);
-    when(modules.get(documentContext.getUri())).thenReturn(spymodule);
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
 
+    when(modules.get(documentContext.getUri())).thenReturn(module);
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
-
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 0, 0, 1);
