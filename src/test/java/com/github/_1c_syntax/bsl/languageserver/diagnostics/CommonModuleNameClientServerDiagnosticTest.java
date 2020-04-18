@@ -80,7 +80,7 @@ class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ЧтоТоКлиентСервер");
+    when(module.getName()).thenReturn("ЧтоТоclientserver");
     when(module.isServer()).thenReturn(Boolean.TRUE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
 

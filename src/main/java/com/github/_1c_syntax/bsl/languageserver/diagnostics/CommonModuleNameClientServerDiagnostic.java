@@ -35,21 +35,23 @@ import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
   modules = {
     ModuleType.CommonModule
   },
   minutesToFix = 2,
   tags = {
-    DiagnosticTag.STANDARD
+    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.UNPREDICTABLE
   }
 
 )
 public class CommonModuleNameClientServerDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern pattern = Pattern.compile(
-    "(КлиентСервер$|ClientServer$)",
+    "^.*клиентсервер|^.*clientserver",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
 
