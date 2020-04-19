@@ -41,8 +41,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
   tags = {
     DiagnosticTag.STANDARD,
     DiagnosticTag.BADPRACTICE,
-    DiagnosticTag.UNPREDICTABLE,
-    DiagnosticTag.SUSPICIOUS
+    DiagnosticTag.UNPREDICTABLE
   }
 )
 public class CommonModuleNameFullAccessDiagnostic extends AbstractCommonModuleNameDiagnostic {
