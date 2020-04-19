@@ -37,13 +37,12 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
   modules = {
     ModuleType.CommonModule
   },
-  minutesToFix = 2,
+  minutesToFix = 5,
   tags = {
-    DiagnosticTag.BADPRACTICE,
     DiagnosticTag.STANDARD,
+    DiagnosticTag.BADPRACTICE,
     DiagnosticTag.UNPREDICTABLE
   }
-
 )
 public class CommonModuleNameClientServerDiagnostic extends AbstractCommonModuleNameDiagnostic {
 

@@ -23,19 +23,27 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 2,
+  severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.BSL,
+  modules = {
+    ModuleType.CommonModule
+  },
+  minutesToFix = 5,
   tags = {
-    DiagnosticTag.STANDARD
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.UNPREDICTABLE,
+    DiagnosticTag.BRAINOVERLOAD
   }
-
 )
 public class CommonModuleNameGlobalDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
