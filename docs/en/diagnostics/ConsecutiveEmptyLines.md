@@ -19,22 +19,6 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
-```
-
-### Parameter for config
-
-```json
-"<DiagnosticKey>": <DiagnosticConfig>
-```
-
-## Snippets
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
 // BSLLS:ConsecutiveEmptyLines-off
 // BSLLS:ConsecutiveEmptyLines-on
 ```
@@ -43,6 +27,6 @@
 
 ```json
 "ConsecutiveEmptyLines": {
-    "allowedEmptyLinesCount": 1
+  "allowedEmptyLinesCount" : 1
 }
 ```

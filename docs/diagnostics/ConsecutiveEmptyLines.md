@@ -22,22 +22,6 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
-```
-
-### Параметр конфигурационного файла
-
-```json
-"<DiagnosticKey>": <DiagnosticConfig>
-```
-
-## Сниппеты
-
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Экранирование кода
-
-```bsl
 // BSLLS:ConsecutiveEmptyLines-off
 // BSLLS:ConsecutiveEmptyLines-on
 ```
@@ -46,6 +30,6 @@
 
 ```json
 "ConsecutiveEmptyLines": {
-    "allowedEmptyLinesCount": 1
+  "allowedEmptyLinesCount" : 1
 }
 ```
