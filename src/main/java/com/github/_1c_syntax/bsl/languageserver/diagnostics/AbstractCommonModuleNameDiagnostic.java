@@ -29,10 +29,16 @@ import java.util.regex.Pattern;
 
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
-  Pattern pattern;
+  private final Pattern pattern;
 
-  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info) {
+  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
     super(info);
+
+    pattern = Pattern.compile(
+      regexp,
+      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+    );
+
   }
 
   @Override

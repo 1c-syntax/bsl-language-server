@@ -29,8 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
 
-import java.util.regex.Pattern;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
@@ -41,13 +39,11 @@ import java.util.regex.Pattern;
 
 )
 public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDiagnostic {
-  public CommonModuleNameCachedDiagnostic(DiagnosticInfo info) {
-    super(info);
-    pattern = Pattern.compile(
-      "^.*повтисп|^.*сached",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
 
+  private static final String REGEXP = "^.*повтисп|^.*сached";
+
+  public CommonModuleNameCachedDiagnostic(DiagnosticInfo info) {
+    super(info, REGEXP);
   }
 
   @Override

@@ -28,8 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 
-import java.util.regex.Pattern;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
@@ -40,13 +38,11 @@ import java.util.regex.Pattern;
 
 )
 public class CommonModuleNameClientDiagnostic extends AbstractCommonModuleNameDiagnostic {
-  public CommonModuleNameClientDiagnostic(DiagnosticInfo info) {
-    super(info);
-    pattern = Pattern.compile(
-      "^.*клиент|^.*client",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
 
+  private static final String REGEXP = "^.*клиент|^.*client";
+
+  public CommonModuleNameClientDiagnostic(DiagnosticInfo info) {
+    super(info, REGEXP);
   }
 
   @Override
