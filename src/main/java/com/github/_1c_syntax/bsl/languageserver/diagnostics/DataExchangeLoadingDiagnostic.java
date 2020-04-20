@@ -61,7 +61,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
     "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final Pattern searchCondition = Pattern.compile(
-    "ОбменДанными\\.Загрузка=Истина|ОбменДанными\\.Загрузка|DataExchange\\.Load=True|DataExchange\\.Load",
+    "ОбменДанными\\.Загрузка|DataExchange\\.Load",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final boolean FIND_FIRST = false;
