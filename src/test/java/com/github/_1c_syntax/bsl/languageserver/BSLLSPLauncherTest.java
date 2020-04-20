@@ -107,6 +107,25 @@ class BSLLSPLauncherTest {
   }
 
   @Test
+  @ExpectSystemExitWithStatus(1)
+  void testAnalyzeError() {
+    // given
+    String[] args = "--analyze --srcDir fake-dir".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).contains("is not exists");
+  }
+
+  @Test
   @ExpectSystemExitWithStatus(0)
   void testFormat() {
     // given
@@ -146,6 +165,25 @@ class BSLLSPLauncherTest {
   }
 
   @Test
+  @ExpectSystemExitWithStatus(1)
+  void testFormatError() {
+    // given
+    String[] args = "--format --srcDir fake-dir".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).contains("is not exists");
+  }
+
+  @Test
   @ExpectSystemExitWithStatus(0)
   void testVersion() {
     // given
@@ -176,5 +214,19 @@ class BSLLSPLauncherTest {
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
     assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  void testWithoutParametersErrorCfg() {
+    // given
+    String[] args = new String[]{"-c", "src/test/resources/cli/error-trace.json"};
+
+    // when
+    BSLLSPLauncher.main(args);
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).contains("Can't create LSP trace file");
   }
 }
