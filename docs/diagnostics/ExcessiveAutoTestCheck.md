@@ -1,8 +1,8 @@
-# <Diagnostic name> (<DiagnosticKey>)
+# Избыточная проверка параметра АвтоТест (ExcessiveAutoTestCheck)
 
-<Metadata>
-
-## <Params>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Дефект кода` | `BSL`<br/>`OS` | `Незначительный` | `Да` | `1` | `standard`<br/>`deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -29,17 +29,17 @@
 * Источник: [Стандарт: Тексты модулей пункт 3](https://its.1c.ru/db/v8std#content:456:hdoc:3)
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:ExcessiveAutoTestCheck-off
+// BSLLS:ExcessiveAutoTestCheck-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"ExcessiveAutoTestCheck": false
 ```

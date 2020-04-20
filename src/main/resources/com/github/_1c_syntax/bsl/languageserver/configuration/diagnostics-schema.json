@@ -266,6 +266,16 @@
             "title": "Empty statement",
             "$id": "#/definitions/EmptyStatement"
         },
+        "ExcessiveAutoTestCheck": {
+            "description": "Excessive AutoTest Check",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Excessive AutoTest Check",
+            "$id": "#/definitions/ExcessiveAutoTestCheck"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": null,

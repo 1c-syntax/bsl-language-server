@@ -164,6 +164,9 @@
                 "EmptyStatement": {
                     "$ref": "diagnostics-schema.json#/definitions/EmptyStatement"
                 },
+                "ExcessiveAutoTestCheck": {
+                    "$ref": "diagnostics-schema.json#/definitions/ExcessiveAutoTestCheck"
+                },
                 "ExtraCommas": {
                     "$ref": "diagnostics-schema.json#/definitions/ExtraCommas"
                 },
