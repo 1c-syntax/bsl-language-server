@@ -28,14 +28,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -63,7 +61,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
     "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final Pattern searchCondition = Pattern.compile(
-    "ОбменДанными.Загрузка=Истина|ОбменДанными.Загрузка|DataExchange.Load=True|DataExchange.Load",
+    "ОбменДанными\\.Загрузка|DataExchange\\.Load",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final boolean FIND_FIRST = false;
@@ -88,8 +86,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       )
       .flatMap(context ->
         Optional.of(documentContext.getSymbolTree())
-          .map(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx)))
-          .get())
+          .flatMap(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx))))
       .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange()));
     return ctx;
   }
