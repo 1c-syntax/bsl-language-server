@@ -13,7 +13,7 @@
       
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.0">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.1">
     
     
       
@@ -21,9 +21,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.89dc9fe3.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.a676eddb.min.css">
       
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecd4686e.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.b302131d.min.css">
       
       
         
@@ -356,9 +356,9 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>88</strong></p>
+<p>Total: <strong>89</strong></p>
 <ul>
-<li>Error: <strong>29</strong></li>
+<li>Error: <strong>30</strong></li>
 <li>Code smell: <strong>55</strong></li>
 <li>Vulnerability: <strong>2</strong></li>
 <li>Security Hotspot: <strong>2</strong></li>
@@ -462,6 +462,14 @@
 <td>Critical</td>
 <td>Code smell</td>
 <td><code>brainoverload</code></td>
+</tr>
+<tr>
+<td><a href="DataExchangeLoading/">DataExchangeLoading</a></td>
+<td>There is no check for the attribute DataExchange.Load in the object's event handler</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>standard</code><br/><code>badpractice</code><br/><code>unpredictable</code></td>
 </tr>
 <tr>
 <td><a href="DeletingCollectionItem/">DeletingCollectionItem</a></td>
@@ -1163,15 +1171,15 @@
       
     </div>
     
-      <script src="../assets/javascripts/vendor.36cbf620.min.js"></script>
-      <script src="../assets/javascripts/bundle.00c583dd.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../assets/javascripts/vendor.c51dfa35.min.js"></script>
+      <script src="../assets/javascripts/bundle.eaaa3931.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
           base: "..",
           features: [],
           search: Object.assign({
-            worker: "../assets/javascripts/worker/search.7f7c8775.min.js"
+            worker: "../assets/javascripts/worker/search.58d22e8e.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>
