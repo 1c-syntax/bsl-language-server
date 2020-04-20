@@ -21,14 +21,83 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.ParameterException;
 
-public class BSLLSPLauncher {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import static picocli.CommandLine.Command;
+
+@Command(
+  name = "bslls",
+  description = "BSL language server",
+  subcommands = {
+    AnalyzeCommand.class,
+    FormatCommand.class,
+    VersionCommand.class,
+    LanguageServerStartCommand.class
+  },
+  usageHelpAutoWidth = true,
+  synopsisSubcommandLabel = "[COMMAND [ARGS]]",
+  footer = "@|green Copyright(c) 2018-2020|@",
+  header = "@|green BSL language server|@")
+public class BSLLSPLauncher implements Callable<Integer> {
+
+  private static final String DEFAULT_COMMAND = "lsp";
+
+  @Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  private boolean usageHelpRequested;
+
   public static void main(String[] args) {
-    int result = new CommandLine(new LanguageServerStartCommand()).execute(args);
+    var app = new BSLLSPLauncher();
+    var cmd = new CommandLine(app);
+
+    // проверка использования дефолтной команды
+    // если строка параметров пуста, то это точно вызов команды по умолчанию
+    if (args.length == 0) {
+      args = addDefaultCommand(args);
+    } else {
+      // выполнение проверки строки запуска в попытке, т.к. парсер при нахождении
+      // неизвестных параметров выдает ошибку
+      try {
+        cmd.parseArgs(args);
+      } catch (ParameterException ex) {
+        // если поймали ошибку, а имя команды не передано, подставим команду и посмотрим,
+        // вдруг заработает
+        if (!ex.getCommandLine().getParseResult().hasSubcommand()) {
+          args = addDefaultCommand(args);
+        }
+      }
+    }
+
+    int result = cmd.execute(args);
     if (result >= 0) {
       System.exit(result);
     }
+  }
+
+  @NotNull
+  private static String[] addDefaultCommand(String[] args) {
+    List<String> tmpList = new ArrayList<>(Arrays.asList(args));
+    tmpList.add(0, DEFAULT_COMMAND);
+    args = tmpList.toArray(new String[0]);
+    return args;
+  }
+
+  public Integer call() {
+    // заглушка, командой как таковой не пользуемся
+    return 0;
   }
 }

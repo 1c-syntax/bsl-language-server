@@ -55,17 +55,11 @@ import static picocli.CommandLine.Option;
  */
 @Slf4j
 @Command(
-  name = "",
-  description = "BSL language server on LSP server mode",
-  subcommands = {
-    AnalyzeCommand.class,
-    FormatCommand.class,
-    VersionCommand.class
-  },
+  name = "lsp",
+  aliases = {"--lsp"},
+  description = "LSP server mode",
   usageHelpAutoWidth = true,
-  synopsisSubcommandLabel = "[COMMAND [ARGS]]",
-  footer = "@|green Copyright(c) 2018-2020|@",
-  header = "@|green BSL language server|@")
+  footer = "@|green Copyright(c) 2018-2020|@")
 public class LanguageServerStartCommand implements Callable<Integer> {
   @Option(
     names = {"-h", "--help"},
