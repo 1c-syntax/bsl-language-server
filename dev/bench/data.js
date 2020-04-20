@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587406892004,
+  "lastUpdate": 1587415310173,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -837,6 +837,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6695273614546695",
             "extra": "mean: 54.797364950180054 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4db0e660a76d8356d800f2c4b3b280d9f6be9f99",
+          "message": "Merge pull request #1097 from qtLex/feature/CanceledStandartInteractionWithAutomatedTestingTools\n\nFeature/canceled standart interaction with automated testing tools",
+          "timestamp": "2020-04-20T23:35:06+03:00",
+          "tree_id": "097d1a46335a816662bd82ab2dc028ee8fbf69cb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4db0e660a76d8356d800f2c4b3b280d9f6be9f99"
+        },
+        "date": 1587415308721,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.12495541572571,
+            "unit": "sec",
+            "range": "stddev: 1.2134717858871449",
+            "extra": "mean: 53.12495541572571 sec\nrounds: 3"
           }
         ]
       }
