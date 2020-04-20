@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **89**
+Total: **90**
 
 * Error: **30**
-* Code smell: **55**
+* Code smell: **56**
 * Vulnerability: **2**
 * Security Hotspot: **2**
 
@@ -38,6 +38,7 @@ Total: **89**
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br/>`suspicious` |
 | [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` |
+| [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Excessive AutoTest Check | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
 | [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` |

@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **89**
+Общее количество: **90**
 
-* Дефект кода: **55**
+* Дефект кода: **56**
 * Уязвимость: **2**
 * Ошибка: **30**
 * Потенциальная уязвимость: **2**
@@ -38,6 +38,7 @@
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br/>`suspicious` |
 | [EmptyRegion](EmptyRegion.md) | Область не должна быть пустой | Да | Информационный | Дефект кода | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` |
+| [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Избыточная проверка параметра АвтоТест | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` |
