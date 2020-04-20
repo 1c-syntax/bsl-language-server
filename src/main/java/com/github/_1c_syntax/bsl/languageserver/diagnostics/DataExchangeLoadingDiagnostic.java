@@ -23,17 +23,21 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -59,18 +63,35 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
     "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final Pattern searchCondition = Pattern.compile(
-    "(ОбменДанными.Загрузка=Истина|ОбменДанными.Загрузка|DataExchange.Load=True|DataExchange.Load)$",
+    "ОбменДанными.Загрузка=Истина|ОбменДанными.Загрузка|DataExchange.Load=True|DataExchange.Load",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final boolean FIND_FIRST = false;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + FIND_FIRST
+  )
+  private boolean findFirst = FIND_FIRST;
 
   public DataExchangeLoadingDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
+  public void configure(Map<String, Object> configuration) {
+    if (configuration == null) return;
+    DiagnosticHelper.configureDiagnostic(this, configuration, "findFirst");
+  }
+
+  @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
     Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::subName)
-      .filter(subName -> searchSubNames.matcher(subName.getText()).find() && needCreateIssue(ctx))
+      .filter(subName ->
+        searchSubNames.matcher(subName.getText()).find()
+          && !checkPassed(ctx)
+      )
       .flatMap(context ->
         Optional.of(documentContext.getSymbolTree())
           .map(symbolTree -> symbolTree.getMethodSymbol((BSLParser.SubContext) getSubContext(ctx)))
@@ -79,15 +100,23 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
     return ctx;
   }
 
-  private boolean needCreateIssue(BSLParser.ProcDeclarationContext ctx) {
+  private boolean checkPassed(BSLParser.ProcDeclarationContext ctx) {
+    AtomicInteger orderStatement = new AtomicInteger();
     return Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::getParent)
       .map(BSLParser.ProcedureContext.class::cast)
       .map(BSLParser.ProcedureContext::subCodeBlock)
       .map(BSLParser.SubCodeBlockContext::codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
-      .flatMap(context -> context.stream().findFirst())
-      .filter(context -> !foundLoadConditionWithReturn(context))
+      .flatMap(context -> context.stream()
+        .filter(statement -> {
+          orderStatement.getAndIncrement();
+          if (findFirst && orderStatement.get() > 1) {
+            return false;
+          }
+          return foundLoadConditionWithReturn(statement);
+        })
+        .findFirst())
       .isPresent();
   }
 
@@ -106,9 +135,10 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
     return Optional.of(ifBranch)
       .map(BSLParser.IfBranchContext::codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
-      .flatMap(context -> context.stream().findFirst())
-      .map(BSLParser.StatementContext::compoundStatement)
-      .map(BSLParser.CompoundStatementContext::returnStatement)
+      .flatMap(context -> context.stream()
+        .map(BSLParser.StatementContext::compoundStatement)
+        .map(BSLParser.CompoundStatementContext::returnStatement)
+        .findFirst())
       .isPresent();
   }
 

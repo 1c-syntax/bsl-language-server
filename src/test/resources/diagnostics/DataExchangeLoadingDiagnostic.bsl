@@ -1,5 +1,5 @@
 Процедура ПередУдалением(Отказ)
-    Если ОбменДанными.Загрузка = Истина Тогда
+    Если ОбменДанными.Загрузка Или ДополнительныеСвойства.Свойство("НеПроверятьУникальность") Тогда
         Возврат;
     КонецЕсли;
     Отказ = ОбщийМодуль.ЕстьОтказ(ОбменДанными.Загрузка);
@@ -17,7 +17,7 @@
     КонецЕсли;
 КонецПроцедуры
 
-Procedure OnWrite(Cancel)
+Procedure OnWrite(Cancel) // Ошибка
     Var Value;
     If DataExchange.Recipients Then
         Return;
@@ -35,4 +35,10 @@ Procedure BeforeDelete(Cancel)
     For Each Item in new Array Do
         Return;
     EndDo;
+
+    // Ошибка если ищем только первым
+    If DataExchange.Load Then
+        Return;
+    EndIf;
+
 EndProcedure

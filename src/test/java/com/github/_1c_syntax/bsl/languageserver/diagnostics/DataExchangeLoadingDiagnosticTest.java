@@ -26,6 +26,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -36,9 +37,31 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
 
   @Test
   void test() {
+    List<Diagnostic> diagnostics;
+    Map<String, Object> configuration;
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    // Проверяем срабатывания без изменения параметров
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
 
+    // then
+    assertThat(diagnostics)
+      .hasSize(2)
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(
+        Ranges.create(7, 10, 7, 22)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(
+        Ranges.create(19, 10, 19, 17)));
+
+    // Проверяем с включенным параметром findFirst
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("findFirst", true);
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
+
+    // then
     assertThat(diagnostics)
       .hasSize(3)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
@@ -47,6 +70,5 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
         Ranges.create(19, 10, 19, 17)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
         Ranges.create(33, 10, 33, 22)));
-
   }
 }
