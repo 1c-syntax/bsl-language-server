@@ -69,7 +69,7 @@ public final class LanguageServerConfiguration {
   private static final ComputeDiagnosticsSkipSupport DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT
     = ComputeDiagnosticsSkipSupport.NEVER;
 
-  private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
+  private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
   private DiagnosticLanguage diagnosticLanguage;
   private boolean showCognitiveComplexityCodeLens;
