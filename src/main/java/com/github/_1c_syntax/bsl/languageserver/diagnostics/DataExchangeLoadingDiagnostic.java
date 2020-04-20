@@ -80,7 +80,9 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) return;
+    if (configuration == null) {
+      return;
+    }
     DiagnosticHelper.configureDiagnostic(this, configuration, "findFirst");
   }
 
@@ -109,7 +111,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .map(BSLParser.SubCodeBlockContext::codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
       .flatMap(context -> context.stream()
-        .filter(statement -> {
+        .filter((BSLParser.StatementContext statement) -> {
           orderStatement.getAndIncrement();
           if (findFirst && orderStatement.get() > 1) {
             return false;
@@ -120,7 +122,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private boolean foundLoadConditionWithReturn(BSLParser.StatementContext ctx) {
+  private static boolean foundLoadConditionWithReturn(BSLParser.StatementContext ctx) {
     return Optional.of(ctx)
       .map(BSLParser.StatementContext::compoundStatement)
       .map(BSLParser.CompoundStatementContext::ifStatement)
@@ -131,7 +133,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
+  private static boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
     return Optional.of(ifBranch)
       .map(BSLParser.IfBranchContext::codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
@@ -142,7 +144,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
+  private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
     return Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 }
