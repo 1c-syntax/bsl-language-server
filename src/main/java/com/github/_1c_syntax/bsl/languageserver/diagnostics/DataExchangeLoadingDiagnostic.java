@@ -79,14 +79,6 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-    DiagnosticHelper.configureDiagnostic(this, configuration, "findFirst");
-  }
-
-  @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
     Optional.of(ctx)
       .map(BSLParser.ProcDeclarationContext::subName)
@@ -110,6 +102,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .map(BSLParser.ProcedureContext::subCodeBlock)
       .map(BSLParser.SubCodeBlockContext::codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
+      // FIXME: сделай этот фрагмент кода проще и лучше
       .flatMap(context -> context.stream()
         .filter((BSLParser.StatementContext statement) -> {
           orderStatement.getAndIncrement();
