@@ -124,13 +124,14 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
-    return Optional.of(ifBranch)
-      .map(BSLParser.IfBranchContext::codeBlock)
+
+    return Optional.ofNullable(ifBranch.codeBlock())
       .map(BSLParser.CodeBlockContext::statement)
-      .flatMap(context -> context.stream()
+      .flatMap(statementContexts -> statementContexts.stream()
         .map(BSLParser.StatementContext::compoundStatement)
         .map(BSLParser.CompoundStatementContext::returnStatement)
-        .findFirst())
+        .map(Optional::ofNullable)
+        .findAny())
       .isPresent();
   }
 
