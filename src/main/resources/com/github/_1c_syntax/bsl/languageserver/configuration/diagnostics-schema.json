@@ -150,6 +150,24 @@
             },
             "$id": "#/definitions/CyclomaticComplexity"
         },
+        "DataExchangeLoading": {
+            "description": "There is no check for the attribute DataExchange.Load in the object's event handler",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "There is no check for the attribute DataExchange.Load in the object's event handler",
+            "properties": {
+                "findFirst": {
+                    "description": "Check should go first",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check should go first"
+                }
+            },
+            "$id": "#/definitions/DataExchangeLoading"
+        },
         "DeletingCollectionItem": {
             "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "default": null,

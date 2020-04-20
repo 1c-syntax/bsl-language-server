@@ -134,6 +134,9 @@
                 "CyclomaticComplexity": {
                     "$ref": "diagnostics-schema.json#/definitions/CyclomaticComplexity"
                 },
+                "DataExchangeLoading": {
+                    "$ref": "diagnostics-schema.json#/definitions/DataExchangeLoading"
+                },
                 "DeletingCollectionItem": {
                     "$ref": "diagnostics-schema.json#/definitions/DeletingCollectionItem"
                 },

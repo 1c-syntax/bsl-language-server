@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **88**
+Total: **89**
 
-* Error: **29**
+* Error: **30**
 * Code smell: **55**
 * Vulnerability: **2**
 * Security Hotspot: **2**
@@ -28,6 +28,7 @@ Total: **88**
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [CreateQueryInCycle](CreateQueryInCycle.md) | Execution query on cycle | Yes | Critical | Error | `performance` |
 | [CyclomaticComplexity](CyclomaticComplexity.md) | Cyclomatic complexity | Yes | Critical | Code smell | `brainoverload` |
+| [DataExchangeLoading](DataExchangeLoading.md) | There is no check for the attribute DataExchange.Load in the object's event handler | Yes | Critical | Error | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | Major | Error | `standard`<br/>`error` |
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Using of the deprecated method "CurrentDate" | Yes | Major | Error | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
