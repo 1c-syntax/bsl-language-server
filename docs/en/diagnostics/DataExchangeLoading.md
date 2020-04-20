@@ -1,8 +1,14 @@
-# Add a check for the attribute ExchangeData.Load at the very beginning of the procedure (DataExchangeLoading)
+# There is no check for the attribute DataExchange.Load in the object's event handler (DataExchangeLoading)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Critical` | `Yes` | `10` | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| `Error` | `BSL` | `Critical` | `Yes` | `5` | `standard`<br/>`badpractice`<br/>`unpredictable` |
+
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `findFirst` | `Boolean` | ```Check should go first``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -64,5 +70,7 @@ EndProcedure
 ### Parameter for config
 
 ```json
-"DataExchangeLoading": false
+"DataExchangeLoading": {
+    "findFirst": false
+}
 ```

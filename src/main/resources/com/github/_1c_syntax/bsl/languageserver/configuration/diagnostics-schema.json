@@ -151,13 +151,21 @@
             "$id": "#/definitions/CyclomaticComplexity"
         },
         "DataExchangeLoading": {
-            "description": "Add a check for the attribute ExchangeData.Load at the very beginning of the procedure",
+            "description": "There is no check for the attribute DataExchange.Load in the object's event handler",
             "default": null,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Add a check for the attribute ExchangeData.Load at the very beginning of the procedure",
+            "title": "There is no check for the attribute DataExchange.Load in the object's event handler",
+            "properties": {
+                "findFirst": {
+                    "description": "Check should go first",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check should go first"
+                }
+            },
             "$id": "#/definitions/DataExchangeLoading"
         },
         "DeletingCollectionItem": {
