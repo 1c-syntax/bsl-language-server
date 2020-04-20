@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587394591732,
+  "lastUpdate": 1587399715109,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -775,6 +775,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.4788611610911804",
             "extra": "mean: 54.360833485921226 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "57660172dddc7ce045da58c489118fd50cb17240",
+          "message": "Merge pull request #1093 from 1c-syntax/feature/issue1079\n\nIssue1079 / Фикс регулярки + map to flatmap (избавился от get)",
+          "timestamp": "2020-04-20T19:15:19+03:00",
+          "tree_id": "adace9e276d299d4848da2efb90c476bc1cc4dfc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/57660172dddc7ce045da58c489118fd50cb17240"
+        },
+        "date": 1587399710353,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.85562459627787,
+            "unit": "sec",
+            "range": "stddev: 1.0383059448663565",
+            "extra": "mean: 53.85562459627787 sec\nrounds: 3"
           }
         ]
       }
