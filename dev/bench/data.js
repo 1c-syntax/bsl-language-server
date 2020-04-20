@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587399715109,
+  "lastUpdate": 1587406892004,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -806,6 +806,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0383059448663565",
             "extra": "mean: 53.85562459627787 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "27c95d8bb19260140035278b88cba79fd7de3319",
+          "message": "Merge pull request #1094 from artbear/dot-reg-fix\n\nНеточные регулярки - неточное использование точки",
+          "timestamp": "2020-04-20T21:14:45+03:00",
+          "tree_id": "348bb2c3367bdf1f95d081cbe6252fb8d6873ad1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/27c95d8bb19260140035278b88cba79fd7de3319"
+        },
+        "date": 1587406890527,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 54.797364950180054,
+            "unit": "sec",
+            "range": "stddev: 0.6695273614546695",
+            "extra": "mean: 54.797364950180054 sec\nrounds: 3"
           }
         ]
       }
