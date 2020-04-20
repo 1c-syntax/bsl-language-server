@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 )
 public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^.(Таймаут|Timeout)",
+  private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^\\.(Таймаут|Timeout)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
     "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy)",
