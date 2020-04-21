@@ -43,7 +43,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check(DocumentContext documentContext) {
-    if (documentContext.getTokens().isEmpty()) {
+    if (documentContext.getTokensFromDefaultChannel().isEmpty()) {
       return;
     }
 
@@ -52,7 +52,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       .map(CommonModule.class::cast)
       .filter(this::flagsCheck)
       .filter(commonModule -> !pattern.matcher(commonModule.getName()).find())
-      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokens().get(0)));
+      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokensFromDefaultChannel().get(0)));
   }
 
   protected abstract boolean flagsCheck(CommonModule commonModule);

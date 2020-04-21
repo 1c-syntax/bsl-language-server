@@ -70,7 +70,7 @@ class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<Common
     //then
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(0, 0, 0, 1);
+      .hasRange(5, 0, 1);
 
   }
 
