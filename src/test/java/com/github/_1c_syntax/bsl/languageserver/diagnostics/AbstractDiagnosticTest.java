@@ -63,7 +63,10 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic) {
-    DocumentContext documentContext = getDocumentContext();
+    return getQuickFixes(diagnostic, getDocumentContext());
+  }
+
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, DocumentContext documentContext) {
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
   }
 
@@ -101,14 +104,23 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   @SneakyThrows
   protected DocumentContext getDocumentContext(String SimpleFileName) {
+    String textDocumentContent = getText(SimpleFileName);
+
+    return TestUtils.getDocumentContext(textDocumentContent);
+  }
+
+  protected String getText() {
+    return getText(diagnosticInstance.getClass().getSimpleName());
+  }
+
+  @SneakyThrows
+  protected String getText(String SimpleFileName) {
     String filePath = "diagnostics/" + SimpleFileName + ".bsl";
-    String textDocumentContent = IOUtils.resourceToString(
+    return IOUtils.resourceToString(
       filePath,
       StandardCharsets.UTF_8,
       this.getClass().getClassLoader()
     );
-
-    return TestUtils.getDocumentContext(textDocumentContent);
   }
 
 }
