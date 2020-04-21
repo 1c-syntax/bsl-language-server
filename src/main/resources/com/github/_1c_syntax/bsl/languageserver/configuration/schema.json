@@ -45,7 +45,7 @@
                     "$ref": "parameters-schema.json#/definitions/CommitTransactionOutsideTryCatch"
                 },
                 "CommonModuleAssign": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleAssign"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
@@ -54,7 +54,7 @@
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveNeedLess"
                 },
                 "ConsecutiveEmptyLines": {
-                    "$ref": "diagnostics-schema.json#/definitions/ConsecutiveEmptyLines"
+                    "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
                 },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
@@ -63,7 +63,7 @@
                     "$ref": "parameters-schema.json#/definitions/CyclomaticComplexity"
                 },
                 "DataExchangeLoading": {
-                    "$ref": "diagnostics-schema.json#/definitions/DataExchangeLoading"
+                    "$ref": "parameters-schema.json#/definitions/DataExchangeLoading"
                 },
                 "DeletingCollectionItem": {
                     "$ref": "parameters-schema.json#/definitions/DeletingCollectionItem"
@@ -93,7 +93,7 @@
                     "$ref": "parameters-schema.json#/definitions/EmptyStatement"
                 },
                 "ExcessiveAutoTestCheck": {
-                    "$ref": "diagnostics-schema.json#/definitions/ExcessiveAutoTestCheck"
+                    "$ref": "parameters-schema.json#/definitions/ExcessiveAutoTestCheck"
                 },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
@@ -147,7 +147,7 @@
                     "$ref": "parameters-schema.json#/definitions/MissingTemporaryFileDeletion"
                 },
                 "MissingVariablesDescription": {
-                    "$ref": "diagnostics-schema.json#/definitions/MissingVariablesDescription"
+                    "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
                 },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
@@ -225,7 +225,7 @@
                     "$ref": "parameters-schema.json#/definitions/TernaryOperatorUsage"
                 },
                 "ThisObjectAssign": {
-                    "$ref": "diagnostics-schema.json#/definitions/ThisObjectAssign"
+                    "$ref": "parameters-schema.json#/definitions/ThisObjectAssign"
                 },
                 "TimeoutsInExternalResources": {
                     "$ref": "parameters-schema.json#/definitions/TimeoutsInExternalResources"

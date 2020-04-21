@@ -98,7 +98,7 @@
         },
         "CommonModuleAssign": {
             "description": "CommonModuleAssign",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
@@ -128,7 +128,7 @@
         },
         "ConsecutiveEmptyLines": {
             "description": "Consecutive empty lines",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
@@ -180,7 +180,7 @@
         },
         "DataExchangeLoading": {
             "description": "There is no check for the attribute DataExchange.Load in the object's event handler",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
@@ -296,7 +296,7 @@
         },
         "ExcessiveAutoTestCheck": {
             "description": "Excessive AutoTest Check",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
@@ -562,7 +562,7 @@
         },
         "MissingVariablesDescription": {
             "description": "All variables declarations must have a description",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
@@ -886,7 +886,7 @@
         },
         "ThisObjectAssign": {
             "description": "ThisObject assign",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
