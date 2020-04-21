@@ -47,6 +47,15 @@
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
+                "CommonModuleNameCached": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameCached"
+                },
+                "CommonModuleNameClient": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameClient"
+                },
+                "CommonModuleNameClientServer": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameClientServer"
+                },
                 "CommonModuleNameFullAccess": {
                     "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameFullAccess"
                 },
