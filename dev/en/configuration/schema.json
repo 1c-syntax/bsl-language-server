@@ -131,9 +131,6 @@
                 "CompilationDirectiveNeedLess": {
                     "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveNeedLess"
                 },
-                "ConsecutiveEmptyLines": {
-                    "$ref": "diagnostics-schema.json#/definitions/ConsecutiveEmptyLines"
-                },
                 "CreateQueryInCycle": {
                     "$ref": "diagnostics-schema.json#/definitions/CreateQueryInCycle"
                 },
