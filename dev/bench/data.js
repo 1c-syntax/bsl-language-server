@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587469269518,
+  "lastUpdate": 1587470017793,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -992,6 +992,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5562564220534881",
             "extra": "mean: 49.750128428141274 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "08fa325dc54a260591506e9bde58eb781e4408c5",
+          "message": "Merge pull request #1082 from artbear/InvalidCharacterInFileDiagnostic-fix\n\nWIP:Ускорение InvalidCharacterInFileDiagnostic",
+          "timestamp": "2020-04-21T14:47:42+03:00",
+          "tree_id": "64ea6cf8ee3f1cc0caa09e2ed5e2f4fd13f14f49",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/08fa325dc54a260591506e9bde58eb781e4408c5"
+        },
+        "date": 1587470016436,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 47.55061054229736,
+            "unit": "sec",
+            "range": "stddev: 0.9742040613489666",
+            "extra": "mean: 47.55061054229736 sec\nrounds: 3"
           }
         ]
       }
