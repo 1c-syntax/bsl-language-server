@@ -32,7 +32,6 @@
 
 ```json
 "ConsecutiveEmptyLines": {
-  "allowedEmptyLinesCount": 1
+    "allowedEmptyLinesCount": 1
 }
 ```
-

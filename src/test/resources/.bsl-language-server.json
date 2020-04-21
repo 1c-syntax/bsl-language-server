@@ -1,15 +1,20 @@
 {
-  "diagnosticLanguage": "en",
-  "showCognitiveComplexityCodeLens": true,
-  "showCyclomaticComplexityCodeLens": true,
-  "computeDiagnosticsTrigger": "onType",
-  "computeDiagnosticsSkipSupport": "withSupportLocked",
-  "traceLog": "build/.trace.log",
-  "configurationRoot": "src/test/resources/metadata",
+  "language": "en",
+  "codeLens": {
+    "showCognitiveComplexity": true,
+    "showCyclomaticComplexity": true
+  },
   "diagnostics": {
-    "LineLength": {
-      "maxLineLength": 140
-    },
-    "MethodSize": false
-  }
+    "computeTrigger": "onType",
+    "skipSupport": "withSupportLocked",
+    "mode": "only",
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 140
+      },
+      "MethodSize": false
+    }
+  },
+  "traceLog": "build/.trace.log",
+  "configurationRoot": "src/test/resources/metadata"
 }

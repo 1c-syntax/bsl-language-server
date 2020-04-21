@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
-import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
@@ -227,7 +227,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
-    if (configuration.getComputeDiagnosticsTrigger() != ComputeDiagnosticsTrigger.NEVER) {
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
   }
@@ -244,7 +244,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     diagnosticProvider.clearComputedDiagnostics(documentContext);
     documentContext.rebuild(params.getContentChanges().get(0).getText());
 
-    if (configuration.getComputeDiagnosticsTrigger() == ComputeDiagnosticsTrigger.ONTYPE) {
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
     }
   }
@@ -271,7 +271,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    if (configuration.getComputeDiagnosticsTrigger() != ComputeDiagnosticsTrigger.NEVER) {
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
   }

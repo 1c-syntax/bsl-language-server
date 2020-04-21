@@ -14,7 +14,6 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
@@ -29,6 +28,6 @@
 
 ```json
 "ConsecutiveEmptyLines": {
-  "allowedEmptyLinesCount": 1
+    "allowedEmptyLinesCount": 1
 }
 ```

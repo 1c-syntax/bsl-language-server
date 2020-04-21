@@ -19,13 +19,42 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+package com.github._1c_syntax.bsl.languageserver.configuration;
 
 /**
- * В пакете содержатся классы для конфигурирования BSL Language Server.
- * <p>
- * Корневой пакет содержит корневой класс конфигурации
- * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}
- * , настройки верхнего уровня и дополнительные пакеты для настроек в разрезе провайдеров
- * (диагностики, code lens, и т.д.)
+ * Язык для сообщений, ресурсов и прочих взаимододействий между
+ * BSL Language Server и пользователем.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration;
+public enum Language {
+
+  /**
+   * Русский
+   */
+  RU("ru"),
+
+  /**
+   * Английский
+   */
+  EN("en");
+
+  /**
+   * Язык по умолчанию
+   */
+  public static final Language DEFAULT_LANGUAGE = RU;
+
+  private final String languageCode;
+
+  /**
+   * @param languageCode код языка в соответствии с {@link java.util.Locale#getLanguage()}
+   */
+  Language(String languageCode) {
+    this.languageCode = languageCode;
+  }
+
+  /**
+   * @return код языка в соответствии с {@link java.util.Locale#getLanguage()}
+   */
+  public String getLanguageCode() {
+    return languageCode;
+  }
+}

@@ -19,19 +19,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration;
+package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 
-public enum DiagnosticLanguage {
-  RU("ru"),
-  EN("en");
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-  private final String languageCode;
-
-  DiagnosticLanguage(String languageCode) {
-    this.languageCode = languageCode;
-  }
-
-  public String getLanguageCode() {
-    return languageCode;
-  }
+/**
+ * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
+ */
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CodeLensOptions {
+  private boolean showCognitiveComplexity = true;
+  private boolean showCyclomaticComplexity = true;
 }
