@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587459439038,
+  "lastUpdate": 1587459500773,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -930,6 +930,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6354533051298585",
             "extra": "mean: 47.79250224431356 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7336a382fdbd3b0a562065cbbee139f21d546f5c",
+          "message": "Merge pull request #1096 from qtLex/fix/fp-multilingual-string-has-all-declared-languages-diagnostic\n\nFix FP MultilingualStringHasAllDeclaredLanguages",
+          "timestamp": "2020-04-21T11:52:05+03:00",
+          "tree_id": "300689aed38992f59fd0cbd98488fd9ce8351c4b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7336a382fdbd3b0a562065cbbee139f21d546f5c"
+        },
+        "date": 1587459499402,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 49.482404470443726,
+            "unit": "sec",
+            "range": "stddev: 0.6442960886777359",
+            "extra": "mean: 49.482404470443726 sec\nrounds: 3"
           }
         ]
       }
