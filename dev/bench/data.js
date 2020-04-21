@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587481337001,
+  "lastUpdate": 1587481940810,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1085,6 +1085,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7268870229557479",
             "extra": "mean: 51.09258484840393 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "c9c8e9c4bfed08a2d3d013d596fee6abfefb1134",
+          "message": "Merge branch 'ConsecutiveEmptyLines-958' into develop",
+          "timestamp": "2020-04-21T18:04:45+03:00",
+          "tree_id": "c1c67bb082f510869ae618d5c04cb1163a42d9b1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c9c8e9c4bfed08a2d3d013d596fee6abfefb1134"
+        },
+        "date": 1587481939233,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 57.288793881734215,
+            "unit": "sec",
+            "range": "stddev: 1.19734789369545",
+            "extra": "mean: 57.288793881734215 sec\nrounds: 3"
           }
         ]
       }
