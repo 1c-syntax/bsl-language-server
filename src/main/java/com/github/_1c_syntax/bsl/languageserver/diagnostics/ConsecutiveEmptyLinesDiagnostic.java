@@ -48,11 +48,11 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.BADPRACTICE
   }
-
 )
 public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   private static final int DEFAULT_ALLOWED_EMPTY_LINES_COUNT = 1;
+
   @DiagnosticParameter(
     type = Integer.class,
     defaultValue = "" + DEFAULT_ALLOWED_EMPTY_LINES_COUNT
@@ -76,19 +76,19 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
     tokens.subList(0, tokens.size() - 1)
       .stream()
       .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
-      .map(Token::getLine)
+      .mapToInt(Token::getLine)
       .distinct()
-      .forEachOrdered(currLine -> {
-        checkEmptyLines(currLine - 1, prevLineStorage[0]);
-        prevLineStorage[0] = currLine;
+      .forEachOrdered((int currentLine) -> {
+        checkEmptyLines(currentLine - 1, prevLineStorage[0]);
+        prevLineStorage[0] = currentLine;
       });
 
     checkEmptyLines(getEofTokenLine(tokens), prevLineStorage[0]);
   }
 
-  private void checkEmptyLines(int eofLine, int prevLine) {
-    if (eofLine - prevLine > allowedEmptyLinesCount){
-      addIssue(prevLine, eofLine);
+  private void checkEmptyLines(int currentLine, int previousLine) {
+    if (currentLine - previousLine > allowedEmptyLinesCount){
+      addIssue(previousLine, currentLine);
     }
   }
 
@@ -97,8 +97,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   private void addIssue(int startEmptyLine, int lastEmptyLine) {
-    Range range = Ranges.create(startEmptyLine, 0, lastEmptyLine - 1, 0);
-    diagnosticStorage.addDiagnostic(range);
+    diagnosticStorage.addDiagnostic(startEmptyLine, 0, lastEmptyLine - 1, 0);
   }
 
   @Override
