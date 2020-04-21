@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ import java.util.stream.Stream;
 )
 public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern BEGIN_TRANSACTION_PATTERN = Pattern.compile(
-    "НачатьТранзакцию|BeginTransaction",
+    "^НачатьТранзакцию$|^BeginTransaction$",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private BSLParserRuleContext nodeBeginTransaction;
@@ -60,10 +61,12 @@ public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDia
     if (ctx.getStart().getType() != BSLParser.IDENTIFIER) {
       return false;
     }
-    return ctx.getChildCount() > 0
-      && ctx.getChild(0).getChildCount() > 0
-      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
-      && BEGIN_TRANSACTION_PATTERN.matcher(ctx.getText()).find();
+    return Optional.of(ctx)
+      .map(BSLParser.StatementContext::callStatement)
+      .map(BSLParser.CallStatementContext::globalMethodCall)
+      .map(BSLParser.GlobalMethodCallContext::methodName)
+      .map(methodNameContext -> BEGIN_TRANSACTION_PATTERN.matcher(methodNameContext.getText()).matches())
+      .orElse(false);
   }
 
   @Override
