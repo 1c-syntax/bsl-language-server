@@ -46,7 +46,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 )
 public class CommonModuleNameServerCallDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "^.*вызовсервера|^.*servercall";
+  private static final String REGEXP = "вызовсервера|servercall";
 
   public CommonModuleNameServerCallDiagnostic(DiagnosticInfo info) {
     super(info, REGEXP);

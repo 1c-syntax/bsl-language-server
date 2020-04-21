@@ -46,7 +46,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 )
 public class CommonModuleNameFullAccessDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "^.*полныеправа|^.*fullaccess";
+  private static final String REGEXP = "полныеправа|fullaccess";
 
   public CommonModuleNameFullAccessDiagnostic(DiagnosticInfo info) {
     super(info, REGEXP);

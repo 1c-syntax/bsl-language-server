@@ -46,7 +46,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 )
 public class CommonModuleNameGlobalDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "^.*глобальный|^.*global";
+  private static final String REGEXP = "глобальный|global";
 
   public CommonModuleNameGlobalDiagnostic(DiagnosticInfo info) {
     super(info, REGEXP);

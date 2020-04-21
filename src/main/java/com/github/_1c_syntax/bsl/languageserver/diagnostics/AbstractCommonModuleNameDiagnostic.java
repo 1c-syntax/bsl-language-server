@@ -48,9 +48,10 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     }
 
     documentContext.getMdObject()
+      .filter(CommonModule.class::isInstance)
       .map(CommonModule.class::cast)
       .filter(this::flagsCheck)
-      .filter(commonModule -> !pattern.matcher(commonModule.getName()).matches())
+      .filter(commonModule -> !pattern.matcher(commonModule.getName()).find())
       .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokens().get(0)));
   }
 
