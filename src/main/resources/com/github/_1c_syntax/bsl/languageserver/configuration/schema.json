@@ -122,6 +122,9 @@
                 "CommitTransactionOutsideTryCatch": {
                     "$ref": "diagnostics-schema.json#/definitions/CommitTransactionOutsideTryCatch"
                 },
+                "CommonModuleAssign": {
+                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleAssign"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "diagnostics-schema.json#/definitions/CompilationDirectiveLost"
                 },

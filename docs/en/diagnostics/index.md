@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **90**
+Total: **91**
 
-* Error: **30**
+* Error: **31**
 * Code smell: **56**
 * Vulnerability: **2**
 * Security Hotspot: **2**
@@ -24,6 +24,7 @@ Total: **90**
 | [CognitiveComplexity](CognitiveComplexity.md) | Cognitive complexity | Yes | Critical | Code smell | `brainoverload` |
 | [CommentedCode](CommentedCode.md) | Commented out code | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` |
+| [CommonModuleAssign](CommonModuleAssign.md) | CommonModuleAssign | Yes | Blocker | Error | `error` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [CreateQueryInCycle](CreateQueryInCycle.md) | Execution query on cycle | Yes | Critical | Error | `performance` |
