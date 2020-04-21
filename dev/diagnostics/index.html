@@ -356,9 +356,9 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>91</strong></p>
+<p>Общее количество: <strong>92</strong></p>
 <ul>
-<li>Дефект кода: <strong>56</strong></li>
+<li>Дефект кода: <strong>57</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
 <li>Ошибка: <strong>31</strong></li>
 <li>Потенциальная уязвимость: <strong>2</strong></li>
@@ -454,6 +454,14 @@
 <td>Важный</td>
 <td>Дефект кода</td>
 <td><code>clumsy</code><br/><code>standard</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="ConsecutiveEmptyLines/">ConsecutiveEmptyLines</a></td>
+<td>Подряд идущие пустые строки</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="CreateQueryInCycle/">CreateQueryInCycle</a></td>
