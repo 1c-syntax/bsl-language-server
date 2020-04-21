@@ -75,7 +75,10 @@ public final class MultilingualStringAnalyser {
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    return !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
+    String firstParameterMultilingualString = getMultilingualString(globalMethodCallContext);
+
+    return !(firstParameterMultilingualString.isEmpty() || firstParameterMultilingualString.startsWith("\""))
+      || !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
@@ -129,7 +132,7 @@ public final class MultilingualStringAnalyser {
 
   private void expandMultilingualString() {
 
-    Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString());
+    Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString(this.globalMethodCallContext));
 
     while (matcher.find()) {
       Matcher cutMatcher = NSTR_LANG_CUT_PATTERN.matcher(matcher.group());
@@ -139,7 +142,7 @@ public final class MultilingualStringAnalyser {
 
   }
 
-  private String getMultilingualString() {
+  private static String getMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
     return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
   }
 
