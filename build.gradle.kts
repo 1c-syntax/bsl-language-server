@@ -56,7 +56,6 @@ dependencies {
     implementation("org.languagetool", "language-ru", "4.2")
 
     implementation("info.picocli", "picocli", "4.2.0")
-    annotationProcessor("info.picocli", "picocli-codegen", "4.2.0")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io", "commons-io", "2.6")
