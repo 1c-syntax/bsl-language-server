@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,11 +73,17 @@ public class GenericCoverageTest {
     GenericCoverageReport report = mapper.readValue(file, GenericCoverageReport.class);
 
     assertThat(report).isNotNull();
-    assertThat(report.version).isEqualTo("1");
-    assertThat(report.file.size()).isEqualTo(1);
+    assertThat(report.getVersion()).isEqualTo("1");
+    assertThat(report.getFile().size()).isEqualTo(1);
 
-    GenericCoverageReport.GenericCoverageReportEntry fileEntry = report.file.get(0);
+    GenericCoverageReport.GenericCoverageReportEntry fileEntry = report.getFile().get(0);
 
     assertThat(fileEntry.getPath()).isEqualTo(fileInfo.getPath().toString());
+    assertThat(fileEntry.getLineToCover().size()).isEqualTo(12);
+
+    GenericCoverageReport.LineToCoverEntry lineToCover = fileEntry.getLineToCover().get(0);
+
+    assertThat(lineToCover.getLineNumber()).isEqualTo(5);
+    assertThat(lineToCover.isCovered()).isFalse();
   }
 }

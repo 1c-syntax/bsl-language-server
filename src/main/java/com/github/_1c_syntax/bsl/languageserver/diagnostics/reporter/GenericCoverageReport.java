@@ -26,22 +26,20 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import lombok.Getter;
 import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "coverage")
+@Value
 public class GenericCoverageReport {
 
   @JacksonXmlProperty(isAttribute = true)
-  @Getter
-  public final String version;
+  final String version;
 
   @JacksonXmlElementWrapper(useWrapping = false)
-  @Getter
-  public final List<GenericCoverageReportEntry> file;
+  final List<GenericCoverageReportEntry> file;
 
   public GenericCoverageReport(AnalysisInfo analysisInfo) {
 
@@ -66,10 +64,10 @@ public class GenericCoverageReport {
   static class GenericCoverageReportEntry {
 
     @JacksonXmlProperty(isAttribute = true)
-    public String path;
+    String path;
 
     @JacksonXmlElementWrapper(useWrapping = false)
-    public List<LineToCoverEntry> lineToCover;
+    List<LineToCoverEntry> lineToCover;
 
     public GenericCoverageReportEntry(FileInfo fileInfo) {
       this.path = fileInfo.getPath().toString();
@@ -82,10 +80,10 @@ public class GenericCoverageReport {
 
     public GenericCoverageReportEntry(
       @JsonProperty("path") String path,
-      @JsonProperty("version") List<LineToCoverEntry> lineToCover
+      @JsonProperty("lineToCover") List<LineToCoverEntry> lineToCover
     ) {
       this.path = path;
-      this.lineToCover = new ArrayList<>();
+      this.lineToCover = new ArrayList<>(lineToCover);
     }
   }
 
@@ -93,10 +91,10 @@ public class GenericCoverageReport {
   static class LineToCoverEntry {
 
     @JacksonXmlProperty(isAttribute = true)
-    public int lineNumber;
+    int lineNumber;
 
     @JacksonXmlProperty(isAttribute = true)
-    public boolean covered;
+    boolean covered;
 
     public LineToCoverEntry(
       @JsonProperty("lineNumber") int lineNumber,
