@@ -69,6 +69,7 @@ public class ReportersAggregator {
     map.put(JUnitReporter.KEY, JUnitReporter.class);
     map.put(TSLintReporter.KEY, TSLintReporter.class);
     map.put(GenericIssueReporter.KEY, GenericIssueReporter.class);
+    map.put(GenericCoverageReporter.KEY, GenericCoverageReporter.class);
 
     return map;
   }
