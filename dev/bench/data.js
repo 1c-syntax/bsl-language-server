@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587556761008,
+  "lastUpdate": 1587556818068,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1209,6 +1209,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.30817895444650345",
             "extra": "mean: 71.37626043955485 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "76fcf12f7d4983a508893bf2848238b70692dc44",
+          "message": "Merge pull request #1100 from yukon39/feature/CoverageAnalysis\n\nДобавлена возможность по выводу в отчет строк требующих покрытия",
+          "timestamp": "2020-04-22T14:52:11+03:00",
+          "tree_id": "563281f2a9b78d2c8704bd0ff4c18be558531d51",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/76fcf12f7d4983a508893bf2848238b70692dc44"
+        },
+        "date": 1587556816456,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 71.45123958587646,
+            "unit": "sec",
+            "range": "stddev: 0.9369369316018011",
+            "extra": "mean: 71.45123958587646 sec\nrounds: 3"
           }
         ]
       }
