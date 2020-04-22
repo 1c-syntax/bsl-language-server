@@ -38,7 +38,7 @@ import java.util.concurrent.Callable;
 import static picocli.CommandLine.Command;
 
 @Command(
-  name = "bslls",
+  name = "bsl-language-server",
   description = "BSL language server",
   subcommands = {
     AnalyzeCommand.class,
