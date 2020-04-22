@@ -37,7 +37,9 @@ def createBSLLSConfiguration():
     newPath = thisPath + "/ssl/.bsl-language-server.json"
     data = {}
     data['configurationRoot'] = './src'
-    data['diagnostics'] = {'Typo': False}
+    data['diagnostics'] = {}
+    data['diagnostics']['mode'] = 'except'
+    data['diagnostics']['parameters'] = {'Typo': False}
 
     with open(newPath, 'w') as outfile:
         json.dump(data, outfile)
