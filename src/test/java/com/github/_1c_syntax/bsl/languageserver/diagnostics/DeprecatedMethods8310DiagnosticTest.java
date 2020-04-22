@@ -38,9 +38,20 @@ class DeprecatedMethods8310DiagnosticTest extends AbstractDiagnosticTest<Depreca
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
-      .hasRange(1, 31, 1, 78);
+      .hasRange(1, 31, 1, 78)
+      .hasRange(5, 31, 5, 67)
+      .hasRange(9, 31, 9, 73)
+      .hasRange(13, 31, 13, 71)
+      .hasRange(17, 31, 17, 83)
+      .hasRange(21, 31, 21, 78)
+      .hasRange(25, 11, 25, 39)
+      .hasRange(30, 11, 30, 39)
+      .hasRange(35, 11, 35, 40)
+      .hasRange(40, 11, 40, 40)
+      .hasRange(45, 11, 45, 52)
+      .hasRange(50, 11, 50, 53);
 
   }
 }

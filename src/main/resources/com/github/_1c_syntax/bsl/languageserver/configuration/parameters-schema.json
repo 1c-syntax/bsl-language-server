@@ -237,13 +237,13 @@
             "$id": "#/definitions/DeprecatedMessage"
         },
         "DeprecatedMethods8310": {
-            "description": "<Diagnostic name>",
+            "description": "Deprecated client application method.",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "<Diagnostic name>",
+            "title": "Deprecated client application method.",
             "$id": "#/definitions/DeprecatedMethods8310"
         },
         "DeprecatedTypeManagedForm": {

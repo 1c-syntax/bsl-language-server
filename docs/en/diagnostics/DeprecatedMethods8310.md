@@ -1,4 +1,4 @@
-# <Diagnostic name> (DeprecatedMethods8310)
+# Deprecated client application method. (DeprecatedMethods8310)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -7,10 +7,16 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
+The following global context methods are deprecated and are not recommended 
+since platform version 8.3.10:
+```
+SetShortApplicationCaption();
+GetShortApplicationCaption();
+SetClientApplicationCaption();
+GetClientApplicationCaption();
+ClientApplicationBaseFontCurrentVariant();
+ClientApplicationInterfaceCurrentVariant().
+```
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -18,6 +24,7 @@
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+Source: [Version 8.3.10 changelog](https://dl03.1c.ru/content/Platform/8_3_10_2699/1cv8upd.htm)
 
 ## Snippets
 
