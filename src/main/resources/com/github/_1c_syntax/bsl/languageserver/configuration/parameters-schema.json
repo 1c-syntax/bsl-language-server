@@ -236,6 +236,16 @@
             "title": "Restriction on the use of deprecated \"Message\" method",
             "$id": "#/definitions/DeprecatedMessage"
         },
+        "DeprecatedMethods8310": {
+            "description": "<Diagnostic name>",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "<Diagnostic name>",
+            "$id": "#/definitions/DeprecatedMethods8310"
+        },
         "DeprecatedTypeManagedForm": {
             "description": "Deprecated ManagedForm type",
             "default": true,
