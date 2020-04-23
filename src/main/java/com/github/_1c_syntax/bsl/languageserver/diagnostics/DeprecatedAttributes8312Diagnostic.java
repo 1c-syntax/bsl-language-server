@@ -1,3 +1,24 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright © 2018-2020
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
@@ -9,9 +30,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,9 +58,9 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String SHOW_SCALE_RU = "ОтображатьШкалу";
   private static final String SHOW_SCALE_EN = "ShowScale";
   private static final String SCALE_LINES_RU = "ЛинииШкалы";
-  private static final String SCALE_LINES_EN = "ScaleLines";
+  //private static final String SCALE_LINES_EN = "ScaleLines";
   private static final String SCALE_COLOR_RU = "ЦветШкалы";
-  private static final String SCALE_COLOR_EN = "ScaleColor";
+  //private static final String SCALE_COLOR_EN = "ScaleColor";
   private static final String SHOW_SERIES_SCALE_LABELS_RU = "ОтображатьПодписиШкалыСерий";
   private static final String SHOW_SERIES_SCALE_LABELS_EN = "ShowSeriesScaleLabels";
   private static final String SHOW_POINTS_SCALE_LABELS_RU = "ОтображатьПодписиШкалыТочек";
@@ -73,17 +96,38 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String GRADIENT_PALETTE_MAX_COLORS_RU = "МаксимальноеКоличествоЦветовГрадиентнойПалитры";
   // Chart deprecated methods
   private static final String GET_PALETTE_EN = "GetPalette";
-  private static final String GET_PALETTE_RU = "ПалитраЦветов";
+  private static final String GET_PALETTE_RU = "ПолучитьПалитру";
   private static final String SET_PALETTE_EN = "SetPalette";
   private static final String SET_PALETTE_RU = "УстановитьПалитру";
 
+  // Global context enum
+  private static final String CHART_LABELS_ORIENTATION_EN = "ChartLabelsOrientation";
+  private static final String CHART_LABELS_ORIENTATION_RU = "ОриентацияМетокДиаграммы";
+
+  // Global context enum attribute
+  private static final String CHILD_FORM_ITEMS_GROUP_EN = "ChildFormItemsGroup";
+  private static final String CHILD_FORM_ITEMS_GROUP_RU = "ГруппировкаПодчиненныхЭлементовФормы";
+  private static final String CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN = "Horizontal";
+  private static final String CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU = "Горизонтальная";
+
+  // Global context methods
+  private static final String CLEAR_EVENT_LOG_EN = "ClearEventLog";
+  private static final String CLEAR_EVENT_LOG_RU = "ОчиститьЖурналРегистрации";
+
+  private static final HashMap<String, String> NEW_ATTRIBUTES = new HashMap<>();
+  static {
+    NEW_ATTRIBUTES.put(SHOW_SCALE_RU, "ОтображатьШкалы");
+    NEW_ATTRIBUTES.put(SHOW_SCALE_EN, "ShowScales");
+    NEW_ATTRIBUTES.put(SCALE_LINES_RU, "ЛинииШкал");
+    NEW_ATTRIBUTES.put(SCALE_COLOR_RU, "ЦветШкал");
+  }
 
   private static String getDeprecatedAttributesRegex(Metaobject metaobject) {
     HashMap<String, String> attributesPair = new HashMap<>();
     if (metaobject.equals(Metaobject.CHART_PLOT_AREA)) {
       attributesPair.put(SHOW_SCALE_RU, SHOW_SCALE_EN);
-      attributesPair.put(SCALE_LINES_RU, SCALE_LINES_EN);
-      attributesPair.put(SCALE_COLOR_RU, SCALE_COLOR_EN);
+      attributesPair.put(SCALE_LINES_RU, "");
+      attributesPair.put(SCALE_COLOR_RU, "");
       attributesPair.put(SHOW_SERIES_SCALE_LABELS_RU, SHOW_SERIES_SCALE_LABELS_EN);
       attributesPair.put(SHOW_POINTS_SCALE_LABELS_RU, SHOW_POINTS_SCALE_LABELS_EN);
       attributesPair.put(SHOW_VALUES_SCALE_LABELS_RU, SHOW_VALUES_SCALE_LABELS_EN);
@@ -97,6 +141,8 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
       attributesPair.put(GRADIENT_PALETTE_START_COLOR_EN, GRADIENT_PALETTE_START_COLOR_RU);
       attributesPair.put(GRADIENT_PALETTE_END_COLOR_EN, GRADIENT_PALETTE_END_COLOR_RU);
       attributesPair.put(GRADIENT_PALETTE_MAX_COLORS_EN, GRADIENT_PALETTE_MAX_COLORS_RU);
+    } else if (metaobject.equals(Metaobject.ENUM_ITEMS_GROUP)) {
+      attributesPair.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN, CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU);
     }
     StringJoiner regex = new StringJoiner("|");
 
@@ -108,11 +154,13 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     return regex.toString();
   }
 
-  private static String getChartMethodsRegex() {
+  private static String getDeprecatedMethodsRegex(Metaobject metaobject) {
     HashMap<String, String> attributesPair = new HashMap<>();
 
-    attributesPair.put(GET_PALETTE_EN, GET_PALETTE_RU);
-    attributesPair.put(SET_PALETTE_EN, SET_PALETTE_RU);
+    if (metaobject.equals(Metaobject.CHART)) {
+      attributesPair.put(GET_PALETTE_EN, GET_PALETTE_RU);
+      attributesPair.put(SET_PALETTE_EN, SET_PALETTE_RU);
+    }
 
     StringJoiner regex = new StringJoiner("|");
 
@@ -132,6 +180,8 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
       namePair.put(CHART_RU, CHART_EN);
       namePair.put(GANTT_CHART_EN, GANTT_CHART_RU);
       namePair.put(PIVOT_CHART_EN, PIVOT_CHART_RU);
+    } else if (metaobject.equals(Metaobject.ENUM_ITEMS_GROUP)) {
+      namePair.put(CHILD_FORM_ITEMS_GROUP_EN, CHILD_FORM_ITEMS_GROUP_RU);
     }
     StringJoiner regex = new StringJoiner("|");
 
@@ -152,7 +202,7 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern CHART_METHODS_PATTERN = Pattern.compile(
-    getChartMethodsRegex(),
+    getDeprecatedMethodsRegex(Metaobject.CHART),
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern CHART_PLOT_AREA_NAME_PATTERN = Pattern.compile(
@@ -163,49 +213,97 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     getMetaobjectNameRegex(Metaobject.CHART),
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  private static final Pattern CHART_LABELS_ORIENTATION_PATTERN = Pattern.compile(
+    CHART_LABELS_ORIENTATION_EN + "|" + CHART_LABELS_ORIENTATION_RU,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final Pattern CHILD_FORM_ITEMS_GROUP_NAME_PATTERN = Pattern.compile(
+    getMetaobjectNameRegex(Metaobject.ENUM_ITEMS_GROUP),
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final Pattern CHILD_FORM_ITEMS_GROUP_ATTRIBUTE_PATTERN = Pattern.compile(
+    getDeprecatedAttributesRegex(Metaobject.ENUM_ITEMS_GROUP),
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+  private static final Pattern CLEAR_EVENT_LOG_PATTERN = Pattern.compile(
+    CLEAR_EVENT_LOG_EN + "|" + CLEAR_EVENT_LOG_RU,
+    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
 
   public DeprecatedAttributes8312Diagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
+  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
 
-    if (isDeprecated(ctx, CHART_PLOT_AREA_NAME_PATTERN, CHART_PLOT_AREA_ATTRIBUTES_PATTERN)
-    || isDeprecated(ctx, CHART_NAME_PATTERN, CHART_ATTRIBUTES_PATTERN)) {
+    if (CHART_METHODS_PATTERN.matcher(ctx.methodName().getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
+
+    return super.visitMethodCall(ctx);
+  }
+
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    if (CLEAR_EVENT_LOG_PATTERN.matcher(ctx.methodName().getText()).matches()) {
+      diagnosticStorage.addDiagnostic(ctx);
+    }
+    return super.visitGlobalMethodCall(ctx);
+  }
+
+  @Override
+  public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
+
+    HashMap<Pattern, Pattern> patternsToCheck = new HashMap<>();
+    patternsToCheck.put(CHART_PLOT_AREA_NAME_PATTERN, CHART_PLOT_AREA_ATTRIBUTES_PATTERN);
+    patternsToCheck.put(CHART_NAME_PATTERN, CHART_ATTRIBUTES_PATTERN);
+    patternsToCheck.put(CHILD_FORM_ITEMS_GROUP_NAME_PATTERN, CHILD_FORM_ITEMS_GROUP_ATTRIBUTE_PATTERN);
+
+    patternsToCheck.forEach((k, v) -> checkDeprecatedAttributes(ctx, k, v));
 
     return super.visitAccessProperty(ctx);
   }
 
-  private boolean isDeprecated(BSLParser.AccessPropertyContext ctx,
-                               Pattern objectNamePattern,
-                               Pattern deprecatedAttributesPattern) {
+  @Override
+  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    if (CHART_LABELS_ORIENTATION_PATTERN.matcher(ctx.getStart().getText()).matches()) {
+      diagnosticStorage.addDiagnostic(ctx);
+    }
 
-    Matcher matcherChartPlotArea = deprecatedAttributesPattern.matcher(ctx.getText().substring(1));
+    return super.visitComplexIdentifier(ctx);
+  }
 
-    if (matcherChartPlotArea.matches()) {
+  private void checkDeprecatedAttributes(BSLParserRuleContext ctx,
+                                            Pattern objectNamePattern,
+                                            Pattern deprecatedAttributesPattern) {
+
+    Matcher deprecatedAttributesMatcher = deprecatedAttributesPattern.matcher(ctx.getText().substring(1));
+
+    if (deprecatedAttributesMatcher.matches()) {
       var complexCtx = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_complexIdentifier);
       if (complexCtx == null) {
         complexCtx = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_lValue);
         if (complexCtx == null) {
-          return false;
+          return;
         }
       }
+      if (objectNamePattern.matcher(complexCtx.getStart().getText()).matches()) {
+        String deprecatedAttribute = deprecatedAttributesMatcher.group();
+        String message = String.format(info.getResourceString("deprecatedAttributeMessage"),
+          deprecatedAttribute,
+          Objects.requireNonNullElseGet(NEW_ATTRIBUTES.get(deprecatedAttribute), String::new));
 
-      Matcher matcherChartPlotAreaName = objectNamePattern.matcher(
-        complexCtx.getStart().getText()
-      );
-      return matcherChartPlotAreaName.matches();
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
+      }
+
     }
-
-    return false;
   }
 
   private enum Metaobject{
     CHART,
-    CHART_PLOT_AREA
+    CHART_PLOT_AREA,
+    ENUM_ITEMS_GROUP
   }
 }
 

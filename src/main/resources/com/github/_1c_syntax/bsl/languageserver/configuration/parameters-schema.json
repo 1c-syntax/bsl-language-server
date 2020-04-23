@@ -206,6 +206,16 @@
             "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "$id": "#/definitions/DeletingCollectionItem"
         },
+        "DeprecatedAttributes8312": {
+            "description": "<Diagnostic name>",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "<Diagnostic name>",
+            "$id": "#/definitions/DeprecatedAttributes8312"
+        },
         "DeprecatedCurrentDate": {
             "description": "Using of the deprecated method \"CurrentDate\"",
             "default": true,
