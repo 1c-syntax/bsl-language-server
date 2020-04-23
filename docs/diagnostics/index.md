@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **92**
+Общее количество: **93**
 
-* Дефект кода: **57**
+* Дефект кода: **58**
 * Уязвимость: **2**
 * Ошибка: **31**
 * Потенциальная уязвимость: **2**
@@ -35,6 +35,7 @@
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Использование устаревшего метода "ТекущаяДата" | Да | Важный | Ошибка | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
+| [DeprecatedMethods8310](DeprecatedMethods8310.md) | Использование устаревшего метода клиентского приложения | Да | Информационный | Дефект кода | `deprecated` |
 | [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Устаревшее использование типа "УправляемаяФорма" | Да | Информационный | Дефект кода | `standard`<br/>`deprecated` |
 | [DuplicateRegion](DuplicateRegion.md) | Повторяющиеся разделы модуля | Да | Информационный | Дефект кода | `standard` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br/>`suspicious` |

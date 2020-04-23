@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **92**
+Total: **93**
 
 * Error: **31**
-* Code smell: **57**
+* Code smell: **58**
 * Vulnerability: **2**
 * Security Hotspot: **2**
 
@@ -35,6 +35,7 @@ Total: **92**
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Using of the deprecated method "CurrentDate" | Yes | Major | Error | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
+| [DeprecatedMethods8310](DeprecatedMethods8310.md) | Deprecated client application method. | Yes | Info | Code smell | `deprecated` |
 | [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Deprecated ManagedForm type | Yes | Info | Code smell | `standard`<br/>`deprecated` |
 | [DuplicateRegion](DuplicateRegion.md) | Duplicate regions | Yes | Info | Code smell | `standard` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Empty code block | Yes | Major | Code smell | `badpractice`<br/>`suspicious` |
