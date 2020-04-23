@@ -39,7 +39,6 @@ import static picocli.CommandLine.Command;
 
 @Command(
   name = "bsl-language-server",
-  description = "BSL language server",
   subcommands = {
     AnalyzeCommand.class,
     FormatCommand.class,
