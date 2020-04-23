@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,16 +90,14 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
     methodsPair.put(GET_CLIENT_APPLICATION_CAPTION_RU, GET_CLIENT_APPLICATION_CAPTION_EN);
     methodsPair.put(BASE_FONT_CURRENT_VARIANT_RU, BASE_FONT_CURRENT_VARIANT_EN);
     methodsPair.put(CLIENT_INTERFACE_VARIANT_RU, CLIENT_INTERFACE_VARIANT_EN);
-    StringBuilder regex = new StringBuilder();
+    StringJoiner regex = new StringJoiner("|");
 
     methodsPair.forEach((k, v) -> {
-      regex.append(k);
-      regex.append("|");
-      regex.append(v);
-      regex.append("|");
+      regex.add(k);
+      regex.add(v);
     });
 
-    return regex.toString().substring(0, regex.length() - 1);
+    return regex.toString();
   }
 
   public DeprecatedMethods8310Diagnostic(DiagnosticInfo info) {
