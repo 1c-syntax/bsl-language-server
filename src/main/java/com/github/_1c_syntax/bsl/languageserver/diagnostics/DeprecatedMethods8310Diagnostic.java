@@ -60,20 +60,8 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
   private static final String BASE_FONT_CURRENT_VARIANT_EN = "ClientApplicationBaseFontCurrentVariant";
   private static final String CLIENT_INTERFACE_VARIANT_RU = "ТекущийВариантИнтерфейсаКлиентскогоПриложения";
   private static final String CLIENT_INTERFACE_VARIANT_EN = "ClientApplicationInterfaceCurrentVariant";
-  private static final String METHOD_PAIR = "%s|%s|";
-  private static final String REGEX = String.format(METHOD_PAIR +
-      METHOD_PAIR +
-      METHOD_PAIR +
-      METHOD_PAIR +
-      METHOD_PAIR +
-      "%s|%s"
-           , SET_SHORT_APPLICATION_CAPTION_RU, SET_SHORT_APPLICATION_CAPTION_EN
-           , GET_SHORT_APPLICATION_CAPTION_RU, GET_SHORT_APPLICATION_CAPTION_EN
-           , SET_CLIENT_APPLICATION_CAPTION_RU, SET_CLIENT_APPLICATION_CAPTION_EN
-           , GET_CLIENT_APPLICATION_CAPTION_RU, GET_CLIENT_APPLICATION_CAPTION_EN
-           , BASE_FONT_CURRENT_VARIANT_RU, BASE_FONT_CURRENT_VARIANT_EN
-           , CLIENT_INTERFACE_VARIANT_RU, CLIENT_INTERFACE_VARIANT_EN);
-  private static final Pattern METHOD_PATTERN = Pattern.compile(REGEX,
+
+  private static final Pattern METHOD_PATTERN = Pattern.compile(getRegex(),
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final HashMap<String, String> newMethods = new HashMap<>();
@@ -91,6 +79,26 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
     newMethods.put(GET_CLIENT_APPLICATION_CAPTION_EN, "ClientApplication.GetCaption");
     newMethods.put(BASE_FONT_CURRENT_VARIANT_EN, "ClientApplication.CurrentBaseFontVariant");
     newMethods.put(CLIENT_INTERFACE_VARIANT_EN, "ClientApplication.CurrentInterfaceVariant");
+  }
+
+  private static String getRegex() {
+    HashMap<String, String> methodsPair = new HashMap<>();
+    methodsPair.put(SET_SHORT_APPLICATION_CAPTION_RU, SET_SHORT_APPLICATION_CAPTION_EN);
+    methodsPair.put(GET_SHORT_APPLICATION_CAPTION_RU, GET_SHORT_APPLICATION_CAPTION_EN);
+    methodsPair.put(SET_CLIENT_APPLICATION_CAPTION_RU, SET_CLIENT_APPLICATION_CAPTION_EN);
+    methodsPair.put(GET_CLIENT_APPLICATION_CAPTION_RU, GET_CLIENT_APPLICATION_CAPTION_EN);
+    methodsPair.put(BASE_FONT_CURRENT_VARIANT_RU, BASE_FONT_CURRENT_VARIANT_EN);
+    methodsPair.put(CLIENT_INTERFACE_VARIANT_RU, CLIENT_INTERFACE_VARIANT_EN);
+    StringBuilder regex = new StringBuilder();
+
+    methodsPair.forEach((k, v) -> {
+      regex.append(k);
+      regex.append("|");
+      regex.append(v);
+      regex.append("|");
+    });
+
+    return regex.toString().substring(0, regex.length() - 1);
   }
 
   public DeprecatedMethods8310Diagnostic(DiagnosticInfo info) {
