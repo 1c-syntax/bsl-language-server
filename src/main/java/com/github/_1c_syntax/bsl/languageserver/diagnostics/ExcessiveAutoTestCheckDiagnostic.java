@@ -28,8 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -74,13 +76,15 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
   }
 
   private boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
-    return codeBlock
-      .getTokens()
-      .stream()
-      .map(t -> t.getType())
-      .filter(t -> t != BSLParser.WHITE_SPACE)
-      .filter(t -> t != BSLParser.LINE_COMMENT)
-      .filter(t -> t != BSLParser.SEMICOLON)
-      .noneMatch(t -> t != BSLParser.RETURN_KEYWORD);
+    List<Token> tokens = codeBlock.getTokens();
+
+    if (tokens.size() == 2) {
+      return tokens.get(0).getType() == BSLParser.RETURN_KEYWORD
+        && tokens.get(1).getType() == BSLParser.SEMICOLON;
+    } else if (tokens.size() == 1) {
+      return tokens.get(0).getType() == BSLParser.RETURN_KEYWORD;
+    }
+
+    return false;
   }
 }
