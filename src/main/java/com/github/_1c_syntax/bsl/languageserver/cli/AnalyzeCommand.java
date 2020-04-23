@@ -124,7 +124,7 @@ public class AnalyzeCommand implements Callable<Integer> {
   private String[] reportersOptions;
 
   @Option(
-    names = {"--silent"},
+    names = {"-q", "--silent"},
     description = "Silent mode")
   private boolean silentMode;
 

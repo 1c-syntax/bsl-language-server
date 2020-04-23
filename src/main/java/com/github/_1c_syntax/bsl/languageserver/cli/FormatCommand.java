@@ -83,7 +83,7 @@ public class FormatCommand implements Callable<Integer> {
   private String srcDirOption;
 
   @Option(
-    names = {"--silent"},
+    names = {"-q", "--silent"},
     description = "Silent mode")
   private boolean silentMode;
 
