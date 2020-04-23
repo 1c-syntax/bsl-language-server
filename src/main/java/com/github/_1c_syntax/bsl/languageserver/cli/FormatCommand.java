@@ -26,9 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
@@ -40,6 +40,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
+
+import static picocli.CommandLine.Command;
+import static picocli.CommandLine.Option;
 
 /**
  * Форматирование кода в исходниках
@@ -54,24 +58,47 @@ import java.util.List;
  *  Выполняет форматирование исходного кода в файлах каталога. Для форматирования используются правила и настройки
  *  "форматтера" FormatProvider, т.е. пользователь никак не может овлиять на результат.
  */
-public class FormatCommand implements Command {
+@Slf4j
+@Command(
+  name = "format",
+  aliases = {"-f", "--format"},
+  description = "Format files in source directory",
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@")
+public class FormatCommand implements Callable<Integer> {
 
-  private final CommandLine cmd;
   private final ServerContext serverContext;
 
-  public FormatCommand(CommandLine cmd) {
-    this.cmd = cmd;
+  @Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  private boolean usageHelpRequested;
+
+  @Option(
+    names = {"-s", "--srcDir"},
+    description = "Source directory",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String srcDirOption;
+
+  @Option(
+    names = {"-q", "--silent"},
+    description = "Silent mode")
+  private boolean silentMode;
+
+  public FormatCommand() {
     this.serverContext = new ServerContext();
   }
 
-  @Override
-  public int execute() {
+  public Integer call() {
     serverContext.clear();
 
-    String srcDirOption = cmd.getOptionValue("srcDir", "");
-    boolean silentMode = cmd.hasOption("silent");
-
     Path srcDir = Absolute.path(srcDirOption);
+    if (!srcDir.toFile().exists()) {
+      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      return 1;
+    }
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 

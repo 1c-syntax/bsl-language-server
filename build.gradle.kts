@@ -55,8 +55,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.languagetool/language-ru
     implementation("org.languagetool", "language-ru", "4.2")
 
-    // https://mvnrepository.com/artifact/commons-cli/commons-cli
-    implementation("commons-cli", "commons-cli", "1.4")
+    implementation("info.picocli", "picocli", "4.2.0")
+
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io", "commons-io", "2.6")
     implementation("org.apache.commons", "commons-lang3", "3.10")

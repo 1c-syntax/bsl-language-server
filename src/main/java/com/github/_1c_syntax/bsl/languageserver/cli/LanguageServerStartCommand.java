@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.cli.CommandLine;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
@@ -38,31 +37,45 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Callable;
+
+import static picocli.CommandLine.Command;
+import static picocli.CommandLine.Option;
 
 /**
  * Запускает приложение в режиме Language Server
  * Ключ команды:
  *  без ключа
  * Параметры:
- *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
- *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- *                                то будут использованы настройки по умолчанию.
+ * -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *                                     Возможно указывать как в абсолютном, так и относительном виде.
+ *                                     Если параметр опущен, то будут использованы настройки по умолчанию.
  * Выводимая информация:
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP.
  */
 @Slf4j
-public class LanguageServerStartCommand implements Command {
+@Command(
+  name = "lsp",
+  aliases = {"--lsp"},
+  description = "LSP server mode (default)",
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@")
+public class LanguageServerStartCommand implements Callable<Integer> {
+  @Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  private boolean usageHelpRequested;
 
-  private final CommandLine cmd;
+  @Option(
+    names = {"-c", "--configuration"},
+    description = "Path to language server configuration file",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String configurationOption;
 
-  public LanguageServerStartCommand(CommandLine cmd) {
-    this.cmd = cmd;
-  }
+  public Integer call() {
 
-  @Override
-  public int execute() {
-
-    String configurationOption = cmd.getOptionValue("configuration", "");
     File configurationFile = new File(configurationOption);
 
     LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);

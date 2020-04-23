@@ -38,29 +38,43 @@
 ```sh
 java -jar bsl-language-server.jar --help
 
-usage: BSL language server [-a] [-c <arg>] [-f] [-h] [-o <arg>] [-r <arg>] [-s <arg>]
- -a,--analyze               Run analysis and get diagnostic info
- -c,--configuration <arg>   Path to language server configuration file
- -f,--format                Format files in source directory
- -h,--help                  Show help.
- -o,--outputDir <arg>       Output report directory
- -r,--reporter <arg>        Reporter key
- -s,--srcDir <arg>          Source directory
- -v,--version               Version
- -q,--silent                Silent mode
+BSL language server
+Usage: bsl-language-server [-h] [-c=<path>] [COMMAND [ARGS]]
+  -c, --configuration=<path>
+               Path to language server configuration file
+  -h, --help   Show this help message and exit
+Commands:
+  analyze, -a, --analyze  Run analysis and get diagnostic info
+  format, -f, --format    Format files in source directory
+  version, -v, --version  Print version
+  lsp, --lsp              LSP server mode (default)
 ```
 
-При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP](https://microsoft.github.io/language-server-protocol/). Для взаимодействия используются stdin и stdout.
+При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
 
 По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `diagnosticLanguage` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
+<a id="analyze"></a>
+
 ## Запуск в режиме анализатора
 
-Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+Для запуска в режиме анализа используется параметр `--analyze` (сокращенно `-a`). 
 
-Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. 
+```sh
+Usage: bsl-language-server analyze [-hq] [-c=<path>] [-o=<path>] [-s=<path>]
+                                   [-r=<keys>]...
+Run analysis and get diagnostic info
+  -c, --configuration=<path>
+                           Path to language server configuration file
+  -h, --help               Show this help message and exit
+  -o, --outputDir=<path>   Output report directory
+  -q, --silent             Silent mode
+  -r, --reporter=<keys>    Reporter key (console, junit, json, tslint, generic)
+  -s, --srcDir=<path>      Source directory
+```
 
-Список и описания репортеров, диагностик, конфигурационного файла доступны [на сайте проекта](https://1c-syntax.github.io/bsl-language-server/).
+Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
+Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр `--reporter` (сокращенно `-r`), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе **Репортеры**.
 
 Пример строки запуска анализа:
 
@@ -74,11 +88,23 @@ java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
 
+<a id="format"></a>
+
 ## Запуск в режиме форматтера
 
-Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`). Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+Для запуска в режиме форматтера используется параметр `--format` (сокращенно `-f`).
 
-Пример строки запуска анализа:
+```sh
+Usage: bsl-language-server format [-hq] [-s=<path>]
+Format files in source directory
+  -h, --help            Show this help message and exit
+  -q, --silent          Silent mode
+  -s, --srcDir=<path>   Source directory
+```
+
+Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+
+Пример строки запуска форматирования:
 
 ```sh
 java -jar bsl-language-server.jar --format --srcDir ./src/cf
@@ -115,7 +141,7 @@ java -jar bsl-language-server.jar --format --srcDir ./src/cf
 * Автодополнение методов текущего модуля
 * Автодополнение контекстных методов (конфигурация 1С и OneScript)
 * Сигнатура функций
-* Подброная всплывающая подсказка по методам
+* Подробная всплывающая подсказка по методам
 * Переход к определению
 * Поиск мест использования
 * Предпросмотр определения процедуры
