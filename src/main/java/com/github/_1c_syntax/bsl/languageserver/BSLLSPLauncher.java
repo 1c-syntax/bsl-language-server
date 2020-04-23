@@ -60,6 +60,13 @@ public class BSLLSPLauncher implements Callable<Integer> {
     description = "Show this help message and exit")
   private boolean usageHelpRequested;
 
+  @Option(
+    names = {"-c", "--configuration"},
+    description = "Path to language server configuration file",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String configurationOption;
+
   public static void main(String[] args) {
     var app = new BSLLSPLauncher();
     var cmd = new CommandLine(app);
