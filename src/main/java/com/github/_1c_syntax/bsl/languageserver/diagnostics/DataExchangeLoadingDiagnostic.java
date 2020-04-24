@@ -126,13 +126,9 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
 
     return Optional.ofNullable(ifBranch.codeBlock())
-      .map(BSLParser.CodeBlockContext::statement)
-      .flatMap(statementContexts -> statementContexts.stream()
-        .map(BSLParser.StatementContext::compoundStatement)
-        .map(BSLParser.CompoundStatementContext::returnStatement)
-        .map(Optional::ofNullable)
-        .findAny())
-      .isPresent();
+      .map(codeBlockContext -> Trees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
+      .map(list -> !list.isEmpty())
+      .orElse(false);
   }
 
   private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
