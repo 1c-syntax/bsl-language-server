@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587637949895,
+  "lastUpdate": 1587715506068,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1302,6 +1302,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.0823066300053433",
             "extra": "mean: 70.88965392112732 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c6cd9ef684918e005969557a3e77591a893fbd5c",
+          "message": "Merge pull request #1111 from 1c-syntax/feature/fixCmdParam\n\nFix PicoCli default command",
+          "timestamp": "2020-04-24T10:57:18+03:00",
+          "tree_id": "cc5a2b1419ebf2c838fd1bc0e136a8c6d8ce6794",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c6cd9ef684918e005969557a3e77591a893fbd5c"
+        },
+        "date": 1587715504415,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 68.05290834108989,
+            "unit": "sec",
+            "range": "stddev: 1.005434225336687",
+            "extra": "mean: 68.05290834108989 sec\nrounds: 3"
           }
         ]
       }
