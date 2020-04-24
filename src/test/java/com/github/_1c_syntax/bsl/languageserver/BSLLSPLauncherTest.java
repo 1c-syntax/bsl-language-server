@@ -236,7 +236,6 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
   void testWithoutParametersErrorCfg() {
     // given
     String[] args = new String[]{"-c", "src/test/resources/cli/error-trace.json"};
