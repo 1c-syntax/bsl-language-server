@@ -84,3 +84,9 @@ EndProcedure
     Возврат;
 
 КонецЕсли;
+
+If List.Property("AutoTest") Then // No error
+
+    List.Delete("AutoTest");
+
+EndIf;

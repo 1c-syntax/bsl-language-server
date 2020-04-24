@@ -76,13 +76,14 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
   }
 
   private boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
-    List<Token> tokens = codeBlock.getTokens();
+    List<? extends BSLParser.StatementContext> statements = codeBlock.statement();
 
-    if (tokens.size() == 2) {
-      return tokens.get(0).getType() == BSLParser.RETURN_KEYWORD
-        && tokens.get(1).getType() == BSLParser.SEMICOLON;
-    } else if (tokens.size() == 1) {
-      return tokens.get(0).getType() == BSLParser.RETURN_KEYWORD;
+    if (statements.size() == 1) {
+      BSLParser.CompoundStatementContext compoundStatement = statements.get(0).compoundStatement();
+
+      if (compoundStatement != null) {
+        return compoundStatement.returnStatement() != null;
+      }
     }
 
     return false;
