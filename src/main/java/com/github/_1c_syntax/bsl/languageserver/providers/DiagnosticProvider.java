@@ -37,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,6 +48,8 @@ public final class DiagnosticProvider {
 
   private final Map<URI, Set<Diagnostic>> computedDiagnostics;
   private final DiagnosticSupplier diagnosticSupplier;
+  public final Map<String, List<Long>> measures =
+    new ConcurrentHashMap<>();
 
   public DiagnosticProvider(DiagnosticSupplier diagnosticSupplier) {
     this.diagnosticSupplier = diagnosticSupplier;
@@ -69,12 +72,23 @@ public final class DiagnosticProvider {
 
   public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
+    documentContext.getSymbolTree();
+    documentContext.getMetrics();
 
     List<Diagnostic> diagnostics =
       diagnosticSupplier.getDiagnosticInstances(documentContext).parallelStream()
         .flatMap((BSLDiagnostic diagnostic) -> {
           try {
-            return diagnostic.getDiagnostics(documentContext).stream();
+            long start = System.currentTimeMillis();
+            List<Diagnostic> diagnosticList = diagnostic.getDiagnostics(documentContext);
+            long end = System.currentTimeMillis();
+
+            String diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
+            List<Long> list = measures.getOrDefault(diagnosticCode, new ArrayList<>());
+            list.add(end - start);
+            measures.put(diagnosticCode, list);
+
+            return diagnosticList.stream();
           } catch (RuntimeException e) {
             String message = String.format(
               "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
