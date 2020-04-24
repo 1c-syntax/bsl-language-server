@@ -78,7 +78,12 @@ public class BSLLSPLauncher implements Callable<Integer> {
       // выполнение проверки строки запуска в попытке, т.к. парсер при нахождении
       // неизвестных параметров выдает ошибку
       try {
-        cmd.parseArgs(args);
+        var parseResult = cmd.parseArgs(args);
+        // если переданы параметры без команды и это не справка
+        // то считаем, что параметры для команды по умолчанию
+        if(!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+          args = addDefaultCommand(args);
+        }
       } catch (ParameterException ex) {
         // если поймали ошибку, а имя команды не передано, подставим команду и посмотрим,
         // вдруг заработает
