@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587720722787,
+  "lastUpdate": 1587731540011,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1364,6 +1364,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.306702603784556",
             "extra": "mean: 69.79234504699707 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d76a5cc70224def759bc47e3713dcc7b4045e6a2",
+          "message": "Merge pull request #1109 from qtLex/fix/ge-tokens-in-diagnostic",
+          "timestamp": "2020-04-24T15:24:33+03:00",
+          "tree_id": "84e5d33c3ae0ea5103466704edd622caefb4c81b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d76a5cc70224def759bc47e3713dcc7b4045e6a2"
+        },
+        "date": 1587731538463,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 66.50787218411763,
+            "unit": "sec",
+            "range": "stddev: 1.1706573645579375",
+            "extra": "mean: 66.50787218411763 sec\nrounds: 3"
           }
         ]
       }
