@@ -48,11 +48,17 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
 
     // then
     assertThat(diagnostics)
-      .hasSize(2)
+      .hasSize(3)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
         Ranges.create(7, 10, 7, 22)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        Ranges.create(19, 10, 19, 17)));
+        Ranges.create(19, 10, 19, 17)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(
+        Ranges.create(70, 10, 70, 22)))
+    //fix me "Если НЕ обменданными"
+//      .anyMatch(diagnostic -> diagnostic.getRange().equals(
+//        Ranges.create(57, 10, 57, 22)));
+    ;
 
     // Проверяем с включенным параметром findFirst
     // when
@@ -63,7 +69,7 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
 
     // then
     assertThat(diagnostics)
-      .hasSize(3)
+      .hasSize(4)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
         Ranges.create(7, 10, 7, 22)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(

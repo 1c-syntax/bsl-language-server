@@ -970,10 +970,10 @@
             "title": "Typo",
             "properties": {
                 "userWordsToIgnore": {
-                    "description": "Dictionary for excluding words",
+                    "description": "Dictionary for excluding words (comma separated, without spaces)",
                     "default": "",
                     "type": "string",
-                    "title": "Dictionary for excluding words"
+                    "title": "Dictionary for excluding words (comma separated, without spaces)"
                 },
                 "minWordLength": {
                     "description": "Minimum length for checked words",

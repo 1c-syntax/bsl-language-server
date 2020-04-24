@@ -217,7 +217,25 @@ class BSLLSPLauncherTest {
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
+  void testWithoutCommandWithConfig() {
+    // проверим, что перешли в команду lsp
+
+    // given
+    String[] args = "-c .".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).contains("LanguageServerStartCommand");
+  }
+
+  @Test
   void testWithoutParametersErrorCfg() {
     // given
     String[] args = new String[]{"-c", "src/test/resources/cli/error-trace.json"};
