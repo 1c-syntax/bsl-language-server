@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **94**
+Общее количество: **89**
 
-* Дефект кода: **58**
+* Дефект кода: **55**
 * Уязвимость: **2**
-* Ошибка: **32**
+* Ошибка: **30**
 * Потенциальная уязвимость: **2**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -24,24 +24,19 @@
 | [CognitiveComplexity](CognitiveComplexity.md) | Когнитивная сложность | Да | Критичный | Дефект кода | `brainoverload` |
 | [CommentedCode](CommentedCode.md) | Закомментированный фрагмент кода | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` |
-| [CommonModuleAssign](CommonModuleAssign.md) | Присвоение общему модулю | Да | Блокирующий | Ошибка | `error` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br/>`standard`<br/>`unpredictable` |
-| [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Подряд идущие пустые строки | Да | Информационный | Дефект кода | `badpractice` |
 | [CreateQueryInCycle](CreateQueryInCycle.md) | Выполнение запроса в цикле | Да | Критичный | Ошибка | `performance` |
 | [CyclomaticComplexity](CyclomaticComplexity.md) | Цикломатическая сложность | Да | Критичный | Дефект кода | `brainoverload` |
-| [DataExchangeLoading](DataExchangeLoading.md) | Отсутствует проверка признака ОбменДанными.Загрузка в обработчике событий объекта | Да | Критичный | Ошибка | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да | Важный | Ошибка | `standard`<br/>`error` |
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Использование устаревшего метода "ТекущаяДата" | Да | Важный | Ошибка | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
-| [DeprecatedMethods8310](DeprecatedMethods8310.md) | Использование устаревшего метода клиентского приложения | Да | Информационный | Дефект кода | `deprecated` |
 | [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Устаревшее использование типа "УправляемаяФорма" | Да | Информационный | Дефект кода | `standard`<br/>`deprecated` |
 | [DuplicateRegion](DuplicateRegion.md) | Повторяющиеся разделы модуля | Да | Информационный | Дефект кода | `standard` |
 | [EmptyCodeBlock](EmptyCodeBlock.md) | Пустой блок кода | Да | Важный | Дефект кода | `badpractice`<br/>`suspicious` |
 | [EmptyRegion](EmptyRegion.md) | Область не должна быть пустой | Да | Информационный | Дефект кода | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Пустой оператор | Да | Информационный | Дефект кода | `badpractice` |
-| [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Избыточная проверка параметра АвтоТест | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` |

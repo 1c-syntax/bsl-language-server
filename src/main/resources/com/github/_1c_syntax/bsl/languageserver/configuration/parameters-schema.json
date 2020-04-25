@@ -1,12 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://1c-syntax.github.io/bsl-language-server/configuration/parameters-schema.json",
+    "$id": "http://example.com/root.json",
     "type": "object",
-    "title": "BSL Language Server Configuration File. Parameters definition part",
+    "title": "BSL Language Server Configuration File. Diagnostic definition part",
     "definitions": {
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -16,7 +16,7 @@
         },
         "CanonicalSpellingKeywords": {
             "description": "Canonical keyword writing",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -26,7 +26,7 @@
         },
         "CodeBlockBeforeSub": {
             "description": "Method definitions must be placed before the module body operators",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -36,7 +36,7 @@
         },
         "CodeOutOfRegion": {
             "description": "Code out of region",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -46,7 +46,7 @@
         },
         "CognitiveComplexity": {
             "description": "Cognitive complexity",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -70,7 +70,7 @@
         },
         "CommentedCode": {
             "description": "Commented out code",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -88,7 +88,7 @@
         },
         "CommitTransactionOutsideTryCatch": {
             "description": "Violating transaction rules for the 'CommitTransaction' method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -96,89 +96,9 @@
             "title": "Violating transaction rules for the 'CommitTransaction' method",
             "$id": "#/definitions/CommitTransactionOutsideTryCatch"
         },
-        "CommonModuleAssign": {
-            "description": "CommonModuleAssign",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "CommonModuleAssign",
-            "$id": "#/definitions/CommonModuleAssign"
-        },
-        "CommonModuleNameCached": {
-            "description": "Missed postfix \"Cached\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missed postfix \"Cached\"",
-            "$id": "#/definitions/CommonModuleNameCached"
-        },
-        "CommonModuleNameClient": {
-            "description": "Missed postfix \"Client\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missed postfix \"Client\"",
-            "$id": "#/definitions/CommonModuleNameClient"
-        },
-        "CommonModuleNameClientServer": {
-            "description": "Missed postfix \"ClientServer\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missed postfix \"ClientServer\"",
-            "$id": "#/definitions/CommonModuleNameClientServer"
-        },
-        "CommonModuleNameFullAccess": {
-            "description": "Missed postfix \"FullAccess\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missed postfix \"FullAccess\"",
-            "$id": "#/definitions/CommonModuleNameFullAccess"
-        },
-        "CommonModuleNameGlobal": {
-            "description": "Missed postfix \"Global\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missed postfix \"Global\"",
-            "$id": "#/definitions/CommonModuleNameGlobal"
-        },
-        "CommonModuleNameGlobalClient": {
-            "description": "Global module with postfix \"Client\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Global module with postfix \"Client\"",
-            "$id": "#/definitions/CommonModuleNameGlobalClient"
-        },
-        "CommonModuleNameServerCall": {
-            "description": "Missed postfix \"ServerCall\"",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Missed postfix \"ServerCall\"",
-            "$id": "#/definitions/CommonModuleNameServerCall"
-        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -188,7 +108,7 @@
         },
         "CompilationDirectiveNeedLess": {
             "description": "Needless compilation directive",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -196,27 +116,9 @@
             "title": "Needless compilation directive",
             "$id": "#/definitions/CompilationDirectiveNeedLess"
         },
-        "ConsecutiveEmptyLines": {
-            "description": "Consecutive empty lines",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Consecutive empty lines",
-            "properties": {
-                "allowedEmptyLinesCount": {
-                    "description": "Maximum allowed consecutive empty lines",
-                    "default": 1,
-                    "type": "integer",
-                    "title": "Maximum allowed consecutive empty lines"
-                }
-            },
-            "$id": "#/definitions/ConsecutiveEmptyLines"
-        },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -226,7 +128,7 @@
         },
         "CyclomaticComplexity": {
             "description": "Cyclomatic complexity",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -248,27 +150,9 @@
             },
             "$id": "#/definitions/CyclomaticComplexity"
         },
-        "DataExchangeLoading": {
-            "description": "There is no check for the attribute DataExchange.Load in the object's event handler",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "There is no check for the attribute DataExchange.Load in the object's event handler",
-            "properties": {
-                "findFirst": {
-                    "description": "Check should go first",
-                    "default": false,
-                    "type": "boolean",
-                    "title": "Check should go first"
-                }
-            },
-            "$id": "#/definitions/DataExchangeLoading"
-        },
         "DeletingCollectionItem": {
             "description": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -276,19 +160,9 @@
             "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "$id": "#/definitions/DeletingCollectionItem"
         },
-        "DeprecatedAttributes8312": {
-            "description": "Deprecated 8.3.12 platform features.",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Deprecated 8.3.12 platform features.",
-            "$id": "#/definitions/DeprecatedAttributes8312"
-        },
         "DeprecatedCurrentDate": {
             "description": "Using of the deprecated method \"CurrentDate\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -298,7 +172,7 @@
         },
         "DeprecatedFind": {
             "description": "Using of the deprecated method \"Find\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -308,7 +182,7 @@
         },
         "DeprecatedMessage": {
             "description": "Restriction on the use of deprecated \"Message\" method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -316,19 +190,9 @@
             "title": "Restriction on the use of deprecated \"Message\" method",
             "$id": "#/definitions/DeprecatedMessage"
         },
-        "DeprecatedMethods8310": {
-            "description": "Deprecated client application method.",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Deprecated client application method.",
-            "$id": "#/definitions/DeprecatedMethods8310"
-        },
         "DeprecatedTypeManagedForm": {
             "description": "Deprecated ManagedForm type",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -338,7 +202,7 @@
         },
         "DuplicateRegion": {
             "description": "Duplicate regions",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -348,7 +212,7 @@
         },
         "EmptyCodeBlock": {
             "description": "Empty code block",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -366,7 +230,7 @@
         },
         "EmptyRegion": {
             "description": "The region should not be empty",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -376,7 +240,7 @@
         },
         "EmptyStatement": {
             "description": "Empty statement",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -384,19 +248,9 @@
             "title": "Empty statement",
             "$id": "#/definitions/EmptyStatement"
         },
-        "ExcessiveAutoTestCheck": {
-            "description": "Excessive AutoTest Check",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Excessive AutoTest Check",
-            "$id": "#/definitions/ExcessiveAutoTestCheck"
-        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -406,7 +260,7 @@
         },
         "FormDataToValue": {
             "description": "FormDataToValue method call",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -416,7 +270,7 @@
         },
         "FunctionNameStartsWithGet": {
             "description": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
-            "default": false,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -426,7 +280,7 @@
         },
         "FunctionReturnsSamePrimitive": {
             "description": "The function always returns the same primitive value",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -436,7 +290,7 @@
         },
         "FunctionShouldHaveReturn": {
             "description": "The function should have return",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -446,7 +300,7 @@
         },
         "GetFormMethod": {
             "description": "GetForm method call",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -456,7 +310,7 @@
         },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -466,7 +320,7 @@
         },
         "IfConditionComplexity": {
             "description": "Usage of complex expressions in the \"If\" condition",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -484,7 +338,7 @@
         },
         "IfElseDuplicatedCodeBlock": {
             "description": "Duplicated code blocks in If...Then...ElseIf... statements",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -494,7 +348,7 @@
         },
         "IfElseDuplicatedCondition": {
             "description": "Duplicated conditions in If...Then...ElseIf... statements",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -504,7 +358,7 @@
         },
         "IfElseIfEndsWithElse": {
             "description": "Else...The...ElseIf... statement should end with Else branch",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -514,7 +368,7 @@
         },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -524,7 +378,7 @@
         },
         "LineLength": {
             "description": "Line Length limit",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -542,7 +396,7 @@
         },
         "MagicNumber": {
             "description": "Magic numbers",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -566,7 +420,7 @@
         },
         "MethodSize": {
             "description": "Method size",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -584,7 +438,7 @@
         },
         "MissingCodeTryCatchEx": {
             "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -602,7 +456,7 @@
         },
         "MissingSpace": {
             "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -644,7 +498,7 @@
         },
         "MissingTemporaryFileDeletion": {
             "description": "Missing temporary file deletion after using",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -662,7 +516,7 @@
         },
         "MissingVariablesDescription": {
             "description": "All variables declarations must have a description",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -672,7 +526,7 @@
         },
         "MultilingualStringHasAllDeclaredLanguages": {
             "description": "There is a localized text for all languages declared in the configuration",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -690,7 +544,7 @@
         },
         "MultilingualStringUsingWithTemplate": {
             "description": "Partially localized text is used in the StrTemplate function",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -708,7 +562,7 @@
         },
         "NestedConstructorsInStructureDeclaration": {
             "description": "Nested constructors with parameters in structure declaration",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -718,7 +572,7 @@
         },
         "NestedFunctionInParameters": {
             "description": "Initialization of method and constructor parameters by calling nested methods",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -728,7 +582,7 @@
         },
         "NestedStatements": {
             "description": "Control flow statements should not be nested too deep",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -746,7 +600,7 @@
         },
         "NestedTernaryOperator": {
             "description": "Nested ternary operator",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -756,7 +610,7 @@
         },
         "NonExportMethodsInApiRegion": {
             "description": "Non export methods in API regions",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -766,7 +620,7 @@
         },
         "NonStandardRegion": {
             "description": "Non-standard region of module",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -776,7 +630,7 @@
         },
         "NumberOfOptionalParams": {
             "description": "Limit number of optional parameters in method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -794,7 +648,7 @@
         },
         "NumberOfParams": {
             "description": "Number of parameters in method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -812,7 +666,7 @@
         },
         "NumberOfValuesInStructureConstructor": {
             "description": "Limit on the number of property values passed to the structure constructor",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -830,7 +684,7 @@
         },
         "OSUsersMethod": {
             "description": "Using method OSUsers",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -840,7 +694,7 @@
         },
         "OneStatementPerLine": {
             "description": "One statement per line",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -850,7 +704,7 @@
         },
         "OrderOfParams": {
             "description": "Order of Parameters in method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -860,7 +714,7 @@
         },
         "PairingBrokenTransaction": {
             "description": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -870,7 +724,7 @@
         },
         "ParseError": {
             "description": "Source code parse error",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -880,7 +734,7 @@
         },
         "ProcedureReturnsValue": {
             "description": "Procedure should not return Value",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -890,7 +744,7 @@
         },
         "PublicMethodsDescription": {
             "description": "All public methods must have a description",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -908,7 +762,7 @@
         },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -918,7 +772,7 @@
         },
         "SelfInsertion": {
             "description": "Insert a collection into itself",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -928,7 +782,7 @@
         },
         "SemicolonPresence": {
             "description": "Statement should end with semicolon symbol \";\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -938,7 +792,7 @@
         },
         "SeveralCompilerDirectives": {
             "description": "Erroneous indication of several compilation directives",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -948,7 +802,7 @@
         },
         "SpaceAtStartComment": {
             "description": "Space at the beginning of the comment",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -966,7 +820,7 @@
         },
         "TempFilesDir": {
             "description": "TempFilesDir() method call",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -976,7 +830,7 @@
         },
         "TernaryOperatorUsage": {
             "description": "Ternary operator usage",
-            "default": false,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -986,7 +840,7 @@
         },
         "ThisObjectAssign": {
             "description": "ThisObject assign",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -996,7 +850,7 @@
         },
         "TimeoutsInExternalResources": {
             "description": "Timeouts working with external resources",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1014,7 +868,7 @@
         },
         "TooManyReturns": {
             "description": "Methods should not have too many return statements",
-            "default": false,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1032,7 +886,7 @@
         },
         "TryNumber": {
             "description": "Cast to number of try catch block",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1042,7 +896,7 @@
         },
         "Typo": {
             "description": "Typo",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1050,10 +904,10 @@
             "title": "Typo",
             "properties": {
                 "userWordsToIgnore": {
-                    "description": "Dictionary for excluding words (comma separated, without spaces)",
+                    "description": "Dictionary for excluding words",
                     "default": "",
                     "type": "string",
-                    "title": "Dictionary for excluding words (comma separated, without spaces)"
+                    "title": "Dictionary for excluding words"
                 },
                 "minWordLength": {
                     "description": "Minimum length for checked words",
@@ -1066,7 +920,7 @@
         },
         "UnaryPlusInConcatenation": {
             "description": "Unary Plus sign in string concatenation",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1076,7 +930,7 @@
         },
         "UnknownPreprocessorSymbol": {
             "description": "Unknown preprocessor symbol",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1086,7 +940,7 @@
         },
         "UnreachableCode": {
             "description": "Unreachable Code",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1096,7 +950,7 @@
         },
         "UnusedLocalMethod": {
             "description": "Unused local method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1106,7 +960,7 @@
         },
         "UnusedParameters": {
             "description": "Unused parameter",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1116,7 +970,7 @@
         },
         "UseLessForEach": {
             "description": "Useless collection iteration",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1126,7 +980,7 @@
         },
         "UsingCancelParameter": {
             "description": "Using parameter \"Cancel\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1136,7 +990,7 @@
         },
         "UsingExternalCodeTools": {
             "description": "Using external code tools",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1146,7 +1000,7 @@
         },
         "UsingFindElementByString": {
             "description": "Using FindByName and FindByCode",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1156,7 +1010,7 @@
         },
         "UsingGoto": {
             "description": "\"goto\" statement should not be used",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1166,7 +1020,7 @@
         },
         "UsingHardcodeNetworkAddress": {
             "description": "Using hardcode ip addresses in code",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1184,7 +1038,7 @@
         },
         "UsingHardcodePath": {
             "description": "Using hardcode file paths in code",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1202,7 +1056,7 @@
         },
         "UsingHardcodeSecretInformation": {
             "description": "Storing confidential information in code",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1220,7 +1074,7 @@
         },
         "UsingModalWindows": {
             "description": "Using modal windows",
-            "default": false,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1230,7 +1084,7 @@
         },
         "UsingObjectNotAvailableUnix": {
             "description": "Using unavailable in Unix objects",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1240,7 +1094,7 @@
         },
         "UsingServiceTag": {
             "description": "Using service tags",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1258,7 +1112,7 @@
         },
         "UsingSynchronousCalls": {
             "description": "Using synchronous calls",
-            "default": false,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1268,7 +1122,7 @@
         },
         "UsingThisForm": {
             "description": "Using deprecated property \"ThisForm\"",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1278,7 +1132,7 @@
         },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
@@ -1288,7 +1142,7 @@
         },
         "YoLetterUsage": {
             "description": "Using Russian character \"yo\" (\"\u0451\") in code",
-            "default": true,
+            "default": null,
             "type": [
                 "boolean",
                 "object"
