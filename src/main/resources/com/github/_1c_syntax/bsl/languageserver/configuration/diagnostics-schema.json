@@ -278,6 +278,16 @@
             "title": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "$id": "#/definitions/FunctionNameStartsWithGet"
         },
+        "FunctionReturnsSamePrimitive": {
+            "description": "The function always returns the same primitive value",
+            "default": null,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The function always returns the same primitive value",
+            "$id": "#/definitions/FunctionReturnsSamePrimitive"
+        },
         "FunctionShouldHaveReturn": {
             "description": "The function should have return",
             "default": null,

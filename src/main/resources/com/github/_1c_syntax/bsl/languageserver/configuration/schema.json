@@ -170,6 +170,9 @@
                 "FunctionNameStartsWithGet": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
+                "FunctionReturnsSamePrimitive": {
+                    "$ref": "diagnostics-schema.json#/definitions/FunctionReturnsSamePrimitive"
+                },
                 "FunctionShouldHaveReturn": {
                     "$ref": "diagnostics-schema.json#/definitions/FunctionShouldHaveReturn"
                 },
