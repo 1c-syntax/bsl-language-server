@@ -58,9 +58,7 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String SHOW_SCALE_RU = "ОтображатьШкалу";
   private static final String SHOW_SCALE_EN = "ShowScale";
   private static final String SCALE_LINES_RU = "ЛинииШкалы";
-  //private static final String SCALE_LINES_EN = "ScaleLines";
   private static final String SCALE_COLOR_RU = "ЦветШкалы";
-  //private static final String SCALE_COLOR_EN = "ScaleColor";
   private static final String SHOW_SERIES_SCALE_LABELS_RU = "ОтображатьПодписиШкалыСерий";
   private static final String SHOW_SERIES_SCALE_LABELS_EN = "ShowSeriesScaleLabels";
   private static final String SHOW_POINTS_SCALE_LABELS_RU = "ОтображатьПодписиШкалыТочек";
@@ -101,7 +99,6 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String SET_PALETTE_RU = "УстановитьПалитру";
 
   // Global context enum
-  private static final String CHART_LABELS_ORIENTATION_EN = "ChartLabelsOrientation";
   private static final String CHART_LABELS_ORIENTATION_RU = "ОриентацияМетокДиаграммы";
 
   // Global context enum attribute
@@ -114,12 +111,78 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String CLEAR_EVENT_LOG_EN = "ClearEventLog";
   private static final String CLEAR_EVENT_LOG_RU = "ОчиститьЖурналРегистрации";
 
-  private static final HashMap<String, String> NEW_ATTRIBUTES = new HashMap<>();
+  private static final HashMap<String, String> NEW_ATTRIBUTES_AND_METHODS = new HashMap<>();
   static {
-    NEW_ATTRIBUTES.put(SHOW_SCALE_RU, "ОтображатьШкалы");
-    NEW_ATTRIBUTES.put(SHOW_SCALE_EN, "ShowScales");
-    NEW_ATTRIBUTES.put(SCALE_LINES_RU, "ЛинииШкал");
-    NEW_ATTRIBUTES.put(SCALE_COLOR_RU, "ЦветШкал");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_RU.toLowerCase(), "ОтображатьШкалы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_EN.toLowerCase(), "ShowScales");
+    NEW_ATTRIBUTES_AND_METHODS.put(SCALE_LINES_RU.toLowerCase(), "ЛинииШкал");
+    NEW_ATTRIBUTES_AND_METHODS.put(SCALE_COLOR_RU.toLowerCase(), "ЦветШкал");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SERIES_SCALE_LABELS_RU.toLowerCase(),
+      "ШкалаСерий.ПоложениеПодписейШкалы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SERIES_SCALE_LABELS_EN.toLowerCase(),
+      "SeriesScale.ScaleLabelLocation");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_POINTS_SCALE_LABELS_RU.toLowerCase(),
+      "ШкалаТочек.ПоложениеПодписейШкалы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_POINTS_SCALE_LABELS_EN.toLowerCase(),
+      "PointsScale.ScaleLabelLocation");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_VALUES_SCALE_LABELS_RU.toLowerCase(),
+      "ШкалаЗначений.ПоложениеПодписейШкалы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_VALUES_SCALE_LABELS_EN.toLowerCase(),
+      "ValuesScale.ScaleLabelLocation");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_VALUE_LINES_RU.toLowerCase(),
+      "ШкалаЗначений.ОтображениеЛинийСетки");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_VALUE_LINES_EN.toLowerCase(),
+      "ValuesScale.GridLinesShowMode");
+    NEW_ATTRIBUTES_AND_METHODS.put(VALUE_SCALE_FORMAT_RU.toLowerCase(),
+      "ШкалаЗначений.ФорматПодписей");
+    NEW_ATTRIBUTES_AND_METHODS.put(VALUE_SCALE_FORMAT_EN.toLowerCase(),
+      "ValuesScale.LabelFormat");
+    NEW_ATTRIBUTES_AND_METHODS.put(LABELS_ORIENTATION_RU.toLowerCase(),
+      "ШкалаТочек.ОриентацияПодписей");
+    NEW_ATTRIBUTES_AND_METHODS.put(LABELS_ORIENTATION_EN.toLowerCase(),
+      "PointsScale.LabelOrientation");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_LEGEND_RU.toLowerCase(),
+      "одно из свойств ОбластьЛегендыДиаграммы, " +
+      "ОбластьЛегендыДиаграммыГанта или ОбластьЛегендыСводнойДиаграммы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_LEGEND_EN.toLowerCase(),
+      "one of the properties of ChartLegendArea, " +
+      "GanttChartLegendArea or PivotChartLegendArea");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_EN.toLowerCase(),
+      "one of the properties of ChartTitleArea, " +
+      "GanttChartTitleArea or PivotChartTitleArea");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_RU.toLowerCase(),
+      "одно из свойств ОбластьЗаголовкаДиаграммы, " +
+      "ОбластьЗаголовкаДиаграммыГанта или ОбластьЗаголовкаСводнойДиаграммы");
+    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_EN.toLowerCase(),
+      "ColorPaletteDescription.ColorPalette");
+    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_RU.toLowerCase(),
+      "ОписаниеПалитрыЦветов.ПалитраЦветов");
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_EN.toLowerCase(),
+      "ColorPaletteDescription.GradientPaletteStartColor");
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_RU.toLowerCase(),
+      "ОписаниеПалитрыЦветов.ЦветНачалаГрадиентнойПалитры");
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_EN.toLowerCase(),
+      "ColorPaletteDescription.GradientPaletteEndColor");
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_RU.toLowerCase(),
+      "ОписаниеПалитрыЦветов.ЦветКонцаГрадиентнойПалитры");
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_EN.toLowerCase(),
+      "ColorPaletteDescription.GradientPaletteMaxColors");
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_RU.toLowerCase(),
+      "ОписаниеПалитрыЦветов.МаксимальноеКоличествоЦветовГрадиентнойПалитры");
+    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_EN.toLowerCase(),
+      "ColorPaletteDescription.GetPalette");
+    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_RU.toLowerCase(),
+      "ОписаниеПалитрыЦветов.ПолучитьПалитру");
+    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_EN.toLowerCase(),
+      "ColorPaletteDescription.SetPalette");
+    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_RU.toLowerCase(),
+      "ОписаниеПалитрыЦветов.УстановитьПалитру");
+    NEW_ATTRIBUTES_AND_METHODS.put(CHART_LABELS_ORIENTATION_RU.toLowerCase(),
+      "ОриентацияПодписейДиаграммы");
+    NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN.toLowerCase(),
+      "AlwaysHorizontal");
+    NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU.toLowerCase(),
+      "ГоризонтальнаяВсегда");
   }
 
   private static String getDeprecatedAttributesRegex(Metaobject metaobject) {
@@ -214,7 +277,7 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern CHART_LABELS_ORIENTATION_PATTERN = Pattern.compile(
-    CHART_LABELS_ORIENTATION_EN + "|" + CHART_LABELS_ORIENTATION_RU,
+    CHART_LABELS_ORIENTATION_RU,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final Pattern CHILD_FORM_ITEMS_GROUP_NAME_PATTERN = Pattern.compile(
@@ -237,8 +300,14 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
 
-    if (CHART_METHODS_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
+    Matcher matcher = CHART_METHODS_PATTERN.matcher(ctx.methodName().getText());
+    if (matcher.matches()) {
+      String deprecatedMethod = matcher.group();
+      String message = String.format(info.getResourceString("deprecatedMethodsMessage"),
+        deprecatedMethod,
+        Objects.requireNonNullElseGet(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedMethod.toLowerCase()),
+          String::new));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
     }
 
     return super.visitMethodCall(ctx);
@@ -246,8 +315,12 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (CLEAR_EVENT_LOG_PATTERN.matcher(ctx.methodName().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
+    Matcher matcher = CLEAR_EVENT_LOG_PATTERN.matcher(ctx.methodName().getText());
+    if (matcher.matches()) {
+      String deprecatedMethod = ctx.getStart().getText();
+      String message = String.format(info.getResourceString("deprecatedGlobalMethodsMessage"),
+        deprecatedMethod);
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
     }
     return super.visitGlobalMethodCall(ctx);
   }
@@ -267,8 +340,14 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-    if (CHART_LABELS_ORIENTATION_PATTERN.matcher(ctx.getStart().getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
+    Matcher matcher = CHART_LABELS_ORIENTATION_PATTERN.matcher(ctx.getStart().getText());
+    if (matcher.matches()) {
+      String deprecatedEnum = ctx.getStart().getText();
+      String message = String.format(info.getResourceString("deprecatedEnumNameMessage"),
+        deprecatedEnum,
+        Objects.requireNonNullElseGet(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedEnum.toLowerCase()),
+          String::new));
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
     }
 
     return super.visitComplexIdentifier(ctx);
@@ -292,7 +371,8 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
         String deprecatedAttribute = deprecatedAttributesMatcher.group();
         String message = String.format(info.getResourceString("deprecatedAttributeMessage"),
           deprecatedAttribute,
-          Objects.requireNonNullElseGet(NEW_ATTRIBUTES.get(deprecatedAttribute), String::new));
+          Objects.requireNonNullElseGet(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedAttribute.toLowerCase()),
+            String::new));
 
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
       }

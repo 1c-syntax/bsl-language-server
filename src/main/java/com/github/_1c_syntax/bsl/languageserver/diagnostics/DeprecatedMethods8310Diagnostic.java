@@ -67,19 +67,31 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
 
   private static final HashMap<String, String> newMethods = new HashMap<>();
   static {
-    newMethods.put(SET_SHORT_APPLICATION_CAPTION_RU, "КлиентскоеПриложение.УстановитьКраткийЗаголовок");
-    newMethods.put(GET_SHORT_APPLICATION_CAPTION_RU, "КлиентскоеПриложение.ПолучитьКраткийЗаголовок");
-    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_RU, "КлиентскоеПриложение.УстановитьЗаголовок");
-    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_RU, "КлиентскоеПриложение.ПолучитьЗаголовок");
-    newMethods.put(BASE_FONT_CURRENT_VARIANT_RU, "КлиентскоеПриложение.ТекущийВариантОсновногоШрифта");
-    newMethods.put(CLIENT_INTERFACE_VARIANT_RU, "КлиентскоеПриложение.ТекущийВариантИнтерфейса");
+    newMethods.put(SET_SHORT_APPLICATION_CAPTION_RU.toLowerCase(),
+      "КлиентскоеПриложение.УстановитьКраткийЗаголовок");
+    newMethods.put(GET_SHORT_APPLICATION_CAPTION_RU.toLowerCase(),
+      "КлиентскоеПриложение.ПолучитьКраткийЗаголовок");
+    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_RU.toLowerCase(),
+      "КлиентскоеПриложение.УстановитьЗаголовок");
+    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_RU.toLowerCase(),
+      "КлиентскоеПриложение.ПолучитьЗаголовок");
+    newMethods.put(BASE_FONT_CURRENT_VARIANT_RU.toLowerCase(),
+      "КлиентскоеПриложение.ТекущийВариантОсновногоШрифта");
+    newMethods.put(CLIENT_INTERFACE_VARIANT_RU.toLowerCase(),
+      "КлиентскоеПриложение.ТекущийВариантИнтерфейса");
 
-    newMethods.put(SET_SHORT_APPLICATION_CAPTION_EN, "ClientApplication.SetShortCaption");
-    newMethods.put(GET_SHORT_APPLICATION_CAPTION_EN, "ClientApplication.GetShortCaption");
-    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_EN, "ClientApplication.SetCaption");
-    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_EN, "ClientApplication.GetCaption");
-    newMethods.put(BASE_FONT_CURRENT_VARIANT_EN, "ClientApplication.CurrentBaseFontVariant");
-    newMethods.put(CLIENT_INTERFACE_VARIANT_EN, "ClientApplication.CurrentInterfaceVariant");
+    newMethods.put(SET_SHORT_APPLICATION_CAPTION_EN.toLowerCase(),
+      "ClientApplication.SetShortCaption");
+    newMethods.put(GET_SHORT_APPLICATION_CAPTION_EN.toLowerCase(),
+      "ClientApplication.GetShortCaption");
+    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_EN.toLowerCase(),
+      "ClientApplication.SetCaption");
+    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_EN.toLowerCase(),
+      "ClientApplication.GetCaption");
+    newMethods.put(BASE_FONT_CURRENT_VARIANT_EN.toLowerCase(),
+      "ClientApplication.CurrentBaseFontVariant");
+    newMethods.put(CLIENT_INTERFACE_VARIANT_EN.toLowerCase(),
+      "ClientApplication.CurrentInterfaceVariant");
   }
 
   private static String getRegex() {
@@ -110,7 +122,7 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
     Matcher matcher = METHOD_PATTERN.matcher(ctx.methodName().getText());
     if (matcher.matches()) {
       diagnosticStorage.addDiagnostic(ctx,
-        info.getMessage(matcher.group(), newMethods.getOrDefault(matcher.group(), "")));
+        info.getMessage(matcher.group(), newMethods.getOrDefault(matcher.group().toLowerCase(), "")));
     }
 
     return super.visitGlobalMethodCall(ctx);

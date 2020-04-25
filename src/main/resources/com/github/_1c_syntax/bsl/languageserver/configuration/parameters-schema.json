@@ -207,13 +207,13 @@
             "$id": "#/definitions/DeletingCollectionItem"
         },
         "DeprecatedAttributes8312": {
-            "description": "<Diagnostic name>",
+            "description": "Deprecated 8.3.12 platform features.",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "<Diagnostic name>",
+            "title": "Deprecated 8.3.12 platform features.",
             "$id": "#/definitions/DeprecatedAttributes8312"
         },
         "DeprecatedCurrentDate": {

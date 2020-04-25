@@ -1,4 +1,4 @@
-# <Diagnostic name> (DeprecatedAttributes8312)
+# Deprecated 8.3.12 platform features. (DeprecatedAttributes8312)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |

@@ -59,10 +59,6 @@ EndProcedure
     Ориентация = ОриентацияМетокДиаграммы.Авто;
 КонецПроцедуры
 
-Procedure Test3()
-    test = ChartLabelsOrientation.Auto;
-EndProcedure
-
 Процедура Тест4()
     ОчиститьЖурналРегистрации(Отбор);
 КонецПроцедуры

@@ -38,9 +38,53 @@ class DeprecatedAttributes8312DiagnosticTest extends AbstractDiagnosticTest<Depr
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(46);
-//    assertThat(diagnostics, true)
-//      .hasRange(6, 0, 6, 20);
+    assertThat(diagnostics).hasSize(45);
+    assertThat(diagnostics, true)
+      .hasRange(1, 37, 1, 53)
+      .hasRange(2, 30, 2, 41)
+      .hasRange(3, 30, 3, 40)
+      .hasRange(4, 30, 4, 58)
+      .hasRange(5, 30, 5, 58)
+      .hasRange(6, 30, 6, 61)
+      .hasRange(7, 30, 7, 59)
+      .hasRange(8, 30, 8, 50)
+      .hasRange(9, 30, 9, 46)
+      .hasRange(13, 17, 13, 27)
+      .hasRange(14, 17, 14, 39)
+      .hasRange(15, 17, 15, 39)
+      .hasRange(16, 17, 16, 39)
+      .hasRange(17, 17, 17, 37)
+      .hasRange(18, 17, 18, 34)
+      .hasRange(19, 17, 19, 35)
+      .hasRange(23, 13, 23, 31)
+      .hasRange(24, 13, 24, 33)
+      .hasRange(25, 18, 25, 36)
+      .hasRange(26, 18, 26, 38)
+      .hasRange(27, 20, 27, 38)
+      .hasRange(28, 20, 28, 40)
+      .hasRange(30, 13, 30, 27)
+      .hasRange(31, 13, 31, 42)
+      .hasRange(32, 13, 32, 41)
+      .hasRange(33, 13, 33, 60)
+      .hasRange(35, 21, 35, 38)
+      .hasRange(36, 14, 36, 45)
+      .hasRange(40, 9, 40, 20)
+      .hasRange(41, 14, 41, 25)
+      .hasRange(42, 14, 42, 25)
+      .hasRange(43, 9, 43, 19)
+      .hasRange(44, 14, 44, 24)
+      .hasRange(45, 14, 45, 24)
+      .hasRange(47, 9, 47, 22)
+      .hasRange(48, 9, 48, 35)
+      .hasRange(49, 9, 49, 33)
+      .hasRange(50, 9, 50 ,34)
+      .hasRange(52, 10, 52, 22)
+      .hasRange(53, 10, 53, 26)
+      .hasRange(58, 17, 58, 46)
+      .hasRange(62, 4, 62, 36)
+      .hasRange(66, 4, 66, 25)
+      .hasRange(70, 54, 70, 69)
+      .hasRange(74, 30, 74, 41);
 
   }
 }
