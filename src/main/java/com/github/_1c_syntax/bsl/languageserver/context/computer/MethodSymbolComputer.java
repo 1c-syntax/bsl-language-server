@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -75,21 +76,6 @@ public final class MethodSymbolComputer
     ) {
       return ctx;
     }
-    final Optional<CompilerDirective> compilerDirective;
-    if (declaration.compilerDirective().isEmpty()){
-      compilerDirective = Optional.empty();
-    } else {
-      var tokenType = declaration.compilerDirective(0).getStop().getType();
-      compilerDirective = CompilerDirective.of(tokenType);
-    }
-
-    final Optional<Annotation> annotation;
-    if (declaration.annotation().isEmpty()){
-      annotation = Optional.empty();
-    } else {
-      var tokenType = declaration.annotation(0).getStop().getType();
-      annotation = Annotation.of(tokenType);
-    }
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
@@ -98,7 +84,8 @@ public final class MethodSymbolComputer
       declaration.paramList(),
       true,
       declaration.EXPORT_KEYWORD() != null,
-      compilerDirective, annotation);
+      getCompilerDirective(declaration.compilerDirective()),
+      getAnnotations(declaration.annotation()));
 
     methods.add(methodSymbol);
 
@@ -119,21 +106,6 @@ public final class MethodSymbolComputer
     ) {
       return ctx;
     }
-    final Optional<CompilerDirective> compilerDirective;
-    if (declaration.compilerDirective().isEmpty()){
-      compilerDirective = Optional.empty();
-    } else {
-      var tokenType = declaration.compilerDirective(0).getStop().getType();
-      compilerDirective = CompilerDirective.of(tokenType);
-    }
-
-    final Optional<Annotation> annotation;
-    if (declaration.annotation().isEmpty()){
-      annotation = Optional.empty();
-    } else {
-      var tokenType = declaration.annotation(0).getStop().getType();
-      annotation = Annotation.of(tokenType);
-    }
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
@@ -142,13 +114,24 @@ public final class MethodSymbolComputer
       declaration.paramList(),
       false,
       declaration.EXPORT_KEYWORD() != null,
-      compilerDirective,
-      annotation
+      getCompilerDirective(declaration.compilerDirective()),
+      getAnnotations(declaration.annotation())
     );
 
     methods.add(methodSymbol);
 
     return ctx;
+  }
+
+  private static Optional<CompilerDirective> getCompilerDirective(List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts) {
+    final Optional<CompilerDirective> compilerDirective;
+    if (compilerDirectiveContexts.isEmpty()) {
+      compilerDirective = Optional.empty();
+    } else {
+      var tokenType = compilerDirectiveContexts.get(0).getStop().getType();
+      compilerDirective = CompilerDirective.of(tokenType);
+    }
+    return compilerDirective;
   }
 
   private MethodSymbol createMethodSymbol(
@@ -159,7 +142,7 @@ public final class MethodSymbolComputer
     boolean function,
     boolean export,
     Optional<CompilerDirective> compilerDirective,
-    Optional<Annotation> annotation) {
+    List<Annotation> annotation) {
 
     return MethodSymbol.builder()
       .name(subName.getText())
@@ -170,7 +153,7 @@ public final class MethodSymbolComputer
       .description(createDescription(startNode.getSymbol()))
       .parameters(createParameters(paramList))
       .compilerDirective(compilerDirective)
-      .annotation(annotation)
+      .annotations(annotation)
       .build();
   }
 
@@ -202,5 +185,20 @@ public final class MethodSymbolComputer
     return Optional.ofNullable(identifier)
       .map(ParseTree::getText)
       .orElse("<UNKNOWN_IDENTIFIER>");
+  }
+
+  private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
+    final List<Annotation> annotations;
+    if (annotationContext.isEmpty()) {
+      annotations = Collections.emptyList();
+    } else {
+      annotations = annotationContext.stream()
+        .map(annotation -> annotation.getStop().getType())
+        .map(Annotation::of)
+        .map(optionalAnnotation -> optionalAnnotation.orElse(null))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    }
+    return annotations;
   }
 }

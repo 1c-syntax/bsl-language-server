@@ -102,9 +102,10 @@ public class MethodSymbolComputerTest {
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     assertThat(methods).hasSize(1);
-    assertThat(methods.get(0).getName()).isEqualTo("Метод");
-    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
-    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -116,9 +117,10 @@ public class MethodSymbolComputerTest {
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
-    assertThat(methods.get(0).getName()).isEqualTo("Метод");
-    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
-    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -130,9 +132,10 @@ public class MethodSymbolComputerTest {
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
-    assertThat(methods.get(0).getName()).isEqualTo("Метод");
-    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
-    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -143,9 +146,10 @@ public class MethodSymbolComputerTest {
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
-    assertThat(methods.get(0).getName()).isEqualTo("Метод");
-    assertThat(methods.get(0).getCompilerDirective().isPresent()).isEqualTo(false);
-    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -158,8 +162,11 @@ public class MethodSymbolComputerTest {
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     assertThat(methods).hasSize(1);
-    assertThat(methods.get(0).getCompilerDirective().isPresent()).isEqualTo(false);
-    assertThat(methods.get(0).getAnnotation().orElse(null)).isEqualTo(Annotation.AFTER);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(1);
+    assertThat(annotations.get(0)).isEqualTo(Annotation.AFTER);
   }
 
   @Test
@@ -192,12 +199,33 @@ public class MethodSymbolComputerTest {
     checkCompilerDirectiveAndAnnotation(module);
   }
 
+  @Test
+  void testSeveralAnnotationsForFunction() {
+
+    String module = "&Аннотация1\n" +
+      "&Аннотация2\n" +
+      "Процедура Метод() Экспорт\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(2);
+    assertThat(annotations.get(0)).isEqualTo(Annotation.CUSTOM);
+    assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
+  }
+
   private static void checkCompilerDirectiveAndAnnotation(String module) {
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     assertThat(methods).hasSize(1);
-    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
-    assertThat(methods.get(0).getAnnotation().orElse(null)).isEqualTo(Annotation.AFTER);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(1);
+    assertThat(annotations.get(0)).isEqualTo(Annotation.AFTER);
   }
 
   private static List<MethodSymbol> getMethodSymbols(String module) {

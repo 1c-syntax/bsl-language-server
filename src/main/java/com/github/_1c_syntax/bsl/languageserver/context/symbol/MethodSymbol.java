@@ -65,7 +65,7 @@ public class MethodSymbol implements Symbol {
   @Builder.Default
   Optional<CompilerDirective> compilerDirective = Optional.empty();
   @Builder.Default
-  Optional<Annotation> annotation = Optional.empty();
+  List<Annotation> annotations = new ArrayList<>();
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
