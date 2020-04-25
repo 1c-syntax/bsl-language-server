@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -28,11 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 
-import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -64,18 +64,13 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
       return false;
     }
 
-    List<? extends BSLParser.CompilerDirectiveContext> compileList;
-
-    if (parentNode.procedure() == null) {
-      compileList = parentNode.function().funcDeclaration().compilerDirective();
-    } else {
-      compileList = parentNode.procedure().procDeclaration().compilerDirective();
-    }
-
-    if (compileList.isEmpty()
-      || (compileList.get(0).getStop().getType() != BSLLexer.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL
-      && compileList.get(0).getStop().getType() != BSLLexer.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL)) {
-
+    var isContextMethod = documentContext.getSymbolTree()
+      .getMethodSymbol(parentNode)
+      .flatMap(MethodSymbol::getCompilerDirective)
+      .filter(compilerDirective -> compilerDirective == CompilerDirective.AT_SERVER_NO_CONTEXT
+        || compilerDirective == CompilerDirective.AT_CLIENT_AT_SERVER_NO_CONTEXT)
+      .isEmpty();
+    if (isContextMethod){
       return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
     }
 
