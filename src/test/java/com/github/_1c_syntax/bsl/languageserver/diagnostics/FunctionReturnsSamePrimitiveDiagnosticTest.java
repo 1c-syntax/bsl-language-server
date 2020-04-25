@@ -1,5 +1,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,14 @@ class FunctionReturnsSamePrimitiveDiagnosticTest extends AbstractDiagnosticTest<
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-  assertThat(diagnostics).hasSize(4);
+  assertThat(diagnostics)
+    .hasSize(3)
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(
+      Ranges.create(0, 8, 0, 23)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(
+      Ranges.create(25, 8, 25, 14)))
+    .anyMatch(diagnostic -> diagnostic.getRange().equals(
+      Ranges.create(35, 8, 35, 17)));
 
   }
 }
