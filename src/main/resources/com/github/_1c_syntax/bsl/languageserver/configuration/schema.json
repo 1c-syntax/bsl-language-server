@@ -132,7 +132,7 @@
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
                 "FunctionReturnsSamePrimitive": {
-                    "$ref": "diagnostics-schema.json#/definitions/FunctionReturnsSamePrimitive"
+                    "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
                 },
                 "FunctionShouldHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/FunctionShouldHaveReturn"
