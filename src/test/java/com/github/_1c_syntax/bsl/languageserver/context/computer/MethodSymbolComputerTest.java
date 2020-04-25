@@ -176,7 +176,7 @@ public class MethodSymbolComputerTest {
       "Процедура Метод()\n" +
       "КонецПроцедуры";
 
-    checkCompilerDirectiveAndAnnotation(module);
+    checkCompilerDirective_AtClient_AndAnnotation_After(module);
   }
 
   @Test
@@ -186,7 +186,7 @@ public class MethodSymbolComputerTest {
       "Процедура Метод()\n" +
       "КонецПроцедуры";
 
-    checkCompilerDirectiveAndAnnotation(module);
+    checkCompilerDirective_AtClient_AndAnnotation_After(module);
   }
 
   @Test
@@ -196,7 +196,7 @@ public class MethodSymbolComputerTest {
       "Функция Метод()\n" +
       "КонецФункции";
 
-    checkCompilerDirectiveAndAnnotation(module);
+    checkCompilerDirective_AtClient_AndAnnotation_After(module);
   }
 
   @Test
@@ -217,7 +217,7 @@ public class MethodSymbolComputerTest {
     assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
   }
 
-  private static void checkCompilerDirectiveAndAnnotation(String module) {
+  private static void checkCompilerDirective_AtClient_AndAnnotation_After(String module) {
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     assertThat(methods).hasSize(1);
