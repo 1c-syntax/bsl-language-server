@@ -346,7 +346,7 @@
         },
         "FunctionReturnsSamePrimitive": {
             "description": "The function always returns the same primitive value",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
