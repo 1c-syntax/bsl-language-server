@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -58,10 +60,6 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "СОЗДАТЬКАТАЛОГ|CREATEDIRECTORY|КАТАЛОГВРЕМЕННЫХФАЙЛОВ|TEMPFILESDIR|КАТАЛОГДОКУМЕНТОВ|DOCUMENTSDIR|" +
       "РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ|USERDATAWORKDIR|ПОЛУЧИТЬФАЙЛЫ|GETFILES|ПОМЕСТИТЬФАЙЛЫ|PUTFILES|" +
       "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern SERVER_COMPILER_PATTERN = Pattern.compile(
-    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
@@ -128,10 +126,12 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
     if (MODALITY_METHODS.matcher(methodName).matches()) {
       BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
       if (rootParent == null
-        || Trees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
-        .stream()
-        .filter(node ->
-          SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {
+        || documentContext.getSymbolTree()
+        .getMethodSymbol(rootParent)
+        .flatMap(MethodSymbol::getCompilerDirective)
+        .filter(compilerDirective -> compilerDirective == CompilerDirective.AT_SERVER
+          || compilerDirective == CompilerDirective.AT_SERVER_NO_CONTEXT)
+        .isEmpty()) {
 
         diagnosticStorage.addDiagnostic(ctx,
           info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
