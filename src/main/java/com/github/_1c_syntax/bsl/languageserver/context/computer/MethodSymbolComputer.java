@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -73,6 +75,21 @@ public final class MethodSymbolComputer
     ) {
       return ctx;
     }
+    final Optional<CompilerDirective> compilerDirective;
+    if (declaration.compilerDirective().isEmpty()){
+      compilerDirective = Optional.empty();
+    } else {
+      var tokenType = declaration.compilerDirective(0).getStop().getType();
+      compilerDirective = CompilerDirective.of(tokenType);
+    }
+
+    final Optional<Annotation> annotation;
+    if (declaration.annotation().isEmpty()){
+      annotation = Optional.empty();
+    } else {
+      var tokenType = declaration.annotation(0).getStop().getType();
+      annotation = Annotation.of(tokenType);
+    }
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
@@ -80,8 +97,8 @@ public final class MethodSymbolComputer
       declaration.subName().getStart(),
       declaration.paramList(),
       true,
-      declaration.EXPORT_KEYWORD() != null
-    );
+      declaration.EXPORT_KEYWORD() != null,
+      compilerDirective, annotation);
 
     methods.add(methodSymbol);
 
@@ -102,6 +119,21 @@ public final class MethodSymbolComputer
     ) {
       return ctx;
     }
+    final Optional<CompilerDirective> compilerDirective;
+    if (declaration.compilerDirective().isEmpty()){
+      compilerDirective = Optional.empty();
+    } else {
+      var tokenType = declaration.compilerDirective(0).getStop().getType();
+      compilerDirective = CompilerDirective.of(tokenType);
+    }
+
+    final Optional<Annotation> annotation;
+    if (declaration.annotation().isEmpty()){
+      annotation = Optional.empty();
+    } else {
+      var tokenType = declaration.annotation(0).getStop().getType();
+      annotation = Annotation.of(tokenType);
+    }
 
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
@@ -109,7 +141,9 @@ public final class MethodSymbolComputer
       declaration.subName().getStart(),
       declaration.paramList(),
       false,
-      declaration.EXPORT_KEYWORD() != null
+      declaration.EXPORT_KEYWORD() != null,
+      compilerDirective,
+      annotation
     );
 
     methods.add(methodSymbol);
@@ -123,8 +157,10 @@ public final class MethodSymbolComputer
     Token subName,
     BSLParser.ParamListContext paramList,
     boolean function,
-    boolean export
-  ) {
+    boolean export,
+    Optional<CompilerDirective> compilerDirective,
+    Optional<Annotation> annotation) {
+
     return MethodSymbol.builder()
       .name(subName.getText())
       .range(Ranges.create(startNode, stopNode))
@@ -133,6 +169,8 @@ public final class MethodSymbolComputer
       .export(export)
       .description(createDescription(startNode.getSymbol()))
       .parameters(createParameters(paramList))
+      .compilerDirective(compilerDirective)
+      .annotation(annotation)
       .build();
   }
 

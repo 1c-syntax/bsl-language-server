@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.junit.jupiter.api.Test;
@@ -88,5 +90,118 @@ public class MethodSymbolComputerTest {
     assertThat(methods.get(0).getName()).isEqualTo("Выполнить");
     assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(0, 10, 0, 19));
 
+  }
+
+  @Test
+  void testCompilerDirective() {
+
+    String module = "&НаКлиенте\n" +
+      "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods).hasSize(1);
+    assertThat(methods.get(0).getName()).isEqualTo("Метод");
+    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+  }
+
+  @Test
+  void testCompilerDirectiveAtServerNoContext() {
+
+    String module = "&НаСервереБезКонтекста\n" +
+      "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods.get(0).getName()).isEqualTo("Метод");
+    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
+    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+  }
+
+  @Test
+  void testSeveralCompilerDirective() {
+
+    String module = "&НаКлиенте\n&НаСервереБезКонтекста\n" +
+      "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods.get(0).getName()).isEqualTo("Метод");
+    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+  }
+
+  @Test
+  void testNonCompilerDirectiveAndNonAnnotation() {
+
+    String module = "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods.get(0).getName()).isEqualTo("Метод");
+    assertThat(methods.get(0).getCompilerDirective().isPresent()).isEqualTo(false);
+    assertThat(methods.get(0).getAnnotation().isPresent()).isEqualTo(false);
+  }
+
+  @Test
+  void testAnnotation() {
+
+    String module = "&После\n" +
+      "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods).hasSize(1);
+    assertThat(methods.get(0).getCompilerDirective().isPresent()).isEqualTo(false);
+    assertThat(methods.get(0).getAnnotation().orElse(null)).isEqualTo(Annotation.AFTER);
+  }
+
+  @Test
+  void testCompilerDirectiveAndAnnotation() {
+
+    String module = "&НаКлиенте\n&После\n" +
+      "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    checkCompilerDirectiveAndAnnotation(module);
+  }
+
+  @Test
+  void testCompilerDirectiveAndAnnotationOtherOrder() {
+
+    String module = "&После\n&НаКлиенте\n" +
+      "Процедура Метод()\n" +
+      "КонецПроцедуры";
+
+    checkCompilerDirectiveAndAnnotation(module);
+  }
+
+  @Test
+  void testCompilerDirectiveAndAnnotationForFunction() {
+
+    String module = "&НаКлиенте\n&После\n" +
+      "Функция Метод()\n" +
+      "КонецФункции";
+
+    checkCompilerDirectiveAndAnnotation(module);
+  }
+
+  private static void checkCompilerDirectiveAndAnnotation(String module) {
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods).hasSize(1);
+    assertThat(methods.get(0).getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    assertThat(methods.get(0).getAnnotation().orElse(null)).isEqualTo(Annotation.AFTER);
+  }
+
+  private static List<MethodSymbol> getMethodSymbols(String module) {
+    DocumentContext documentContext = TestUtils.getDocumentContext(module);
+    return documentContext.getSymbolTree().getMethods();
   }
 }
