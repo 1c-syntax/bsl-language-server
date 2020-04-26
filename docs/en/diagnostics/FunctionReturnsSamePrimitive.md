@@ -46,6 +46,21 @@ Function CheckString(Val RowTable)
 EndFunction
 ```
 
+## Nuances
+
+Attachable functions excluded from the scan. Example:
+```bsl
+Function Attachable_RandomAction(Command)
+
+    If ValueIsFilled(CurrentDate) Then
+        Return Undefined;
+    EndIf;
+
+    Return Undefined;
+
+EndFunction
+```
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
