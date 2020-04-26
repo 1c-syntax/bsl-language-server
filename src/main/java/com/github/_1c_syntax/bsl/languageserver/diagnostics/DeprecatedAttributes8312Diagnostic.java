@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
@@ -112,148 +113,78 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   private static final String CLEAR_EVENT_LOG_RU = "ОчиститьЖурналРегистрации";
 
   private static final HashMap<String, String> NEW_ATTRIBUTES_AND_METHODS = new HashMap<>();
+
   static {
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_RU.toLowerCase(), "ОтображатьШкалы");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_EN.toLowerCase(), "ShowScales");
-    NEW_ATTRIBUTES_AND_METHODS.put(SCALE_LINES_RU.toLowerCase(), "ЛинииШкал");
-    NEW_ATTRIBUTES_AND_METHODS.put(SCALE_COLOR_RU.toLowerCase(), "ЦветШкал");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SERIES_SCALE_LABELS_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_RU.toLowerCase(Locale.ENGLISH), "ОтображатьШкалы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_EN.toLowerCase(Locale.ENGLISH), "ShowScales");
+    NEW_ATTRIBUTES_AND_METHODS.put(SCALE_LINES_RU.toLowerCase(Locale.ENGLISH), "ЛинииШкал");
+    NEW_ATTRIBUTES_AND_METHODS.put(SCALE_COLOR_RU.toLowerCase(Locale.ENGLISH), "ЦветШкал");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SERIES_SCALE_LABELS_RU.toLowerCase(Locale.ENGLISH),
       "ШкалаСерий.ПоложениеПодписейШкалы");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SERIES_SCALE_LABELS_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SERIES_SCALE_LABELS_EN.toLowerCase(Locale.ENGLISH),
       "SeriesScale.ScaleLabelLocation");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_POINTS_SCALE_LABELS_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_POINTS_SCALE_LABELS_RU.toLowerCase(Locale.ENGLISH),
       "ШкалаТочек.ПоложениеПодписейШкалы");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_POINTS_SCALE_LABELS_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_POINTS_SCALE_LABELS_EN.toLowerCase(Locale.ENGLISH),
       "PointsScale.ScaleLabelLocation");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_VALUES_SCALE_LABELS_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_VALUES_SCALE_LABELS_RU.toLowerCase(Locale.ENGLISH),
       "ШкалаЗначений.ПоложениеПодписейШкалы");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_VALUES_SCALE_LABELS_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_VALUES_SCALE_LABELS_EN.toLowerCase(Locale.ENGLISH),
       "ValuesScale.ScaleLabelLocation");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_VALUE_LINES_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_VALUE_LINES_RU.toLowerCase(Locale.ENGLISH),
       "ШкалаЗначений.ОтображениеЛинийСетки");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_VALUE_LINES_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_SCALE_VALUE_LINES_EN.toLowerCase(Locale.ENGLISH),
       "ValuesScale.GridLinesShowMode");
-    NEW_ATTRIBUTES_AND_METHODS.put(VALUE_SCALE_FORMAT_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(VALUE_SCALE_FORMAT_RU.toLowerCase(Locale.ENGLISH),
       "ШкалаЗначений.ФорматПодписей");
-    NEW_ATTRIBUTES_AND_METHODS.put(VALUE_SCALE_FORMAT_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(VALUE_SCALE_FORMAT_EN.toLowerCase(Locale.ENGLISH),
       "ValuesScale.LabelFormat");
-    NEW_ATTRIBUTES_AND_METHODS.put(LABELS_ORIENTATION_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(LABELS_ORIENTATION_RU.toLowerCase(Locale.ENGLISH),
       "ШкалаТочек.ОриентацияПодписей");
-    NEW_ATTRIBUTES_AND_METHODS.put(LABELS_ORIENTATION_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(LABELS_ORIENTATION_EN.toLowerCase(Locale.ENGLISH),
       "PointsScale.LabelOrientation");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_LEGEND_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_LEGEND_RU.toLowerCase(Locale.ENGLISH),
       "одно из свойств ОбластьЛегендыДиаграммы, " +
-      "ОбластьЛегендыДиаграммыГанта или ОбластьЛегендыСводнойДиаграммы");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_LEGEND_EN.toLowerCase(),
+        "ОбластьЛегендыДиаграммыГанта или ОбластьЛегендыСводнойДиаграммы");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_LEGEND_EN.toLowerCase(Locale.ENGLISH),
       "one of the properties of ChartLegendArea, " +
-      "GanttChartLegendArea or PivotChartLegendArea");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_EN.toLowerCase(),
+        "GanttChartLegendArea or PivotChartLegendArea");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_EN.toLowerCase(Locale.ENGLISH),
       "one of the properties of ChartTitleArea, " +
-      "GanttChartTitleArea or PivotChartTitleArea");
-    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_RU.toLowerCase(),
+        "GanttChartTitleArea or PivotChartTitleArea");
+    NEW_ATTRIBUTES_AND_METHODS.put(SHOW_TITLE_RU.toLowerCase(Locale.ENGLISH),
       "одно из свойств ОбластьЗаголовкаДиаграммы, " +
-      "ОбластьЗаголовкаДиаграммыГанта или ОбластьЗаголовкаСводнойДиаграммы");
-    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_EN.toLowerCase(),
+        "ОбластьЗаголовкаДиаграммыГанта или ОбластьЗаголовкаСводнойДиаграммы");
+    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.ColorPalette");
-    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(COLOR_PALETTE_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.ПалитраЦветов");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.GradientPaletteStartColor");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_START_COLOR_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.ЦветНачалаГрадиентнойПалитры");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.GradientPaletteEndColor");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_END_COLOR_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.ЦветКонцаГрадиентнойПалитры");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.GradientPaletteMaxColors");
-    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GRADIENT_PALETTE_MAX_COLORS_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.МаксимальноеКоличествоЦветовГрадиентнойПалитры");
-    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.GetPalette");
-    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(GET_PALETTE_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.ПолучитьПалитру");
-    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_EN.toLowerCase(Locale.ENGLISH),
       "ColorPaletteDescription.SetPalette");
-    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(SET_PALETTE_RU.toLowerCase(Locale.ENGLISH),
       "ОписаниеПалитрыЦветов.УстановитьПалитру");
-    NEW_ATTRIBUTES_AND_METHODS.put(CHART_LABELS_ORIENTATION_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(CHART_LABELS_ORIENTATION_RU.toLowerCase(Locale.ENGLISH),
       "ОриентацияПодписейДиаграммы");
-    NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN.toLowerCase(Locale.ENGLISH),
       "AlwaysHorizontal");
-    NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU.toLowerCase(),
+    NEW_ATTRIBUTES_AND_METHODS.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU.toLowerCase(Locale.ENGLISH),
       "ГоризонтальнаяВсегда");
-  }
-
-  private static String getDeprecatedAttributesRegex(Metaobject metaobject) {
-    HashMap<String, String> attributesPair = new HashMap<>();
-    if (metaobject.equals(Metaobject.CHART_PLOT_AREA)) {
-      attributesPair.put(SHOW_SCALE_RU, SHOW_SCALE_EN);
-      attributesPair.put(SCALE_LINES_RU, "");
-      attributesPair.put(SCALE_COLOR_RU, "");
-      attributesPair.put(SHOW_SERIES_SCALE_LABELS_RU, SHOW_SERIES_SCALE_LABELS_EN);
-      attributesPair.put(SHOW_POINTS_SCALE_LABELS_RU, SHOW_POINTS_SCALE_LABELS_EN);
-      attributesPair.put(SHOW_VALUES_SCALE_LABELS_RU, SHOW_VALUES_SCALE_LABELS_EN);
-      attributesPair.put(SHOW_SCALE_VALUE_LINES_RU, SHOW_SCALE_VALUE_LINES_EN);
-      attributesPair.put(VALUE_SCALE_FORMAT_RU, VALUE_SCALE_FORMAT_EN);
-      attributesPair.put(LABELS_ORIENTATION_RU, LABELS_ORIENTATION_EN);
-    } else if (metaobject.equals(Metaobject.CHART)) {
-      attributesPair.put(SHOW_LEGEND_EN, SHOW_LEGEND_RU);
-      attributesPair.put(SHOW_TITLE_EN, SHOW_TITLE_RU);
-      attributesPair.put(COLOR_PALETTE_EN, COLOR_PALETTE_RU);
-      attributesPair.put(GRADIENT_PALETTE_START_COLOR_EN, GRADIENT_PALETTE_START_COLOR_RU);
-      attributesPair.put(GRADIENT_PALETTE_END_COLOR_EN, GRADIENT_PALETTE_END_COLOR_RU);
-      attributesPair.put(GRADIENT_PALETTE_MAX_COLORS_EN, GRADIENT_PALETTE_MAX_COLORS_RU);
-    } else if (metaobject.equals(Metaobject.ENUM_ITEMS_GROUP)) {
-      attributesPair.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN, CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU);
-    }
-    StringJoiner regex = new StringJoiner("|");
-
-    attributesPair.forEach((k, v) -> {
-      regex.add(k);
-      regex.add(v);
-    });
-
-    return regex.toString();
-  }
-
-  private static String getDeprecatedMethodsRegex(Metaobject metaobject) {
-    HashMap<String, String> attributesPair = new HashMap<>();
-
-    if (metaobject.equals(Metaobject.CHART)) {
-      attributesPair.put(GET_PALETTE_EN, GET_PALETTE_RU);
-      attributesPair.put(SET_PALETTE_EN, SET_PALETTE_RU);
-    }
-
-    StringJoiner regex = new StringJoiner("|");
-
-    attributesPair.forEach((k, v) -> {
-      regex.add(k);
-      regex.add(v);
-    });
-
-    return regex.toString();
-  }
-
-  private static String getMetaobjectNameRegex(Metaobject metaobject) {
-    HashMap<String, String> namePair = new HashMap<>();
-    if (metaobject.equals(Metaobject.CHART_PLOT_AREA)) {
-      namePair.put(CHART_PLOT_AREA_RU, CHART_PLOT_AREA_EN);
-    } else if (metaobject.equals(Metaobject.CHART)) {
-      namePair.put(CHART_RU, CHART_EN);
-      namePair.put(GANTT_CHART_EN, GANTT_CHART_RU);
-      namePair.put(PIVOT_CHART_EN, PIVOT_CHART_RU);
-    } else if (metaobject.equals(Metaobject.ENUM_ITEMS_GROUP)) {
-      namePair.put(CHILD_FORM_ITEMS_GROUP_EN, CHILD_FORM_ITEMS_GROUP_RU);
-    }
-    StringJoiner regex = new StringJoiner("|");
-
-    namePair.forEach((k, v) -> {
-      regex.add(k);
-      regex.add(v);
-    });
-
-    return regex.toString();
   }
 
   private static final Pattern CHART_PLOT_AREA_ATTRIBUTES_PATTERN = Pattern.compile(
@@ -292,7 +223,6 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     CLEAR_EVENT_LOG_EN + "|" + CLEAR_EVENT_LOG_RU,
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-
   public DeprecatedAttributes8312Diagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -303,10 +233,12 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     Matcher matcher = CHART_METHODS_PATTERN.matcher(ctx.methodName().getText());
     if (matcher.matches()) {
       String deprecatedMethod = matcher.group();
-      String message = String.format(info.getResourceString("deprecatedMethodsMessage"),
+      String message = info.getResourceString("deprecatedMethodsMessage",
         deprecatedMethod,
-        Objects.requireNonNullElseGet(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedMethod.toLowerCase()),
-          String::new));
+        Objects.requireNonNullElse(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedMethod.toLowerCase(Locale.ENGLISH)),
+          ""
+        )
+      );
       diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
     }
 
@@ -318,8 +250,10 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     Matcher matcher = CLEAR_EVENT_LOG_PATTERN.matcher(ctx.methodName().getText());
     if (matcher.matches()) {
       String deprecatedMethod = ctx.getStart().getText();
-      String message = String.format(info.getResourceString("deprecatedGlobalMethodsMessage"),
-        deprecatedMethod);
+      String message = info.getResourceString(
+        "deprecatedGlobalMethodsMessage",
+        deprecatedMethod
+      );
       diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
     }
     return super.visitGlobalMethodCall(ctx);
@@ -343,10 +277,13 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     Matcher matcher = CHART_LABELS_ORIENTATION_PATTERN.matcher(ctx.getStart().getText());
     if (matcher.matches()) {
       String deprecatedEnum = ctx.getStart().getText();
-      String message = String.format(info.getResourceString("deprecatedEnumNameMessage"),
+      String message = info.getResourceString("deprecatedEnumNameMessage",
         deprecatedEnum,
-        Objects.requireNonNullElseGet(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedEnum.toLowerCase()),
-          String::new));
+        Objects.requireNonNullElse(
+          NEW_ATTRIBUTES_AND_METHODS.get(deprecatedEnum.toLowerCase(Locale.ENGLISH)),
+          ""
+        )
+      );
       diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
     }
 
@@ -354,8 +291,8 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
   }
 
   private void checkDeprecatedAttributes(BSLParserRuleContext ctx,
-                                            Pattern objectNamePattern,
-                                            Pattern deprecatedAttributesPattern) {
+                                         Pattern objectNamePattern,
+                                         Pattern deprecatedAttributesPattern) {
 
     Matcher deprecatedAttributesMatcher = deprecatedAttributesPattern.matcher(ctx.getText().substring(1));
 
@@ -369,10 +306,13 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
       }
       if (objectNamePattern.matcher(complexCtx.getStart().getText()).matches()) {
         String deprecatedAttribute = deprecatedAttributesMatcher.group();
-        String message = String.format(info.getResourceString("deprecatedAttributeMessage"),
+        String message = info.getResourceString("deprecatedAttributeMessage",
           deprecatedAttribute,
-          Objects.requireNonNullElseGet(NEW_ATTRIBUTES_AND_METHODS.get(deprecatedAttribute.toLowerCase()),
-            String::new));
+          Objects.requireNonNullElse(
+            NEW_ATTRIBUTES_AND_METHODS.get(deprecatedAttribute.toLowerCase(Locale.ENGLISH)),
+            ""
+          )
+        );
 
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(message));
       }
@@ -380,7 +320,78 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     }
   }
 
-  private enum Metaobject{
+  private static String getDeprecatedAttributesRegex(Metaobject metaobject) {
+    HashMap<String, String> attributesPair = new HashMap<>();
+    if (metaobject == Metaobject.CHART_PLOT_AREA) {
+      attributesPair.put(SHOW_SCALE_RU, SHOW_SCALE_EN);
+      attributesPair.put(SCALE_LINES_RU, "");
+      attributesPair.put(SCALE_COLOR_RU, "");
+      attributesPair.put(SHOW_SERIES_SCALE_LABELS_RU, SHOW_SERIES_SCALE_LABELS_EN);
+      attributesPair.put(SHOW_POINTS_SCALE_LABELS_RU, SHOW_POINTS_SCALE_LABELS_EN);
+      attributesPair.put(SHOW_VALUES_SCALE_LABELS_RU, SHOW_VALUES_SCALE_LABELS_EN);
+      attributesPair.put(SHOW_SCALE_VALUE_LINES_RU, SHOW_SCALE_VALUE_LINES_EN);
+      attributesPair.put(VALUE_SCALE_FORMAT_RU, VALUE_SCALE_FORMAT_EN);
+      attributesPair.put(LABELS_ORIENTATION_RU, LABELS_ORIENTATION_EN);
+    } else if (metaobject == Metaobject.CHART) {
+      attributesPair.put(SHOW_LEGEND_EN, SHOW_LEGEND_RU);
+      attributesPair.put(SHOW_TITLE_EN, SHOW_TITLE_RU);
+      attributesPair.put(COLOR_PALETTE_EN, COLOR_PALETTE_RU);
+      attributesPair.put(GRADIENT_PALETTE_START_COLOR_EN, GRADIENT_PALETTE_START_COLOR_RU);
+      attributesPair.put(GRADIENT_PALETTE_END_COLOR_EN, GRADIENT_PALETTE_END_COLOR_RU);
+      attributesPair.put(GRADIENT_PALETTE_MAX_COLORS_EN, GRADIENT_PALETTE_MAX_COLORS_RU);
+    } else if (metaobject == Metaobject.ENUM_ITEMS_GROUP) {
+      attributesPair.put(CHILD_FORM_ITEMS_GROUP_HORIZONTAL_EN, CHILD_FORM_ITEMS_GROUP_HORIZONTAL_RU);
+    }
+    StringJoiner regex = new StringJoiner("|");
+
+    attributesPair.forEach((String k, String v) -> {
+      regex.add(k);
+      regex.add(v);
+    });
+
+    return regex.toString();
+  }
+
+  private static String getDeprecatedMethodsRegex(Metaobject metaobject) {
+    HashMap<String, String> attributesPair = new HashMap<>();
+
+    if (metaobject == Metaobject.CHART) {
+      attributesPair.put(GET_PALETTE_EN, GET_PALETTE_RU);
+      attributesPair.put(SET_PALETTE_EN, SET_PALETTE_RU);
+    }
+
+    StringJoiner regex = new StringJoiner("|");
+
+    attributesPair.forEach((String k, String v) -> {
+      regex.add(k);
+      regex.add(v);
+    });
+
+    return regex.toString();
+  }
+
+  private static String getMetaobjectNameRegex(Metaobject metaobject) {
+    HashMap<String, String> namePair = new HashMap<>();
+    if (metaobject == Metaobject.CHART_PLOT_AREA) {
+      namePair.put(CHART_PLOT_AREA_RU, CHART_PLOT_AREA_EN);
+    } else if (metaobject == Metaobject.CHART) {
+      namePair.put(CHART_RU, CHART_EN);
+      namePair.put(GANTT_CHART_EN, GANTT_CHART_RU);
+      namePair.put(PIVOT_CHART_EN, PIVOT_CHART_RU);
+    } else if (metaobject == Metaobject.ENUM_ITEMS_GROUP) {
+      namePair.put(CHILD_FORM_ITEMS_GROUP_EN, CHILD_FORM_ITEMS_GROUP_RU);
+    }
+    StringJoiner regex = new StringJoiner("|");
+
+    namePair.forEach((String k, String v) -> {
+      regex.add(k);
+      regex.add(v);
+    });
+
+    return regex.toString();
+  }
+
+  private enum Metaobject {
     CHART,
     CHART_PLOT_AREA,
     ENUM_ITEMS_GROUP
