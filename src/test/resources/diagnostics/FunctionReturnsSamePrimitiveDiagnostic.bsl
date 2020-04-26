@@ -49,3 +49,23 @@
     КонецЕсли;
     Возврат Значение;
 КонецФункции
+
+Функция Подключаемый_КакаяТоКоманда(Команда)
+
+    Если ЗначениеЗаполнено(ТекущаяДата) Тогда
+        Возврат Неопределено;
+    КонецЕсли;
+
+    Возврат Неопределено;
+
+КонецФункции
+
+Function Attachable_RandomAction(Command)
+
+    If ValueIsFilled(CurrentDate) Then
+        Return Undefined;
+    EndIf;
+
+    Return Undefined;
+
+EndFunction
