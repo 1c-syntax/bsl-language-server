@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1587899754574,
+  "lastUpdate": 1587906759816,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1550,6 +1550,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3655075404783061",
             "extra": "mean: 71.80062262217204 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "286cb6f15d07b58cab92212cfee8b576eff3d5b8",
+          "message": "Merge pull request #1135 from EightM/fix/8310DiagnosticRefactor\n\nДобавлено явное указание локалей при вызове toLowerCase()",
+          "timestamp": "2020-04-26T16:05:11+03:00",
+          "tree_id": "f3eb28f140722e4b969e2511a35b87605beb4677",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/286cb6f15d07b58cab92212cfee8b576eff3d5b8"
+        },
+        "date": 1587906758319,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 65.36535310745239,
+            "unit": "sec",
+            "range": "stddev: 0.89016860179428",
+            "extra": "mean: 65.36535310745239 sec\nrounds: 3"
           }
         ]
       }
