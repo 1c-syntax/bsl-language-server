@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.Range;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +55,8 @@ import java.util.stream.Stream;
 public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String KEY_MESSAGE = "diagnosticMessageReturnStatement";
+  private static final Pattern pattern = Pattern.compile(
+    "^(подключаемый|attachable)_", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   public FunctionReturnsSamePrimitiveDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -61,6 +64,17 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
+
+    var abortCheck = Optional.ofNullable(ctx.funcDeclaration())
+      .map(BSLParser.FuncDeclarationContext::subName)
+      .filter(subNameContext -> pattern.matcher(subNameContext.getText()).find())
+      .isPresent();
+
+    // Исключаем подключаемые методы
+    if (abortCheck) {
+      return ctx;
+    }
+
     var tree = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
     if (tree.size() > 1) {
       var expressions = tree.stream()
@@ -100,9 +114,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   private Range getSubNameRange(ParserRuleContext ctx) {
     return Optional.ofNullable(Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub))
       .map(BSLParser.SubContext.class::cast)
-      .map(context -> documentContext.getSymbolTree().getMethodSymbol(context))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(context -> documentContext.getSymbolTree().getMethodSymbol(context))
       .map(MethodSymbol::getSubNameRange)
       .orElse(Ranges.create(ctx.getStart()));
   }
