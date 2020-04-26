@@ -68,6 +68,9 @@
                 "DeletingCollectionItem": {
                     "$ref": "parameters-schema.json#/definitions/DeletingCollectionItem"
                 },
+                "DeprecatedAttributes8312": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedAttributes8312"
+                },
                 "DeprecatedCurrentDate": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedCurrentDate"
                 },
