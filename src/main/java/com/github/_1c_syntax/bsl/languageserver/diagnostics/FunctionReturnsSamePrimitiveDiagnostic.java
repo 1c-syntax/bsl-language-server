@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -98,8 +99,13 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
     BSLParser.FunctionContext ctx, Collection<ParseTree> tree, List<BSLParser.ExpressionContext> expressions) {
 
     var set = expressions.stream()
-      .map(BSLParser.ExpressionContext::getText)
-      .map(String::toUpperCase)
+      .map((BSLParser.ExpressionContext expression) -> {
+        var text = expression.getText();
+        if (Trees.findAllRuleNodes(expression, BSLParser.RULE_string).isEmpty()) {
+          text = text.toUpperCase(Locale.ENGLISH);
+        }
+        return text;
+      })
       .collect(Collectors.toSet());
     if (set.size() == 1) {
       var relatedInformation = tree.stream()
