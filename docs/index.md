@@ -82,6 +82,8 @@ Run analysis and get diagnostic info
   -q, --silent             Silent mode
   -r, --reporter=<keys>    Reporter key (console, junit, json, tslint, generic)
   -s, --srcDir=<path>      Source directory
+  -w, --workspaceDir=<path> 
+                           Workspace directory
 ```
 
 Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников. 

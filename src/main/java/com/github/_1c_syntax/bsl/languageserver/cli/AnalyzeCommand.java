@@ -63,6 +63,9 @@ import static picocli.CommandLine.Option;
  *  -o, (--outputDir) &lt;arg&gt; -     Путь к каталогу размещения отчетов - результатов анализа.
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то файлы отчета будут сохранены в текущем каталоге запуска.
+ *  -w, (--workspaceDir) &lt;arg&gt; -  Путь к каталогу проекта, относительно которого располагаются исходные файлы.
+ *                                Возможно указывать как в абсолютном, так и в относительном виде. Если параметр опущен,
+ *                                то пути к исходным файлам будут указываться относительно текущего каталога запуска.
  *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то будут использованы настройки по умолчанию.
@@ -94,6 +97,13 @@ public class AnalyzeCommand implements Callable<Integer> {
     usageHelp = true,
     description = "Show this help message and exit")
   private boolean usageHelpRequested;
+
+  @Option(
+    names = {"-w", "--workspaceDir"},
+    description = "Workspace directory",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String workspaceDirOption;
 
   @Option(
     names = {"-s", "--srcDir"},
@@ -133,6 +143,12 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   public Integer call() {
 
+    Path workspaceDir = Absolute.path(workspaceDirOption);
+    if (!workspaceDir.toFile().exists()) {
+      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir.toString());
+      return 1;
+    }
+
     Path srcDir = Absolute.path(srcDirOption);
     if (!srcDir.toFile().exists()) {
       LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
@@ -152,14 +168,14 @@ public class AnalyzeCommand implements Callable<Integer> {
     List<FileInfo> fileInfos;
     if (silentMode) {
       fileInfos = files.parallelStream()
-        .map((File file) -> getFileInfoFromFile(srcDir, file))
+        .map((File file) -> getFileInfoFromFile(workspaceDir, file))
         .collect(Collectors.toList());
     } else {
       try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
         fileInfos = files.parallelStream()
           .map((File file) -> {
             pb.step();
-            return getFileInfoFromFile(srcDir, file);
+            return getFileInfoFromFile(workspaceDir, file);
           })
           .collect(Collectors.toList());
       }
