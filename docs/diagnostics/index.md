@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **93**
+Общее количество: **94**
 
-* Дефект кода: **58**
+* Дефект кода: **59**
 * Уязвимость: **2**
 * Ошибка: **31**
 * Потенциальная уязвимость: **2**
@@ -32,6 +32,7 @@
 | [CyclomaticComplexity](CyclomaticComplexity.md) | Цикломатическая сложность | Да | Критичный | Дефект кода | `brainoverload` |
 | [DataExchangeLoading](DataExchangeLoading.md) | Отсутствует проверка признака ОбменДанными.Загрузка в обработчике событий объекта | Да | Критичный | Ошибка | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Удаление элемента при обходе коллекции посредством оператора "Для каждого ... Из ... Цикл" | Да | Важный | Ошибка | `standard`<br/>`error` |
+| [DeprecatedAttributes8312](DeprecatedAttributes8312.md) | Устаревшие объекты платформы 8.3.12 | Да | Информационный | Дефект кода | `deprecated` |
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Использование устаревшего метода "ТекущаяДата" | Да | Важный | Ошибка | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
