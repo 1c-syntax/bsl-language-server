@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,31 +67,35 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
   private static final HashMap<String, String> newMethods = new HashMap<>();
+
+  public DeprecatedMethods8310Diagnostic(DiagnosticInfo info) {
+    super(info);
+  }
   static {
-    newMethods.put(SET_SHORT_APPLICATION_CAPTION_RU.toLowerCase(),
+    newMethods.put(SET_SHORT_APPLICATION_CAPTION_RU.toLowerCase(Locale.ENGLISH),
       "КлиентскоеПриложение.УстановитьКраткийЗаголовок");
-    newMethods.put(GET_SHORT_APPLICATION_CAPTION_RU.toLowerCase(),
+    newMethods.put(GET_SHORT_APPLICATION_CAPTION_RU.toLowerCase(Locale.ENGLISH),
       "КлиентскоеПриложение.ПолучитьКраткийЗаголовок");
-    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_RU.toLowerCase(),
+    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_RU.toLowerCase(Locale.ENGLISH),
       "КлиентскоеПриложение.УстановитьЗаголовок");
-    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_RU.toLowerCase(),
+    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_RU.toLowerCase(Locale.ENGLISH),
       "КлиентскоеПриложение.ПолучитьЗаголовок");
-    newMethods.put(BASE_FONT_CURRENT_VARIANT_RU.toLowerCase(),
+    newMethods.put(BASE_FONT_CURRENT_VARIANT_RU.toLowerCase(Locale.ENGLISH),
       "КлиентскоеПриложение.ТекущийВариантОсновногоШрифта");
-    newMethods.put(CLIENT_INTERFACE_VARIANT_RU.toLowerCase(),
+    newMethods.put(CLIENT_INTERFACE_VARIANT_RU.toLowerCase(Locale.ENGLISH),
       "КлиентскоеПриложение.ТекущийВариантИнтерфейса");
 
-    newMethods.put(SET_SHORT_APPLICATION_CAPTION_EN.toLowerCase(),
+    newMethods.put(SET_SHORT_APPLICATION_CAPTION_EN.toLowerCase(Locale.ENGLISH),
       "ClientApplication.SetShortCaption");
-    newMethods.put(GET_SHORT_APPLICATION_CAPTION_EN.toLowerCase(),
+    newMethods.put(GET_SHORT_APPLICATION_CAPTION_EN.toLowerCase(Locale.ENGLISH),
       "ClientApplication.GetShortCaption");
-    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_EN.toLowerCase(),
+    newMethods.put(SET_CLIENT_APPLICATION_CAPTION_EN.toLowerCase(Locale.ENGLISH),
       "ClientApplication.SetCaption");
-    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_EN.toLowerCase(),
+    newMethods.put(GET_CLIENT_APPLICATION_CAPTION_EN.toLowerCase(Locale.ENGLISH),
       "ClientApplication.GetCaption");
-    newMethods.put(BASE_FONT_CURRENT_VARIANT_EN.toLowerCase(),
+    newMethods.put(BASE_FONT_CURRENT_VARIANT_EN.toLowerCase(Locale.ENGLISH),
       "ClientApplication.CurrentBaseFontVariant");
-    newMethods.put(CLIENT_INTERFACE_VARIANT_EN.toLowerCase(),
+    newMethods.put(CLIENT_INTERFACE_VARIANT_EN.toLowerCase(Locale.ENGLISH),
       "ClientApplication.CurrentInterfaceVariant");
   }
 
@@ -104,16 +109,12 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
     methodsPair.put(CLIENT_INTERFACE_VARIANT_RU, CLIENT_INTERFACE_VARIANT_EN);
     StringJoiner regex = new StringJoiner("|");
 
-    methodsPair.forEach((k, v) -> {
+    methodsPair.forEach((String k, String v) -> {
       regex.add(k);
       regex.add(v);
     });
 
     return regex.toString();
-  }
-
-  public DeprecatedMethods8310Diagnostic(DiagnosticInfo info) {
-    super(info);
   }
 
   @Override
@@ -122,7 +123,7 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
     Matcher matcher = METHOD_PATTERN.matcher(ctx.methodName().getText());
     if (matcher.matches()) {
       diagnosticStorage.addDiagnostic(ctx,
-        info.getMessage(matcher.group(), newMethods.getOrDefault(matcher.group().toLowerCase(), "")));
+        info.getMessage(matcher.group(), newMethods.getOrDefault(matcher.group().toLowerCase(Locale.ENGLISH), "")));
     }
 
     return super.visitGlobalMethodCall(ctx);
