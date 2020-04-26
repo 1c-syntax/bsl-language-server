@@ -97,7 +97,10 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   private void checkPrimitiveValue(
     BSLParser.FunctionContext ctx, Collection<ParseTree> tree, List<BSLParser.ExpressionContext> expressions) {
 
-    var set = expressions.stream().map(BSLParser.ExpressionContext::getText).collect(Collectors.toSet());
+    var set = expressions.stream()
+      .map(BSLParser.ExpressionContext::getText)
+      .map(String::toUpperCase)
+      .collect(Collectors.toSet());
     if (set.size() == 1) {
       var relatedInformation = tree.stream()
         .map(BSLParser.ReturnStatementContext.class::cast)
