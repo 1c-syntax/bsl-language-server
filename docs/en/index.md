@@ -82,6 +82,8 @@ Run analysis and get diagnostic info
   -q, --silent             Silent mode
   -r, --reporter=<keys>    Reporter key (console, junit, json, tslint, generic)
   -s, --srcDir=<path>      Source directory
+  -w, --workspaceDir=<path> 
+                           Workspace directory
 ```
 
 To set source code folder for analysis use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.

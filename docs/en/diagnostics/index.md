@@ -9,9 +9,8 @@ To escape individual sections of code or files from triggering diagnostics, you 
 ## Implemented diagnostics
 
 Total: **94**
-
 * Error: **32**
-* Code smell: **58**
+* Code smell: **59**
 * Vulnerability: **2**
 * Security Hotspot: **2**
 
@@ -32,6 +31,7 @@ Total: **94**
 | [CyclomaticComplexity](CyclomaticComplexity.md) | Cyclomatic complexity | Yes | Critical | Code smell | `brainoverload` |
 | [DataExchangeLoading](DataExchangeLoading.md) | There is no check for the attribute DataExchange.Load in the object's event handler | Yes | Critical | Error | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [DeletingCollectionItem](DeletingCollectionItem.md) | Deleting an item when iterating through collection using the operator "For each ... In ... Do" | Yes | Major | Error | `standard`<br/>`error` |
+| [DeprecatedAttributes8312](DeprecatedAttributes8312.md) | Deprecated 8.3.12 platform features. | Yes | Info | Code smell | `deprecated` |
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Using of the deprecated method "CurrentDate" | Yes | Major | Error | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
