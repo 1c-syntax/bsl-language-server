@@ -60,6 +60,16 @@
 
 КонецФункции
 
+Функция КакаяТоКоманда(Команда) // <- ошибка
+
+    Если ЗначениеЗаполнено(ТекущаяДата) Тогда
+        Возврат Null;
+    КонецЕсли;
+
+    Возврат NULL;
+
+КонецФункции
+
 Function Attachable_RandomAction(Command)
 
     If ValueIsFilled(CurrentDate) Then

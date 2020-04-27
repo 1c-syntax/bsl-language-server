@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -59,6 +60,14 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   private static final Pattern pattern = Pattern.compile(
     "^(подключаемый|attachable)_", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
+  private static final boolean CHECK_ATTACHABLE_METHODS = true;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_ATTACHABLE_METHODS
+  )
+  private boolean checkAttachableMethods = CHECK_ATTACHABLE_METHODS;
+
   public FunctionReturnsSamePrimitiveDiagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -66,14 +75,15 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    var abortCheck = Optional.ofNullable(ctx.funcDeclaration())
-      .map(BSLParser.FuncDeclarationContext::subName)
-      .filter(subNameContext -> pattern.matcher(subNameContext.getText()).find())
-      .isPresent();
-
-    // Исключаем подключаемые методы
-    if (abortCheck) {
-      return ctx;
+    if (checkAttachableMethods) {
+      // Исключаем подключаемые методы
+      var abortCheck = Optional.ofNullable(ctx.funcDeclaration())
+        .map(BSLParser.FuncDeclarationContext::subName)
+        .filter(subNameContext -> pattern.matcher(subNameContext.getText()).find())
+        .isPresent();
+      if (abortCheck) {
+        return ctx;
+      }
     }
 
     var tree = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
