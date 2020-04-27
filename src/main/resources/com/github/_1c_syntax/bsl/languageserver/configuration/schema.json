@@ -113,9 +113,6 @@
                 "FunctionReturnsSamePrimitive": {
                     "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
                 },
-                "FunctionReturnsSamePrimitive": {
-                    "$ref": "diagnostics-schema.json#/definitions/FunctionReturnsSamePrimitive"
-                },
                 "FunctionShouldHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/FunctionShouldHaveReturn"
                 },

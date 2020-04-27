@@ -4,6 +4,12 @@
 | :-: | :-: | :-: | :-: | :-: | :-: |
 | `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `5` | `design`<br/>`badpractice` |
 
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `checkAttachableMethods` | `Boolean` | ```Check attachable methods``` | ```true``` |
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -82,5 +88,7 @@ EndFunction
 ### Parameter for config
 
 ```json
-"FunctionReturnsSamePrimitive": false
+"FunctionReturnsSamePrimitive": {
+    "checkAttachableMethods": true
+}
 ```
