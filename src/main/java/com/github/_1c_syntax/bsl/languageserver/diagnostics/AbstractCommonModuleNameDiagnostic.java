@@ -24,7 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
@@ -34,10 +38,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
   public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
     super(info);
 
-    pattern = Pattern.compile(
-      regexp,
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
+    pattern = CaseInsensitivePattern.compile(regexp);
 
   }
 
@@ -51,7 +52,9 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       .filter(CommonModule.class::isInstance)
       .map(CommonModule.class::cast)
       .filter(this::flagsCheck)
-      .filter(commonModule -> !pattern.matcher(commonModule.getName()).find())
+      .map(MDObjectBase::getName)
+      .map(pattern::matcher)
+      .filter(Predicate.not(Matcher::find))
       .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokensFromDefaultChannel().get(0)));
   }
 
