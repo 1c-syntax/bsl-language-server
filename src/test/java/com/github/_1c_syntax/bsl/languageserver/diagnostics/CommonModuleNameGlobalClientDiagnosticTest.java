@@ -75,6 +75,29 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
   }
 
   @Test
+  void testEng() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТоClientGlobal");
+    when(module.isGlobal()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(5, 0, 1);
+
+  }
+
+
+  @Test
   void testNegative() {
 
     getDocumentContextFromFile();
@@ -102,6 +125,26 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     // given
     when(module.getName()).thenReturn("ЧтоТоКлиентГлобальный");
     when(module.isGlobal()).thenReturn(Boolean.FALSE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testClientAtStart() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("КлиентЛицензированияГлобальный");
+    when(module.isGlobal()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
 
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
