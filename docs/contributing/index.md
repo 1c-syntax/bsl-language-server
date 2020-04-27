@@ -7,6 +7,7 @@
 - Старт
   - [Настройка окружения](EnvironmentSetting.md)
   - [Быстрый старт](FastStart.md)
+  - [Руководство по стилю](StyleGuide.md)
 - Разработка диагностик
   - [Процесс (workflow) разработки диагностики](DiagnosticDevWorkFlow.md)
   - [Пример разработки диагностики](DiagnosticExample.md)
