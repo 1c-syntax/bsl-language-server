@@ -156,6 +156,46 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
 
   }
 
+  @Test
+  void testClientAtStartEng() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ClientЛицензированияГлобальный");
+    when(module.isGlobal()).thenReturn(Boolean.FALSE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testClient() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ClientЛицензированияГлобальный");
+    when(module.isGlobal()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
   @SneakyThrows
   void getDocumentContextFromFile() {
 
