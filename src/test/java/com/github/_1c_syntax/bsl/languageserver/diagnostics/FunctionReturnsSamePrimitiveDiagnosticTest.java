@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
@@ -37,16 +37,39 @@ class FunctionReturnsSamePrimitiveDiagnosticTest extends AbstractDiagnosticTest<
   @Test
   void test() {
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    List<Diagnostic> diagnostics;
+    Map<String, Object> configuration;
 
-  assertThat(diagnostics)
-    .hasSize(3)
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(
-      Ranges.create(0, 8, 0, 23)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(
-      Ranges.create(25, 8, 25, 14)))
-    .anyMatch(diagnostic -> diagnostic.getRange().equals(
-      Ranges.create(35, 8, 35, 17)));
+    // Проверяем срабатывания с параметрами по умолчанию
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics, true)
+      .hasSize(4)
+      .hasRange(0, 8, 23)
+      .hasRange(25, 8, 14)
+      .hasRange(35, 8, 17)
+      .hasRange(62, 8, 22);
+
+    // Проверяем с выключенным параметром checkAttachableMethods
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkAttachableMethods", false);
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics, true)
+      .hasSize(6)
+      .hasRange(0, 8, 23)
+      .hasRange(25, 8, 14)
+      .hasRange(35, 8, 17)
+      .hasRange(52, 8, 35)
+      .hasRange(62, 8, 22)
+      .hasRange(72, 9, 32);
 
   }
 }
