@@ -44,7 +44,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 )
 public class CommonModuleNameGlobalClientDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "^(?>(?!Клиент|client).)*$";
+  private static final String REGEXP = "^(?>(?!.+клиент|.+client).)*$";
 
   public CommonModuleNameGlobalClientDiagnostic(DiagnosticInfo info) {
     super(info, REGEXP);
