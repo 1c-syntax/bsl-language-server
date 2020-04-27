@@ -48,25 +48,25 @@
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
                 "CommonModuleNameCached": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameCached"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
                 },
                 "CommonModuleNameClient": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameClient"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameClient"
                 },
                 "CommonModuleNameClientServer": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameClientServer"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameClientServer"
                 },
                 "CommonModuleNameFullAccess": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameFullAccess"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameFullAccess"
                 },
                 "CommonModuleNameGlobal": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameGlobal"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameGlobal"
                 },
                 "CommonModuleNameGlobalClient": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameGlobalClient"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameGlobalClient"
                 },
                 "CommonModuleNameServerCall": {
-                    "$ref": "diagnostics-schema.json#/definitions/CommonModuleNameServerCall"
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameServerCall"
                 },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
