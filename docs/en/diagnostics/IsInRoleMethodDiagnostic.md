@@ -1,8 +1,8 @@
-# <Diagnostic name>
+# IsInRole global method call (IsInRoleMethodDiagnostic)
 
-<Metadata>
-
-## <Params>
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `5` | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -32,18 +32,19 @@ If AccessRight("View", Metadata.Reports.PopularCountries) Then ...
 * Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 Source: [Standard: Checking access rights](https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights)
-## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+## Snippets
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:IsInRoleMethodDiagnostic-off
+// BSLLS:IsInRoleMethodDiagnostic-on
 ```
 
 ### Parameter for config
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"IsInRoleMethodDiagnostic": false
 ```

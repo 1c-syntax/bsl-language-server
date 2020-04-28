@@ -1,8 +1,8 @@
-# <Diagnostic name> (<DiagnosticKey>)
+# Использование метода РольДоступна (IsInRoleMethodDiagnostic)
 
-<Metadata>
-
-## <Params>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Дефект кода` | `BSL` | `Важный` | `Да` | `5` | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -32,18 +32,19 @@
 * Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 * Источник: [Стандарт: Проверка прав доступа](https://its.1c.ru/db/v8std#content:737:hdoc)
-## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+## Сниппеты
+
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:IsInRoleMethodDiagnostic-off
+// BSLLS:IsInRoleMethodDiagnostic-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"IsInRoleMethodDiagnostic": false
 ```
