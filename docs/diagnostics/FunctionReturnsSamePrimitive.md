@@ -1,8 +1,8 @@
-# Функция всегда возвращает одно и то же примитивное значение (<DiagnosticKey>)
+# Функция всегда возвращает одно и то же примитивное значение (FunctionReturnsSamePrimitive)
 
-<Metadata>
-
-## <Params>
+| Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Ошибка` | `BSL`<br/>`OS` | `Важный` | `Да` | `5` | `design`<br/>`badpractice` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -55,17 +55,17 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:FunctionReturnsSamePrimitive-off
+// BSLLS:FunctionReturnsSamePrimitive-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"FunctionReturnsSamePrimitive": false
 ```
