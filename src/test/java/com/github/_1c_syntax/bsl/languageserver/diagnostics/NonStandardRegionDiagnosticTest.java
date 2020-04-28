@@ -134,14 +134,14 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
 
     assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics, true)
-      .hasRange(0, 1, 27)
-      .hasRange(20, 1, 21)
-      .hasRange(28, 1, 32)
-      .hasRange(32, 1, 46)
-      .hasRange(36, 1, 63)
-      .hasRange(40, 1, 31)
-      .hasRange(44, 1, 27)
-      .hasRange(52, 1, 18)
+      .hasRange(5, 1, 27)
+      .hasRange(25, 1, 21)
+      .hasRange(33, 1, 32)
+      .hasRange(37, 1, 46)
+      .hasRange(41, 1, 63)
+      .hasRange(45, 1, 31)
+      .hasRange(49, 1, 27)
+      .hasRange(57, 1, 18)
     ;
   }
 
