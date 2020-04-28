@@ -356,11 +356,11 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>101</strong></p>
+<p>Общее количество: <strong>102</strong></p>
 <ul>
 <li>Дефект кода: <strong>65</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
-<li>Ошибка: <strong>31</strong></li>
+<li>Ошибка: <strong>32</strong></li>
 <li>Потенциальная уязвимость: <strong>3</strong></li>
 </ul>
 <table>
@@ -662,6 +662,14 @@
 <td>Информационный</td>
 <td>Дефект кода</td>
 <td><code>standard</code></td>
+</tr>
+<tr>
+<td><a href="FunctionReturnsSamePrimitive/">FunctionReturnsSamePrimitive</a></td>
+<td>Функция всегда возвращает одно и то же примитивное значение</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Ошибка</td>
+<td><code>design</code><br/><code>badpractice</code></td>
 </tr>
 <tr>
 <td><a href="FunctionShouldHaveReturn/">FunctionShouldHaveReturn</a></td>
