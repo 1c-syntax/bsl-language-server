@@ -106,6 +106,76 @@
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
         },
+        "CommonModuleNameCached": {
+            "description": "Missed postfix \"Cached\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Cached\"",
+            "$id": "#/definitions/CommonModuleNameCached"
+        },
+        "CommonModuleNameClient": {
+            "description": "Missed postfix \"Client\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Client\"",
+            "$id": "#/definitions/CommonModuleNameClient"
+        },
+        "CommonModuleNameClientServer": {
+            "description": "Missed postfix \"ClientServer\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"ClientServer\"",
+            "$id": "#/definitions/CommonModuleNameClientServer"
+        },
+        "CommonModuleNameFullAccess": {
+            "description": "Missed postfix \"FullAccess\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"FullAccess\"",
+            "$id": "#/definitions/CommonModuleNameFullAccess"
+        },
+        "CommonModuleNameGlobal": {
+            "description": "Missed postfix \"Global\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Global\"",
+            "$id": "#/definitions/CommonModuleNameGlobal"
+        },
+        "CommonModuleNameGlobalClient": {
+            "description": "Global module with postfix \"Client\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Global module with postfix \"Client\"",
+            "$id": "#/definitions/CommonModuleNameGlobalClient"
+        },
+        "CommonModuleNameServerCall": {
+            "description": "Missed postfix \"ServerCall\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"ServerCall\"",
+            "$id": "#/definitions/CommonModuleNameServerCall"
+        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
             "default": true,
