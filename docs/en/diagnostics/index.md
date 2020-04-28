@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **95**
+Total: **102**
 
-* Error: **31**
-* Code smell: **60**
+* Error: **32**
+* Code smell: **65**
 * Vulnerability: **2**
-* Security Hotspot: **2**
+* Security Hotspot: **3**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
@@ -25,6 +25,13 @@ Total: **95**
 | [CommentedCode](CommentedCode.md) | Commented out code | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` |
 | [CommonModuleAssign](CommonModuleAssign.md) | CommonModuleAssign | Yes | Blocker | Error | `error` |
+| [CommonModuleNameCached](CommonModuleNameCached.md) | Missed postfix "Cached" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameClient](CommonModuleNameClient.md) | Missed postfix "Client" | Yes | Minor | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Missed postfix "ClientServer" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameFullAccess](CommonModuleNameFullAccess.md) | Missed postfix "FullAccess" | Yes | Major | Security Hotspot | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameGlobal](CommonModuleNameGlobal.md) | Missed postfix "Global" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`brainoverload` |
+| [CommonModuleNameGlobalClient](CommonModuleNameGlobalClient.md) | Global module with postfix "Client" | Yes | Major | Code smell | `standard` |
+| [CommonModuleNameServerCall](CommonModuleNameServerCall.md) | Missed postfix "ServerCall" | Yes | Minor | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Consecutive empty lines | Yes | Info | Code smell | `badpractice` |
@@ -46,6 +53,7 @@ Total: **95**
 | [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` |
+| [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | The function always returns the same primitive value | Yes | Major | Error | `design`<br/>`badpractice` |
 | [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | The function should have return | Yes | Major | Error | `suspicious`<br/>`unpredictable` |
 | [GetFormMethod](GetFormMethod.md) | GetForm method call | Yes | Major | Error | `error` |
 | [IdenticalExpressions](IdenticalExpressions.md) | There are identical sub-expressions to the left and to the right of the "foo" operator | Yes | Major | Error | `suspicious` |
@@ -54,7 +62,6 @@ Total: **95**
 | [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` |
 | [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` |
 | [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br/>`standard`<br/>`unpredictable` |
-| [IsInRoleMethodDiagnostic](IsInRoleMethodDiagnostic.md) | IsInRole global method call | Yes | Major | Code smell | `error` |
 | [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` |
 | [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` |

@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **95**
+Общее количество: **102**
 
-* Дефект кода: **60**
+* Дефект кода: **65**
 * Уязвимость: **2**
-* Ошибка: **31**
-* Потенциальная уязвимость: **2**
+* Ошибка: **32**
+* Потенциальная уязвимость: **3**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
@@ -25,6 +25,13 @@
 | [CommentedCode](CommentedCode.md) | Закомментированный фрагмент кода | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` |
 | [CommonModuleAssign](CommonModuleAssign.md) | Присвоение общему модулю | Да | Блокирующий | Ошибка | `error` |
+| [CommonModuleNameCached](CommonModuleNameCached.md) | Пропущен постфикс "ПовтИсп" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameClient](CommonModuleNameClient.md) | Пропущен постфикс "Клиент" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Пропущен постфикс "КлиентСервер" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameFullAccess](CommonModuleNameFullAccess.md) | Пропущен постфикс "ПолныеПрава" | Да | Важный | Потенциальная уязвимость | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameGlobal](CommonModuleNameGlobal.md) | Пропущен постфикс "Глобальный" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`brainoverload` |
+| [CommonModuleNameGlobalClient](CommonModuleNameGlobalClient.md) | Глобальный модуль с постфиксом "Клиент" | Да | Важный | Дефект кода | `standard` |
+| [CommonModuleNameServerCall](CommonModuleNameServerCall.md) | Пропущен постфикс "ВызовСервера" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Подряд идущие пустые строки | Да | Информационный | Дефект кода | `badpractice` |
@@ -46,6 +53,7 @@
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` |
+| [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | Функция всегда возвращает одно и то же примитивное значение | Да | Важный | Ошибка | `design`<br/>`badpractice` |
 | [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | Важный | Ошибка | `suspicious`<br/>`unpredictable` |
 | [GetFormMethod](GetFormMethod.md) | Использование метода ПолучитьФорму | Да | Важный | Ошибка | `error` |
 | [IdenticalExpressions](IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да | Важный | Ошибка | `suspicious` |
@@ -54,7 +62,6 @@
 | [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `suspicious` |
 | [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` |
 | [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br/>`standard`<br/>`unpredictable` |
-| [IsInRoleMethodDiagnostic](IsInRoleMethodDiagnostic.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` |
 | [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` |
 | [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` |
