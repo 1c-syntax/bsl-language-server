@@ -48,28 +48,45 @@ class FunctionReturnsSamePrimitiveDiagnosticTest extends AbstractDiagnosticTest<
 
     // then
     assertThat(diagnostics, true)
-      .hasSize(4)
+      .hasSize(5)
       .hasRange(0, 8, 23)
       .hasRange(25, 8, 14)
       .hasRange(35, 8, 17)
-      .hasRange(62, 8, 22);
+      .hasRange(62, 8, 22)
+      .hasRange(82, 8, 32);
 
-    // Проверяем с выключенным параметром checkAttachableMethods
+    // Проверяем с выключенным параметром skipAttachable
     // when
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("checkAttachableMethods", false);
+    configuration.put("skipAttachable", false);
     diagnosticInstance.configure(configuration);
     diagnostics = getDiagnostics();
 
     // then
     assertThat(diagnostics, true)
-      .hasSize(6)
+      .hasSize(7)
       .hasRange(0, 8, 23)
       .hasRange(25, 8, 14)
       .hasRange(35, 8, 17)
       .hasRange(52, 8, 35)
       .hasRange(62, 8, 22)
-      .hasRange(72, 9, 32);
+      .hasRange(72, 9, 32)
+      .hasRange(82, 8, 32);
+
+    // Проверяем с включенным параметром caseSensitiveForString
+    // when
+    configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("caseSensitiveForString", true);
+    diagnosticInstance.configure(configuration);
+    diagnostics = getDiagnostics();
+
+    // then
+    assertThat(diagnostics, true)
+      .hasSize(4)
+      .hasRange(0, 8, 23)
+      .hasRange(25, 8, 14)
+      .hasRange(35, 8, 17)
+      .hasRange(62, 8, 22);
 
   }
 }

@@ -8,7 +8,8 @@
 
 | Имя | Тип | Описание | Значение по умолчанию |
 | :-: | :-: | :-- | :-: |
-| `checkAttachableMethods` | `Булево` | ```Проверять подключаемые методы``` | ```true``` |
+| `skipAttachable` | `Булево` | ```Не учитывать подключаемые методы``` | ```true``` |
+| `caseSensitiveForString` | `Булево` | ```Учитывать регистр в строковых значениях``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -89,6 +90,7 @@
 
 ```json
 "FunctionReturnsSamePrimitive": {
-    "checkAttachableMethods": true
+    "skipAttachable": true,
+    "caseSensitiveForString": false
 }
 ```

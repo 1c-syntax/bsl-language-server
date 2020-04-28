@@ -60,13 +60,20 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   private static final Pattern pattern = Pattern.compile(
     "^(подключаемый|attachable)_", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-  private static final boolean CHECK_ATTACHABLE_METHODS = true;
+  private static final boolean SKIP_ATTACHABLE = true;
+  private static final boolean CASE_SENSITIVE_FOR_STRING = false;
 
   @DiagnosticParameter(
     type = Boolean.class,
-    defaultValue = "" + CHECK_ATTACHABLE_METHODS
+    defaultValue = "" + SKIP_ATTACHABLE
   )
-  private boolean checkAttachableMethods = CHECK_ATTACHABLE_METHODS;
+  private boolean skipAttachable = SKIP_ATTACHABLE;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CASE_SENSITIVE_FOR_STRING
+  )
+  private boolean caseSensitiveForString = CASE_SENSITIVE_FOR_STRING;
 
   public FunctionReturnsSamePrimitiveDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -75,7 +82,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    if (checkAttachableMethods) {
+    if (skipAttachable) {
       // Исключаем подключаемые методы
       var abortCheck = Optional.ofNullable(ctx.funcDeclaration())
         .map(BSLParser.FuncDeclarationContext::subName)
@@ -108,16 +115,12 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   private void checkPrimitiveValue(
     BSLParser.FunctionContext ctx, Collection<ParseTree> tree, List<BSLParser.ExpressionContext> expressions) {
 
-    var set = expressions.stream()
-      .map((BSLParser.ExpressionContext expression) -> {
-        var text = expression.getText();
-        if (Trees.findAllRuleNodes(expression, BSLParser.RULE_string).isEmpty()) {
-          text = text.toUpperCase(Locale.ENGLISH);
-        }
-        return text;
-      })
-      .collect(Collectors.toSet());
-    if (set.size() == 1) {
+    var count = expressions.stream()
+      .map(this::getExpressionText)
+      .distinct()
+      .count();
+
+    if (count == 1) {
       var relatedInformation = tree.stream()
         .map(BSLParser.ReturnStatementContext.class::cast)
         .map(statement -> RelatedInformation.create(
@@ -125,9 +128,16 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
           Ranges.create(statement.getStart()),
           info.getResourceString(KEY_MESSAGE)))
         .collect(Collectors.toList());
-      diagnosticStorage.addDiagnostic(getSubNameRange(ctx), info.getMessage(), relatedInformation);
+      diagnosticStorage.addDiagnostic(getSubNameRange(ctx), relatedInformation);
     }
 
+  }
+
+  private String getExpressionText(BSLParser.ExpressionContext expression) {
+    if (caseSensitiveForString && Trees.nodeContains(expression, BSLParser.RULE_string)) {
+      return expression.getText();
+    }
+    return expression.getText().toUpperCase(Locale.ENGLISH);
   }
 
   private Range getSubNameRange(ParserRuleContext ctx) {
