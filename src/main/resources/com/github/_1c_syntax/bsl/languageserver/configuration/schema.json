@@ -131,6 +131,9 @@
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
+                "FunctionReturnsSamePrimitive": {
+                    "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
+                },
                 "FunctionShouldHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/FunctionShouldHaveReturn"
                 },
