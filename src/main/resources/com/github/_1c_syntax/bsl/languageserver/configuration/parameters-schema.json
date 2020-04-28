@@ -287,11 +287,17 @@
             ],
             "title": "The function always returns the same primitive value",
             "properties": {
-                "checkAttachableMethods": {
-                    "description": "Check attachable methods",
+                "skipAttachable": {
+                    "description": "Ignore attachable methods",
                     "default": true,
                     "type": "boolean",
-                    "title": "Check attachable methods"
+                    "title": "Ignore attachable methods"
+                },
+                "caseSensitiveForString": {
+                    "description": "Case sensitive for strings",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive for strings"
                 }
             },
             "$id": "#/definitions/FunctionReturnsSamePrimitive"

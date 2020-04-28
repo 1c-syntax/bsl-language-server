@@ -8,7 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `checkAttachableMethods` | `Boolean` | ```Check attachable methods``` | ```true``` |
+| `skipAttachable` | `Boolean` | ```Ignore attachable methods``` | ```true``` |
+| `caseSensitiveForString` | `Boolean` | ```Case sensitive for strings``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -89,6 +90,7 @@ EndFunction
 
 ```json
 "FunctionReturnsSamePrimitive": {
-    "checkAttachableMethods": true
+    "skipAttachable": true,
+    "caseSensitiveForString": false
 }
 ```
