@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1,
   minutesToFix = 1,
   tags = {
-    DiagnosticTag.STANDARD,
     DiagnosticTag.DEPRECATED,
     DiagnosticTag.ERROR
   }
@@ -68,7 +67,8 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     var rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
     var rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
     var currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
-    if (rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
+    if (!SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()
+    || rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
       return false;
     }
 
