@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.regex.Pattern;
 
@@ -64,11 +65,17 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    var rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
-    var rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
-    var currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
-    if (!SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()
-    || rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
+    BSLParserRuleContext rootIfNode = null;
+    BSLParserRuleContext rootExpressionNode = null;
+    BSLParserRuleContext currentRootMember = null;
+
+    if (SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()) {
+      rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
+      rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
+      currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
+    }
+
+    if (rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
       return false;
     }
 
