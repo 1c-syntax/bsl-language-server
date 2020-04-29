@@ -10,7 +10,7 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 Total: **103**
 
-* Error: **32**
+* Error: **33**
 * Code smell: **66**
 * Vulnerability: **2**
 * Security Hotspot: **3**
@@ -103,6 +103,7 @@ Total: **103**
 | [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Unary Plus sign in string concatenation | Yes | Blocker | Error | `suspicious`<br/>`brainoverload` |
 | [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes | Critical | Error | `standard`<br/>`error` |
 | [UnreachableCode](UnreachableCode.md) | Unreachable Code | Yes | Minor | Error | `design`<br/>`suspicious` |
+| [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Unsafe SafeMode method call | Yes | Blocker | Error | `standard`<br/>`deprecated`<br/>`error` |
 | [UnusedLocalMethod](UnusedLocalMethod.md) | Unused local method | Yes | Major | Code smell | `standard`<br/>`suspicious` |
 | [UnusedParameters](UnusedParameters.md) | Unused parameter | Yes | Major | Code smell | `design` |
 | [UseLessForEach](UseLessForEach.md) | Useless collection iteration | Yes | Critical | Error | `clumsy` |

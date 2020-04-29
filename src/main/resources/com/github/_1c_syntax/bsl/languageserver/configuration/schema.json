@@ -281,6 +281,9 @@
                 "UnreachableCode": {
                     "$ref": "parameters-schema.json#/definitions/UnreachableCode"
                 },
+                "UnsafeSafeModeMethodCall": {
+                    "$ref": "parameters-schema.json#/definitions/UnsafeSafeModeMethodCall"
+                },
                 "UnusedLocalMethod": {
                     "$ref": "parameters-schema.json#/definitions/UnusedLocalMethod"
                 },
