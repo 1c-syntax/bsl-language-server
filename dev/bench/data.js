@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588153734149,
+  "lastUpdate": 1588172390515,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1767,6 +1767,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5137954495346785",
             "extra": "mean: 70.97816332181294 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4fbbcf2682bd2cefc565174aca06fd2f4ea63e2b",
+          "message": "Merge pull request #1140 from EightM/feature/IsInRoleDiagnostic\n\nНовая диагностика: Запрет на использование РольДоступна",
+          "timestamp": "2020-04-29T17:51:05+03:00",
+          "tree_id": "b2f56e82fc47cfb8c6c4a388adc56850327fa15c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/4fbbcf2682bd2cefc565174aca06fd2f4ea63e2b"
+        },
+        "date": 1588172388543,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.00321968396504,
+            "unit": "sec",
+            "range": "stddev: 0.8243297359563875",
+            "extra": "mean: 78.00321968396504 sec\nrounds: 3"
           }
         ]
       }
