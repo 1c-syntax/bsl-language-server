@@ -356,9 +356,9 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>102</strong></p>
+<p>Общее количество: <strong>103</strong></p>
 <ul>
-<li>Дефект кода: <strong>65</strong></li>
+<li>Дефект кода: <strong>66</strong></li>
 <li>Уязвимость: <strong>2</strong></li>
 <li>Ошибка: <strong>32</strong></li>
 <li>Потенциальная уязвимость: <strong>3</strong></li>
@@ -734,6 +734,14 @@
 <td>Важный</td>
 <td>Ошибка</td>
 <td><code>error</code><br/><code>standard</code><br/><code>unpredictable</code></td>
+</tr>
+<tr>
+<td><a href="IsInRoleMethodDiagnostic/">IsInRoleMethodDiagnostic</a></td>
+<td>Использование метода РольДоступна</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="LineLength/">LineLength</a></td>
