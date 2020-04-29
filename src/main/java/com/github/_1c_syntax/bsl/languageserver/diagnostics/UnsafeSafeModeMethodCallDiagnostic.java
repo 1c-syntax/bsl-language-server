@@ -76,8 +76,8 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     if (indexOfCurrentMemberNode != rootExpressionNode.getChildCount() - 1) {
       var nextNode = rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
       return !(Trees.nodeContains(nextNode, BSLParser.RULE_compareOperation));
-    } else {
-      return true;
     }
+
+    return true;
   }
 }
