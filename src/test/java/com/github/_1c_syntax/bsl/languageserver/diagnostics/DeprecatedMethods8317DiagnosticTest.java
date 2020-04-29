@@ -17,9 +17,11 @@ class DeprecatedMethods8317DiagnosticTest extends AbstractDiagnosticTest<Depreca
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(6, 0, 6, 20);
+      .hasRange(4, 17, 4, 43)
+      .hasRange(5, 17, 5, 45)
+      .hasRange(6, 8, 6, 34);
 
   }
 }
