@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588172390515,
+  "lastUpdate": 1588172761561,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -1798,6 +1798,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8243297359563875",
             "extra": "mean: 78.00321968396504 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cdb3b92f38b174c39317a0f26c4d2f0692c96eea",
+          "message": "Merge pull request #1141 from EightM/feature/UnsafeSafeModeMethodCall\n\nНовая диагностика: Ошибка неявного преобразования БезопасныйРежим",
+          "timestamp": "2020-04-29T17:57:47+03:00",
+          "tree_id": "7dc4d97b0c3482d00c762628c0b5b7d98f56c53d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cdb3b92f38b174c39317a0f26c4d2f0692c96eea"
+        },
+        "date": 1588172759540,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.17470502853394,
+            "unit": "sec",
+            "range": "stddev: 0.8189776048463295",
+            "extra": "mean: 72.17470502853394 sec\nrounds: 3"
           }
         ]
       }
