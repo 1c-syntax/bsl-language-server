@@ -97,11 +97,6 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
     for (Diagnostic diagnostic : diagnostics) {
 
       int diagnosticStartLine = diagnostic.getRange().getStart().getLine();
-      Position diagnosticRangeStart = diagnostic.getRange().getStart();
-      diagnosticRangeStart = new Position(
-        diagnosticRangeStart.getLine(),
-        diagnosticRangeStart.getCharacter() - 1
-      );
 
       Optional<RegionSymbol> optionalRegionSymbol = documentContext.getSymbolTree().getRegionsFlat()
         .stream()
@@ -120,6 +115,9 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
       if (maxDiagnosticEndLine == 0 || diagnosticEndLine > maxDiagnosticEndLine) {
         maxDiagnosticEndLine = diagnosticEndLine;
       }
+
+      int diagnosticStartCharacter = diagnostic.getRange().getStart().getCharacter() - 1;
+      Position diagnosticRangeStart = new Position(diagnosticStartLine, diagnosticStartCharacter);
 
       Position diagnosticRangeEnd = new Position(
         diagnosticEndLine + 1,
