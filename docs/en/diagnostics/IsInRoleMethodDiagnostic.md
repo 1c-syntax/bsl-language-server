@@ -11,7 +11,8 @@ To check access rights in the code, use the AccessRight method.
 
 When a role does not grant access rights to metadata objects and defines an additional access right only, 
 use the IsInRole method. If Standard Subsystems Library is used in a configuration,
-use the RolesAvailable function of the Users common module.
+use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with
+PrivilegedMode() method call.
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 ```
@@ -23,6 +24,14 @@ If IsInRole("ViewPopularCountriesReport") Then ...
 Correct example:
 If AccessRight("Edit", Metadata.Catalogs.WorldCountries) Then ...
 If AccessRight("View", Metadata.Reports.PopularCountries) Then ...
+```
+```
+Incorrect:
+If IsInRole("Paymaster") Then ...
+```
+```
+Correct example:
+If IsInRole("Paymaster") OR PrivilegedMode() Then ...
 ```
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
