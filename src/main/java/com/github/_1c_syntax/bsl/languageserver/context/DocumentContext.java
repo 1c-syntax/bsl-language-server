@@ -54,6 +54,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -273,17 +274,11 @@ public class DocumentContext {
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
 
-    int ncloc = (int) getTokensFromDefaultChannel().stream()
-      .map(Token::getLine)
-      .distinct()
-      .count();
-
-    metricsTemp.setNcloc(ncloc);
-
     int[] nclocData = getTokensFromDefaultChannel().stream()
       .mapToInt(Token::getLine)
       .distinct().toArray();
     metricsTemp.setNclocData(nclocData);
+    metricsTemp.setNcloc(nclocData.length);
 
     metricsTemp.setCovlocData(computeCovlocData());
 
@@ -296,13 +291,11 @@ public class DocumentContext {
     }
     metricsTemp.setLines(lines);
 
-    int comments;
-    final List<Token> commentsUnboxed = getComments();
-    if (commentsUnboxed.isEmpty()) {
-      comments = 0;
-    } else {
-      comments = (int) commentsUnboxed.stream().map(Token::getLine).distinct().count();
-    }
+    int comments = (int) getComments()
+      .stream()
+      .map(Token::getLine)
+      .distinct()
+      .count();
     metricsTemp.setComments(comments);
 
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
@@ -317,7 +310,7 @@ public class DocumentContext {
   private int[] computeCovlocData() {
 
     return Trees.getDescendants(getAst()).stream()
-      .filter(node -> !(node instanceof TerminalNodeImpl))
+      .filter(Predicate.not(TerminalNodeImpl.class::isInstance))
       .filter(DocumentContext::mustCovered)
       .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
       .distinct().toArray();
