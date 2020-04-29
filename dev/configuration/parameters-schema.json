@@ -1118,6 +1118,16 @@
             "title": "Unreachable Code",
             "$id": "#/definitions/UnreachableCode"
         },
+        "UnsafeSafeModeMethodCall": {
+            "description": "Unsafe SafeMode method call",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unsafe SafeMode method call",
+            "$id": "#/definitions/UnsafeSafeModeMethodCall"
+        },
         "UnusedLocalMethod": {
             "description": "Unused local method",
             "default": true,
