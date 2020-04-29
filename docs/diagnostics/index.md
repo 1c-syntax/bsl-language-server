@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **103**
+Общее количество: **104**
 
 * Дефект кода: **66**
 * Уязвимость: **2**
-* Ошибка: **32**
+* Ошибка: **33**
 * Потенциальная уязвимость: **3**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -103,6 +103,7 @@
 | [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Унарный плюс в конкатенации строк | Да | Блокирующий | Ошибка | `suspicious`<br/>`brainoverload` |
 | [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да | Критичный | Ошибка | `standard`<br/>`error` |
 | [UnreachableCode](UnreachableCode.md) | Недостижимый код | Да | Незначительный | Ошибка | `design`<br/>`suspicious` |
+| [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Небезопасное использование функции БезопасныйРежим() | Да | Блокирующий | Ошибка | `deprecated`<br/>`error` |
 | [UnusedLocalMethod](UnusedLocalMethod.md) | Неиспользуемый локальный метод | Да | Важный | Дефект кода | `standard`<br/>`suspicious` |
 | [UnusedParameters](UnusedParameters.md) | Неиспользуемый параметр | Да | Важный | Дефект кода | `design` |
 | [UseLessForEach](UseLessForEach.md) | Бесполезный перебор коллекции | Да | Критичный | Ошибка | `clumsy` |
