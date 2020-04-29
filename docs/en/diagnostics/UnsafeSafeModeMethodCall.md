@@ -7,11 +7,15 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Developers make mistakes using the implicit conversion SafeMode() to Boolean type
+In "1C: Enterprise 8.3" the global context method SafeMode () returns the type String,
+if safe mode was set with the name of the security profile.
 
-In fact, this method can return the profile name with a string.
+Using the Safe Mode () method,
+ in which the result is implicitly converted to a Boolean type is unsafe,
+ must be corrected for the code with an explicit comparison of the result with the value False.
+ Thus, with the installed security profile, the code will be executed in the same way as in the safe mode.
 
-Use SafeMode() <> False or SafeMode() = False
+Use SafeMode() <> False
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 Incorrect:

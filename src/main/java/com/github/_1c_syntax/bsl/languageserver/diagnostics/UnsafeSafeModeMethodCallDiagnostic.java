@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.BLOCKER,
   scope = DiagnosticScope.BSL,
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1,
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
