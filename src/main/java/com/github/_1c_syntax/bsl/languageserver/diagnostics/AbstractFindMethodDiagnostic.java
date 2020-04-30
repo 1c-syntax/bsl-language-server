@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
 import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -48,11 +49,15 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
     return getMethodPattern().matcher(ctx.methodName().getText()).matches();
   }
 
+  protected String getMessage(BSLParserRuleContext ctx) {
+    return info.getMessage(ctx.getText());
+  }
+
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
     if (checkGlobalMethodCall(ctx)) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
+      diagnosticStorage.addDiagnostic(ctx.methodName(), getMessage(ctx));
     }
 
     return super.visitGlobalMethodCall(ctx);
@@ -62,7 +67,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
 
     if (checkMethodCall(ctx)) {
-      diagnosticStorage.addDiagnostic(ctx.methodName());
+      diagnosticStorage.addDiagnostic(ctx.methodName(), getMessage(ctx));
     }
 
     return super.visitMethodCall(ctx);
