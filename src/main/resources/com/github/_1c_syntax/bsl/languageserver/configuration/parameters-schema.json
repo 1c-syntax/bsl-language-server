@@ -546,6 +546,16 @@
             "title": "Invalid character",
             "$id": "#/definitions/InvalidCharacterInFile"
         },
+        "IsInRoleMethodDiagnostic": {
+            "description": "IsInRole global method call",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "IsInRole global method call",
+            "$id": "#/definitions/IsInRoleMethodDiagnostic"
+        },
         "LineLength": {
             "description": "Line Length limit",
             "default": true,
@@ -1117,6 +1127,16 @@
             ],
             "title": "Unreachable Code",
             "$id": "#/definitions/UnreachableCode"
+        },
+        "UnsafeSafeModeMethodCall": {
+            "description": "Unsafe SafeMode method call",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unsafe SafeMode method call",
+            "$id": "#/definitions/UnsafeSafeModeMethodCall"
         },
         "UnusedLocalMethod": {
             "description": "Unused local method",
