@@ -24,7 +24,7 @@ jobs:
         java-version: 14
 
     - name: Build javadoc
-      run: ./gradlew javadoc
+      run: ./gradlew --no-daemon javadoc
 
     - name: Set up Python
       uses: actions/setup-python@v1
