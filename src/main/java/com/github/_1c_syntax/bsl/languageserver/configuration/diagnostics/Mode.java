@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 
 /**
  * Режим для учета настроек правил.
- * <p/>
+ * <p>
  * См. {@link DiagnosticsOptions#getParameters()}
  */
 public enum Mode {
