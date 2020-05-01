@@ -10,6 +10,7 @@ on:
     - 'src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/**'
     - 'mkdocs.yml'
     - 'mkdocs.en.yml'
+    - '.github/workflows/gh-pages.yml'
 
 jobs:
   build-deploy:
