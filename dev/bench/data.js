@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588418915775,
+  "lastUpdate": 1588420034022,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2201,6 +2201,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.42127758319336694",
             "extra": "mean: 70.67603039741516 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "olegtymko@yandex.ru",
+            "name": "Oleg Tymko",
+            "username": "otymko"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "731db7eaaeacdd475654bce6d7c5335e5f13a073",
+          "message": "Merge pull request #1148 from 1c-syntax/feature/clever-jekyll\n\nCreate .nojekyll",
+          "timestamp": "2020-05-02T18:39:18+07:00",
+          "tree_id": "08ac4e351b18e62c94e9f2f4dae387a26f4ca738",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/731db7eaaeacdd475654bce6d7c5335e5f13a073"
+        },
+        "date": 1588420031808,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.39842669169109,
+            "unit": "sec",
+            "range": "stddev: 1.8918903557312257",
+            "extra": "mean: 70.39842669169109 sec\nrounds: 3"
           }
         ]
       }
