@@ -95,6 +95,7 @@ jobs:
     - name: Copy javadoc
       run: |
         cp -R build/docs/javadoc temp/site/javadoc
+        echo "" > temp/site/.nojekyll
  
     - name: Public Russian Master
       if: github.ref == 'refs/heads/master'
