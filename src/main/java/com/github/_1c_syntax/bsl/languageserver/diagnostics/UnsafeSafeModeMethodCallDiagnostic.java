@@ -65,13 +65,15 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (!SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()) {
-      return false;
-    }
+    BSLParserRuleContext rootIfNode = null;
+    BSLParserRuleContext rootExpressionNode = null;
+    BSLParserRuleContext currentRootMember = null;
 
-    BSLParserRuleContext rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
-    BSLParserRuleContext rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
-    BSLParserRuleContext currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
+    if (SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()) {
+      rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
+      rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
+      currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
+    }
 
     if (rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
       return false;
