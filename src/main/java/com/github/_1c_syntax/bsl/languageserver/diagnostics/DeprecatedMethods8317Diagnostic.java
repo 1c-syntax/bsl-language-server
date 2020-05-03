@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
 import java.util.regex.Pattern;
 
@@ -62,12 +61,4 @@ public class DeprecatedMethods8317Diagnostic extends AbstractFindMethodDiagnosti
     return false;
   }
 
-  @Override
-  protected String getMessage(BSLParserRuleContext ctx) {
-    if (ctx instanceof BSLParser.GlobalMethodCallContext) {
-      return info.getMessage(((BSLParser.GlobalMethodCallContext) ctx).methodName().getText());
-    }
-
-    return "";
-  }
 }

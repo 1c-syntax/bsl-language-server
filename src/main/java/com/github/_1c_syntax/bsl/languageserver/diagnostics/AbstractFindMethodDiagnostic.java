@@ -30,29 +30,74 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
+/**
+ * Абстрактная диагностика, предназначенная для поиска вызова обычных методов и методов глобального контекста
+ * с использованием регулярного выражения.
+ * {@code AbstractFindMethodDiagnostic} предоставляет для переопределения два метода проверки вызовов и один
+ * метод генерации сообщения пользователю.
+ * По умолчанию проверяется, что имя вызываемого метода соответствует переданному в конструкторе регулярному выражению.
+ * <b>Важно:</b> наследование данной диагностики без переопределения {@code getMessage} подразумевает, что первым
+ * параметром сообщения пользователю <b>всегда</b> будет имя найденного метода.
+ */
 public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   @Getter
   @Setter
   private Pattern methodPattern;
 
+  /**
+   * Конструктор по умолчанию
+   * @param info служебная информация о диагностике
+   * @param pattern регулярное выражение для проверки
+   */
   AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
     super(info);
     methodPattern = pattern;
   }
 
+  /**
+   * Проверка контекста глобального метода
+   * @param ctx контекст глобального метода
+   * @return {@code true} если имя метода соответствует регулярному выражению
+   */
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     return getMethodPattern().matcher(ctx.methodName().getText()).matches();
   }
 
+  /**
+   * Проверка контекста обычного метода
+   * @param ctx контекст метода
+   * @return {@code true} если имя метода соответствует регулярному выражению
+   */
   protected boolean checkMethodCall(BSLParser.MethodCallContext ctx) {
     return getMethodPattern().matcher(ctx.methodName().getText()).matches();
   }
 
+  /**
+   * Получает сообщение диагностики для пользователя
+   * @param ctx контекст узла
+   * @return В случае если передан контекст метода, параметризованное сообщение,
+   * первым параметром которого <b>всегда</b> будет имя метода.
+   * В противном случае возвращается обычное сообщение без параметров.
+   */
   protected String getMessage(BSLParserRuleContext ctx) {
-    return info.getMessage(ctx.getText());
+
+    if (ctx instanceof BSLParser.GlobalMethodCallContext) {
+      return info.getMessage(((BSLParser.GlobalMethodCallContext) ctx).methodName().getText());
+    } else if (ctx instanceof BSLParser.MethodCallContext) {
+      return info.getMessage(((BSLParser.MethodCallContext) ctx).methodName().getText());
+    } else {
+      return info.getMessage();
+    }
+
   }
 
+  /**
+   * Обработчик узла глобального метода. Добавляет информацию о сработавшей диагностике
+   * в случае если проверка метода возвращает {@code true}
+   * @param ctx контекст гломабльного метода
+   * @return результат посещения ноды по умолчанию.
+   */
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
@@ -63,6 +108,12 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
     return super.visitGlobalMethodCall(ctx);
   }
 
+  /**
+   * Обработчик узла обычного метода. Добавляет информацию о сработавшей диагностике
+   * в случае если проверка метода возвращает {@code true}
+   * @param ctx контекст метода
+   * @return результат посещения ноды по умолчанию.
+   */
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
 
