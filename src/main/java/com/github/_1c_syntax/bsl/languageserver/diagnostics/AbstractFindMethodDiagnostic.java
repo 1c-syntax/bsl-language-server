@@ -94,8 +94,9 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Обработчик узла глобального метода. Добавляет информацию о сработавшей диагностике
-   * в случае если проверка метода возвращает {@code true}
-   * @param ctx контекст гломабльного метода
+   * в случае если проверка метода {@link AbstractFindMethodDiagnostic#checkGlobalMethodCall(BSLParser.GlobalMethodCallContext)}
+   * возвращает {@code true}
+   * @param ctx контекст глобального метода
    * @return результат посещения ноды по умолчанию.
    */
   @Override
@@ -110,7 +111,8 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Обработчик узла обычного метода. Добавляет информацию о сработавшей диагностике
-   * в случае если проверка метода возвращает {@code true}
+   * в случае если проверка метода {@link AbstractFindMethodDiagnostic#checkMethodCall(BSLParser.MethodCallContext)}
+   * возвращает {@code true}
    * @param ctx контекст метода
    * @return результат посещения ноды по умолчанию.
    */
