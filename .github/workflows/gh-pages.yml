@@ -10,12 +10,21 @@ on:
     - 'src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/**'
     - 'mkdocs.yml'
     - 'mkdocs.en.yml'
+    - '.github/workflows/gh-pages.yml'
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+
+    - name: Setup JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 14
+
+    - name: Build javadoc
+      run: ./gradlew --no-daemon javadoc
 
     - name: Set up Python
       uses: actions/setup-python@v1
@@ -82,6 +91,11 @@ jobs:
       run: |
         cp -R tmp-bench/. temp/site/bench
         rm -rf tmp-bench
+
+    - name: Copy javadoc
+      run: |
+        cp -R build/docs/javadoc temp/site/javadoc
+        echo "" > temp/site/.nojekyll
  
     - name: Public Russian Master
       if: github.ref == 'refs/heads/master'

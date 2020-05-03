@@ -8,6 +8,7 @@
     - [Настройка окружения](EnvironmentSetting.md)
     - [Быстрый старт](FastStart.md)
     - [Руководство по стилю](StyleGuide.md)
+    - [JavaDoc](../javadoc/index.html)
 - Разработка диагностик
     - [Процесс (workflow) разработки диагностики](DiagnosticDevWorkFlow.md)
     - [Пример разработки диагностики](DiagnosticExample.md)
