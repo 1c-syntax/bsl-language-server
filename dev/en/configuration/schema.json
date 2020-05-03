@@ -104,6 +104,9 @@
                 "DeprecatedMethods8310": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8310"
                 },
+                "DeprecatedMethods8317": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8317"
+                },
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
                 },

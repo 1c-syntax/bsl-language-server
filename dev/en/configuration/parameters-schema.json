@@ -326,6 +326,16 @@
             "title": "Deprecated client application method.",
             "$id": "#/definitions/DeprecatedMethods8310"
         },
+        "DeprecatedMethods8317": {
+            "description": "Using of deprecated platform 8.3.17 global methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using of deprecated platform 8.3.17 global methods",
+            "$id": "#/definitions/DeprecatedMethods8317"
+        },
         "DeprecatedTypeManagedForm": {
             "description": "Deprecated ManagedForm type",
             "default": true,
