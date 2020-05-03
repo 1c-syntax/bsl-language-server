@@ -74,7 +74,18 @@ public final class Trees {
   }
 
   public static List<ParseTree> getDescendants(ParseTree t) {
-    return org.antlr.v4.runtime.tree.Trees.getDescendants(t);
+    List<ParseTree> nodes = new ArrayList<>(t.getChildCount());
+    flatten(t, nodes);
+    return nodes;
+  }
+
+  private static void flatten(ParseTree t, List<ParseTree> flatList) {
+    flatList.add(t);
+
+    int n = t.getChildCount();
+    for (int i = 0; i < n; i++) {
+      flatten(t.getChild(i), flatList);
+    }
   }
 
   /**
