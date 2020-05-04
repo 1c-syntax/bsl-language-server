@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticCompl
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -207,9 +206,6 @@ public class DocumentContext {
     contentList.clear();
     tokenizer = null;
 
-    if (symbolTree.isPresent()) {
-      getSymbolTree().getChildrenFlat().forEach(Symbol::clearParseTreeData);
-    }
     cognitiveComplexityData.clear();
     cyclomaticComplexityData.clear();
     metrics.clear();

@@ -24,10 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
@@ -36,7 +34,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
@@ -45,7 +42,6 @@ public final class RegionSymbolComputer
   private final DocumentContext documentContext;
   private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack = new ArrayDeque<>();
   private final List<RegionSymbol> regions = new ArrayList<>();
-  private final List<BSLParserRuleContext> allNodes = new ArrayList<>();
 
   public RegionSymbolComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -55,21 +51,15 @@ public final class RegionSymbolComputer
   public List<RegionSymbol> compute() {
     regionStack.clear();
     regions.clear();
-    allNodes.clear();
-
-    Trees.getDescendants(documentContext.getAst()).stream()
-      .filter(node -> node instanceof BSLParserRuleContext)
-      .map(node -> (BSLParserRuleContext) node)
-      .filter(node -> (node.getStop() != null)
-        && (node.getStart() != null))
-      .collect(Collectors.toCollection(() -> allNodes));
 
     visitFile(documentContext.getAst());
 
     regionStack.clear();
-    allNodes.clear();
 
-    return new ArrayList<>(regions);
+    List<RegionSymbol> result = new ArrayList<>(regions);
+    regions.clear();
+
+    return result;
   }
 
   @Override
@@ -101,17 +91,6 @@ public final class RegionSymbolComputer
       .range(range)
       .endRange(Ranges.create(ctx))
     ;
-
-    // zero-based ranges
-    int regionStartLine = range.getStart().getLine() + 1;
-    int regionEndLine = range.getEnd().getLine() + 1;
-    List<BSLParserRuleContext> regionNodes = allNodes.stream()
-      .filter(node ->
-        node.getStart().getLine() > regionStartLine
-          && node.getStart().getLine() < regionEndLine)
-      .collect(Collectors.toList());
-
-    builder.nodes(regionNodes);
 
     RegionSymbol region = builder.build();
 

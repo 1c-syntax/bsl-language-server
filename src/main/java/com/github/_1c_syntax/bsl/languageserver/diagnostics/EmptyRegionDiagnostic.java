@@ -29,7 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -43,6 +45,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -61,17 +64,38 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
     BSLParser.RULE_preprocessor
   );
 
+  private final List<BSLParserRuleContext> allNodes = new ArrayList<>();
+
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   protected void check(DocumentContext documentContext) {
+
+    allNodes.clear();
+
+    Trees.getDescendants(documentContext.getAst()).stream()
+      .filter(node -> node instanceof BSLParserRuleContext)
+      .map(node -> (BSLParserRuleContext) node)
+      .filter(node -> (node.getStop() != null)
+        && (node.getStart() != null))
+      .collect(Collectors.toCollection(() -> allNodes));
+
     documentContext.getSymbolTree().getRegionsFlat().forEach(this::checkRegion);
+
+    allNodes.clear();
   }
 
   private void checkRegion(RegionSymbol region) {
-    var hasChildren = region.getNodes().stream()
+    // zero-based ranges
+    int startLine = region.getStartRange().getStart().getLine() + 1;
+    int endLine = region.getEndRange().getEnd().getLine() + 1;
+
+    var hasChildren = allNodes.stream()
+      .filter(node ->
+        node.getStart().getLine() > startLine
+          && node.getStart().getLine() < endLine)
       .map(RuleContext::getRuleIndex)
       .filter(ruleIndex -> !REGIONS_NODE_INDEXES.contains(ruleIndex))
       .findAny();

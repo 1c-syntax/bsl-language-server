@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -39,8 +38,8 @@ import java.util.stream.Collectors;
 
 @Value
 @Builder(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude = {"children", "parent", "nodes"})
-@ToString(exclude = {"children", "parent", "nodes"})
+@EqualsAndHashCode(exclude = {"children", "parent"})
+@ToString(exclude = {"children", "parent"})
 public class RegionSymbol implements Symbol {
   String name;
   Range range;
@@ -56,16 +55,6 @@ public class RegionSymbol implements Symbol {
 
   @Builder.Default
   List<Symbol> children = new ArrayList<>();
-
-  @NonFinal
-  @Builder.Default
-  // TODO подумать, как избавиться от этого
-    List<BSLParserRuleContext> nodes = new ArrayList<>();
-
-  @Override
-  public void clearParseTreeData() {
-    nodes = null;
-  }
 
   public List<MethodSymbol> getMethods() {
     return children.stream()
