@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588516746193,
+  "lastUpdate": 1588616812920,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2356,6 +2356,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8466044779767242",
             "extra": "mean: 62.893169482549034 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "fe382eda6b2d1587be55e2133adc5c32b26366bc",
+          "message": "Избавление от ParseTree в Symbol",
+          "timestamp": "2020-05-04T21:19:29+03:00",
+          "tree_id": "3cf3c36dfc1cf3018c0bfb83f3a314c62fdcea57",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fe382eda6b2d1587be55e2133adc5c32b26366bc"
+        },
+        "date": 1588616810877,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 62.16158072153727,
+            "unit": "sec",
+            "range": "stddev: 4.661411203245504",
+            "extra": "mean: 62.16158072153727 sec\nrounds: 3"
           }
         ]
       }
