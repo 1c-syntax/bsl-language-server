@@ -125,13 +125,19 @@ public final class MethodSymbolComputer
     boolean function,
     boolean export
   ) {
+    Optional<MethodDescription> description = createDescription(startNode.getSymbol());
+    boolean deprecated = description
+      .map(MethodDescription::isDeprecated)
+      .orElse(false);
+
     return MethodSymbol.builder()
       .name(subName.getText())
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(subName))
       .function(function)
       .export(export)
-      .description(createDescription(startNode.getSymbol()))
+      .description(description)
+      .deprecated(deprecated)
       .parameters(createParameters(paramList))
       .build();
   }
