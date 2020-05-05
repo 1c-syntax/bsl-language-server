@@ -42,9 +42,9 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
 
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(0, 1, 13)
-      .hasRange(10, 1, 23)
-      .hasRange(12, 1, 26)
+      .hasRange(0, 0, 2, 13)
+      .hasRange(10, 0, 15, 13)
+      .hasRange(12, 0, 14, 13)
     ;
 
   }

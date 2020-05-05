@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -35,16 +34,12 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -69,12 +64,11 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       currentRegionLevel++;
       regions.push((BSLParser.RegionStartContext) ctx);
     } else if (ctx instanceof BSLParser.PreprocessorContext
-      || ctx instanceof BSLParser.FileContext
       || ctx instanceof BSLParser.RegionNameContext
       || ctx instanceof BSLParser.RegionEndContext) {
       //ignore
-    } else {
-      currentUsageLevel = Math.max(currentUsageLevel, currentRegionLevel);
+    } else if (currentUsageLevel < currentRegionLevel) {
+      currentUsageLevel = currentRegionLevel;
     }
   }
 
@@ -85,7 +79,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
         BSLParser.RegionStartContext currentRegion = regions.pop();
         if (currentUsageLevel < currentRegionLevel) {
           diagnosticStorage.addDiagnostic(
-            Ranges.create(currentRegion),
+            Ranges.create(currentRegion.getParent(), ctx),
             info.getMessage(currentRegion.regionName().getText())
           );
         } else if (currentRegionLevel == currentUsageLevel) {
@@ -102,45 +96,10 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
     CodeActionParams params,
     DocumentContext documentContext
   ) {
-    diagnostics.sort(Comparator.comparingInt(o -> o.getRange().getStart().getLine()));
-    List<TextEdit> textEdits = new ArrayList<>();
-    int maxDiagnosticEndLine = 0;
-
-    for (Diagnostic diagnostic : diagnostics) {
-
-      int diagnosticStartLine = diagnostic.getRange().getStart().getLine();
-
-      Optional<RegionSymbol> optionalRegionSymbol = documentContext.getSymbolTree().getRegionsFlat()
-        .stream()
-        .filter(regionSymbol -> regionSymbol.getRange().getStart().getLine() == diagnosticStartLine)
-        .findFirst();
-      if (optionalRegionSymbol.isEmpty()) {
-        continue;
-      }
-      RegionSymbol region = optionalRegionSymbol.get();
-
-      int diagnosticEndLine = region.getRange().getEnd().getLine() - 1;
-      if (diagnosticEndLine < maxDiagnosticEndLine) {
-        continue;
-      }
-
-      if (maxDiagnosticEndLine == 0 || diagnosticEndLine > maxDiagnosticEndLine) {
-        maxDiagnosticEndLine = diagnosticEndLine;
-      }
-
-      int diagnosticStartCharacter = diagnostic.getRange().getStart().getCharacter() - 1;
-      Position diagnosticRangeStart = new Position(diagnosticStartLine, diagnosticStartCharacter);
-
-      Position diagnosticRangeEnd = new Position(
-        diagnosticEndLine + 1,
-        0
-      );
-
-      Range range = new Range(diagnosticRangeStart, diagnosticRangeEnd);
-
-      textEdits.add(new TextEdit(range, ""));
-
-    }
+    List<TextEdit> textEdits = diagnostics
+      .stream()
+      .map(diagnostic -> new TextEdit(diagnostic.getRange(), ""))
+      .collect(Collectors.toList());
 
     return CodeActionProvider.createCodeActions(
       textEdits,
