@@ -29,10 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -40,12 +39,12 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -55,56 +54,45 @@ import java.util.stream.Collectors;
     DiagnosticTag.STANDARD
   }
 )
-public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
-
-  private static final Set<Integer> REGIONS_NODE_INDEXES = Set.of(
-    BSLParser.RULE_regionName,
-    BSLParser.RULE_regionStart,
-    BSLParser.RULE_regionEnd,
-    BSLParser.RULE_preprocessor
-  );
-
-  private final List<BSLParserRuleContext> allNodes = new ArrayList<>();
+public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements QuickFixProvider {
+  int currentRegionLevel = 0;
+  int currentUsageLevel = 0;
+  Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
 
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
-
-    allNodes.clear();
-
-    Trees.getDescendants(documentContext.getAst()).stream()
-      .filter(node -> node instanceof BSLParserRuleContext)
-      .map(node -> (BSLParserRuleContext) node)
-      .filter(node -> (node.getStop() != null)
-        && (node.getStart() != null))
-      .collect(Collectors.toCollection(() -> allNodes));
-
-    documentContext.getSymbolTree().getRegionsFlat().forEach(this::checkRegion);
-
-    allNodes.clear();
+  public void enterEveryRule(ParserRuleContext ctx) {
+    if (ctx instanceof BSLParser.RegionStartContext) {
+      currentRegionLevel++;
+      regions.push((BSLParser.RegionStartContext) ctx);
+    } else if (ctx instanceof BSLParser.PreprocessorContext
+      || ctx instanceof BSLParser.FileContext
+      || ctx instanceof BSLParser.RegionNameContext
+      || ctx instanceof BSLParser.RegionEndContext) {
+      //ignore
+    } else {
+      currentUsageLevel = Math.max(currentUsageLevel, currentRegionLevel);
+    }
   }
 
-  private void checkRegion(RegionSymbol region) {
-    // zero-based ranges
-    int startLine = region.getStartRange().getStart().getLine() + 1;
-    int endLine = region.getEndRange().getEnd().getLine() + 1;
-
-    var hasChildren = allNodes.stream()
-      .filter(node ->
-        node.getStart().getLine() > startLine
-          && node.getStart().getLine() < endLine)
-      .map(RuleContext::getRuleIndex)
-      .filter(ruleIndex -> !REGIONS_NODE_INDEXES.contains(ruleIndex))
-      .findAny();
-
-    if (hasChildren.isEmpty()) {
-      diagnosticStorage.addDiagnostic(
-        region.getStartRange(),
-        info.getMessage(region.getName())
-      );
+  @Override
+  public void exitEveryRule(ParserRuleContext ctx) {
+    if (ctx instanceof BSLParser.RegionEndContext) {
+      if (!regions.isEmpty()) {
+        BSLParser.RegionStartContext currentRegion = regions.pop();
+        if (currentUsageLevel < currentRegionLevel) {
+          diagnosticStorage.addDiagnostic(
+            Ranges.create(currentRegion),
+            info.getMessage(currentRegion.regionName().getText())
+          );
+        } else if (currentRegionLevel == currentUsageLevel) {
+          currentUsageLevel--;
+        }
+        currentRegionLevel--;
+      }
     }
   }
 
@@ -150,8 +138,7 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
 
       Range range = new Range(diagnosticRangeStart, diagnosticRangeEnd);
 
-      TextEdit textEdit = new TextEdit(range, "");
-      textEdits.add(textEdit);
+      textEdits.add(new TextEdit(range, ""));
 
     }
 
@@ -162,5 +149,6 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
       diagnostics
     );
   }
+
 }
 
