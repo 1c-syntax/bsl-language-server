@@ -51,12 +51,11 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
 
   @Test
   void testQuickFix() {
-    // TODO Some bad code happens
-    /*
+
     final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    final Diagnostic externalRegionDiagnostic = diagnostics.get(1);
-    final Diagnostic internalRegionDiagnostic = diagnostics.get(2);
+    final Diagnostic externalRegionDiagnostic = diagnostics.get(2);
+    final Diagnostic internalRegionDiagnostic = diagnostics.get(1);
 
     List<CodeAction> quickFixes = getQuickFixes(externalRegionDiagnostic);
     assertThat(quickFixes).hasSize(1);
@@ -77,6 +76,6 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
       .in(documentContext)
       .hasChanges(1)
       .hasNewText("");
-*/
+
   }
 }
