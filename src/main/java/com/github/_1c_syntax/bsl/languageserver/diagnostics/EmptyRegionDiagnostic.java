@@ -32,10 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTreeListener;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -58,16 +54,46 @@ import java.util.Optional;
     DiagnosticTag.STANDARD
   }
 )
-public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
+public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements QuickFixProvider {
+  int currentRegionLevel = 0;
+  int currentUsageLevel = 0;
+  Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
 
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
-    ParseTreeWalker walker = new ParseTreeWalker();
-    walker.walk(new RegionChecker(), documentContext.getAst());
+  public void enterEveryRule(ParserRuleContext ctx) {
+    if (ctx instanceof BSLParser.RegionStartContext) {
+      currentRegionLevel++;
+      regions.push((BSLParser.RegionStartContext) ctx);
+    } else if (ctx instanceof BSLParser.PreprocessorContext
+      || ctx instanceof BSLParser.FileContext
+      || ctx instanceof BSLParser.RegionNameContext
+      || ctx instanceof BSLParser.RegionEndContext) {
+      //ignore
+    } else {
+      currentUsageLevel = Math.max(currentUsageLevel, currentRegionLevel);
+    }
+  }
+
+  @Override
+  public void exitEveryRule(ParserRuleContext ctx) {
+    if (ctx instanceof BSLParser.RegionEndContext) {
+      if (!regions.isEmpty()) {
+        BSLParser.RegionStartContext currentRegion = regions.pop();
+        if (currentUsageLevel < currentRegionLevel) {
+          diagnosticStorage.addDiagnostic(
+            Ranges.create(currentRegion),
+            info.getMessage(currentRegion.regionName().getText())
+          );
+        } else if (currentRegionLevel == currentUsageLevel) {
+          currentUsageLevel--;
+        }
+        currentRegionLevel--;
+      }
+    }
   }
 
   @Override
@@ -124,53 +150,5 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
     );
   }
 
-  private class RegionChecker implements ParseTreeListener {
-    int currentRegionLevel = 0;
-    int currentUsageLevel = 0;
-    Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
-
-    @Override
-    public void visitTerminal(TerminalNode node) {
-      // nothing to do
-    }
-
-    @Override
-    public void visitErrorNode(ErrorNode node) {
-      // nothing to do
-    }
-
-    @Override
-    public void enterEveryRule(ParserRuleContext ctx) {
-      if (ctx instanceof BSLParser.RegionStartContext) {
-        currentRegionLevel++;
-        regions.push((BSLParser.RegionStartContext) ctx);
-      } else if (ctx instanceof BSLParser.PreprocessorContext
-        || ctx instanceof BSLParser.FileContext
-        || ctx instanceof BSLParser.RegionNameContext
-        || ctx instanceof BSLParser.RegionEndContext) {
-        //ignore
-      } else {
-        currentUsageLevel = Math.max(currentUsageLevel, currentRegionLevel);
-      }
-    }
-
-    @Override
-    public void exitEveryRule(ParserRuleContext ctx) {
-      if (ctx instanceof BSLParser.RegionEndContext) {
-        if (!regions.isEmpty()) {
-          BSLParser.RegionStartContext currentRegion = regions.pop();
-          if (currentUsageLevel < currentRegionLevel) {
-            diagnosticStorage.addDiagnostic(
-              Ranges.create(currentRegion),
-              info.getMessage(currentRegion.regionName().getText())
-            );
-          } else if (currentRegionLevel == currentUsageLevel) {
-            currentUsageLevel--;
-          }
-          currentRegionLevel--;
-        }
-      }
-    }
-  }
 }
 
