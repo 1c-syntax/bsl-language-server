@@ -87,8 +87,8 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "4034e83681b")
-    implementation("com.github.1c-syntax", "mdclasses", "f3240bb")
-    implementation("com.github.1c-syntax", "bsl-context", "3614f80")
+    implementation("com.github.1c-syntax", "mdclasses", "1c503aa392c")
+    implementation("com.github.1c-syntax", "bsl-context", "41e4a3fc")
     // FIXME:
 //    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
