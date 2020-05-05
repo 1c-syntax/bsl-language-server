@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.context.context.BSLContext;
+import com.github._1c_syntax.bsl.context.entity.AbstractMethod;
+import com.github._1c_syntax.bsl.languageserver.context.engine.MDOContext;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
@@ -32,12 +35,14 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   private Path configurationRoot;
+  private final Lazy<BSLContext> context = new Lazy<>(this::computeBSLContext);
 
   public ServerContext() {
     this(null);
@@ -96,6 +101,10 @@ public class ServerContext {
     return configurationMetadata.getOrCompute();
   }
 
+  public BSLContext getContext() {
+    return context.getOrCompute();
+  }
+
   private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
       return Configuration.create();
@@ -103,4 +112,17 @@ public class ServerContext {
 
     return Configuration.create(configurationRoot);
   }
+
+  private BSLContext computeBSLContext() {
+    return new MDOContext(getConfiguration());
+  }
+
+  public Map<String, AbstractMethod> getGlobalMethods() {
+    return getContext().getMethods(URI.create(""));
+  }
+
+  public Optional<AbstractMethod> getGlobalMethod(String methodName) {
+    return getContext().getMethod(URI.create(""), methodName);
+  }
+
 }

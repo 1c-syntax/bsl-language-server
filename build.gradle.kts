@@ -87,7 +87,10 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "4034e83681b")
-    implementation("com.github.1c-syntax", "mdclasses", "86be1579c4")
+    implementation("com.github.1c-syntax", "mdclasses", "f3240bb")
+    implementation("com.github.1c-syntax", "bsl-context", "3614f80")
+    // FIXME:
+//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
