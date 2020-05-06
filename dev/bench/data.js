@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588669367195,
+  "lastUpdate": 1588761891683,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2418,6 +2418,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.2004369827808765",
             "extra": "mean: 71.4718307654063 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "79f3efac1adc329bb609d0c226572e7f9f3cd3f8",
+          "message": "Merge pull request #1152 from 1c-syntax/feature/deprecatedSymbolInfo",
+          "timestamp": "2020-05-06T13:36:32+03:00",
+          "tree_id": "604cfec2e8ea75c23bbd55082fc10bacef592b6a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/79f3efac1adc329bb609d0c226572e7f9f3cd3f8"
+        },
+        "date": 1588761889636,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 70.69908277193706,
+            "unit": "sec",
+            "range": "stddev: 0.6254807772679284",
+            "extra": "mean: 70.69908277193706 sec\nrounds: 3"
           }
         ]
       }
