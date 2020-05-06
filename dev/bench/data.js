@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588766893131,
+  "lastUpdate": 1588775866798,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2480,6 +2480,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6031938985035534",
             "extra": "mean: 80.51257904370625 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "52125fd3ae311854328a9c7f1125a3e69bfca040",
+          "message": "Оптимизация поиска MethodSymbol в SymbolTree",
+          "timestamp": "2020-05-06T17:31:02+03:00",
+          "tree_id": "a8690a0de5bb2e5c410babf044b973786f926f60",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/52125fd3ae311854328a9c7f1125a3e69bfca040"
+        },
+        "date": 1588775864883,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 53.004623810450234,
+            "unit": "sec",
+            "range": "stddev: 0.845052497535804",
+            "extra": "mean: 53.004623810450234 sec\nrounds: 3"
           }
         ]
       }
