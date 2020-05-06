@@ -222,17 +222,34 @@ public final class Trees {
   }
 
   /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды нужно типа
+   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
    */
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
-    if (tnc.getParent() == null) {
+    final var parent = tnc.getParent();
+    if (parent == null) {
       return null;
     }
 
-    if (getRuleIndex(tnc.getParent()) == ruleindex) {
-      return (BSLParserRuleContext) tnc.getParent();
+    if (getRuleIndex(parent) == ruleindex) {
+      return (BSLParserRuleContext) parent;
     } else {
-      return getRootParent((BSLParserRuleContext) tnc.getParent(), ruleindex);
+      return getRootParent((BSLParserRuleContext) parent, ruleindex);
+    }
+  }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
+   */
+  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, List<Integer> indexes) {
+    final var parent = tnc.getParent();
+    if (parent == null) {
+      return null;
+    }
+
+    if (indexes.contains(getRuleIndex(parent))) {
+      return (BSLParserRuleContext) parent;
+    } else {
+      return getRootParent((BSLParserRuleContext) parent, indexes);
     }
   }
 

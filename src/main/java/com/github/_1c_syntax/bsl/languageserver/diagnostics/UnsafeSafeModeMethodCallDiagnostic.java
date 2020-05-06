@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -52,6 +54,10 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     "(БезопасныйРежим|SafeMode)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private static final List<Integer> ROOT_LIST = Arrays.asList(
+    BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch, BSLParser.RULE_codeBlock);
+  private static final List<Integer> IF_BRANCHES = Arrays.asList(
+    BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch);
 
   public UnsafeSafeModeMethodCallDiagnostic(DiagnosticInfo info) {
     super(info, SAFE_MODE_METHOD_NAME);
@@ -65,22 +71,27 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    BSLParserRuleContext rootIfNode = null;
-    BSLParserRuleContext rootExpressionNode = null;
-    BSLParserRuleContext currentRootMember = null;
-
-    if (SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()) {
-      rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
-      rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
-      currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
+    if (!super.checkGlobalMethodCall(ctx)){
+      return false;
     }
 
-    if (rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
+    BSLParserRuleContext currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
+    if (currentRootMember == null) {
+      return false;
+    }
+    BSLParserRuleContext rootExpressionNode = Trees.getRootParent(currentRootMember, BSLParser.RULE_expression);
+    if (rootExpressionNode == null) {
+      return false;
+    }
+
+    BSLParserRuleContext rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
+    if (rootIfNode == null || !IF_BRANCHES.contains(rootIfNode.getRuleIndex())) {
       return false;
     }
 
     int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
     if (indexOfCurrentMemberNode != rootExpressionNode.getChildCount() - 1) {
+
       var nextNode = rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
       return !(Trees.nodeContains(nextNode, BSLParser.RULE_compareOperation));
     }
