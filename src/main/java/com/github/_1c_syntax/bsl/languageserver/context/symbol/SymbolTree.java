@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
@@ -37,12 +38,11 @@ import java.util.stream.Collectors;
 public class SymbolTree {
   List<Symbol> children;
 
-  public List<Symbol> getChildrenFlat() {
-    List<Symbol> symbols = new ArrayList<>();
-    children.forEach(child -> flatten(child, symbols));
+  @Getter(lazy = true)
+  List<Symbol> childrenFlat = createChildrenFlat();
 
-    return symbols;
-  }
+  @Getter(lazy = true)
+  List<MethodSymbol> methods = createMethods();
 
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
@@ -60,10 +60,6 @@ public class SymbolTree {
 
   public List<RegionSymbol> getRegionsFlat() {
     return getChildrenFlat(RegionSymbol.class);
-  }
-
-  public List<MethodSymbol> getMethods() {
-    return getChildrenFlat(MethodSymbol.class);
   }
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
@@ -110,6 +106,17 @@ public class SymbolTree {
     return getVariables().stream()
       .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange))
       .findAny();
+  }
+
+  private List<Symbol> createChildrenFlat() {
+    List<Symbol> symbols = new ArrayList<>();
+    getChildren().forEach(child -> flatten(child, symbols));
+
+    return symbols;
+  }
+
+  private List<MethodSymbol> createMethods() {
+    return getChildrenFlat(MethodSymbol.class);
   }
 
   private static void flatten(Symbol symbol, List<Symbol> symbols) {
