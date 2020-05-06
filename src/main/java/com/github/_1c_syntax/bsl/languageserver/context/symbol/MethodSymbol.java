@@ -57,6 +57,8 @@ public class MethodSymbol implements Symbol {
   boolean export;
   Optional<MethodDescription> description;
 
+  boolean deprecated;
+
   @Builder.Default
   List<ParameterDefinition> parameters = new ArrayList<>();
 
