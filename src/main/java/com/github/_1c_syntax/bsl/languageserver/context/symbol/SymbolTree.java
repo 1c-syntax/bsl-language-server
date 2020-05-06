@@ -29,7 +29,6 @@ import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,10 +38,10 @@ public class SymbolTree {
   List<Symbol> children;
 
   public List<Symbol> getChildrenFlat() {
-    return children.stream()
-      .map(this::getSelfAndChildrenRecursive)
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+    List<Symbol> symbols = new ArrayList<>();
+    children.forEach(child -> flatten(child, symbols));
+
+    return symbols;
   }
 
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
@@ -113,16 +112,9 @@ public class SymbolTree {
       .findAny();
   }
 
-  private List<Symbol> getSelfAndChildrenRecursive(Symbol symbol) {
-    var list = new ArrayList<Symbol>();
-    list.add(symbol);
-
-    symbol.getChildren().stream()
-      .map(this::getSelfAndChildrenRecursive)
-      .flatMap(Collection::stream)
-      .collect(Collectors.toCollection(() -> list));
-
-    return list;
+  private static void flatten(Symbol symbol, List<Symbol> symbols) {
+    symbols.add(symbol);
+    symbol.getChildren().forEach(child -> flatten(child, symbols));
   }
 
 }
