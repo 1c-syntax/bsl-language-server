@@ -38,7 +38,7 @@ class UnsafeSafeModeMethodCallDiagnosticTest extends AbstractDiagnosticTest<Unsa
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics).hasSize(10);
     assertThat(diagnostics, true)
       .hasRange(1, 9, 1, 24)
       .hasRange(3, 17, 3, 32)
@@ -49,6 +49,7 @@ class UnsafeSafeModeMethodCallDiagnosticTest extends AbstractDiagnosticTest<Unsa
       .hasRange(18, 34, 18, 49)
       .hasRange(20, 34, 20, 49)
       .hasRange(23, 20, 23, 35)
+      .hasRange(26, 9, 26, 24)
     ;
   }
 }
