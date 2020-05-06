@@ -24,11 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentItem;
 
 import javax.annotation.CheckForNull;
+import java.io.File;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +52,14 @@ public class ServerContext {
     this.configurationRoot = configurationRoot;
   }
 
+  public void populateContext(Collection<File> uris) {
+    uris.parallelStream().forEach(file -> {
+      DocumentContext documentContext = addDocument(file);
+      documentContext.getSymbolTree();
+      documentContext.clearSecondaryData();
+    });
+  }
+
   public Map<URI, DocumentContext> getDocuments() {
     return Collections.unmodifiableMap(documents);
   }
@@ -59,6 +72,12 @@ public class ServerContext {
   @CheckForNull
   public DocumentContext getDocument(URI uri) {
     return documents.get(Absolute.uri(uri));
+  }
+
+  @SneakyThrows
+  public DocumentContext addDocument(File file) {
+    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    return addDocument(file.toURI(), content);
   }
 
   public DocumentContext addDocument(URI uri, String content) {

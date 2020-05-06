@@ -165,6 +165,11 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
 
+    if (!silentMode) {
+      System.out.println("Populating context...");
+    }
+    context.populateContext(files);
+
     List<FileInfo> fileInfos;
     if (silentMode) {
       fileInfos = files.parallelStream()
