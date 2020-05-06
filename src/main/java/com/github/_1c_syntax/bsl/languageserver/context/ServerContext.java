@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.context.context.BSLContext;
-import com.github._1c_syntax.bsl.context.entity.AbstractMethod;
-import com.github._1c_syntax.bsl.languageserver.context.engine.MDOContext;
+import com.github._1c_syntax.bsl.context.ContextStorage;
+import com.github._1c_syntax.bsl.context.component.Method;
+import com.github._1c_syntax.mdclasses.context.MDEngine;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
@@ -42,7 +42,7 @@ public class ServerContext {
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   private Path configurationRoot;
-  private final Lazy<BSLContext> context = new Lazy<>(this::computeBSLContext);
+  private ContextStorage contextStorage = new ContextStorage();
 
   public ServerContext() {
     this(null);
@@ -101,28 +101,29 @@ public class ServerContext {
     return configurationMetadata.getOrCompute();
   }
 
-  public BSLContext getContext() {
-    return context.getOrCompute();
-  }
-
   private Configuration computeConfigurationMetadata() {
+    Configuration configuration;
     if (configurationRoot == null) {
-      return Configuration.create();
+      configuration = Configuration.create();
     }
+    configuration = Configuration.create(configurationRoot);
 
-    return Configuration.create(configurationRoot);
+    MDEngine engine = new MDEngine(configuration);
+    contextStorage.registerEngine(engine);
+
+    return configuration;
   }
 
-  private BSLContext computeBSLContext() {
-    return new MDOContext(getConfiguration());
+  public ContextStorage getContextStorage() {
+    return contextStorage;
   }
 
-  public Map<String, AbstractMethod> getGlobalMethods() {
-    return getContext().getMethods(URI.create(""));
+  public Map<String, Method> getGlobalMethods() {
+    return getContextStorage().getGlobalMethods();
   }
 
-  public Optional<AbstractMethod> getGlobalMethod(String methodName) {
-    return getContext().getMethod(URI.create(""), methodName);
+  public Optional<Method> getGlobalMethod(String methodName) {
+    return Optional.ofNullable(getContextStorage().getGlobalMethods().get(methodName));
   }
 
 }
