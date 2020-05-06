@@ -37,9 +37,10 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -63,11 +64,10 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
     if (ctx instanceof BSLParser.RegionStartContext) {
       currentRegionLevel++;
       regions.push((BSLParser.RegionStartContext) ctx);
-    } else if (ctx instanceof BSLParser.PreprocessorContext
+    } else if (! (ctx instanceof BSLParser.PreprocessorContext
       || ctx instanceof BSLParser.RegionNameContext
-      || ctx instanceof BSLParser.RegionEndContext) {
-      //ignore
-    } else if (currentUsageLevel < currentRegionLevel) {
+      || ctx instanceof BSLParser.RegionEndContext)
+      && currentUsageLevel < currentRegionLevel) {
       currentUsageLevel = currentRegionLevel;
     }
   }
@@ -96,10 +96,20 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
     CodeActionParams params,
     DocumentContext documentContext
   ) {
-    List<TextEdit> textEdits = diagnostics
+    List<TextEdit> textEdits = new ArrayList<>(diagnostics.size());
+    diagnostics
       .stream()
-      .map(diagnostic -> new TextEdit(diagnostic.getRange(), ""))
-      .collect(Collectors.toList());
+      .map(Diagnostic::getRange)
+      .sorted(Comparator.comparingInt(o -> o.getStart().getLine()))
+      .reduce((prev, curr) -> {
+        if (prev.getEnd().getLine() > curr.getStart().getLine()) {
+          return prev;
+        } else {
+          textEdits.add(new TextEdit(prev, ""));
+          return curr;
+        }
+      })
+      .ifPresent(lastRange -> textEdits.add(new TextEdit(lastRange, "")));
 
     return CodeActionProvider.createCodeActions(
       textEdits,
@@ -108,6 +118,4 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       diagnostics
     );
   }
-
 }
-
