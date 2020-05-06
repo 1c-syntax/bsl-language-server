@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588777092859,
+  "lastUpdate": 1588777603776,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2542,6 +2542,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4135836934312864",
             "extra": "mean: 65.64842319488525 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "d3d4c44fe5157f854a3d3656e1abe3f39d2d33bc",
+          "message": "Старая реализация case insensetivity в парсере",
+          "timestamp": "2020-05-06T17:58:28+03:00",
+          "tree_id": "57dd3d3301ed8dd33107d53cd9b6f93c0838fce8",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d3d4c44fe5157f854a3d3656e1abe3f39d2d33bc"
+        },
+        "date": 1588777601551,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 67.51455569267273,
+            "unit": "sec",
+            "range": "stddev: 1.7793590732024618",
+            "extra": "mean: 67.51455569267273 sec\nrounds: 3"
           }
         ]
       }
