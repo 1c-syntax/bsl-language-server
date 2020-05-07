@@ -26,9 +26,12 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -38,6 +41,8 @@ public class ServerContextTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
+  private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
   @Test
   void testConfigurationMetadata() {
@@ -63,6 +68,34 @@ public class ServerContextTest {
   }
 
   @Test
+  void testMdoRefs() throws IOException {
+
+    var path = Absolute.path(PATH_TO_METADATA);
+    var serverContext = new ServerContext(path);
+    var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
+
+    DocumentContext documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
+    assertThat(serverContext.getMdoRefs()).hasSize(1);
+    assertThat(serverContext.getDocumentsByMdoRef()).hasSize(1);
+    assertThat(serverContext.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
+      .isEqualTo(documentContext);
+    assertThat(serverContext.getDocumentsByMdoRef(mdoRefCommonModule))
+      .hasSize(1)
+      .containsKey(documentContext.getModuleType())
+      .containsValue(documentContext);
+
+    addDocumentContext(serverContext, PATH_TO_CATALOG_MODULE_FILE);
+    addDocumentContext(serverContext, PATH_TO_CATALOG_FILE);
+
+    assertThat(serverContext.getMdoRefs()).hasSize(3);
+    assertThat(serverContext.getDocumentsByMdoRef()).hasSize(2);
+
+    assertThat(serverContext.getDocumentsByMdoRef("Catalog.Справочник1"))
+      .hasSize(2)
+      .containsKeys(ModuleType.ManagerModule, ModuleType.ObjectModule);
+  }
+
+  @Test
   void testErrorConfigurationMetadata() {
     Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
 
@@ -74,4 +107,9 @@ public class ServerContextTest {
     assertThat(configurationMetadata.getModulesByType()).hasSize(0);
   }
 
+  private DocumentContext addDocumentContext(ServerContext serverContext, String path) throws IOException {
+    var file = new File(PATH_TO_METADATA, path);
+    var uri = Absolute.uri(file);
+    return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+  }
 }
