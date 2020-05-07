@@ -51,9 +51,9 @@ import java.util.List;
   }
 )
 public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements QuickFixProvider {
-  int currentRegionLevel = 0;
-  int currentUsageLevel = 0;
-  Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
+  private int currentRegionLevel;
+  private int currentUsageLevel;
+  private final Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
 
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -75,19 +75,17 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
 
   @Override
   public void exitEveryRule(ParserRuleContext ctx) {
-    if (ctx instanceof BSLParser.RegionEndContext) {
-      if (!regions.isEmpty()) {
-        BSLParser.RegionStartContext currentRegion = regions.pop();
-        if (currentUsageLevel < currentRegionLevel) {
-          diagnosticStorage.addDiagnostic(
-            Ranges.create(currentRegion.getParent(), ctx),
-            info.getMessage(currentRegion.regionName().getText())
-          );
-        } else if (currentRegionLevel == currentUsageLevel) {
-          currentUsageLevel--;
-        }
-        currentRegionLevel--;
+    if (ctx instanceof BSLParser.RegionEndContext && !regions.isEmpty()) {
+      BSLParser.RegionStartContext currentRegion = regions.pop();
+      if (currentUsageLevel < currentRegionLevel) {
+        diagnosticStorage.addDiagnostic(
+          Ranges.create(currentRegion),
+          info.getMessage(currentRegion.regionName().getText())
+        );
+      } else if (currentRegionLevel == currentUsageLevel) {
+        currentUsageLevel--;
       }
+      currentRegionLevel--;
     }
   }
 

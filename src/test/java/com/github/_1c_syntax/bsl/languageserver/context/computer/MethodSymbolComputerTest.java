@@ -40,7 +40,7 @@ public class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(3);
+    assertThat(methods.size()).isEqualTo(5);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription().orElse(null)).isNull();
@@ -77,6 +77,26 @@ public class MethodSymbolComputerTest {
     assertThat(parameters.get(3).isByValue()).isTrue();
     assertThat(parameters.get(3).isOptional()).isTrue();
 
+  }
+
+  @Test
+  void testDeprecated() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
+
+    MethodSymbol methodSymbol = methods.get(2);
+
+    assertThat(methodSymbol.isDeprecated()).isFalse();
+
+    methodSymbol = methods.get(3);
+
+    assertThat(methodSymbol.isDeprecated()).isTrue();
+    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecatedInfo()).isNotEmpty();
+
+    methodSymbol = methods.get(4);
+
+    assertThat(methodSymbol.isDeprecated()).isTrue();
+    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecatedInfo()).isNotEmpty();
   }
 
   @Test

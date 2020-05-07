@@ -43,7 +43,7 @@ class DocumentSymbolProviderTest {
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbols(documentContext);
 
-    assertThat(documentSymbols).hasSize(8);
+    assertThat(documentSymbols).hasSize(9);
 
     // global variables
     assertThat(documentSymbols)
@@ -58,12 +58,14 @@ class DocumentSymbolProviderTest {
     // methods
     assertThat(documentSymbols)
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Method))
-      .hasSize(3)
+      .hasSize(4)
       .extracting(Either::getRight)
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(4, 0, 5, 14)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(47, 0, 48, 12)))
+      .filteredOn(DocumentSymbol::getDeprecated)
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(47, 0, 48, 12)))
     ;
 
     // sub vars
