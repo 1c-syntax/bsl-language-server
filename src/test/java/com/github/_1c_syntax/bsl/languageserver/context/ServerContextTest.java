@@ -87,12 +87,21 @@ public class ServerContextTest {
     addDocumentContext(serverContext, PATH_TO_CATALOG_MODULE_FILE);
     addDocumentContext(serverContext, PATH_TO_CATALOG_FILE);
 
+    // для проверки на дубль
+    addDocumentContext(serverContext, PATH_TO_CATALOG_FILE);
+
     assertThat(serverContext.getMdoRefs()).hasSize(3);
     assertThat(serverContext.getDocumentsByMdoRef()).hasSize(2);
 
     assertThat(serverContext.getDocumentsByMdoRef("Catalog.Справочник1"))
       .hasSize(2)
       .containsKeys(ModuleType.ManagerModule, ModuleType.ObjectModule);
+
+    serverContext.removeDocument(Absolute.uri(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE)));
+    assertThat(serverContext.getMdoRefs()).hasSize(2);
+    assertThat(serverContext.getDocumentsByMdoRef()).hasSize(1);
+
+    assertThat(serverContext.getDocument(mdoRefCommonModule, ModuleType.CommonModule)).isNull();
   }
 
   @Test

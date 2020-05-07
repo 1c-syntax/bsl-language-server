@@ -41,7 +41,8 @@ public class ServerContext {
   @CheckForNull
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
-  private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef = Collections.synchronizedMap(new HashMap<>());
+  private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
+    = Collections.synchronizedMap(new HashMap<>());
 
   public ServerContext() {
     this(null);
