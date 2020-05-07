@@ -32,8 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -54,10 +53,10 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     "(БезопасныйРежим|SafeMode)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
-  private static final List<Integer> ROOT_LIST = Arrays.asList(
+  private static final Set<Integer> ROOT_LIST = Set.of(
     BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch, BSLParser.RULE_expression,
     BSLParser.RULE_codeBlock, BSLParser.RULE_assignment);
-  private static final List<Integer> IF_BRANCHES = Arrays.asList(
+  private static final Set<Integer> IF_BRANCHES = Set.of(
     BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch);
 
   public UnsafeSafeModeMethodCallDiagnostic(DiagnosticInfo info) {
@@ -76,11 +75,15 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
       return false;
     }
 
-    BSLParserRuleContext currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
+    BSLParser.MemberContext currentRootMember = (BSLParser.MemberContext)Trees.getRootParent(ctx, BSLParser.RULE_member);
     if (currentRootMember == null) {
       return false;
     }
-    if (((BSLParserRuleContext)currentRootMember.getChild(0)).getRuleIndex() == BSLParser.RULE_unaryModifier){
+    return nonValidExpression(currentRootMember);
+  }
+
+  private static boolean nonValidExpression(BSLParser.MemberContext currentRootMember) {
+    if (currentRootMember.unaryModifier() != null){
       return true;
     }
 
