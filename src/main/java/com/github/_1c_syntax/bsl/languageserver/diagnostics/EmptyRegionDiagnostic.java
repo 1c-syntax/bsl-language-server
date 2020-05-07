@@ -79,7 +79,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       BSLParser.RegionStartContext currentRegion = regions.pop();
       if (currentUsageLevel < currentRegionLevel) {
         diagnosticStorage.addDiagnostic(
-          Ranges.create(currentRegion),
+          Ranges.create(currentRegion.getParent(), ctx),
           info.getMessage(currentRegion.regionName().getText())
         );
       } else if (currentRegionLevel == currentUsageLevel) {
