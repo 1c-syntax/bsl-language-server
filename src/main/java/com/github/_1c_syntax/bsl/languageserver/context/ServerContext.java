@@ -32,6 +32,7 @@ import javax.annotation.CheckForNull;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,7 +147,7 @@ public class ServerContext {
       mdoRefs.put(uri, mdoRef);
       var documentsGroup = documentsByMDORef.get(mdoRef);
       if (documentsGroup == null) {
-        Map<ModuleType, DocumentContext> newDocumentsGroup = new HashMap<>();
+        Map<ModuleType, DocumentContext> newDocumentsGroup = new EnumMap<>(ModuleType.class);
         newDocumentsGroup.put(documentContext.getModuleType(), documentContext);
         documentsByMDORef.put(mdoRef, newDocumentsGroup);
       } else {
