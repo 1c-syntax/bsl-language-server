@@ -223,6 +223,10 @@ public final class Trees {
 
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
+   *
+   * @param tnc       - нода, для которой ищем родителя
+   * @param ruleindex - BSLParser.RULE_*
+   * @return tnc - если родитель не найден, вернет null
    */
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
     final var parent = tnc.getParent();
@@ -239,8 +243,12 @@ public final class Trees {
 
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
+   *
+   * @param tnc       - нода, для которой ищем родителя
+   * @param indexes - Collection of BSLParser.RULE_*
+   * @return tnc - если родитель не найден, вернет null
    */
-  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, List<Integer> indexes) {
+  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
     final var parent = tnc.getParent();
     if (parent == null) {
       return null;
