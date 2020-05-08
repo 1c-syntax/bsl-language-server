@@ -35,8 +35,8 @@ import java.util.List;
  */
 public class DocumentLinkProvider {
   private final DiagnosticProvider diagnosticProvider;
-  private static final String SITE_DIAGNOSTICS_URL_RU = "https://1c-syntax.github.io/bsl-language-server/diagnostics/";
-  private static final String SITE_DIAGNOSTICS_URL_EN = "https://1c-syntax.github.io/bsl-language-server/en/diagnostics/";
+  private static final String SITE_URL_RU = "https://1c-syntax.github.io/bsl-language-server/diagnostics/";
+  private static final String SITE_URL_EN = "https://1c-syntax.github.io/bsl-language-server/en/diagnostics/";
   private final LanguageServerConfiguration configuration;
 
   public DocumentLinkProvider(LanguageServerConfiguration configuration, DiagnosticProvider diagnosticProvider) {
@@ -46,8 +46,7 @@ public class DocumentLinkProvider {
 
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
     List<DocumentLink> documentLinks = new ArrayList<>();
-    var siteDiagnosticsUrl = configuration.getLanguage().equals(Language.EN)
-      ? SITE_DIAGNOSTICS_URL_EN : SITE_DIAGNOSTICS_URL_RU;
+    var siteDiagnosticsUrl = configuration.getLanguage() == Language.EN ? SITE_URL_EN : SITE_URL_RU;
     diagnosticProvider.getComputedDiagnostics(documentContext)
       .forEach(diagnostic -> documentLinks.add(new DocumentLink(diagnostic.getRange(),
         siteDiagnosticsUrl + DiagnosticCode.getStringValue(diagnostic.getCode()))));
