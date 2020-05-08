@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -35,6 +34,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
@@ -57,25 +57,17 @@ public class ServerContext {
     return Collections.unmodifiableMap(documents);
   }
 
-  public Map<URI, String> getMdoRefs() {
-    return Collections.unmodifiableMap(mdoRefs);
-  }
-
-  public Map<String, Map<ModuleType, DocumentContext>> getDocumentsByMdoRef() {
-    return Collections.unmodifiableMap(documentsByMDORef);
-  }
-
   @CheckForNull
   public DocumentContext getDocument(String uri) {
     return getDocument(URI.create(uri));
   }
 
-  public DocumentContext getDocument(String mdoRef, ModuleType moduleType) {
+  public Optional<DocumentContext> getDocument(String mdoRef, ModuleType moduleType) {
     var documentsGroup = documentsByMDORef.get(mdoRef);
     if (documentsGroup != null) {
-      return documentsGroup.get(moduleType);
+      return Optional.ofNullable(documentsGroup.get(moduleType));
     }
-    return null;
+    return Optional.empty();
   }
 
   @CheckForNull
@@ -137,11 +129,9 @@ public class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    addMdoRefByUri(getConfiguration().getModulesByURI(), uri, documentContext);
-  }
-
-  private void addMdoRefByUri(Map<URI, MDObjectBase> modulesByUri, URI uri, DocumentContext documentContext) {
+    var modulesByUri = getConfiguration().getModulesByURI();
     var mdoByUri = modulesByUri.get(uri);
+
     if (mdoByUri != null) {
       var mdoRef = mdoByUri.getMdoRef();
       mdoRefs.put(uri, mdoRef);

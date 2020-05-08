@@ -133,7 +133,7 @@ public final class MethodSymbolComputer
 
     String mdoRef = documentContext.getMdObject()
       .map(MDObjectBase::getMdoRef)
-      .orElse(null);
+      .orElse("");
 
     return MethodSymbol.builder()
       .name(subName.getText())
