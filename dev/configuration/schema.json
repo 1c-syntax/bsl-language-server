@@ -26,6 +26,9 @@
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
+                "CachedPublic": {
+                    "$ref": "parameters-schema.json#/definitions/CachedPublic"
+                },
                 "CanonicalSpellingKeywords": {
                     "$ref": "parameters-schema.json#/definitions/CanonicalSpellingKeywords"
                 },

@@ -14,6 +14,16 @@
             "title": "Violating transaction rules for the 'BeginTransaction' method",
             "$id": "#/definitions/BeginTransactionBeforeTryCatch"
         },
+        "CachedPublic": {
+            "description": "Cached public methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Cached public methods",
+            "$id": "#/definitions/CachedPublic"
+        },
         "CanonicalSpellingKeywords": {
             "description": "Canonical keyword writing",
             "default": true,
