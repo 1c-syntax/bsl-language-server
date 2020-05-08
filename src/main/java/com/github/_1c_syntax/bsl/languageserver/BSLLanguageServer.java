@@ -68,6 +68,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     setConfigurationRoot(params);
+    CompletableFuture.runAsync(context::populateContext);
 
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);

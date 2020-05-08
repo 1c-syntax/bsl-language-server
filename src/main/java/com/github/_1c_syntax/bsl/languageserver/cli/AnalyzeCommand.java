@@ -164,10 +164,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
-
-    if (!silentMode) {
-      System.out.println("Populating context...");
-    }
+    
     context.populateContext(files);
 
     List<FileInfo> fileInfos;
