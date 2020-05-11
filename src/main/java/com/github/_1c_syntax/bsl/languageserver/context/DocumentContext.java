@@ -195,13 +195,14 @@ public class DocumentContext {
 
   public void rebuild(String content) {
     computeLock.lock();
-    clear();
+    clearSecondaryData();
     this.content = content;
     tokenizer = new Tokenizer(content);
     computeLock.unlock();
   }
 
   public void clearSecondaryData() {
+    computeLock.lock();
     content = null;
     contentList.clear();
     tokenizer = null;
@@ -210,12 +211,7 @@ public class DocumentContext {
     cyclomaticComplexityData.clear();
     metrics.clear();
     diagnosticIgnoranceData.clear();
-  }
-
-  private void clear() {
-    clearSecondaryData();
-
-    symbolTree.clear();
+    computeLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {
