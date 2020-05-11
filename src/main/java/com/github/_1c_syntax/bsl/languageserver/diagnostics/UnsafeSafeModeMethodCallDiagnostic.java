@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -52,6 +53,11 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     "(БезопасныйРежим|SafeMode)",
     Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
   );
+  private static final Set<Integer> ROOT_LIST = Set.of(
+    BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch, BSLParser.RULE_expression,
+    BSLParser.RULE_codeBlock, BSLParser.RULE_assignment);
+  private static final Set<Integer> IF_BRANCHES = Set.of(
+    BSLParser.RULE_ifBranch, BSLParser.RULE_elsifBranch);
 
   public UnsafeSafeModeMethodCallDiagnostic(DiagnosticInfo info) {
     super(info, SAFE_MODE_METHOD_NAME);
@@ -65,26 +71,56 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    BSLParserRuleContext rootIfNode = null;
-    BSLParserRuleContext rootExpressionNode = null;
-    BSLParserRuleContext currentRootMember = null;
-
-    if (SAFE_MODE_METHOD_NAME.matcher(ctx.methodName().getText()).matches()) {
-      rootIfNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
-      rootExpressionNode = Trees.getRootParent(ctx, BSLParser.RULE_expression);
-      currentRootMember = Trees.getRootParent(ctx, BSLParser.RULE_member);
-    }
-
-    if (rootIfNode == null || rootExpressionNode == null || currentRootMember == null) {
+    if (!super.checkGlobalMethodCall(ctx)){
       return false;
     }
 
-    int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
-    if (indexOfCurrentMemberNode != rootExpressionNode.getChildCount() - 1) {
-      var nextNode = rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
-      return !(Trees.nodeContains(nextNode, BSLParser.RULE_compareOperation));
+    BSLParser.MemberContext currentRootMember = (BSLParser.MemberContext)Trees.getRootParent(ctx, BSLParser.RULE_member);
+    if (currentRootMember == null) {
+      return false;
+    }
+    return nonValidExpression(currentRootMember);
+  }
+
+  private static boolean nonValidExpression(BSLParser.MemberContext currentRootMember) {
+    if (currentRootMember.unaryModifier() != null){
+      return true;
     }
 
-    return true;
+    BSLParserRuleContext rootExpressionNode = (BSLParserRuleContext) currentRootMember.getParent();
+
+    BSLParserRuleContext rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
+    if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
+      return false;
+    }
+    if (rootExpressionNode.getChildCount() == 1 && IF_BRANCHES.contains(rootIfNode.getRuleIndex())){
+      return true;
+    }
+
+    return haveNeighboorBooleanOperator(currentRootMember, rootExpressionNode);
+  }
+
+  private static boolean haveNeighboorBooleanOperator(BSLParserRuleContext currentRootMember,
+                                                      BSLParserRuleContext rootExpressionNode) {
+    boolean haveNeighboorBoolOperation = false;
+    int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
+    if (indexOfCurrentMemberNode > 0) {
+      var prev = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode - 1);
+      if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)){
+        return false;
+      }
+      haveNeighboorBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
+    }
+    if (indexOfCurrentMemberNode < rootExpressionNode.getChildCount() - 1) {
+
+      var next = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
+      if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)){
+        return false;
+      }
+      if (!haveNeighboorBoolOperation){
+        haveNeighboorBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
+      }
+    }
+    return haveNeighboorBoolOperation;
   }
 }
