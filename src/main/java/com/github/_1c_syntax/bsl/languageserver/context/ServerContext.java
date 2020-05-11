@@ -59,7 +59,7 @@ public class ServerContext {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;
     }
-    LOGGER.info("Finding files to populate context...");
+    LOGGER.debug("Finding files to populate context...");
     Collection<File> files = FileUtils.listFiles(
       configurationRoot.toFile(),
       new String[]{"bsl", "os"},
@@ -69,7 +69,7 @@ public class ServerContext {
   }
 
   public void populateContext(Collection<File> uris) {
-    LOGGER.info("Populating context...");
+    LOGGER.debug("Populating context...");
 
     uris.parallelStream().forEach((File file) -> {
       DocumentContext documentContext = getDocument(file.toURI());
@@ -80,7 +80,7 @@ public class ServerContext {
       }
     });
 
-    LOGGER.info("Context populated.");
+    LOGGER.debug("Context populated.");
   }
 
   public Map<URI, DocumentContext> getDocuments() {
