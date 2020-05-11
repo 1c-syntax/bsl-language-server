@@ -9,7 +9,7 @@ on:
 
 jobs:
   Benchmark:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout project
         uses: actions/checkout@v2
