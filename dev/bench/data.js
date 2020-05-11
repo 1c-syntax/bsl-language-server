@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589230264861,
+  "lastUpdate": 1589233202382,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2852,6 +2852,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.0861845546357842",
             "extra": "mean: 52.55107402801514 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "80240be5c7691bcaade3eae275e53367c6abfd2d",
+          "message": "Merge pull request #1179 from 1c-syntax/feature/double-parsing\n\nДвойной проход файлов для наполнения базы контекстов",
+          "timestamp": "2020-05-12T00:34:22+03:00",
+          "tree_id": "d13d1e8117d3b11989200aa0f13eb79f73c83211",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/80240be5c7691bcaade3eae275e53367c6abfd2d"
+        },
+        "date": 1589233199912,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 52.05723428726196,
+            "unit": "sec",
+            "range": "stddev: 0.9290600497281724",
+            "extra": "mean: 52.05723428726196 sec\nrounds: 3"
           }
         ]
       }
