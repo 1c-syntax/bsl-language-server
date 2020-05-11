@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1588930179133,
+  "lastUpdate": 1589189942503,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2697,6 +2697,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3332327259236498",
             "extra": "mean: 60.82535560925802 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f67b0285fb6ca6fefcb315c575b63f31fc80d96",
+          "message": "Merge pull request #1180 from MinimaJack/patch-2",
+          "timestamp": "2020-05-11T12:31:29+03:00",
+          "tree_id": "84ebd1c754e44796bd0477add968af195c86d897",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3f67b0285fb6ca6fefcb315c575b63f31fc80d96"
+        },
+        "date": 1589189940200,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 59.751272201538086,
+            "unit": "sec",
+            "range": "stddev: 1.0101054047757976",
+            "extra": "mean: 59.751272201538086 sec\nrounds: 3"
           }
         ]
       }
