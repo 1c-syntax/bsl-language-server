@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589221987417,
+  "lastUpdate": 1589222280348,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2759,6 +2759,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.19350607111572654",
             "extra": "mean: 64.65459116299947 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "988b7e752387d0d038c244851223193d32c3224c",
+          "message": "Merge pull request #1155 from artbear/safe-mode-fix\n\nДоработка диагностики Ошибка неявного преобразования БезопасныйРежим",
+          "timestamp": "2020-05-11T21:29:47+03:00",
+          "tree_id": "186ed38ac3dc062407b9dd1054c13414f9bfc4a9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/988b7e752387d0d038c244851223193d32c3224c"
+        },
+        "date": 1589222277866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 71.26645747820537,
+            "unit": "sec",
+            "range": "stddev: 0.2912828721117854",
+            "extra": "mean: 71.26645747820537 sec\nrounds: 3"
           }
         ]
       }
