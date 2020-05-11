@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589230223361,
+  "lastUpdate": 1589230264861,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2821,6 +2821,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.077636962331521",
             "extra": "mean: 50.025840044021606 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "075b484e613eb117468b8cae44913d531569f427",
+          "message": "Исправление поведения EXCEPT\n\nВне зависимости от включения/выключения диагностики, если mode = except, диагностика должна исключаться",
+          "timestamp": "2020-05-11T23:44:04+03:00",
+          "tree_id": "a39e0f1f277ca22d576e86ad531b3fefab29da80",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/075b484e613eb117468b8cae44913d531569f427"
+        },
+        "date": 1589230262067,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 52.55107402801514,
+            "unit": "sec",
+            "range": "stddev: 2.0861845546357842",
+            "extra": "mean: 52.55107402801514 sec\nrounds: 3"
           }
         ]
       }
