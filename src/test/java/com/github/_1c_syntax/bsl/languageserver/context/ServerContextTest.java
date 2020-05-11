@@ -74,4 +74,19 @@ public class ServerContextTest {
     assertThat(configurationMetadata.getModulesByType()).hasSize(0);
   }
 
+  @Test
+  void testPopulateContext() {
+    // given
+    Path path = Absolute.path(PATH_TO_METADATA);
+    ServerContext serverContext = new ServerContext(path);
+
+    assertThat(serverContext.getDocuments()).hasSize(0);
+
+    // when
+    serverContext.populateContext();
+
+    // then
+    assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
+  }
+
 }
