@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589233202382,
+  "lastUpdate": 1589270749582,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -2883,6 +2883,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9290600497281724",
             "extra": "mean: 52.05723428726196 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9eafe043729c9a70e3267ce70078dfaf7f962c2a",
+          "message": "Merge pull request #1182 from 1c-syntax/fix/LostSemicolonPerfomance",
+          "timestamp": "2020-05-12T11:00:12+03:00",
+          "tree_id": "e0682d054e90aff4518c1a4fe21a01cbd3496419",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9eafe043729c9a70e3267ce70078dfaf7f962c2a"
+        },
+        "date": 1589270747175,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 50.21088695526123,
+            "unit": "sec",
+            "range": "stddev: 0.8091087453985",
+            "extra": "mean: 50.21088695526123 sec\nrounds: 3"
           }
         ]
       }
