@@ -5,7 +5,21 @@ on:
     branches:
       - develop
       - master
+    paths:
+    - 'src/**'
+    - '.github/workflows/benchmark.yml'
+    - '.github/scripts/*.*'
+    - '*gradle*'
+    - 'gradle/wrapper/gradle-wrapper.properties'
+    - 'lombok.config'
   pull_request:
+    paths:
+    - 'src/**'
+    - '.github/workflows/benchmark.yml'
+    - '.github/scripts/*.*'
+    - '*gradle*'
+    - 'gradle/wrapper/gradle-wrapper.properties'
+    - 'lombok.config'
 
 jobs:
   Benchmark:
