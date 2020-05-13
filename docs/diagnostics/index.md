@@ -26,7 +26,7 @@
 | [CommentedCode](CommentedCode.md) | Закомментированный фрагмент кода | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` |
 | [CommonModuleAssign](CommonModuleAssign.md) | Присвоение общему модулю | Да | Блокирующий | Ошибка | `error` |
-| [CommonModuleInvalidType](CommonModuleInvalidType.md) | Общий Модуль недопустимого типа | Да | Важный | Ошибка | `standard`<br/>`unpredictable` |
+| [CommonModuleInvalidType](CommonModuleInvalidType.md) | Общий модуль недопустимого типа | Да | Важный | Ошибка | `standard`<br/>`unpredictable`<br/>`design` |
 | [CommonModuleNameCached](CommonModuleNameCached.md) | Пропущен постфикс "ПовтИсп" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [CommonModuleNameClient](CommonModuleNameClient.md) | Пропущен постфикс "Клиент" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Пропущен постфикс "КлиентСервер" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |

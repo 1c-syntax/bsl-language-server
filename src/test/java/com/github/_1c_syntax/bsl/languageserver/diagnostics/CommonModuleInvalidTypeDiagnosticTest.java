@@ -103,7 +103,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ПростоВызовСерверат");
+    when(module.getName()).thenReturn("ПростоВызовСервера");
     when(module.isServer()).thenReturn(Boolean.TRUE);
     when(module.isServerCall()).thenReturn(Boolean.TRUE);
     when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
