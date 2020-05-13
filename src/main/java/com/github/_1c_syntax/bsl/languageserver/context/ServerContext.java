@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.SneakyThrows;
@@ -36,8 +37,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class ServerContext {
@@ -45,6 +48,9 @@ public class ServerContext {
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
   private Path configurationRoot;
+  private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
+  private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
+    = Collections.synchronizedMap(new HashMap<>());
 
   public ServerContext() {
     this(null);
@@ -92,9 +98,22 @@ public class ServerContext {
     return getDocument(URI.create(uri));
   }
 
+  public Optional<DocumentContext> getDocument(String mdoRef, ModuleType moduleType) {
+    var documentsGroup = documentsByMDORef.get(mdoRef);
+    if (documentsGroup != null) {
+      return Optional.ofNullable(documentsGroup.get(moduleType));
+    }
+    return Optional.empty();
+  }
+
   @CheckForNull
   public DocumentContext getDocument(URI uri) {
     return documents.get(Absolute.uri(uri));
+  }
+
+  @CheckForNull
+  public Map<ModuleType, DocumentContext> getDocuments(String mdoRef) {
+    return documentsByMDORef.get(mdoRef);
   }
 
   @SneakyThrows
@@ -110,6 +129,7 @@ public class ServerContext {
     if (documentContext == null) {
       documentContext = new DocumentContext(absoluteURI, content, this);
       documents.put(absoluteURI, documentContext);
+      addMdoRefByUri(absoluteURI, documentContext);
     } else {
       documentContext.rebuild(content);
     }
@@ -122,11 +142,15 @@ public class ServerContext {
   }
 
   public void removeDocument(URI uri) {
-    documents.remove(Absolute.uri(uri));
+    URI absoluteURI = Absolute.uri(uri);
+    removeDocumentMdoRefByUri(absoluteURI);
+    documents.remove(absoluteURI);
   }
 
   public void clear() {
     documents.clear();
+    documentsByMDORef.clear();
+    mdoRefs.clear();
     configurationMetadata.clear();
   }
 
@@ -144,5 +168,37 @@ public class ServerContext {
     }
 
     return Configuration.create(configurationRoot);
+  }
+
+  private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
+    var modulesByUri = getConfiguration().getModulesByURI();
+    var mdoByUri = modulesByUri.get(uri);
+
+    if (mdoByUri != null) {
+      var mdoRef = mdoByUri.getMdoRef();
+      mdoRefs.put(uri, mdoRef);
+      var documentsGroup = documentsByMDORef.get(mdoRef);
+      if (documentsGroup == null) {
+        Map<ModuleType, DocumentContext> newDocumentsGroup = new EnumMap<>(ModuleType.class);
+        newDocumentsGroup.put(documentContext.getModuleType(), documentContext);
+        documentsByMDORef.put(mdoRef, newDocumentsGroup);
+      } else {
+        documentsGroup.put(documentContext.getModuleType(), documentContext);
+      }
+    }
+  }
+
+  private void removeDocumentMdoRefByUri(URI uri) {
+    var mdoRef = mdoRefs.get(uri);
+    if (mdoRef != null) {
+      var documentsGroup = documentsByMDORef.get(mdoRef);
+      if (documentsGroup != null) {
+        documentsGroup.remove(documents.get(uri).getModuleType());
+        if (documentsGroup.isEmpty()) {
+          documentsByMDORef.remove(mdoRef);
+        }
+      }
+      mdoRefs.remove(uri);
+    }
   }
 }

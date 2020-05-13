@@ -59,6 +59,12 @@ public class MethodSymbol implements Symbol {
 
   boolean deprecated;
 
+  /**
+   * Ссылка на объект метаданных, в модуле которого находится метод
+   * Формат ссылки: Document.Заказ, CommonModule.ОбщегоНазначения
+   */
+  String mdoRef;
+
   @Builder.Default
   List<ParameterDefinition> parameters = new ArrayList<>();
 
