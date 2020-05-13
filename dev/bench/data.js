@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589368127499,
+  "lastUpdate": 1589370522853,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3038,6 +3038,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2742506038429684",
             "extra": "mean: 50.49314498901367 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7bee04ab80a4122e6df170599e1d4035ed8138e8",
+          "message": "Merge pull request #1157 from 1c-syntax/feature/addMdoRef\n\nДобавил ссылки на метаданные mdoRef",
+          "timestamp": "2020-05-13T14:33:31+03:00",
+          "tree_id": "ce101b3cd29f01f6129d59ab29edcb099b81c4c1",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7bee04ab80a4122e6df170599e1d4035ed8138e8"
+        },
+        "date": 1589370520452,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 50.30738147099813,
+            "unit": "sec",
+            "range": "stddev: 1.0301878724572548",
+            "extra": "mean: 50.30738147099813 sec\nrounds: 3"
           }
         ]
       }
