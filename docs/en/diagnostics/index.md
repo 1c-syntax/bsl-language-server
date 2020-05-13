@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **106**
+Total: **107**
 
 * Error: **33**
-* Code smell: **68**
+* Code smell: **69**
 * Vulnerability: **2**
 * Security Hotspot: **3**
 
@@ -33,6 +33,7 @@ Total: **106**
 | [CommonModuleNameGlobal](CommonModuleNameGlobal.md) | Missed postfix "Global" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`brainoverload` |
 | [CommonModuleNameGlobalClient](CommonModuleNameGlobalClient.md) | Global module with postfix "Client" | Yes | Major | Code smell | `standard` |
 | [CommonModuleNameServerCall](CommonModuleNameServerCall.md) | Missed postfix "ServerCall" | Yes | Minor | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameWords](CommonModuleNameWords.md) | Unrecommended common module name | Yes | Info | Code smell | `standard` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Consecutive empty lines | Yes | Info | Code smell | `badpractice` |

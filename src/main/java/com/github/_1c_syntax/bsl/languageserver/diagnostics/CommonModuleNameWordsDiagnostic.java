@@ -21,51 +21,53 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
-
-  protected Pattern pattern;
-
-  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info) {
-    super(info);
-
+@DiagnosticMetadata(
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.INFO,
+  minutesToFix = 5,
+  tags = {
+    DiagnosticTag.STANDARD
   }
 
-  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
+)
+public class CommonModuleNameWordsDiagnostic extends AbstractCommonModuleNameDiagnostic {
+
+  private static final String DEFAULT_WORDS = "процедуры|procedures" +
+    "|функции|functions" +
+    "|обработчики|handlers" +
+    "|модуль|module" +
+    "|функциональность|functionality";
+
+  @DiagnosticParameter(
+    type = String.class
+  )
+  private String words = DEFAULT_WORDS;
+
+  public CommonModuleNameWordsDiagnostic(DiagnosticInfo info) {
     super(info);
-
-    pattern = CaseInsensitivePattern.compile(regexp);
-
+    pattern = CaseInsensitivePattern.compile(words);
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
-    if (documentContext.getTokensFromDefaultChannel().isEmpty()) {
-      return;
-    }
-
-    documentContext.getMdObject()
-      .filter(CommonModule.class::isInstance)
-      .map(CommonModule.class::cast)
-      .filter(this::flagsCheck)
-      .map(MDObjectBase::getName)
-      .map(pattern::matcher)
-      .filter(this::matchCheck)
-      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokensFromDefaultChannel().get(0)));
+  protected boolean flagsCheck(CommonModule commonModule) {
+    return true;
   }
 
-  protected abstract boolean flagsCheck(CommonModule commonModule);
-
+  @Override
   protected boolean matchCheck(Matcher matcher) {
-    return !matcher.find();
+    return matcher.find();
   }
 
 }
+
