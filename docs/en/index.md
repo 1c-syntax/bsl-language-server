@@ -22,6 +22,8 @@
 - <a href="reporters">Reporters</a>
 - <a href="diagnostics">Diagnostics</a>
 - <a href="features">Features</a>
+- [Frequently asked questions](faq.md)
+- [System requirements](systemRequirements.md)
 - <a href="#thanks">Special thanks</a>
 
 <a id="capabilities"></a>
@@ -63,7 +65,7 @@ Commands:
 
 Starting BSL Language Server in standard mode will run the Language Server communicating via [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). stdin and stdout are used for communication.
 
-By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter `diagnosticLanguage` in configuration file or raise an event `workspace/didChangeConfiguration`:
+By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter `language` in configuration file or raise an event `workspace/didChangeConfiguration`:
 
 <a id="analyze"></a>
 
