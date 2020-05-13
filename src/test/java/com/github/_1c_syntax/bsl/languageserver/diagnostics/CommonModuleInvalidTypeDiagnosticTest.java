@@ -52,16 +52,16 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
   @Test
-  void testClientServer() {
+  void testUnknown() {
 
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ПростоКлиентСервер");
+    when(module.getName()).thenReturn("СОшибкой");
     when(module.isServer()).thenReturn(Boolean.TRUE);
     when(module.isServerCall()).thenReturn(Boolean.TRUE);
-    when(module.isExternalConnection()).thenReturn(Boolean.TRUE);
-    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
+    when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
@@ -76,17 +76,17 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
   }
 
   @Test
-  void testUnknown() {
+  void testClientServer() {
 
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("СОшибкой");
+    when(module.getName()).thenReturn("ПростоКлиентСервер");
     when(module.isServer()).thenReturn(Boolean.TRUE);
-    when(module.isServerCall()).thenReturn(Boolean.TRUE);
-    when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
-    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
-    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+    when(module.isExternalConnection()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
     // when
@@ -94,7 +94,6 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
 
     //then
     assertThat(diagnostics).hasSize(0);
-
   }
 
   @Test
@@ -149,6 +148,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
     // given
     when(module.getName()).thenReturn("ПростоКлиент");
     when(module.isServer()).thenReturn(Boolean.FALSE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
     when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
     when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
