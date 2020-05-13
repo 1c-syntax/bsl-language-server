@@ -61,38 +61,6 @@ public class CommonModuleInvalidTypeDiagnostic extends AbstractCommonModuleNameD
       && !isClientServer(commonModule);
   }
 
-  private boolean isClientServer(CommonModule commonModule) {
-    return !commonModule.isServerCall()
-      && commonModule.isServer()
-      && commonModule.isExternalConnection()
-      && commonModule.isClientOrdinaryApplication()
-      && commonModule.isClientManagedApplication();
-  }
-
-  private boolean isClient(CommonModule commonModule) {
-    return !commonModule.isServerCall()
-      && !commonModule.isServer()
-      && !commonModule.isExternalConnection()
-      && commonModule.isClientOrdinaryApplication()
-      && commonModule.isClientManagedApplication();
-  }
-
-  private boolean isServerCall(CommonModule commonModule) {
-    return commonModule.isServerCall()
-      && commonModule.isServer()
-      && !commonModule.isExternalConnection()
-      && !commonModule.isClientOrdinaryApplication()
-      && !commonModule.isClientManagedApplication();
-  }
-
-  private boolean isServer(CommonModule commonModule) {
-    return !commonModule.isServerCall()
-      && commonModule.isServer()
-      && commonModule.isExternalConnection()
-      && commonModule.isClientOrdinaryApplication()
-      && !commonModule.isClientManagedApplication();
-  }
-
   @Override
   protected boolean matchCheck(Matcher matcher) {
     return true;
