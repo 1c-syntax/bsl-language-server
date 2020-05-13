@@ -186,6 +186,24 @@
             "title": "Missed postfix \"ServerCall\"",
             "$id": "#/definitions/CommonModuleNameServerCall"
         },
+        "CommonModuleNameWords": {
+            "description": "Unrecommended common module name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unrecommended common module name",
+            "properties": {
+                "words": {
+                    "description": "Unrecommended words",
+                    "default": "",
+                    "type": "string",
+                    "title": "Unrecommended words"
+                }
+            },
+            "$id": "#/definitions/CommonModuleNameWords"
+        },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
             "default": true,
