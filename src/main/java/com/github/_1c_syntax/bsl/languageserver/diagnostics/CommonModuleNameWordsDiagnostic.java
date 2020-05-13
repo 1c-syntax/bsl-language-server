@@ -57,7 +57,8 @@ public class CommonModuleNameWordsDiagnostic extends AbstractCommonModuleNameDia
     "|функциональность|functionality";
 
   @DiagnosticParameter(
-    type = String.class
+    type = String.class,
+    defaultValue = DEFAULT_WORDS
   )
   private String words = DEFAULT_WORDS;
 

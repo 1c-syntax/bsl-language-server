@@ -8,7 +8,7 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `words` | `String` | ```Unrecommended words``` | `````` |
+| `words` | `String` | ```Unrecommended words``` | ```процедуры|procedures|функции|functions|обработчики|handlers|модуль|module|функциональность|functionality``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -39,6 +39,6 @@
 
 ```json
 "CommonModuleNameWords": {
-    "words": ""
+    "words": "процедуры|procedures|функции|functions|обработчики|handlers|модуль|module|функциональность|functionality"
 }
 ```
