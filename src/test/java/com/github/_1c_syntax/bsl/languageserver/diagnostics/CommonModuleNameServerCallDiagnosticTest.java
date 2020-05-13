@@ -76,6 +76,52 @@ class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<Co
   }
 
   @Test
+  void testServer() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТо");
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isExternalConnection()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
+  void testServerCall() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТо");
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
+    when(module.isServerCall()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(1);
+
+  }
+
+  @Test
   void TestNegative() {
 
     getDocumentContextFromFile();
