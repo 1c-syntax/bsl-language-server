@@ -50,6 +50,9 @@
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
+                "CommonModuleInvalidType": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
+                },
                 "CommonModuleNameCached": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
                 },

@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **107**
+Total: **108**
 
-* Error: **33**
+* Error: **34**
 * Code smell: **69**
 * Vulnerability: **2**
 * Security Hotspot: **3**
@@ -26,6 +26,7 @@ Total: **107**
 | [CommentedCode](CommentedCode.md) | Commented out code | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` |
 | [CommonModuleAssign](CommonModuleAssign.md) | CommonModuleAssign | Yes | Blocker | Error | `error` |
+| [CommonModuleInvalidType](CommonModuleInvalidType.md) | Common module invalid type | Yes | Major | Error | `standard`<br/>`unpredictable` |
 | [CommonModuleNameCached](CommonModuleNameCached.md) | Missed postfix "Cached" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [CommonModuleNameClient](CommonModuleNameClient.md) | Missed postfix "Client" | Yes | Minor | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
 | [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Missed postfix "ClientServer" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
