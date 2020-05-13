@@ -54,6 +54,6 @@ public class CommonModuleNameClientServerDiagnostic extends AbstractCommonModule
 
   @Override
   protected boolean flagsCheck(CommonModule commonModule) {
-    return commonModule.isServer() && commonModule.isClientManagedApplication();
+    return isClientServer(commonModule);
   }
 }

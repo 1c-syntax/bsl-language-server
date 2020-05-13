@@ -52,6 +52,6 @@ public class CommonModuleNameGlobalClientDiagnostic extends AbstractCommonModule
 
   @Override
   protected boolean flagsCheck(CommonModule commonModule) {
-    return commonModule.isGlobal() && commonModule.isClientManagedApplication();
+    return commonModule.isGlobal() && isClient(commonModule);
   }
 }

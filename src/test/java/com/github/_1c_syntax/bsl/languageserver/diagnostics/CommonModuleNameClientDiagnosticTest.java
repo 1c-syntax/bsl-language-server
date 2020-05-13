@@ -75,6 +75,26 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
   }
 
   @Test
+  void testClientServer() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ЧтоТо");
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
+
+  @Test
   void testNegative() {
 
     getDocumentContextFromFile();

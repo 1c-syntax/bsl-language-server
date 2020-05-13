@@ -60,7 +60,7 @@ class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<Co
     // given
     when(module.getName()).thenReturn("ЧтоТо");
     when(module.isServer()).thenReturn(Boolean.TRUE);
-    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
     when(module.isServerCall()).thenReturn(Boolean.TRUE);
 
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
