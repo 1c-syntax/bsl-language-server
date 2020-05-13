@@ -61,6 +61,7 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
     when(module.getName()).thenReturn("ЧтоТо");
     when(module.isServer()).thenReturn(Boolean.FALSE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
 
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 

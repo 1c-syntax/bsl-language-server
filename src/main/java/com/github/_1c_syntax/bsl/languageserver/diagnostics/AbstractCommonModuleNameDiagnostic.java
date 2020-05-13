@@ -65,7 +65,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
-//      && commonModule.isClientOrdinaryApplication()
+      && commonModule.isClientOrdinaryApplication()
       && commonModule.isClientManagedApplication();
   }
 
@@ -73,7 +73,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return !commonModule.isServerCall()
       && !commonModule.isServer()
       && !commonModule.isExternalConnection()
-//      && commonModule.isClientOrdinaryApplication()
+      && commonModule.isClientOrdinaryApplication()
       && commonModule.isClientManagedApplication();
   }
 
@@ -81,7 +81,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return commonModule.isServerCall()
       && commonModule.isServer()
       && !commonModule.isExternalConnection()
-//      && !commonModule.isClientOrdinaryApplication()
+      && !commonModule.isClientOrdinaryApplication()
       && !commonModule.isClientManagedApplication();
   }
 
@@ -89,7 +89,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
-//      && commonModule.isClientOrdinaryApplication()
+      && commonModule.isClientOrdinaryApplication()
       && !commonModule.isClientManagedApplication();
   }
 
