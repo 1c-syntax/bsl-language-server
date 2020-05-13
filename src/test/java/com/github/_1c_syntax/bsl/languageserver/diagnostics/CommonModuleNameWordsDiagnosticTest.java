@@ -34,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -88,6 +89,30 @@ class CommonModuleNameWordsDiagnosticTest extends AbstractDiagnosticTest<CommonM
     assertThat(diagnostics).hasSize(0);
 
   }
+
+  @Test
+  void testConfigure() {
+
+    getDocumentContextFromFile();
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("words", "мой");
+    diagnosticInstance.configure(configuration);
+
+    // given
+    when(module.getName()).thenReturn("МойОбщий");
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(5, 0, 1);
+
+  }
+
 
   @SneakyThrows
   void getDocumentContextFromFile() {

@@ -34,16 +34,9 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   protected Pattern pattern;
 
-  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info) {
-    super(info);
-
-  }
-
   public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
     super(info);
-
     pattern = CaseInsensitivePattern.compile(regexp);
-
   }
 
   @Override

@@ -24,17 +24,24 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
+  scope = DiagnosticScope.BSL,
+  modules = {
+    ModuleType.CommonModule
+  },
   minutesToFix = 5,
   tags = {
     DiagnosticTag.STANDARD
@@ -55,7 +62,12 @@ public class CommonModuleNameWordsDiagnostic extends AbstractCommonModuleNameDia
   private String words = DEFAULT_WORDS;
 
   public CommonModuleNameWordsDiagnostic(DiagnosticInfo info) {
-    super(info);
+    super(info, DEFAULT_WORDS);
+  }
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    super.configure(configuration);
     pattern = CaseInsensitivePattern.compile(words);
   }
 
