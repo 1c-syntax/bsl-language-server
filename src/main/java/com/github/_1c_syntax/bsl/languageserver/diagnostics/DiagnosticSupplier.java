@@ -142,11 +142,14 @@ public class DiagnosticSupplier {
     boolean enabledDirectly = diagnosticConfiguration != null
       && diagnosticConfiguration.isLeft()
       && diagnosticConfiguration.getLeft();
+    boolean disabledDirectly = diagnosticConfiguration != null
+      && diagnosticConfiguration.isLeft()
+      && !diagnosticConfiguration.getLeft();
     boolean hasDefinedSetting = enabledDirectly || hasCustomConfiguration;
 
     boolean passedAllMode = mode == Mode.ALL;
     boolean passedOnlyMode = mode == Mode.ONLY && hasDefinedSetting;
-    boolean passedExcept = mode == Mode.EXCEPT && !hasDefinedSetting;
+    boolean passedExcept = mode == Mode.EXCEPT && !(hasDefinedSetting || disabledDirectly);
     boolean passedOn = mode == Mode.ON && (activatedByDefault || hasDefinedSetting);
 
     return passedOn

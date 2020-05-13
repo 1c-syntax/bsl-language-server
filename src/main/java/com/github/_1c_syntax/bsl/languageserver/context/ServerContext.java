@@ -25,17 +25,24 @@ import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentItem;
 
 import javax.annotation.CheckForNull;
+import java.io.File;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 public class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
@@ -51,6 +58,35 @@ public class ServerContext {
 
   public ServerContext(@CheckForNull Path configurationRoot) {
     this.configurationRoot = configurationRoot;
+  }
+
+  public void populateContext() {
+    if (configurationRoot == null) {
+      LOGGER.info("Can't populate server context. Configuration root is not defined.");
+      return;
+    }
+    LOGGER.debug("Finding files to populate context...");
+    Collection<File> files = FileUtils.listFiles(
+      configurationRoot.toFile(),
+      new String[]{"bsl", "os"},
+      true
+    );
+    populateContext(files);
+  }
+
+  public void populateContext(Collection<File> uris) {
+    LOGGER.debug("Populating context...");
+
+    uris.parallelStream().forEach((File file) -> {
+      DocumentContext documentContext = getDocument(file.toURI());
+      if (documentContext == null) {
+        documentContext = addDocument(file);
+        documentContext.getSymbolTree();
+        documentContext.clearSecondaryData();
+      }
+    });
+
+    LOGGER.debug("Context populated.");
   }
 
   public Map<URI, DocumentContext> getDocuments() {
@@ -76,8 +112,14 @@ public class ServerContext {
   }
 
   @CheckForNull
-  public Map<ModuleType, DocumentContext> getDocumentsByMdoRef(String mdoRef) {
+  public Map<ModuleType, DocumentContext> getDocuments(String mdoRef) {
     return documentsByMDORef.get(mdoRef);
+  }
+
+  @SneakyThrows
+  public DocumentContext addDocument(File file) {
+    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    return addDocument(file.toURI(), content);
   }
 
   public DocumentContext addDocument(URI uri, String content) {

@@ -174,7 +174,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(node ->
         node.getStart().getType() != BSLLexer.SEMICOLON
-          && !Trees.nodeContains(node, BSLParser.RULE_regionStart, BSLParser.RULE_regionEnd))
+          && !Trees.nodeContains(node, BSLParser.RULE_regionStart, BSLParser.RULE_regionEnd, BSLParser.RULE_preproc_endif))
       .collect(Collectors.toList());
 
     // если в блоке кода есть еще стейты кроме текущего

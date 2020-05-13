@@ -8,16 +8,17 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **105**
+Total: **107**
 
 * Error: **33**
-* Code smell: **67**
+* Code smell: **69**
 * Vulnerability: **2**
 * Security Hotspot: **3**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
 | [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` |
+| [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br/>`design` |
 | [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` |
 | [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Method definitions must be placed before the module body operators | Yes | Blocker | Error | `error` |
 | [CodeOutOfRegion](CodeOutOfRegion.md) | Code out of region | Yes | Info | Code smell | `standard` |
@@ -32,6 +33,7 @@ Total: **105**
 | [CommonModuleNameGlobal](CommonModuleNameGlobal.md) | Missed postfix "Global" | Yes | Major | Code smell | `standard`<br/>`badpractice`<br/>`brainoverload` |
 | [CommonModuleNameGlobalClient](CommonModuleNameGlobalClient.md) | Global module with postfix "Client" | Yes | Major | Code smell | `standard` |
 | [CommonModuleNameServerCall](CommonModuleNameServerCall.md) | Missed postfix "ServerCall" | Yes | Minor | Code smell | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameWords](CommonModuleNameWords.md) | Unrecommended common module name | Yes | Info | Code smell | `standard` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Consecutive empty lines | Yes | Info | Code smell | `badpractice` |

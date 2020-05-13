@@ -26,6 +26,9 @@
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
+                "CachedPublic": {
+                    "$ref": "parameters-schema.json#/definitions/CachedPublic"
+                },
                 "CanonicalSpellingKeywords": {
                     "$ref": "parameters-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
@@ -67,6 +70,9 @@
                 },
                 "CommonModuleNameServerCall": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameServerCall"
+                },
+                "CommonModuleNameWords": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameWords"
                 },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"

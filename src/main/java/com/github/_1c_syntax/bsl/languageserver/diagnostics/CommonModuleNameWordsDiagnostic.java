@@ -24,73 +24,63 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
+
+import java.util.Map;
+import java.util.regex.Matcher;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 30,
+  severity = DiagnosticSeverity.INFO,
+  scope = DiagnosticScope.BSL,
+  modules = {
+    ModuleType.CommonModule
+  },
+  minutesToFix = 5,
   tags = {
-    DiagnosticTag.BADPRACTICE
+    DiagnosticTag.STANDARD
   }
-)
-public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final int MAX_METHOD_SIZE = 200;
+)
+public class CommonModuleNameWordsDiagnostic extends AbstractCommonModuleNameDiagnostic {
+
+  private static final String DEFAULT_WORDS = "процедуры|procedures" +
+    "|функции|functions" +
+    "|обработчики|handlers" +
+    "|модуль|module" +
+    "|функциональность|functionality";
 
   @DiagnosticParameter(
-    type = Integer.class,
-    defaultValue = "" + MAX_METHOD_SIZE
+    type = String.class,
+    defaultValue = DEFAULT_WORDS
   )
-  private int maxMethodSize = MAX_METHOD_SIZE;
+  private String words = DEFAULT_WORDS;
 
-  public MethodSizeDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public CommonModuleNameWordsDiagnostic(DiagnosticInfo info) {
+    super(info, DEFAULT_WORDS);
   }
 
   @Override
-  public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-    int methodSize = methodSize(ctx.subCodeBlock());
-
-    if (methodSizeExceedsLimit(methodSize)) {
-      diagnosticStorage.addDiagnostic(
-        ctx.procDeclaration().subName(),
-        info.getMessage(ctx.procDeclaration().subName().getText(), methodSize, maxMethodSize));
-    }
-
-    return ctx;
+  public void configure(Map<String, Object> configuration) {
+    super.configure(configuration);
+    pattern = CaseInsensitivePattern.compile(words);
   }
 
   @Override
-  public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-    int methodSize = methodSize(ctx.subCodeBlock());
-
-    if (methodSizeExceedsLimit(methodSize)) {
-      diagnosticStorage.addDiagnostic(
-        ctx.funcDeclaration().subName(),
-        info.getMessage(ctx.funcDeclaration().subName().getText(), methodSize, maxMethodSize));
-    }
-
-    return ctx;
+  protected boolean flagsCheck(CommonModule commonModule) {
+    return true;
   }
 
-  private boolean methodSizeExceedsLimit(int methodSize) {
-    return methodSize > maxMethodSize;
-  }
-
-  private static int methodSize(BSLParser.SubCodeBlockContext ctx) {
-    if (ctx.codeBlock().getChildCount() == 0) {
-      return 0;
-    }
-    Token start = ctx.getStart();
-    Token stop = ctx.getStop();
-
-    return stop.getLine() - start.getLine();
+  @Override
+  protected boolean matchCheck(Matcher matcher) {
+    return matcher.find();
   }
 
 }
+

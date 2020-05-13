@@ -27,19 +27,16 @@ import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
-  private final Pattern pattern;
+  protected Pattern pattern;
 
   public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
     super(info);
-
     pattern = CaseInsensitivePattern.compile(regexp);
-
   }
 
   @Override
@@ -54,10 +51,14 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       .filter(this::flagsCheck)
       .map(MDObjectBase::getName)
       .map(pattern::matcher)
-      .filter(Predicate.not(Matcher::find))
+      .filter(this::matchCheck)
       .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokensFromDefaultChannel().get(0)));
   }
 
   protected abstract boolean flagsCheck(CommonModule commonModule);
+
+  protected boolean matchCheck(Matcher matcher) {
+    return !matcher.find();
+  }
 
 }

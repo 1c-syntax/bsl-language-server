@@ -14,6 +14,16 @@
             "title": "Violating transaction rules for the 'BeginTransaction' method",
             "$id": "#/definitions/BeginTransactionBeforeTryCatch"
         },
+        "CachedPublic": {
+            "description": "Cached public methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Cached public methods",
+            "$id": "#/definitions/CachedPublic"
+        },
         "CanonicalSpellingKeywords": {
             "description": "Canonical keyword writing",
             "default": true,
@@ -175,6 +185,24 @@
             ],
             "title": "Missed postfix \"ServerCall\"",
             "$id": "#/definitions/CommonModuleNameServerCall"
+        },
+        "CommonModuleNameWords": {
+            "description": "Unrecommended common module name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unrecommended common module name",
+            "properties": {
+                "words": {
+                    "description": "Unrecommended words",
+                    "default": "",
+                    "type": "string",
+                    "title": "Unrecommended words"
+                }
+            },
+            "$id": "#/definitions/CommonModuleNameWords"
         },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",

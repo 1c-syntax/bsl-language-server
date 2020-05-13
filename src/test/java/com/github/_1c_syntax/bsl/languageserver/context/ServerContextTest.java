@@ -79,7 +79,7 @@ public class ServerContextTest {
       .isPresent()
       .get()
       .isEqualTo(documentContext);
-    assertThat(serverContext.getDocumentsByMdoRef(mdoRefCommonModule))
+    assertThat(serverContext.getDocuments(mdoRefCommonModule))
       .hasSize(1)
       .containsKey(documentContext.getModuleType())
       .containsValue(documentContext);
@@ -90,7 +90,7 @@ public class ServerContextTest {
     // для проверки на дубль
     addDocumentContext(serverContext, PATH_TO_CATALOG_FILE);
 
-    assertThat(serverContext.getDocumentsByMdoRef("Catalog.Справочник1"))
+    assertThat(serverContext.getDocuments("Catalog.Справочник1"))
       .hasSize(2)
       .containsKeys(ModuleType.ManagerModule, ModuleType.ObjectModule);
 
@@ -111,9 +111,25 @@ public class ServerContextTest {
     assertThat(configurationMetadata.getModulesByType()).hasSize(0);
   }
 
+  @Test
+  void testPopulateContext() {
+    // given
+    Path path = Absolute.path(PATH_TO_METADATA);
+    ServerContext serverContext = new ServerContext(path);
+
+    assertThat(serverContext.getDocuments()).hasSize(0);
+
+    // when
+    serverContext.populateContext();
+
+    // then
+    assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
+  }
+
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
     return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
   }
+
 }

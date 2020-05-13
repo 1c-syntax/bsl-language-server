@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **105**
+Общее количество: **107**
 
-* Дефект кода: **67**
+* Дефект кода: **69**
 * Уязвимость: **2**
 * Ошибка: **33**
 * Потенциальная уязвимость: **3**
@@ -18,6 +18,7 @@
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
 | [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Нарушение правил работы с транзакциями для метода 'НачатьТранзакцию' | Да | Важный | Ошибка | `standard` |
+| [CachedPublic](CachedPublic.md) | Кеширование программного интерфейса | Да | Важный | Дефект кода | `standard`<br/>`design` |
 | [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Каноническое написание ключевых слов | Да | Информационный | Дефект кода | `standard` |
 | [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Определения методов должны размещаться перед операторами тела модуля | Да | Блокирующий | Ошибка | `error` |
 | [CodeOutOfRegion](CodeOutOfRegion.md) | Код расположен вне области | Да | Информационный | Дефект кода | `standard` |
@@ -32,6 +33,7 @@
 | [CommonModuleNameGlobal](CommonModuleNameGlobal.md) | Пропущен постфикс "Глобальный" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`brainoverload` |
 | [CommonModuleNameGlobalClient](CommonModuleNameGlobalClient.md) | Глобальный модуль с постфиксом "Клиент" | Да | Важный | Дефект кода | `standard` |
 | [CommonModuleNameServerCall](CommonModuleNameServerCall.md) | Пропущен постфикс "ВызовСервера" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameWords](CommonModuleNameWords.md) | Нерекомендуемое имя общего модуля | Да | Информационный | Дефект кода | `standard` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Подряд идущие пустые строки | Да | Информационный | Дефект кода | `badpractice` |

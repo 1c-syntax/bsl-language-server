@@ -21,7 +21,7 @@ In server or client common modules, the execution context is obvious, so there i
 
 ## Sources
 
-- Source: [The use of compilation directives and preprocessor instructions(RUS)](https://its.1c.ru/db/v8std#content:453:hdoc)
+- Source: [The use of compilation directives and preprocessor instructions(RUS)](https://its.1c.ru/db/v8std#content:439:hdoc)
 
 ## Snippets
 
