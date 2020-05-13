@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **106**
+Общее количество: **107**
 
-* Дефект кода: **68**
+* Дефект кода: **69**
 * Уязвимость: **2**
 * Ошибка: **33**
 * Потенциальная уязвимость: **3**
@@ -33,6 +33,7 @@
 | [CommonModuleNameGlobal](CommonModuleNameGlobal.md) | Пропущен постфикс "Глобальный" | Да | Важный | Дефект кода | `standard`<br/>`badpractice`<br/>`brainoverload` |
 | [CommonModuleNameGlobalClient](CommonModuleNameGlobalClient.md) | Глобальный модуль с постфиксом "Клиент" | Да | Важный | Дефект кода | `standard` |
 | [CommonModuleNameServerCall](CommonModuleNameServerCall.md) | Пропущен постфикс "ВызовСервера" | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice`<br/>`unpredictable` |
+| [CommonModuleNameWords](CommonModuleNameWords.md) | Нерекомендуемое имя общего модуля | Да | Информационный | Дефект кода | `standard` |
 | [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br/>`unpredictable` |
 | [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br/>`standard`<br/>`unpredictable` |
 | [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Подряд идущие пустые строки | Да | Информационный | Дефект кода | `badpractice` |

@@ -71,6 +71,9 @@
                 "CommonModuleNameServerCall": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameServerCall"
                 },
+                "CommonModuleNameWords": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameWords"
+                },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
                 },
