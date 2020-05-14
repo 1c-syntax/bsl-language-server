@@ -64,6 +64,43 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
   }
 
   @Test
+  void testIsExternal() {
+
+    getDocumentContextFromFile();
+    when(module.isServer()).thenReturn(Boolean.FALSE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
+    when(module.isExternalConnection()).thenReturn(Boolean.TRUE);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(2, 4, 21)
+      .hasRange(6, 12, 29)
+    ;
+  }
+
+  @Test
+  void testIsOrdinary() {
+
+    getDocumentContextFromFile();
+    when(module.isServer()).thenReturn(Boolean.FALSE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
+    when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(2, 4, 21)
+      .hasRange(6, 12, 29)
+    ;
+  }
+
+  @Test
   void testIsNonServer() {
 
     getDocumentContextFromFile();
