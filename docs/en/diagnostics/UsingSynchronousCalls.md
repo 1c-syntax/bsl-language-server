@@ -2,7 +2,7 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Major` | `No` | `15` | `standard` |
+| `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
