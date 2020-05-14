@@ -12,8 +12,8 @@ Total: **108**
 
 * Error: **34**
 * Code smell: **69**
-* Vulnerability: **2**
-* Security Hotspot: **3**
+* Vulnerability: **3**
+* Security Hotspot: **4**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
@@ -54,6 +54,8 @@ Total: **108**
 | [EmptyRegion](EmptyRegion.md) | The region should not be empty | Yes | Info | Code smell | `standard` |
 | [EmptyStatement](EmptyStatement.md) | Empty statement | Yes | Info | Code smell | `badpractice` |
 | [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Excessive AutoTest Check | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
+| [ExecuteExternalCode](ExecuteExternalCode.md) | Executing of external code on the server | Yes | Critical | Vulnerability | `error`<br/>`standard` |
+| [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br/>`standard` |
 | [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` |

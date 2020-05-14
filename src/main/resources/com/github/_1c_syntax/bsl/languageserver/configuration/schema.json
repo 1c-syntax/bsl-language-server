@@ -134,6 +134,12 @@
                 "ExcessiveAutoTestCheck": {
                     "$ref": "parameters-schema.json#/definitions/ExcessiveAutoTestCheck"
                 },
+                "ExecuteExternalCode": {
+                    "$ref": "parameters-schema.json#/definitions/ExecuteExternalCode"
+                },
+                "ExecuteExternalCodeInCommonModule": {
+                    "$ref": "parameters-schema.json#/definitions/ExecuteExternalCodeInCommonModule"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
