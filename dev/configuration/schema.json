@@ -50,6 +50,9 @@
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
                 },
+                "CommonModuleInvalidType": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
+                },
                 "CommonModuleNameCached": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
                 },
@@ -130,6 +133,12 @@
                 },
                 "ExcessiveAutoTestCheck": {
                     "$ref": "parameters-schema.json#/definitions/ExcessiveAutoTestCheck"
+                },
+                "ExecuteExternalCode": {
+                    "$ref": "parameters-schema.json#/definitions/ExecuteExternalCode"
+                },
+                "ExecuteExternalCodeInCommonModule": {
+                    "$ref": "parameters-schema.json#/definitions/ExecuteExternalCodeInCommonModule"
                 },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"

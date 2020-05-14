@@ -116,6 +116,16 @@
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
         },
+        "CommonModuleInvalidType": {
+            "description": "Common module invalid type",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module invalid type",
+            "$id": "#/definitions/CommonModuleInvalidType"
+        },
         "CommonModuleNameCached": {
             "description": "Missed postfix \"Cached\"",
             "default": true,
@@ -431,6 +441,26 @@
             ],
             "title": "Excessive AutoTest Check",
             "$id": "#/definitions/ExcessiveAutoTestCheck"
+        },
+        "ExecuteExternalCode": {
+            "description": "Executing of external code on the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Executing of external code on the server",
+            "$id": "#/definitions/ExecuteExternalCode"
+        },
+        "ExecuteExternalCodeInCommonModule": {
+            "description": "Executing of external code in a common module on the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Executing of external code in a common module on the server",
+            "$id": "#/definitions/ExecuteExternalCodeInCommonModule"
         },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
