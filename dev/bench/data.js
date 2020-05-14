@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589377102487,
+  "lastUpdate": 1589445478767,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3100,6 +3100,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5264551690651613",
             "extra": "mean: 50.37978013356527 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b8f7337bdf38530b1723ca6f5705c4fe22bf3570",
+          "message": "Merge pull request #1192 from 1c-syntax/feature/566\n\nКорректировка поведения UsingModalWindows и UsingSynchronousCalls",
+          "timestamp": "2020-05-14T11:32:21+03:00",
+          "tree_id": "d2644766c62a676f075dbd8d75d28e39a069c238",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b8f7337bdf38530b1723ca6f5705c4fe22bf3570"
+        },
+        "date": 1589445472573,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 50.890660683314,
+            "unit": "sec",
+            "range": "stddev: 1.2755021289941508",
+            "extra": "mean: 50.890660683314 sec\nrounds: 3"
           }
         ]
       }
