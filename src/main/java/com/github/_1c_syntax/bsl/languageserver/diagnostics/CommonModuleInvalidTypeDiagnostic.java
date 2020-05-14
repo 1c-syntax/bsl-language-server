@@ -30,8 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 
+import java.util.regex.Matcher;
+
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
+  type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
   modules = {
@@ -40,20 +42,28 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
   minutesToFix = 5,
   tags = {
     DiagnosticTag.STANDARD,
-    DiagnosticTag.BADPRACTICE,
-    DiagnosticTag.UNPREDICTABLE
+    DiagnosticTag.UNPREDICTABLE,
+    DiagnosticTag.DESIGN
   }
+
 )
-public class CommonModuleNameClientServerDiagnostic extends AbstractCommonModuleNameDiagnostic {
-
-  private static final String REGEXP = "клиентсервер|clientserver";
-
-  public CommonModuleNameClientServerDiagnostic(DiagnosticInfo info) {
-    super(info, REGEXP);
+public class CommonModuleInvalidTypeDiagnostic extends AbstractCommonModuleNameDiagnostic {
+  public CommonModuleInvalidTypeDiagnostic(DiagnosticInfo info) {
+    super(info, "");
   }
 
   @Override
   protected boolean flagsCheck(CommonModule commonModule) {
-    return isClientServer(commonModule);
+
+    return !isServer(commonModule)
+      && !isServerCall(commonModule)
+      && !isClient(commonModule)
+      && !isClientServer(commonModule);
   }
+
+  @Override
+  protected boolean matchCheck(Matcher matcher) {
+    return true;
+  }
+
 }

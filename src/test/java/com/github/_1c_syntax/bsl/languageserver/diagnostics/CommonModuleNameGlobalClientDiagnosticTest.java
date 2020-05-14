@@ -61,6 +61,9 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     when(module.getName()).thenReturn("ЧтоТоКлиентГлобальный");
     when(module.isGlobal()).thenReturn(Boolean.TRUE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+    when(module.isServer()).thenReturn(Boolean.FALSE);
 
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
@@ -83,6 +86,9 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     when(module.getName()).thenReturn("ЧтоТоClientGlobal");
     when(module.isGlobal()).thenReturn(Boolean.TRUE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+    when(module.isServer()).thenReturn(Boolean.FALSE);
 
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 

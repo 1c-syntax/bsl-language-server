@@ -40,54 +40,29 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameClientDiagnostic> {
-  private DocumentContext documentContext;
-  private CommonModule module;
-
-  CommonModuleNameClientDiagnosticTest() {
-    super(CommonModuleNameClientDiagnostic.class);
+class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<CommonModuleInvalidTypeDiagnostic> {
+  CommonModuleInvalidTypeDiagnosticTest() {
+    super(CommonModuleInvalidTypeDiagnostic.class);
   }
+
+  private CommonModule module;
+  private DocumentContext documentContext;
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
-
   @Test
-  void test() {
+  void testUnknown() {
 
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ЧтоТо");
-    when(module.isServer()).thenReturn(Boolean.FALSE);
-    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
-    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
-
-    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
-
-    // when
-    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
-
-    //then
-    assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true)
-      .hasRange(5, 0, 1);
-
-  }
-
-  @Test
-  void testClient() {
-
-    getDocumentContextFromFile();
-
-    // given
-    when(module.getName()).thenReturn("ЧтоТо");
-    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
-    when(module.isServer()).thenReturn(Boolean.FALSE);
+    when(module.getName()).thenReturn("СОшибкой");
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.TRUE);
     when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
     when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
-    when(module.isServerCall()).thenReturn(Boolean.FALSE);
-
+    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
     // when
@@ -106,10 +81,33 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ЧтоТо");
+    when(module.getName()).thenReturn("ПростоКлиентСервер");
     when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+    when(module.isExternalConnection()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void testServerCall() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ПростоВызовСервера");
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.TRUE);
+    when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.FALSE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
     // when
@@ -121,15 +119,17 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
   }
 
   @Test
-  void testNegative() {
+  void testServer() {
 
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ЧтоТоclient");
-    when(module.isServer()).thenReturn(Boolean.FALSE);
-    when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
-
+    when(module.getName()).thenReturn("ПростоСервер");
+    when(module.isServer()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+    when(module.isExternalConnection()).thenReturn(Boolean.TRUE);
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
+    when(module.isClientManagedApplication()).thenReturn(Boolean.FALSE);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
     // when
@@ -141,16 +141,17 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
   }
 
   @Test
-  void testGlobal() {
+  void testClient() {
 
     getDocumentContextFromFile();
 
     // given
-    when(module.getName()).thenReturn("ЧтоТоГлобальный");
+    when(module.getName()).thenReturn("ПростоКлиент");
     when(module.isServer()).thenReturn(Boolean.FALSE);
-    when(module.isGlobal()).thenReturn(Boolean.TRUE);
+    when(module.isServerCall()).thenReturn(Boolean.FALSE);
+    when(module.isExternalConnection()).thenReturn(Boolean.FALSE);
     when(module.isClientManagedApplication()).thenReturn(Boolean.TRUE);
-
+    when(module.isClientOrdinaryApplication()).thenReturn(Boolean.TRUE);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
     // when
@@ -160,7 +161,6 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
     assertThat(diagnostics).hasSize(0);
 
   }
-
 
   @SneakyThrows
   void getDocumentContextFromFile() {
@@ -176,9 +176,8 @@ class CommonModuleNameClientDiagnosticTest extends AbstractDiagnosticTest<Common
       serverContext
     ));
 
-
     module = spy((CommonModule) configuration.getModulesByURI().get(documentContext.getUri()));
 
   }
-
 }
+

@@ -54,6 +54,6 @@ public class CommonModuleNameServerCallDiagnostic extends AbstractCommonModuleNa
 
   @Override
   protected boolean flagsCheck(CommonModule commonModule) {
-    return commonModule.isServer() && commonModule.isServerCall();
+    return isServerCall(commonModule);
   }
 }
