@@ -442,6 +442,26 @@
             "title": "Excessive AutoTest Check",
             "$id": "#/definitions/ExcessiveAutoTestCheck"
         },
+        "ExecuteExternalCode": {
+            "description": "Executing of external code on the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Executing of external code on the server",
+            "$id": "#/definitions/ExecuteExternalCode"
+        },
+        "ExecuteExternalCodeInCommonModule": {
+            "description": "Executing of external code in a common module on the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Executing of external code in a common module on the server",
+            "$id": "#/definitions/ExecuteExternalCodeInCommonModule"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": true,
