@@ -5,6 +5,7 @@ com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind
+com.github._1c_syntax.bsl.languageserver.configuration.documentlink
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
 com.github._1c_syntax.bsl.languageserver.context.symbol
