@@ -25,4 +25,11 @@
 
 `BSL Language Server` является самостоятельным приложением, реализацией серверной части протокола LSP. Плагин для SonarQube использует `BSL Language Server` для выполнения анализа исходного кода языка BSL (конфигурации 1С, скрипты 1Scipt и OSWeb).
 
-`BSL Language Server` может быть использован с любым приложением, имеющим реализацию LSP клиента, на данный момент это плагины для [VS code](https://github.com/1c-syntax/vsc-language-1c-bsl/), [1C:Enterprise development tools](https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator) (собственная реализация, без LSP), плагин для [SonarQube](https://github.com/1c-syntax/sonar-bsl-plugin-community), [Phoenix BSL](https://github.com/otymko/phoenixbsl)
+`BSL Language Server` может быть использован с любым приложением, имеющим реализацию LSP клиента. Проверенные подключения:
+* плагин для [VS code](https://github.com/1c-syntax/vsc-language-1c-bsl/);
+* дополнительная утилита для Конфигуратора [Phoenix BSL](https://github.com/otymko/phoenixbsl);
+* плагин для Sublime Text [https://github.com/sublimelsp/LSP].
+
+Так же через прямой импорт `BSL Language Server` работают:
+* плагин для [1C:Enterprise development tools](https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator) (собственная реализация, без LSP);
+* плагин для [SonarQube](https://github.com/1c-syntax/sonar-bsl-plugin-community);
