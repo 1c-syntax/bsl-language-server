@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.UTF8Control;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -35,10 +35,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
@@ -109,13 +107,11 @@ public class DiagnosticInfo {
   }
 
   public String getResourceString(String key) {
-    String languageCode = language.getLanguageCode();
-    Locale locale = Locale.forLanguageTag(languageCode);
-    return ResourceBundle.getBundle(diagnosticClass.getName(), locale, new UTF8Control()).getString(key).intern();
+    return Resources.getResourceString(language, diagnosticClass, key);
   }
 
   public String getResourceString(String key, Object... args) {
-    return String.format(getResourceString(key), args).intern();
+    return Resources.getResourceString(language, diagnosticClass, key, args);
   }
 
   public DiagnosticType getType() {
