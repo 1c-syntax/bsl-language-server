@@ -393,6 +393,26 @@
                 }
             }
         },
+        "documentLink": {
+            "$id": "#/properties/documentLink",
+            "type": "object",
+            "title": "Document link configuration.",
+            "default": null,
+            "properties": {
+                "useDevSite": {
+                    "$id": "#/properties/useDevSite",
+                    "type": "boolean",
+                    "title": "Use develop version of site for documentation links.",
+                    "default": false
+                },
+                "siteRoot": {
+                    "$id": "#/properties/siteRoot",
+                    "type": "string",
+                    "title": "Root URL for documentation links.",
+                    "default": "https://1c-syntax.github.io/bsl-language-server"
+                }
+            }
+        },
         "diagnostics": {
             "$id": "#/properties/diagnostics",
             "type": "object",

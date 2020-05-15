@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
@@ -79,6 +80,89 @@ class DocumentLinkProviderTest {
         .startsWith(SITE_EN_URL))
       .filteredOn(documentLink -> !documentLink.getTarget().endsWith(DIAGNOSTIC_CODE))
       .hasSize(3);
+  }
+
+  @Test
+  void testDevSite() {
+    // given
+    var configuration = LanguageServerConfiguration.create();
+    var documentLinkOptions = configuration.getDocumentLinkOptions();
+    var documentContext = getDocumentContext();
+    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
+
+    // when
+    documentLinkOptions.setUseDevSite(false);
+    var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> !documentLink.getTarget().contains("/dev/"));
+
+    // when
+    documentLinkOptions.setUseDevSite(true);
+    documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> documentLink.getTarget().contains("/dev/"));
+
+    // when
+    documentLinkOptions.setUseDevSite(true);
+    configuration.setLanguage(Language.EN);
+    documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> documentLink.getTarget().contains("/dev/"))
+      .allMatch(documentLink -> documentLink.getTarget().contains("/en/"));
+
+  }
+
+  @Test
+  void testTooltip() {
+    var configuration = LanguageServerConfiguration.create();
+    var documentContext = getDocumentContext();
+    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
+
+    // when
+    configuration.setLanguage(Language.RU);
+    var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> documentLink.getTooltip().contains("Документация"));
+
+    // when
+    configuration.setLanguage(Language.EN);
+    documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> documentLink.getTooltip().contains("documentation"));
+  }
+
+  @Test
+  void testSiteRoot() {
+    var configuration = LanguageServerConfiguration.create();
+    var documentContext = getDocumentContext();
+    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
+
+    // when
+    var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> documentLink.getTarget().startsWith("https://1c-syntax"));
+
+    // when
+    configuration.getDocumentLinkOptions().setSiteRoot("https://fake");
+    documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
+
+    // then
+    assertThat(documentLinks)
+      .allMatch(documentLink -> !documentLink.getTarget().startsWith("https://1c-syntax"))
+      .allMatch(documentLink -> documentLink.getTarget().startsWith("https://fake"))
+    ;
   }
 
   @NotNull

@@ -25,18 +25,17 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.eclipse.lsp4j.DocumentLink;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Класс-провайдер для реализации формирования ссылки на страницу с информацией по диагностике
  */
 public class DocumentLinkProvider {
   private final DiagnosticProvider diagnosticProvider;
-  private static final String SITE_URL_RU = "https://1c-syntax.github.io/bsl-language-server/diagnostics/";
-  private static final String SITE_URL_EN = "https://1c-syntax.github.io/bsl-language-server/en/diagnostics/";
   private final LanguageServerConfiguration configuration;
 
   public DocumentLinkProvider(LanguageServerConfiguration configuration, DiagnosticProvider diagnosticProvider) {
@@ -45,11 +44,32 @@ public class DocumentLinkProvider {
   }
 
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
-    List<DocumentLink> documentLinks = new ArrayList<>();
-    var siteDiagnosticsUrl = configuration.getLanguage() == Language.EN ? SITE_URL_EN : SITE_URL_RU;
-    diagnosticProvider.getComputedDiagnostics(documentContext)
-      .forEach(diagnostic -> documentLinks.add(new DocumentLink(diagnostic.getRange(),
-        siteDiagnosticsUrl + DiagnosticCode.getStringValue(diagnostic.getCode()))));
-    return documentLinks;
+
+    var linkOptions = configuration.getDocumentLinkOptions();
+    var language = configuration.getLanguage();
+
+    var siteRoot = linkOptions.getSiteRoot();
+    var devSuffix = linkOptions.useDevSite() ? "/dev" : "";
+    var languageSuffix = language == Language.EN ? "/en" : "";
+
+    var siteDiagnosticsUrl = String.format(
+      "%s%s%s/diagnostics/",
+      siteRoot,
+      devSuffix,
+      languageSuffix
+      );
+
+    var tooltip = Resources.getResourceString(language, this.getClass(), "tooltip");
+
+    return diagnosticProvider.getComputedDiagnostics(documentContext).stream()
+      .map(diagnostic ->
+        new DocumentLink(
+          diagnostic.getRange(),
+          siteDiagnosticsUrl + DiagnosticCode.getStringValue(diagnostic.getCode()),
+          null,
+          tooltip
+        )
+      )
+      .collect(Collectors.toList());
   }
 }

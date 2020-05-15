@@ -99,6 +99,8 @@ class LanguageServerConfigurationTest {
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotEqualTo(null);
 
+    assertThat(configuration.getDocumentLinkOptions().useDevSite()).isTrue();
+
   }
 
   @Test
