@@ -40,12 +40,13 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -102,9 +103,9 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   )
   private Boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS;
 
-  private Pattern patternL = compilePattern(listForCheckLeft);
-  private Pattern patternR = compilePattern(listForCheckRight);
-  private Pattern patternLr = compilePattern(listForCheckLeftAndRight);
+  private @Nullable Pattern patternL = compilePattern(listForCheckLeft);
+  private @Nullable Pattern patternR = compilePattern(listForCheckRight);
+  private @Nullable Pattern patternLr = compilePattern(listForCheckLeftAndRight);
   private final String mainMessage;
   private final String indexWordLeftMsg;
   private final String indexWordRightMsg;
@@ -116,12 +117,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     indexWordLeftMsg = this.info.getResourceString("wordLeft");
     indexWordRightMsg = this.info.getResourceString("wordRight");
     indexWordLeftRightMsg = this.info.getResourceString("wordLeftAndRight");
-  }
-
-  private static Stream<Token> findTokenStreamByPattern(List<Token> tokens, Pattern pattern) {
-    return tokens
-      .parallelStream()
-      .filter((Token t) -> pattern.matcher(t.getText()).matches());
   }
 
   private static String getRegularString(String string) {
@@ -158,40 +153,54 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
 
+    if (patternL == null && patternR == null && patternLr == null){
+      return Collections.emptyList();
+    }
+
     diagnosticStorage.clearDiagnostics();
 
     List<Token> tokens = documentContext.getTokens();
+    boolean noSpaceLeft = false;
+    boolean noSpaceRight = false;
 
-    // проверяем слева
-    if (patternL != null) {
-      findTokenStreamByPattern(tokens, patternL)
-        .filter((Token t) -> noSpaceLeft(tokens, t))
-        .forEach((Token t) ->
-          addDiagnostic(t, mainMessage, indexWordLeftMsg)
-        );
-    }
+    for (var token:tokens){
+      boolean checkLeft = false;
+      boolean checkRight = false;
 
-    // проверяем справа
-    if (patternR != null) {
-      findTokenStreamByPattern(tokens, patternR)
-        .filter((Token t) -> noSpaceRight(tokens, t))
-        .forEach((Token t) ->
-          addDiagnostic(t, mainMessage, indexWordRightMsg)
-        );
-    }
+      final var text = token.getText();
 
-    // проверяем слева и справа
-    if (patternLr != null) {
-      findTokenStreamByPattern(tokens, patternLr)
-        .forEach((Token t) -> checkLeftRight(tokens, t));
+      if (patternL != null && patternL.matcher(text).matches()){
+        noSpaceLeft = noSpaceLeft(tokens, token);
+        checkLeft = true;
+
+        if (noSpaceLeft){
+          addDiagnostic(token, mainMessage, indexWordLeftMsg);
+        }
+      }
+      if (patternR != null && patternR.matcher(text).matches()){
+        noSpaceRight = noSpaceRight(tokens, token);
+        checkRight = true;
+
+        if (noSpaceRight){
+          addDiagnostic(token, mainMessage, indexWordRightMsg);
+        }
+      }
+      if (patternLr != null && patternLr.matcher(text).matches()){
+        if (!checkLeft){
+          noSpaceLeft = noSpaceLeft(tokens, token);
+        }
+        if (!checkRight){
+          noSpaceRight = noSpaceRight(tokens, token);
+        }
+        checkLeftRight(token, noSpaceLeft, noSpaceRight);
+      }
     }
 
     return diagnosticStorage.getDiagnostics();
   }
 
-  private void checkLeftRight(List<Token> tokens, Token t) {
-    final var noSpaceLeft = noSpaceLeft(tokens, t);
-    final var noSpaceRight = noSpaceRight(tokens, t);
+  private void checkLeftRight(Token t, boolean noSpaceLeft, boolean noSpaceRight) {
+
     String errorMessage = null;
     if (noSpaceLeft && !noSpaceRight){
       errorMessage = indexWordLeftMsg;
