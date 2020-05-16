@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -67,6 +68,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     setConfigurationRoot(params);
+    CompletableFuture.runAsync(context::populateContext);
 
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
@@ -76,6 +78,7 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     capabilities.setDocumentSymbolProvider(Boolean.TRUE);
     capabilities.setCodeActionProvider(Boolean.TRUE);
     capabilities.setCodeLensProvider(new CodeLensOptions());
+    capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
 
     InitializeResult result = new InitializeResult(capabilities);
 

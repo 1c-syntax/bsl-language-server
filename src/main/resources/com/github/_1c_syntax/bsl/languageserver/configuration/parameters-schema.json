@@ -14,6 +14,16 @@
             "title": "Violating transaction rules for the 'BeginTransaction' method",
             "$id": "#/definitions/BeginTransactionBeforeTryCatch"
         },
+        "CachedPublic": {
+            "description": "Cached public methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Cached public methods",
+            "$id": "#/definitions/CachedPublic"
+        },
         "CanonicalSpellingKeywords": {
             "description": "Canonical keyword writing",
             "default": true,
@@ -105,6 +115,104 @@
             ],
             "title": "CommonModuleAssign",
             "$id": "#/definitions/CommonModuleAssign"
+        },
+        "CommonModuleInvalidType": {
+            "description": "Common module invalid type",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module invalid type",
+            "$id": "#/definitions/CommonModuleInvalidType"
+        },
+        "CommonModuleNameCached": {
+            "description": "Missed postfix \"Cached\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Cached\"",
+            "$id": "#/definitions/CommonModuleNameCached"
+        },
+        "CommonModuleNameClient": {
+            "description": "Missed postfix \"Client\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Client\"",
+            "$id": "#/definitions/CommonModuleNameClient"
+        },
+        "CommonModuleNameClientServer": {
+            "description": "Missed postfix \"ClientServer\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"ClientServer\"",
+            "$id": "#/definitions/CommonModuleNameClientServer"
+        },
+        "CommonModuleNameFullAccess": {
+            "description": "Missed postfix \"FullAccess\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"FullAccess\"",
+            "$id": "#/definitions/CommonModuleNameFullAccess"
+        },
+        "CommonModuleNameGlobal": {
+            "description": "Missed postfix \"Global\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"Global\"",
+            "$id": "#/definitions/CommonModuleNameGlobal"
+        },
+        "CommonModuleNameGlobalClient": {
+            "description": "Global module with postfix \"Client\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Global module with postfix \"Client\"",
+            "$id": "#/definitions/CommonModuleNameGlobalClient"
+        },
+        "CommonModuleNameServerCall": {
+            "description": "Missed postfix \"ServerCall\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Missed postfix \"ServerCall\"",
+            "$id": "#/definitions/CommonModuleNameServerCall"
+        },
+        "CommonModuleNameWords": {
+            "description": "Unrecommended common module name",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unrecommended common module name",
+            "properties": {
+                "words": {
+                    "description": "Unrecommended words",
+                    "default": "\u043f\u0440\u043e\u0446\u0435\u0434\u0443\u0440\u044b|procedures|\u0444\u0443\u043d\u043a\u0446\u0438\u0438|functions|\u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0447\u0438\u043a\u0438|handlers|\u043c\u043e\u0434\u0443\u043b\u044c|module|\u0444\u0443\u043d\u043a\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u044c|functionality",
+                    "type": "string",
+                    "title": "Unrecommended words"
+                }
+            },
+            "$id": "#/definitions/CommonModuleNameWords"
         },
         "CompilationDirectiveLost": {
             "description": "Methods compilation directive",
@@ -206,6 +314,16 @@
             "title": "Deleting an item when iterating through collection using the operator \"For each ... In ... Do\"",
             "$id": "#/definitions/DeletingCollectionItem"
         },
+        "DeprecatedAttributes8312": {
+            "description": "Deprecated 8.3.12 platform features.",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deprecated 8.3.12 platform features.",
+            "$id": "#/definitions/DeprecatedAttributes8312"
+        },
         "DeprecatedCurrentDate": {
             "description": "Using of the deprecated method \"CurrentDate\"",
             "default": true,
@@ -245,6 +363,16 @@
             ],
             "title": "Deprecated client application method.",
             "$id": "#/definitions/DeprecatedMethods8310"
+        },
+        "DeprecatedMethods8317": {
+            "description": "Using of deprecated platform 8.3.17 global methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using of deprecated platform 8.3.17 global methods",
+            "$id": "#/definitions/DeprecatedMethods8317"
         },
         "DeprecatedTypeManagedForm": {
             "description": "Deprecated ManagedForm type",
@@ -314,6 +442,26 @@
             "title": "Excessive AutoTest Check",
             "$id": "#/definitions/ExcessiveAutoTestCheck"
         },
+        "ExecuteExternalCode": {
+            "description": "Executing of external code on the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Executing of external code on the server",
+            "$id": "#/definitions/ExecuteExternalCode"
+        },
+        "ExecuteExternalCodeInCommonModule": {
+            "description": "Executing of external code in a common module on the server",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Executing of external code in a common module on the server",
+            "$id": "#/definitions/ExecuteExternalCodeInCommonModule"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": true,
@@ -343,6 +491,30 @@
             ],
             "title": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "$id": "#/definitions/FunctionNameStartsWithGet"
+        },
+        "FunctionReturnsSamePrimitive": {
+            "description": "The function always returns the same primitive value",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "The function always returns the same primitive value",
+            "properties": {
+                "skipAttachable": {
+                    "description": "Ignore attachable methods",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Ignore attachable methods"
+                },
+                "caseSensitiveForString": {
+                    "description": "Case sensitive for strings",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Case sensitive for strings"
+                }
+            },
+            "$id": "#/definitions/FunctionReturnsSamePrimitive"
         },
         "FunctionShouldHaveReturn": {
             "description": "The function should have return",
@@ -431,6 +603,16 @@
             ],
             "title": "Invalid character",
             "$id": "#/definitions/InvalidCharacterInFile"
+        },
+        "IsInRoleMethodDiagnostic": {
+            "description": "IsInRole global method call",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "IsInRole global method call",
+            "$id": "#/definitions/IsInRoleMethodDiagnostic"
         },
         "LineLength": {
             "description": "Line Length limit",
@@ -1004,6 +1186,16 @@
             "title": "Unreachable Code",
             "$id": "#/definitions/UnreachableCode"
         },
+        "UnsafeSafeModeMethodCall": {
+            "description": "Unsafe SafeMode method call",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unsafe SafeMode method call",
+            "$id": "#/definitions/UnsafeSafeModeMethodCall"
+        },
         "UnusedLocalMethod": {
             "description": "Unused local method",
             "default": true,
@@ -1130,7 +1322,7 @@
         },
         "UsingModalWindows": {
             "description": "Using modal windows",
-            "default": false,
+            "default": true,
             "type": [
                 "boolean",
                 "object"
@@ -1168,7 +1360,7 @@
         },
         "UsingSynchronousCalls": {
             "description": "Using synchronous calls",
-            "default": false,
+            "default": true,
             "type": [
                 "boolean",
                 "object"

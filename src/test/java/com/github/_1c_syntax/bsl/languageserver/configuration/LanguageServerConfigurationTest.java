@@ -21,7 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +46,8 @@ class LanguageServerConfigurationTest {
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
   private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
+    = "./src/test/resources/.partial-bsl-language-server.json";
 
   @BeforeEach
   void startUp() throws IOException {
@@ -94,6 +99,8 @@ class LanguageServerConfigurationTest {
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotEqualTo(null);
 
+    assertThat(configuration.getDocumentLinkOptions().useDevSite()).isTrue();
+
   }
 
   @Test
@@ -128,6 +135,28 @@ class LanguageServerConfigurationTest {
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
+  }
+
+  @Test
+  void testPartialInitialization() {
+    // given
+    File configurationFile = new File(PATH_TO_PARTIAL_CONFIGURATION_FILE);
+
+    // when
+    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+
+    CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+
+    // then
+    assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
+    assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
+
+    assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
+
+    assertThat(diagnosticsOptions.getMode()).isEqualTo(Mode.ON);
+    assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);
+    assertThat(diagnosticsOptions.getParameters()).isEmpty();
   }
 
 }

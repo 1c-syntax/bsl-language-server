@@ -61,6 +61,7 @@ gen/
 
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
+.idea/checkstyle-idea.xml
 *.bak
 *.orig
 

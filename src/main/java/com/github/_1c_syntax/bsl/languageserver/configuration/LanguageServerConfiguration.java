@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -68,6 +69,9 @@ public final class LanguageServerConfiguration {
   @JsonProperty("codeLens")
   private final CodeLensOptions codeLensOptions;
 
+  @JsonProperty("documentLink")
+  private final DocumentLinkOptions documentLinkOptions;
+
   @Nullable
   private File traceLog;
 
@@ -79,6 +83,7 @@ public final class LanguageServerConfiguration {
       Language.DEFAULT_LANGUAGE,
       new DiagnosticsOptions(),
       new CodeLensOptions(),
+      new DocumentLinkOptions(),
       null,
       null
     );

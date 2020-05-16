@@ -50,10 +50,18 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
       .hasRange(82, 16, 84, 25)
       .hasRange(93, 8, 16)
       .hasRange(102, 8, 17)
-      .hasRange(108, 16, 112, 26)
+      .hasRange(108, 16, 111, 29)
       .hasRange(138, 4, 16)
       .hasRange(161, 4, 13)
       .hasRange(166, 4, 168, 13)
       .hasRange(172, 0, 9);
+  }
+
+  @Test
+  void testRegion() {
+    List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeRegionDiagnostic");
+
+    assertThat(diagnostics).hasSize(0);
+
   }
 }

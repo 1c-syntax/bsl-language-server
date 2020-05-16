@@ -5,11 +5,25 @@ on:
     branches:
       - develop
       - master
+    paths:
+    - 'src/**'
+    - '.github/workflows/benchmark.yml'
+    - '.github/scripts/*.*'
+    - '*gradle*'
+    - 'gradle/wrapper/gradle-wrapper.properties'
+    - 'lombok.config'
   pull_request:
+    paths:
+    - 'src/**'
+    - '.github/workflows/benchmark.yml'
+    - '.github/scripts/*.*'
+    - '*gradle*'
+    - 'gradle/wrapper/gradle-wrapper.properties'
+    - 'lombok.config'
 
 jobs:
   Benchmark:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout project
         uses: actions/checkout@v2
@@ -23,7 +37,7 @@ jobs:
         run: ./gradlew jar
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: "3.7"
 

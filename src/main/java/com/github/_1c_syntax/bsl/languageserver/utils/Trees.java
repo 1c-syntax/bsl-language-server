@@ -74,7 +74,18 @@ public final class Trees {
   }
 
   public static List<ParseTree> getDescendants(ParseTree t) {
-    return org.antlr.v4.runtime.tree.Trees.getDescendants(t);
+    List<ParseTree> nodes = new ArrayList<>(t.getChildCount());
+    flatten(t, nodes);
+    return nodes;
+  }
+
+  private static void flatten(ParseTree t, List<ParseTree> flatList) {
+    flatList.add(t);
+
+    int n = t.getChildCount();
+    for (int i = 0; i < n; i++) {
+      flatten(t.getChild(i), flatList);
+    }
   }
 
   /**
@@ -211,17 +222,42 @@ public final class Trees {
   }
 
   /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды нужно типа
+   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
+   *
+   * @param tnc       - нода, для которой ищем родителя
+   * @param ruleindex - BSLParser.RULE_*
+   * @return tnc - если родитель не найден, вернет null
    */
   public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
-    if (tnc.getParent() == null) {
+    final var parent = tnc.getParent();
+    if (parent == null) {
       return null;
     }
 
-    if (getRuleIndex(tnc.getParent()) == ruleindex) {
-      return (BSLParserRuleContext) tnc.getParent();
+    if (getRuleIndex(parent) == ruleindex) {
+      return (BSLParserRuleContext) parent;
     } else {
-      return getRootParent((BSLParserRuleContext) tnc.getParent(), ruleindex);
+      return getRootParent((BSLParserRuleContext) parent, ruleindex);
+    }
+  }
+
+  /**
+   * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
+   *
+   * @param tnc       - нода, для которой ищем родителя
+   * @param indexes - Collection of BSLParser.RULE_*
+   * @return tnc - если родитель не найден, вернет null
+   */
+  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
+    final var parent = tnc.getParent();
+    if (parent == null) {
+      return null;
+    }
+
+    if (indexes.contains(getRuleIndex(parent))) {
+      return (BSLParserRuleContext) parent;
+    } else {
+      return getRootParent((BSLParserRuleContext) parent, indexes);
     }
   }
 

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -29,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -40,10 +42,10 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
   minutesToFix = 15,
-  activatedByDefault = false,
   tags = {
     DiagnosticTag.STANDARD
-  }
+  },
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern MODALITY_METHODS = Pattern.compile(
@@ -124,6 +126,13 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    var configuration = documentContext.getServerContext().getConfiguration();
+    // если использование синхронных вызовов разрешено (без предупреждение), то
+    // ничего не диагностируется
+    if (configuration.getSynchronousExtensionAndAddInCallUseMode() == UseMode.USE) {
+      return ctx;
+    }
+
     String methodName = ctx.methodName().getText();
     if (MODALITY_METHODS.matcher(methodName).matches()) {
       BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);

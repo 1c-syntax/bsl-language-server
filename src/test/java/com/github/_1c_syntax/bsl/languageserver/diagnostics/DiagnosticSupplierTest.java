@@ -368,16 +368,16 @@ class DiagnosticSupplierTest {
     // when
     lsConfiguration.getDiagnosticsOptions().setMode(Mode.ONLY);
     Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
-    rules.put("Typo", Either.forLeft(true));
+    rules.put("Typo", Either.forLeft(false));
     rules.put("TooManyReturns", Either.forLeft(true));
 
     lsConfiguration.getDiagnosticsOptions().setParameters(rules);
     List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
 
     assertThat(diagnostics)
-      .hasSize(2)
+      .hasSize(1)
       .flatExtracting(Object::getClass)
-      .contains(TypoDiagnostic.class)
+      .doesNotContain(TypoDiagnostic.class)
       .contains(TooManyReturnsDiagnostic.class)
     ;
   }
@@ -392,7 +392,7 @@ class DiagnosticSupplierTest {
     // when
     lsConfiguration.getDiagnosticsOptions().setMode(Mode.EXCEPT);
     Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
-    rules.put("Typo", Either.forLeft(true));
+    rules.put("Typo", Either.forLeft(false));
     rules.put("TooManyReturns", Either.forLeft(true));
 
     lsConfiguration.getDiagnosticsOptions().setParameters(rules);

@@ -42,9 +42,9 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
 
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(0, 1, 13)
-      .hasRange(10, 1, 23)
-      .hasRange(12, 1, 26)
+      .hasRange(0, 0, 2, 13)
+      .hasRange(10, 0, 15, 13)
+      .hasRange(12, 0, 14, 13)
     ;
 
   }
@@ -54,8 +54,8 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
 
     final DocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    final Diagnostic externalRegionDiagnostic = diagnostics.get(1);
-    final Diagnostic internalRegionDiagnostic = diagnostics.get(2);
+    final Diagnostic externalRegionDiagnostic = diagnostics.get(2);
+    final Diagnostic internalRegionDiagnostic = diagnostics.get(1);
 
     List<CodeAction> quickFixes = getQuickFixes(externalRegionDiagnostic);
     assertThat(quickFixes).hasSize(1);

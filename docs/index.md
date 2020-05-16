@@ -22,6 +22,8 @@
 * <a href="reporters">Репортеры</a>
 * <a href="diagnostics">Диагностики</a>
 * <a href="features">Дополнительные возможности</a>
+* [Часто задаваемые вопросы](faq.md)
+* [Системные требования](systemRequirements.md)
 * <a href="#thanks">Благодарности</a>
 
 <a id="capabilities"></a>
@@ -63,7 +65,7 @@ Commands:
 
 При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). Для взаимодействия используются stdin и stdout.
 
-По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `diagnosticLanguage` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
+По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр `language` в конфигурационном файле или вызвав событие `workspace/didChangeConfiguration`:
 
 <a id="analyze"></a>
 
@@ -82,6 +84,8 @@ Run analysis and get diagnostic info
   -q, --silent             Silent mode
   -r, --reporter=<keys>    Reporter key (console, junit, json, tslint, generic)
   -s, --srcDir=<path>      Source directory
+  -w, --workspaceDir=<path> 
+                           Workspace directory
 ```
 
 Для указания каталога расположения анализируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
