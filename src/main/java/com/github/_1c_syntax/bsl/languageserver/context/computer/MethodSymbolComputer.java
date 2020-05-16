@@ -43,11 +43,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
+
+  //подробная расшифровка использования этих директив компиляции приведена в комментариях в MethodSymbolComputerTest
+  private static final Set<Integer> specialCompilerDirectivesTokenTypes = Set.of(
+    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
   private final DocumentContext documentContext;
   private final List<MethodSymbol> methods = new ArrayList<>();
@@ -125,14 +131,18 @@ public final class MethodSymbolComputer
   }
 
   private static Optional<CompilerDirective> getCompilerDirective(List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts) {
-    final Optional<CompilerDirective> compilerDirective;
     if (compilerDirectiveContexts.isEmpty()) {
-      compilerDirective = Optional.empty();
-    } else {
-      var tokenType = compilerDirectiveContexts.get(0).getStop().getType();
-      compilerDirective = CompilerDirective.of(tokenType);
+      return Optional.empty();
     }
-    return compilerDirective;
+    var tokenType = compilerDirectiveContexts.stream()
+      .map(o -> (BSLParser.CompilerDirectiveContext) o)
+      .map(compilerDirectiveContext -> compilerDirectiveContext.getStop().getType())
+      .filter(specialCompilerDirectivesTokenTypes::contains)
+      .findAny()
+      .orElseGet(() -> compilerDirectiveContexts.get(0).getStop().getType());
+
+    return CompilerDirective.of(tokenType);
+
   }
 
   private MethodSymbol createMethodSymbol(

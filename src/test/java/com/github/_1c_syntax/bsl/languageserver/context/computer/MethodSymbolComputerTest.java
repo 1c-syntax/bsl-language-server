@@ -53,7 +53,7 @@ public class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(14);
+    assertThat(methods.size()).isEqualTo(18);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription().orElse(null)).isNull();
@@ -76,6 +76,16 @@ public class MethodSymbolComputerTest {
     assertThat(annotations).hasSize(2);
     assertThat(annotations.get(0)).isEqualTo(Annotation.CUSTOM);
     assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
+
+    methodSymbol = methods.get(15);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод16");
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
+    methodSymbol = methods.get(17);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод18");
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT_AT_SERVER);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -179,7 +189,7 @@ public class MethodSymbolComputerTest {
   @Test
   void testSeveralCompilerDirective() {
 
-    String module = "&НаКлиенте\n&НаСервереБезКонтекста\n" +
+    String module = "&НаКлиенте\n&НаСервере\n" +
       "Процедура Метод8()\n" +
       "КонецПроцедуры";
 
@@ -229,7 +239,7 @@ public class MethodSymbolComputerTest {
       "Процедура Метод11()\n" +
       "КонецПроцедуры";
 
-    checkCompilerDirective_AtClient_AndAnnotation_After(module);
+    checkCompilerDirective_for_AtClient_AndAnnotation_After(module);
   }
 
   @Test
@@ -239,7 +249,7 @@ public class MethodSymbolComputerTest {
       "Процедура Метод12()\n" +
       "КонецПроцедуры";
 
-    checkCompilerDirective_AtClient_AndAnnotation_After(module);
+    checkCompilerDirective_for_AtClient_AndAnnotation_After(module);
   }
 
   @Test
@@ -249,7 +259,18 @@ public class MethodSymbolComputerTest {
       "Функция Метод13()\n" +
       "КонецФункции";
 
-    checkCompilerDirective_AtClient_AndAnnotation_After(module);
+    checkCompilerDirective_for_AtClient_AndAnnotation_After(module);
+  }
+
+  private static void checkCompilerDirective_for_AtClient_AndAnnotation_After(String module) {
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    assertThat(methods).hasSize(1);
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(1);
+    assertThat(annotations.get(0)).isEqualTo(Annotation.AFTER);
   }
 
   @Test
@@ -270,6 +291,19 @@ public class MethodSymbolComputerTest {
     assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
   }
 
+  // есть определенные предпочтения при использовании &НаКлиентеНаСервереБезКонтекста в модуле упр.формы
+  // при ее использовании с другой директивой будет использоваться именно она
+  // например, порядок 1
+  //&НаКлиентеНаСервереБезКонтекста
+  //&НаСервереБезКонтекста
+  //показывает Сервер в отладчике и доступен серверный объект ТаблицаЗначений
+  // или порядок 2
+  //&НаСервереБезКонтекста
+  //&НаКлиентеНаСервереБезКонтекста
+  //аналогично
+  //т.е. порядок этих 2х директив не важен, все равно используется &НаКлиентеНаСервереБезКонтекста.
+  // проверял на 8.3.15
+
   @Test
   void testSeveralDirectivesWithoutContext() {
 
@@ -281,22 +315,72 @@ public class MethodSymbolComputerTest {
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     var methodSymbol = methods.get(0);
-    assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
-    var annotations = methodSymbol.getAnnotations();
-    assertThat(annotations).hasSize(2);
-    assertThat(annotations.get(0)).isEqualTo(Annotation.CUSTOM);
-    assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
   }
 
-  private static void checkCompilerDirective_AtClient_AndAnnotation_After(String module) {
+  @Test
+  void testSeveralDirectivesWithoutContextReverse() {
+
+    String module = "&НаКлиентеНаСервереБезКонтекста\n" +
+      "&НаСервереБезКонтекста\n" +
+      "Процедура Метод16()\n" +
+      "КонецПроцедуры\n";
+
     List<MethodSymbol> methods = getMethodSymbols(module);
 
-    assertThat(methods).hasSize(1);
     var methodSymbol = methods.get(0);
-    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
-    var annotations = methodSymbol.getAnnotations();
-    assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0)).isEqualTo(Annotation.AFTER);
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
+  }
+
+  // есть определенные предпочтения при использовании &НаКлиентеНаСервере в модуле команды
+  // при ее использовании с другой директивой будет использоваться именно она
+  //  проверял на 8.3.15
+  //порядок
+  //1
+  //&НаКлиентеНаСервере
+  //&НаКлиенте
+  //вызывает клиент при вызове метода с клиента
+  //вызывает сервер при вызове метода с сервера
+  //2
+  //&НаКлиенте
+  //&НаКлиентеНаСервере
+  //вызывает клиент при вызове метода с клиента
+  //вызывает сервер при вызове метода с сервера
+
+  @Test
+  void testSeveralDirectivesWithClient() {
+
+    String module = "&НаКлиентеНаСервере\n" +
+      "&НаКлиенте\n" +
+      "Процедура Метод17()\n" +
+      "КонецПроцедуры\n";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT_AT_SERVER);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
+  }
+
+  @Test
+  void testSeveralDirectivesWithClientReverse() {
+
+    String module = "&НаКлиенте\n" +
+      "&НаКлиентеНаСервере\n" +
+      "Процедура Метод18()\n" +
+      "КонецПроцедуры\n";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT_AT_SERVER);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
   }
 
   private static List<MethodSymbol> getMethodSymbols(String module) {
