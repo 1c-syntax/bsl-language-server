@@ -64,6 +64,18 @@ public class MethodSymbolComputerTest {
     assertThat(methods.get(1).getRegion().orElse(null).getName()).isEqualTo("ИмяОбласти");
     assertThat(methods.get(1).getDescription().orElse(null).getDescription()).isNotEmpty();
 
+    var methodSymbol = methods.get(5);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод6");
+    assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
+    methodSymbol = methods.get(13);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод14");
+    assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(2);
+    assertThat(annotations.get(0)).isEqualTo(Annotation.CUSTOM);
+    assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
   }
 
   @Test
@@ -137,14 +149,14 @@ public class MethodSymbolComputerTest {
   void testCompilerDirective() {
 
     String module = "&НаКлиенте\n" +
-      "Процедура Метод()\n" +
+      "Процедура Метод6()\n" +
       "КонецПроцедуры";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     assertThat(methods).hasSize(1);
     var methodSymbol = methods.get(0);
-    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getName()).isEqualTo("Метод6");
     assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
     assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
@@ -153,13 +165,13 @@ public class MethodSymbolComputerTest {
   void testCompilerDirectiveAtServerNoContext() {
 
     String module = "&НаСервереБезКонтекста\n" +
-      "Процедура Метод()\n" +
+      "Процедура Метод7()\n" +
       "КонецПроцедуры";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     var methodSymbol = methods.get(0);
-    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getName()).isEqualTo("Метод7");
     assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_SERVER_NO_CONTEXT);
     assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
@@ -168,13 +180,13 @@ public class MethodSymbolComputerTest {
   void testSeveralCompilerDirective() {
 
     String module = "&НаКлиенте\n&НаСервереБезКонтекста\n" +
-      "Процедура Метод()\n" +
+      "Процедура Метод8()\n" +
       "КонецПроцедуры";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     var methodSymbol = methods.get(0);
-    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getName()).isEqualTo("Метод8");
     assertThat(methodSymbol.getCompilerDirective().orElse(null)).isEqualTo(CompilerDirective.AT_CLIENT);
     assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
@@ -182,13 +194,13 @@ public class MethodSymbolComputerTest {
   @Test
   void testNonCompilerDirectiveAndNonAnnotation() {
 
-    String module = "Процедура Метод()\n" +
+    String module = "Процедура Метод9()\n" +
       "КонецПроцедуры";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     var methodSymbol = methods.get(0);
-    assertThat(methodSymbol.getName()).isEqualTo("Метод");
+    assertThat(methodSymbol.getName()).isEqualTo("Метод9");
     assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
     assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
@@ -197,7 +209,7 @@ public class MethodSymbolComputerTest {
   void testAnnotation() {
 
     String module = "&После\n" +
-      "Процедура Метод()\n" +
+      "Процедура Метод10()\n" +
       "КонецПроцедуры";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
@@ -214,7 +226,7 @@ public class MethodSymbolComputerTest {
   void testCompilerDirectiveAndAnnotation() {
 
     String module = "&НаКлиенте\n&После\n" +
-      "Процедура Метод()\n" +
+      "Процедура Метод11()\n" +
       "КонецПроцедуры";
 
     checkCompilerDirective_AtClient_AndAnnotation_After(module);
@@ -224,7 +236,7 @@ public class MethodSymbolComputerTest {
   void testCompilerDirectiveAndAnnotationOtherOrder() {
 
     String module = "&После\n&НаКлиенте\n" +
-      "Процедура Метод()\n" +
+      "Процедура Метод12()\n" +
       "КонецПроцедуры";
 
     checkCompilerDirective_AtClient_AndAnnotation_After(module);
@@ -234,7 +246,7 @@ public class MethodSymbolComputerTest {
   void testCompilerDirectiveAndAnnotationForFunction() {
 
     String module = "&НаКлиенте\n&После\n" +
-      "Функция Метод()\n" +
+      "Функция Метод13()\n" +
       "КонецФункции";
 
     checkCompilerDirective_AtClient_AndAnnotation_After(module);
@@ -245,8 +257,26 @@ public class MethodSymbolComputerTest {
 
     String module = "&Аннотация1\n" +
       "&Аннотация2\n" +
-      "Процедура Метод() Экспорт\n" +
+      "Процедура Метод14() Экспорт\n" +
       "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirective().isPresent()).isEqualTo(false);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(2);
+    assertThat(annotations.get(0)).isEqualTo(Annotation.CUSTOM);
+    assertThat(annotations.get(1)).isEqualTo(Annotation.CUSTOM);
+  }
+
+  @Test
+  void testSeveralDirectivesWithoutContext() {
+
+    String module = "&НаСервереБезКонтекста\n" +
+      "&НаКлиентеНаСервереБезКонтекста\n" +
+      "Процедура Метод15()\n" +
+      "КонецПроцедуры\n";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
 
