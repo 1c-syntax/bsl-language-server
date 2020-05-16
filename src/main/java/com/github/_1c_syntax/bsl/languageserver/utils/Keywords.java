@@ -151,6 +151,8 @@ public final class Keywords {
   public static final String EXECUTE_UP_RU = "ВЫПОЛНИТЬ";
   public static final String EXECUTE_EN = "Execute";
   public static final String EXECUTE_UP_EN = "EXECUTE";
+  public static final String EVAL_RU = "Вычислить";
+  public static final String EVAL_EN = "Eval";
   public static final String ADD_HANDLER_RU = "ДобавитьОбработчик";
   public static final String ADD_HANDLER_UP_RU = "ДОБАВИТЬОБРАБОТЧИК";
   public static final String ADD_HANDLER_EN = "AddHandler";

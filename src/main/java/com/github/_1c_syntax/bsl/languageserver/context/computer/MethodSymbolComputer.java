@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -142,7 +143,16 @@ public final class MethodSymbolComputer
     boolean function,
     boolean export,
     Optional<CompilerDirective> compilerDirective,
-    List<Annotation> annotation) {
+    List<Annotation> annotation
+  ) {
+    Optional<MethodDescription> description = createDescription(startNode.getSymbol());
+    boolean deprecated = description
+      .map(MethodDescription::isDeprecated)
+      .orElse(false);
+
+    String mdoRef = documentContext.getMdObject()
+      .map(MDObjectBase::getMdoRef)
+      .orElse("");
 
     return MethodSymbol.builder()
       .name(subName.getText())
@@ -150,7 +160,9 @@ public final class MethodSymbolComputer
       .subNameRange(Ranges.create(subName))
       .function(function)
       .export(export)
-      .description(createDescription(startNode.getSymbol()))
+      .description(description)
+      .deprecated(deprecated)
+      .mdoRef(mdoRef)
       .parameters(createParameters(paramList))
       .compilerDirective(compilerDirective)
       .annotations(annotation)

@@ -51,13 +51,12 @@ public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnosti
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    if (ctx.ENDFUNCTION_KEYWORD() == null
-      || Trees.treeContainsErrors(ctx)) {
+    if (ctx.ENDFUNCTION_KEYWORD() == null) {
       return ctx;
     }
 
     Collection<ParseTree> tokens = Trees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
-    if (tokens.isEmpty()) {
+    if (tokens.isEmpty() && !Trees.treeContainsErrors(ctx)) {
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
       diagnosticStorage.addDiagnostic(subName);
     }

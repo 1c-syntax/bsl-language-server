@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -60,15 +59,15 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
   @Override
   public ParseTree visitStatement(BSLParser.StatementContext ctx) {
 
-    if (Trees.treeContainsErrors(ctx)) {
-      return ctx;
-    }
+    if (ctx.preprocessor() == null
+      && ctx.SEMICOLON() == null
+      && ctx.getStop() != null) {
 
-    if (ctx.preprocessor() == null && ctx.SEMICOLON() == null) {
-      Token lastToken = ctx.getStop();
-      if (lastToken != null) {
-        diagnosticStorage.addDiagnostic(lastToken);
+      if (Trees.treeContainsErrors(ctx)) {
+        return ctx;
       }
+
+      diagnosticStorage.addDiagnostic(ctx.getStop());
     }
     return super.visitStatement(ctx);
   }

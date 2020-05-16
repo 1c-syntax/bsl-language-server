@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,7 +31,7 @@ import lombok.NoArgsConstructor;
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
  */
 @Data
-@AllArgsConstructor
+@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeLensOptions {

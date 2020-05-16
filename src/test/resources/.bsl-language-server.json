@@ -15,6 +15,9 @@
       "MethodSize": false
     }
   },
+  "documentLink": {
+    "useDevSite": true
+  },
   "traceLog": "build/.trace.log",
   "configurationRoot": "src/test/resources/metadata"
 }

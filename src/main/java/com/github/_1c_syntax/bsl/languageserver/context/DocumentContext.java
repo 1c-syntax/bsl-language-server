@@ -28,13 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticCompl
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
@@ -51,7 +51,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -187,32 +189,29 @@ public class DocumentContext {
     return supportVariants.getOrCompute();
   }
 
+  public Optional<MDObjectBase> getMdObject() {
+    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByURI().get(getUri()));
+  }
+
   public void rebuild(String content) {
     computeLock.lock();
-    clear();
+    clearSecondaryData();
     this.content = content;
     tokenizer = new Tokenizer(content);
     computeLock.unlock();
   }
 
   public void clearSecondaryData() {
+    computeLock.lock();
     content = null;
     contentList.clear();
     tokenizer = null;
 
-    if (symbolTree.isPresent()) {
-      getSymbolTree().getChildrenFlat().forEach(Symbol::clearParseTreeData);
-    }
     cognitiveComplexityData.clear();
     cyclomaticComplexityData.clear();
     metrics.clear();
     diagnosticIgnoranceData.clear();
-  }
-
-  private void clear() {
-    clearSecondaryData();
-
-    symbolTree.clear();
+    computeLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {
@@ -267,17 +266,11 @@ public class DocumentContext {
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
 
-    int ncloc = (int) getTokensFromDefaultChannel().stream()
-      .map(Token::getLine)
-      .distinct()
-      .count();
-
-    metricsTemp.setNcloc(ncloc);
-
     int[] nclocData = getTokensFromDefaultChannel().stream()
       .mapToInt(Token::getLine)
       .distinct().toArray();
     metricsTemp.setNclocData(nclocData);
+    metricsTemp.setNcloc(nclocData.length);
 
     metricsTemp.setCovlocData(computeCovlocData());
 
@@ -290,13 +283,11 @@ public class DocumentContext {
     }
     metricsTemp.setLines(lines);
 
-    int comments;
-    final List<Token> commentsUnboxed = getComments();
-    if (commentsUnboxed.isEmpty()) {
-      comments = 0;
-    } else {
-      comments = (int) commentsUnboxed.stream().map(Token::getLine).distinct().count();
-    }
+    int comments = (int) getComments()
+      .stream()
+      .map(Token::getLine)
+      .distinct()
+      .count();
     metricsTemp.setComments(comments);
 
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
@@ -311,7 +302,7 @@ public class DocumentContext {
   private int[] computeCovlocData() {
 
     return Trees.getDescendants(getAst()).stream()
-      .filter(node -> !(node instanceof TerminalNodeImpl))
+      .filter(Predicate.not(TerminalNodeImpl.class::isInstance))
       .filter(DocumentContext::mustCovered)
       .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
       .distinct().toArray();

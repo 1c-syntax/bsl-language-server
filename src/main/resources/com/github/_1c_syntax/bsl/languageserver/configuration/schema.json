@@ -26,6 +26,9 @@
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },
+                "CachedPublic": {
+                    "$ref": "parameters-schema.json#/definitions/CachedPublic"
+                },
                 "CanonicalSpellingKeywords": {
                     "$ref": "parameters-schema.json#/definitions/CanonicalSpellingKeywords"
                 },
@@ -46,6 +49,33 @@
                 },
                 "CommonModuleAssign": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleAssign"
+                },
+                "CommonModuleInvalidType": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
+                },
+                "CommonModuleNameCached": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
+                },
+                "CommonModuleNameClient": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameClient"
+                },
+                "CommonModuleNameClientServer": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameClientServer"
+                },
+                "CommonModuleNameFullAccess": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameFullAccess"
+                },
+                "CommonModuleNameGlobal": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameGlobal"
+                },
+                "CommonModuleNameGlobalClient": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameGlobalClient"
+                },
+                "CommonModuleNameServerCall": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameServerCall"
+                },
+                "CommonModuleNameWords": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleNameWords"
                 },
                 "CompilationDirectiveLost": {
                     "$ref": "parameters-schema.json#/definitions/CompilationDirectiveLost"
@@ -68,6 +98,9 @@
                 "DeletingCollectionItem": {
                     "$ref": "parameters-schema.json#/definitions/DeletingCollectionItem"
                 },
+                "DeprecatedAttributes8312": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedAttributes8312"
+                },
                 "DeprecatedCurrentDate": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedCurrentDate"
                 },
@@ -79,6 +112,9 @@
                 },
                 "DeprecatedMethods8310": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8310"
+                },
+                "DeprecatedMethods8317": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8317"
                 },
                 "DeprecatedTypeManagedForm": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedTypeManagedForm"
@@ -98,6 +134,12 @@
                 "ExcessiveAutoTestCheck": {
                     "$ref": "parameters-schema.json#/definitions/ExcessiveAutoTestCheck"
                 },
+                "ExecuteExternalCode": {
+                    "$ref": "parameters-schema.json#/definitions/ExecuteExternalCode"
+                },
+                "ExecuteExternalCodeInCommonModule": {
+                    "$ref": "parameters-schema.json#/definitions/ExecuteExternalCodeInCommonModule"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
@@ -106,6 +148,9 @@
                 },
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
+                },
+                "FunctionReturnsSamePrimitive": {
+                    "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
                 },
                 "FunctionShouldHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/FunctionShouldHaveReturn"
@@ -130,6 +175,9 @@
                 },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
+                },
+                "IsInRoleMethodDiagnostic": {
+                    "$ref": "parameters-schema.json#/definitions/IsInRoleMethodDiagnostic"
                 },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
@@ -251,6 +299,9 @@
                 "UnreachableCode": {
                     "$ref": "parameters-schema.json#/definitions/UnreachableCode"
                 },
+                "UnsafeSafeModeMethodCall": {
+                    "$ref": "parameters-schema.json#/definitions/UnsafeSafeModeMethodCall"
+                },
                 "UnusedLocalMethod": {
                     "$ref": "parameters-schema.json#/definitions/UnusedLocalMethod"
                 },
@@ -339,6 +390,26 @@
                     "type": "boolean",
                     "title": "Show cyclomatic complexity score above method definition.",
                     "default": true
+                }
+            }
+        },
+        "documentLink": {
+            "$id": "#/properties/documentLink",
+            "type": "object",
+            "title": "Document link configuration.",
+            "default": null,
+            "properties": {
+                "useDevSite": {
+                    "$id": "#/properties/useDevSite",
+                    "type": "boolean",
+                    "title": "Use develop version of site for documentation links.",
+                    "default": false
+                },
+                "siteRoot": {
+                    "$id": "#/properties/siteRoot",
+                    "type": "string",
+                    "title": "Root URL for documentation links.",
+                    "default": "https://1c-syntax.github.io/bsl-language-server"
                 }
             }
         },

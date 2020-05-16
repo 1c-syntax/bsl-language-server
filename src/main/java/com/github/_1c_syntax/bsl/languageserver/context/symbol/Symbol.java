@@ -41,9 +41,6 @@ public interface Symbol {
 
   List<Symbol> getChildren();
 
-  default void clearParseTreeData() {
-  }
-
   default Optional<Symbol> getRootParent() {
     return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
   }

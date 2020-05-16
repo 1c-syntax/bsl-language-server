@@ -77,7 +77,7 @@ dependencies {
 
     implementation("org.reflections", "reflections", "0.9.10")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "01cc1512e10b667a0ec3fdd2307ca0221bf52684") {
+    implementation("com.github.1c-syntax", "bsl-parser", "57e4b9574b") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -86,7 +86,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
 
-    implementation("com.github.1c-syntax", "utils", "0.2.1")
+    implementation("com.github.1c-syntax", "utils", "4034e83681b")
     implementation("com.github.1c-syntax", "mdclasses", "86be1579c4")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
