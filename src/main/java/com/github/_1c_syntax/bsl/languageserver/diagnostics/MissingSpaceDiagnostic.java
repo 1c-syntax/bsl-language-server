@@ -113,41 +113,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   public MissingSpaceDiagnostic(DiagnosticInfo info) {
     super(info);
-    mainMessage = this.info.getMessage();
-    indexWordLeftMsg = this.info.getResourceString("wordLeft");
-    indexWordRightMsg = this.info.getResourceString("wordRight");
-    indexWordLeftRightMsg = this.info.getResourceString("wordLeftAndRight");
-  }
-
-  private static String getRegularString(String string) {
-
-    if (string.isEmpty()) {
-      return "";
-    }
-
-    StringBuilder singleChar = new StringBuilder();
-    StringBuilder doubleChar = new StringBuilder();
-
-    String[] listOfString = string.trim().split(" ");
-
-    for (String s : listOfString) {
-      if (s.length() == 1) {
-        singleChar.append(s);
-      } else {
-        doubleChar.append("|(?:").append(s).append(")");
-      }
-    }
-
-    return "[\\Q" + singleChar + "\\E]" + doubleChar;
-  }
-
-  private static Pattern compilePattern(String string) {
-
-    if (string.isEmpty()) {
-      return null;
-    }
-
-    return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
   @Override
@@ -199,29 +164,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     return diagnosticStorage.getDiagnostics();
   }
 
-  private void checkLeftRight(Token t, boolean noSpaceLeft, boolean noSpaceRight) {
-
-    String errorMessage = null;
-    if (noSpaceLeft && !noSpaceRight){
-      errorMessage = indexWordLeftMsg;
-    } else {
-      if (!noSpaceLeft && noSpaceRight) {
-        errorMessage = indexWordRightMsg;
-      } else {
-        if (noSpaceLeft) {
-          errorMessage = indexWordLeftRightMsg;
-        }
-      }
-    }
-    addDiagnostic(t, mainMessage, errorMessage);
-  }
-
-  private void addDiagnostic(Token t, String mainMessage, String errorMessage) {
-    if (errorMessage != null){
-      diagnosticStorage.addDiagnostic(t, getErrorMessage(mainMessage, errorMessage, t.getText()));
-    }
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
     if (configuration == null) {
@@ -246,6 +188,100 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     listForCheckLeftAndRight = getRegularString(listLRParam);
     patternLr = compilePattern(listForCheckLeftAndRight);
 
+  }
+
+  @Override
+  public List<CodeAction> getQuickFixes(
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+
+    List<TextEdit> textEdits = new ArrayList<>();
+
+    diagnostics.forEach((Diagnostic diagnostic) -> {
+      String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
+
+      // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
+      Boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
+      Boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
+
+      Range range = diagnostic.getRange();
+
+      if (Boolean.TRUE.equals(missedLeft)) {
+        TextEdit textEdit = new TextEdit(
+          new Range(range.getStart(), range.getStart()),
+          " ");
+        textEdits.add(textEdit);
+      }
+      if (Boolean.TRUE.equals(missedRight)) {
+        TextEdit textEdit = new TextEdit(
+          new Range(range.getEnd(), range.getEnd()),
+          " ");
+        textEdits.add(textEdit);
+      }
+    });
+
+    return CodeActionProvider.createCodeActions(
+      textEdits,
+      info.getResourceString("quickFixMessage"),
+      documentContext.getUri(),
+      diagnostics
+    );
+  }
+
+  private void checkLeftRight(Token t, boolean noSpaceLeft, boolean noSpaceRight) {
+
+    String errorMessage = null;
+    if (noSpaceLeft && !noSpaceRight){
+      errorMessage = indexWordLeftMsg;
+    } else {
+      if (!noSpaceLeft && noSpaceRight) {
+        errorMessage = indexWordRightMsg;
+      } else {
+        if (noSpaceLeft) {
+          errorMessage = indexWordLeftRightMsg;
+        }
+      }
+    }
+    addDiagnostic(t, mainMessage, errorMessage);
+  }
+
+  private void addDiagnostic(Token t, String mainMessage, String errorMessage) {
+    if (errorMessage != null){
+      diagnosticStorage.addDiagnostic(t, getErrorMessage(mainMessage, errorMessage, t.getText()));
+    }
+  }
+
+  private static String getRegularString(String string) {
+
+    if (string.isEmpty()) {
+      return "";
+    }
+
+    StringBuilder singleChar = new StringBuilder();
+    StringBuilder doubleChar = new StringBuilder();
+
+    String[] listOfString = string.trim().split(" ");
+
+    for (String s : listOfString) {
+      if (s.length() == 1) {
+        singleChar.append(s);
+      } else {
+        doubleChar.append("|(?:").append(s).append(")");
+      }
+    }
+
+    return "[\\Q" + singleChar + "\\E]" + doubleChar;
+  }
+
+  private static Pattern compilePattern(String string) {
+
+    if (string.isEmpty()) {
+      return null;
+    }
+
+    return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
   private boolean noSpaceLeft(List<Token> tokens, Token t) {
@@ -299,45 +335,5 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private String getErrorMessage(String formatString, String errorMessage, String tokenText) {
     return String.format(formatString, errorMessage, tokenText).intern();
-  }
-
-  @Override
-  public List<CodeAction> getQuickFixes(
-    List<Diagnostic> diagnostics,
-    CodeActionParams params,
-    DocumentContext documentContext
-  ) {
-
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
-
-      // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
-      Boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
-      Boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
-
-      Range range = diagnostic.getRange();
-
-      if (Boolean.TRUE.equals(missedLeft)) {
-        TextEdit textEdit = new TextEdit(
-          new Range(range.getStart(), range.getStart()),
-          " ");
-        textEdits.add(textEdit);
-      }
-      if (Boolean.TRUE.equals(missedRight)) {
-        TextEdit textEdit = new TextEdit(
-          new Range(range.getEnd(), range.getEnd()),
-          " ");
-        textEdits.add(textEdit);
-      }
-    });
-
-    return CodeActionProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
   }
 }
