@@ -106,10 +106,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   private @Nullable Pattern patternL = compilePattern(listForCheckLeft);
   private @Nullable Pattern patternR = compilePattern(listForCheckRight);
   private @Nullable Pattern patternLr = compilePattern(listForCheckLeftAndRight);
-  private final String mainMessage;
-  private final String indexWordLeftMsg;
-  private final String indexWordRightMsg;
-  private final String indexWordLeftRightMsg;
+  private String mainMessage;
+  private String indexWordLeftMsg;
+  private String indexWordRightMsg;
+  private String indexWordLeftRightMsg;
 
   public MissingSpaceDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -121,6 +121,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     if (patternL == null && patternR == null && patternLr == null){
       return Collections.emptyList();
     }
+
+    mainMessage = this.info.getMessage();
+    indexWordLeftMsg = this.info.getResourceString("wordLeft");
+    indexWordRightMsg = this.info.getResourceString("wordRight");
+    indexWordLeftRightMsg = this.info.getResourceString("wordLeftAndRight");
 
     diagnosticStorage.clearDiagnostics();
 
