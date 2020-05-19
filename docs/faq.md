@@ -28,7 +28,7 @@
 `BSL Language Server` может быть использован с любым приложением, имеющим реализацию LSP клиента. Проверенные подключения:
 * плагин для [VS code](https://github.com/1c-syntax/vsc-language-1c-bsl/);
 * дополнительная утилита для Конфигуратора [Phoenix BSL](https://github.com/otymko/phoenixbsl);
-* плагин для Sublime Text [https://github.com/sublimelsp/LSP].
+* плагин для [Sublime Text](https://github.com/sublimelsp/LSP).
 
 Так же через прямой импорт `BSL Language Server` работают:
 * плагин для [1C:Enterprise development tools](https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator) (собственная реализация, без LSP);
