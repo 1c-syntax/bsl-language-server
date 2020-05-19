@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1589546782800,
+  "lastUpdate": 1589886680004,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3255,6 +3255,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7584098112351798",
             "extra": "mean: 51.32477037111918 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "bbbda213f8c2a9b9b66c8209daa7a88c80c7eb9d",
+          "message": "Очистка символьного дерева при перестройке контекста",
+          "timestamp": "2020-05-19T13:59:11+03:00",
+          "tree_id": "6450d192883fba3232ac6f0a63dd1e7ae751232b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bbbda213f8c2a9b9b66c8209daa7a88c80c7eb9d"
+        },
+        "date": 1589886676808,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 52.93542687098185,
+            "unit": "sec",
+            "range": "stddev: 2.2480661391371486",
+            "extra": "mean: 52.93542687098185 sec\nrounds: 3"
           }
         ]
       }
