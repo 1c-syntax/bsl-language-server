@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 
 class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<DeprecatedMethodCallDiagnostic> {
   DeprecatedMethodCallDiagnosticTest() {
@@ -36,11 +37,17 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
   @Test
   void test() {
 
+    initServerContext(PATH_TO_METADATA);
+
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(6, 0, 6, 20);
+      .hasRange(1, 18, 1, 37)
+      .hasRange(4, 18, 4, 35)
+      .hasRange(7, 22, 7, 39)
+      .hasRange(10, 23, 10, 40)
+    ;
 
   }
 }

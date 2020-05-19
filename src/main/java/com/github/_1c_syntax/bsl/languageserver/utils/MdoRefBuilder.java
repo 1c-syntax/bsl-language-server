@@ -23,25 +23,43 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.tree.ParseTree;
+
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @UtilityClass
 public class MdoRefBuilder {
 
   public String getMdoRef(DocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
-    String mdoRef = "";
+    AtomicReference<String> mdoRef = new AtomicReference<>("");
 
-    if (callStatement.IDENTIFIER() != null) {
-      var commonModuleName = callStatement.IDENTIFIER().getText();
-      var commonModule = documentContext.getServerContext()
-        .getConfiguration()
-        .getCommonModule(commonModuleName);
-      if (commonModule.isPresent()) {
-        mdoRef = commonModule.orElseThrow().getMdoRef();
-      }
-    }
+    Optional.ofNullable(callStatement.IDENTIFIER())
+      .map(ParseTree::getText)
+      .flatMap(commonModuleName -> getCommonModuleMdoRef(documentContext, commonModuleName))
+      .ifPresent(mdoRef::set);
 
-    return mdoRef;
+    return mdoRef.get();
+  }
+
+  public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
+    AtomicReference<String> mdoRef = new AtomicReference<>("");
+
+    Optional.ofNullable(complexIdentifier.IDENTIFIER())
+      .map(ParseTree::getText)
+      .flatMap(commonModuleName -> getCommonModuleMdoRef(documentContext, commonModuleName))
+      .ifPresent(mdoRef::set);
+
+    return mdoRef.get();
+  }
+
+  private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
+    return documentContext.getServerContext()
+      .getConfiguration()
+      .getCommonModule(commonModuleName)
+      .map(CommonModule::getMdoRef);
   }
 
 }

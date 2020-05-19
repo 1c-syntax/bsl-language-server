@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.CheckForNull;
+import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -52,17 +53,8 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
-    if (ctx.globalMethodCall() != null) {
-      return super.visitCallStatement(ctx);
-    }
-
     String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
     if (mdoRef.isEmpty()) {
-      return super.visitCallStatement(ctx);
-    }
-
-    var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
-    if (documentContexts == null) {
       return super.visitCallStatement(ctx);
     }
 
@@ -71,6 +63,32 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitCallStatement(ctx);
     }
 
+    checkDeprecatedCall(mdoRef, methodName);
+
+    return super.visitCallStatement(ctx);
+  }
+
+
+  @Override
+  public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+
+    String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+    if (mdoRef.isEmpty()) {
+      return super.visitComplexIdentifier(ctx);
+    }
+
+    Token methodName = getMethodName(ctx);
+    if (methodName == null) {
+      return super.visitComplexIdentifier(ctx);
+    }
+
+    checkDeprecatedCall(mdoRef, methodName);
+
+    return super.visitComplexIdentifier(ctx);
+  }
+
+  private void checkDeprecatedCall(String mdoRef, Token methodName) {
+    var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
     String methodNameText = methodName.getText();
 
     documentContexts.values().stream()
@@ -80,17 +98,28 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
       .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName));
-
-    return super.visitCallStatement(ctx);
   }
 
-  @CheckForNull
   private static Token getMethodName(BSLParser.CallStatementContext ctx) {
-
     var modifiers = ctx.modifier();
     if (modifiers.isEmpty()) {
       return getMethodName(ctx.accessCall());
     } else {
+      return getMethodName(modifiers);
+    }
+  }
+
+  private static Token getMethodName(BSLParser.AccessCallContext ctx) {
+    return ctx.methodCall().methodName().getStart();
+  }
+
+  private static Token getMethodName(BSLParser.ComplexIdentifierContext ctx) {
+    return getMethodName(ctx.modifier());
+  }
+
+  @CheckForNull
+  private static Token getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
+    if (!modifiers.isEmpty()) {
       // пока только общие модули
       BSLParser.ModifierContext firstModifier = modifiers.get(0);
       if (firstModifier.accessCall() != null) {
@@ -99,9 +128,5 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     return null;
-  }
-
-  private static Token getMethodName(BSLParser.AccessCallContext ctx) {
-    return ctx.methodCall().methodName().getStart();
   }
 }
