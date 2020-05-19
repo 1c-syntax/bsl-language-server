@@ -196,6 +196,7 @@ public class DocumentContext {
   public void rebuild(String content) {
     computeLock.lock();
     clearSecondaryData();
+    symbolTree.clear();
     this.content = content;
     tokenizer = new Tokenizer(content);
     computeLock.unlock();
