@@ -274,6 +274,51 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    Как изменить язык диагностических сообщений?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    Как увеличить максимальную длину строки в диагностике Ограничение на длину строки?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lens" class="md-nav__link">
+    Как отключить Lens о когнитивной диагностики?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    Я считаю, что диагностика работает неправильно. Что делать?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bsl-language-server-sonarqube" class="md-nav__link">
+    BSL Language Server и SonarQube плагин это одно и тоже?
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -294,31 +339,19 @@
                 
                 <h1 id="_1">Часто задаваемые вопросы<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>В данном разделе собраны наиболее часто возникающие вопросы и ответы на них.</p>
-<ol>
-<li>Как изменить язык диагностических сообщений?</li>
-</ol>
+<h2 id="_2">Как изменить язык диагностических сообщений?<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Для изменения языка выводимых сообщений с русского (по умолчанию) на английский можно с помощью конфигурационного файла. О возможностях конфигурирования можно узнать в <a href="../features/ConfigurationFile/">описании конфигурационного файла</a></p>
-<ol>
-<li>Как увеличить максимальную длину строки в диагностике <code>Ограничение на длину строки</code>?</li>
-</ol>
+<h2 id="_3">Как увеличить максимальную длину строки в диагностике <code>Ограничение на длину строки</code>?<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Все диагностики имеет страницу с описанием в разделе <code>Диагностики</code>, например интересующая <a href="../diagnostics/LineLength/">Ограничение на длину строки</a>. Если диагностика может менять свое поведение, то на странице с описанием будут присутствовать параметры с описанием, на что они влияют. В данном случае - параметр <code>maxLineLength</code> как раз и отвечает за максимальную длину строки.</p>
-<ol>
-<li>Как отключить Lens о когнитивной диагностики?</li>
-</ol>
+<h2 id="lens">Как отключить Lens о когнитивной диагностики?<a class="headerlink" href="#lens" title="Permanent link">&para;</a></h2>
 <p>Для отключения <code>линзы</code> с информацией о когнитивной сложности стоит воспользоваться конфигурационным файлом, в котором для параметра <code>showCognitiveComplexity</code> установить значение <code>false</code>. О возможностях конфигурирования можно узнать в <a href="../features/ConfigurationFile/">описании конфигурационного файла</a></p>
-<ol>
-<li>Я считаю, что диагностика работает неправильно. Что делать?</li>
-</ol>
+<h2 id="_4">Я считаю, что диагностика работает неправильно. Что делать?<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>В случае сомнения (или уверенности) в том, что диагностика работает неверно есть два пути</p>
 <ul>
 <li>обратиться в чате <a href="https://t.me/bsl_language_server">telegram</a> с ситуацией, возможно все-таки ошибки нет</li>
-<li>
-<p>создать ишью (<a href="https://github.com/1c-syntax/bsl-language-server/issues">issue</a>) в репозитории проекта соответствующего типа, куда приложить описание ошибки и, очень желательно, примеры кода, где диагностика работает неверно.</p>
-</li>
-<li>
-<p><code>BSL Language Server</code> и SonarQube плагин это одно и тоже?</p>
-</li>
+<li>создать ишью (<a href="https://github.com/1c-syntax/bsl-language-server/issues">issue</a>) в репозитории проекта соответствующего типа, куда приложить описание ошибки и, очень желательно, примеры кода, где диагностика работает неверно.</li>
 </ul>
+<h2 id="bsl-language-server-sonarqube"><code>BSL Language Server</code> и SonarQube плагин это одно и тоже?<a class="headerlink" href="#bsl-language-server-sonarqube" title="Permanent link">&para;</a></h2>
 <p><code>BSL Language Server</code> является самостоятельным приложением, реализацией серверной части протокола LSP. Плагин для SonarQube использует <code>BSL Language Server</code> для выполнения анализа исходного кода языка BSL (конфигурации 1С, скрипты 1Scipt и OSWeb).</p>
 <p><code>BSL Language Server</code> может быть использован с любым приложением, имеющим реализацию LSP клиента. Проверенные подключения:
 * плагин для <a href="https://github.com/1c-syntax/vsc-language-1c-bsl/">VS code</a>;
