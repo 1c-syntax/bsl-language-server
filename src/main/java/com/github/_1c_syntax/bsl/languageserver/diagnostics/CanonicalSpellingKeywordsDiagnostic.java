@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -71,86 +70,86 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
     Map<Integer, List<String>> result = new HashMap<>();
 
-    result.put(BSLParser.IF_KEYWORD, makeListKeywords(Keywords.IF_RU, Keywords.IF_EN));
-    result.put(BSLParser.THEN_KEYWORD, makeListKeywords(Keywords.THEN_RU, Keywords.THEN_EN));
-    result.put(BSLParser.ELSE_KEYWORD, makeListKeywords(Keywords.ELSE_RU, Keywords.ELSE_EN));
-    result.put(BSLParser.ELSIF_KEYWORD, makeListKeywords(Keywords.ELSIF_RU, Keywords.ELSIF_EN));
-    result.put(BSLParser.ENDIF_KEYWORD, makeListKeywords(Keywords.ENDIF_RU, Keywords.ENDIF_EN));
-    result.put(BSLParser.FOR_KEYWORD, makeListKeywords(Keywords.FOR_RU, Keywords.FOR_EN));
-    result.put(BSLParser.EACH_KEYWORD, makeListKeywords(
+    result.put(BSLParser.IF_KEYWORD, List.of(Keywords.IF_RU, Keywords.IF_EN));
+    result.put(BSLParser.THEN_KEYWORD, List.of(Keywords.THEN_RU, Keywords.THEN_EN));
+    result.put(BSLParser.ELSE_KEYWORD, List.of(Keywords.ELSE_RU, Keywords.ELSE_EN));
+    result.put(BSLParser.ELSIF_KEYWORD, List.of(Keywords.ELSIF_RU, Keywords.ELSIF_EN));
+    result.put(BSLParser.ENDIF_KEYWORD, List.of(Keywords.ENDIF_RU, Keywords.ENDIF_EN));
+    result.put(BSLParser.FOR_KEYWORD, List.of(Keywords.FOR_RU, Keywords.FOR_EN));
+    result.put(BSLParser.EACH_KEYWORD, List.of(
       Keywords.EACH_RU, Keywords.EACH_LO_RU, Keywords.EACH_EN, Keywords.EACH_LO_EN));
-    result.put(BSLParser.IN_KEYWORD, makeListKeywords(Keywords.IN_RU, Keywords.IN_EN));
-    result.put(BSLParser.DO_KEYWORD, makeListKeywords(Keywords.DO_RU, Keywords.DO_EN));
-    result.put(BSLParser.WHILE_KEYWORD, makeListKeywords(Keywords.WHILE_RU, Keywords.WHILE_EN));
-    result.put(BSLParser.BREAK_KEYWORD, makeListKeywords(Keywords.BREAK_RU, Keywords.BREAK_EN));
-    result.put(BSLParser.CONTINUE_KEYWORD, makeListKeywords(Keywords.CONTINUE_RU, Keywords.CONTINUE_EN));
-    result.put(BSLParser.ENDDO_KEYWORD, makeListKeywords(Keywords.END_DO_RU, Keywords.END_DO_EN));
-    result.put(BSLParser.TO_KEYWORD, makeListKeywords(Keywords.TO_RU, Keywords.TO_EN));
-    result.put(BSLParser.PROCEDURE_KEYWORD, makeListKeywords(Keywords.PROCEDURE_RU, Keywords.PROCEDURE_EN));
-    result.put(BSLParser.VAL_KEYWORD, makeListKeywords(Keywords.VAL_RU, Keywords.VAL_EN));
-    result.put(BSLParser.EXPORT_KEYWORD, makeListKeywords(Keywords.EXPORT_RU, Keywords.EXPORT_EN));
-    result.put(BSLParser.VAR_KEYWORD, makeListKeywords(Keywords.VAR_RU, Keywords.VAR_EN));
-    result.put(BSLParser.TRY_KEYWORD, makeListKeywords(Keywords.TRY_RU, Keywords.TRY_EN));
-    result.put(BSLParser.EXECUTE_KEYWORD, makeListKeywords(Keywords.EXECUTE_RU, Keywords.EXECUTE_EN));
-    result.put(BSLParser.RETURN_KEYWORD, makeListKeywords(Keywords.RETURN_RU, Keywords.RETURN_EN));
-    result.put(BSLParser.TRUE, makeListKeywords(Keywords.TRUE_RU, Keywords.TRUE_EN));
-    result.put(BSLParser.EXCEPT_KEYWORD, makeListKeywords(Keywords.EXCEPT_RU, Keywords.EXCEPT_EN));
-    result.put(BSLParser.RAISE_KEYWORD, makeListKeywords(Keywords.RAISE_RU, Keywords.RAISE_EN));
-    result.put(BSLParser.ENDTRY_KEYWORD, makeListKeywords(Keywords.END_TRY_RU, Keywords.END_TRY_EN));
-    result.put(BSLParser.ENDPROCEDURE_KEYWORD, makeListKeywords(Keywords.END_PROCEDURE_RU, Keywords.END_PROCEDURE_EN));
-    result.put(BSLParser.FUNCTION_KEYWORD, makeListKeywords(Keywords.FUNCTION_RU, Keywords.FUNCTION_EN));
-    result.put(BSLParser.ENDFUNCTION_KEYWORD, makeListKeywords(Keywords.END_FUNCTION_RU, Keywords.END_FUNCTION_EN));
-    result.put(BSLParser.FALSE, makeListKeywords(Keywords.FALSE_RU, Keywords.FALSE_EN));
-    result.put(BSLParser.ADDHANDLER_KEYWORD, makeListKeywords(Keywords.ADD_HANDLER_RU, Keywords.ADD_HANDLER_EN));
-    result.put(BSLParser.REMOVEHANDLER_KEYWORD, makeListKeywords(
+    result.put(BSLParser.IN_KEYWORD, List.of(Keywords.IN_RU, Keywords.IN_EN));
+    result.put(BSLParser.DO_KEYWORD, List.of(Keywords.DO_RU, Keywords.DO_EN));
+    result.put(BSLParser.WHILE_KEYWORD, List.of(Keywords.WHILE_RU, Keywords.WHILE_EN));
+    result.put(BSLParser.BREAK_KEYWORD, List.of(Keywords.BREAK_RU, Keywords.BREAK_EN));
+    result.put(BSLParser.CONTINUE_KEYWORD, List.of(Keywords.CONTINUE_RU, Keywords.CONTINUE_EN));
+    result.put(BSLParser.ENDDO_KEYWORD, List.of(Keywords.END_DO_RU, Keywords.END_DO_EN));
+    result.put(BSLParser.TO_KEYWORD, List.of(Keywords.TO_RU, Keywords.TO_EN));
+    result.put(BSLParser.PROCEDURE_KEYWORD, List.of(Keywords.PROCEDURE_RU, Keywords.PROCEDURE_EN));
+    result.put(BSLParser.VAL_KEYWORD, List.of(Keywords.VAL_RU, Keywords.VAL_EN));
+    result.put(BSLParser.EXPORT_KEYWORD, List.of(Keywords.EXPORT_RU, Keywords.EXPORT_EN));
+    result.put(BSLParser.VAR_KEYWORD, List.of(Keywords.VAR_RU, Keywords.VAR_EN));
+    result.put(BSLParser.TRY_KEYWORD, List.of(Keywords.TRY_RU, Keywords.TRY_EN));
+    result.put(BSLParser.EXECUTE_KEYWORD, List.of(Keywords.EXECUTE_RU, Keywords.EXECUTE_EN));
+    result.put(BSLParser.RETURN_KEYWORD, List.of(Keywords.RETURN_RU, Keywords.RETURN_EN));
+    result.put(BSLParser.TRUE, List.of(Keywords.TRUE_RU, Keywords.TRUE_EN));
+    result.put(BSLParser.EXCEPT_KEYWORD, List.of(Keywords.EXCEPT_RU, Keywords.EXCEPT_EN));
+    result.put(BSLParser.RAISE_KEYWORD, List.of(Keywords.RAISE_RU, Keywords.RAISE_EN));
+    result.put(BSLParser.ENDTRY_KEYWORD, List.of(Keywords.END_TRY_RU, Keywords.END_TRY_EN));
+    result.put(BSLParser.ENDPROCEDURE_KEYWORD, List.of(Keywords.END_PROCEDURE_RU, Keywords.END_PROCEDURE_EN));
+    result.put(BSLParser.FUNCTION_KEYWORD, List.of(Keywords.FUNCTION_RU, Keywords.FUNCTION_EN));
+    result.put(BSLParser.ENDFUNCTION_KEYWORD, List.of(Keywords.END_FUNCTION_RU, Keywords.END_FUNCTION_EN));
+    result.put(BSLParser.FALSE, List.of(Keywords.FALSE_RU, Keywords.FALSE_EN));
+    result.put(BSLParser.ADDHANDLER_KEYWORD, List.of(Keywords.ADD_HANDLER_RU, Keywords.ADD_HANDLER_EN));
+    result.put(BSLParser.REMOVEHANDLER_KEYWORD, List.of(
       Keywords.REMOVE_HANDLER_RU, Keywords.REMOVE_HANDLER_EN));
-    result.put(BSLParser.GOTO_KEYWORD, makeListKeywords(Keywords.GOTO_RU, Keywords.GOTO_EN));
-    result.put(BSLParser.AND_KEYWORD, makeListKeywords(
+    result.put(BSLParser.GOTO_KEYWORD, List.of(Keywords.GOTO_RU, Keywords.GOTO_EN));
+    result.put(BSLParser.AND_KEYWORD, List.of(
       Keywords.AND_RU, Keywords.AND_UP_EN, Keywords.AND_EN));
-    result.put(BSLParser.OR_KEYWORD, makeListKeywords(
+    result.put(BSLParser.OR_KEYWORD, List.of(
       Keywords.OR_RU, Keywords.OR_UP_RU, Keywords.OR_EN, Keywords.OR_UP_EN));
-    result.put(BSLParser.NOT_KEYWORD, makeListKeywords(
+    result.put(BSLParser.NOT_KEYWORD, List.of(
       Keywords.NOT_RU, Keywords.NOT_UP_RU, Keywords.NOT_EN, Keywords.NOT_UP_EN));
-    result.put(BSLParser.NEW_KEYWORD, makeListKeywords(Keywords.NEW_RU, Keywords.NEW_EN));
-    result.put(BSLParser.UNDEFINED, makeListKeywords(Keywords.UNDEFINED_RU, Keywords.UNDEFINED_EN));
-    result.put(BSLParser.PREPROC_REGION, makeListKeywords(Keywords.REGION_RU, Keywords.REGION_EN));
-    result.put(BSLParser.PREPROC_END_REGION, makeListKeywords(Keywords.ENDREGION_RU, Keywords.ENDREGION_EN));
-    result.put(BSLParser.PREPROC_IF_KEYWORD, makeListKeywords(Keywords.IF_RU, Keywords.IF_EN));
-    result.put(BSLParser.PREPROC_THEN_KEYWORD, makeListKeywords(Keywords.THEN_RU, Keywords.THEN_EN));
-    result.put(BSLParser.PREPROC_ELSIF_KEYWORD, makeListKeywords(Keywords.ELSIF_RU, Keywords.ELSIF_EN));
-    result.put(BSLParser.PREPROC_ELSE_KEYWORD, makeListKeywords(Keywords.ELSE_RU, Keywords.ELSE_EN));
-    result.put(BSLParser.PREPROC_ENDIF_KEYWORD, makeListKeywords(Keywords.ENDIF_RU, Keywords.ENDIF_EN));
-    result.put(BSLParser.PREPROC_OR_KEYWORD, makeListKeywords(
+    result.put(BSLParser.NEW_KEYWORD, List.of(Keywords.NEW_RU, Keywords.NEW_EN));
+    result.put(BSLParser.UNDEFINED, List.of(Keywords.UNDEFINED_RU, Keywords.UNDEFINED_EN));
+    result.put(BSLParser.PREPROC_REGION, List.of(Keywords.REGION_RU, Keywords.REGION_EN));
+    result.put(BSLParser.PREPROC_END_REGION, List.of(Keywords.ENDREGION_RU, Keywords.ENDREGION_EN));
+    result.put(BSLParser.PREPROC_IF_KEYWORD, List.of(Keywords.IF_RU, Keywords.IF_EN));
+    result.put(BSLParser.PREPROC_THEN_KEYWORD, List.of(Keywords.THEN_RU, Keywords.THEN_EN));
+    result.put(BSLParser.PREPROC_ELSIF_KEYWORD, List.of(Keywords.ELSIF_RU, Keywords.ELSIF_EN));
+    result.put(BSLParser.PREPROC_ELSE_KEYWORD, List.of(Keywords.ELSE_RU, Keywords.ELSE_EN));
+    result.put(BSLParser.PREPROC_ENDIF_KEYWORD, List.of(Keywords.ENDIF_RU, Keywords.ENDIF_EN));
+    result.put(BSLParser.PREPROC_OR_KEYWORD, List.of(
       Keywords.OR_RU, Keywords.OR_UP_RU, Keywords.OR_EN, Keywords.OR_UP_EN));
-    result.put(BSLParser.PREPROC_AND_KEYWORD, makeListKeywords(
+    result.put(BSLParser.PREPROC_AND_KEYWORD, List.of(
       Keywords.AND_RU, Keywords.AND_EN, Keywords.AND_UP_EN));
-    result.put(BSLParser.PREPROC_NOT_KEYWORD, makeListKeywords(
+    result.put(BSLParser.PREPROC_NOT_KEYWORD, List.of(
       Keywords.NOT_RU, Keywords.NOT_UP_RU, Keywords.NOT_EN, Keywords.NOT_UP_EN));
-    result.put(BSLParser.PREPROC_SERVER_SYMBOL, makeListKeywords(Keywords.SERVER_RU, Keywords.SERVER_EN));
-    result.put(BSLParser.PREPROC_CLIENT_SYMBOL, makeListKeywords(Keywords.CLIENT_RU, Keywords.CLIENT_EN));
-    result.put(BSLParser.PREPROC_MOBILEAPPCLIENT_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_SERVER_SYMBOL, List.of(Keywords.SERVER_RU, Keywords.SERVER_EN));
+    result.put(BSLParser.PREPROC_CLIENT_SYMBOL, List.of(Keywords.CLIENT_RU, Keywords.CLIENT_EN));
+    result.put(BSLParser.PREPROC_MOBILEAPPCLIENT_SYMBOL, List.of(
       Keywords.MOBILE_APP_CLIENT_RU, Keywords.MOBILE_APP_CLIENT_EN));
-    result.put(BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_MOBILEAPPSERVER_SYMBOL, List.of(
       Keywords.MOBILE_APP_SERVER_RU, Keywords.MOBILE_APP_SERVER_EN));
-    result.put(BSLParser.PREPROC_MOBILECLIENT_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_MOBILECLIENT_SYMBOL, List.of(
       Keywords.MOBILE_CLIENT_RU, Keywords.MOBILE_CLIENT_EN));
-    result.put(BSLParser.PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_THICKCLIENTORDINARYAPPLICATION_SYMBOL, List.of(
       Keywords.THICK_CLIENT_ORDINARY_APPLICATION_RU, Keywords.THICK_CLIENT_ORDINARY_APPLICATION_EN));
-    result.put(BSLParser.PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_THICKCLIENTMANAGEDAPPLICATION_SYMBOL, List.of(
       Keywords.THICK_CLIENT_MANAGED_APPLICATION_RU, Keywords.THICK_CLIENT_MANAGED_APPLICATION_EN));
-    result.put(BSLParser.PREPROC_EXTERNALCONNECTION_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_EXTERNALCONNECTION_SYMBOL, List.of(
       Keywords.EXTERNAL_CONNECTION_RU, Keywords.EXTERNAL_CONNECTION_EN));
-    result.put(BSLParser.PREPROC_THINCLIENT_SYMBOL, makeListKeywords(Keywords.THIN_CLIENT_RU, Keywords.THIN_CLIENT_EN));
-    result.put(BSLParser.PREPROC_WEBCLIENT_SYMBOL, makeListKeywords(Keywords.WEB_CLIENT_RU, Keywords.WEB_CLIENT_EN));
-    result.put(BSLParser.PREPROC_ATCLIENT_SYMBOL, makeListKeywords(Keywords.AT_CLIENT_RU, Keywords.AT_CLIENT_EN));
-    result.put(BSLParser.PREPROC_ATSERVER_SYMBOL, makeListKeywords(Keywords.AT_SERVER_RU, Keywords.AT_SERVER_EN));
-    result.put(BSLParser.ANNOTATION_ATCLIENT_SYMBOL, makeListKeywords(Keywords.AT_CLIENT_RU, Keywords.AT_CLIENT_EN));
-    result.put(BSLParser.ANNOTATION_ATSERVER_SYMBOL, makeListKeywords(Keywords.AT_SERVER_RU, Keywords.AT_SERVER_EN));
-    result.put(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL, makeListKeywords(
+    result.put(BSLParser.PREPROC_THINCLIENT_SYMBOL, List.of(Keywords.THIN_CLIENT_RU, Keywords.THIN_CLIENT_EN));
+    result.put(BSLParser.PREPROC_WEBCLIENT_SYMBOL, List.of(Keywords.WEB_CLIENT_RU, Keywords.WEB_CLIENT_EN));
+    result.put(BSLParser.PREPROC_ATCLIENT_SYMBOL, List.of(Keywords.AT_CLIENT_RU, Keywords.AT_CLIENT_EN));
+    result.put(BSLParser.PREPROC_ATSERVER_SYMBOL, List.of(Keywords.AT_SERVER_RU, Keywords.AT_SERVER_EN));
+    result.put(BSLParser.ANNOTATION_ATCLIENT_SYMBOL, List.of(Keywords.AT_CLIENT_RU, Keywords.AT_CLIENT_EN));
+    result.put(BSLParser.ANNOTATION_ATSERVER_SYMBOL, List.of(Keywords.AT_SERVER_RU, Keywords.AT_SERVER_EN));
+    result.put(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL, List.of(
       Keywords.AT_SERVER_NO_CONTEXT_RU, Keywords.AT_SERVER_NO_CONTEXT_EN));
-    result.put(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL, makeListKeywords(
+    result.put(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL, List.of(
       Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_RU, Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_EN));
-    result.put(BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL, makeListKeywords(
+    result.put(BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL, List.of(
       Keywords.AT_CLIENT_AT_SERVER_RU, Keywords.AT_CLIENT_AT_SERVER_EN));
 
     return result;
@@ -312,9 +311,5 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
       diagnostics
     );
 
-  }
-
-  private static List<String> makeListKeywords(String... keyword) {
-    return List.of(keyword);
   }
 }
