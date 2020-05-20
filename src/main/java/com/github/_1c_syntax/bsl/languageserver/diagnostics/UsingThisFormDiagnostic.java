@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.CodeAction;
@@ -63,14 +64,8 @@ import java.util.regex.Pattern;
 )
 public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final Pattern pattern = Pattern.compile(
-    "^(этаформа|thisform)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
-  private static final Pattern onlyRuPattern = Pattern.compile(
-    "этаформа",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-  );
+  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(этаформа|thisform)");
+  private static final Pattern ONLY_RU_PATTERN = CaseInsensitivePattern.compile("этаформа");
   private static final String THIS_OBJECT = "ЭтотОбъект";
   private static final String THIS_OBJECT_EN = "ThisObject";
 
@@ -109,7 +104,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   private static boolean hasThisForm(List<? extends BSLParser.ParamContext> params) {
     for (BSLParser.ParamContext param : params) {
-      if (pattern.matcher(param.getText()).find()) {
+      if (PATTERN.matcher(param.getText()).find()) {
         return true;
       }
     }
@@ -123,7 +118,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
       return super.visitCallStatement(ctx);
     }
 
-    if (pattern.matcher(ctx.getStart().getText()).matches()) {
+    if (PATTERN.matcher(ctx.getStart().getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
@@ -133,7 +128,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
     Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
-      .filter(token -> pattern.matcher(token.getText()).matches())
+      .filter(token -> PATTERN.matcher(token.getText()).matches())
       .forEach(token -> diagnosticStorage.addDiagnostic((TerminalNode) token));
 
     return ctx;
@@ -164,7 +159,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
 
     TerminalNode identifier = ctx.IDENTIFIER();
-    if (identifier != null && pattern.matcher(identifier.getText()).matches()) {
+    if (identifier != null && PATTERN.matcher(identifier.getText()).matches()) {
       diagnosticStorage.addDiagnostic(identifier);
     }
     return super.visitLValue(ctx);
@@ -174,7 +169,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     Range range = diagnostic.getRange();
     String currentText = documentContext.getText(range);
 
-    if (onlyRuPattern.matcher(currentText).matches()) {
+    if (ONLY_RU_PATTERN.matcher(currentText).matches()) {
       return new TextEdit(range, THIS_OBJECT);
     }
 

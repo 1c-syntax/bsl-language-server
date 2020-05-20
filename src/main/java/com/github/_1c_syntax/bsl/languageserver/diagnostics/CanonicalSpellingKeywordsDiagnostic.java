@@ -78,8 +78,7 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     result.put(BSLParser.ENDIF_KEYWORD, makeListKeywords(Keywords.ENDIF_RU, Keywords.ENDIF_EN));
     result.put(BSLParser.FOR_KEYWORD, makeListKeywords(Keywords.FOR_RU, Keywords.FOR_EN));
     result.put(BSLParser.EACH_KEYWORD, makeListKeywords(
-      Keywords.EACH_RU, Keywords.EACH_LO_RU,
-      Keywords.EACH_EN, Keywords.EACH_LO_EN));
+      Keywords.EACH_RU, Keywords.EACH_LO_RU, Keywords.EACH_EN, Keywords.EACH_LO_EN));
     result.put(BSLParser.IN_KEYWORD, makeListKeywords(Keywords.IN_RU, Keywords.IN_EN));
     result.put(BSLParser.DO_KEYWORD, makeListKeywords(Keywords.DO_RU, Keywords.DO_EN));
     result.put(BSLParser.WHILE_KEYWORD, makeListKeywords(Keywords.WHILE_RU, Keywords.WHILE_EN));
@@ -159,6 +158,7 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
   private static Map<String, String> getCanonical() {
     Map<String, String> result = new HashMap<>();
+
     result.put(Keywords.IF_UP_RU, Keywords.IF_RU);
     result.put(Keywords.IF_UP_EN, Keywords.IF_EN);
     result.put(Keywords.THEN_UP_RU, Keywords.THEN_RU);
