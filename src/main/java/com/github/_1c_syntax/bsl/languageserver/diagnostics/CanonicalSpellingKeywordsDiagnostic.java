@@ -158,9 +158,7 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
   }
 
   private static Map<String, String> getCanonical() {
-
     Map<String, String> result = new HashMap<>();
-
     result.put(Keywords.IF_UP_RU, Keywords.IF_RU);
     result.put(Keywords.IF_UP_EN, Keywords.IF_EN);
     result.put(Keywords.THEN_UP_RU, Keywords.THEN_RU);
@@ -269,7 +267,6 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     result.put(Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_UP_EN, Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_EN);
     result.put(Keywords.AT_CLIENT_AT_SERVER_UP_RU, Keywords.AT_CLIENT_AT_SERVER_RU);
     result.put(Keywords.AT_CLIENT_AT_SERVER_UP_EN, Keywords.AT_CLIENT_AT_SERVER_EN);
-
     return result;
   }
 

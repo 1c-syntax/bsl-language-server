@@ -73,8 +73,8 @@ public class GenericCoverageReport {
       this.path = fileInfo.getPath().toString();
       this.lineToCover = new ArrayList<>();
 
-      for (int lineToCover : fileInfo.getMetrics().getCovlocData()) {
-        this.lineToCover.add(new LineToCoverEntry(lineToCover, false));
+      for (int lineNumToCover : fileInfo.getMetrics().getCovlocData()) {
+        this.lineToCover.add(new LineToCoverEntry(lineNumToCover, false));
       }
     }
 
