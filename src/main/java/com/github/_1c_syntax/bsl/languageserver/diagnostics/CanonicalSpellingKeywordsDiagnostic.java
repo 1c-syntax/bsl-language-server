@@ -315,6 +315,6 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
   }
 
   private static List<String> makeListKeywords(String... keyword) {
-    return Arrays.asList(keyword);
+    return List.of(keyword);
   }
 }
