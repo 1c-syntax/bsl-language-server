@@ -34,6 +34,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.ArrayDeque;
@@ -100,7 +101,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       .stream()
       .map(Diagnostic::getRange)
       .sorted(Comparator.comparingInt(o -> o.getStart().getLine()))
-      .reduce((prev, curr) -> {
+      .reduce((Range prev, Range curr) -> {
         if (prev.getEnd().getLine() > curr.getStart().getLine()) {
           return prev;
         } else {

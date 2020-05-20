@@ -75,7 +75,8 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
       return false;
     }
 
-    BSLParser.MemberContext currentRootMember = (BSLParser.MemberContext)Trees.getRootParent(ctx, BSLParser.RULE_member);
+    BSLParser.MemberContext currentRootMember =
+      (BSLParser.MemberContext) Trees.getRootParent(ctx, BSLParser.RULE_member);
     if (currentRootMember == null) {
       return false;
     }
