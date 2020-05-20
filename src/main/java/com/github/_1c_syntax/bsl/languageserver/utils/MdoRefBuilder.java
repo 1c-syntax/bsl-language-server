@@ -24,9 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.metadata.additional.MDOType;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.utils.Common;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,22 +41,35 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MdoRefBuilder {
 
   public String getMdoRef(DocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
-    AtomicReference<String> mdoRef = new AtomicReference<>("");
-
-    Optional.ofNullable(callStatement.IDENTIFIER())
-      .map(ParseTree::getText)
-      .flatMap(commonModuleName -> getCommonModuleMdoRef(documentContext, commonModuleName))
-      .ifPresent(mdoRef::set);
-
-    return mdoRef.get();
+    return getMdoRef(documentContext, callStatement.IDENTIFIER(), callStatement.modifier());
   }
 
+
   public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
+    return getMdoRef(documentContext, complexIdentifier.IDENTIFIER(), complexIdentifier.modifier());
+  }
+
+  public String getMdoRef(
+    DocumentContext documentContext,
+    @Nullable
+    TerminalNode identifier,
+    List<? extends BSLParser.ModifierContext> modifiers
+  ) {
+
     AtomicReference<String> mdoRef = new AtomicReference<>("");
 
-    Optional.ofNullable(complexIdentifier.IDENTIFIER())
+    Optional.ofNullable(identifier)
       .map(ParseTree::getText)
       .flatMap(commonModuleName -> getCommonModuleMdoRef(documentContext, commonModuleName))
+      .or(() ->
+        Optional.ofNullable(identifier)
+          .map(ParseTree::getText)
+          .flatMap(MDOType::fromValue)
+          .filter(mdoType -> Common.getModuleTypesForMdoTypes()
+            .getOrDefault(mdoType, Collections.emptySet())
+            .contains(ModuleType.ManagerModule))
+          .map(mdoType -> getMdoRef(mdoType, getMdoName(modifiers)))
+      )
       .ifPresent(mdoRef::set);
 
     return mdoRef.get();
@@ -62,4 +82,21 @@ public class MdoRefBuilder {
       .map(CommonModule::getMdoRef);
   }
 
+  private String getMdoRef(MDOType mdoType, String identifier) {
+    if (identifier.isEmpty()) {
+      return "";
+    }
+
+    return mdoType.getName() + "." + identifier;
+  }
+
+  private String getMdoName(List<? extends BSLParser.ModifierContext> modifiers) {
+    return modifiers.stream()
+      .limit(1)
+      .findAny()
+      .map(BSLParser.ModifierContext::accessProperty)
+      .map(BSLParser.AccessPropertyContext::IDENTIFIER)
+      .map(ParseTree::getText)
+      .orElse("");
+  }
 }

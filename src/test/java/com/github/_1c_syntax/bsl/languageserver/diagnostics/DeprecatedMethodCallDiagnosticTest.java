@@ -41,12 +41,15 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
       .hasRange(1, 18, 1, 37)
       .hasRange(4, 18, 4, 35)
       .hasRange(7, 22, 7, 39)
       .hasRange(10, 23, 10, 40)
+      .hasRange(16, 34, 16, 53)
+      .hasRange(19, 38, 19, 55)
+      .hasRange(22, 39, 22, 56)
     ;
 
   }

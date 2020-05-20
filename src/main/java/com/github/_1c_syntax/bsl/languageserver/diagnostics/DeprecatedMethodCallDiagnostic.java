@@ -34,6 +34,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.CheckForNull;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -102,10 +104,12 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
 
   private static Token getMethodName(BSLParser.CallStatementContext ctx) {
     var modifiers = ctx.modifier();
+    var methodName = getMethodName(ctx.accessCall());
+
     if (modifiers.isEmpty()) {
-      return getMethodName(ctx.accessCall());
+      return methodName;
     } else {
-      return getMethodName(modifiers);
+      return Optional.ofNullable(getMethodName(modifiers)).orElse(methodName);
     }
   }
 
@@ -119,14 +123,11 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
 
   @CheckForNull
   private static Token getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
-    if (!modifiers.isEmpty()) {
-      // пока только общие модули
-      BSLParser.ModifierContext firstModifier = modifiers.get(0);
-      if (firstModifier.accessCall() != null) {
-        return getMethodName(firstModifier.accessCall());
-      }
-    }
-
-    return null;
+    return modifiers.stream()
+      .map(BSLParser.ModifierContext::accessCall)
+      .filter(Objects::nonNull)
+      .map(DeprecatedMethodCallDiagnostic::getMethodName)
+      .findFirst()
+      .orElse(null);
   }
 }
