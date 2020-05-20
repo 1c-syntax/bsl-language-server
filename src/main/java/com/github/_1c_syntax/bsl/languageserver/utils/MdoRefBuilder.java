@@ -44,7 +44,6 @@ public class MdoRefBuilder {
     return getMdoRef(documentContext, callStatement.IDENTIFIER(), callStatement.modifier());
   }
 
-
   public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
     return getMdoRef(documentContext, complexIdentifier.IDENTIFIER(), complexIdentifier.modifier());
   }

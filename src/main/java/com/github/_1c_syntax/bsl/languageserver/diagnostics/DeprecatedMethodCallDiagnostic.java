@@ -22,17 +22,19 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -55,38 +57,42 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
+    if (currentMethodIsDeprecated(ctx, documentContext)) {
+      return super.visitCallStatement(ctx);
+    }
+
     String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
     if (mdoRef.isEmpty()) {
       return super.visitCallStatement(ctx);
     }
 
-    Token methodName = getMethodName(ctx);
-    if (methodName == null) {
-      return super.visitCallStatement(ctx);
-    }
-
-    checkDeprecatedCall(mdoRef, methodName);
+    getMethodName(ctx).ifPresent(methodName -> checkDeprecatedCall(mdoRef, methodName));
 
     return super.visitCallStatement(ctx);
   }
 
-
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+
+    if (currentMethodIsDeprecated(ctx, documentContext)) {
+      return super.visitComplexIdentifier(ctx);
+    }
 
     String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
     if (mdoRef.isEmpty()) {
       return super.visitComplexIdentifier(ctx);
     }
 
-    Token methodName = getMethodName(ctx);
-    if (methodName == null) {
-      return super.visitComplexIdentifier(ctx);
-    }
-
-    checkDeprecatedCall(mdoRef, methodName);
+    getMethodName(ctx).ifPresent(methodName -> checkDeprecatedCall(mdoRef, methodName));
 
     return super.visitComplexIdentifier(ctx);
+  }
+
+  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, DocumentContext documentContext) {
+    return Optional.ofNullable(Trees.getRootParent(ctx, BSLParser.RULE_sub))
+      .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol(sub))
+      .map(MethodSymbol::isDeprecated)
+      .orElse(false);
   }
 
   private void checkDeprecatedCall(String mdoRef, Token methodName) {
@@ -102,32 +108,31 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
       .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName));
   }
 
-  private static Token getMethodName(BSLParser.CallStatementContext ctx) {
+  private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
     var modifiers = ctx.modifier();
     var methodName = getMethodName(ctx.accessCall());
 
     if (modifiers.isEmpty()) {
       return methodName;
     } else {
-      return Optional.ofNullable(getMethodName(modifiers)).orElse(methodName);
+      return getMethodName(modifiers).or(() -> methodName);
     }
   }
 
-  private static Token getMethodName(BSLParser.AccessCallContext ctx) {
-    return ctx.methodCall().methodName().getStart();
+  private static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
+    return Optional.of(ctx.methodCall().methodName().getStart());
   }
 
-  private static Token getMethodName(BSLParser.ComplexIdentifierContext ctx) {
+  private static Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
     return getMethodName(ctx.modifier());
   }
 
-  @CheckForNull
-  private static Token getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
+  private static Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
     return modifiers.stream()
       .map(BSLParser.ModifierContext::accessCall)
       .filter(Objects::nonNull)
       .map(DeprecatedMethodCallDiagnostic::getMethodName)
       .findFirst()
-      .orElse(null);
+      .orElse(Optional.empty());
   }
 }
