@@ -32,10 +32,12 @@ import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -99,7 +101,9 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
     String methodNameText = methodName.getText();
 
-    documentContexts.values().stream()
+    documentContexts.entrySet().stream()
+      .filter(entry -> entry.getKey() == ModuleType.ManagerModule || entry.getKey() == ModuleType.CommonModule)
+      .map(Map.Entry::getValue)
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethods().stream())
       .filter(methodSymbol -> methodSymbol.isDeprecated()
