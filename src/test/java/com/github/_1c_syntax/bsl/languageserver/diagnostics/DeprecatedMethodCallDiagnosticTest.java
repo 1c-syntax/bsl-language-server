@@ -37,11 +37,14 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
   @Test
   void test() {
 
+    // given
     initServerContext(PATH_TO_METADATA);
 
+    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(7);
+    // then
+    assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics, true)
       .hasRange(1, 18, 1, 37)
       .hasRange(4, 18, 4, 35)
@@ -50,6 +53,7 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
       .hasRange(16, 34, 16, 53)
       .hasRange(19, 38, 19, 55)
       .hasRange(22, 39, 22, 56)
+      .hasRange(28, 0, 28, 19)
     ;
 
   }

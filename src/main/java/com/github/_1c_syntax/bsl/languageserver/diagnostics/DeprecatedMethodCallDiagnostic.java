@@ -36,10 +36,12 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -51,6 +53,9 @@ import java.util.Optional;
   }
 )
 public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
+  private static final Set<ModuleType> DEFAULT_MODULE_TYPES =
+    EnumSet.of(ModuleType.ManagerModule, ModuleType.CommonModule);
+
   public DeprecatedMethodCallDiagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -89,6 +94,24 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitComplexIdentifier(ctx);
   }
 
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    if (currentMethodIsDeprecated(ctx, documentContext)) {
+      return super.visitGlobalMethodCall(ctx);
+    }
+
+    var methodName = ctx.methodName().getStart();
+    var methodNameText = methodName.getText();
+
+    documentContext.getSymbolTree().getMethods().stream()
+      .filter(methodSymbol -> methodSymbol.isDeprecated()
+        && methodSymbol.getName().equalsIgnoreCase(methodNameText))
+      .findAny()
+      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName));
+
+    return super.visitGlobalMethodCall(ctx);
+  }
+
   private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, DocumentContext documentContext) {
     return Optional.ofNullable(Trees.getRootParent(ctx, BSLParser.RULE_sub))
       .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol(sub))
@@ -101,7 +124,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     String methodNameText = methodName.getText();
 
     documentContexts.entrySet().stream()
-      .filter(entry -> entry.getKey() == ModuleType.ManagerModule || entry.getKey() == ModuleType.CommonModule)
+      .filter(entry -> DEFAULT_MODULE_TYPES.contains(entry.getKey()))
       .map(Map.Entry::getValue)
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethods().stream())
