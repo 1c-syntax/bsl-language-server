@@ -107,7 +107,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
       .filter(methodSymbol -> methodSymbol.isDeprecated()
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
-      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName));
+      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodNameText)));
 
     return super.visitGlobalMethodCall(ctx);
   }
@@ -131,7 +131,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
       .filter(methodSymbol -> methodSymbol.isDeprecated()
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
-      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName));
+      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodNameText)));
   }
 
   private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
