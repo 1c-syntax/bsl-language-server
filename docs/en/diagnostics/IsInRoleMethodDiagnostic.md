@@ -35,11 +35,7 @@ If IsInRole("Paymaster") OR PrivilegedMode() Then ...
 ```
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 Source: [Standard: Checking access rights](https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights)
 
 ## Snippets
