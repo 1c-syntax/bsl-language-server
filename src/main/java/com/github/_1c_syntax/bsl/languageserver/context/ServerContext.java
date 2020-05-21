@@ -171,8 +171,8 @@ public class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    var modulesByUri = getConfiguration().getModulesByURI();
-    var mdoByUri = modulesByUri.get(uri);
+    var modulesByObject = getConfiguration().getModulesByObject();
+    var mdoByUri = modulesByObject.get(uri);
 
     if (mdoByUri != null) {
       var mdoRef = mdoByUri.getMdoRef();

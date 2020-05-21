@@ -132,7 +132,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     ));
 
 
-    module = spy((CommonModule) configuration.getModulesByURI().get(moduleFile.toUri()));
+    module = spy((CommonModule) configuration.getModulesByObject().get(moduleFile.toUri()));
 
   }
 }
