@@ -14,20 +14,6 @@ Using method may carry a malicious function.
 
 Source: [Pass-the-hash attack](https://en.wikipedia.org/wiki/Pass_the_hash)
 
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
-
-```bsl
-// BSLLS:OSUsersMethod-off
-// BSLLS:OSUsersMethod-on
-```
-
-### Parameter for config
-
-```json
-"OSUsersMethod": false
-```
-
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
