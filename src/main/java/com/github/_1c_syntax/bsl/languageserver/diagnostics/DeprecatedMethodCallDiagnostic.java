@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -107,7 +108,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
       .filter(methodSymbol -> methodSymbol.isDeprecated()
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
-      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodNameText)));
+      .ifPresent(methodSymbol -> fireIssue(methodSymbol, methodName));
 
     return super.visitGlobalMethodCall(ctx);
   }
@@ -131,7 +132,17 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
       .filter(methodSymbol -> methodSymbol.isDeprecated()
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
-      .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodNameText)));
+      .ifPresent(methodSymbol -> fireIssue(methodSymbol, methodName));
+  }
+
+  private void fireIssue(MethodSymbol methodSymbol, Token methodName) {
+    var methodNameText = methodName.getText();
+
+    var deprecationInfo = methodSymbol.getDescription()
+      .map(MethodDescription::getDeprecationInfo)
+      .orElse("");
+
+    diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodNameText, deprecationInfo));
   }
 
   private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {

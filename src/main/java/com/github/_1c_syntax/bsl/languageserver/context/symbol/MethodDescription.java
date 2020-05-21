@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 public class MethodDescription {
 
   private static final int COMMENT_LENGTH = 2;
-  private static final Pattern DEPRECATED = CaseInsensitivePattern.compile("(?:\\s*)((?:Устарела|Deprecated)\\..*)");
+  private static final Pattern DEPRECATED_PATTERN
+    = CaseInsensitivePattern.compile("(?:\\s*)(?:Устарела|Deprecated)\\.(.*)");
 
   private final int startLine;
   private final int endLine;
@@ -41,18 +42,22 @@ public class MethodDescription {
   private final String description;
 
   @Getter
-  private final String deprecatedInfo;
+  private final String deprecationInfo;
+  @Getter
+  private final boolean deprecated;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
       .map(Token::getText)
       .map(MethodDescription::uncomment)
       .collect(Collectors.joining("\n"));
-    Matcher matcher = DEPRECATED.matcher(description);
+    Matcher matcher = DEPRECATED_PATTERN.matcher(description);
     if (matcher.find()) {
-      deprecatedInfo = matcher.group(1);
+      deprecationInfo = matcher.group(1);
+      deprecated = true;
     } else {
-      deprecatedInfo = "";
+      deprecationInfo = "";
+      deprecated = false;
     }
 
     if (comments.isEmpty()) {
@@ -67,10 +72,6 @@ public class MethodDescription {
 
   public boolean isEmpty() {
     return description.isEmpty();
-  }
-
-  public boolean isDeprecated() {
-    return !deprecatedInfo.isEmpty();
   }
 
   public boolean contains(Token first, Token last) {

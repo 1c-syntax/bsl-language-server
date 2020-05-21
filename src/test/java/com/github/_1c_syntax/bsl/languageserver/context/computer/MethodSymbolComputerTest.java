@@ -102,12 +102,12 @@ public class MethodSymbolComputerTest {
     methodSymbol = methods.get(3);
 
     assertThat(methodSymbol.isDeprecated()).isTrue();
-    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecatedInfo()).isNotEmpty();
+    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecationInfo()).isEmpty();
 
     methodSymbol = methods.get(4);
 
     assertThat(methodSymbol.isDeprecated()).isTrue();
-    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecatedInfo()).isNotEmpty();
+    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecationInfo()).isNotEmpty();
   }
 
   @Test
