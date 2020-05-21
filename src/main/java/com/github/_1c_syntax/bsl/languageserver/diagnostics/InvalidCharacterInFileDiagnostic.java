@@ -96,15 +96,14 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
         || token.getType() == BSLLexer.STRINGTAIL
       )
       .filter((Token token) -> ILLEGAL_PATTERN.matcher(token.getText()).find())
-      .forEach(token ->
+      .forEach((Token token) ->
         {
           var text = token.getText();
-            String message = diagnosticMessageDash;
-            if (ILLEGAL_SPACE_PATTERN.matcher(text).find()){
-              message = diagnosticMessageSpace;
-            }
-            diagnosticStorage.addDiagnostic(token, message);
-
+          String message = diagnosticMessageDash;
+          if (ILLEGAL_SPACE_PATTERN.matcher(text).find()) {
+            message = diagnosticMessageSpace;
+          }
+          diagnosticStorage.addDiagnostic(token, message);
         }
       );
 
