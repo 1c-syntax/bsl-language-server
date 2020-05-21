@@ -43,13 +43,12 @@ import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.MAJOR,
-  minutesToFix = 1,
+  severity = DiagnosticSeverity.MINOR,
+  minutesToFix = 3,
   tags = {
     DiagnosticTag.DEPRECATED,
     DiagnosticTag.DESIGN
   }
-
 )
 public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
   public DeprecatedMethodCallDiagnostic(DiagnosticInfo info) {

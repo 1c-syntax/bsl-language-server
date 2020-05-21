@@ -1,8 +1,8 @@
-# <Diagnostic name>
+# Deprecated methods should not be used (DeprecatedMethodCall)
 
-<Metadata>
-
-## <Params>
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `3` | `deprecated`<br/>`design` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,24 +13,19 @@
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:DeprecatedMethodCall-off
+// BSLLS:DeprecatedMethodCall-on
 ```
 
 ### Parameter for config
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"DeprecatedMethodCall": false
 ```
