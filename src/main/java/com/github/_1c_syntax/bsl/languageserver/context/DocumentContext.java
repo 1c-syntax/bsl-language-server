@@ -190,7 +190,7 @@ public class DocumentContext {
   }
 
   public Optional<MDObjectBase> getMdObject() {
-    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByURI().get(getUri()));
+    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 
   public void rebuild(String content) {

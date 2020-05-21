@@ -176,7 +176,7 @@ class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<
     ));
 
 
-    module = spy((CommonModule) configuration.getModulesByURI().get(documentContext.getUri()));
+    module = spy((CommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
 
   }
 }
