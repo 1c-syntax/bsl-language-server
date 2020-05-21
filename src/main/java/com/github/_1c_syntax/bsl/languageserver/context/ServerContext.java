@@ -111,9 +111,8 @@ public class ServerContext {
     return documents.get(Absolute.uri(uri));
   }
 
-  @CheckForNull
   public Map<ModuleType, DocumentContext> getDocuments(String mdoRef) {
-    return documentsByMDORef.get(mdoRef);
+    return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
   @SneakyThrows

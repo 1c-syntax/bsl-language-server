@@ -354,6 +354,16 @@
             "title": "Restriction on the use of deprecated \"Message\" method",
             "$id": "#/definitions/DeprecatedMessage"
         },
+        "DeprecatedMethodCall": {
+            "description": "Deprecated methods should not be used",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deprecated methods should not be used",
+            "$id": "#/definitions/DeprecatedMethodCall"
+        },
         "DeprecatedMethods8310": {
             "description": "Deprecated client application method.",
             "default": true,

@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **110**
+Total: **111**
 
 * Error: **34**
-* Code smell: **69**
+* Code smell: **70**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -46,6 +46,7 @@ Total: **110**
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Using of the deprecated method "CurrentDate" | Yes | Major | Error | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Using of the deprecated method "Find" | Yes | Minor | Code smell | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Restriction on the use of deprecated "Message" method | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
+| [DeprecatedMethodCall](DeprecatedMethodCall.md) | Deprecated methods should not be used | Yes | Minor | Code smell | `deprecated`<br/>`design` |
 | [DeprecatedMethods8310](DeprecatedMethods8310.md) | Deprecated client application method. | Yes | Info | Code smell | `deprecated` |
 | [DeprecatedMethods8317](DeprecatedMethods8317.md) | Using of deprecated platform 8.3.17 global methods | Yes | Info | Code smell | `deprecated` |
 | [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Deprecated ManagedForm type | Yes | Info | Code smell | `standard`<br/>`deprecated` |

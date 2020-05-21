@@ -102,12 +102,12 @@ public class MethodSymbolComputerTest {
     methodSymbol = methods.get(3);
 
     assertThat(methodSymbol.isDeprecated()).isTrue();
-    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecatedInfo()).isNotEmpty();
+    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecationInfo()).isEmpty();
 
     methodSymbol = methods.get(4);
 
     assertThat(methodSymbol.isDeprecated()).isTrue();
-    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecatedInfo()).isNotEmpty();
+    assertThat(methodSymbol.getDescription().orElseThrow().getDeprecationInfo()).isNotEmpty();
   }
 
   @Test
@@ -115,9 +115,9 @@ public class MethodSymbolComputerTest {
 
     var path = Absolute.path(PATH_TO_METADATA);
     var serverContext = new ServerContext(path);
-    checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль");
-    checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1");
-    checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1");
+    checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 5);
+    checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 1);
+    checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1", 1);
   }
 
   @Test
@@ -131,12 +131,17 @@ public class MethodSymbolComputerTest {
 
   }
 
-  private void checkModule(ServerContext serverContext, String path, String mdoRef) throws IOException {
+  private void checkModule(
+    ServerContext serverContext,
+    String path,
+    String mdoRef,
+    int methodsCount
+  ) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
     var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
-    assertThat(methods.size()).isEqualTo(1);
+    assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");
     assertThat(methods.get(0).getMdoRef()).isEqualTo(mdoRef);
   }

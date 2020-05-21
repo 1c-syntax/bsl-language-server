@@ -110,6 +110,9 @@
                 "DeprecatedMessage": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMessage"
                 },
+                "DeprecatedMethodCall": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedMethodCall"
+                },
                 "DeprecatedMethods8310": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMethods8310"
                 },
