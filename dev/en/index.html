@@ -422,16 +422,7 @@
                 
                 
                 <h1 id="bsl-language-server">BSL Language Server<a class="headerlink" href="#bsl-language-server" title="Permanent link">Link</a></h1>
-<p><a href="https://github.com/1c-syntax/bsl-language-server/actions"><img alt="Actions Status" src="https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg" /></a>
-<a href="https://github.com/1c-syntax/bsl-language-server/releases/latest"><img alt="Download" src="https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&amp;style=flat" /></a>
-<a href="https://jitpack.io/#1c-syntax/bsl-language-server"><img alt="JitPack" src="https://jitpack.io/v/1c-syntax/bsl-language-server.svg" /></a>
-<a href="https://github.com/1c-syntax/bsl-language-server/releases"><img alt="GitHub Releases" src="https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/latest/total?style=flat-square" /></a>
-<a href="https://github.com/1c-syntax/bsl-language-server/releases"><img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/total?style=flat-square" /></a>
-<a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Quality Gate" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=alert_status" /></a>
-<a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Maintainability" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=sqale_rating" /></a>
-<a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server"><img alt="Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&amp;metric=coverage" /></a>
-<a href="bench/index.html"><img alt="Benchmark" src="bench/benchmark.svg" /></a>
-<a href="https://t.me/bsl_language_server"><img alt="telegram" src="https://img.shields.io/badge/telegram-chat-green.svg" /></a></p>
+<p><a href="https://github.com/1c-syntax/bsl-language-server/actions"></a><img alt="Actions Status" src="https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg" /></p>
 <p><a href="https://microsoft.github.io/language-server-protocol/">Language Server Protocol</a> implementation for 1C (BSL) - 1C:Enterprise 8 and <a href="http://oscript.io">OneScript</a> languages.</p>
 <ul>
 <li><a href="contributing/">Contributing guidelines</a></li>
@@ -483,25 +474,12 @@ Commands:
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>language</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
 <h2 id="run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#run-in-analyzer-mode" title="Permanent link">Link</a></h2>
-<p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>). </p>
-<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
-                                   <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>...
-Run analysis and get diagnostic info
-  -c, --configuration<span class="o">=</span>&lt;path&gt;
-                           Path to language server configuration file
-  -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>
-  -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory
-  -q, --silent             Silent mode
-  -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>
-  -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory
-  -w, --workspaceDir<span class="o">=</span>&lt;path&gt; 
-                           Workspace directory
+<p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>).</p>
+<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>                                    <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>... Run analysis and get diagnostic info   -c, --configuration<span class="o">=</span>&lt;path&gt;                            Path to language server configuration file   -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory   -q, --silent             Silent mode   -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>   -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory   -w, --workspaceDir<span class="o">=</span>&lt;path&gt;                             Workspace directory
 </code></pre></div>
 
 
-<p>To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder.</p>
-<p>To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
-<p>Command line example to run analysis:</p>
+<p>To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder. To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
 <div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 </code></pre></div>
 
@@ -515,7 +493,7 @@ Run analysis and get diagnostic info
 
 <p><a id="format"></a></p>
 <h2 id="run-in-formatter-mode">Run in formatter mode<a class="headerlink" href="#run-in-formatter-mode" title="Permanent link">Link</a></h2>
-<p>To run in formatter mode use parameter <code>--format</code> (short <code>-f</code>). </p>
+<p>To run in formatter mode use parameter <code>--format</code> (short <code>-f</code>).</p>
 <div class="codehilite"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
 Format files in <span class="nb">source</span> directory
   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
@@ -533,17 +511,16 @@ Format files in <span class="nb">source</span> directory
 <p><a id="configuration"></a></p>
 <h2 id="configuration-file">Configuration file<a class="headerlink" href="#configuration-file" title="Permanent link">Link</a></h2>
 <p>A detailed description of the configuration file is given on <a href="features/ConfigurationFile/">this page</a></p>
-<p><a id="thanks"></a></p>
 <h2 id="special-thanks">Special thanks<a class="headerlink" href="#special-thanks" title="Permanent link">Link</a></h2>
 <p>Many thanks to all <a href="https://github.com/1c-syntax/bsl-language-server/graphs/contributors">contributors</a> to the project, to all who participated in the discussions, who helped with the testing.</p>
 <p>You are awesome!</p>
 <p>Thanks to companies supporting open source projects, and especially to those who supported us:</p>
 <hr />
-<p><a href="https://www.yourkit.com"><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></a></p>
-<p><a href="https://www.yourkit.com">YourKit, LLC</a> is the creator of innovative and intelligent tools for profiling Java and .NET applications. YourKit has offered an open source license <code>YourKit Java Profiler</code> for <code>BSL Language Server</code> to improve its performance.</p>
+<p><a href="https://www.yourkit.com"></a><img alt="YourKit" src="https://www.yourkit.com/images/yklogo.png" /></p>
+<p>{a0 href="https://www.yourkit.com"}YourKit, LLC{/a0} is the creator of innovative and intelligent tools for profiling <code>Java</code> and <code>.NET</code> applications. YourKit has offered an open source license <a href="https://www.yourkit.com">YourKit Java Profiler</a> for <code>BSL Language Server</code> to improve its performance.</p>
 <p>With <code>YourKit Java Profiler</code> we profile and improve project performance.</p>
 <hr />
-<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/assets/images/jetbrains-variant-4.png?raw=true" /></a></p>
+<p><a href="https://www.jetbrains.com"></a><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></p>
 <p><a href="https://www.jetbrains.com">JetBrains</a> is the creator of professional software for development. JetBrains has offered an open source license for his products, including <code>IntelliJ IDEA Ultimate</code>.</p>
 <p><code>IntelliJ IDEA Ultimate</code> is one of the best tools in its class.</p>
                 

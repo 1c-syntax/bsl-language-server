@@ -274,6 +274,30 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#supported-java-versions" class="md-nav__link">
+    Supported Java Versions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-os" class="md-nav__link">
+    Supported OS
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -293,6 +317,18 @@
                 
                 
                 <h1 id="system-requirements">System requirements<a class="headerlink" href="#system-requirements" title="Permanent link">Link</a></h1>
+<p>Using <code>BSL Language Server</code> has some limitations, listed bellow</p>
+<h2 id="supported-java-versions">Supported Java Versions<a class="headerlink" href="#supported-java-versions" title="Permanent link">Link</a></h2>
+<p><code>BSL Language Server</code> is a console Java application and requires the presence of a Java virtual machine on the computer.</p>
+<p>The minimum supported version is Java 11, but as part of the build pipelines, a health check is performed when using more recent versions. Java versions 11, 13 and 14 are currently supported.</p>
+<p>JDK vendor is also interesting. Due to the changed licensing policy of Oracle, it is recommended to use open implementations of the <code>OpenJDK</code> virtual machine: AdoptOpenJDK, Liberica JDK.</p>
+<h2 id="supported-os">Supported OS<a class="headerlink" href="#supported-os" title="Permanent link">Link</a></h2>
+<p><code>BSL Language Server</code> should work on all systems running modern desktop and server operating systems which supported Java. The most popular environments are tested as part of the build pipelines:</p>
+<ul>
+<li>guaranteed to work on the latest versions of the Windows 7/10, Windows server 2012 and higher</li>
+<li>latest Linux OS supported</li>
+<li>latest macos supported</li>
+</ul>
                 
               
               

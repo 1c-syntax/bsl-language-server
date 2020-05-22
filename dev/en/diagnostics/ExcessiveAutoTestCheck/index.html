@@ -376,14 +376,25 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>Standard 772, Interaction with Automated Testing Tools, has been canceled. In this regard, verification of the "АвтоТест" parameter in the form code is no longer necessary.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Parameters</span><span class="o">.</span><span class="nv">Property</span><span class="p">(</span><span class="s1">&quot;АвтоТест&quot;</span><span class="p">)</span> <span class="k">Then</span>
+    <span class="k">Return</span><span class="p">;</span>
+<span class="nv">EndIf</span><span class="p">;</span>
+</code></pre></div>
+
+
+<p>and in handler Filling in object module:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">FillData</span> <span class="o">=</span> <span class="s1">&quot;АвтоТест&quot;</span> <span class="k">Then</span>
+    <span class="k">Return</span><span class="p">;</span>
+<span class="nv">EndIf</span><span class="p">;</span>
+</code></pre></div>
+
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
+<ul>
+<li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc:3">Standard: Modules. Part 3 (RU)</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 

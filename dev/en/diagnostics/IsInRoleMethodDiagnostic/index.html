@@ -376,41 +376,36 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-To check access rights in the code, use the AccessRight method.</p>
-<p>When a role does not grant access rights to metadata objects and defines an additional access right only, 
-use the IsInRole method. If Standard Subsystems Library is used in a configuration,
-use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with
-PrivilegedMode() method call.</p>
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+<p>To check access rights in the code, use the AccessRight method.</p>
+<p>When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method. If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call.</p>
+<p>If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span>
-<span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;AddChangeWorldCountries&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
-<span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;ViewPopularCountriesReport&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
+<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;AddChangeWorldCountries&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;ViewPopularCountriesReport&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="err">Correct example:</span>
-<span class="err">If AccessRight(&quot;Edit&quot;, Metadata.Catalogs.WorldCountries) Then ...</span>
-<span class="err">If AccessRight(&quot;View&quot;, Metadata.Reports.PopularCountries) Then ...</span>
+<div class="codehilite"><pre><span></span><code><span class="err">Correct example: If AccessRight(&quot;Edit&quot;, Metadata.Catalogs.WorldCountries) Then ... If AccessRight(&quot;View&quot;, Metadata.Reports.PopularCountries) Then ...</span>
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span>
-<span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;Paymaster&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
+<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;Paymaster&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="err">Correct example:</span>
-<span class="err">If IsInRole(&quot;Paymaster&quot;) OR PrivilegedMode() Then ...</span>
+<div class="codehilite"><pre><span></span><code><span class="err">Correct example: If IsInRole(&quot;Paymaster&quot;) OR PrivilegedMode() Then ...</span>
 </code></pre></div>
 
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-<p>Source: <a href="https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights">Standard: Checking access rights</a></p>
+<ul>
+<li><a href="https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights">Standard: Checking access rights</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 

@@ -378,12 +378,22 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>To avoid code duplication, it is recommended to create client-server common modules with methods whose contents are the same on the server and on the client. These modules have signs:</p>
+<ul>
+<li>Client (Managed application)</li>
+<li>Server (ServerCall is disabled)</li>
+<li>Client (Ordinary application)</li>
+<li>External connection</li>
+</ul>
+<p>Common modules of this type are named with the "ClientServer" postfix</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<p>FilesClientServer, CommonClientServer, UsersClientServer</p>
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
+<p><a href="https://its.1c.ru/db/v8std#content:469:hdoc:2.4">Standard: Rules for creating common modules (RU)</a></p>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 

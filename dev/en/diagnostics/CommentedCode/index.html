@@ -395,9 +395,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>Software modules should not have commented out code fragments, as well as fragments,
-which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.)
-and with specific developers of this code.</p>
+<p>Software modules should not have commented out code fragments, as well as fragments, which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.) and with specific developers of this code.</p>
 <p>For example, it is unacceptable to leave such fragments in the code after debugging or refactoring is completed:</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
     <span class="c c-Singleline">//If True Then</span>
@@ -417,8 +415,8 @@ and with specific developers of this code.</p>
 
 
 <p>Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.</p>
-<p><strong>ATTENTION</strong> :</p>
-<p>A code block is considered commented , if at least one line inside the block is defined as code.</p>
+<p><strong>ATTENTION</strong> :
+ A code block is considered commented , if at least one line inside the block is defined as code.</p>
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std/content/456/hdoc">Source</a></li>

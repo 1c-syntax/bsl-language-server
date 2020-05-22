@@ -274,6 +274,51 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-change-the-language-of-diagnostic-messages" class="md-nav__link">
+    How to change the language of diagnostic messages?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-increase-the-maximum-line-length-in-diagnostics-line-length-limit" class="md-nav__link">
+    How to increase the maximum line length in diagnostics? Line length limit ?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-disable-lens-on-cognitive-complexity" class="md-nav__link">
+    How to disable Lens on cognitive complexity?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#i-think-that-the-diagnosis-does-not-work-correctly-what-to-do" class="md-nav__link">
+    I think that the diagnosis does not work correctly. What to do?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bsl-language-server-and-sonarqube-plugin-are-the-same-things" class="md-nav__link">
+    BSL Language Server and SonarQube plugin are the same things?
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -293,6 +338,32 @@
                 
                 
                 <h1 id="frequently-asked-questions">Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">Link</a></h1>
+<p>This section contains the most frequently asked questions and answers.</p>
+<h2 id="how-to-change-the-language-of-diagnostic-messages">How to change the language of diagnostic messages?<a class="headerlink" href="#how-to-change-the-language-of-diagnostic-messages" title="Permanent link">Link</a></h2>
+<p>To change the language of displayed messages from Russian (default) to English, you can use the configuration file. The configuration options can be found in the <a href="../features/ConfigurationFile/">description of configuration file.</a></p>
+<h2 id="how-to-increase-the-maximum-line-length-in-diagnostics-line-length-limit">How to increase the maximum line length in diagnostics? <code>Line length limit</code> ?<a class="headerlink" href="#how-to-increase-the-maximum-line-length-in-diagnostics-line-length-limit" title="Permanent link">Link</a></h2>
+<p>All diagnostics has a page with a description in the <code>Diagnostics</code> section, for example, <a href="../diagnostics/LineLength/">Line length limit</a>. If the diagnosis can change its behavior, then on the description page there will be parameters with a description of what they affect. In this case, the <code>maxLineLength</code> parameter is responsible for the maximum line length.</p>
+<h2 id="how-to-disable-lens-on-cognitive-complexity">How to disable Lens on cognitive complexity?<a class="headerlink" href="#how-to-disable-lens-on-cognitive-complexity" title="Permanent link">Link</a></h2>
+<p>To disable the <code>lense</code> with information about cognitive complexity, you should use the configuration file in which <code>showCognitiveComplexity</code> set to <code>false</code> . The configuration options can be found in the <a href="../features/ConfigurationFile/">description of the configuration file.</a></p>
+<h2 id="i-think-that-the-diagnosis-does-not-work-correctly-what-to-do">I think that the diagnosis does not work correctly. What to do?<a class="headerlink" href="#i-think-that-the-diagnosis-does-not-work-correctly-what-to-do" title="Permanent link">Link</a></h2>
+<p>In case of doubt (or confidence) that the diagnosis is not working correctly, there are two ways</p>
+<ul>
+<li>contact the <a href="https://t.me/bsl_language_server">telegram</a> chat and describe situation, maybe still there is no error</li>
+<li>create issue ( <a href="https://github.com/1c-syntax/bsl-language-server/issues">issue</a> ) in the project repository of the appropriate type, where to attach the error description and, it is very desirable, code examples where the diagnosis does not work correctly.</li>
+</ul>
+<h2 id="bsl-language-server-and-sonarqube-plugin-are-the-same-things"><code>BSL Language Server</code> and SonarQube plugin are the same things?<a class="headerlink" href="#bsl-language-server-and-sonarqube-plugin-are-the-same-things" title="Permanent link">Link</a></h2>
+<p><code>BSL Language Server</code> is a stand-alone application, the implementation of the server side of the LSP protocol. The plugin for SonarQube uses the <code>BSL Language Server</code> to analyze the BSL source code (1C configurations, 1Scipt and OSWeb scripts).</p>
+<p><code>BSL Language Server</code> can be used with any application that has an LSP client implementation. Verified connections:</p>
+<ul>
+<li>plugin for <a href="https://github.com/1c-syntax/vsc-language-1c-bsl/">VS code</a> ;</li>
+<li>additional utility for 1C:Enterprise in DESIGNER mode <a href="https://github.com/otymko/phoenixbsl">Phoenix BSL</a> ;</li>
+<li>plugin for <a href="https://github.com/sublimelsp/LSP">Sublime Text</a> .</li>
+</ul>
+<p>Also through direct import <code>BSL Language Server</code> work:</p>
+<ul>
+<li>plugin for <a href="https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator">1C: Enterprise development tools</a> (own implementation, without LSP);</li>
+<li>plugin for <a href="https://github.com/1c-syntax/sonar-bsl-plugin-community">SonarQube</a> ;</li>
+</ul>
                 
               
               

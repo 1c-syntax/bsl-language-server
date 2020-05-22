@@ -324,9 +324,9 @@
 <li>Clone the project repository to the created directory <code>https://github.com/1c-syntax/bsl-language-server.git</code></li>
 <li>Set up the environment according to the <a href="../EnvironmentSetting/">instructions</a></li>
 <li>Execute commands to ignore changes in service files<ol>
-<li><code>git update-index --assume-unchanged ./.idea/compiler.xml</code> </li>
-<li><code>git update-index --assume-unchanged ./.idea/encodings.xml</code> </li>
-<li><code>git update-index --assume-unchanged ./.idea/misc.xml</code> </li>
+<li><code>git update-index --assume-unchanged ./.idea/compiler.xml</code></li>
+<li><code>git update-index --assume-unchanged ./.idea/encodings.xml</code></li>
+<li><code>git update-index --assume-unchanged ./.idea/misc.xml</code></li>
 </ol>
 </li>
 <li>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</li>
@@ -339,8 +339,21 @@
 <li>Create <code>bsl-parser</code> project directory</li>
 <li>Clone the project repository into the created directory <code>https://github.com/1c-syntax/bsl-parser.git</code></li>
 <li>Set up the environment according to the <a href="../EnvironmentSetting/">instruction</a> <em>(if not previously performed)</em></li>
-<li>Install <code>ANTLR v4 grammar plugin</code></li>
-<li>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</li>
+<li>
+<p>Install <code>ANTLR v4 grammar plugin</code></p>
+</li>
+<li>
+<p>restart IDEA</p>
+</li>
+<li>
+<p>Set up the plugin -  <code>File | Settings | Languages &amp; Frameworks | ANTLR v4 default project settings</code> <code>ANTLR v4 grammar plugin</code></p>
+</li>
+<li>
+<p>Set up <code>Case transformation in the Preview window</code> in <code>Transform to uppercase when lexing</code></p>
+</li>
+<li>
+<p>Open the <code>build.gradle.kts</code> file from the project directory, agree to import the dependencies, wait for them to download</p>
+</li>
 <li>Open <code>src/main/antlr/BSLParser.g4</code></li>
 <li>Place the cursor on any line with a code <em>(not a comment)</em> and select the <code>Test Rule file</code> context menu item</li>
 <li>In the opened window, select a bsl-file or paste text from the clipboard</li>

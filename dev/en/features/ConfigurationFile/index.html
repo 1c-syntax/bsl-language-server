@@ -317,8 +317,7 @@
                 
                 
                 <h1 id="bsl-language-server-configuration">BSL Language Server Configuration<a class="headerlink" href="#bsl-language-server-configuration" title="Permanent link">Link</a></h1>
-<p>BSL Language Server provides the ability to change the settings using a configuration file in json format.
- The created file must be specified using the key <code>--configuration</code> <em>(or <code>-c</code>)</em>  when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation <em>(this is usually the root of a project or workspace)</em>.</p>
+<p>BSL Language Server provides the ability to change the settings using a configuration file in json format. The created file must be specified using the key <code>--configuration</code> <em>(or <code>-c</code>)</em>  when running BSL Language Server as a console application. If you use the editor / IDE with the BSL Language Server client plugin, place it in accordance with the documentation <em>(this is usually the root of a project or workspace)</em>.</p>
 <h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">Link</a></h2>
 <table>
 <thead>
@@ -330,29 +329,64 @@
 </thead>
 <tbody>
 <tr>
-<td align="left"><code>diagnosticLanguage</code></td>
+<td align="left"><code>language</code></td>
 <td align="center"><code>String</code></td>
 <td align="left">Set the language for displaying diagnosed comments. Supported languages:<br><em> <code>ru</code> - for Russian (</em>default<em>)<br></em> <code>en</code> - for English</td>
 </tr>
 <tr>
-<td align="left"><code>showCognitiveComplexityCodeLens</code></td>
+<td align="left"><code>codeLens</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">Contains the settings for displaying <code>lens</code> in advanced code editors / IDEs <em>(for example, <a href="https://code.visualstudio.com/">Visual Studio Code</a> )</em> , which displays various information above a block of code.</td>
+</tr>
+<tr>
+<td align="left">⤷   <code>showCognitiveComplexity</code></td>
 <td align="center"><code>Boolean</code></td>
 <td align="left">In code editors/IDE with support codelens<em>(for example <a href="https://code.visualstudio.com/">Visual Studio Code</a>)</em>, enables displaying the value<a href="../../diagnostics/CognitiveComplexity/"> of the cognitive complexity</a> of the method over its definition. By default is enabled (<em>is set to <code>true</code></em>)</td>
 </tr>
 <tr>
-<td align="left"><code>showCyclomaticComplexityCodeLens</code></td>
+<td align="left">⤷   <code>showCyclomaticComplexity</code></td>
 <td align="center"><code>Boolean</code></td>
 <td align="left">Similar to <code>showCognitiveComplexityCodeLens</code>, enables the display of the <a href="../../diagnostics/CyclomaticComplexity/">cyclomatic complexity</a> value   of the method. By default enabled (<em>is set to <code>true</code></em>)</td>
 </tr>
 <tr>
-<td align="left"><code>computeDiagnosticsTrigger</code></td>
-<td align="center"><code>String</code></td>
-<td align="left">Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br><em> <code>onType</code> -when editing a file (online) </em><strong>on large files can significantly slow down editing </strong><em><br></em> <code>onSave</code> - when saving a file (<em>default</em>)<br>* <code>never</code> - analysis will not be performed</td>
+<td align="left"><code>diagnostics</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">Contains diagnostic settings</td>
 </tr>
 <tr>
-<td align="left"><code>computeDiagnosticsSkipSupport</code></td>
+<td align="left">⤷   <code>computeTrigger</code></td>
+<td align="center"><code>String</code></td>
+<td align="left">Event that will trigger the code analysis procedure to diagnose comments. Possible values:<br><em> <code>onType</code> -when editing a file (online) </em><strong>on large files can significantly slow down editing </strong>*<em data-md-type="emphasis"><br> <code data-md-type="codespan">onSave</code> - when saving a file (<em data-md-type="emphasis">default</em>)</em><br> <code>never</code> - analysis will not be performed</td>
+</tr>
+<tr>
+<td align="left">⤷   <code>skipSupport</code></td>
 <td align="center"><code>String</code></td>
 <td align="left">This parameter sets <strong>1C configuration</strong> file skipping mode <em>(for example files are not analyzed for issues)</em> which are "on support" from vendor configuration. Possible values:<br><em> <code>withSupport</code> - skip all modules set "on support" </em>(all "locks" types)<em><br></em> <code>withSupportLocked</code> -  skip modules set "on support" with prohibited modification <em>("yellow  closed lock")</em><br><em> <code>never</code> - skip no modules as support mode is not analyzed </em>(set by default)*</td>
+</tr>
+<tr>
+<td align="left">⤷   <code>mode</code></td>
+<td align="center"><code>String</code></td>
+<td align="left">Setting for controlling the diagnostic settings accounting mode. Possible options: <br> * <code>OFF</code> - All diagnostics are considered to be turned off, regardless of their settings. <br> * <code>ON</code> - All diagnostics enabled by default are considered enabled, the rest - depending on personal settings <br> * <code>EXCEPT</code> - All diagnostics other than those specified are considered enabled. <br> * <code>ONLY</code> - Only the specified diagnostics are considered enabled. <br> * <code>ALL</code> - All diagnostics are considered enabled.</td>
+</tr>
+<tr>
+<td align="left">⤷   <code>parameters</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">Parameter is a collection of diagnostics parameters.  Collection items are json-objects with the following structure:<br><em> </em>object key<em> - string, is diagnostic key<br></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type  <code>json-object</code>,  collection of diagnostic parameters.<br><br>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
+</tr>
+<tr>
+<td align="left"><code>documentLink</code></td>
+<td align="center"><code>JSON-Object</code></td>
+<td align="left">Contains documentation link settings</td>
+</tr>
+<tr>
+<td align="left">⤷   <code>useDevSite</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left">When you turn on the settings, the resulting documentation links will lead to the develop version of the site. By default, the parameter is off ( <em>set to <code>false</code></em> )</td>
+</tr>
+<tr>
+<td align="left">⤷   <code>siteRoot</code></td>
+<td align="center"><code>String</code></td>
+<td align="left">The path to the root of the site with the documentation. By default, the parameter value is <code>"https://1c-syntax.github.io/bsl-language-server"</code></td>
 </tr>
 <tr>
 <td align="left"><code>traceLog</code></td>
@@ -360,9 +394,9 @@
 <td align="left">To log all requests <em>(incoming and outgoing)</em> between <strong>BSL Language Server</strong> and <strong>Language Client</strong>  from used editor/IDE. this parameter sets log file path. The path can set either absolute or relative <em>(from project root)</em>, by default the value is not set.<br><br><strong>WARNING</strong><br><br><em> When starting </em><em>BSL Language Server</em><em> overwrites this file <br></em> Speed of interaction between client and server <strong>DRAMATICALLY REDUCED</strong></td>
 </tr>
 <tr>
-<td align="left"><code>diagnostics</code></td>
-<td align="center"><code>JSON-Object</code></td>
-<td align="left">Parameter is a collection of diagnostics parameters.  Collection items are json-objects with the following structure:<br><em> </em>object key<em> - string, is diagnostic key<br></em> <em>object value</em> - if is boolean, then interpreted as diagnostic off-switch (<code>false</code>) or on-switch with default parameters (<code>true</code>), if is type  <code>json-object</code>,  collection of diagnostic parameters.<br><br>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page.</td>
+<td align="left"><code>configurationRoot</code></td>
+<td align="center"><code>String</code></td>
+<td align="left">This parameter is intended to indicate the root directory the 1C configuration files are located in the project directory. It can be useful if there are several configuration directories in the same project directory or when the structure of the project directory is so complex. By default, the parameter is empty and <code>BSL Language Server</code> determines the location of the configuration root directory independently</td>
 </tr>
 </tbody>
 </table>
@@ -377,6 +411,7 @@
 <li>Language of diagnostics messages - English;</li>
 <li>Changes the diagnostic setting for <a href="../../diagnostics/LineLength/">LineLength - Line Length limit</a>, set the limit for the length of a string to 140 characters;</li>
 <li>Disable <a href="../../diagnostics/MethodSize/">MethodSize - Method size restriction{/a0 } diagnostic.</a></li>
+<li>Enables the calculation of diagnostics in continuous mode ( <code>computeTrigger = onType</code> )</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="p">{</span>
   <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>

@@ -376,25 +376,20 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-In "1C: Enterprise 8.3" the global context method SafeMode () returns the type String,
-if safe mode was set with the name of the security profile.</p>
-<p>Using the Safe Mode () method,
- in which the result is implicitly converted to a Boolean type is unsafe,
- must be corrected for the code with an explicit comparison of the result with the value False.
- Thus, with the installed security profile, the code will be executed in the same way as in the safe mode.</p>
-<p>Use SafeMode() &lt;&gt; False</p>
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+<p>In "1C: Enterprise 8.3" the global context method SafeMode () returns the type String, if safe mode was set with the name of the security profile.</p>
+<p>Using the Safe Mode () method, in which the result is implicitly converted to a Boolean type is unsafe, must be corrected for the code with an explicit comparison of the result with the value False. Thus, with the installed security profile, the code will be executed in the same way as in the safe mode.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<p><!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() Then</span>
-<span class="err">// some code</span>
-<span class="err">EndIf;</span>
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+<p>Wrong:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() Then // some code EndIf;</span>
 </code></pre></div>
 
 
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() = True Then</span>
+<div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() &lt;&gt; False Then</span>
 <span class="err">// some code</span>
 <span class="err">EndIf;</span>
 </code></pre></div>
@@ -403,7 +398,9 @@ Incorrect:</p>
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-<p>Source: <a href="https://its.1c.ru/db/metod8dev#content:5293:hdoc:izmenenie_bezopasnyjrezhim">SafeMode method</a></p>
+<ul>
+<li>Source: <a href="https://its.1c.ru/db/metod8dev#content:5293:hdoc:izmenenie_bezopasnyjrezhim">SafeMode method</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 

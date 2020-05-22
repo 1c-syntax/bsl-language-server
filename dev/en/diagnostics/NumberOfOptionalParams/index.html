@@ -402,9 +402,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>It is not recommended to declare many parameters in functions (best practice to use not more than seven parameters). Meanwhile there should not be many parameters with default values set (best practice to have not more than three such parameters). Otherwise code readability decreases.</p>
-<p>For example it is easy to make a mistake in number of commas passing optional parameters.
-If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.</p>
+<p>It is not recommended to declare many parameters in functions (best practice to use not more than seven parameters). Meanwhile there should not be many parameters with default values set (best practice to have not more than three such parameters). Otherwise code readability decreases.
+  For example it is easy to make a mistake in number of commas passing optional parameters. If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Create an item in catalog &quot;Goods&quot;</span>
@@ -414,8 +413,8 @@ If need to pass many parameters to a function, it is recommended to group same-t
 </code></pre></div>
 
 
-<p>Correct:</p>
-<p>Group parameters, having goods item properties into Structure ЗначенияРеквизитов.</p>
+<p>Correct:
+ Group parameters, having goods item properties into Structure ЗначенияРеквизитов.</p>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Create an item in the catalog &quot;Goods&quot;</span>
 <span class="nv">Procedure</span> <span class="nv">CreateSKU</span><span class="p">(</span><span class="nv">ParamsValue</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 <span class="o">...</span>

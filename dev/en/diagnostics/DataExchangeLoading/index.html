@@ -404,33 +404,18 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>All actions in the event-handler procedures BeforeWrite, OnWrite, BeforeDelete should be performed after checking for DataExchange.Load.</p>
+<p>This is necessary so that no business logic of the object is executed when writing the object through the data exchange mechanism, since it has already been executed for the object in the node where it was created.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Bad:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>
-
-    <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>
-        <span class="nv">RandomAlgorithm</span><span class="p">();</span>
-    <span class="nv">EndIf</span><span class="p">;</span>
-
-    <span class="c c-Singleline">// code handler</span>
-    <span class="c c-Singleline">//</span>
-    <span class="c c-Singleline">// ...</span>
-
-<span class="k">EndProcedure</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>      <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>         <span class="nv">RandomAlgorithm</span><span class="p">();</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     //     // ...      EndProcedure</span>
 </code></pre></div>
 
 
 <p>Good:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>
-    <span class="nv">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>
-         <span class="k">Return</span><span class="p">;</span>
-    <span class="nv">EndIf</span><span class="p">;</span>
-
-    <span class="c c-Singleline">// code handler</span>
-    <span class="c c-Singleline">// ...</span>
-<span class="k">EndProcedure</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>     <span class="nv">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>          <span class="k">Return</span><span class="p">;</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     // ... EndProcedure</span>
 </code></pre></div>
 
 
@@ -438,10 +423,10 @@
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
-<li><a href="https://its.1c.ru/db/v8std#content:773">Стандарт: Использование признака ОбменДанными.Загрузка в обработчиках событий объекта</a></li>
-<li><a href="https://its.1c.ru/db/v8std#content:465">Обработчик события ПриЗаписи</a></li>
-<li><a href="https://its.1c.ru/db/v8std#content:464">Обработчик события ПередЗаписью</a></li>
-<li><a href="https://its.1c.ru/db/v8std#content:752">Обработчик события ПередУдалением</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:773">Standard: Using DataExchange.Load in object handlers (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:465">Handler OnWrite (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:464">Handler BeforeWrite (RU)</a></li>
+<li><a href="https://its.1c.ru/db/v8std#content:752">Handler BeforeDelete (RU)</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->

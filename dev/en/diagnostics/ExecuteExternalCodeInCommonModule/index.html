@@ -378,12 +378,18 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>It is dangerous to use not only direct execution of code written in the Enterprise mode, but also algorithms where <code>Execute</code> or <code>Eval</code> code executes the code in server methods.
+If it is necessary to execute external code, then it must be located in a common module and pass an audit in advance.</p>
+<p><strong>The restriction does not apply to code executed on the client.</strong></p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:770:hdoc">Restrictions on the use of Execute and Eval on the server (RU)</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 

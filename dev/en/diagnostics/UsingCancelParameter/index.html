@@ -396,9 +396,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p>In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".</p>
-<p>This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.</p>
-<p>In addition when modifying configuration the number of such checks can increase.</p>
+<p>In event handlers of object's modules, record sets, forms and etc. using parameter "Cancel" (ПриЗаписи, ОбработкаПроверкиЗаполнения, ТоварыПередНачаломДобавления and etc.) it should not be assigned value "false".  This is due to the fact, that in code of event handlers the parameter "Cancel" can be set in several consecutive checks (or in several subscriptions on the same event).In this case, by the time the next check is performed, the parameter "Cancel" can already be set to True, and you can set it to False by mistake.  In addition when modifying configuration the number of such checks can increase.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <h3 id="incorrect">Incorrect<a class="headerlink" href="#incorrect" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
