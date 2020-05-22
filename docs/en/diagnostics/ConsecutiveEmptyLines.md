@@ -27,14 +27,11 @@ Inserting 2 or more empty lines does not carry this value and leads to a meaning
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:ConsecutiveEmptyLines-off
-// BSLLS:ConsecutiveEmptyLines-on
+// BSLLS:ConsecutiveEmptyLines-off // BSLLS:ConsecutiveEmptyLines-on
 ```
 
 ### Parameter for config
 
 ```json
-"ConsecutiveEmptyLines": {
-    "allowedEmptyLinesCount": 1
-}
+"ConsecutiveEmptyLines": {     "allowedEmptyLinesCount": 1 }
 ```
