@@ -1,24 +1,24 @@
 # Using external code tools (UsingExternalCodeTools)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Security Hotspot` | `BSL`<br/>`OS` | `Critical` | `Yes` | `15` | `standard`<br/>`design` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Security Hotspot` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `standard`<br>`design`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 For application solutions it is forbidden to execute in unsafe mode any code on the 1C:Enterprise server that is not part of the application solution (configuration) itself.
-
-The restriction does not apply to the code that has passed the audit, and to the code executed on the client.
+ The restriction does not apply to the code that has passed the audit, and to the code executed on the client.
 
 Examples of invalid execution of "external" code in unsafe mode:
 
 - external reports and processings (print forms, etc.)
 - configuration extensions
 
-### Limitations
+### Diagnostic ignorance in code
 
 At the moment, the server context is not analyzed, so diagnostic works both at client and server contexts
 
@@ -30,18 +30,16 @@ At the moment, the server context is not analyzed, so diagnostic works both at c
 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-
-
 - [Restriction on the execution of "external" code](https://its.1c.ru/db/v8std#content:669:hdoc)
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+
+### Экранирование кода
 
 ```bsl
-// BSLLS:UsingExternalCodeTools-off
-// BSLLS:UsingExternalCodeTools-on
+// BSLLS:UsingExternalCodeTools-off // BSLLS:UsingExternalCodeTools-on
 ```
 
 ### Parameter for config
