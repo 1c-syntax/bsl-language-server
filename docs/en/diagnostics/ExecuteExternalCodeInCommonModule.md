@@ -10,8 +10,8 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-При разработке решений следует учитывать, что опасно использование не только непосредственного выполнения кода, написанного в режиме Предприятие, но и алгоритмов, где методами `Выполнить` или `Вычислить` исполняется код в серверных функциях и процедурах.
- Если выполнение произвольного кода необходимо, то такой код должен предварительно располагаться в общем модуле и пройти аудит.
+It is dangerous to use not only direct execution of code written in the Enterprise mode, but also algorithms where `Execute` or `Eval` code executes the code in server methods.
+If it is necessary to execute external code, then it must be located in a common module and pass an audit in advance.
 
 **The restriction does not apply to code executed on the client.**
 
