@@ -14,7 +14,7 @@ To check access rights in the code, use the AccessRight method.
 
 When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method. If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call.
 
-При использовании в конфигурации Библиотеки стандартных подсистем (БСП) следует использовать функцию РолиДоступны общего модуля Пользователи. Если в конфигурации не используется БСП, следует обязательно совмещать вызов РольДоступна() с проверкой на ПривилегированныйРежим().
+If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.
 
 ## Examples
 
