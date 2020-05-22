@@ -24,19 +24,12 @@ Based on the structure described above, the location of the program code before 
 Wrong
 
 ```bsl
-Method();
-Message("Before methods");
-
-Procedure Method()
-// Method body
-EndProcedure
+Method(); Message("Before methods");  Procedure Method() // Method body EndProcedure
 ```
 
 ## Sources
 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
-
 
 - [Module structure](https://its.1c.ru/db/v8std/content/455/hdoc)
 

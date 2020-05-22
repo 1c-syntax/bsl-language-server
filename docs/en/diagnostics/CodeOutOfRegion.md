@@ -20,8 +20,6 @@ The code of module should be structured and divided into regions.
 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-
-
 - Reference [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets

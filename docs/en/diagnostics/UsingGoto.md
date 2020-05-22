@@ -8,9 +8,7 @@
 ## Description
 
 `goto` is an unstructured control flow statement. It makes code less readable and maintainable.
-
-Structured control flow statements such as `if`, `for`, `while`, `continue` or `break`
-should be used instead.
+ Structured control flow statements such as `if`, `for`, `while`, `continue` or `break` should be used instead.
 
 ## Examples
 
