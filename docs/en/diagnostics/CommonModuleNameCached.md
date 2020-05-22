@@ -10,7 +10,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Модули, предназначенные для реализации на сервере или на клиенте функций с повторным использованием возвращаемых значений (на время вызова или на время сеанса), именуются с постфиксом "ПовтИсп" (англ. "Cached") и "КлиентПовтИсп" (англ. "ClientCached") соответственно.
+Modules intended for implementing functions on the server or client with cached of the returned values (for the time of the call or for the session) are named with the postfix "Cached" and "ClientCached" respectively.
 
 ## Examples
 
