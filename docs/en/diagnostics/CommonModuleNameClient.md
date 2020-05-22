@@ -10,12 +10,12 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Клиентские общие модули содержат клиентскую бизнес-логику (функциональность, определенную только для клиента) и имеют признаки:
+Client common modules contain client business logic (functionality specific to the client only) and have the following features:
 
 - Client (Managed application)
 - Client (Ordinary application)
 
-Исключение составляют случаи, когда клиентские процедуры и функции должны быть доступны только в режиме управляемого приложения (только в режиме обычного приложения или только в режиме внешнего соединения). В таких случаях, допустима иная комбинация двух этих признаков.
+In cases where client methods should be available only in managed application mode (or only in regular application mode or only in external connection mode), a different combination of these two features is allowed.
 
 Client common modules are named with the "Client" postfix. Except when the Global flag is on.
 
