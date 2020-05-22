@@ -1,11 +1,10 @@
 # Deprecated methods should not be used (DeprecatedMethodCall)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `3` | `deprecated`<br>`design`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `3` | `deprecated`<br/>`design` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Use or extension of deprecated methods should be avoided. Marking method as deprecated is a warning that means the method will be removed in future versions and left for temporary backward compatibility.
@@ -29,11 +28,11 @@ Exception: It is possible to call deprecated methods from deprecated methods.
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-"DeprecatedMethodCall": false
+// BSLLS:DeprecatedMethodCall-off
+// BSLLS:DeprecatedMethodCall-on
 ```
 
 ### Parameter for config

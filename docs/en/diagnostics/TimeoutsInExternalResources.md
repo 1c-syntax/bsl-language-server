@@ -1,17 +1,16 @@
 # Timeouts working with external resources (TimeoutsInExternalResources)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `unpredictable`<br>`standard`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL`<br/>`OS` | `Critical` | `Yes` | `5` | `unpredictable`<br/>`standard` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
-:-: | :-: | :-- | :-:
-`analyzeInternetMailProfileZeroTimeout` | `Boolean` | `Analyze the timeout for "InternetMailProfile"` | `true`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `analyzeInternetMailProfileZeroTimeout` | `Boolean` | ```Analyze the timeout for "InternetMailProfile"``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 When working with external resources using the WSDefinitions, WSProxy, HTTPConnection, FTPConnection there should be a time out - the time limit for the operation to be completed. Otherwise, as a result of endless waiting, the program will freeze or some of the functionality of the program will become unavailable.
@@ -59,7 +58,6 @@ HTTPConnection.Timeout = 1;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

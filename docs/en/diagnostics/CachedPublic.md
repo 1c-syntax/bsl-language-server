@@ -1,11 +1,10 @@
 # Cached public methods (CachedPublic)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`design`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br/>`design` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 You should not create a programming interface in modules that reuse return values.
@@ -25,11 +24,11 @@ You should not create a programming interface in modules that reuse return value
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CachedPublic-off // BSLLS:CachedPublic-on
+// BSLLS:CachedPublic-off
+// BSLLS:CachedPublic-on
 ```
 
 ### Parameter for config

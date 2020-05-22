@@ -1,11 +1,10 @@
 # Missed postfix "ServerCall" (CommonModuleNameServerCall)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br/>`badpractice`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -31,11 +30,11 @@ FilesServerCall, CommonServerCall
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CommonModuleNameServerCall-off // BSLLS:CommonModuleNameServerCall-on
+// BSLLS:CommonModuleNameServerCall-off
+// BSLLS:CommonModuleNameServerCall-on
 ```
 
 ### Parameter for config

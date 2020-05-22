@@ -1,11 +1,10 @@
 # Missed postfix "FullAccess" (CommonModuleNameFullAccess)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Security Hotspot` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Security Hotspot` | `BSL` | `Major` | `Yes` | `5` | `standard`<br/>`badpractice`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,11 +26,11 @@ FilesFullAccess
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CommonModuleNameFullAccess-off // BSLLS:CommonModuleNameFullAccess-on
+// BSLLS:CommonModuleNameFullAccess-off
+// BSLLS:CommonModuleNameFullAccess-on
 ```
 
 ### Parameter for config

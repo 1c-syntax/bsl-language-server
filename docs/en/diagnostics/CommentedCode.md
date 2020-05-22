@@ -1,17 +1,16 @@
 # Commented out code (CommentedCode)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`badpractice`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `standard`<br/>`badpractice` |
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
-:-: | :-: | :-- | :-:
-`threshold` | `Float` | `Threshold` | `0.9`
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `threshold` | `Float` | ```Threshold``` | ```0.9``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Software modules should not have commented out code fragments, as well as fragments, which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.) and with specific developers of this code.
@@ -48,7 +47,6 @@ Correct: after debugging or refactoring is completed, remove the handler BeforeD
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

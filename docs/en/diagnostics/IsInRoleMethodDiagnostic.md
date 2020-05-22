@@ -1,11 +1,10 @@
 # IsInRole global method call (IsInRoleMethodDiagnostic)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Major` | `Yes` | `5` | `error`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `5` | `error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -45,11 +44,11 @@ Correct example: If IsInRole("Paymaster") OR PrivilegedMode() Then ...
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:IsInRoleMethodDiagnostic-off // BSLLS:IsInRoleMethodDiagnostic-on
+// BSLLS:IsInRoleMethodDiagnostic-off
+// BSLLS:IsInRoleMethodDiagnostic-on
 ```
 
 ### Parameter for config

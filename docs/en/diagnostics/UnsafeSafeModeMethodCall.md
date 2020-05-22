@@ -1,11 +1,10 @@
 # Unsafe SafeMode method call (UnsafeSafeModeMethodCall)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Error` | `BSL` | `Blocker` | `Yes` | `1` | `deprecated`<br>`error`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Error` | `BSL` | `Blocker` | `Yes` | `1` | `deprecated`<br/>`error` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -41,11 +40,11 @@ EndIf;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:UnsafeSafeModeMethodCall-off // BSLLS:UnsafeSafeModeMethodCall-on
+// BSLLS:UnsafeSafeModeMethodCall-off
+// BSLLS:UnsafeSafeModeMethodCall-on
 ```
 
 ### Parameter for config

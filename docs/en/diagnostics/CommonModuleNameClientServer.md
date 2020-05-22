@@ -1,11 +1,10 @@
 # Missed postfix "ClientServer" (CommonModuleNameClientServer)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br/>`badpractice`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -34,11 +33,11 @@ FilesClientServer, CommonClientServer, UsersClientServer
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CommonModuleNameClientServer-off // BSLLS:CommonModuleNameClientServer-on
+// BSLLS:CommonModuleNameClientServer-off
+// BSLLS:CommonModuleNameClientServer-on
 ```
 
 ### Parameter for config

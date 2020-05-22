@@ -1,11 +1,10 @@
 # Excessive AutoTest Check (ExcessiveAutoTestCheck)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `1` | `standard`<br>`deprecated`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `1` | `standard`<br/>`deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Standard 772, Interaction with Automated Testing Tools, has been canceled. In this regard, verification of the "АвтоТест" parameter in the form code is no longer necessary.
@@ -33,7 +32,6 @@ EndIf;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

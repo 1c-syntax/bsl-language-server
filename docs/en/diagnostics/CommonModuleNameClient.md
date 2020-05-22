@@ -1,11 +1,10 @@
 # Missed postfix "Client" (CommonModuleNameClient)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br/>`badpractice`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -34,11 +33,11 @@ FilesClient, CommonClient, StandardSubsystemsClient
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CommonModuleNameClient-off // BSLLS:CommonModuleNameClient-on
+// BSLLS:CommonModuleNameClient-off
+// BSLLS:CommonModuleNameClient-on
 ```
 
 ### Parameter for config
