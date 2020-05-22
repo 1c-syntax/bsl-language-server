@@ -10,7 +10,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Модули, выполняющиеся в привилегированном режиме, имеющие признак Привилегированный, именуются с постфиксом "ПолныеПрава" (англ. "FullAccess").
+Modules executed in privileged mode have the Privileged flag, are named with the "FullAccess" postfix.
 
 ## Examples
 
