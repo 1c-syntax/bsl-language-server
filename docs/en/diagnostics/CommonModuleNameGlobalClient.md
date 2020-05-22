@@ -10,15 +10,15 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Для глобальных модулей добавляется постфикс "Глобальный" (англ. "Global"), в этом случае постфикс "Клиент" добавлять не следует.
+For global modules, the "Global" postfix is added, "Client" postfix should not be added.
 
 ## Examples
 
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-НеПравильно: РаботаСФайламиГлобальныйКлиент, InfobaseUpdateGlobalClient
+Incorrect: InfobaseUpdateGlobalClient
 
-Правильно: РаботаСФайламиГлобальный, InfobaseUpdateGlobal
+Correct: InfobaseUpdateGlobal
 
 ## Sources
 
