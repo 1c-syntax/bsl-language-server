@@ -10,7 +10,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Для глобальных модулей добавляется постфикс "Глобальный" (англ. "Global"), в этом случае постфикс "Клиент" добавлять не следует.
+For global modules, the "Global" postfix is added, "Client" postfix should not be added.
 
 ## Examples
 
