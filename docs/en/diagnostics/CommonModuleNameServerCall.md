@@ -10,11 +10,11 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Серверные общие модули для вызова с клиента содержат серверные процедуры и функции, доступные для использования из клиентского кода. Они составляют клиентский программный интерфейс сервера приложения. Такие процедуры и функции размещаются в общих модулях с признаком:
+Server common modules for calling from the client code contain server methods available for use from client code. It forms the application server client interface. Such methods are placed in common modules with the attribute:
 
 - Server (ServerCall is enabled)
 
-Серверные общие модули для вызова с клиента называются по общим правилам именования объектов метаданных и должны именоваться с постфиксом "ВызовСервера" (англ. "ServerCall").
+Server common modules for calling from the client must be named with the postfix "ServerCall"
 
 ## Examples
 
