@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
@@ -40,7 +39,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
     if (documentContext.getTokensFromDefaultChannel().isEmpty()) {
       return;
     }

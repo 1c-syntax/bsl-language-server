@@ -269,7 +269,7 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     return result;
   }
 
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
     documentContext.getTokensFromDefaultChannel()
       .parallelStream()
       .filter((Token t) ->

@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   // символы, требующие пробелы только слева
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT = "";
@@ -152,13 +152,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  public void check() {
 
     sampleMessage[INDEX_WORD_LEFT] = info.getResourceString("wordLeft");               // "Слева"
     sampleMessage[INDEX_WORD_RIGHT] = info.getResourceString("wordRight");             // "Справа"
     sampleMessage[INDEX_WORD_LEFT_RIGHT] = info.getResourceString("wordLeftAndRight"); // "Слева и справа"
-
-    diagnosticStorage.clearDiagnostics();
 
     List<Token> tokens = documentContext.getTokens();
     List<Token> foundTokens;
@@ -208,8 +206,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
         );
 
     }
-
-    return diagnosticStorage.getDiagnostics();
   }
 
   @Override
