@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -53,7 +52,7 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
     documentContext
       .getSymbolTree()
       .getChildrenFlat(VariableSymbol.class)

@@ -1218,7 +1218,7 @@
         },
         "UnusedLocalVariable": {
             "description": "Unused local variable",
-            "default": null,
+            "default": true,
             "type": [
                 "boolean",
                 "object"

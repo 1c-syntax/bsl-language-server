@@ -209,7 +209,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private boolean notRegistered(String variableName) {
     return variables.stream()
-      .filter(v -> v.getKind() == VariableKind.GLOBAL
+      .filter(v -> v.getKind() == VariableKind.MODULE
         || currentMethodRange == null
         || Ranges.containsRange(currentMethodRange, v.getRange()))
       .noneMatch(v -> v.getName().equals(variableName));
@@ -217,7 +217,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   private Optional<VariableSymbol> findVariableSymbol(String variableName) {
     return variables.stream()
-      .filter(v -> v.getKind() == VariableKind.GLOBAL
+      .filter(v -> v.getKind() == VariableKind.MODULE
         || currentMethodRange == null
         || Ranges.containsRange(currentMethodRange, v.getRange()))
       .filter(v -> v.getName().equals(variableName))

@@ -309,7 +309,7 @@
                     "$ref": "parameters-schema.json#/definitions/UnusedLocalMethod"
                 },
                 "UnusedLocalVariable": {
-                    "$ref": "diagnostics-schema.json#/definitions/UnusedLocalVariable"
+                    "$ref": "parameters-schema.json#/definitions/UnusedLocalVariable"
                 },
                 "UnusedParameters": {
                     "$ref": "parameters-schema.json#/definitions/UnusedParameters"
