@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **111**
+Общее количество: **112**
 
-* Дефект кода: **70**
+* Дефект кода: **71**
 * Уязвимость: **3**
 * Ошибка: **34**
 * Потенциальная уязвимость: **4**
@@ -89,6 +89,7 @@
 | [NumberOfParams](NumberOfParams.md) | Ограничение на количество параметров метода | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](NumberOfValuesInStructureConstructor.md) | Ограничение на количество значений свойств, передаваемых в конструктор структуры | Да | Незначительный | Дефект кода | `standard`<br/>`brainoverload` |
 | [OSUsersMethod](OSUsersMethod.md) | Использование метода ПользователиОС | Да | Критичный | Потенциальная уязвимость | `suspicious` |
+| [ObjectNameLength](ObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Информационный | Дефект кода | `standard` |
 | [OneStatementPerLine](OneStatementPerLine.md) | Одно выражение в одной строке | Да | Незначительный | Дефект кода | `standard`<br/>`design` |
 | [OrderOfParams](OrderOfParams.md) | Порядок параметров метода | Да | Важный | Дефект кода | `standard`<br/>`design` |
 | [PairingBrokenTransaction](PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да | Важный | Ошибка | `standard` |

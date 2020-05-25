@@ -1,8 +1,14 @@
-# Metadata object names must not exceed 80 characters (ObjectNameLength)
+# Metadata object names must not exceed the allowed length (ObjectNameLength)
 
-<Metadata>
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `standard` |
 
-## <Params>
+## Parameters 
+
+| Name | Type | Description | Default value |
+| :-: | :-: | :-- | :-: |
+| `maxObjectNameLength` | `Integer` | ```Permissible length of the name of the configuration object``` | ```80``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -22,8 +28,8 @@ In addition to problems using these objects, there are problems with uploading t
 [Standard: Name, synonym, comment (RU)](https://its.1c.ru/db/v8std#content:474:hdoc:2.3)
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl

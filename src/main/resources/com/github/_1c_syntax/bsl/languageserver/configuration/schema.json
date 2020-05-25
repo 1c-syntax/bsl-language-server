@@ -239,6 +239,9 @@
                 "OSUsersMethod": {
                     "$ref": "parameters-schema.json#/definitions/OSUsersMethod"
                 },
+                "ObjectNameLength": {
+                    "$ref": "parameters-schema.json#/definitions/ObjectNameLength"
+                },
                 "OneStatementPerLine": {
                     "$ref": "parameters-schema.json#/definitions/OneStatementPerLine"
                 },
