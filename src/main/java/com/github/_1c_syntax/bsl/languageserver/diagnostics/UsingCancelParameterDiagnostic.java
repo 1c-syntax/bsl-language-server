@@ -34,10 +34,8 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -73,18 +71,13 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    Collection<ParseTree> assigns = Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment);
-
-    List<BSLParserRuleContext> tree = assigns.stream()
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment).stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
           .getText())
           .matches()
       )
       .map(BSLParserRuleContext.class::cast)
-      .collect(Collectors.toList());
-
-    tree.stream()
       .filter(ident -> !rightPartIsValid((BSLParser.AssignmentContext) ident))
       .map(ParseTree::getParent)
       .map(BSLParserRuleContext.class::cast)
