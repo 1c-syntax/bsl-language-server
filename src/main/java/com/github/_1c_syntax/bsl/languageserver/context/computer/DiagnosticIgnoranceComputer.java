@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
@@ -46,19 +47,19 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private static final DiagnosticCode ALL_DIAGNOSTICS_KEY = new DiagnosticCode("all");
 
-  private static final Pattern IGNORE_ALL_ON = Pattern.compile(
+  private static final Pattern IGNORE_ALL_ON = CaseInsensitivePattern.compile(
     "BSLLS-(?:вкл|on)"
   );
 
-  private static final Pattern IGNORE_ALL_OFF = Pattern.compile(
+  private static final Pattern IGNORE_ALL_OFF = CaseInsensitivePattern.compile(
     "BSLLS-(?:выкл|off)"
   );
 
-  private static final Pattern IGNORE_DIAGNOSTIC_ON = Pattern.compile(
+  private static final Pattern IGNORE_DIAGNOSTIC_ON = CaseInsensitivePattern.compile(
     "BSLLS:(\\w+)-(?:вкл|on)"
   );
 
-  private static final Pattern IGNORE_DIAGNOSTIC_OFF = Pattern.compile(
+  private static final Pattern IGNORE_DIAGNOSTIC_OFF = CaseInsensitivePattern.compile(
     "BSLLS:(\\w+)-(?:выкл|off)"
   );
 
