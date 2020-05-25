@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
@@ -47,9 +48,8 @@ import java.util.regex.Pattern;
 )
 public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern API_REGION_NAME = Pattern.compile(
-    "^(?:ПрограммныйИнтерфейс|Public)$",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern API_REGION_NAME = CaseInsensitivePattern.compile(
+    "^(?:ПрограммныйИнтерфейс|Public)$"
   );
 
   private static final boolean DEFAULT_CHECK_ALL_REGION = false;

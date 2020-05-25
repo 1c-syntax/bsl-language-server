@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -48,13 +49,13 @@ import java.util.regex.Pattern;
 )
 public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final Pattern modalityMethods = Pattern.compile(
+  private final Pattern modalityMethods = CaseInsensitivePattern.compile(
     "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
       "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
       "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
       "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|" +
-      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)"
+  );
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
@@ -87,7 +88,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
     var configuration = documentContext.getServerContext().getConfiguration();
     // если использование модальных окон разрешено (без предупреждение), то
     // ничего не диагностируется
@@ -95,6 +96,11 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
+    return super.visitFile(ctx);
+  }
+
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
     if (modalityMethods.matcher(methodName).matches()) {
       diagnosticStorage.addDiagnostic(ctx,

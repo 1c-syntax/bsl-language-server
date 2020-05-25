@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -52,9 +53,8 @@ import java.util.regex.Pattern;
 )
 public class ThisObjectAssignDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern thisObjectPattern = Pattern.compile(
-    "(этотобъект|thisobject)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern thisObjectPattern = CaseInsensitivePattern.compile(
+    "(этотобъект|thisobject)"
   );
 
   public ThisObjectAssignDiagnostic(DiagnosticInfo info) {

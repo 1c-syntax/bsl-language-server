@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -187,41 +188,41 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
       "ГоризонтальнаяВсегда");
   }
 
-  private static final Pattern CHART_PLOT_AREA_ATTRIBUTES_PATTERN = Pattern.compile(
-    getDeprecatedAttributesRegex(Metaobject.CHART_PLOT_AREA),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHART_PLOT_AREA_ATTRIBUTES_PATTERN = CaseInsensitivePattern.compile(
+    getDeprecatedAttributesRegex(Metaobject.CHART_PLOT_AREA)
+  );
 
-  private static final Pattern CHART_ATTRIBUTES_PATTERN = Pattern.compile(
-    getDeprecatedAttributesRegex(Metaobject.CHART),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHART_ATTRIBUTES_PATTERN = CaseInsensitivePattern.compile(
+    getDeprecatedAttributesRegex(Metaobject.CHART)
+  );
 
-  private static final Pattern CHART_METHODS_PATTERN = Pattern.compile(
-    getDeprecatedMethodsRegex(Metaobject.CHART),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHART_METHODS_PATTERN = CaseInsensitivePattern.compile(
+    getDeprecatedMethodsRegex(Metaobject.CHART)
+  );
 
-  private static final Pattern CHART_PLOT_AREA_NAME_PATTERN = Pattern.compile(
-    getMetaobjectNameRegex(Metaobject.CHART_PLOT_AREA),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHART_PLOT_AREA_NAME_PATTERN = CaseInsensitivePattern.compile(
+    getMetaobjectNameRegex(Metaobject.CHART_PLOT_AREA)
+  );
 
-  private static final Pattern CHART_NAME_PATTERN = Pattern.compile(
-    getMetaobjectNameRegex(Metaobject.CHART),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHART_NAME_PATTERN = CaseInsensitivePattern.compile(
+    getMetaobjectNameRegex(Metaobject.CHART)
+  );
 
-  private static final Pattern CHART_LABELS_ORIENTATION_PATTERN = Pattern.compile(
-    CHART_LABELS_ORIENTATION_RU,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHART_LABELS_ORIENTATION_PATTERN = CaseInsensitivePattern.compile(
+    CHART_LABELS_ORIENTATION_RU
+  );
 
-  private static final Pattern CHILD_FORM_ITEMS_GROUP_NAME_PATTERN = Pattern.compile(
-    getMetaobjectNameRegex(Metaobject.ENUM_ITEMS_GROUP),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHILD_FORM_ITEMS_GROUP_NAME_PATTERN = CaseInsensitivePattern.compile(
+    getMetaobjectNameRegex(Metaobject.ENUM_ITEMS_GROUP)
+  );
 
-  private static final Pattern CHILD_FORM_ITEMS_GROUP_ATTRIBUTE_PATTERN = Pattern.compile(
-    getDeprecatedAttributesRegex(Metaobject.ENUM_ITEMS_GROUP),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CHILD_FORM_ITEMS_GROUP_ATTRIBUTE_PATTERN = CaseInsensitivePattern.compile(
+    getDeprecatedAttributesRegex(Metaobject.ENUM_ITEMS_GROUP)
+  );
 
-  private static final Pattern CLEAR_EVENT_LOG_PATTERN = Pattern.compile(
-    CLEAR_EVENT_LOG_EN + "|" + CLEAR_EVENT_LOG_RU,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern CLEAR_EVENT_LOG_PATTERN = CaseInsensitivePattern.compile(
+    CLEAR_EVENT_LOG_EN + "|" + CLEAR_EVENT_LOG_RU
+  );
 
   public DeprecatedAttributes8312Diagnostic(DiagnosticInfo info) {
     super(info);

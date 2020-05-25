@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -55,9 +56,9 @@ import java.util.stream.Collectors;
   }
 )
 public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
-  private static final Pattern NEW_LINE_PATTERN = Pattern.compile(
-    "^(\\s+?)[^\\s]",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern NEW_LINE_PATTERN = CaseInsensitivePattern.compile(
+    "^(\\s+?)[^\\s]"
+  );
   private int previousLineNumber;
   private final List<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
 

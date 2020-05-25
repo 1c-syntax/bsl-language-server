@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.Collections;
 import java.util.EnumMap;
@@ -171,9 +172,9 @@ public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
   }
 
   private static Pattern createPattern(String keywordRu, String keywordEn, String template) {
-    return Pattern.compile(
-      String.format(template, keywordRu, keywordEn),
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    return CaseInsensitivePattern.compile(
+      String.format(template, keywordRu, keywordEn)
+    );
   }
 
   @Override

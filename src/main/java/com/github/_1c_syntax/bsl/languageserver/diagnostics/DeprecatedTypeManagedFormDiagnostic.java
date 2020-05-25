@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -55,14 +56,12 @@ import java.util.regex.Pattern;
 )
 public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final Pattern paramPattern = Pattern.compile(
-    "\"(УправляемаяФорма|ManagedForm)\"",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern paramPattern = CaseInsensitivePattern.compile(
+    "\"(УправляемаяФорма|ManagedForm)\""
   );
 
-  private static final Pattern methodPattern = Pattern.compile(
-    "(Тип|Type)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern methodPattern = CaseInsensitivePattern.compile(
+    "(Тип|Type)"
   );
 
   public DeprecatedTypeManagedFormDiagnostic(DiagnosticInfo info) {
