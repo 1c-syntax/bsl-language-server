@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
@@ -53,14 +54,12 @@ import java.util.stream.Collectors;
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern ATTACHABLE_PATTERN = Pattern.compile(
-    "(подключаемый_.*|attachable_.*)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern ATTACHABLE_PATTERN = CaseInsensitivePattern.compile(
+    "(подключаемый_.*|attachable_.*)"
   );
 
-  private static final Pattern HANDLER_PATTERN = Pattern.compile(
-    "(ПриСозданииОбъекта|OnObjectCreate)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
+    "(ПриСозданииОбъекта|OnObjectCreate)"
   );
 
   public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {

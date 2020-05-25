@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.MethodCallContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Locale;
@@ -47,9 +48,8 @@ import java.util.regex.Pattern;
 )
 public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern DELETE_CALL_PATTERN = Pattern.compile(
-    "(удалить|delete)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern DELETE_CALL_PATTERN = CaseInsensitivePattern.compile(
+    "(удалить|delete)"
   );
   private static final Predicate<MethodCallContext> MATCH_METHOD_CALL_DELETE
     = e -> DELETE_CALL_PATTERN.matcher(e.methodName().getText()).matches();

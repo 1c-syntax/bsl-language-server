@@ -29,10 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -54,7 +52,7 @@ import java.util.regex.Pattern;
   }
 )
 
-public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   public static final String SPACE_REGEX = "(?:" +
     "\\u00A0" + // 160
@@ -84,7 +82,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  public void check() {
 
     documentContext
       .getTokens()
@@ -106,8 +104,6 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
           diagnosticStorage.addDiagnostic(token, message);
         }
       );
-
-    return ctx;
   }
 
   @Override

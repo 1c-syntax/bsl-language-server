@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class CommentedCodeDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
   private static final String COMMENT_START = "//";
@@ -86,10 +86,7 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    this.documentContext = documentContext;
-    diagnosticStorage.clearDiagnostics();
-
+  public void check() {
     methodDescriptions = documentContext.getSymbolTree().getMethods()
       .stream()
       .map(MethodSymbol::getDescription)
@@ -101,8 +98,6 @@ public class CommentedCodeDiagnostic extends AbstractVisitorDiagnostic implement
       .stream()
       .filter(this::isCommentGroupNotMethodDescription)
       .forEach(this::checkCommentGroup);
-
-    return diagnosticStorage.getDiagnostics();
   }
 
   private List<List<Token>> groupComments(List<Token> comments) {

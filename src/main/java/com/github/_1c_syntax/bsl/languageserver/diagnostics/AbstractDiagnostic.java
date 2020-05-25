@@ -31,6 +31,7 @@ public abstract class AbstractDiagnostic implements BSLDiagnostic {
 
   protected final DiagnosticInfo info;
   protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  protected DocumentContext documentContext;
 
   public AbstractDiagnostic(DiagnosticInfo info) {
     this.info = info;
@@ -43,10 +44,11 @@ public abstract class AbstractDiagnostic implements BSLDiagnostic {
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
-    check(documentContext);
+    check();
     return diagnosticStorage.getDiagnostics();
   }
 
-  protected abstract void check(DocumentContext documentContext);
+  protected abstract void check();
 }

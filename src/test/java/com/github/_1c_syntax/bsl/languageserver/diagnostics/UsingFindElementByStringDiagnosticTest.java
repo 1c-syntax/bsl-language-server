@@ -42,13 +42,15 @@ class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<Usin
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
     assertThat(diagnostics, true)
       .hasRange(7, 38, 7, 78)
       .hasRange(9, 40, 9, 61)
       .hasRange(13, 27, 13, 59)
       .hasRange(24, 35, 24, 53)
-      .hasRange(27, 35, 27, 51);
+      .hasRange(27, 35, 27, 51)
+      .hasRange(30, 27, 30, 53)
+    ;
 
   }
 

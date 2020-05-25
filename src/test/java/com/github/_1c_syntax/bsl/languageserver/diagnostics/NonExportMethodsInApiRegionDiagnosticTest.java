@@ -42,12 +42,13 @@ class NonExportMethodsInApiRegionDiagnosticTest extends AbstractDiagnosticTest<N
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       // на +
       .hasRange(8, 10, 8, 16)
       .hasRange(20, 10, 20, 13)
       .hasRange(25, 14, 25, 27)
+      .hasRange(64, 10, 64, 39)
     ;
   }
 }

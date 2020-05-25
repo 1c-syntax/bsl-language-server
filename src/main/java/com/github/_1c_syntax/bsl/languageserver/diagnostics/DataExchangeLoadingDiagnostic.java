@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -57,12 +58,12 @@ import java.util.regex.Pattern;
 )
 public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern searchSubNames = Pattern.compile(
-    "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final Pattern searchCondition = Pattern.compile(
-    "ОбменДанными\\.Загрузка|DataExchange\\.Load",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern searchSubNames = CaseInsensitivePattern.compile(
+    "^(ПередЗаписью|ПриЗаписи|ПередУдалением|BeforeWrite|BeforeDelete|OnWrite)$"
+  );
+  private static final Pattern searchCondition = CaseInsensitivePattern.compile(
+    "ОбменДанными\\.Загрузка|DataExchange\\.Load"
+  );
 
   private static final boolean FIND_FIRST = false;
 
