@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -31,12 +32,46 @@ class ObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<ObjectNameLe
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
+  @Test
+  void testConfigure() {
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxObjectNameLength", 10);
+    diagnosticInstance.configure(configuration);
+
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
+  void testConfigureNegative() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxObjectNameLength", 90);
+    diagnosticInstance.configure(configuration);
+
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    // given
+    when(module.getName()).thenReturn("ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации");
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {
-      "Catalogs/Справочник1/Ext/ObjectModule.bsl",
-      "Catalogs/Справочник1/Forms/ФормаВыбора/Ext/Form/Module.bsl",
-      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
-    })
+    "Catalogs/Справочник1/Ext/ObjectModule.bsl",
+    "Catalogs/Справочник1/Forms/ФормаВыбора/Ext/Form/Module.bsl",
+    "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"
+  })
   void test(String modulePath) {
 
     getDocumentContextFromFile(modulePath);
@@ -66,7 +101,6 @@ class ObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<ObjectNameLe
 
     //then
     assertThat(diagnostics).hasSize(0);
-
   }
 
   @SneakyThrows
