@@ -2,13 +2,13 @@
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Info` | `Yes` | `1` | `standard` |
+| `Error` | `BSL`<br/>`OS` | `Major` | `Yes` | `10` | `standard` |
 
 ## Parameters 
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `maxObjectNameLength` | `Integer` | ```Permissible length of the name of the configuration object``` | ```80``` |
+| `maxMetadataObjectNameLength` | `Integer` | ```Permissible length of the name of the configuration object``` | ```80``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description

@@ -10,8 +10,8 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 Total: **112**
 
-* Error: **34**
-* Code smell: **71**
+* Error: **35**
+* Code smell: **70**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -72,6 +72,7 @@ Total: **112**
 | [IsInRoleMethodDiagnostic](IsInRoleMethodDiagnostic.md) | IsInRole global method call | Yes | Major | Code smell | `error` |
 | [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` |
+| [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` |
 | [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` |
 | [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br/>`badpractice` |
 | [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` |
@@ -89,7 +90,6 @@ Total: **112**
 | [NumberOfParams](NumberOfParams.md) | Number of parameters in method | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
 | [NumberOfValuesInStructureConstructor](NumberOfValuesInStructureConstructor.md) | Limit on the number of property values passed to the structure constructor | Yes | Minor | Code smell | `standard`<br/>`brainoverload` |
 | [OSUsersMethod](OSUsersMethod.md) | Using method OSUsers | Yes | Critical | Security Hotspot | `suspicious` |
-| [ObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Info | Code smell | `standard` |
 | [OneStatementPerLine](OneStatementPerLine.md) | One statement per line | Yes | Minor | Code smell | `standard`<br/>`design` |
 | [OrderOfParams](OrderOfParams.md) | Order of Parameters in method | Yes | Major | Code smell | `standard`<br/>`design` |
 | [PairingBrokenTransaction](PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes | Major | Error | `standard` |

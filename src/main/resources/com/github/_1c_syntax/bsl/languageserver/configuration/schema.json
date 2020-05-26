@@ -188,6 +188,9 @@
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
                 },
+                "MetadataObjectNameLength": {
+                    "$ref": "parameters-schema.json#/definitions/MetadataObjectNameLength"
+                },
                 "MethodSize": {
                     "$ref": "parameters-schema.json#/definitions/MethodSize"
                 },
@@ -238,9 +241,6 @@
                 },
                 "OSUsersMethod": {
                     "$ref": "parameters-schema.json#/definitions/OSUsersMethod"
-                },
-                "ObjectNameLength": {
-                    "$ref": "parameters-schema.json#/definitions/ObjectNameLength"
                 },
                 "OneStatementPerLine": {
                     "$ref": "parameters-schema.json#/definitions/OneStatementPerLine"
