@@ -24,15 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.MAJOR,
   minutesToFix = 10,
+  scope = DiagnosticScope.BSL,
   tags = {
     DiagnosticTag.STANDARD
   }
@@ -58,13 +61,20 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
       .getMdObject()
       .map(MDObjectBase::getName)
       .filter(this::checkName)
-      .ifPresent(objectName -> diagnosticStorage.addDiagnostic(
-        documentContext.getTokensFromDefaultChannel().get(0),
-        info.getMessage(maxMetadataObjectNameLength)
-      ));
+      .ifPresent(this::addDiagnostic);
   }
 
   private boolean checkName(String name) {
     return name.length() > maxMetadataObjectNameLength;
+  }
+
+  private void addDiagnostic(String name) {
+    var tokens = documentContext.getTokensFromDefaultChannel();
+    String message = info.getMessage(maxMetadataObjectNameLength);
+    if (tokens.isEmpty()) {
+      diagnosticStorage.addDiagnostic(new Range(), message);
+    } else {
+      diagnosticStorage.addDiagnostic(tokens.get(0), message);
+    }
   }
 }

@@ -22,9 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -32,11 +30,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
@@ -44,6 +42,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<MetadataObjectNameLengthDiagnostic> {
+
+  private static final String LONG_NAME = "ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации";
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+
   private MDObjectBase module;
   private DocumentContext documentContext;
 
@@ -51,15 +53,14 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     super(MetadataObjectNameLengthDiagnostic.class);
   }
 
-  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
-
   @Test
   void testConfigure() {
+
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("maxMetadataObjectNameLength", 10);
     diagnosticInstance.configure(configuration);
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", false);
 
     // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -75,16 +76,32 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     configuration.put("maxMetadataObjectNameLength", 90);
     diagnosticInstance.configure(configuration);
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", false);
 
     // given
-    when(module.getName()).thenReturn("ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации");
+    when(module.getName()).thenReturn(LONG_NAME);
 
     // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
     assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void testEmptyModule() {
+
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", true);
+
+    // given
+    when(module.getName()).thenReturn(LONG_NAME);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(1);
   }
 
   @ParameterizedTest
@@ -95,10 +112,10 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   })
   void test(String modulePath) {
 
-    getDocumentContextFromFile(modulePath);
+    getDocumentContextFromFile(modulePath, false);
 
     // given
-    when(module.getName()).thenReturn("ОченьДлинноеИмяОбъектаКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации");
+    when(module.getName()).thenReturn(LONG_NAME);
 
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
 
@@ -112,7 +129,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   @Test
   void testNegative() {
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", false);
 
     // given
     when(module.getName()).thenReturn("Short");
@@ -125,21 +142,17 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   }
 
   @SneakyThrows
-  void getDocumentContextFromFile(String modulePath) {
+  void getDocumentContextFromFile(String modulePath, boolean empty) {
 
-    Path path = Absolute.path(PATH_TO_METADATA);
-    Path testFile = Paths.get(PATH_TO_METADATA, modulePath).toAbsolutePath();
+    initServerContext(PATH_TO_METADATA);
+    var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
 
-    ServerContext serverContext = new ServerContext(path);
-    var configuration = serverContext.getConfiguration();
     documentContext = spy(new DocumentContext(
-      testFile.toUri(),
-      FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      serverContext
+      testFile.toURI(),
+      empty ? "" : FileUtils.readFileToString(testFile, StandardCharsets.UTF_8),
+      context
     ));
 
-
-    module = spy(configuration.getModulesByObject().get(documentContext.getUri()));
-
+    module = spy(Objects.requireNonNull(context).getConfiguration().getModulesByObject().get(documentContext.getUri()));
   }
 }
