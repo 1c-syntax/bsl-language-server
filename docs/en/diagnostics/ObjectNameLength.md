@@ -20,7 +20,7 @@ In addition to problems using these objects, there are problems with uploading t
 
 ## Examples
 
-ОченьДлинноеИмяСправочникиКотороеВызываетПроблемыВРаботеАТакжеОшибкиВыгрузкиКонфигурации, LooooooooooooooooooooooooooooooooooooooooooooooooooooooooongVeryLongDocumentName
+LooooooooooooooooooooooooooooooooooooooooooooooooooooooooongVeryLongDocumentName
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
