@@ -43,12 +43,12 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class ObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<ObjectNameLengthDiagnostic> {
+class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<MetadataObjectNameLengthDiagnostic> {
   private MDObjectBase module;
   private DocumentContext documentContext;
 
-  ObjectNameLengthDiagnosticTest() {
-    super(ObjectNameLengthDiagnostic.class);
+  MetadataObjectNameLengthDiagnosticTest() {
+    super(MetadataObjectNameLengthDiagnostic.class);
   }
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
@@ -56,7 +56,7 @@ class ObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<ObjectNameLe
   @Test
   void testConfigure() {
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("maxObjectNameLength", 10);
+    configuration.put("maxMetadataObjectNameLength", 10);
     diagnosticInstance.configure(configuration);
 
     getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
@@ -72,7 +72,7 @@ class ObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<ObjectNameLe
   void testConfigureNegative() {
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("maxObjectNameLength", 90);
+    configuration.put("maxMetadataObjectNameLength", 90);
     diagnosticInstance.configure(configuration);
 
     getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");

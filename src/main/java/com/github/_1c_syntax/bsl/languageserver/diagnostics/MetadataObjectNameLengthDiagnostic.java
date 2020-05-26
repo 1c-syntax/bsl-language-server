@@ -30,25 +30,25 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
-  minutesToFix = 1,
+  type = DiagnosticType.ERROR,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10,
   tags = {
     DiagnosticTag.STANDARD
   }
 
 )
-public class ObjectNameLengthDiagnostic extends AbstractDiagnostic {
+public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
 
-  private static final int MAX_OBJECT_NAME_LENGTH = 80;
+  private static final int MAX_METADATA_OBJECT_NAME_LENGTH = 80;
 
   @DiagnosticParameter(
     type = Integer.class,
-    defaultValue = "" + MAX_OBJECT_NAME_LENGTH
+    defaultValue = "" + MAX_METADATA_OBJECT_NAME_LENGTH
   )
-  private int maxObjectNameLength = MAX_OBJECT_NAME_LENGTH;
+  private int maxMetadataObjectNameLength = MAX_METADATA_OBJECT_NAME_LENGTH;
 
-  public ObjectNameLengthDiagnostic(DiagnosticInfo info) {
+  public MetadataObjectNameLengthDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
@@ -60,11 +60,11 @@ public class ObjectNameLengthDiagnostic extends AbstractDiagnostic {
       .filter(this::checkName)
       .ifPresent(objectName -> diagnosticStorage.addDiagnostic(
         documentContext.getTokensFromDefaultChannel().get(0),
-        info.getMessage(maxObjectNameLength)
+        info.getMessage(maxMetadataObjectNameLength)
       ));
   }
 
   private boolean checkName(String name) {
-    return name.length() > maxObjectNameLength;
+    return name.length() > maxMetadataObjectNameLength;
   }
 }

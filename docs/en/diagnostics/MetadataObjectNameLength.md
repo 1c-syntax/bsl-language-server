@@ -1,4 +1,4 @@
-# Metadata object names must not exceed the allowed length (ObjectNameLength)
+# Metadata object names must not exceed the allowed length (MetadataObjectNameLength)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -33,14 +33,14 @@ LooooooooooooooooooooooooooooooooooooooooooooooooooooooooongVeryLongDocumentName
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:ObjectNameLength-off
-// BSLLS:ObjectNameLength-on
+// BSLLS:MetadataObjectNameLength-off
+// BSLLS:MetadataObjectNameLength-on
 ```
 
 ### Parameter for config
 
 ```json
-"ObjectNameLength": {
-    "maxObjectNameLength": 80
+"MetadataObjectNameLength": {
+    "maxMetadataObjectNameLength": 80
 }
 ```

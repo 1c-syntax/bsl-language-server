@@ -1,4 +1,4 @@
-# Имена объектов метаданных не должны превышать допустимой длины наименования (ObjectNameLength)
+# Имена объектов метаданных не должны превышать допустимой длины наименования (MetadataObjectNameLength)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -33,14 +33,14 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:ObjectNameLength-off
-// BSLLS:ObjectNameLength-on
+// BSLLS:MetadataObjectNameLength-off
+// BSLLS:MetadataObjectNameLength-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"ObjectNameLength": {
-    "maxObjectNameLength": 80
+"MetadataObjectNameLength": {
+    "maxMetadataObjectNameLength": 80
 }
 ```
