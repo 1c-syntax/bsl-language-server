@@ -69,7 +69,8 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
   }
 
   private void addDiagnostic(String name) {
-    var tokens = documentContext.getTokensFromDefaultChannel();
+
+    var tokens = documentContext.getTokens();
     String message = info.getMessage(maxMetadataObjectNameLength);
     if (tokens.isEmpty()) {
       diagnosticStorage.addDiagnostic(new Range(), message);
