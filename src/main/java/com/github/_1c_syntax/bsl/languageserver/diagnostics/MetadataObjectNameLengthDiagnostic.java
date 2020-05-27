@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
-import org.eclipse.lsp4j.Range;
+import org.antlr.v4.runtime.Token;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -57,25 +57,20 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    documentContext
-      .getMdObject()
-      .map(MDObjectBase::getName)
-      .filter(this::checkName)
-      .ifPresent(this::addDiagnostic);
+    if (!documentContext.getTokens().isEmpty()
+      && documentContext.getTokens().get(0).getType() != Token.EOF
+    )
+      documentContext
+        .getMdObject()
+        .map(MDObjectBase::getName)
+        .filter(this::checkName)
+        .ifPresent(name -> diagnosticStorage.addDiagnostic(
+          documentContext.getTokens().get(0),
+          info.getMessage(maxMetadataObjectNameLength))
+        );
   }
 
   private boolean checkName(String name) {
     return name.length() > maxMetadataObjectNameLength;
-  }
-
-  private void addDiagnostic(String name) {
-
-    var tokens = documentContext.getTokens();
-    String message = info.getMessage(maxMetadataObjectNameLength);
-    if (tokens.isEmpty()) {
-      diagnosticStorage.addDiagnostic(new Range(), message);
-    } else {
-      diagnosticStorage.addDiagnostic(tokens.get(0), message);
-    }
   }
 }
