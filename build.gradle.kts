@@ -214,8 +214,13 @@ tasks.register("precommit") {
 }
 
 tasks {
-    val delombok by registering(io.franzbecker.gradle.lombok.task.DelombokTask::class) {
+    val delombok by registering(JavaExec::class) {
         dependsOn(compileJava)
+
+        main = project.extensions.findByType(io.franzbecker.gradle.lombok.LombokPluginExtension::class)!!.main
+        args = listOf("delombok")
+        classpath = project.configurations.getByName("compileClasspath")
+
         jvmArgs = listOf("-Dfile.encoding=UTF-8")
         val outputDir by extra { file("$buildDir/delombok") }
         outputs.dir(outputDir)
