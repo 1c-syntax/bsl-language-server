@@ -12,9 +12,9 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 The following items are deprecated and their use is not recommended since platform version 8.3.12:
 
-- Для системного перечисления ГруппировкаПодчиненныхЭлементовФормы реализовано значение ГоризонтальнаяВсегда. Значение системного перечисления ГруппировкаПодчиненныхЭлементовФормы.Горизонтальная считается устаревшим;
+- Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
 
-- Системное перечисление ОриентацияМетокДиаграммы более не доступно. Актуальный вариант ОриентацияПодписейДиаграммы;
+- ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
 
 - The following properties and methods of Chart object are obsolete and not recommended for use:
 
@@ -31,7 +31,7 @@ The following items are deprecated and their use is not recommended since platfo
     - ScaleLines
     - ScaleColor
 
-- Свойства объекта ОбластьПостроенияДиаграммы являются устаревшими, не рекомендуются для использования и поддерживаются для совместимости:
+- Properties of FullTextSearchManager object are obsolete, not recomended for use and supported only for backward compatibility:
 
     - ShowSeriesScaleLabels - recommended to use the SeriesScale.ScaleLabelLocation
     - ShowPointsScaleLabels- recommended to use the PointsScale.ScaleLabelLocation
@@ -40,11 +40,11 @@ The following items are deprecated and their use is not recommended since platfo
     - ValueScaleFormat - recommended to use the ValuesScale.LabelFormat
     - LabelsOrientation - recommended to use the PointsScale.LabelOrientation
 
-- Свойство ОтображатьЛегенду объектов Диаграмма, ДиаграммаГанта, СводнаяДиаграмма является устаревшим и не рекомендуется для использования.
+- Property ShowLegend of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
 
-- Свойство ОтображатьЗаголовок объектов Диаграмма, ДиаграммаГанта, СводнаяДиаграмма является устаревшим и не рекомендуется для использования.
+- Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
 
-- Метод глобального контекста ОчиститьЖурналРегистрации() применим только к журналу в формата SQLite, признан устаревшим и его использование не рекомендуется.
+- The global context method ClearEventLog() is applicable only to a event log in SQLite format, is obsolete and its use is not recommended.
 
 ## Sources
 
