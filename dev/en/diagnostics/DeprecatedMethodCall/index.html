@@ -381,8 +381,11 @@
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeprecatedMethodCall-off</span>
-<span class="c c-Singleline">// BSLLS:DeprecatedMethodCall-on</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Deprecated. Need to use DontDeprecatedProcedure.</span>
+<span class="nv">Procedure</span> <span class="nv">DeprecatedProcedure</span><span class="p">()</span>
+<span class="k">EndProcedure</span>
+
+<span class="nv">DeprecatedProcedure</span><span class="p">();</span> <span class="c c-Singleline">// Triggering diagnostics</span>
 </code></pre></div>
 
 
