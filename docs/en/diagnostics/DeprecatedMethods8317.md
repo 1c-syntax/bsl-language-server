@@ -1,11 +1,10 @@
 # Using of deprecated platform 8.3.17 global methods (DeprecatedMethods8317)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Info` | `Yes` | `5` | `deprecated`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Info` | `Yes` | `5` | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,11 +26,11 @@ You should use the same methods of the ErrorProcessing object instead.
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:DeprecatedMethods8317-off // BSLLS:DeprecatedMethods8317-on
+// BSLLS:DeprecatedMethods8317-off
+// BSLLS:DeprecatedMethods8317-on
 ```
 
 ### Parameter for config

@@ -1,11 +1,10 @@
 # Deprecated 8.3.12 platform features. (DeprecatedAttributes8312)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Info` | `Yes` | `1` | `deprecated`
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL` | `Info` | `Yes` | `1` | `deprecated` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -55,11 +54,11 @@ The following items are deprecated and their use is not recommended since platfo
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:DeprecatedAttributes8312-off // BSLLS:DeprecatedAttributes8312-on
+// BSLLS:DeprecatedAttributes8312-off
+// BSLLS:DeprecatedAttributes8312-on
 ```
 
 ### Parameter for config
