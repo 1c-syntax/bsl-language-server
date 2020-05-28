@@ -16,8 +16,11 @@ Exception: It is possible to call deprecated methods from deprecated methods.
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-// BSLLS:DeprecatedMethodCall-off
-// BSLLS:DeprecatedMethodCall-on
+// Deprecated. Need to use DontDeprecatedProcedure.
+Procedure DeprecatedProcedure()
+EndProcedure
+
+DeprecatedProcedure(); // Triggering diagnostics
 ```
 
 ## Sources

@@ -9,7 +9,7 @@
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-When assigning a value to a common module, an exception will be thrown. This situation is possible when a common module with a name that is already used for a variable is added to the configuration.
+When assigning a value to a common module, an exception will be thrown. Such a situation is possible when a common module with a name that is already used for a variable is added to the configuration.
 
 ## Examples
 
