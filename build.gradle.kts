@@ -12,7 +12,7 @@ plugins {
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
     id("org.sonarqube") version "2.8"
-    id("io.franzbecker.gradle-lombok") version "3.3.0"
+    id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.28.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
@@ -94,7 +94,7 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
-    testImplementation("org.assertj", "assertj-core", "3.15.0")
+    testImplementation("org.assertj", "assertj-core", "3.16.1")
     testImplementation("org.mockito", "mockito-core", "3.3.3")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
@@ -243,8 +243,6 @@ publishing {
             artifact(tasks["sourcesJar"])
             artifact(tasks["shadowJar"])
             artifact(tasks["javadocJar"])
-//            artifact(tasks.shadowJar.get())
-//            artifact(tasks.javadoc.get())
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
                 
