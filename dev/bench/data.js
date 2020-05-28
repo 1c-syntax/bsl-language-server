@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1590659115457,
+  "lastUpdate": 1590672797707,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3534,6 +3534,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.18789025241868",
             "extra": "mean: 59.21439639727274 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "94353b42240c3bd7fc49a67d16c04cecd0ddb07c",
+          "message": "Подгонка delombok под gradle 6.4",
+          "timestamp": "2020-05-28T16:26:30+03:00",
+          "tree_id": "a3f6cf54d7dca2abbeecfaa89457c2edef0ab938",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/94353b42240c3bd7fc49a67d16c04cecd0ddb07c"
+        },
+        "date": 1590672795206,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 59.133386532465614,
+            "unit": "sec",
+            "range": "stddev: 0.5828554062534959",
+            "extra": "mean: 59.133386532465614 sec\nrounds: 3"
           }
         ]
       }
