@@ -130,7 +130,9 @@ class DocumentLinkProviderTest {
 
     // then
     assertThat(documentLinks)
-      .allMatch(documentLink -> documentLink.getTooltip().contains("Документация"));
+      .allMatch(documentLink -> documentLink.getTooltip().contains("Документация"))
+      .anyMatch(documentLink -> documentLink.getTooltip().contains(DIAGNOSTIC_CODE))
+    ;
 
     // when
     configuration.setLanguage(Language.EN);
@@ -138,7 +140,9 @@ class DocumentLinkProviderTest {
 
     // then
     assertThat(documentLinks)
-      .allMatch(documentLink -> documentLink.getTooltip().contains("documentation"));
+      .allMatch(documentLink -> documentLink.getTooltip().contains("documentation"))
+      .anyMatch(documentLink -> documentLink.getTooltip().contains(DIAGNOSTIC_CODE))
+    ;
   }
 
   @Test

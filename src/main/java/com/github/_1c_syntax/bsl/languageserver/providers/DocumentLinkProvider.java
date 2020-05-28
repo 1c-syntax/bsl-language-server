@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLink;
 
 import java.util.List;
@@ -57,19 +58,19 @@ public class DocumentLinkProvider {
       siteRoot,
       devSuffix,
       languageSuffix
-      );
-
-    var tooltip = Resources.getResourceString(language, this.getClass(), "tooltip");
+    );
 
     return diagnosticProvider.getComputedDiagnostics(documentContext).stream()
-      .map(diagnostic ->
-        new DocumentLink(
+      .map((Diagnostic diagnostic) -> {
+        var diagnosticCode = DiagnosticCode.getStringValue(diagnostic.getCode());
+
+        return new DocumentLink(
           diagnostic.getRange(),
-          siteDiagnosticsUrl + DiagnosticCode.getStringValue(diagnostic.getCode()),
+          siteDiagnosticsUrl + diagnosticCode,
           null,
-          tooltip
-        )
-      )
+          Resources.getResourceString(language, this.getClass(), "tooltip", diagnosticCode)
+        );
+      })
       .collect(Collectors.toList());
   }
 }
