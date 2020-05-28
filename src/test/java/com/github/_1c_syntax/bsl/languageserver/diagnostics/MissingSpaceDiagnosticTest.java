@@ -45,7 +45,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(29);
+//    assertThat(diagnostics).hasSize(29);
     assertThat(diagnostics, true)
       // на +
       .hasRange(4, 18, 4, 19)
@@ -92,6 +92,8 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       // с кавычками в строке
       .hasRange(43, 19, 20)
       .hasRange(43, 14, 15)
+
+      .hasSize(29)
     ;
   }
 
@@ -131,7 +133,6 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     diagnosticInstance.configure(configuration);
 
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(16);
     // на )
     assertThat(diagnostics, true)
       .hasRange(3, 31, 3, 32)
@@ -148,6 +149,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(31, 20, 31, 21)
       .hasRange(33, 6, 33, 7)
       .hasRange(41, 45, 41, 46);
+    assertThat(diagnostics).hasSize(16);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -159,11 +161,11 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
 
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
       .hasRange(8, 12, 8, 13)
       .hasRange(27, 10, 27, 11)
       .hasRange(41, 46, 41, 47);
+    assertThat(diagnostics).hasSize(3);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -174,11 +176,11 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     diagnosticInstance.configure(configuration);
 
     diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(4, 9, 4, 10)
       .hasRange(17, 18, 17, 19)
       .hasRange(31, 9, 31, 10)
       .hasRange(31, 28, 31, 29);
+    assertThat(diagnostics).hasSize(4);
   }
 }

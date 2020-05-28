@@ -122,25 +122,31 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return Collections.emptyList();
     }
 
-    mainMessage = this.info.getMessage();
-    indexWordLeftMsg = this.info.getResourceString("wordLeft");
-    indexWordRightMsg = this.info.getResourceString("wordRight");
-    indexWordLeftRightMsg = this.info.getResourceString("wordLeftAndRight");
+    if (mainMessage == null){
+      mainMessage = this.info.getMessage();
+      indexWordLeftMsg = this.info.getResourceString("wordLeft");
+      indexWordRightMsg = this.info.getResourceString("wordRight");
+      indexWordLeftRightMsg = this.info.getResourceString("wordLeftAndRight");
+    }
 
     diagnosticStorage.clearDiagnostics();
 
-    List<Token> tokens = documentContext.getTokens();
+    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
     boolean noSpaceLeft = false;
     boolean noSpaceRight = false;
 
-    for (var token:tokens){
+    for (int i = 0; i < tokens.size(); i++) {
+      var token = tokens.get(i);
+
+//    }
+//    for (var token:tokens){
       boolean checkLeft = false;
       boolean checkRight = false;
 
       final var text = token.getText();
 
       if (patternL != null && patternL.matcher(text).matches()){
-        noSpaceLeft = noSpaceLeft(tokens, token);
+        noSpaceLeft = noSpaceLeft(tokens, token, i);
         checkLeft = true;
 
         if (noSpaceLeft){
@@ -148,7 +154,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
         }
       }
       if (patternR != null && patternR.matcher(text).matches()){
-        noSpaceRight = noSpaceRight(tokens, token);
+        noSpaceRight = noSpaceRight(tokens, token, i);
         checkRight = true;
 
         if (noSpaceRight){
@@ -157,10 +163,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       }
       if (patternLr != null && patternLr.matcher(text).matches()){
         if (!checkLeft){
-          noSpaceLeft = noSpaceLeft(tokens, token);
+          noSpaceLeft = noSpaceLeft(tokens, token, i);
         }
         if (!checkRight){
-          noSpaceRight = noSpaceRight(tokens, token);
+          noSpaceRight = noSpaceRight(tokens, token, i);
         }
         checkLeftRight(token, noSpaceLeft, noSpaceRight);
       }
@@ -289,23 +295,52 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
-  private boolean noSpaceLeft(List<Token> tokens, Token t) {
+  private boolean noSpaceLeft(List<Token> tokens, Token t, int i) {
 
-    Token previousToken = tokens.get(t.getTokenIndex() - 1);
+//    Token previousToken = tokens.get(t.getTokenIndex() - 1);
+    Token previousToken = tokens.get(i - 1);
+//    if (t.getLine() == previousToken.getLine()
+//      && t.getCharPositionInLine() > previousToken.getCharPositionInLine() + 1){
+//      return false;
+//    }
     return previousToken.getType() != BSLParser.LPAREN
-      && patternNotSpace.matcher(previousToken.getText()).find();
+      && noSpaceBetween(previousToken, t) && patternNotSpace.matcher(previousToken.getText()).find();
+//    return previousToken.getType() != BSLParser.LPAREN
+//      && patternNotSpace.matcher(previousToken.getText()).find();
   }
 
-  private boolean noSpaceRight(List<Token> tokens, Token t) {
+  private static boolean noSpaceBetween(Token prev, Token next){
+    return prev.getLine() == next.getLine()
+//      && prev.getCharPositionInLine() + 1 == next.getCharPositionInLine();
+      && getLastCharPositionInLine(prev) + 1 == next.getCharPositionInLine();
+  }
+
+  private static int getLastCharPositionInLine(Token t) {
+    return t.getCharPositionInLine() + t.getStopIndex() - t.getStartIndex();
+  }
+
+  private boolean noSpaceRight(List<Token> tokens, Token t, int i) {
+
+//    if (i >= tokens.size() - 1){
+//      return false;
+//    }
+//    Token nextToken = tokens.get(i + 1);
+//    if (t.getLine() == nextToken.getLine() && nextToken.getCharPositionInLine() > t.getCharPositionInLine() + 1){
+//      return false;
+//    }
 
     // Если это унарный + или -, то пробел справа проверяем в соответствии с параметром checkSpaceToRightOfUnary
     // Надо понять, что они унарные
-    if (t.getTokenIndex() + 1 >= tokens.size() || (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
-      && isUnaryChar(tokens, t) && !Boolean.TRUE.equals(checkSpaceToRightOfUnary)) {
+    //    if (t.getTokenIndex() + 1 >= tokens.size() || (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
+    //      && isUnaryChar(tokens, t, i) && !Boolean.TRUE.equals(checkSpaceToRightOfUnary)) {
+    if (i + 1 >= tokens.size() || !Boolean.TRUE.equals(checkSpaceToRightOfUnary)
+        && (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
+        && isUnaryChar(tokens, t, i)) {
       return false;
     }
 
-    Token nextToken = tokens.get(t.getTokenIndex() + 1);
+//    Token nextToken = tokens.get(t.getTokenIndex() + 1);
+    Token nextToken = tokens.get(i + 1);
 
     // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
     if (Boolean.TRUE.equals(allowMultipleCommas)
@@ -313,10 +348,11 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       && nextToken.getType() == BSLLexer.COMMA) {
       return false;
     }
-    return patternNotSpace.matcher(nextToken.getText()).find();
+    return noSpaceBetween(t, nextToken) && patternNotSpace.matcher(nextToken.getText()).find();
+//    return patternNotSpace.matcher(nextToken.getText()).find();
   }
 
-  private boolean isUnaryChar(List<Token> tokens, Token t) {
+  private boolean isUnaryChar(List<Token> tokens, Token t, int i) {
 
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
@@ -325,7 +361,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return false;
     }
 
-    int currentIndex = t.getTokenIndex() - 1;
+//    int currentIndex = t.getTokenIndex() - 1;
+    int currentIndex = i - 1;
     while (currentIndex > 0) {
 
       final var text = tokens.get(currentIndex).getText();
