@@ -312,7 +312,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     // Надо понять, что они унарные
     if (i + 1 >= tokens.size() || !Boolean.TRUE.equals(checkSpaceToRightOfUnary)
         && (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
-        && isUnaryChar(tokens, t, i)) {
+        && isUnaryChar(tokens, i)) {
       return false;
     }
 
@@ -328,7 +328,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     return noSpaceBetween(t, nextToken) && patternNotSpace.matcher(nextToken.getText()).find();
   }
 
-  private boolean isUnaryChar(List<Token> tokens, Token t, int i) {
+  private boolean isUnaryChar(List<Token> tokens, int i) {
 
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
