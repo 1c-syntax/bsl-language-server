@@ -138,8 +138,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
     for (int i = 0; i < tokens.size(); i++) {
       var token = tokens.get(i);
 
-//    }
-//    for (var token:tokens){
       boolean checkLeft = false;
       boolean checkRight = false;
 
@@ -297,21 +295,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private boolean noSpaceLeft(List<Token> tokens, Token t, int i) {
 
-//    Token previousToken = tokens.get(t.getTokenIndex() - 1);
     Token previousToken = tokens.get(i - 1);
-//    if (t.getLine() == previousToken.getLine()
-//      && t.getCharPositionInLine() > previousToken.getCharPositionInLine() + 1){
-//      return false;
-//    }
+
     return previousToken.getType() != BSLParser.LPAREN
       && noSpaceBetween(previousToken, t) && patternNotSpace.matcher(previousToken.getText()).find();
-//    return previousToken.getType() != BSLParser.LPAREN
-//      && patternNotSpace.matcher(previousToken.getText()).find();
   }
 
   private static boolean noSpaceBetween(Token prev, Token next){
     return prev.getLine() == next.getLine()
-//      && prev.getCharPositionInLine() + 1 == next.getCharPositionInLine();
       && getLastCharPositionInLine(prev) + 1 == next.getCharPositionInLine();
   }
 
@@ -321,25 +312,14 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
   private boolean noSpaceRight(List<Token> tokens, Token t, int i) {
 
-//    if (i >= tokens.size() - 1){
-//      return false;
-//    }
-//    Token nextToken = tokens.get(i + 1);
-//    if (t.getLine() == nextToken.getLine() && nextToken.getCharPositionInLine() > t.getCharPositionInLine() + 1){
-//      return false;
-//    }
-
     // Если это унарный + или -, то пробел справа проверяем в соответствии с параметром checkSpaceToRightOfUnary
     // Надо понять, что они унарные
-    //    if (t.getTokenIndex() + 1 >= tokens.size() || (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
-    //      && isUnaryChar(tokens, t, i) && !Boolean.TRUE.equals(checkSpaceToRightOfUnary)) {
     if (i + 1 >= tokens.size() || !Boolean.TRUE.equals(checkSpaceToRightOfUnary)
         && (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
         && isUnaryChar(tokens, t, i)) {
       return false;
     }
 
-//    Token nextToken = tokens.get(t.getTokenIndex() + 1);
     Token nextToken = tokens.get(i + 1);
 
     // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
@@ -348,8 +328,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       && nextToken.getType() == BSLLexer.COMMA) {
       return false;
     }
+
     return noSpaceBetween(t, nextToken) && patternNotSpace.matcher(nextToken.getText()).find();
-//    return patternNotSpace.matcher(nextToken.getText()).find();
   }
 
   private boolean isUnaryChar(List<Token> tokens, Token t, int i) {
@@ -361,7 +341,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return false;
     }
 
-//    int currentIndex = t.getTokenIndex() - 1;
     int currentIndex = i - 1;
     while (currentIndex > 0) {
 
