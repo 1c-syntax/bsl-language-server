@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -44,7 +45,6 @@ import java.util.regex.Pattern;
     DiagnosticTag.STANDARD
   }
 )
-
 public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String REGEX_NETWORK_ADDRESS =
@@ -67,15 +67,15 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   private static final String REGEX_ALPHABET = "[A-zА-я]";
 
-  private static final Pattern patternNetworkAddress = getLocalPattern(REGEX_NETWORK_ADDRESS);
-  private static final Pattern patternURL = getLocalPattern(REGEX_URL);
-  private static final Pattern patternAlphabet = getLocalPattern(REGEX_ALPHABET);
+  private static final Pattern patternNetworkAddress = CaseInsensitivePattern.compile(REGEX_NETWORK_ADDRESS);
+  private static final Pattern patternURL = CaseInsensitivePattern.compile(REGEX_URL);
+  private static final Pattern patternAlphabet = CaseInsensitivePattern.compile(REGEX_ALPHABET);
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = REGEX_EXCLUSION
   )
-  private Pattern searchWordsExclusion = getLocalPattern(REGEX_EXCLUSION);
+  private Pattern searchWordsExclusion = CaseInsensitivePattern.compile(REGEX_EXCLUSION);
 
   public UsingHardcodeNetworkAddressDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -91,7 +91,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
     // Слова исключения, при поиске IP адресов
     String searchWordsExclusionProperty =
       (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);
-    searchWordsExclusion = getLocalPattern(searchWordsExclusionProperty);
+    searchWordsExclusion = CaseInsensitivePattern.compile(searchWordsExclusionProperty);
 
   }
 
@@ -154,10 +154,6 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
       return matcher.find();
     }
     return false;
-  }
-
-  private static Pattern getLocalPattern(String content) {
-    return Pattern.compile(content, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
 }

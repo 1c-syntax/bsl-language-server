@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.List;
@@ -44,9 +45,8 @@ import java.util.regex.Pattern;
 )
 public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern deletePattern = Pattern.compile(
-    "(вставить|добавить|insert|add)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern deletePattern = CaseInsensitivePattern.compile(
+    "(вставить|добавить|insert|add)"
   );
 
   public SelfInsertionDiagnostic(DiagnosticInfo info) {
@@ -76,7 +76,7 @@ public class SelfInsertionDiagnostic extends AbstractVisitorDiagnostic {
       }
     }
 
-    return super.visitCallStatement(ctx);
+    return ctx;
   }
 
 }

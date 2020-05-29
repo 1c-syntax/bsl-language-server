@@ -111,9 +111,8 @@ public class ServerContext {
     return documents.get(Absolute.uri(uri));
   }
 
-  @CheckForNull
   public Map<ModuleType, DocumentContext> getDocuments(String mdoRef) {
-    return documentsByMDORef.get(mdoRef);
+    return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
   @SneakyThrows
@@ -171,8 +170,8 @@ public class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    var modulesByUri = getConfiguration().getModulesByURI();
-    var mdoByUri = modulesByUri.get(uri);
+    var modulesByObject = getConfiguration().getModulesByObject();
+    var mdoByUri = modulesByObject.get(uri);
 
     if (mdoByUri != null) {
       var mdoRef = mdoByUri.getMdoRef();

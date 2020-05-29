@@ -30,13 +30,12 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -49,9 +48,8 @@ import java.util.stream.Collectors;
 )
 public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern cancelPattern = Pattern.compile(
-    "отказ|cancel",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern cancelPattern = CaseInsensitivePattern.compile(
+    "отказ|cancel"
   );
 
   public UsingCancelParameterDiagnostic(DiagnosticInfo info) {
@@ -73,23 +71,17 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    int skip = 0;
-    Collection<ParseTree> assigns = Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment);
-
-    List<ParseTree> tree = assigns.stream()
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment).stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
           .getText())
           .matches()
-      ).collect(Collectors.toList());
-
-    tree.stream().skip(skip).forEach(
-      (ParseTree ident) -> {
-        if (!rightPartIsValid((BSLParser.AssignmentContext) ident)) {
-          diagnosticStorage.addDiagnostic((BSLParserRuleContext) ident.getParent());
-        }
-      }
-    );
+      )
+      .map(BSLParserRuleContext.class::cast)
+      .filter(ident -> !rightPartIsValid((BSLParser.AssignmentContext) ident))
+      .map(ParseTree::getParent)
+      .map(BSLParserRuleContext.class::cast)
+      .forEach(diagnosticStorage::addDiagnostic);
 
     return ctx;
   }

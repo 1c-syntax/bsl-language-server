@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -42,7 +43,6 @@ import org.eclipse.lsp4j.TextEdit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,7 +56,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   // символы, требующие пробелы только слева
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT = "";
@@ -69,8 +69,8 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   // Разрешить несколько запятых подряд
   private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false;
 
-  @Nonnull private static final Pattern patternNotSpace = compilePattern("\\S+");
-  private static final Pattern BEFORE_UNARY_CHAR_PATTERN = compilePattern(
+  @Nonnull private static final Pattern patternNotSpace = CaseInsensitivePattern.compile("\\S+");
+  private static final Pattern BEFORE_UNARY_CHAR_PATTERN = CaseInsensitivePattern.compile(
     getRegularString("+ - * / = % < > ( [ , Возврат <> <= >="));
 
   @DiagnosticParameter(
@@ -116,10 +116,10 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  public void check() {
 
     if (patternL == null && patternR == null && patternLr == null){
-      return Collections.emptyList();
+      return;
     }
 
     if (mainMessage == null){
@@ -128,8 +128,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       indexWordRightMsg = this.info.getResourceString("wordRight");
       indexWordLeftRightMsg = this.info.getResourceString("wordLeftAndRight");
     }
-
-    diagnosticStorage.clearDiagnostics();
 
     List<Token> tokens = documentContext.getTokensFromDefaultChannel();
     boolean noSpaceLeft = false;
@@ -169,8 +167,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
         checkLeftRight(token, noSpaceLeft, noSpaceRight);
       }
     }
-
-    return diagnosticStorage.getDiagnostics();
   }
 
   @Override
@@ -290,7 +286,7 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return null;
     }
 
-    return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    return CaseInsensitivePattern.compile(string);
   }
 
   private boolean noSpaceLeft(List<Token> tokens, Token t, int i) {
@@ -336,10 +332,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
 
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
-
-    if (BEFORE_UNARY_CHAR_PATTERN == null) {
-      return false;
-    }
 
     int currentIndex = i - 1;
     while (currentIndex > 0) {

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
@@ -51,14 +52,12 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
   private static final HashSet<String> IS_IN_ROLE_VARS = new HashSet<>();
   private static final HashSet<String> PRIVILEGED_MODE_NAME_VARS = new HashSet<>();
 
-  private static final Pattern IS_IN_ROLE_NAME_PATTERN = Pattern.compile(
-    "(РольДоступна|IsInRole)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern IS_IN_ROLE_NAME_PATTERN = CaseInsensitivePattern.compile(
+    "(РольДоступна|IsInRole)"
   );
 
-  private static final Pattern PRIVILEGED_MODE_NAME_PATTERN = Pattern.compile(
-    "(PrivilegedMode|ПривилегированныйРежим)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern PRIVILEGED_MODE_NAME_PATTERN = CaseInsensitivePattern.compile(
+    "(PrivilegedMode|ПривилегированныйРежим)"
   );
 
   public IsInRoleMethodDiagnosticDiagnostic(DiagnosticInfo info) {

@@ -10,8 +10,7 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 When passing parameters to function, it is not recommended to use nested calls of other functions.
-
-Similarly, it is not recommended to use nested calls of other functions or other parameterized constructors when initializing constructor parameters.
+ Similarly, it is not recommended to use nested calls of other functions or other parameterized constructors when initializing constructor parameters.
 
 At the same time, if the code with nested calls is compact (does not require the hyphenation of expressions) and is easy to read, then nested calls are acceptable.
 
@@ -22,29 +21,18 @@ At the same time, if the code with nested calls is compact (does not require the
 Wrong:
 
 ```bsl
-Attachments.Insert(
- AttachedFile.Description,
- New Picture(GetFromTempStorage(
-  AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData)));
+Attachments.Insert(  AttachedFile.Description,  New Picture(GetFromTempStorage(   AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData)));
 ```
 
 It is correct to break such calls into separate operators using additional local variables:
 
 ```bsl
-FileImageHRef = AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData;
-PictureData = New Picture(GetFromTempStorage(FileImageHRef));
-Attachments.Insert(AttachedFile.Description, PictureData);
+FileImageHRef = AttachedFiles.GetFileData(AttachedFile.Ref).RefToFileBinaryData; PictureData = New Picture(GetFromTempStorage(FileImageHRef)); Attachments.Insert(AttachedFile.Description, PictureData);
 ```
 
 ## Sources
 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 - [Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
 

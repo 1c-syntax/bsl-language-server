@@ -6,18 +6,22 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
+
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+Modules intended for implementing functions on the server or client with cached of the returned values (for the time of the call or for the session) are named with the postfix "Cached" and "ClientCached" respectively.
+
 ## Examples
+
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
+FilesClientCached, UsersInternalCached
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+## Sources
+
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
+[Standard: Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:3.2.3)
 
 ## Snippets
 

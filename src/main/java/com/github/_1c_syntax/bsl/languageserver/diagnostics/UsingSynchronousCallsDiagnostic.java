@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -48,7 +49,7 @@ import java.util.regex.Pattern;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern MODALITY_METHODS = Pattern.compile(
+  private static final Pattern MODALITY_METHODS = CaseInsensitivePattern.compile(
     "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
       "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
       "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
@@ -59,12 +60,12 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       "КОПИРОВАТЬФАЙЛ|FILECOPY|ПЕРЕМЕСТИТЬФАЙЛ|MOVEFILE|НАЙТИФАЙЛЫ|FINDFILES|УДАЛИТЬФАЙЛЫ|DELETEFILES|" +
       "СОЗДАТЬКАТАЛОГ|CREATEDIRECTORY|КАТАЛОГВРЕМЕННЫХФАЙЛОВ|TEMPFILESDIR|КАТАЛОГДОКУМЕНТОВ|DOCUMENTSDIR|" +
       "РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ|USERDATAWORKDIR|ПОЛУЧИТЬФАЙЛЫ|GETFILES|ПОМЕСТИТЬФАЙЛЫ|PUTFILES|" +
-      "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)"
+  );
 
-  private static final Pattern SERVER_COMPILER_PATTERN = Pattern.compile(
-    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern SERVER_COMPILER_PATTERN = CaseInsensitivePattern.compile(
+    "(НаСервере|НаСервереБезКонтекста|AtServer|AtServerNoContext)"
+  );
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
@@ -125,7 +126,7 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
     var configuration = documentContext.getServerContext().getConfiguration();
     // если использование синхронных вызовов разрешено (без предупреждение), то
     // ничего не диагностируется
@@ -133,6 +134,11 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
+    return super.visitFile(ctx);
+  }
+
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
     if (MODALITY_METHODS.matcher(methodName).matches()) {
       BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);

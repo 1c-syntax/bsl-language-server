@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -63,7 +62,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
     tokensInOneLine.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {

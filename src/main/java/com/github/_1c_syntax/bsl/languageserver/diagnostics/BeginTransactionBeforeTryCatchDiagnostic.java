@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Optional;
@@ -44,9 +45,9 @@ import java.util.stream.Stream;
   }
 )
 public class BeginTransactionBeforeTryCatchDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern BEGIN_TRANSACTION_PATTERN = Pattern.compile(
-    "^НачатьТранзакцию$|^BeginTransaction$",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern BEGIN_TRANSACTION_PATTERN = CaseInsensitivePattern.compile(
+    "^НачатьТранзакцию$|^BeginTransaction$"
+  );
 
   private BSLParserRuleContext nodeBeginTransaction;
   private BSLParser.StatementContext nodeEndFile;

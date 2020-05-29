@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -57,8 +58,9 @@ import java.util.stream.Stream;
 public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String KEY_MESSAGE = "diagnosticMessageReturnStatement";
-  private static final Pattern pattern = Pattern.compile(
-    "^(подключаемый|attachable)_", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern pattern = CaseInsensitivePattern.compile(
+    "^(подключаемый|attachable)_"
+  );
 
   private static final boolean SKIP_ATTACHABLE = true;
   private static final boolean CASE_SENSITIVE_FOR_STRING = false;
