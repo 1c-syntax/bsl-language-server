@@ -25,8 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -41,7 +41,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,8 +49,8 @@ public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
 
-  //подробная расшифровка использования этих директив компиляции приведена в комментариях в MethodSymbolComputerTest
-  private static final Set<Integer> specialCompilerDirectivesTokenTypes = Set.of(
+  // подробная расшифровка использования этих директив компиляции приведена в комментариях в MethodSymbolComputerTest
+  private static final Set<Integer> SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES = Set.of(
     BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
@@ -130,18 +129,46 @@ public final class MethodSymbolComputer
     return ctx;
   }
 
-  private static Optional<CompilerDirective> getCompilerDirective(List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts) {
+  // есть определенные предпочтения при использовании &НаКлиентеНаСервереБезКонтекста в модуле упр.формы
+  // при ее использовании с другой директивой будет использоваться именно она
+  // например, порядок 1
+  //&НаКлиентеНаСервереБезКонтекста
+  //&НаСервереБезКонтекста
+  //показывает Сервер в отладчике и доступен серверный объект ТаблицаЗначений
+  // или порядок 2
+  //&НаСервереБезКонтекста
+  //&НаКлиентеНаСервереБезКонтекста
+  //аналогично
+  //т.е. порядок этих 2х директив не важен, все равно используется &НаКлиентеНаСервереБезКонтекста.
+  // проверял на 8.3.15
+
+  // есть определенные предпочтения при использовании &НаКлиентеНаСервере в модуле команды
+  // при ее использовании с другой директивой будет использоваться именно она
+  //  проверял на 8.3.15
+  //  порядок
+  //  1
+  //  &НаКлиентеНаСервере
+  //  &НаКлиенте
+  //  вызывает клиент при вызове метода с клиента
+  //  вызывает сервер при вызове метода с сервера
+  //  2
+  //  &НаКлиенте
+  //  &НаКлиентеНаСервере
+  //  вызывает клиент при вызове метода с клиента
+  //  вызывает сервер при вызове метода с сервера
+
+  private static Optional<CompilerDirectiveKind> getCompilerDirective(List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts) {
     if (compilerDirectiveContexts.isEmpty()) {
       return Optional.empty();
     }
     var tokenType = compilerDirectiveContexts.stream()
       .map(o -> (BSLParser.CompilerDirectiveContext) o)
       .map(compilerDirectiveContext -> compilerDirectiveContext.getStop().getType())
-      .filter(specialCompilerDirectivesTokenTypes::contains)
+      .filter(SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES::contains)
       .findAny()
       .orElseGet(() -> compilerDirectiveContexts.get(0).getStop().getType());
 
-    return CompilerDirective.of(tokenType);
+    return CompilerDirectiveKind.of(tokenType);
 
   }
 
@@ -152,8 +179,8 @@ public final class MethodSymbolComputer
     BSLParser.ParamListContext paramList,
     boolean function,
     boolean export,
-    Optional<CompilerDirective> compilerDirective,
-    List<Annotation> annotation
+    Optional<CompilerDirectiveKind> compilerDirective,
+    List<AnnotationKind> annotationKind
   ) {
     Optional<MethodDescription> description = createDescription(startNode.getSymbol());
     boolean deprecated = description
@@ -174,8 +201,8 @@ public final class MethodSymbolComputer
       .deprecated(deprecated)
       .mdoRef(mdoRef)
       .parameters(createParameters(paramList))
-      .compilerDirective(compilerDirective)
-      .annotations(annotation)
+      .compilerDirectiveKind(compilerDirective)
+      .annotationKinds(annotationKind)
       .build();
   }
 
@@ -209,18 +236,18 @@ public final class MethodSymbolComputer
       .orElse("<UNKNOWN_IDENTIFIER>");
   }
 
-  private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
-    final List<Annotation> annotations;
+  private static List<AnnotationKind> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
+    final List<AnnotationKind> annotationKinds;
     if (annotationContext.isEmpty()) {
-      annotations = Collections.emptyList();
+      annotationKinds = Collections.emptyList();
     } else {
-      annotations = annotationContext.stream()
+      annotationKinds = annotationContext.stream()
         .map(annotation -> annotation.getStop().getType())
-        .map(Annotation::of)
-        .map(optionalAnnotation -> optionalAnnotation.orElse(null))
-        .filter(Objects::nonNull)
+        .map(AnnotationKind::of)
+        .filter(optionalAnnotation -> optionalAnnotation.isPresent())
+        .map(optionalAnnotation -> optionalAnnotation.get())
         .collect(Collectors.toList());
     }
-    return annotations;
+    return annotationKinds;
   }
 }

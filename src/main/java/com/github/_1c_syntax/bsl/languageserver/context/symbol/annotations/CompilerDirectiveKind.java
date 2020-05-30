@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public enum CompilerDirective {
+public enum CompilerDirectiveKind {
   AT_SERVER_NO_CONTEXT(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL),
   AT_CLIENT_AT_SERVER_NO_CONTEXT(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL),
   AT_CLIENT_AT_SERVER(BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL),
@@ -35,7 +35,7 @@ public enum CompilerDirective {
 
   private final int tokenType;
 
-  CompilerDirective(int tokenType) {
+  CompilerDirectiveKind(int tokenType) {
     this.tokenType = tokenType;
   }
 
@@ -43,7 +43,7 @@ public enum CompilerDirective {
     return tokenType;
   }
 
-  public static Optional<CompilerDirective> of(int tokenType){
+  public static Optional<CompilerDirectiveKind> of(int tokenType){
     return Stream.of(values())
       .filter(compilerDirective -> compilerDirective.getTokenType() == tokenType)
       .findAny();

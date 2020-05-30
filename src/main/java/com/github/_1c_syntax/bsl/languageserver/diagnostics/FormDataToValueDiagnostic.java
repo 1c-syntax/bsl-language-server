@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -66,9 +66,9 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
     var isContextMethod = documentContext.getSymbolTree()
       .getMethodSymbol(parentNode)
-      .flatMap(MethodSymbol::getCompilerDirective)
-      .filter(compilerDirective -> compilerDirective == CompilerDirective.AT_SERVER_NO_CONTEXT
-        || compilerDirective == CompilerDirective.AT_CLIENT_AT_SERVER_NO_CONTEXT)
+      .flatMap(MethodSymbol::getCompilerDirectiveKind)
+      .filter(compilerDirective -> compilerDirective == CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
+        || compilerDirective == CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT)
       .isEmpty();
     if (isContextMethod){
       return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();

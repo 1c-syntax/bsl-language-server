@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public enum Annotation {
+public enum AnnotationKind {
   BEFORE(BSLParser.ANNOTATION_BEFORE_SYMBOL),
   AFTER(BSLParser.ANNOTATION_AFTER_SYMBOL),
   AROUND(BSLParser.ANNOTATION_AROUND_SYMBOL),
@@ -35,7 +35,7 @@ public enum Annotation {
 
   private final int tokenType;
 
-  Annotation(int tokenType) {
+  AnnotationKind(int tokenType) {
     this.tokenType = tokenType;
   }
 
@@ -43,9 +43,9 @@ public enum Annotation {
     return tokenType;
   }
 
-  public static Optional<Annotation> of(int tokenType) {
+  public static Optional<AnnotationKind> of(int tokenType) {
     return Stream.of(values())
-      .filter(annotation -> annotation.getTokenType() == tokenType)
+      .filter(annotationKind -> annotationKind.getTokenType() == tokenType)
       .findAny();
   }
 }

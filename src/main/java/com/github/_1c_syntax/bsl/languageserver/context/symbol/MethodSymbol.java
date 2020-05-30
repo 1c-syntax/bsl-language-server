@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirective;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -71,9 +71,9 @@ public class MethodSymbol implements Symbol {
   List<ParameterDefinition> parameters = new ArrayList<>();
 
   @Builder.Default
-  Optional<CompilerDirective> compilerDirective = Optional.empty();
+  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
   @Builder.Default
-  List<Annotation> annotations = new ArrayList<>();
+  List<AnnotationKind> annotationKinds = new ArrayList<>();
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
