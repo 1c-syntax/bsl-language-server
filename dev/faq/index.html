@@ -351,15 +351,19 @@
 <li>обратиться в чате <a href="https://t.me/bsl_language_server">telegram</a> с ситуацией, возможно все-таки ошибки нет</li>
 <li>создать ишью (<a href="https://github.com/1c-syntax/bsl-language-server/issues">issue</a>) в репозитории проекта соответствующего типа, куда приложить описание ошибки и, очень желательно, примеры кода, где диагностика работает неверно.</li>
 </ul>
-<h2 id="bsl-language-server-sonarqube"><code>BSL Language Server</code> и SonarQube плагин это одно и тоже?<a class="headerlink" href="#bsl-language-server-sonarqube" title="Permanent link">&para;</a></h2>
-<p><code>BSL Language Server</code> является самостоятельным приложением, реализацией серверной части протокола LSP. Плагин для SonarQube использует <code>BSL Language Server</code> для выполнения анализа исходного кода языка BSL (конфигурации 1С, скрипты 1Scipt и OSWeb).</p>
-<p><code>BSL Language Server</code> может быть использован с любым приложением, имеющим реализацию LSP клиента. Проверенные подключения:
-* плагин для <a href="https://github.com/1c-syntax/vsc-language-1c-bsl/">VS code</a>;
-* дополнительная утилита для Конфигуратора <a href="https://github.com/otymko/phoenixbsl">Phoenix BSL</a>;
-* плагин для <a href="https://github.com/sublimelsp/LSP">Sublime Text</a>.</p>
-<p>Так же через прямой импорт <code>BSL Language Server</code> работают:
-* плагин для <a href="https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator">1C:Enterprise development tools</a> (собственная реализация, без LSP);
-* плагин для <a href="https://github.com/1c-syntax/sonar-bsl-plugin-community">SonarQube</a>;</p>
+<h2 id="bsl-language-server-sonarqube"><code>BSL Language Server</code> и <code>SonarQube</code> плагин это одно и тоже?<a class="headerlink" href="#bsl-language-server-sonarqube" title="Permanent link">&para;</a></h2>
+<p><code>BSL Language Server</code> является самостоятельным приложением, реализацией серверной части протокола LSP. Плагин для <code>SonarQube</code> использует <code>BSL Language Server</code> для выполнения анализа исходного кода языка BSL (конфигурации 1С, скрипты 1Script и 1Script.Web).</p>
+<p><code>BSL Language Server</code> может быть использован с любым приложением, имеющим реализацию LSP клиента. Проверенные подключения:</p>
+<ul>
+<li>плагин для <a href="https://github.com/1c-syntax/vsc-language-1c-bsl/">VS code</a>;</li>
+<li>дополнительная утилита для Конфигуратора <a href="https://github.com/otymko/phoenixbsl">Phoenix BSL</a>;</li>
+<li>плагин для <a href="https://github.com/sublimelsp/LSP">Sublime Text</a>.</li>
+</ul>
+<p>Так же через прямой импорт <code>BSL Language Server</code> работают:</p>
+<ul>
+<li>плагин для <a href="https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator">1C:Enterprise development tools</a> (собственная реализация, без LSP);</li>
+<li>плагин для <a href="https://github.com/1c-syntax/sonar-bsl-plugin-community">SonarQube</a>;</li>
+</ul>
                 
               
               
