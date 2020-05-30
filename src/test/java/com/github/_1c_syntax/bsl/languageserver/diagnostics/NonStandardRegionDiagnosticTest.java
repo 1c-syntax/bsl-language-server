@@ -141,7 +141,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       .hasRange(41, 1, 63)
       .hasRange(45, 1, 31)
       .hasRange(49, 1, 27)
-      .hasRange(57, 1, 18)
+      .hasRange(77, 1, 18)
     ;
   }
 

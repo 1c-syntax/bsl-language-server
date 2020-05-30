@@ -64,7 +64,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
 
     final var tokens = documentContext.getTokens();
     if (tokens.isEmpty()){

@@ -6,18 +6,28 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+Standard 772, Interaction with Automated Testing Tools, has been canceled. In this regard, verification of the "АвтоТест" parameter in the form code is no longer necessary.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+```bsl
+If Parameters.Property("АвтоТест") Then
+    Return;
+EndIf;
+```
+
+and in handler Filling in object module:
+
+```bsl
+If FillData = "АвтоТест" Then
+    Return;
+EndIf;
+```
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+- Источник: [Standard: Modules. Part 3 (RU)](https://its.1c.ru/db/v8std#content:456:hdoc:3)
 
 ## Snippets
 

@@ -24,32 +24,10 @@ A large number of returns in a method (procedure or function) increases its comp
 Bad method example
 
 ```bsl
-Function Example(Condition)
-    If Condition = 1 Then
-        Return "Check passed";
-    ElsIf Condition = 2 Then
-        ExecuteSomething();
-        Return "Check not passed";
-    ElsIf Condition > 7 Then
-        Если Validate(Contidtion) Then
-            Return "Check passed";
-        Else
-            Return "Check not passed";
-        EndIf;
-    EndIf;
-    Return "";
-EndFunction
+Function Example(Condition)     If Condition = 1 Then         Return "Check passed";     ElsIf Condition = 2 Then         ExecuteSomething();         Return "Check not passed";     ElsIf Condition > 7 Then         Если Validate(Contidtion) Then             Return "Check passed";         Else             Return "Check not passed";         EndIf;     EndIf;     Return ""; EndFunction
 ```
 
 ## Sources
-
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 - [Why Many Return Statements Are a Bad Idea in OOP](https://www.yegor256.com/2015/08/18/multiple-return-statements-in-oop.html)
 - [JAVA: Methods should not have too many return statements](https://rules.sonarsource.com/java/RSPEC-1142)

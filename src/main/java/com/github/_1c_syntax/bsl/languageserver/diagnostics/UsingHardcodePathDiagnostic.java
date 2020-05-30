@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Map;
@@ -58,14 +59,14 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String REGEX_URL = "^(ftp|http|https):\\/\\/[^ \"].*";
 
-  private static final Pattern patternPath = getLocalPattern(REGEX_PATH);
-  private static final Pattern patternURL = getLocalPattern(REGEX_URL);
+  private static final Pattern patternPath = CaseInsensitivePattern.compile(REGEX_PATH);
+  private static final Pattern patternURL = CaseInsensitivePattern.compile(REGEX_URL);
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = REGEX_STD_PATHS_UNIX
   )
-  private Pattern searchWordsStdPathsUnix = getLocalPattern("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
+  private Pattern searchWordsStdPathsUnix = CaseInsensitivePattern.compile("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 
   public UsingHardcodePathDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -80,7 +81,7 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty =
       (String) configuration.getOrDefault("searchWordsStdPathsUnix", REGEX_STD_PATHS_UNIX);
-    searchWordsStdPathsUnix = getLocalPattern("^\\/(" + searchWordsStdPathsUnixProperty + ")");
+    searchWordsStdPathsUnix = CaseInsensitivePattern.compile("^\\/(" + searchWordsStdPathsUnixProperty + ")");
 
   }
 
@@ -113,10 +114,6 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     diagnosticStorage.addDiagnostic(ctx);
-  }
-
-  private static Pattern getLocalPattern(String content) {
-    return Pattern.compile(content, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
   }
 
 }

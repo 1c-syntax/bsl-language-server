@@ -30,9 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.Collections;
 import java.util.EnumMap;
@@ -52,7 +51,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.STANDARD
   }
 )
-public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
+public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern PUBLIC_REGION_NAME =
     createPattern(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
@@ -173,20 +172,20 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static Pattern createPattern(String keywordRu, String keywordEn, String template) {
-    return Pattern.compile(
-      String.format(template, keywordRu, keywordEn),
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    return CaseInsensitivePattern.compile(
+      String.format(template, keywordRu, keywordEn)
+    );
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
+  public void check() {
 
     // нет смысла говорить о стандартах для неизвестных модулях
     Set<Pattern> standardRegions = standardRegionsByModuleType.getOrDefault(
       documentContext.getModuleType(), Collections.emptySet());
 
     if (standardRegions.isEmpty()) {
-      return ctx;
+      return;
     }
 
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
@@ -194,7 +193,7 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
     // чтобы не было лишних FP, анализировать модуль без областей не будем
     // вешать диагностику тож не будем, пусть вешается "CodeOutOfRegionDiagnostic"
     if (regions.isEmpty()) {
-      return ctx;
+      return;
     }
 
     // проверим, что область находится в списке доступных
@@ -206,7 +205,5 @@ public class NonStandardRegionDiagnostic extends AbstractVisitorDiagnostic {
         );
       }
     });
-
-    return ctx;
   }
 }

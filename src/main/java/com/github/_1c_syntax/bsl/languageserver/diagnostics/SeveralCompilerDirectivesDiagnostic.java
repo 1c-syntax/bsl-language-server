@@ -53,7 +53,7 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
     if (Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
       diagnosticStorage.addDiagnostic(ctx.moduleVarsList());
     }
-    return super.visitModuleVar(ctx);
+    return ctx;
   }
 
   @Override
@@ -64,6 +64,6 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
       diagnosticStorage.addDiagnostic(methodSymbol.get().getSubNameRange());
     }
 
-    return super.visitSub(ctx);
+    return ctx;
   }
 }

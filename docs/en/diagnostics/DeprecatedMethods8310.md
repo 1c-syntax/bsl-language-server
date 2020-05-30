@@ -19,11 +19,7 @@ ClientApplicationInterfaceCurrentVariant().
 ```
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 Source: [Version 8.3.10 changelog](https://dl03.1c.ru/content/Platform/8_3_10_2699/1cv8upd.htm)
 
 ## Snippets

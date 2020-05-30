@@ -47,7 +47,7 @@ public class UnknownPreprocessorSymbolDiagnostic extends AbstractVisitorDiagnost
   @Override
   public ParseTree visitPreproc_unknownSymbol(BSLParser.Preproc_unknownSymbolContext ctx) {
     diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
-    return super.visitPreproc_unknownSymbol(ctx);
+    return ctx;
   }
 
 }

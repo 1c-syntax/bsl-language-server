@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
 
@@ -45,11 +46,10 @@ import java.util.regex.Pattern;
 )
 public class DeprecatedMethods8317Diagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern DEPRECATED_METHODS_NAMES = Pattern.compile(
+  private static final Pattern DEPRECATED_METHODS_NAMES = CaseInsensitivePattern.compile(
     "(КраткоеПредставлениеОшибки|BriefErrorDescription|" +
       "ПодробноеПредставлениеОшибки|DetailErrorDescription|" +
-      "ПоказатьИнформациюОбОшибке|ShowErrorInfo)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+      "ПоказатьИнформациюОбОшибке|ShowErrorInfo)"
   );
 
   public DeprecatedMethods8317Diagnostic(DiagnosticInfo info) {

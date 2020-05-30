@@ -60,7 +60,7 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
 
     if (!isCashed(documentContext)) {
       return;

@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -63,8 +64,7 @@ public class DeprecatedMethods8310Diagnostic extends AbstractVisitorDiagnostic {
   private static final String CLIENT_INTERFACE_VARIANT_RU = "ТекущийВариантИнтерфейсаКлиентскогоПриложения";
   private static final String CLIENT_INTERFACE_VARIANT_EN = "ClientApplicationInterfaceCurrentVariant";
 
-  private static final Pattern METHOD_PATTERN = Pattern.compile(getRegex(),
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern METHOD_PATTERN = CaseInsensitivePattern.compile(getRegex());
 
   private static final HashMap<String, String> newMethods = new HashMap<>();
 

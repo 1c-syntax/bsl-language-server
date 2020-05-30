@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -54,7 +55,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   // символы, требующие пробелы только слева
   private static final String DEFAULT_LIST_FOR_CHECK_LEFT = "";
@@ -148,17 +149,15 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
       return null;
     }
 
-    return Pattern.compile(string, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    return CaseInsensitivePattern.compile(string);
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  public void check() {
 
     sampleMessage[INDEX_WORD_LEFT] = info.getResourceString("wordLeft");               // "Слева"
     sampleMessage[INDEX_WORD_RIGHT] = info.getResourceString("wordRight");             // "Справа"
     sampleMessage[INDEX_WORD_LEFT_RIGHT] = info.getResourceString("wordLeftAndRight"); // "Слева и справа"
-
-    diagnosticStorage.clearDiagnostics();
 
     List<Token> tokens = documentContext.getTokens();
     List<Token> foundTokens;
@@ -208,8 +207,6 @@ public class MissingSpaceDiagnostic extends AbstractVisitorDiagnostic implements
         );
 
     }
-
-    return diagnosticStorage.getDiagnostics();
   }
 
   @Override

@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
 
@@ -42,9 +43,8 @@ import java.util.regex.Pattern;
 )
 public class GetFormMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
-    "ПолучитьФорму|GetForm",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
+    "ПолучитьФорму|GetForm"
   );
 
   public GetFormMethodDiagnostic(DiagnosticInfo info) {

@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **110**
+Общее количество: **111**
 
-* Дефект кода: **69**
+* Дефект кода: **70**
 * Уязвимость: **3**
 * Ошибка: **34**
 * Потенциальная уязвимость: **4**
@@ -46,6 +46,7 @@
 | [DeprecatedCurrentDate](DeprecatedCurrentDate.md) | Использование устаревшего метода "ТекущаяДата" | Да | Важный | Ошибка | `standard`<br/>`deprecated`<br/>`unpredictable` |
 | [DeprecatedFind](DeprecatedFind.md) | Использование устаревшего метода "Найти" | Да | Незначительный | Дефект кода | `deprecated` |
 | [DeprecatedMessage](DeprecatedMessage.md) | Ограничение на использование устаревшего метода "Сообщить" | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
+| [DeprecatedMethodCall](DeprecatedMethodCall.md) | Устаревшие методы не должны использоваться | Да | Незначительный | Дефект кода | `deprecated`<br/>`design` |
 | [DeprecatedMethods8310](DeprecatedMethods8310.md) | Использование устаревшего метода клиентского приложения | Да | Информационный | Дефект кода | `deprecated` |
 | [DeprecatedMethods8317](DeprecatedMethods8317.md) | Использование устаревших глобальных методов платформы 8.3.17 | Да | Информационный | Дефект кода | `deprecated` |
 | [DeprecatedTypeManagedForm](DeprecatedTypeManagedForm.md) | Устаревшее использование типа "УправляемаяФорма" | Да | Информационный | Дефект кода | `standard`<br/>`deprecated` |

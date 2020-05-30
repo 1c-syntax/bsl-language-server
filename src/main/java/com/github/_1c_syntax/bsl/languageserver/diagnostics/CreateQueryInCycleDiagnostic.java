@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
@@ -53,22 +54,12 @@ import java.util.stream.Collectors;
   }
 )
 public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern EXECUTE_CALL_PATTERN = Pattern.compile(
-    "Выполнить|Execute",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern QUERY_BUILDER_PATTERN = Pattern.compile(
-    "ПостроительЗапроса|QueryBuilder",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern REPORT_BUILDER_PATTERN = Pattern.compile(
-    "ПостроительОтчета|ReportBuilder",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern QUERY_PATTERN = Pattern.compile(
-    "Запрос|Query",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
+  private static final Pattern EXECUTE_CALL_PATTERN = CaseInsensitivePattern.compile("Выполнить|Execute");
+  private static final Pattern QUERY_BUILDER_PATTERN =
+    CaseInsensitivePattern.compile("ПостроительЗапроса|QueryBuilder");
+  private static final Pattern REPORT_BUILDER_PATTERN =
+    CaseInsensitivePattern.compile("ПостроительОтчета|ReportBuilder");
+  private static final Pattern QUERY_PATTERN = CaseInsensitivePattern.compile("Запрос|Query");
 
   private static final String BOOLEAN_TYPE = "Boolean";
   private static final String DATE_TYPE = "Datetime";

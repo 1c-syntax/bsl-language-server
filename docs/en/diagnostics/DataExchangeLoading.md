@@ -12,50 +12,37 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
+
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+All actions in the event-handler procedures BeforeWrite, OnWrite, BeforeDelete should be performed after checking for DataExchange.Load.
+
+This is necessary so that no business logic of the object is executed when writing the object through the data exchange mechanism, since it has already been executed for the object in the node where it was created.
+
 ## Examples
+
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 Bad:
+
 ```bsl
-Procedure BeforeWrite(Cancel)
-
-    If Not Cancel Then
-        RandomAlgorithm();
-    EndIf;
-
-    // code handler
-    //
-    // ...
-    
-EndProcedure
+Procedure BeforeWrite(Cancel)      If Not Cancel Then         RandomAlgorithm();     EndIf;      // code handler     //     // ...      EndProcedure
 ```
 
 Good:
-```bsl
-Procedure BeforeWrite(Cancel)
-    If DataExchange.Load Then
-         Return;
-    EndIf;
 
-    // code handler
-    // ...
-EndProcedure
+```bsl
+Procedure BeforeWrite(Cancel)     If DataExchange.Load Then          Return;     EndIf;      // code handler     // ... EndProcedure
 ```
 
 ## Sources
+
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
-* [Стандарт: Использование признака ОбменДанными.Загрузка в обработчиках событий объекта](https://its.1c.ru/db/v8std#content:773)
-* [Обработчик события ПриЗаписи](https://its.1c.ru/db/v8std#content:465)
-* [Обработчик события ПередЗаписью](https://its.1c.ru/db/v8std#content:464)
-* [Обработчик события ПередУдалением](https://its.1c.ru/db/v8std#content:752)
+- [Standard: Using DataExchange.Load in object handlers (RU)](https://its.1c.ru/db/v8std#content:773)
+- [Handler OnWrite (RU)](https://its.1c.ru/db/v8std#content:465)
+- [Handler BeforeWrite (RU)](https://its.1c.ru/db/v8std#content:464)
+- [Handler BeforeDelete (RU)](https://its.1c.ru/db/v8std#content:752)
 
 ## Snippets
 

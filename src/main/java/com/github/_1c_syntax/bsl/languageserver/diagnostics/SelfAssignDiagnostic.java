@@ -52,7 +52,7 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
     BSLParser.ExpressionContext expression = ctx.expression();
 
     if (expression == null) {
-      return super.visitAssignment(ctx);
+      return ctx;
     }
 
     if (ctx.lValue().getText().equalsIgnoreCase(expression.getText())
@@ -60,7 +60,7 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
       diagnosticStorage.addDiagnostic(ctx);
     }
 
-    return super.visitAssignment(ctx);
+    return ctx;
   }
 
   private static int getDescendantsCount(ParserRuleContext tree) {

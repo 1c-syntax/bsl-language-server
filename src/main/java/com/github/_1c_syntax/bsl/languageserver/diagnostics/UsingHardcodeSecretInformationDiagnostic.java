@@ -28,13 +28,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import javax.annotation.CheckForNull;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -53,17 +54,17 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private static final String FIND_WORD_DEFAULT = "Пароль|Password";
 
-  private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
-    "Структура|Structure|Соответствие|Map|FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern PATTERN_NEW_EXPRESSION = CaseInsensitivePattern.compile(
+    "Структура|Structure|Соответствие|Map|FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection"
+  );
 
-  private static final Pattern PATTERN_NEW_EXPRESSION_CONNECTION = Pattern.compile(
-    "FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern PATTERN_NEW_EXPRESSION_CONNECTION = CaseInsensitivePattern.compile(
+    "FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection"
+  );
 
-  private static final Pattern PATTERN_METHOD_INSERT = Pattern.compile(
-    "Вставить|Insert",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern PATTERN_METHOD_INSERT = CaseInsensitivePattern.compile(
+    "Вставить|Insert"
+  );
 
   private static final Pattern PATTERN_CHECK_PASSWORD = Pattern.compile("^[\\*]+$", Pattern.UNICODE_CASE);
 
@@ -87,9 +88,9 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private static Pattern getPatternSearch(String value) {
-    return Pattern.compile(
-      "^(" + value + ")$",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    return CaseInsensitivePattern.compile(
+      "^(" + value + ")$"
+    );
   }
 
   /**
@@ -205,7 +206,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
     Matcher matcher = searchWords.matcher(getClearString(accessText));
     if (matcher.find()) {
-      ParserRuleContext assignment = getAncestorByRuleIndex(
+      ParserRuleContext assignment = Trees.getAncestorByRuleIndex(
         (ParserRuleContext) ctx.getRuleContext(),
         BSLParser.RULE_assignment
       );
@@ -232,7 +233,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
-    ParserRuleContext assignment = getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
+    ParserRuleContext assignment = Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
     if (assignment != null) {
       diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getMessage());
     }
@@ -251,19 +252,6 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   private static String getClearString(String inputString) {
     return inputString.replace("\"", "").replace(" ", "");
-  }
-
-  // TODO: перенести в bsl parser
-  @CheckForNull
-  private static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, int type) {
-    ParserRuleContext parent = element.getParent();
-    if (parent == null) {
-      return null;
-    }
-    if (parent.getRuleIndex() == type) {
-      return parent;
-    }
-    return getAncestorByRuleIndex(parent, type);
   }
 
   private static boolean parentIsModifierContext(ParserRuleContext ctx) {
