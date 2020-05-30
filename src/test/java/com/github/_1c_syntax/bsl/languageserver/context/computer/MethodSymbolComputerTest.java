@@ -53,7 +53,7 @@ public class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(18);
+    assertThat(methods.size()).isEqualTo(19);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription().orElse(null)).isNull();
@@ -84,6 +84,11 @@ public class MethodSymbolComputerTest {
 
     methodSymbol = methods.get(17);
     assertThat(methodSymbol.getName()).isEqualTo("Метод18");
+    assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
+    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+
+    methodSymbol = methods.get(18);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод19");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
     assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
   }
@@ -345,6 +350,24 @@ public class MethodSymbolComputerTest {
     String module = "&НаКлиенте\n" +
       "&НаКлиентеНаСервере\n" +
       "Процедура Метод18()\n" +
+      "КонецПроцедуры\n";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
+    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+
+  }
+
+  @Test
+  void testSeveralDirectivesWithClientReverse_SecondCopy() {
+
+    String module = "&НаКлиенте\n" +
+      "&НаКлиентеНаСервере\n" +
+      "&НаКлиенте\n" +
+      "&НаКлиентеНаСервере\n" +
+      "Процедура Метод19()\n" +
       "КонецПроцедуры\n";
 
     List<MethodSymbol> methods = getMethodSymbols(module);
