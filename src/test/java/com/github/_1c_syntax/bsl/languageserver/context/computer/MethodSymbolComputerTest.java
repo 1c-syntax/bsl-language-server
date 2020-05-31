@@ -90,6 +90,8 @@ public class MethodSymbolComputerTest {
     var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
     assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.get(0).getName()).isEqualTo("После");
+    assertThat(annotations.get(0).getParameters()).hasSize(0);
 
     methodSymbol = methods.get(10);
     assertThat(methodSymbol.getName()).isEqualTo("Метод11");
@@ -135,7 +137,6 @@ public class MethodSymbolComputerTest {
     assertThat(methodSymbol.getName()).isEqualTo("Метод19");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
     assertThat(methodSymbol.getAnnotations()).hasSize(0);
-
 
     methodSymbol = methods.get(19);
     assertThat(methodSymbol.getName()).isEqualTo("Метод20");
@@ -306,6 +307,8 @@ public class MethodSymbolComputerTest {
     var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
     assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.get(0).getName()).isEqualTo("После");
+    assertThat(annotations.get(0).getParameters()).hasSize(0);
   }
 
   @Test
