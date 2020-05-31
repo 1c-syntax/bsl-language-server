@@ -53,7 +53,7 @@ public class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(19);
+    assertThat(methods.size()).isEqualTo(20);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription().orElse(null)).isNull();
@@ -67,29 +67,29 @@ public class MethodSymbolComputerTest {
     var methodSymbol = methods.get(5);
     assertThat(methodSymbol.getName()).isEqualTo("Метод6");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(6);
     assertThat(methodSymbol.getName()).isEqualTo("Метод7");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(7);
     assertThat(methodSymbol.getName()).isEqualTo("Метод8");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(8);
     assertThat(methodSymbol.getName()).isEqualTo("Метод9");
     assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(9);
     assertThat(methodSymbol.getName()).isEqualTo("Метод10");
     assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
-    var annotations = methodSymbol.getAnnotationKinds();
+    var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0)).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
 
     methodSymbol = methods.get(10);
     assertThat(methodSymbol.getName()).isEqualTo("Метод11");
@@ -106,35 +106,62 @@ public class MethodSymbolComputerTest {
     methodSymbol = methods.get(13);
     assertThat(methodSymbol.getName()).isEqualTo("Метод14");
     assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
-    annotations = methodSymbol.getAnnotationKinds();
+    annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(2);
-    assertThat(annotations.get(0)).isEqualTo(AnnotationKind.CUSTOM);
-    assertThat(annotations.get(1)).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(annotations.get(1).getKind()).isEqualTo(AnnotationKind.CUSTOM);
 
     methodSymbol = methods.get(14);
     assertThat(methodSymbol.getName()).isEqualTo("Метод15");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(15);
     assertThat(methodSymbol.getName()).isEqualTo("Метод16");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(16);
     assertThat(methodSymbol.getName()).isEqualTo("Метод17");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(17);
     assertThat(methodSymbol.getName()).isEqualTo("Метод18");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
     methodSymbol = methods.get(18);
     assertThat(methodSymbol.getName()).isEqualTo("Метод19");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
+
+
+    methodSymbol = methods.get(19);
+    assertThat(methodSymbol.getName()).isEqualTo("Метод20");
+    assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
+    annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(1);
+    var annotation = annotations.get(0);
+    assertThat(annotation.getKind()).isEqualTo(AnnotationKind.CUSTOM);
+
+    var parameters = annotation.getParameters();
+    assertThat(parameters).hasSize(3);
+
+    var parameter = parameters.get(0);
+    assertThat(parameter.getName()).isEqualTo("ДажеСПараметром");
+    assertThat(parameter.isOptional()).isEqualTo(true);
+    assertThat(parameter.getValue()).isEqualTo("Да");
+
+    parameter = parameters.get(1);
+    assertThat(parameter.getName()).isEqualTo("СПараметромБезЗначения");
+    assertThat(parameter.isOptional()).isEqualTo(false);
+    assertThat(parameter.getValue()).isEqualTo("");
+
+    parameter = parameters.get(2);
+    assertThat(parameter.getName()).isEqualTo("");
+    assertThat(parameter.isOptional()).isEqualTo(true);
+    assertThat(parameter.getValue()).isEqualTo("Значение без параметра");
   }
 
   @Test
@@ -217,7 +244,7 @@ public class MethodSymbolComputerTest {
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getName()).isEqualTo("Метод6");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -232,7 +259,7 @@ public class MethodSymbolComputerTest {
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getName()).isEqualTo("Метод7");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -247,7 +274,7 @@ public class MethodSymbolComputerTest {
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getName()).isEqualTo("Метод8");
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -261,7 +288,7 @@ public class MethodSymbolComputerTest {
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getName()).isEqualTo("Метод9");
     assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
   }
 
   @Test
@@ -276,9 +303,9 @@ public class MethodSymbolComputerTest {
     assertThat(methods).hasSize(1);
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
-    var annotations = methodSymbol.getAnnotationKinds();
+    var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0)).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
   }
 
   @Test
@@ -315,19 +342,14 @@ public class MethodSymbolComputerTest {
     List<MethodSymbol> methods = getMethodSymbols(module);
 
     assertThat(methods).hasSize(1);
-//    var methodSymbol = methods.get(0);
-//    assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
-//    var annotations = methodSymbol.getAnnotationKinds();
-//    assertThat(annotations).hasSize(1);
-//    assertThat(annotations.get(0)).isEqualTo(AnnotationKind.AFTER);
     checkCompilerDirective_for_AtClient_AndAnnotation_After(methods.get(0));
   }
 
   private static void checkCompilerDirective_for_AtClient_AndAnnotation_After(MethodSymbol methodSymbol) {
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
-    var annotations = methodSymbol.getAnnotationKinds();
+    var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0)).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
   }
 
   @Test
@@ -342,10 +364,10 @@ public class MethodSymbolComputerTest {
 
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
-    var annotations = methodSymbol.getAnnotationKinds();
+    var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(2);
-    assertThat(annotations.get(0)).isEqualTo(AnnotationKind.CUSTOM);
-    assertThat(annotations.get(1)).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(annotations.get(1).getKind()).isEqualTo(AnnotationKind.CUSTOM);
   }
 
   @Test
@@ -360,7 +382,7 @@ public class MethodSymbolComputerTest {
 
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
   }
 
@@ -376,7 +398,7 @@ public class MethodSymbolComputerTest {
 
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
   }
 
@@ -392,7 +414,7 @@ public class MethodSymbolComputerTest {
 
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
   }
 
@@ -408,7 +430,7 @@ public class MethodSymbolComputerTest {
 
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
   }
 
@@ -426,8 +448,43 @@ public class MethodSymbolComputerTest {
 
     var methodSymbol = methods.get(0);
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT_AT_SERVER);
-    assertThat(methodSymbol.getAnnotationKinds()).hasSize(0);
+    assertThat(methodSymbol.getAnnotations()).hasSize(0);
 
+  }
+
+  @Test
+  void testAnnotationWithParams() {
+
+    String module = "&НаЧемУгодно(ДажеСПараметром = \"Да\", СПараметромБезЗначения, \"Значение без параметра\")\n" +
+      "Процедура Метод20() Экспорт\n" +
+      "КонецПроцедуры";
+
+    List<MethodSymbol> methods = getMethodSymbols(module);
+
+    var methodSymbol = methods.get(0);
+    assertThat(methodSymbol.getCompilerDirectiveKind().isPresent()).isEqualTo(false);
+    var annotations = methodSymbol.getAnnotations();
+    assertThat(annotations).hasSize(1);
+    var annotation = annotations.get(0);
+    assertThat(annotation.getKind()).isEqualTo(AnnotationKind.CUSTOM);
+
+    var parameters = annotation.getParameters();
+    assertThat(parameters).hasSize(3);
+
+    var parameter = parameters.get(0);
+    assertThat(parameter.getName()).isEqualTo("ДажеСПараметром");
+    assertThat(parameter.isOptional()).isEqualTo(true);
+    assertThat(parameter.getValue()).isEqualTo("Да");
+
+    parameter = parameters.get(1);
+    assertThat(parameter.getName()).isEqualTo("СПараметромБезЗначения");
+    assertThat(parameter.isOptional()).isEqualTo(false);
+    assertThat(parameter.getValue()).isEqualTo("");
+
+    parameter = parameters.get(2);
+    assertThat(parameter.getName()).isEqualTo("");
+    assertThat(parameter.isOptional()).isEqualTo(true);
+    assertThat(parameter.getValue()).isEqualTo("Значение без параметра");
   }
 
   private static List<MethodSymbol> getMethodSymbols(String module) {

@@ -25,7 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -180,7 +182,7 @@ public final class MethodSymbolComputer
     boolean function,
     boolean export,
     Optional<CompilerDirectiveKind> compilerDirective,
-    List<AnnotationKind> annotationKind
+    List<Annotation> annotations
   ) {
     Optional<MethodDescription> description = createDescription(startNode.getSymbol());
     boolean deprecated = description
@@ -202,7 +204,7 @@ public final class MethodSymbolComputer
       .mdoRef(mdoRef)
       .parameters(createParameters(paramList))
       .compilerDirectiveKind(compilerDirective)
-      .annotationKinds(annotationKind)
+      .annotations(annotations)
       .build();
   }
 
@@ -236,18 +238,49 @@ public final class MethodSymbolComputer
       .orElse("<UNKNOWN_IDENTIFIER>");
   }
 
-  private static List<AnnotationKind> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
-    final List<AnnotationKind> annotationKinds;
+  private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
     if (annotationContext.isEmpty()) {
-      annotationKinds = Collections.emptyList();
-    } else {
-      annotationKinds = annotationContext.stream()
-        .map(annotation -> annotation.getStop().getType())
-        .map(AnnotationKind::of)
-        .filter(optionalAnnotation -> optionalAnnotation.isPresent())
-        .map(optionalAnnotation -> optionalAnnotation.get())
+      return Collections.emptyList();
+    }
+    return annotationContext.stream()
+      .map(o -> (BSLParser.AnnotationContext) o)
+      .map(annotation -> createAnnotation(
+          annotation.annotationName(),
+          annotation.getStop().getType(),
+          annotation.annotationParams()))
+      .collect(Collectors.toList());
+  }
+
+  private static Annotation createAnnotation(BSLParser.AnnotationNameContext annotationNameContext, int type,
+                                             BSLParser.AnnotationParamsContext annotationParamsContext) {
+    final List<AnnotationParameterDefinition> params;
+    if (annotationParamsContext == null){
+      params = Collections.emptyList();
+    } else{
+      params = annotationParamsContext.annotationParam().stream()
+        .map(o -> (BSLParser.AnnotationParamContext) o)
+        .map(MethodSymbolComputer::getAnnotationParam)
         .collect(Collectors.toList());
     }
-    return annotationKinds;
+
+    return Annotation.builder()
+      .name(annotationNameContext.getText())
+      .kind(AnnotationKind.of(type))
+      .parameters(params)
+      .build();
+  }
+
+  private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
+    return new AnnotationParameterDefinition(
+      o.annotationParamName() != null ? o.annotationParamName().getText() : "",
+      o.constValue() != null ? excludeTrailingQuotes(o.constValue().getText()) : "",
+      o.constValue() != null);
+  }
+
+  private static String excludeTrailingQuotes(String text) {
+    if (text.length() > 2 && text.charAt(0) == '\"'){
+      return text.substring(1, text.length() - 1);
+    }
+    return text;
   }
 }

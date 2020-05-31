@@ -22,9 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Getter;
 
-import java.util.Optional;
 import java.util.stream.Stream;
+
+/**
+ * Класс хранит информацию о виде аннотации.
+ * См. {@link Annotation}
+ */
 
 public enum AnnotationKind {
   BEFORE(BSLParser.ANNOTATION_BEFORE_SYMBOL),
@@ -33,19 +38,16 @@ public enum AnnotationKind {
   CHANGEANDVALIDATE(BSLParser.ANNOTATION_CHANGEANDVALIDATE_SYMBOL),
   CUSTOM(BSLParser.ANNOTATION_CUSTOM_SYMBOL);
 
+  @Getter
   private final int tokenType;
 
   AnnotationKind(int tokenType) {
     this.tokenType = tokenType;
   }
 
-  public int getTokenType() {
-    return tokenType;
-  }
-
-  public static Optional<AnnotationKind> of(int tokenType) {
+  public static AnnotationKind of(int tokenType) {
     return Stream.of(values())
       .filter(annotationKind -> annotationKind.getTokenType() == tokenType)
-      .findAny();
+      .findAny().orElse(CUSTOM);
   }
 }
