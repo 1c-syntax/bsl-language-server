@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -29,9 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Diagnostic;
 
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +40,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
+public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
 
   private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки"
     + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
@@ -78,23 +75,19 @@ public class UsingServiceTagDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-
-    diagnosticStorage.clearDiagnostics();
-
+  public void check() {
     documentContext.getComments()
       .parallelStream()
-      .filter((Token token) -> pattern.matcher(token.getText()).find())
       .forEach((Token token) -> {
         Matcher matcher = pattern.matcher(token.getText());
-        matcher.find();
+        if (!matcher.find()){
+          return;
+        }
         diagnosticStorage.addDiagnostic(
           token,
           info.getMessage(matcher.group(0))
         );
       });
-
-    return diagnosticStorage.getDiagnostics();
   }
 
 }

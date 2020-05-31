@@ -154,7 +154,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
 
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, List<Token>> tokensMap = new HashMap<>();

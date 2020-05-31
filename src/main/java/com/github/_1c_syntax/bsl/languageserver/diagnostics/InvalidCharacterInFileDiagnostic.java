@@ -28,9 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -52,51 +52,58 @@ import java.util.regex.Pattern;
   }
 )
 
-public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
-  private static final Pattern ILLEGAL_DASH_PATTERN = Pattern.compile("([" +
+  public static final String SPACE_REGEX = "(?:" +
+    "\\u00A0" + // 160
+    ")";
+
+  private static final Pattern ILLEGAL_PATTERN = Pattern.compile("(?:[" +
       "\\u00AD" + // 173
       "\\u2012" + // 8210
       "\\u2013" + // 8211
       "\\u2014" + // 8212
       "\\u2015" + // 8213
       "\\u2212" + // 8722
-      "])",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "])" +
+      "|" + SPACE_REGEX,
+    Pattern.UNICODE_CASE);
 
-  private static final Pattern ILLEGAL_SPACE_PATTERN = Pattern.compile("([" +
-      "\\u00A0" + // 160
-      "])",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern ILLEGAL_SPACE_PATTERN = Pattern.compile(SPACE_REGEX,
+    Pattern.UNICODE_CASE);
+
+  private final String diagnosticMessageDash;
+  private final String diagnosticMessageSpace;
 
   public InvalidCharacterInFileDiagnostic(DiagnosticInfo info) {
     super(info);
+    diagnosticMessageDash = info.getResourceString("diagnosticMessageDash");
+    diagnosticMessageSpace = info.getResourceString("diagnosticMessageSpace");
   }
 
   @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
-    documentContext
-      .getTokens()
-      .stream()
-      .filter((Token token) -> ILLEGAL_DASH_PATTERN.matcher(token.getText()).find())
-      .forEach(token ->
-        diagnosticStorage.addDiagnostic(
-          token,
-          info.getResourceString("diagnosticMessageDash"))
-      );
+  public void check() {
 
     documentContext
       .getTokens()
       .stream()
-      .filter((Token token) -> ILLEGAL_SPACE_PATTERN.matcher(token.getText()).find())
-      .forEach(token ->
-        diagnosticStorage.addDiagnostic(
-          token,
-          info.getResourceString("diagnosticMessageSpace")
-        )
+      .filter((Token token) -> token.getChannel() == Lexer.HIDDEN
+        || token.getType() == BSLLexer.STRINGPART
+        || token.getType() == BSLLexer.STRING
+        || token.getType() == BSLLexer.STRINGSTART
+        || token.getType() == BSLLexer.STRINGTAIL
+      )
+      .filter((Token token) -> ILLEGAL_PATTERN.matcher(token.getText()).find())
+      .forEach((Token token) ->
+        {
+          var text = token.getText();
+          String message = diagnosticMessageDash;
+          if (ILLEGAL_SPACE_PATTERN.matcher(text).find()) {
+            message = diagnosticMessageSpace;
+          }
+          diagnosticStorage.addDiagnostic(token, message);
+        }
       );
-
-    return ctx;
   }
 
   @Override
@@ -109,7 +116,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(info.getResourceString("diagnosticMessageSpace")))
+      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageSpace))
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
@@ -119,11 +126,11 @@ public class InvalidCharacterInFileDiagnostic extends AbstractVisitorDiagnostic 
       });
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(info.getResourceString("diagnosticMessageDash")))
+      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageDash))
       .forEach((Diagnostic diagnostic) -> {
         Range range = diagnostic.getRange();
         TextEdit textEdit = new TextEdit(range,
-          ILLEGAL_DASH_PATTERN.matcher(documentContext.getText(range)).replaceAll("-"));
+          ILLEGAL_PATTERN.matcher(documentContext.getText(range)).replaceAll("-"));
 
         textEdits.add(textEdit);
       });

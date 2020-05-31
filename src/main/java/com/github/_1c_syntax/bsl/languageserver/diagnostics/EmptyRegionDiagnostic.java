@@ -22,27 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -52,35 +51,42 @@ import java.util.Set;
     DiagnosticTag.STANDARD
   }
 )
-public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
-
-  private static final Set<Integer> REGIONS_NODE_INDEXES = Set.of(
-    BSLParser.RULE_regionName,
-    BSLParser.RULE_regionStart,
-    BSLParser.RULE_regionEnd,
-    BSLParser.RULE_preprocessor
-  );
+public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements QuickFixProvider {
+  private int currentRegionLevel;
+  private int currentUsageLevel;
+  private final Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
 
   public EmptyRegionDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
-    documentContext.getSymbolTree().getRegionsFlat().forEach(this::checkRegion);
+  public void enterEveryRule(ParserRuleContext ctx) {
+    if (ctx instanceof BSLParser.RegionStartContext) {
+      currentRegionLevel++;
+      regions.push((BSLParser.RegionStartContext) ctx);
+    } else if (! (ctx instanceof BSLParser.PreprocessorContext
+      || ctx instanceof BSLParser.RegionNameContext
+      || ctx instanceof BSLParser.RegionEndContext
+      || ctx instanceof BSLParser.StatementContext)
+      && currentUsageLevel < currentRegionLevel) {
+      currentUsageLevel = currentRegionLevel;
+    }
   }
 
-  private void checkRegion(RegionSymbol region) {
-    var hasChildren = region.getNodes().stream()
-      .map(RuleContext::getRuleIndex)
-      .filter(ruleIndex -> !REGIONS_NODE_INDEXES.contains(ruleIndex))
-      .findAny();
-
-    if (hasChildren.isEmpty()) {
-      diagnosticStorage.addDiagnostic(
-        region.getStartRange(),
-        info.getMessage(region.getName())
-      );
+  @Override
+  public void exitEveryRule(ParserRuleContext ctx) {
+    if (ctx instanceof BSLParser.RegionEndContext && !regions.isEmpty()) {
+      BSLParser.RegionStartContext currentRegion = regions.pop();
+      if (currentUsageLevel < currentRegionLevel) {
+        diagnosticStorage.addDiagnostic(
+          Ranges.create(currentRegion.getParent(), ctx),
+          info.getMessage(currentRegion.regionName().getText())
+        );
+      } else if (currentRegionLevel == currentUsageLevel) {
+        currentUsageLevel--;
+      }
+      currentRegionLevel--;
     }
   }
 
@@ -90,48 +96,20 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
     CodeActionParams params,
     DocumentContext documentContext
   ) {
-    diagnostics.sort(Comparator.comparingInt(o -> o.getRange().getStart().getLine()));
-    List<TextEdit> textEdits = new ArrayList<>();
-    int maxDiagnosticEndLine = 0;
-
-    for (Diagnostic diagnostic : diagnostics) {
-
-      int diagnosticStartLine = diagnostic.getRange().getStart().getLine();
-      Position diagnosticRangeStart = diagnostic.getRange().getStart();
-      diagnosticRangeStart = new Position(
-        diagnosticRangeStart.getLine(),
-        diagnosticRangeStart.getCharacter() - 1
-      );
-
-      Optional<RegionSymbol> optionalRegionSymbol = documentContext.getSymbolTree().getRegionsFlat()
-        .stream()
-        .filter(regionSymbol -> regionSymbol.getRange().getStart().getLine() == diagnosticStartLine)
-        .findFirst();
-      if (optionalRegionSymbol.isEmpty()) {
-        continue;
-      }
-      RegionSymbol region = optionalRegionSymbol.get();
-
-      int diagnosticEndLine = region.getRange().getEnd().getLine() - 1;
-      if (diagnosticEndLine < maxDiagnosticEndLine) {
-        continue;
-      }
-
-      if (maxDiagnosticEndLine == 0 || diagnosticEndLine > maxDiagnosticEndLine) {
-        maxDiagnosticEndLine = diagnosticEndLine;
-      }
-
-      Position diagnosticRangeEnd = new Position(
-        diagnosticEndLine + 1,
-        0
-      );
-
-      Range range = new Range(diagnosticRangeStart, diagnosticRangeEnd);
-
-      TextEdit textEdit = new TextEdit(range, "");
-      textEdits.add(textEdit);
-
-    }
+    List<TextEdit> textEdits = new ArrayList<>(diagnostics.size());
+    diagnostics
+      .stream()
+      .map(Diagnostic::getRange)
+      .sorted(Comparator.comparingInt(o -> o.getStart().getLine()))
+      .reduce((Range prev, Range curr) -> {
+        if (prev.getEnd().getLine() > curr.getStart().getLine()) {
+          return prev;
+        } else {
+          textEdits.add(new TextEdit(prev, ""));
+          return curr;
+        }
+      })
+      .ifPresent(lastRange -> textEdits.add(new TextEdit(lastRange, "")));
 
     return CodeActionProvider.createCodeActions(
       textEdits,
@@ -141,4 +119,3 @@ public class EmptyRegionDiagnostic extends AbstractDiagnostic implements QuickFi
     );
   }
 }
-

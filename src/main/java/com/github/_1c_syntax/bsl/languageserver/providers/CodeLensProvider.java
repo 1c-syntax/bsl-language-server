@@ -49,7 +49,7 @@ public final class CodeLensProvider {
   private List<CodeLens> getCognitiveComplexityCodeLenses(DocumentContext documentContext) {
     List<CodeLens> codeLenses = new ArrayList<>();
 
-    if (configuration.isShowCognitiveComplexityCodeLens()) {
+    if (configuration.getCodeLensOptions().isShowCognitiveComplexity()) {
       Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData()
         .getMethodsComplexity();
 
@@ -72,7 +72,7 @@ public final class CodeLensProvider {
   private List<CodeLens> getCyclomaticComplexityCodeLenses(DocumentContext documentContext) {
     List<CodeLens> codeLenses = new ArrayList<>();
 
-    if (configuration.isShowCyclomaticComplexityCodeLens()) {
+    if (configuration.getCodeLensOptions().isShowCyclomaticComplexity()) {
 
       Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCyclomaticComplexityData()
         .getMethodsComplexity();

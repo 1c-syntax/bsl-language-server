@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -56,14 +55,14 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     defaultValue = "" + MAX_LINE_LENGTH
   )
   private int maxLineLength = MAX_LINE_LENGTH;
-  private Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
+  private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
   public LineLengthDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
     tokensInOneLine.clear();
 
     documentContext.getTokensFromDefaultChannel().forEach((Token token) -> {

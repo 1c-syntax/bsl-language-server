@@ -22,14 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
-import com.github._1c_syntax.bsl.languageserver.configuration.ComputeDiagnosticsTrigger;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
@@ -50,6 +51,8 @@ import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.eclipse.lsp4j.DocumentLink;
+import org.eclipse.lsp4j.DocumentLinkParams;
 import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -85,6 +88,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final DiagnosticProvider diagnosticProvider;
   private final CodeActionProvider codeActionProvider;
   private final CodeLensProvider codeLensProvider;
+  private final DocumentLinkProvider documentLinkProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -99,6 +103,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
     codeActionProvider = new CodeActionProvider(this.diagnosticProvider, quickFixSupplier);
     codeLensProvider = new CodeLensProvider(this.configuration);
+    documentLinkProvider = new DocumentLinkProvider(this.configuration, this.diagnosticProvider);
   }
 
   @Override
@@ -227,7 +232,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
-    if (configuration.getComputeDiagnosticsTrigger() != ComputeDiagnosticsTrigger.NEVER) {
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
   }
@@ -244,7 +249,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     diagnosticProvider.clearComputedDiagnostics(documentContext);
     documentContext.rebuild(params.getContentChanges().get(0).getText());
 
-    if (configuration.getComputeDiagnosticsTrigger() == ComputeDiagnosticsTrigger.ONTYPE) {
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
     }
   }
@@ -271,7 +276,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    if (configuration.getComputeDiagnosticsTrigger() != ComputeDiagnosticsTrigger.NEVER) {
+    if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
   }
@@ -279,6 +284,16 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   @Override
   public void connect(LanguageClient client) {
     this.client = client;
+  }
+
+  @Override
+  public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> documentLinkProvider.getDocumentLinks(documentContext));
   }
 
   public void reset() {

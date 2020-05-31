@@ -106,7 +106,7 @@ public final class FoldingRangeProvider {
 
   private static class UseRangeFinder extends BSLParserBaseVisitor<ParseTree> {
 
-    private List<FoldingRange> regionRanges = new ArrayList<>();
+    private final List<FoldingRange> regionRanges = new ArrayList<>();
 
     public List<FoldingRange> getRegionRanges() {
       return new ArrayList<>(regionRanges);
@@ -135,7 +135,7 @@ public final class FoldingRangeProvider {
 
   private static class CodeBlockRangeFinder extends BSLParserBaseVisitor<ParseTree> {
 
-    private List<FoldingRange> regionRanges = new ArrayList<>();
+    private final List<FoldingRange> regionRanges = new ArrayList<>();
 
     public List<FoldingRange> getRegionRanges() {
       return new ArrayList<>(regionRanges);
@@ -202,7 +202,7 @@ public final class FoldingRangeProvider {
 
   private static class RegionRangeFinder {
 
-    private List<FoldingRange> regionRanges;
+    private final List<FoldingRange> regionRanges;
 
     RegionRangeFinder(DocumentContext documentContext) {
       regionRanges = documentContext.getSymbolTree().getRegionsFlat().stream()
@@ -229,8 +229,8 @@ public final class FoldingRangeProvider {
 
   private static class PreprocIfRegionRangeFinder extends BSLParserBaseVisitor<ParseTree> {
 
-    private Deque<BSLParser.Preproc_ifContext> preprocIfRegionStack = new ArrayDeque<>();
-    private List<FoldingRange> regionRanges = new ArrayList<>();
+    private final Deque<BSLParser.Preproc_ifContext> preprocIfRegionStack = new ArrayDeque<>();
+    private final List<FoldingRange> regionRanges = new ArrayList<>();
 
     public List<FoldingRange> getRegionRanges() {
       return new ArrayList<>(regionRanges);

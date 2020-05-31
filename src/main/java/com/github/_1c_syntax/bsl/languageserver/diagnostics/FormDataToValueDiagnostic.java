@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -47,9 +48,8 @@ import java.util.regex.Pattern;
 )
 public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
-    "ДанныеФормыВЗначение|FormDataToValue",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
+    "ДанныеФормыВЗначение|FormDataToValue"
   );
 
   public FormDataToValueDiagnostic(DiagnosticInfo info) {

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
@@ -39,32 +40,27 @@ public final class MultilingualStringAnalyser {
   private static final String NSTR_LANG_REGEX = "\\w+\\s*=\\s*['|\"{2}]";
   private static final String NSTR_LANG_CUT_REGEX = "\\s*=\\s*['|\"{2}]";
   private static final String WHITE_SPACE_REGEX = "\\s";
-  private static final Pattern NSTR_METHOD_NAME_PATTERN = Pattern.compile(
-    NSTR_METHOD_NAME,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern NSTR_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
+    NSTR_METHOD_NAME
   );
-  private static final Pattern TEMPLATE_METHOD_NAME_PATTERN = Pattern.compile(
-    TEMPLATE_METHOD_NAME,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern TEMPLATE_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
+    TEMPLATE_METHOD_NAME
   );
-  private static final Pattern NSTR_LANG_PATTERN = Pattern.compile(
-    NSTR_LANG_REGEX,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern NSTR_LANG_PATTERN = CaseInsensitivePattern.compile(
+    NSTR_LANG_REGEX
   );
-  private static final Pattern NSTR_LANG_CUT_PATTERN = Pattern.compile(
-    NSTR_LANG_CUT_REGEX,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern NSTR_LANG_CUT_PATTERN = CaseInsensitivePattern.compile(
+    NSTR_LANG_CUT_REGEX
   );
-  private static final Pattern WHITE_SPACE_PATTERN = Pattern.compile(
-    WHITE_SPACE_REGEX,
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern WHITE_SPACE_PATTERN = CaseInsensitivePattern.compile(
+    WHITE_SPACE_REGEX
   );
 
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
   private String variableName;
-  private ArrayList<String> expectedLanguages;
-  private Set<String> expandedMultilingualString = new HashSet<>();
+  private final ArrayList<String> expectedLanguages;
+  private final Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
   public MultilingualStringAnalyser(String declaredLanguages) {
@@ -75,7 +71,10 @@ public final class MultilingualStringAnalyser {
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
-    return !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
+    String firstParameterMultilingualString = getMultilingualString(globalMethodCallContext);
+
+    return !(firstParameterMultilingualString.isEmpty() || firstParameterMultilingualString.startsWith("\""))
+      || !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
   }
 
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
@@ -129,7 +128,7 @@ public final class MultilingualStringAnalyser {
 
   private void expandMultilingualString() {
 
-    Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString());
+    Matcher matcher = NSTR_LANG_PATTERN.matcher(getMultilingualString(this.globalMethodCallContext));
 
     while (matcher.find()) {
       Matcher cutMatcher = NSTR_LANG_CUT_PATTERN.matcher(matcher.group());
@@ -139,7 +138,7 @@ public final class MultilingualStringAnalyser {
 
   }
 
-  private String getMultilingualString() {
+  private static String getMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
     return globalMethodCallContext.doCall().callParamList().callParam(0).getText();
   }
 

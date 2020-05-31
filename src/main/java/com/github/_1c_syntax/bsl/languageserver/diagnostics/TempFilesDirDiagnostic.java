@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
 
@@ -44,9 +45,8 @@ import java.util.regex.Pattern;
 )
 public class TempFilesDirDiagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
-    "КаталогВременныхФайлов|TempFilesDir",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
+    "КаталогВременныхФайлов|TempFilesDir"
   );
 
   public TempFilesDirDiagnostic(DiagnosticInfo info) {

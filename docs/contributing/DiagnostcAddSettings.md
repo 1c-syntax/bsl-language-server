@@ -24,17 +24,31 @@
 
 ```
 
-Следующим шагом, необходимо реализовать метод установки значения `configure`.  
-Например
+Если параметр примитивный или типа String и он устанавливается в соответствующее свойство класса диагностики простым сеттером, то на этом все.  
+Если же параметр более сложный, например строка-паттерн для регулярного выражения, которое необходимо вычислить перед установкой, то нужно реализовать метод установки значений параметров `configure`.  
+
+Например есть два параметра:
+
+- `commentAsCode` - считать комментарии как код, типа булево
+- `excludeMethods` - методы, которые не надо проверять, типа ArrayList
+
+Тогда метод установки значений параметров будет выглядеть:
 
 ```java
  @Override
   public void configure(Map<String, Object> configuration) {
+    
     if (configuration == null) {
       return;
     }
+    
+    // для установки "простых свойств", включая "commentAsCode"
+    super.configure(configuration);
 
-    this.commentsAnnotation = (String) configuration.getOrDefault("commentsAnnotation", commentsAnnotation);
+    // установка "сложного" свойства "excludeMethods"
+    String excludeMethodsString =
+      (String) configuration.getOrDefault("excludeMethods", EXCLUDE_METHODS_DEFAULT);
+    this.excludeMethods = new ArrayList<>(Arrays.asList(excludeMethodsString.split(",")));
   }
 
 ```
@@ -43,12 +57,12 @@
 
 Обязательно нужно добавить тест для случая изменения настроек диагностики.  
 Тест добавляется во все тот же класс теста диагностики _(отдельный метод для каждой комбинации вариантов настроек диагностики)_. В начале теста необходимо выполнить установку значения параметра диагностики, последующие действия аналогичны общим правилам написания тестов.  
-Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по-умолчанию, используя метод `getDefaultDiagnosticConfiguration()` из метаданных текущей диагностики `diagnosticInstance.getInfo()`. Затем выполнить изменение значения параметра, путем добавления в коллекцию конфигурации, а затем переконфигурировать текущую диагностику, обратившись к методу `configure`.  
+Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по-умолчанию, используя метод `getDefaultConfiguration()` из метаданных текущей диагностики `diagnosticInstance.getInfo()`. Затем выполнить изменение значения параметра, путем добавления в коллекцию конфигурации, а затем переконфигурировать текущую диагностику, обратившись к методу `configure`.  
 Пример
 
 ```java
 // получение текущей конфигурации диагностики
-Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultDiagnosticConfiguration();
+Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
 
 // установка нового значения
 configuration.put("commentsAnnotation", "//(с)");

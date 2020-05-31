@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
@@ -47,19 +48,20 @@ import java.util.stream.Collectors;
 )
 public class PairingBrokenTransactionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern beginTransaction = Pattern.compile("НачатьТранзакцию|BeginTransaction",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private final Pattern beginTransaction = CaseInsensitivePattern.compile(
+    "НачатьТранзакцию|BeginTransaction"
+  );
 
-  private Pattern beginEndTransaction = Pattern.compile(
-    "ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private final Pattern beginEndTransaction = CaseInsensitivePattern.compile(
+    "ЗафиксироватьТранзакцию|CommitTransaction|НачатьТранзакцию|BeginTransaction"
+  );
 
-  private Pattern beginCancelTransaction = Pattern.compile(
-    "ОтменитьТранзакцию|RollbackTransaction|НачатьТранзакцию|BeginTransaction",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private final Pattern beginCancelTransaction = CaseInsensitivePattern.compile(
+    "ОтменитьТранзакцию|RollbackTransaction|НачатьТранзакцию|BeginTransaction"
+  );
 
-  private HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
-  private HashMap<String, String> pairMethodsBeginCancel = new HashMap<>();
+  private final HashMap<String, String> pairMethodsBeginEnd = new HashMap<>();
+  private final HashMap<String, String> pairMethodsBeginCancel = new HashMap<>();
 
   public PairingBrokenTransactionDiagnostic(DiagnosticInfo info) {
     super(info);

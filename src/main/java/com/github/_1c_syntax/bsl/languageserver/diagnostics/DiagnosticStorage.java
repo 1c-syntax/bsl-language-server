@@ -39,8 +39,8 @@ import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvi
 
 public class DiagnosticStorage {
 
-  private BSLDiagnostic diagnostic;
-  private Queue<Diagnostic> diagnosticList = new ConcurrentLinkedQueue<>();
+  private final BSLDiagnostic diagnostic;
+  private final Queue<Diagnostic> diagnosticList = new ConcurrentLinkedQueue<>();
 
   DiagnosticStorage(BSLDiagnostic diagnostic) {
     this.diagnostic = diagnostic;

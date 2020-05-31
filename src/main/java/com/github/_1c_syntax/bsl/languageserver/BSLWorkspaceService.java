@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class BSLWorkspaceService implements WorkspaceService {
 
-  private LanguageServerConfiguration configuration;
+  private final LanguageServerConfiguration configuration;
 
   public BSLWorkspaceService(LanguageServerConfiguration configuration) {
     this.configuration = configuration;

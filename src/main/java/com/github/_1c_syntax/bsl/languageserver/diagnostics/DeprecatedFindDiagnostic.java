@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
 
@@ -41,9 +42,8 @@ import java.util.regex.Pattern;
   tags = {DiagnosticTag.DEPRECATED}
 )
 public class DeprecatedFindDiagnostic extends AbstractFindMethodDiagnostic {
-  private static final Pattern messagePattern = Pattern.compile(
-    "(найти|find)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern messagePattern = CaseInsensitivePattern.compile(
+    "(найти|find)"
   );
 
   public DeprecatedFindDiagnostic(DiagnosticInfo info) {

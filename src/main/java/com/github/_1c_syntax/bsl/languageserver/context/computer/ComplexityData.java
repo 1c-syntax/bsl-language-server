@@ -31,10 +31,10 @@ import java.util.Map;
 @Value
 @AllArgsConstructor
 public class ComplexityData {
-  private final int fileComplexity;
-  private final int fileCodeBlockComplexity;
-  private List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
+  int fileComplexity;
+  int fileCodeBlockComplexity;
+  List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
 
-  private final Map<MethodSymbol, Integer> methodsComplexity;
-  private Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
+  Map<MethodSymbol, Integer> methodsComplexity;
+  Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
 }

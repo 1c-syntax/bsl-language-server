@@ -42,7 +42,7 @@ import java.util.Collections;
 
 class JsonReporterTest {
 
-  private File file = new File("./bsl-json.json");
+  private final File file = new File("./bsl-json.json");
 
   @BeforeEach
   void setUp() {

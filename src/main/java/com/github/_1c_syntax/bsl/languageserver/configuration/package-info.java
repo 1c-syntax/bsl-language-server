@@ -19,4 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+
+/**
+ * В пакете содержатся классы для конфигурирования BSL Language Server.
+ * <p>
+ * Корневой пакет содержит корневой класс конфигурации
+ * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}
+ * , настройки верхнего уровня и дополнительные пакеты для настроек в разрезе провайдеров
+ * (диагностики, code lens, и т.д.)
+ */
 package com.github._1c_syntax.bsl.languageserver.configuration;

@@ -28,7 +28,7 @@ import org.languagetool.Language;
 @AllArgsConstructor
 public class JLanguageToolPool extends AbstractObjectPool<JLanguageToolPoolEntry> {
 
-  private Language language;
+  private final Language language;
 
   @Override
   protected JLanguageToolPoolEntry create() {

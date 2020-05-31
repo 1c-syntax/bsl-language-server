@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="schema">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="schema" />
+              <option name="relativePathToSchema" value="src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/schema.json" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="src/test/resources/.bsl-language-server.json" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>

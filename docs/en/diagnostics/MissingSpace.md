@@ -17,8 +17,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces.
-Also, the space should be to the right of `,` и `;`
+To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces. Also, the space should be to the right of `,` и `;`
 
 ## Examples
 
