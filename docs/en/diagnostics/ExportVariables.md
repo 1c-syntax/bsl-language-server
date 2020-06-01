@@ -1,36 +1,64 @@
-# <Diagnostic name>
+# Ban export global module variables (ExportVariables)
 
-<Metadata>
-
-## <Params>
+| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `Code smell` | `BSL`<br/>`OS` | `Major` | `Yes` | `5` | `standard`<br/>`design`<br/>`unpredictable` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+In most scenarios, we recommend that you do not use global variables and use other 1C:Enterprise script tools instead.
+Since monitoring the visibility (usage) areas of such variables is tricky,
+they often might cause issues that cannot be easily located.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+```bsl
+Variable FileConversion Export;
+Procedure BeforeWrite(Cancel)
+
+  If FileConversion Then
+  ...
+
+EndProcedure
+```
+
+We recommend that you use the AdditionalProperties object property for passing parameters between event subscription handlers
+and for passing parameters from external script to object module event handlers.
+
+```bsl
+Procedure BeforeWrite(Cancel)
+
+  If AdditionalProperties.Property("FileConversion") Then 
+  ...
+
+EndProcedure
+
+// script that calls the procedure
+FileObject.AdditionalProperties.Insert("FileConversion", True);
+FileObject.Write();
+```
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
+<!-- Примеры источников -->
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+* [Standard: Using global variables in modules](https://1c-dn.com/library/using_global_variables_in_modules/)
+* [Standard: Using global variables in modules(RU)](https://its.1c.ru/db/v8std#content:639:hdoc)
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:<DiagnosticKey>-off
-// BSLLS:<DiagnosticKey>-on
+// BSLLS:ExportVariables-off
+// BSLLS:ExportVariables-on
 ```
 
 ### Parameter for config
 
 ```json
-"<DiagnosticKey>": <DiagnosticConfig>
+"ExportVariables": false
 ```
