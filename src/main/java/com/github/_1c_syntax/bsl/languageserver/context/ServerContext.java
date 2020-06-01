@@ -41,6 +41,8 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 public class ServerContext {
@@ -51,6 +53,7 @@ public class ServerContext {
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
+  private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
   public ServerContext() {
     this(null);
@@ -76,6 +79,7 @@ public class ServerContext {
 
   public void populateContext(Collection<File> uris) {
     LOGGER.debug("Populating context...");
+    contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
       DocumentContext documentContext = getDocument(file.toURI());
@@ -86,6 +90,7 @@ public class ServerContext {
       }
     });
 
+    contextLock.writeLock().unlock();
     LOGGER.debug("Context populated.");
   }
 
@@ -122,6 +127,7 @@ public class ServerContext {
   }
 
   public DocumentContext addDocument(URI uri, String content) {
+    contextLock.readLock().lock();
     URI absoluteURI = Absolute.uri(uri);
 
     DocumentContext documentContext = getDocument(absoluteURI);
@@ -133,6 +139,7 @@ public class ServerContext {
       documentContext.rebuild(content);
     }
 
+    contextLock.readLock().unlock();
     return documentContext;
   }
 
