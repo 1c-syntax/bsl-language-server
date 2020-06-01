@@ -73,4 +73,9 @@ public class MethodSymbol implements Symbol {
       .filter(symbol -> symbol instanceof RegionSymbol)
       .map(symbol -> (RegionSymbol) symbol);
   }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitMethod(this);
+  }
 }

@@ -45,12 +45,15 @@ public interface Symbol {
     return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
   }
 
+  void accept(SymbolTreeVisitor visitor);
+
   static Symbol emptySymbol() {
     return new Symbol() {
       @Getter private final String name = "empty";
       @Getter private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter @Setter private Optional<Symbol> parent = Optional.empty();
       @Getter private final List<Symbol> children = Collections.emptyList();
+      @Override public void accept(SymbolTreeVisitor visitor) { }
     };
   }
 
