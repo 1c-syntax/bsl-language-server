@@ -84,7 +84,7 @@ public class ServerContext {
     uris.parallelStream().forEach((File file) -> {
       DocumentContext documentContext = getDocument(file.toURI());
       if (documentContext == null) {
-        documentContext = addDocument(file);
+        documentContext = createDocumentContext(file);
         documentContext.getSymbolTree();
         documentContext.clearSecondaryData();
       }
@@ -120,21 +120,12 @@ public class ServerContext {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
-  @SneakyThrows
-  public DocumentContext addDocument(File file) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return addDocument(file.toURI(), content);
-  }
-
   public DocumentContext addDocument(URI uri, String content) {
     contextLock.readLock().lock();
-    URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = getDocument(absoluteURI);
+    DocumentContext documentContext = getDocument(uri);
     if (documentContext == null) {
-      documentContext = new DocumentContext(absoluteURI, content, this);
-      documents.put(absoluteURI, documentContext);
-      addMdoRefByUri(absoluteURI, documentContext);
+      documentContext = createDocumentContext(uri, content);
     } else {
       documentContext.rebuild(content);
     }
@@ -166,6 +157,22 @@ public class ServerContext {
 
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
+  }
+
+  @SneakyThrows
+  private DocumentContext createDocumentContext(File file) {
+    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    return createDocumentContext(file.toURI(), content);
+  }
+
+  private DocumentContext createDocumentContext(URI uri, String content) {
+    URI absoluteURI = Absolute.uri(uri);
+
+    DocumentContext documentContext = new DocumentContext(absoluteURI, content, this);
+    documents.put(absoluteURI, documentContext);
+    addMdoRefByUri(absoluteURI, documentContext);
+
+    return documentContext;
   }
 
   private Configuration computeConfigurationMetadata() {
