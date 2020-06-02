@@ -41,6 +41,8 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 public class ServerContext {
@@ -51,6 +53,7 @@ public class ServerContext {
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
+  private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
   public ServerContext() {
     this(null);
@@ -76,16 +79,18 @@ public class ServerContext {
 
   public void populateContext(Collection<File> uris) {
     LOGGER.debug("Populating context...");
+    contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
       DocumentContext documentContext = getDocument(file.toURI());
       if (documentContext == null) {
-        documentContext = addDocument(file);
+        documentContext = createDocumentContext(file);
         documentContext.getSymbolTree();
         documentContext.clearSecondaryData();
       }
     });
 
+    contextLock.writeLock().unlock();
     LOGGER.debug("Context populated.");
   }
 
@@ -115,24 +120,17 @@ public class ServerContext {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
-  @SneakyThrows
-  public DocumentContext addDocument(File file) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return addDocument(file.toURI(), content);
-  }
-
   public DocumentContext addDocument(URI uri, String content) {
-    URI absoluteURI = Absolute.uri(uri);
+    contextLock.readLock().lock();
 
-    DocumentContext documentContext = getDocument(absoluteURI);
+    DocumentContext documentContext = getDocument(uri);
     if (documentContext == null) {
-      documentContext = new DocumentContext(absoluteURI, content, this);
-      documents.put(absoluteURI, documentContext);
-      addMdoRefByUri(absoluteURI, documentContext);
+      documentContext = createDocumentContext(uri, content);
     } else {
       documentContext.rebuild(content);
     }
 
+    contextLock.readLock().unlock();
     return documentContext;
   }
 
@@ -159,6 +157,22 @@ public class ServerContext {
 
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
+  }
+
+  @SneakyThrows
+  private DocumentContext createDocumentContext(File file) {
+    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    return createDocumentContext(file.toURI(), content);
+  }
+
+  private DocumentContext createDocumentContext(URI uri, String content) {
+    URI absoluteURI = Absolute.uri(uri);
+
+    DocumentContext documentContext = new DocumentContext(absoluteURI, content, this);
+    documents.put(absoluteURI, documentContext);
+    addMdoRefByUri(absoluteURI, documentContext);
+
+    return documentContext;
   }
 
   private Configuration computeConfigurationMetadata() {
