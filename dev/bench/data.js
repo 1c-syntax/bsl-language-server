@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1590923381770,
+  "lastUpdate": 1591083374164,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3627,6 +3627,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.366219498379158",
             "extra": "mean: 58.24815503756205 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2c25f41e1d88cabf0f9b3cb21ea65ce842c1961f",
+          "message": "Merge pull request #1229 from 1c-syntax/fix/race-condition-on-populateContext",
+          "timestamp": "2020-06-02T10:29:51+03:00",
+          "tree_id": "03b23afe1f0e5a9d2a6164330756303fdcc0eb5b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2c25f41e1d88cabf0f9b3cb21ea65ce842c1961f"
+        },
+        "date": 1591083371719,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 59.27674126625061,
+            "unit": "sec",
+            "range": "stddev: 0.8805170820192342",
+            "extra": "mean: 59.27674126625061 sec\nrounds: 3"
           }
         ]
       }
