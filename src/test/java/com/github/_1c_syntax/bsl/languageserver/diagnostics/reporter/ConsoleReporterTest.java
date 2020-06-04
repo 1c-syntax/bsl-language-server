@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +36,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 class ConsoleReporterTest {
 
@@ -64,8 +66,13 @@ class ConsoleReporterTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
+    String mdoRef = "";
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoRef();
+    }
     String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic), mdoRef);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     ConsoleReporter reporter = new ConsoleReporter();

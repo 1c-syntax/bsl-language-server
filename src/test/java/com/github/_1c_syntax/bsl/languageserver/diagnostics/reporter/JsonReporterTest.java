@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.AnalysisInfoObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
@@ -39,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 class JsonReporterTest {
 
@@ -67,8 +69,13 @@ class JsonReporterTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
+    String mdoRef = "";
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoRef();
+    }
     String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic), mdoRef);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     JsonReporter reporter = new JsonReporter();

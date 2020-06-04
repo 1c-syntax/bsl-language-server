@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -41,6 +42,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -92,8 +94,13 @@ class JUnitReporterTest {
       "",
       new ServerContext()
     );
+    String mdoRef = "";
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoRef();
+    }
     String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics);
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics, mdoRef);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     AbstractDiagnosticReporter reporter = new JUnitReporter();

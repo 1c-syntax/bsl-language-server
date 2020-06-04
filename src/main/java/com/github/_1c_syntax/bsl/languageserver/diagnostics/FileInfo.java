@@ -41,11 +41,13 @@ public class FileInfo {
   Path path;
   List<Diagnostic> diagnostics;
   MetricStorage metrics;
+  String mdoRef;
 
-  public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
+  public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics, String mdoRef) {
     URI uri = documentContext.getUri();
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
+    this.mdoRef = mdoRef;
   }
 }

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
@@ -204,8 +205,13 @@ public class AnalyzeCommand implements Callable<Integer> {
     Path filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
     MetricStorage metrics = documentContext.getMetrics();
+    String mdoRef = "";
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoRef();
+    }
 
-    FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics);
+    FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics, mdoRef);
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearSecondaryData();
