@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.AnalysisInfoObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
@@ -40,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Optional;
 
 class JsonReporterTest {
 
