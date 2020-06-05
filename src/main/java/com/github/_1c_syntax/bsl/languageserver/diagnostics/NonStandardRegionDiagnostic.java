@@ -105,7 +105,7 @@ public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
 
   private static Set<Pattern> getStandardRegionsByModuleType(ModuleType moduleType) {
 
-    if (moduleType == ModuleType.Unknown) {
+    if (moduleType == ModuleType.UNKNOWN) {
       return Collections.emptySet();
     }
 

@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -132,7 +133,8 @@ public final class MethodSymbolComputer
       .orElse(false);
 
     String mdoRef = documentContext.getMdObject()
-      .map(MDObjectBase::getMdoRef)
+      .map(MDObjectBase::getMdoReference)
+      .map(MDOReference::getMdoRef)
       .orElse("");
 
     return MethodSymbol.builder()

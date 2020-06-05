@@ -63,5 +63,4 @@ public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
 
     return ctx;
   }
-
 }
