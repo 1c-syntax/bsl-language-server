@@ -90,16 +90,11 @@ class GenericReporterTest {
     ));
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
-    String mdoRef = "";
-    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
-    if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoRef();
-    }
     Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
     diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
     String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics, mdoRef);
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     AbstractDiagnosticReporter reporter = new GenericIssueReporter();

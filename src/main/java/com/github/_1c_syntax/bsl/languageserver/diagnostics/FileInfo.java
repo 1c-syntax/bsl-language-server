@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -33,21 +34,27 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Value
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileInfo {
   Path path;
+  String mdoRef;
   List<Diagnostic> diagnostics;
   MetricStorage metrics;
-  String mdoRef;
 
-  public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics, String mdoRef) {
+  public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
     URI uri = documentContext.getUri();
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
-    this.mdoRef = mdoRef;
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoRef();
+    } else {
+      mdoRef = "";
+    }
   }
 }

@@ -211,7 +211,7 @@ public class AnalyzeCommand implements Callable<Integer> {
       mdoRef = mdObjectBase.get().getMdoRef();
     }
 
-    FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics, mdoRef);
+    FileInfo fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearSecondaryData();

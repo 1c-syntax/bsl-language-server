@@ -66,13 +66,9 @@ class ConsoleReporterTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
-    String mdoRef = "";
-    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
-    if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoRef();
-    }
+
     String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic), mdoRef);
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     ConsoleReporter reporter = new ConsoleReporter();

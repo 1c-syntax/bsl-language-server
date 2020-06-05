@@ -64,12 +64,7 @@ public class GenericCoverageTest {
 
     // when
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-    String mdoRef = "";
-    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
-    if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoRef();
-    }
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>(), mdoRef);
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>());
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
     AbstractDiagnosticReporter reporter = new GenericCoverageReporter();
