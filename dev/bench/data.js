@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1591111787543,
+  "lastUpdate": 1591374672376,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3689,6 +3689,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.7968417341355558",
             "extra": "mean: 59.50652662913004 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "zchokobo@gmail.com",
+            "name": "EightM",
+            "username": "EightM"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "678cd430cf554f5eb22cb30945996e53cca8947e",
+          "message": "Добавление mdoref в FileInfo. Исправление тестов (#1241)",
+          "timestamp": "2020-06-05T19:24:56+03:00",
+          "tree_id": "76a6027971497aba182ad502177b131e42904785",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/678cd430cf554f5eb22cb30945996e53cca8947e"
+        },
+        "date": 1591374669997,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.66145157814026,
+            "unit": "sec",
+            "range": "stddev: 1.4270434117407993",
+            "extra": "mean: 58.66145157814026 sec\nrounds: 3"
           }
         ]
       }
