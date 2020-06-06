@@ -188,6 +188,9 @@
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
                 },
+                "MetadataObjectNameLength": {
+                    "$ref": "parameters-schema.json#/definitions/MetadataObjectNameLength"
+                },
                 "MethodSize": {
                     "$ref": "parameters-schema.json#/definitions/MethodSize"
                 },
