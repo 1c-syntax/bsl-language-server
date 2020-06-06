@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1591374672376,
+  "lastUpdate": 1591464615399,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3720,6 +3720,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4270434117407993",
             "extra": "mean: 58.66145157814026 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alkoleft@yandex.ru",
+            "name": "alkoleft",
+            "username": "alkoleft"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f1cca88659634e75ab0aa643fd10070956a4448b",
+          "message": "Feature/object name length (#1215)\n\n* Создана диагностика\r\n\r\nCo-authored-by: Oleg Tymko <olegtymko@yandex.ru>\r\nCo-authored-by: Nikita Gryzlov <nixel2007@gmail.com>",
+          "timestamp": "2020-06-06T20:23:50+03:00",
+          "tree_id": "efce105086265f096f096d96ff7e7980a5b56e18",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f1cca88659634e75ab0aa643fd10070956a4448b"
+        },
+        "date": 1591464612048,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 59.414725383122764,
+            "unit": "sec",
+            "range": "stddev: 0.1597566579069291",
+            "extra": "mean: 59.414725383122764 sec\nrounds: 3"
           }
         ]
       }
