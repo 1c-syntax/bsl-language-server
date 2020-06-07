@@ -33,7 +33,6 @@ import java.util.Map;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 
-
 class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiagnostic> {
 
   MissingSpaceDiagnosticTest() {
@@ -153,7 +152,6 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(45, 8, 45, 9)
       .hasRange(45, 22, 45, 23);
     assertThat(diagnostics).hasSize(18);
-
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("listForCheckLeft", "");
