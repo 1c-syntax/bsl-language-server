@@ -45,7 +45,6 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-//    assertThat(diagnostics).hasSize(29);
     assertThat(diagnostics, true)
       // на +
       .hasRange(4, 18, 4, 19)
