@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1591537837913,
+  "lastUpdate": 1591538214197,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3782,6 +3782,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.543841255516334",
             "extra": "mean: 58.67768716812134 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "3fa4455f7ccd2f574c225705828b4460146213be",
+          "message": "Merge branch 'MissingSpaceDiagnostic-fix'",
+          "timestamp": "2020-06-07T16:38:56+03:00",
+          "tree_id": "a0de8d57506c16d0f668084384768067fc40318d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3fa4455f7ccd2f574c225705828b4460146213be"
+        },
+        "date": 1591538211807,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.70124371846517,
+            "unit": "sec",
+            "range": "stddev: 0.7710462049822925",
+            "extra": "mean: 58.70124371846517 sec\nrounds: 3"
           }
         ]
       }
