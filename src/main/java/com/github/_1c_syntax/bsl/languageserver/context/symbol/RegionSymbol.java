@@ -62,4 +62,9 @@ public class RegionSymbol implements Symbol {
       .map(symbol -> (MethodSymbol) symbol)
       .collect(Collectors.toList());
   }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitRegion(this);
+  }
 }

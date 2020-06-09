@@ -57,4 +57,9 @@ public class VariableSymbol implements Symbol {
   VariableKind kind;
   boolean export;
   Optional<VariableDescription> description;
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitVariable(this);
+  }
 }

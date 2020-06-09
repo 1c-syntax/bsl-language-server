@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **112**
+Общее количество: **113**
 
-* Дефект кода: **70**
+* Дефект кода: **71**
 * Уязвимость: **3**
 * Ошибка: **35**
 * Потенциальная уязвимость: **4**
@@ -57,6 +57,7 @@
 | [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Избыточная проверка параметра АвтоТест | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
 | [ExecuteExternalCode](ExecuteExternalCode.md) | Выполнение произвольного кода на сервере | Да | Критичный | Уязвимость | `error`<br/>`standard` |
 | [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Выполнение произвольного кода в общем модуле на сервере | Да | Критичный | Потенциальная уязвимость | `badpractice`<br/>`standard` |
+| [ExportVariables](ExportVariables.md) | Запрет экспортных глобальных переменных модуля | Да | Важный | Дефект кода | `standard`<br/>`design`<br/>`unpredictable` |
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` |
