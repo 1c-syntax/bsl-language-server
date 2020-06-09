@@ -25,10 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -40,11 +45,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
+
+  private static final Set<Integer> SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES = Set.of(
+    BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
+    BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
   private final DocumentContext documentContext;
   private final List<MethodSymbol> methods = new ArrayList<>();
@@ -81,8 +91,9 @@ public final class MethodSymbolComputer
       declaration.subName().getStart(),
       declaration.paramList(),
       true,
-      declaration.EXPORT_KEYWORD() != null
-    );
+      declaration.EXPORT_KEYWORD() != null,
+      getCompilerDirective(declaration.compilerDirective()),
+      getAnnotations(declaration.annotation()));
 
     methods.add(methodSymbol);
 
@@ -110,12 +121,58 @@ public final class MethodSymbolComputer
       declaration.subName().getStart(),
       declaration.paramList(),
       false,
-      declaration.EXPORT_KEYWORD() != null
+      declaration.EXPORT_KEYWORD() != null,
+      getCompilerDirective(declaration.compilerDirective()),
+      getAnnotations(declaration.annotation())
     );
 
     methods.add(methodSymbol);
 
     return ctx;
+  }
+
+  // есть определенные предпочтения при использовании &НаКлиентеНаСервереБезКонтекста в модуле упр.формы
+  // при ее использовании с другой директивой будет использоваться именно она
+  // например, порядок 1
+  //&НаКлиентеНаСервереБезКонтекста
+  //&НаСервереБезКонтекста
+  //показывает Сервер в отладчике и доступен серверный объект ТаблицаЗначений
+  // или порядок 2
+  //&НаСервереБезКонтекста
+  //&НаКлиентеНаСервереБезКонтекста
+  //аналогично
+  //т.е. порядок этих 2х директив не важен, все равно используется &НаКлиентеНаСервереБезКонтекста.
+  // проверял на 8.3.15
+
+  // есть определенные предпочтения при использовании &НаКлиентеНаСервере в модуле команды
+  // при ее использовании с другой директивой будет использоваться именно она
+  //  проверял на 8.3.15
+  //  порядок
+  //  1
+  //  &НаКлиентеНаСервере
+  //  &НаКлиенте
+  //  вызывает клиент при вызове метода с клиента
+  //  вызывает сервер при вызове метода с сервера
+  //  2
+  //  &НаКлиенте
+  //  &НаКлиентеНаСервере
+  //  вызывает клиент при вызове метода с клиента
+  //  вызывает сервер при вызове метода с сервера
+
+  private static Optional<CompilerDirectiveKind> getCompilerDirective(
+    List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts
+  ) {
+    if (compilerDirectiveContexts.isEmpty()) {
+      return Optional.empty();
+    }
+    var tokenType = compilerDirectiveContexts.stream()
+      .map(compilerDirectiveContext -> compilerDirectiveContext.getStop().getType())
+      .filter(SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES::contains)
+      .findAny()
+      .orElseGet(() -> compilerDirectiveContexts.get(0).getStop().getType());
+
+    return CompilerDirectiveKind.of(tokenType);
+
   }
 
   private MethodSymbol createMethodSymbol(
@@ -124,7 +181,9 @@ public final class MethodSymbolComputer
     Token subName,
     BSLParser.ParamListContext paramList,
     boolean function,
-    boolean export
+    boolean export,
+    Optional<CompilerDirectiveKind> compilerDirective,
+    List<Annotation> annotations
   ) {
     Optional<MethodDescription> description = createDescription(startNode.getSymbol());
     boolean deprecated = description
@@ -145,6 +204,8 @@ public final class MethodSymbolComputer
       .deprecated(deprecated)
       .mdoRef(mdoRef)
       .parameters(createParameters(paramList))
+      .compilerDirectiveKind(compilerDirective)
+      .annotations(annotations)
       .build();
   }
 
@@ -176,5 +237,55 @@ public final class MethodSymbolComputer
     return Optional.ofNullable(identifier)
       .map(ParseTree::getText)
       .orElse("<UNKNOWN_IDENTIFIER>");
+  }
+
+  private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
+    if (annotationContext.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return annotationContext.stream()
+      .map(annotation -> createAnnotation(
+        annotation.annotationName(),
+        annotation.getStop().getType(),
+        annotation.annotationParams()))
+      .collect(Collectors.toList());
+  }
+
+  private static Annotation createAnnotation(BSLParser.AnnotationNameContext annotationNameContext, int type,
+                                             BSLParser.AnnotationParamsContext annotationParamsContext) {
+    final List<AnnotationParameterDefinition> params;
+    if (annotationParamsContext == null) {
+      params = Collections.emptyList();
+    } else {
+      params = annotationParamsContext.annotationParam().stream()
+        .map(MethodSymbolComputer::getAnnotationParam)
+        .collect(Collectors.toList());
+    }
+
+    return Annotation.builder()
+      .name(annotationNameContext.getText())
+      .kind(AnnotationKind.of(type))
+      .parameters(params)
+      .build();
+  }
+
+  private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
+    var name = Optional.ofNullable(o.annotationParamName())
+      .map(BSLParserRuleContext::getText)
+      .orElse("");
+    var value = Optional.ofNullable(o.constValue())
+      .map(BSLParserRuleContext::getText)
+      .map(MethodSymbolComputer::excludeTrailingQuotes)
+      .orElse("");
+    var optional = o.constValue() != null;
+
+    return new AnnotationParameterDefinition(name, value, optional);
+  }
+
+  private static String excludeTrailingQuotes(String text) {
+    if (text.length() > 2 && text.charAt(0) == '\"') {
+      return text.substring(1, text.length() - 1);
+    }
+    return text;
   }
 }
