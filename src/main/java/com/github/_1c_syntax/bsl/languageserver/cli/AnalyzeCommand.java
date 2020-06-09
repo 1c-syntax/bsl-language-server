@@ -208,7 +208,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     String mdoRef = "";
     Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
     if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoRef();
+      mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
     }
 
     FileInfo fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
