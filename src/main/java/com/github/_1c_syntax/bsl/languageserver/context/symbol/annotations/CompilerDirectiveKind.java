@@ -30,7 +30,6 @@ import java.util.stream.Stream;
  * Класс хранит информацию о директиве компиляции.
  * См. {@link com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol}
  */
-
 public enum CompilerDirectiveKind {
   AT_SERVER_NO_CONTEXT(BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL),
   AT_CLIENT_AT_SERVER_NO_CONTEXT(BSLParser.ANNOTATION_ATCLIENTATSERVERNOCONTEXT_SYMBOL),

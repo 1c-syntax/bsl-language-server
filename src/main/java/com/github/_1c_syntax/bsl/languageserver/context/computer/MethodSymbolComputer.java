@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -51,7 +52,6 @@ public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
 
-  // подробная расшифровка использования этих директив компиляции приведена в комментариях в MethodSymbolComputerTest
   private static final Set<Integer> SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES = Set.of(
     BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
@@ -159,12 +159,13 @@ public final class MethodSymbolComputer
   //  вызывает клиент при вызове метода с клиента
   //  вызывает сервер при вызове метода с сервера
 
-  private static Optional<CompilerDirectiveKind> getCompilerDirective(List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts) {
+  private static Optional<CompilerDirectiveKind> getCompilerDirective(
+    List<? extends BSLParser.CompilerDirectiveContext> compilerDirectiveContexts
+  ) {
     if (compilerDirectiveContexts.isEmpty()) {
       return Optional.empty();
     }
     var tokenType = compilerDirectiveContexts.stream()
-      .map(o -> (BSLParser.CompilerDirectiveContext) o)
       .map(compilerDirectiveContext -> compilerDirectiveContext.getStop().getType())
       .filter(SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES::contains)
       .findAny()
@@ -243,22 +244,20 @@ public final class MethodSymbolComputer
       return Collections.emptyList();
     }
     return annotationContext.stream()
-      .map(o -> (BSLParser.AnnotationContext) o)
       .map(annotation -> createAnnotation(
-          annotation.annotationName(),
-          annotation.getStop().getType(),
-          annotation.annotationParams()))
+        annotation.annotationName(),
+        annotation.getStop().getType(),
+        annotation.annotationParams()))
       .collect(Collectors.toList());
   }
 
   private static Annotation createAnnotation(BSLParser.AnnotationNameContext annotationNameContext, int type,
                                              BSLParser.AnnotationParamsContext annotationParamsContext) {
     final List<AnnotationParameterDefinition> params;
-    if (annotationParamsContext == null){
+    if (annotationParamsContext == null) {
       params = Collections.emptyList();
-    } else{
+    } else {
       params = annotationParamsContext.annotationParam().stream()
-        .map(o -> (BSLParser.AnnotationParamContext) o)
         .map(MethodSymbolComputer::getAnnotationParam)
         .collect(Collectors.toList());
     }
@@ -271,14 +270,20 @@ public final class MethodSymbolComputer
   }
 
   private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
-    return new AnnotationParameterDefinition(
-      o.annotationParamName() != null ? o.annotationParamName().getText() : "",
-      o.constValue() != null ? excludeTrailingQuotes(o.constValue().getText()) : "",
-      o.constValue() != null);
+    var name = Optional.ofNullable(o.annotationParamName())
+      .map(BSLParserRuleContext::getText)
+      .orElse("");
+    var value = Optional.ofNullable(o.constValue())
+      .map(BSLParserRuleContext::getText)
+      .map(MethodSymbolComputer::excludeTrailingQuotes)
+      .orElse("");
+    var optional = o.constValue() != null;
+
+    return new AnnotationParameterDefinition(name, value, optional);
   }
 
   private static String excludeTrailingQuotes(String text) {
-    if (text.length() > 2 && text.charAt(0) == '\"'){
+    if (text.length() > 2 && text.charAt(0) == '\"') {
       return text.substring(1, text.length() - 1);
     }
     return text;

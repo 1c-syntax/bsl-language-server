@@ -30,7 +30,6 @@ import java.util.stream.Stream;
  * Класс хранит информацию о виде аннотации.
  * См. {@link Annotation}
  */
-
 public enum AnnotationKind {
   BEFORE(BSLParser.ANNOTATION_BEFORE_SYMBOL),
   AFTER(BSLParser.ANNOTATION_AFTER_SYMBOL),
