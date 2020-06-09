@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1591686383691,
+  "lastUpdate": 1591687384158,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3844,6 +3844,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5291487334643485",
             "extra": "mean: 58.59420625368754 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ef3c9614695111d8b84bd75afb549c5f50ca7d52",
+          "message": "Merge pull request #1198 from artbear/annotations-method-symbol-1115\n\nДирективы компиляции и аннотации в MethodSymbol",
+          "timestamp": "2020-06-09T10:15:21+03:00",
+          "tree_id": "c1e233c5fd66687c9eab2c4d85739fa3c38d317d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ef3c9614695111d8b84bd75afb549c5f50ca7d52"
+        },
+        "date": 1591687381710,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.72048377990723,
+            "unit": "sec",
+            "range": "stddev: 1.902508702594203",
+            "extra": "mean: 58.72048377990723 sec\nrounds: 3"
           }
         ]
       }
