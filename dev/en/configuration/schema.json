@@ -143,6 +143,9 @@
                 "ExecuteExternalCodeInCommonModule": {
                     "$ref": "parameters-schema.json#/definitions/ExecuteExternalCodeInCommonModule"
                 },
+                "ExportVariables": {
+                    "$ref": "parameters-schema.json#/definitions/ExportVariables"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
