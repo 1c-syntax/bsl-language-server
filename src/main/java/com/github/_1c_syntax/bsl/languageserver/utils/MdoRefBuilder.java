@@ -52,7 +52,7 @@ public class MdoRefBuilder {
   public String getMdoRef(
     DocumentContext documentContext,
     @Nullable
-      TerminalNode identifier,
+    TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
 
