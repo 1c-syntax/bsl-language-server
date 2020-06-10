@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1591693074671,
+  "lastUpdate": 1591783191091,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -3906,6 +3906,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0477913445508165",
             "extra": "mean: 58.4556717077891 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b3b5ab459d25f2cade03b03994eb8f79379d79ee",
+          "message": "Merge pull request #1249 from 1c-syntax/feature/up-mdclasses-dev\n\nОбновление версии mdclasses до последней из develop",
+          "timestamp": "2020-06-10T12:53:39+03:00",
+          "tree_id": "f87aa6bae6f99de274a4d9c73df4e4af7d1f531f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b3b5ab459d25f2cade03b03994eb8f79379d79ee"
+        },
+        "date": 1591783188659,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 57.86943658192953,
+            "unit": "sec",
+            "range": "stddev: 0.5387571942671254",
+            "extra": "mean: 57.86943658192953 sec\nrounds: 3"
           }
         ]
       }
