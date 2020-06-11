@@ -33,9 +33,10 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -66,7 +67,11 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
-    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx, BSLParser.RULE_complexIdentifier);
+    List<ParseTree> listIdentifier = Trees.getChildren(ctx, BSLParser.RULE_expression).stream()
+      .map(bslParserRuleContext -> (BSLParser.ExpressionContext)bslParserRuleContext)
+      .flatMap(expressionContext -> Trees.findAllRuleNodes(expressionContext, BSLParser.RULE_complexIdentifier)
+        .stream())
+      .collect(Collectors.toList());
 
     if (listIdentifier.isEmpty()) {
       return super.visitIfBranch(ctx);
