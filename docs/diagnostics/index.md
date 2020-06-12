@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **111**
+Общее количество: **113**
 
-* Дефект кода: **70**
+* Дефект кода: **71**
 * Уязвимость: **3**
-* Ошибка: **34**
+* Ошибка: **35**
 * Потенциальная уязвимость: **4**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -57,6 +57,7 @@
 | [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Избыточная проверка параметра АвтоТест | Да | Незначительный | Дефект кода | `standard`<br/>`deprecated` |
 | [ExecuteExternalCode](ExecuteExternalCode.md) | Выполнение произвольного кода на сервере | Да | Критичный | Уязвимость | `error`<br/>`standard` |
 | [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Выполнение произвольного кода в общем модуле на сервере | Да | Критичный | Потенциальная уязвимость | `badpractice`<br/>`standard` |
+| [ExportVariables](ExportVariables.md) | Запрет экспортных глобальных переменных модуля | Да | Важный | Дефект кода | `standard`<br/>`design`<br/>`unpredictable` |
 | [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` |
@@ -72,6 +73,7 @@
 | [IsInRoleMethodDiagnostic](IsInRoleMethodDiagnostic.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` |
 | [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` |
+| [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` |
 | [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` |
 | [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br/>`badpractice` |
 | [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` |

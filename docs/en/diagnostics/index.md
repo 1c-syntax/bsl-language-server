@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **111**
+Total: **113**
 
-* Error: **34**
-* Code smell: **70**
+* Error: **35**
+* Code smell: **71**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -57,6 +57,7 @@ Total: **111**
 | [ExcessiveAutoTestCheck](ExcessiveAutoTestCheck.md) | Excessive AutoTest Check | Yes | Minor | Code smell | `standard`<br/>`deprecated` |
 | [ExecuteExternalCode](ExecuteExternalCode.md) | Executing of external code on the server | Yes | Critical | Vulnerability | `error`<br/>`standard` |
 | [ExecuteExternalCodeInCommonModule](ExecuteExternalCodeInCommonModule.md) | Executing of external code in a common module on the server | Yes | Critical | Security Hotspot | `badpractice`<br/>`standard` |
+| [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br/>`design`<br/>`unpredictable` |
 | [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br/>`badpractice` |
 | [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` |
 | [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` |
@@ -72,6 +73,7 @@ Total: **111**
 | [IsInRoleMethodDiagnostic](IsInRoleMethodDiagnostic.md) | IsInRole global method call | Yes | Major | Code smell | `error` |
 | [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` |
+| [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` |
 | [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` |
 | [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br/>`badpractice` |
 | [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` |

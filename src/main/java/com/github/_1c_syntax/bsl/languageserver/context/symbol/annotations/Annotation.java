@@ -19,47 +19,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.Value;
-import lombok.experimental.NonFinal;
-import org.eclipse.lsp4j.Range;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Класс хранит информацию об аннотации.
+ * См. {@link com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol}
+ */
 @Value
 @Builder
-@EqualsAndHashCode(exclude = {"children", "parent"})
-@ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements Symbol {
+public class Annotation {
   String name;
-  Range range;
-  Range variableNameRange;
-
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  AnnotationKind kind;
 
   @Builder.Default
-  List<Symbol> children = Collections.emptyList();
-
-  VariableKind kind;
-  boolean export;
-  Optional<VariableDescription> description;
-
-  @Override
-  public void accept(SymbolTreeVisitor visitor) {
-    visitor.visitVariable(this);
-  }
+  List<AnnotationParameterDefinition> parameters = new ArrayList<>();
 }

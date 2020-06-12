@@ -52,7 +52,7 @@ public class FileInfo {
     metrics = documentContext.getMetrics();
     Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
     if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoRef();
+      mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
     } else {
       mdoRef = "";
     }

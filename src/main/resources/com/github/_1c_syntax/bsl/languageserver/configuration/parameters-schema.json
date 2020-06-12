@@ -472,6 +472,16 @@
             "title": "Executing of external code in a common module on the server",
             "$id": "#/definitions/ExecuteExternalCodeInCommonModule"
         },
+        "ExportVariables": {
+            "description": "Ban export global module variables",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Ban export global module variables",
+            "$id": "#/definitions/ExportVariables"
+        },
         "ExtraCommas": {
             "description": "Commas without a parameter at the end of a method call",
             "default": true,
@@ -665,6 +675,24 @@
                 }
             },
             "$id": "#/definitions/MagicNumber"
+        },
+        "MetadataObjectNameLength": {
+            "description": "Metadata object names must not exceed the allowed length",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Metadata object names must not exceed the allowed length",
+            "properties": {
+                "maxMetadataObjectNameLength": {
+                    "description": "Permissible length of the name of the configuration object",
+                    "default": 80,
+                    "type": "integer",
+                    "title": "Permissible length of the name of the configuration object"
+                }
+            },
+            "$id": "#/definitions/MetadataObjectNameLength"
         },
         "MethodSize": {
             "description": "Method size",

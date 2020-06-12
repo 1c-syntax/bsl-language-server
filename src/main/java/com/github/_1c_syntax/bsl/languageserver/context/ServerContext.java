@@ -188,7 +188,7 @@ public class ServerContext {
     var mdoByUri = modulesByObject.get(uri);
 
     if (mdoByUri != null) {
-      var mdoRef = mdoByUri.getMdoRef();
+      var mdoRef = mdoByUri.getMdoReference().getMdoRef();
       mdoRefs.put(uri, mdoRef);
       var documentsGroup = documentsByMDORef.get(mdoRef);
       if (documentsGroup == null) {

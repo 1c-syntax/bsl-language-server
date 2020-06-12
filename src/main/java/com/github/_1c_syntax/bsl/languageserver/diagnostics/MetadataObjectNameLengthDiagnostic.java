@@ -23,44 +23,54 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.Configuration;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import org.antlr.v4.runtime.Token;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.BLOCKER,
-  minutesToFix = 2,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 10,
+  scope = DiagnosticScope.BSL,
   tags = {
-    DiagnosticTag.ERROR
+    DiagnosticTag.STANDARD
   }
 
 )
-public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
+public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
 
-  public CommonModuleAssignDiagnostic(DiagnosticInfo info) {
+  private static final int MAX_METADATA_OBJECT_NAME_LENGTH = 80;
+
+  @DiagnosticParameter(
+    type = Integer.class,
+    defaultValue = "" + MAX_METADATA_OBJECT_NAME_LENGTH
+  )
+  private int maxMetadataObjectNameLength = MAX_METADATA_OBJECT_NAME_LENGTH;
+
+  public MetadataObjectNameLengthDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  public ParseTree visitLValue(BSLParser.LValueContext ctx) {
+  protected void check() {
+    if (!documentContext.getTokens().isEmpty()
+      && documentContext.getTokens().get(0).getType() != Token.EOF
+    )
+      documentContext
+        .getMdObject()
+        .map(MDObjectBase::getName)
+        .filter(this::checkName)
+        .ifPresent(name -> diagnosticStorage.addDiagnostic(
+          documentContext.getTokens().get(0),
+          info.getMessage(maxMetadataObjectNameLength))
+        );
+  }
 
-    TerminalNode identifier = ctx.IDENTIFIER();
-
-    if (identifier == null
-      || ctx.acceptor() != null) {
-      return ctx;
-    }
-
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getCommonModule(identifier.getText()).isPresent()) {
-      diagnosticStorage.addDiagnostic(identifier, info.getMessage(identifier.getText()));
-    }
-
-    return ctx;
+  private boolean checkName(String name) {
+    return name.length() > maxMetadataObjectNameLength;
   }
 }

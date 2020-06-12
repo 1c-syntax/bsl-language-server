@@ -87,11 +87,12 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "0.3.0")
-    implementation("com.github.1c-syntax", "mdclasses", "0.5.0")
+    implementation("com.github.1c-syntax", "mdclasses", "e1e6c47c5313568d12f2f2ebf9f9a6152fee0869")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
+    testImplementation("org.junit.jupiter", "junit-jupiter-params", junitVersion)
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     testImplementation("org.assertj", "assertj-core", "3.16.1")

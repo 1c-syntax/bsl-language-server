@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

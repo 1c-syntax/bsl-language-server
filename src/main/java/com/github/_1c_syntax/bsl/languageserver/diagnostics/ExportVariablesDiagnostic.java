@@ -21,46 +21,40 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.Configuration;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.ERROR,
-  severity = DiagnosticSeverity.BLOCKER,
-  minutesToFix = 2,
+  type = DiagnosticType.CODE_SMELL,
+  severity = DiagnosticSeverity.MAJOR,
+  minutesToFix = 5,
+  scope = DiagnosticScope.ALL,
   tags = {
-    DiagnosticTag.ERROR
+    DiagnosticTag.STANDARD,
+    DiagnosticTag.DESIGN,
+    DiagnosticTag.UNPREDICTABLE
   }
-
 )
-public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
-
-  public CommonModuleAssignDiagnostic(DiagnosticInfo info) {
+public class ExportVariablesDiagnostic extends AbstractSymbolTreeDiagnostic {
+  public ExportVariablesDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
-  public ParseTree visitLValue(BSLParser.LValueContext ctx) {
-
-    TerminalNode identifier = ctx.IDENTIFIER();
-
-    if (identifier == null
-      || ctx.acceptor() != null) {
-      return ctx;
+  public void visitVariable(VariableSymbol variable) {
+    if (variable.isExport()) {
+      diagnosticStorage.addDiagnostic(variable.getRange());
     }
+  }
 
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getCommonModule(identifier.getText()).isPresent()) {
-      diagnosticStorage.addDiagnostic(identifier, info.getMessage(identifier.getText()));
-    }
-
-    return ctx;
+  @Override
+  public void visitMethod(MethodSymbol method) {
+    // skip content of methods
   }
 }
