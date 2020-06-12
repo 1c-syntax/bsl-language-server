@@ -158,6 +158,9 @@ public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
         standardRegions.add(EVENT_HANDLERS_REGION_NAME);
         standardRegions.add(INTERNAL_REGION_NAME);
         break;
+      case HTTPServiceModule:
+        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
+        break;
       default:
         // для Unknown ничего
     }
