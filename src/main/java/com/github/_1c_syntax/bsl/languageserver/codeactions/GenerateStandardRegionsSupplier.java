@@ -23,14 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,17 +50,21 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
     List<CodeAction> codeActions = new ArrayList<>();
 
     ModuleType moduleType = documentContext.getModuleType();
-    Set<String> neededStandardRegions = Regions.getStandardRegionsNamesByModuleType(moduleType, Language.RU);
+    ScriptVariant configurationLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
+    Set<String> neededStandardRegions = Regions.getStandardRegionsNamesByModuleType(moduleType, configurationLanguage);
     Set<String> documentRegionsNames = documentContext.getSymbolTree().getModuleLevelRegions().stream()
       .map(RegionSymbol::getName)
       .collect(Collectors.toSet());
     neededStandardRegions.removeAll(documentRegionsNames);
+    FileType fileType = documentContext.getFileType();
 
-    if (neededStandardRegions.isEmpty()) {
+    if (neededStandardRegions.isEmpty() || fileType == FileType.OS) {
       return codeActions;
     }
 
-    String regionFormat = "#Область %s%n#КонецОбласти%n";
+    String regionFormat =
+      configurationLanguage == ScriptVariant.ENGLISH ? "#Region %s%n#EndRegion%n" : "#Область %s%n#КонецОбласти%n";
+
     String result = neededStandardRegions.stream()
       .map(s -> String .format(regionFormat, s))
       .collect(Collectors.joining("\n"));

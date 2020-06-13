@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 
@@ -124,89 +124,132 @@ public class Regions {
     return standardRegions;
   }
 
-  public Set<String> getStandardRegionsNamesByModuleType(ModuleType moduleType, Language language) {
-    if (language == Language.EN) {
-      return new HashSet<>();
-    }
-    return getRussianStandardRegionNames(moduleType);
-
+  public Set<String> getStandardRegionsNamesByModuleType(ModuleType moduleType, ScriptVariant language) {
+    return getStandardRegionNames(moduleType, language);
   }
 
-  private static Set<String> getRussianStandardRegionNames(ModuleType moduleType) {
+  private static Set<String> getStandardRegionNames(ModuleType moduleType, ScriptVariant language) {
     Set<String> regionsName = new HashSet<>();
     switch (moduleType) {
       case FormModule:
-        addFormModuleRegionsNames(regionsName);
+        addFormModuleRegionsNames(regionsName, language);
         break;
       case ObjectModule:
       case RecordSetModule:
-        addObjectAndRecordSetRegionsName(regionsName);
+        addObjectAndRecordSetRegionsName(regionsName, language);
         break;
       case ValueManagerModule:
-        addValueManageRegionsName(regionsName);
+        addValueManageRegionsName(regionsName, language);
         break;
       case CommonModule:
-        addCommonModuleRegionNames(regionsName);
+        addCommonModuleRegionNames(regionsName, language);
         break;
       case ApplicationModule:
       case ManagedApplicationModule:
       case OrdinaryApplicationModule:
-        addApplicationModulesRegionsNames(regionsName);
+        addApplicationModulesRegionsNames(regionsName, language);
         break;
       case CommandModule:
       case SessionModule:
-        addCommandAndSessionModulesRegionsNames(regionsName);
+      case HTTPServiceModule:
+        addCommandAndSessionModulesRegionsNames(regionsName, language);
         break;
       case ExternalConnectionModule:
-        addExternalConnectionRegionsNames(regionsName);
+        addExternalConnectionRegionsNames(regionsName, language);
         break;
       case ManagerModule:
-        addManagerModuleRegionsNames(regionsName);
+        addManagerModuleRegionsNames(regionsName, language);
         break;
       default:
         // для Unknown ничего
     }
 
     // у всех типов модулей есть такая область
-    regionsName.add(Keywords.PRIVATE_REGION_RU);
+    regionsName.add(language == ScriptVariant.ENGLISH ? Keywords.PRIVATE_REGION_EN : Keywords.PRIVATE_REGION_RU);
 
     return regionsName;
   }
 
-  private static void addManagerModuleRegionsNames(Set<String> regionsName) {
+  private static void addManagerModuleRegionsNames(Set<String> regionsName, ScriptVariant language) {
+
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      return;
+    }
+
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
     regionsName.add(Keywords.INTERNAL_REGION_RU);
   }
 
-  private static void addExternalConnectionRegionsNames(Set<String> regionsName) {
+  private static void addExternalConnectionRegionsNames(Set<String> regionsName, ScriptVariant language) {
+
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      return;
+    }
+
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
   }
 
-  private static void addCommandAndSessionModulesRegionsNames(Set<String> regionsName) {
-    regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
+  private static void addCommandAndSessionModulesRegionsNames(Set<String> regionsName, ScriptVariant language) {
+    regionsName.add(language == ScriptVariant.ENGLISH ? Keywords.EVENT_HANDLERS_REGION_EN
+      : Keywords.EVENT_HANDLERS_REGION_RU);
   }
 
-  private static void addApplicationModulesRegionsNames(Set<String> regionsName) {
+  private static void addApplicationModulesRegionsNames(Set<String> regionsName, ScriptVariant language) {
+
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.VARIABLES_REGION_EN);
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      return;
+    }
+
     regionsName.add(Keywords.VARIABLES_REGION_RU);
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
   }
+  private static void addCommonModuleRegionNames(Set<String> regionsName, ScriptVariant language) {
 
-  private static void addCommonModuleRegionNames(Set<String> regionsName) {
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      return;
+    }
+
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.INTERNAL_REGION_RU);
   }
 
-  private static void addValueManageRegionsName(Set<String> regionsName) {
+  private static void addValueManageRegionsName(Set<String> regionsName, ScriptVariant language) {
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.VARIABLES_REGION_EN);
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      return;
+    }
     regionsName.add(Keywords.VARIABLES_REGION_RU);
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
     regionsName.add(Keywords.INTERNAL_REGION_RU);
   }
 
-  private static void addObjectAndRecordSetRegionsName(Set<String> regionsName) {
+  private static void addObjectAndRecordSetRegionsName(Set<String> regionsName, ScriptVariant language) {
+
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.VARIABLES_REGION_EN);
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.EVENT_HANDLERS_REGION_EN);
+      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      regionsName.add(Keywords.INITIALIZE_REGION_EN);
+      return;
+    }
     regionsName.add(Keywords.VARIABLES_REGION_RU);
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
@@ -214,7 +257,16 @@ public class Regions {
     regionsName.add(Keywords.INITIALIZE_REGION_RU);
   }
 
-  private static void addFormModuleRegionsNames(Set<String> regionsName) {
+  private static void addFormModuleRegionsNames(Set<String> regionsName, ScriptVariant language) {
+    if (language == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.VARIABLES_REGION_EN);
+      regionsName.add(Keywords.FORM_EVENT_HANDLERS_REGION_EN);
+      regionsName.add(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
+      regionsName.add(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN);
+      regionsName.add(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
+      regionsName.add(Keywords.INITIALIZE_REGION_EN);
+      return;
+    }
     regionsName.add(Keywords.VARIABLES_REGION_RU);
     regionsName.add(Keywords.FORM_EVENT_HANDLERS_REGION_RU);
     regionsName.add(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU);
