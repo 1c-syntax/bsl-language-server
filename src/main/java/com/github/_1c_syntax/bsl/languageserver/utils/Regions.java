@@ -103,6 +103,7 @@ public class Regions {
         break;
       case CommandModule:
       case SessionModule:
+      case HTTPServiceModule:
         standardRegions.add(EVENT_HANDLERS_REGION_NAME);
         break;
       case ExternalConnectionModule:
