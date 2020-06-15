@@ -4,6 +4,16 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Parameters definition part",
     "definitions": {
+        "AttachIdleHandler": {
+            "description": "Usage AttachIdleHandler",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Usage AttachIdleHandler",
+            "$id": "#/definitions/AttachIdleHandler"
+        },
         "BeginTransactionBeforeTryCatch": {
             "description": "Violating transaction rules for the 'BeginTransaction' method",
             "default": true,
