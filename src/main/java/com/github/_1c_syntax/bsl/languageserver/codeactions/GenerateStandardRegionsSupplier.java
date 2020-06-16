@@ -41,8 +41,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * {@code Supplier} {@code codeAction} для генерации отсутствующих
+ * стандартных программных областей
+ */
 public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
 
+  /**
+   * При необходимости создает {@code CodeAction} для генерации отсутствующих
+   * стандартных областей 1С
+   * @param params параметры вызова генерации {@code codeAction}
+   * @param documentContext представление программного модуля
+   * @return {@code List<CodeAction>} если модуль не содержит всех стандартных областей,
+   * пустой {@code ArrayList} если генерация областей не требуется
+   */
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
     List<CodeAction> codeActions = new ArrayList<>();

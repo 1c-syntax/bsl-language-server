@@ -31,6 +31,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+/**
+ * Вспомогательный класс, содержащий методы для работы с программными областями 1С
+ */
 @UtilityClass
 public class Regions {
 
@@ -68,6 +71,12 @@ public class Regions {
   private final Pattern INITIALIZE_REGION_NAME =
     createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
 
+  /**
+   * Метод возвращает паттерны регулярных выражений
+   * удовлетворяющих стандартным наименованиям областей 1С на русском и английском языках
+   * @param moduleType тип программного модуля 1С
+   * @return множество паттернов имен областей 1С для конкретного типа модуля
+   */
   public Set<Pattern> getStandardRegionsPatternsByModuleType(ModuleType moduleType) {
 
     if (moduleType == ModuleType.UNKNOWN) {
@@ -124,6 +133,13 @@ public class Regions {
     return standardRegions;
   }
 
+  /**
+   * Получает стандартные имена областей 1С, на основании типа программного модуля
+   * и языка конфигурации
+   * @param moduleType тип программного модуля 1С
+   * @param language язык конфигурации, может быть русским или английским
+   * @return множество имен стандартных областей 1С
+   */
   public Set<String> getStandardRegionsNamesByModuleType(ModuleType moduleType, ScriptVariant language) {
     return getStandardRegionNames(moduleType, language);
   }
