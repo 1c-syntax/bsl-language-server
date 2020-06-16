@@ -26,13 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.V8BasicType;
+import com.github._1c_syntax.bsl.languageserver.utils.V8Type;
+import com.github._1c_syntax.bsl.languageserver.utils.V8TypeFromPresentationSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.V8TypeFromVariableSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.V8TypeHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.ToString;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
@@ -43,7 +46,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -53,7 +55,7 @@ import java.util.stream.Collectors;
     DiagnosticTag.PERFORMANCE
   }
 )
-public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
+public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic implements V8TypeFromPresentationSupplier, V8TypeFromVariableSupplier {
   private static final Pattern EXECUTE_CALL_PATTERN = CaseInsensitivePattern.compile("Выполнить|Execute");
   private static final Pattern QUERY_BUILDER_PATTERN =
     CaseInsensitivePattern.compile("ПостроительЗапроса|QueryBuilder");
@@ -61,15 +63,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     CaseInsensitivePattern.compile("ПостроительОтчета|ReportBuilder");
   private static final Pattern QUERY_PATTERN = CaseInsensitivePattern.compile("Запрос|Query");
 
-  private static final String BOOLEAN_TYPE = "Boolean";
-  private static final String DATE_TYPE = "Datetime";
-  private static final String NULL_TYPE = "Null";
-  private static final String NUMBER_TYPE = "Number";
-  private static final String REPORT_BUILDER_TYPE = "ReportBuilder";
-  private static final String STRING_TYPE = "String";
-  private static final String QUERY_BUILDER_TYPE = "QueryBuilder";
-  private static final String QUERY_TYPE = "Query";
-  private static final String UNDEFINED_TYPE = "Undefined";
   private static final String GLOBAL_SCOPE = "GLOBAL_SCOPE";
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
@@ -79,81 +72,17 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     super(info);
   }
 
-  private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
-    String result;
-    if (constValue.string() != null) {
-      result = STRING_TYPE;
-    } else if (constValue.DATETIME() != null) {
-      result = DATE_TYPE;
-    } else if (constValue.numeric() != null) {
-      result = NUMBER_TYPE;
-    } else if (constValue.TRUE() != null) {
-      result = BOOLEAN_TYPE;
-    } else if (constValue.FALSE() != null) {
-      result = BOOLEAN_TYPE;
-    } else if (constValue.NULL() != null) {
-      result = NULL_TYPE;
-    } else {
-      result = UNDEFINED_TYPE;
-    }
-
-    return result;
-  }
-
-  private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
-
-    String typeName = Optional.ofNullable(newExpression.typeName())
-      .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(memberListContext -> memberListContext.stream().findFirst())
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
-      )
-      .orElse(UNDEFINED_TYPE);
-
-    if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
-      return QUERY_BUILDER_TYPE;
-    } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
-      return REPORT_BUILDER_TYPE;
-    } else if (QUERY_PATTERN.matcher(typeName).matches()) {
-      return QUERY_TYPE;
-    } else {
-      return typeName;
-    }
-  }
-
-  private static String getVariableNameFromCallStatementContext(BSLParser.CallStatementContext callStatement) {
-    return callStatement.IDENTIFIER().getText();
-  }
-
-  private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
-    ParserRuleContext parent = modifier.getParent();
-    if (parent instanceof BSLParser.ComplexIdentifierContext) {
-      return getComplexPathName(((BSLParser.ComplexIdentifierContext) parent), modifier);
-    } else if (parent instanceof BSLParser.CallStatementContext) {
-      BSLParser.CallStatementContext parentCall = (BSLParser.CallStatementContext) parent;
-
-      return parentCall.modifier().stream()
-        .takeWhile(e -> !e.equals(modifier))
-        .map(RuleContext::getText)
-        .collect(Collectors.joining("", parentCall.IDENTIFIER().getText(), ""));
-    }
-    return null;
-  }
-
-  private static String getComplexPathName(BSLParser.ComplexIdentifierContext ci, BSLParser.ModifierContext to) {
-
-    return ci.modifier().stream()
-      .takeWhile(e -> !e.equals(to))
-      .map(RuleContext::getText)
-      .collect(Collectors.joining("", ci.getChild(0).getText(), ""));
-
+  private static V8TypeFromPresentationSupplier getTypeSupplier() {
+    return (typeName) -> {
+      if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
+        return Optional.of(NecessaryTypes.QUERY_BUILDER_TYPE);
+      } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
+        return Optional.of(NecessaryTypes.REPORT_BUILDER_TYPE);
+      } else if (QUERY_PATTERN.matcher(typeName).matches()) {
+        return Optional.of(NecessaryTypes.QUERY_TYPE);
+      }
+      return Optional.empty();
+    };
   }
 
   @Override
@@ -204,35 +133,23 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     currentVariable.addDeclaration(ctx.lValue());
 
     if (firstMember.complexIdentifier() != null) {
-      currentVariable.types.addAll(getTypesFromComplexIdentifier(firstMember.complexIdentifier()));
+      currentVariable.types.addAll(V8TypeHelper.getTypesFromComplexIdentifier(firstMember.complexIdentifier(), this));
     } else if (firstMember.constValue() != null) {
-      currentVariable.types.add(getTypeFromConstValue(firstMember.constValue()));
+      currentVariable.types.add(V8TypeHelper.getConstValueType(firstMember.constValue()));
     } else {
-      currentVariable.addType(UNDEFINED_TYPE);
+      currentVariable.addType(V8BasicType.UNDEFINED_TYPE);
     }
 
     currentScope.addVariable(currentVariable);
     return super.visitAssignment(ctx);
   }
 
-  private Set<String> getTypesFromComplexIdentifier(BSLParser.ComplexIdentifierContext complexId) {
-    if (complexId.newExpression() != null) {
-      return Set.of(getTypeFromNewExpressionContext(complexId.newExpression()));
-    } else if (complexId.IDENTIFIER() != null) {
-      return currentScope.getVariableByName(getComplexPathName(complexId, null))
-        .map(variableDefinition -> variableDefinition.types)
-        .orElse(Set.of(UNDEFINED_TYPE));
-    } else {
-      return Set.of();
-    }
-  }
-
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx){
+  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
       .flatMap(Collection::stream)
-      .forEach( t -> t.accept(this));
+      .forEach(t -> t.accept(this));
   }
 
   @Override
@@ -249,20 +166,20 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     BSLParserRuleContext parent = (BSLParserRuleContext) ctx.getParent();
     if (parent instanceof BSLParser.CallStatementContext) {
       errorContext = parent;
-      variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
+      variableName = V8TypeHelper.getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent, ctx);
     } else if (parent instanceof BSLParser.ModifierContext) {
       BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
       errorContext = (BSLParserRuleContext) callModifier.getParent();
-      variableName = getVariableNameFromModifierContext(callModifier);
+      variableName = V8TypeHelper.getVariableNameFromModifierContext(callModifier);
     }
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
     BSLParserRuleContext finalErrorContext = errorContext;
     if (finalErrorContext != null) {
       variableDefinition.ifPresent((VariableDefinition definition) -> {
 
-        if (definition.types.contains(QUERY_BUILDER_TYPE)
-          || definition.types.contains(REPORT_BUILDER_TYPE)
-          || definition.types.contains(QUERY_TYPE)) {
+        if (definition.types.contains(NecessaryTypes.QUERY_BUILDER_TYPE)
+          || definition.types.contains(NecessaryTypes.REPORT_BUILDER_TYPE)
+          || definition.types.contains(NecessaryTypes.QUERY_TYPE)) {
           diagnosticStorage.addDiagnostic(finalErrorContext);
         }
 
@@ -276,9 +193,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       Optional.ofNullable(ctx.expression())
-        .ifPresent( e -> e.accept(this));
+        .ifPresent(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
@@ -297,13 +214,39 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       ctx.expression()
-        .forEach( e-> e.accept(this));
+        .forEach(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
     return ctx;
+  }
+
+  @Override
+  public Optional<V8Type> getTypeFromPresentation(String presentation) {
+    return getTypeSupplier().getTypeFromPresentation(presentation);
+  }
+
+  @Override
+  public Optional<Set<V8Type>> getTypesFromVariable(String variableName) {
+    return currentScope.getVariableByName(variableName)
+      .map(variableDefinition -> variableDefinition.types);
+  }
+
+  enum NecessaryTypes implements V8Type {
+    REPORT_BUILDER_TYPE("ReportBuilder"), QUERY_BUILDER_TYPE("QueryBuilder"), QUERY_TYPE("Query");
+
+    String name;
+
+    NecessaryTypes(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String presentation() {
+      return this.name;
+    }
   }
 
   public enum CodeFlowType {
@@ -313,14 +256,14 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   @ToString
   public static class VariableDefinition {
     private final String variableName;
-    private final Set<String> types = new HashSet<>();
+    private final Set<V8Type> types = new HashSet<>();
     private ParseTree firstDeclaration;
 
     VariableDefinition(String variableName) {
       this.variableName = variableName;
     }
 
-    public void addType(String type) {
+    public void addType(V8Type type) {
       this.types.add(type);
     }
 

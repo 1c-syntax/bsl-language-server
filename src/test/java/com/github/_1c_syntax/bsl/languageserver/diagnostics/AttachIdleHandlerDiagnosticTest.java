@@ -39,10 +39,12 @@ class AttachIdleHandlerDiagnosticTest extends AbstractDiagnosticTest<AttachIdleH
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasRange(9, 4, 9, 32)
-      .hasRange(38, 0, 38, 27);
+      .hasRange(38, 0, 38, 27)
+      .hasRange(42, 0, 42, 28)
+     .hasRange(44, 0, 44, 28);
 
   }
 }

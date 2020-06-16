@@ -26,17 +26,20 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.V8TypeHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.RuleContext;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1,
+  modules = {
+    ModuleType.FormModule
+  },
   tags = {
     DiagnosticTag.ERROR,
     DiagnosticTag.UNPREDICTABLE
@@ -44,12 +47,6 @@ import java.util.regex.Pattern;
 
 )
 public class AttachIdleHandlerDiagnostic extends AbstractFindMethodDiagnostic {
-  private static final String BOOLEAN_TYPE = "Boolean";
-  private static final String DATE_TYPE = "Datetime";
-  private static final String NULL_TYPE = "Null";
-  private static final String NUMBER_TYPE = "Number";
-  private static final String STRING_TYPE = "String";
-  private static final String UNDEFINED_TYPE = "Undefined";
 
   private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
     "ПодключитьОбработчикОжидания|AttachIdleHandler|ОтключитьОбработчикОжидания|DetachIdleHandler"
@@ -64,62 +61,33 @@ public class AttachIdleHandlerDiagnostic extends AbstractFindMethodDiagnostic {
     super(info, MESSAGE_PATTERN);
   }
 
-  /**
-   * Получение типа константного значения
-   *
-   * @param constValue - значение
-   */
-  private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
-    String result;
-    if (constValue.string() != null) {
-      result = STRING_TYPE;
-    } else if (constValue.DATETIME() != null) {
-      result = DATE_TYPE;
-    } else if (constValue.numeric() != null) {
-      result = NUMBER_TYPE;
-    } else if (constValue.TRUE() != null) {
-      result = BOOLEAN_TYPE;
-    } else if (constValue.FALSE() != null) {
-      result = BOOLEAN_TYPE;
-    } else if (constValue.NULL() != null) {
-      result = NULL_TYPE;
-    } else {
-      result = UNDEFINED_TYPE;
-    }
-
-    return result;
-
-  }
-
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
     if (!getMethodPattern().matcher(ctx.methodName().getText()).matches()) {
       return false;
     }
-    if (ctx.doCall().callParamList().callParam().size() == 0) {
-      return false;
-    }
+    var callContext = ctx.doCall();
+    // Проверка на существование метода в текущем контексте без параметров
+    boolean hasError = V8TypeHelper.getStringConstantFromFirstParam(callContext)
+      .get().map(methodName -> {
+        boolean methodExist = documentContext.getSymbolTree().getMethods()
+          .stream()
+          .anyMatch(e -> e.getName().equalsIgnoreCase(methodName)
+            && e.getParameters().size() == 0);
+        return !methodExist;
+      }).orElse(false);
 
-    Optional<String> methodName = Optional.ofNullable(ctx.doCall())
-      .map(BSLParser.DoCallContext::callParamList)
-      .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-      .map(BSLParser.CallParamContext::expression)
-      .map(BSLParser.ExpressionContext::member)
-      .flatMap(memberListContext -> memberListContext.stream().findFirst())
-      .map(BSLParser.MemberContext::constValue)
-      .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-      .map(RuleContext::getText)
-      .map(constValueText -> constValueText.substring(1, constValueText.length() - 1));
-
-    if (methodName.isPresent()) {
-      boolean methodExist = documentContext.getSymbolTree().getMethods()
-        .stream()
-        .anyMatch(e -> e.getName().equalsIgnoreCase(methodName.get()));
-
-      return !methodExist;
-    }
-
-    return false;
+    // Проверка что при таймауте меньше 1 секунды, третий параметр не равен Ложь
+    hasError = hasError || V8TypeHelper.getFloatNumberConstantFromParam(callContext, 1)
+      .get()
+      .filter(e -> e < 1.0)
+      .map(e -> V8TypeHelper.getBooleanConstantFromParam(callContext, 2)
+        .get().map(be -> be.equals(Boolean.FALSE))
+        .orElse(false)
+      )
+      .orElse(false);
+    return hasError;
   }
 }
+
