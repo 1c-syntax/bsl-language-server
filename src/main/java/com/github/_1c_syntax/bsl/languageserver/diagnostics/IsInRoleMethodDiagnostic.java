@@ -59,6 +59,8 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern PRIVILEGED_MODE_NAME_PATTERN = CaseInsensitivePattern.compile(
     "(ПривилегированныйРежим|PrivilegedMode)"
   );
+  private static final Set<Integer> ROOT_PARENTS_FOR_GLOBAL_METHODS =
+    Set.of(BSLParser.RULE_ifStatement, BSLParser.RULE_assignment);
 
   public IsInRoleMethodDiagnostic(DiagnosticInfo info) {
     super(info);
@@ -88,7 +90,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     Trees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier).stream()
       .map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
       .filter(complexCtx -> IS_IN_ROLE_VARS.contains(complexCtx.getText()))
-      .filter(IsInRoleMethodDiagnostic::checkStatement)
+      .filter(ctx -> checkStatement(ctx, expression))
       .forEach(diagnosticStorage::addDiagnostic);
   }
 
@@ -106,7 +108,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void handleIsInRoleGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
-    var rootParent = Trees.getRootParent(ctx, Set.of(BSLParser.RULE_ifStatement, BSLParser.RULE_assignment));
+    var rootParent = Trees.getRootParent(ctx, ROOT_PARENTS_FOR_GLOBAL_METHODS);
     if (rootParent == null){
       return;
     }
@@ -114,10 +116,9 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
       if (checkStatement(ctx)) {
         diagnosticStorage.addDiagnostic(ctx);
       }
-    } else
-      if (rootParent.getRuleIndex() == BSLParser.RULE_assignment){
-      addAssignedNameVar(rootParent, IS_IN_ROLE_VARS);
-    }
+    } else if (rootParent.getRuleIndex() == BSLParser.RULE_assignment){
+        addAssignedNameVar(rootParent, IS_IN_ROLE_VARS);
+      }
   }
 
   private static void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
@@ -145,6 +146,10 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean checkStatement(BSLParserRuleContext ctx) {
     var parentExpression = Trees.getRootParent(ctx, BSLParser.RULE_expression);
+    return checkStatement(ctx, parentExpression);
+  }
+
+  private static boolean checkStatement(BSLParserRuleContext ctx, BSLParserRuleContext parentExpression) {
 
     if (parentExpression == null) {
       return false;
