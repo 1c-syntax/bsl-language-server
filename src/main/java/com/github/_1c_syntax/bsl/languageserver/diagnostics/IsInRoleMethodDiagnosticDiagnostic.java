@@ -33,13 +33,10 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
+import java.util.Collection;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -78,16 +75,36 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
-    Trees.getFirstChild(ctx, BSLParser.RULE_expression).stream()
-      .map(bslParserRuleContext -> (BSLParser.ExpressionContext)bslParserRuleContext)
-      .flatMap(expressionContext -> Trees.findAllRuleNodes(expressionContext, BSLParser.RULE_complexIdentifier)
-        .stream())
+    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
+
+    if (listIdentifier.isEmpty()) {
+      return super.visitIfBranch(ctx);
+    }
+
+    computeDiagnostics(listIdentifier);
+
+    return super.visitIfBranch(ctx);
+  }
+
+  @Override
+  public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
+    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
+
+    if (listIdentifier.isEmpty()) {
+      return super.visitElsifBranch(ctx);
+    }
+
+    computeDiagnostics(listIdentifier);
+
+    return super.visitElsifBranch(ctx);
+  }
+
+  private void computeDiagnostics(Collection<ParseTree> listIdentifier) {
+    listIdentifier.stream()
       .map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
       .filter(complexCtx -> IS_IN_ROLE_VARS.contains(complexCtx.getText()))
       .filter(IsInRoleMethodDiagnosticDiagnostic::checkStatement)
       .forEach(diagnosticStorage::addDiagnostic);
-
-    return super.visitIfBranch(ctx);
   }
 
   @Override

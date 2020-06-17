@@ -53,6 +53,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     pathByModuleType.put(ModuleType.FormModule, "Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl");
     pathByModuleType.put(ModuleType.CommonModule, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
     pathByModuleType.put(ModuleType.RecordSetModule, "InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl");
+    pathByModuleType.put(ModuleType.HTTPServiceModule, "HTTPServices/HTTPСервис1/Ext/Module.bsl");
   }
 
   @Test
@@ -210,6 +211,18 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       .hasRange(32, 1, 46)
       .hasRange(36, 1, 63)
       .hasRange(40, 1, 31)
+    ;
+  }
+
+  @Test
+  void testHTTPServiceModule() throws IOException {
+
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.HTTPServiceModule));
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(0, 1, 29)
+      .hasRange(4, 1, 38)
     ;
   }
 
