@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class IsInRoleMethodDiagnosticDiagnosticTest extends AbstractDiagnosticTest<IsInRoleMethodDiagnosticDiagnostic> {
-  IsInRoleMethodDiagnosticDiagnosticTest() {
-    super(IsInRoleMethodDiagnosticDiagnostic.class);
+class IsInRoleMethodDiagnosticTest extends AbstractDiagnosticTest<IsInRoleMethodDiagnostic> {
+  IsInRoleMethodDiagnosticTest() {
+    super(IsInRoleMethodDiagnostic.class);
   }
 
   @Test

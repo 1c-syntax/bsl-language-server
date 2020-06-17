@@ -35,7 +35,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Collection;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -48,7 +47,7 @@ import java.util.regex.Pattern;
   }
 
 )
-public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnostic {
+public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final HashSet<String> IS_IN_ROLE_VARS = new HashSet<>();
   private static final HashSet<String> PRIVILEGED_MODE_NAME_VARS = new HashSet<>();
@@ -61,7 +60,7 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
     "(ПривилегированныйРежим|PrivilegedMode)"
   );
 
-  public IsInRoleMethodDiagnosticDiagnostic(DiagnosticInfo info) {
+  public IsInRoleMethodDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
@@ -75,35 +74,21 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
-    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
-
-    if (listIdentifier.isEmpty()) {
-      return super.visitIfBranch(ctx);
-    }
-
-    computeDiagnostics(listIdentifier);
-
+    computeDiagnostics(ctx.expression());
     return super.visitIfBranch(ctx);
   }
 
   @Override
   public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
-    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
-
-    if (listIdentifier.isEmpty()) {
-      return super.visitElsifBranch(ctx);
-    }
-
-    computeDiagnostics(listIdentifier);
-
+    computeDiagnostics(ctx.expression());
     return super.visitElsifBranch(ctx);
   }
 
-  private void computeDiagnostics(Collection<ParseTree> listIdentifier) {
-    listIdentifier.stream()
+  private void computeDiagnostics(BSLParser.ExpressionContext expression) {
+    Trees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier).stream()
       .map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
       .filter(complexCtx -> IS_IN_ROLE_VARS.contains(complexCtx.getText()))
-      .filter(IsInRoleMethodDiagnosticDiagnostic::checkStatement)
+      .filter(IsInRoleMethodDiagnostic::checkStatement)
       .forEach(diagnosticStorage::addDiagnostic);
   }
 
