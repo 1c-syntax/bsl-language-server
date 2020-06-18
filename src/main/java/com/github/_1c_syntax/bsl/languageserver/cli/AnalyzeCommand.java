@@ -25,18 +25,20 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
@@ -85,6 +87,8 @@ import static picocli.CommandLine.Option;
   description = "Run analysis and get diagnostic info",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
+@Component
+@RequiredArgsConstructor
 public class AnalyzeCommand implements Callable<Integer> {
 
   private static class ReportersKeys extends ArrayList<String> {
@@ -141,6 +145,7 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   private DiagnosticProvider diagnosticProvider;
   private ServerContext context;
+  private final ApplicationContext applicationContext;
 
   public Integer call() {
 
@@ -157,12 +162,13 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     File configurationFile = new File(configurationOption);
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-
+    LanguageServerConfiguration configuration = applicationContext.getBean(
+      LanguageServerConfiguration.class,
+      configurationFile
+    );
     Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context = new ServerContext(configurationPath);
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
+    context = applicationContext.getBean(ServerContext.class, configurationPath);
+    diagnosticProvider = applicationContext.getBean(DiagnosticProvider.class);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
     

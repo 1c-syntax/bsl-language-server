@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
@@ -35,6 +36,7 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +46,8 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
 
   private final LanguageServerConfiguration configuration;
@@ -51,18 +55,6 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   private final BSLWorkspaceService workspaceService;
   private boolean shutdownWasCalled;
   private final ServerContext context;
-
-  public BSLLanguageServer(LanguageServerConfiguration configuration) {
-    this.configuration = configuration;
-
-    context = new ServerContext();
-    workspaceService = new BSLWorkspaceService(configuration);
-    textDocumentService = new BSLTextDocumentService(configuration, context);
-  }
-
-  public BSLLanguageServer() {
-    this(LanguageServerConfiguration.create());
-  }
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {

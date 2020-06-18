@@ -74,6 +74,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
@@ -81,6 +82,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+@Component
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
   private final ServerContext context;

@@ -33,6 +33,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URI;
@@ -65,6 +66,7 @@ import static picocli.CommandLine.Option;
   description = "Format files in source directory",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
+@Component
 public class FormatCommand implements Callable<Integer> {
 
   private final ServerContext serverContext;

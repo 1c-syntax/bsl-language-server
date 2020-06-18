@@ -25,10 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -41,17 +43,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
 
-  private final Map<URI, Set<Diagnostic>> computedDiagnostics;
+  private final Map<URI, Set<Diagnostic>> computedDiagnostics = new HashMap<>();
   private final DiagnosticSupplier diagnosticSupplier;
-
-  public DiagnosticProvider(DiagnosticSupplier diagnosticSupplier) {
-    this.diagnosticSupplier = diagnosticSupplier;
-    computedDiagnostics = new HashMap<>();
-  }
 
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
     List<Diagnostic> diagnostics = computeDiagnostics(documentContext);

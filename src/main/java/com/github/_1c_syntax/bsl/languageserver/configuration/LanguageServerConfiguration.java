@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,9 +30,16 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -57,20 +65,24 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class LanguageServerConfiguration {
+@Configuration
+public class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
   private Language language;
 
   @JsonProperty("diagnostics")
-  private final DiagnosticsOptions diagnosticsOptions;
+  @Setter(value = AccessLevel.NONE)
+  private DiagnosticsOptions diagnosticsOptions;
 
   @JsonProperty("codeLens")
-  private final CodeLensOptions codeLensOptions;
+  @Setter(value = AccessLevel.NONE)
+  private CodeLensOptions codeLensOptions;
 
   @JsonProperty("documentLink")
-  private final DocumentLinkOptions documentLinkOptions;
+  @Setter(value = AccessLevel.NONE)
+  private DocumentLinkOptions documentLinkOptions;
 
   @Nullable
   private File traceLog;
@@ -78,18 +90,26 @@ public final class LanguageServerConfiguration {
   @Nullable
   private Path configurationRoot;
 
-  private LanguageServerConfiguration() {
+  @NonFinal
+  @JsonIgnore
+  @Getter(value = AccessLevel.NONE)
+  @Setter(value = AccessLevel.NONE)
+  private File configurationFile;
+
+  public LanguageServerConfiguration() {
     this(
       Language.DEFAULT_LANGUAGE,
       new DiagnosticsOptions(),
       new CodeLensOptions(),
       new DocumentLinkOptions(),
       null,
+      null,
       null
     );
   }
 
-  public static LanguageServerConfiguration create(File configurationFile) {
+  @SneakyThrows
+  public LanguageServerConfiguration(File configurationFile) {
     LanguageServerConfiguration configuration = null;
     if (configurationFile.exists()) {
       ObjectMapper mapper = new ObjectMapper();
@@ -105,7 +125,7 @@ public final class LanguageServerConfiguration {
     if (configuration == null) {
       configuration = create();
     }
-    return configuration;
+    PropertyUtils.copyProperties(this, configuration);
   }
 
   public static LanguageServerConfiguration create() {

@@ -25,7 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.Banner;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
@@ -39,17 +45,14 @@ import static picocli.CommandLine.Command;
 
 @Command(
   name = "bsl-language-server",
-  subcommands = {
-    AnalyzeCommand.class,
-    FormatCommand.class,
-    VersionCommand.class,
-    LanguageServerStartCommand.class
-  },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
   footer = "@|green Copyright(c) 2018-2020|@",
   header = "@|green BSL language server|@")
-public class BSLLSPLauncher implements Callable<Integer> {
+@SpringBootApplication
+@Component
+@RequiredArgsConstructor
+public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -66,9 +69,25 @@ public class BSLLSPLauncher implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  private final AnalyzeCommand analyzeCommand;
+  private final FormatCommand formatCommand;
+  private final LanguageServerStartCommand languageServerStartCommand;
+  private final VersionCommand versionCommand;
+
   public static void main(String[] args) {
-    var app = new BSLLSPLauncher();
-    var cmd = new CommandLine(app);
+    new SpringApplicationBuilder(BSLLSPLauncher.class)
+      .logStartupInfo(false)
+      .bannerMode(Banner.Mode.OFF)
+      .run(args);
+  }
+
+  @Override
+  public void run(String[] args) {
+    var cmd = new CommandLine(this);
+    cmd.addSubcommand("analyze", analyzeCommand);
+    cmd.addSubcommand("format", formatCommand);
+    cmd.addSubcommand("lsp", languageServerStartCommand);
+    cmd.addSubcommand("version", versionCommand);
 
     // проверка использования дефолтной команды
     // если строка параметров пуста, то это точно вызов команды по умолчанию
