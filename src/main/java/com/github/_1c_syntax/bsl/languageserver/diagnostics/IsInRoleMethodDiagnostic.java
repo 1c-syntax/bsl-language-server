@@ -49,9 +49,6 @@ import java.util.regex.Pattern;
 )
 public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final HashSet<String> IS_IN_ROLE_VARS = new HashSet<>();
-  private static final HashSet<String> PRIVILEGED_MODE_NAME_VARS = new HashSet<>();
-
   private static final Pattern IS_IN_ROLE_NAME_PATTERN = CaseInsensitivePattern.compile(
     "(РольДоступна|IsInRole)"
   );
@@ -62,14 +59,17 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   private static final Set<Integer> ROOT_PARENTS_FOR_GLOBAL_METHODS =
     Set.of(BSLParser.RULE_ifStatement, BSLParser.RULE_assignment);
 
+  private final Set<String> isInRoleVars = new HashSet<>();
+  private final Set<String> privilegedModeNameVars = new HashSet<>();
+
   public IsInRoleMethodDiagnostic(DiagnosticInfo info) {
     super(info);
   }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    IS_IN_ROLE_VARS.clear();
-    PRIVILEGED_MODE_NAME_VARS.clear();
+    isInRoleVars.clear();
+    privilegedModeNameVars.clear();
 
     return super.visitFile(ctx);
   }
@@ -89,7 +89,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   private void computeDiagnostics(BSLParser.ExpressionContext expression) {
     Trees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier).stream()
       .map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
-      .filter(complexCtx -> IS_IN_ROLE_VARS.contains(complexCtx.getText()))
+      .filter(complexCtx -> isInRoleVars.contains(complexCtx.getText()))
       .filter(ctx -> checkStatement(ctx, expression))
       .forEach(diagnosticStorage::addDiagnostic);
   }
@@ -117,14 +117,14 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
         diagnosticStorage.addDiagnostic(ctx);
       }
     } else if (rootParent.getRuleIndex() == BSLParser.RULE_assignment){
-        addAssignedNameVar(rootParent, IS_IN_ROLE_VARS);
+        addAssignedNameVar(rootParent, isInRoleVars);
       }
   }
 
-  private static void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
+  private void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
     var assignmentNode = Trees.getRootParent(ctx, BSLParser.RULE_assignment);
     if (assignmentNode != null) {
-      addAssignedNameVar(assignmentNode, PRIVILEGED_MODE_NAME_VARS);
+      addAssignedNameVar(assignmentNode, privilegedModeNameVars);
     }
   }
 
@@ -138,18 +138,18 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     var childNode = Trees.getFirstChild(ctx, BSLParser.RULE_lValue);
     childNode.ifPresent(node ->
     {
-      IS_IN_ROLE_VARS.remove(node.getText());
-      PRIVILEGED_MODE_NAME_VARS.remove(node.getText());
+      isInRoleVars.remove(node.getText());
+      privilegedModeNameVars.remove(node.getText());
     });
     return super.visitAssignment(ctx);
   }
 
-  private static boolean checkStatement(BSLParserRuleContext ctx) {
+  private boolean checkStatement(BSLParserRuleContext ctx) {
     var parentExpression = Trees.getRootParent(ctx, BSLParser.RULE_expression);
     return checkStatement(ctx, parentExpression);
   }
 
-  private static boolean checkStatement(BSLParserRuleContext ctx, BSLParserRuleContext parentExpression) {
+  private boolean checkStatement(BSLParserRuleContext ctx, BSLParserRuleContext parentExpression) {
 
     if (parentExpression == null) {
       return false;
@@ -157,7 +157,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
     var identifierList = Trees.findAllRuleNodes(parentExpression, BSLParser.RULE_complexIdentifier);
     for (ParseTree parseTree : identifierList) {
-      if (PRIVILEGED_MODE_NAME_VARS.contains(parseTree.getText())) {
+      if (privilegedModeNameVars.contains(parseTree.getText())) {
         return false;
       }
     }
