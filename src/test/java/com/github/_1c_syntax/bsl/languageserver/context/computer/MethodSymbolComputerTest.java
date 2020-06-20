@@ -53,7 +53,7 @@ public class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(20);
+    assertThat(methods.size()).isEqualTo(23);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription().orElse(null)).isNull();
