@@ -250,7 +250,7 @@ public final class MethodSymbolComputer
   private static Annotation createAnnotation(BSLParser.AnnotationContext annotation) {
     return Annotation.builder()
       .name(annotation.annotationName().getText())
-      .kind(AnnotationKind.of(annotation.getStop().getType()))
+      .kind(AnnotationKind.of(annotation.annotationName().getStop().getType()))
       .parameters(getAnnotationParameter(annotation.annotationParams()))
       .build();
   }
