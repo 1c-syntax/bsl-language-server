@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -74,6 +75,17 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     return HANDLER_PATTERN.matcher(methodSymbol.getName()).matches();
   }
 
+  private boolean isOverride(MethodSymbol method) {
+    return method.getAnnotations()
+      .stream()
+      .anyMatch(annotation ->
+        annotation.getKind().equals(AnnotationKind.AFTER)
+        || annotation.getKind().equals(AnnotationKind.AROUND)
+        || annotation.getKind().equals(AnnotationKind.BEFORE)
+        || annotation.getKind().equals(AnnotationKind.CHANGEANDVALIDATE)
+      );
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
@@ -86,6 +98,7 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     documentContext.getSymbolTree().getMethods()
       .stream()
       .filter(method -> !method.isExport())
+      .filter(method -> !isOverride(method))
       .filter(method -> !isAttachable(method))
       .filter(method -> !isHandler(method))
       .filter(method -> !collect.contains(method.getName().toLowerCase(Locale.ENGLISH)))
