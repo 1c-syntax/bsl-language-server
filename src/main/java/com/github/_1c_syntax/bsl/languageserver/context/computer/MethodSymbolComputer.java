@@ -242,33 +242,30 @@ public final class MethodSymbolComputer
   }
 
   private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
-    if (annotationContext.isEmpty()) {
-      return Collections.emptyList();
-    }
     return annotationContext.stream()
-      .map(annotation -> createAnnotation(
-        annotation.annotationName(),
-        annotation.getStop().getType(),
-        annotation.annotationParams()))
+      .map(MethodSymbolComputer::createAnnotation)
       .collect(Collectors.toList());
   }
 
-  private static Annotation createAnnotation(BSLParser.AnnotationNameContext annotationNameContext, int type,
-                                             BSLParser.AnnotationParamsContext annotationParamsContext) {
-    final List<AnnotationParameterDefinition> params;
+  private static Annotation createAnnotation(BSLParser.AnnotationContext annotation) {
+    return Annotation.builder()
+      .name(annotation.annotationName().getText())
+      .kind(AnnotationKind.of(annotation.annotationName().getStop().getType()))
+      .parameters(getAnnotationParameter(annotation.annotationParams()))
+      .build();
+  }
+
+  private static List<AnnotationParameterDefinition> getAnnotationParameter(
+    BSLParser.AnnotationParamsContext annotationParamsContext
+  ) {
+
     if (annotationParamsContext == null) {
-      params = Collections.emptyList();
-    } else {
-      params = annotationParamsContext.annotationParam().stream()
-        .map(MethodSymbolComputer::getAnnotationParam)
-        .collect(Collectors.toList());
+      return Collections.emptyList();
     }
 
-    return Annotation.builder()
-      .name(annotationNameContext.getText())
-      .kind(AnnotationKind.of(type))
-      .parameters(params)
-      .build();
+    return annotationParamsContext.annotationParam().stream()
+      .map(MethodSymbolComputer::getAnnotationParam)
+      .collect(Collectors.toList());
   }
 
   private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
