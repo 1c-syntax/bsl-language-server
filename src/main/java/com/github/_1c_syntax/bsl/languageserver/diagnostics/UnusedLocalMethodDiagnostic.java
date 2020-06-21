@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -35,8 +36,10 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -63,6 +66,13 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     "(ПриСозданииОбъекта|OnObjectCreate)"
   );
 
+  private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
+    AnnotationKind.AFTER,
+    AnnotationKind.AROUND,
+    AnnotationKind.BEFORE,
+    AnnotationKind.CHANGEANDVALIDATE
+  );
+
   public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
     super(info);
   }
@@ -78,12 +88,8 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean isOverride(MethodSymbol method) {
     return method.getAnnotations()
       .stream()
-      .anyMatch(annotation ->
-        annotation.getKind() == AnnotationKind.AFTER
-        || annotation.getKind() == AnnotationKind.AROUND
-        || annotation.getKind() == AnnotationKind.BEFORE
-        || annotation.getKind() == AnnotationKind.CHANGEANDVALIDATE
-      );
+      .map(Annotation::getKind)
+      .anyMatch(EXTENSION_ANNOTATIONS::contains);
   }
 
   @Override
