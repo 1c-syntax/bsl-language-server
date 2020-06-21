@@ -255,7 +255,10 @@ public final class MethodSymbolComputer
       .build();
   }
 
-  private static List<AnnotationParameterDefinition> getAnnotationParameter(BSLParser.AnnotationParamsContext annotationParamsContext) {
+  private static List<AnnotationParameterDefinition> getAnnotationParameter(
+    BSLParser.AnnotationParamsContext annotationParamsContext
+  ) {
+
     if (annotationParamsContext == null) {
       return Collections.emptyList();
     }
