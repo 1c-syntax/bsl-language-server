@@ -16,6 +16,7 @@ plugins {
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.28.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("io.freefair.javadoc-links") version "5.1.0"
 }
 
 repositories {
