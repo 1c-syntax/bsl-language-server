@@ -75,14 +75,14 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     return HANDLER_PATTERN.matcher(methodSymbol.getName()).matches();
   }
 
-  private boolean isOverride(MethodSymbol method) {
+  private static boolean isOverride(MethodSymbol method) {
     return method.getAnnotations()
       .stream()
       .anyMatch(annotation ->
-        annotation.getKind().equals(AnnotationKind.AFTER)
-        || annotation.getKind().equals(AnnotationKind.AROUND)
-        || annotation.getKind().equals(AnnotationKind.BEFORE)
-        || annotation.getKind().equals(AnnotationKind.CHANGEANDVALIDATE)
+        annotation.getKind() == AnnotationKind.AFTER
+        || annotation.getKind() == AnnotationKind.AROUND
+        || annotation.getKind() == AnnotationKind.BEFORE
+        || annotation.getKind() == AnnotationKind.CHANGEANDVALIDATE
       );
   }
 
