@@ -30,6 +30,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Component
 public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
 
   private static final int ADD_FIX_ALL_DIAGNOSTICS_THRESHOLD = 2;

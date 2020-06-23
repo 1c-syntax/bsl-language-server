@@ -21,12 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -35,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -83,6 +82,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Component
+@RequiredArgsConstructor
 public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
 
   private final ServerContext context;
@@ -94,19 +94,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
   @CheckForNull
   private LanguageClient client;
-
-  public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
-    this.configuration = configuration;
-    this.context = context;
-
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-
-    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    codeActionProvider = new CodeActionProvider(this.diagnosticProvider, quickFixSupplier);
-    codeLensProvider = new CodeLensProvider(this.configuration);
-    documentLinkProvider = new DocumentLinkProvider(this.configuration, this.diagnosticProvider);
-  }
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {

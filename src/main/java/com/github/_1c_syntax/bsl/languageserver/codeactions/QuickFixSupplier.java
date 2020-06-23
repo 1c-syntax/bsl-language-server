@@ -28,11 +28,13 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Component
 public class QuickFixSupplier {
 
   private final List<Class<? extends QuickFixProvider>> quickFixClasses;
