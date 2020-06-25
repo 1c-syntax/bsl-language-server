@@ -37,7 +37,6 @@ import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
@@ -143,9 +142,9 @@ public class AnalyzeCommand implements Callable<Integer> {
     description = "Silent mode")
   private boolean silentMode;
 
-  private DiagnosticProvider diagnosticProvider;
-  private ServerContext context;
-  private final ApplicationContext applicationContext;
+  private final LanguageServerConfiguration configuration;
+  private final DiagnosticProvider diagnosticProvider;
+  private final ServerContext context;
 
   public Integer call() {
 
@@ -162,13 +161,10 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     File configurationFile = new File(configurationOption);
-    LanguageServerConfiguration configuration = applicationContext.getBean(
-      LanguageServerConfiguration.class,
-      configurationFile
-    );
+    configuration.updateConfiguration(configurationFile);
+
     Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context = applicationContext.getBean(ServerContext.class, configurationPath);
-    diagnosticProvider = applicationContext.getBean(DiagnosticProvider.class);
+    context.setConfigurationRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
     

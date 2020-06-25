@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,13 +32,12 @@ import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -62,27 +60,28 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
  * и безопасно сохранять ссылку на конфигурацию или ее части.
  */
 @Data
+@Component
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Configuration
 public class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
-  private Language language;
+  private Language language = Language.DEFAULT_LANGUAGE;
 
   @JsonProperty("diagnostics")
   @Setter(value = AccessLevel.NONE)
-  private DiagnosticsOptions diagnosticsOptions;
+  private DiagnosticsOptions diagnosticsOptions = new DiagnosticsOptions();
 
   @JsonProperty("codeLens")
   @Setter(value = AccessLevel.NONE)
-  private CodeLensOptions codeLensOptions;
+  private CodeLensOptions codeLensOptions = new CodeLensOptions();
 
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
-  private DocumentLinkOptions documentLinkOptions;
+  private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
 
   @Nullable
   private File traceLog;
@@ -90,42 +89,29 @@ public class LanguageServerConfiguration {
   @Nullable
   private Path configurationRoot;
 
-  @NonFinal
-  @JsonIgnore
-  @Getter(value = AccessLevel.NONE)
-  @Setter(value = AccessLevel.NONE)
-  private File configurationFile;
-
-  public LanguageServerConfiguration() {
-    this(
-      Language.DEFAULT_LANGUAGE,
-      new DiagnosticsOptions(),
-      new CodeLensOptions(),
-      new DocumentLinkOptions(),
-      null,
-      null,
-      null
-    );
-  }
-
   @SneakyThrows
-  public LanguageServerConfiguration(File configurationFile) {
-    LanguageServerConfiguration configuration = null;
-    if (configurationFile.exists()) {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-      try {
-        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-      } catch (IOException e) {
-        LOGGER.error("Can't deserialize configuration file", e);
-      }
+  public void updateConfiguration(File configurationFile) {
+    if (!configurationFile.exists()) {
+      return;
     }
 
-    if (configuration == null) {
-      configuration = create();
+    LanguageServerConfiguration configuration;
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
+    try {
+      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    } catch (IOException e) {
+      LOGGER.error("Can't deserialize configuration file", e);
+      return;
     }
+
+    // todo: refactor
     PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
+    PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
   }
 
   public static LanguageServerConfiguration create() {

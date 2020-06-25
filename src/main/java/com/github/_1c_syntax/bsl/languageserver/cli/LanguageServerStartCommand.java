@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,6 @@ import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -79,14 +77,13 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
-  private final ApplicationContext context;
+  private final LanguageServerConfiguration configuration;
+  private final LanguageServer server;
 
   public Integer call() {
 
     File configurationFile = new File(configurationOption);
-
-    LanguageServerConfiguration configuration = context.getBean(LanguageServerConfiguration.class, configurationFile);
-    LanguageServer server = context.getBean(BSLLanguageServer.class, configuration);
+    configuration.updateConfiguration(configurationFile);
 
     Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
 
