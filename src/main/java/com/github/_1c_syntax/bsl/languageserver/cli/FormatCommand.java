@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
@@ -67,9 +68,11 @@ import static picocli.CommandLine.Option;
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
 @Component
+@RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
 
   private final ServerContext serverContext;
+  private final FormatProvider formatProvider;
 
   @Option(
     names = {"-h", "--help"},
@@ -88,10 +91,6 @@ public class FormatCommand implements Callable<Integer> {
     names = {"-q", "--silent"},
     description = "Silent mode")
   private boolean silentMode;
-
-  public FormatCommand() {
-    this.serverContext = new ServerContext();
-  }
 
   public Integer call() {
     serverContext.clear();
@@ -131,7 +130,7 @@ public class FormatCommand implements Callable<Integer> {
     options.setInsertSpaces(false);
 
     params.setOptions(options);
-    final List<TextEdit> formatting = FormatProvider.getFormatting(params, documentContext);
+    final List<TextEdit> formatting = formatProvider.getFormatting(params, documentContext);
 
     serverContext.removeDocument(uri);
 

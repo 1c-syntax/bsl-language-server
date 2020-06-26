@@ -93,6 +93,10 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final CodeActionProvider codeActionProvider;
   private final CodeLensProvider codeLensProvider;
   private final DocumentLinkProvider documentLinkProvider;
+  private final DocumentSymbolProvider documentSymbolProvider;
+  private final FoldingRangeProvider foldingRangeProvider;
+  private final FormatProvider formatProvider;
+  private final HoverProvider hoverProvider;
 
   @CheckForNull
   private LanguageClient client;
@@ -115,7 +119,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = HoverProvider.getHover(params, documentContext);
+    Optional<Hover> hover = hoverProvider.getHover(params, documentContext);
     return CompletableFuture.completedFuture(hover.orElse(null));
   }
 
@@ -150,7 +154,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> DocumentSymbolProvider.getDocumentSymbols(documentContext));
+    return CompletableFuture.supplyAsync(() -> documentSymbolProvider.getDocumentSymbols(documentContext));
   }
 
   @Override
@@ -185,7 +189,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = FormatProvider.getFormatting(params, documentContext);
+    List<TextEdit> edits = formatProvider.getFormatting(params, documentContext);
     return CompletableFuture.completedFuture(edits);
   }
 
@@ -196,7 +200,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = FormatProvider.getRangeFormatting(params, documentContext);
+    List<TextEdit> edits = formatProvider.getRangeFormatting(params, documentContext);
     return CompletableFuture.completedFuture(edits);
   }
 
@@ -212,7 +216,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> FoldingRangeProvider.getFoldingRange(documentContext));
+    return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
 
   @Override

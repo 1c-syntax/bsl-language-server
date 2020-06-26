@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Component
 public final class FormatProvider {
 
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
@@ -79,11 +81,7 @@ public final class FormatProvider {
     BSLLexer.STRING
   ));
 
-  private FormatProvider() {
-    // only statics
-  }
-
-  public static List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
+  public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
     if (tokens.isEmpty()) {
       return Collections.emptyList();
@@ -97,7 +95,7 @@ public final class FormatProvider {
     );
   }
 
-  public static List<TextEdit> getRangeFormatting(
+  public List<TextEdit> getRangeFormatting(
     DocumentRangeFormattingParams params,
     DocumentContext documentContext
   ) {

@@ -31,16 +31,14 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+@Component
 public final class HoverProvider {
 
-  private HoverProvider() {
-    // only statics
-  }
-
-  public static Optional<Hover> getHover(HoverParams params, DocumentContext documentContext) {
+  public Optional<Hover> getHover(HoverParams params, DocumentContext documentContext) {
 
     SubNameFinder finder = new SubNameFinder(params.getPosition());
     finder.visit(documentContext.getAst());
