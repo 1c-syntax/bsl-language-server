@@ -125,9 +125,6 @@ public class DiagnosticSupplier {
   }
 
   private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
-    if (diagnosticInfo == null) {
-      return false;
-    }
 
     var mode = diagnosticsOptions.getMode();
     if (mode == Mode.OFF) {
@@ -201,9 +198,6 @@ public class DiagnosticSupplier {
 
     if (compatibilityMode == DiagnosticCompatibilityMode.UNDEFINED) {
       return true;
-    }
-    if (contextCompatibilityMode == null) {
-      return false;
     }
 
     return CompatibilityMode.compareTo(compatibilityMode.getCompatibilityMode(), contextCompatibilityMode) >= 0;
