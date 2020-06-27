@@ -21,9 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import org.reflections.ReflectionUtils;
-
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,13 +76,10 @@ public final class DiagnosticParameterInfo {
     return value;
   }
 
-  @SuppressWarnings("unchecked")
   static List<DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
-    return ReflectionUtils.getAllFields(
-      diagnosticInfo.getDiagnosticClass(),
-      ReflectionUtils.withAnnotation(DiagnosticParameter.class)
-    ).stream()
-      .map((Field field) -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))
+    return Arrays.stream(diagnosticInfo.getDiagnosticClass().getFields())
+      .filter(field -> field.isAnnotationPresent(DiagnosticParameter.class))
+      .map(field -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))
       .collect(Collectors.toList());
   }
 }

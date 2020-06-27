@@ -39,18 +39,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.reflections.Reflections;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,7 +63,7 @@ public class DiagnosticSupplier implements ApplicationContextAware {
   @Setter
   private ApplicationContext applicationContext;
 
-  private static final List<Class<? extends BSLDiagnostic>> diagnosticClasses = createDiagnosticClasses();
+  private List<Class<? extends BSLDiagnostic>> diagnosticClasses;
 
   public <T extends Either<String, Number>> Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(
     T diagnosticCode
@@ -223,27 +223,19 @@ public class DiagnosticSupplier implements ApplicationContextAware {
     return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
   }
 
+  @PostConstruct
   @SuppressWarnings("unchecked")
-  private static List<Class<? extends BSLDiagnostic>> createDiagnosticClasses() {
-
-    Reflections diagnosticReflections = new Reflections(
-      new ConfigurationBuilder()
-        .setUrls(
-          ClasspathHelper.forPackage(
-            BSLDiagnostic.class.getPackage().getName(),
-            ClasspathHelper.contextClassLoader(),
-            ClasspathHelper.staticClassLoader()
-          )
-        )
-    );
-
-    return diagnosticReflections.getTypesAnnotatedWith(DiagnosticMetadata.class)
-      .stream()
+  private void createDiagnosticClasses() {
+    var beanNames = applicationContext.getBeanNamesForAnnotation(DiagnosticMetadata.class);
+    diagnosticClasses = Arrays.stream(beanNames)
+      .map(applicationContext::getType)
+      .filter(Objects::nonNull)
+      .filter(BSLDiagnostic.class::isAssignableFrom)
       .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
       .collect(Collectors.toList());
   }
 
-  public static List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
+  public List<Class<? extends BSLDiagnostic>> getDiagnosticClasses() {
     return new ArrayList<>(diagnosticClasses);
   }
 }

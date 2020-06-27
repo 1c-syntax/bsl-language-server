@@ -24,29 +24,29 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.reflections.Reflections;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class QuickFixSupplier {
 
-  private final List<Class<? extends QuickFixProvider>> quickFixClasses;
+  private final ApplicationContext applicationContext;
+  private List<Class<? extends QuickFixProvider>> quickFixClasses;
   // TODO: Рефакторинг апи квик-фиксов.
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
   // Возможно через аннотацию.
   private final DiagnosticSupplier diagnosticSupplier;
-
-  public QuickFixSupplier(DiagnosticSupplier diagnosticSupplier) {
-    this.diagnosticSupplier = diagnosticSupplier;
-    this.quickFixClasses = createQuickFixClasses();
-  }
 
   public List<Class<? extends QuickFixProvider>> getQuickFixClasses() {
     return new ArrayList<>(quickFixClasses);
@@ -76,20 +76,16 @@ public class QuickFixSupplier {
     return (QuickFixProvider) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
   }
 
-  private static List<Class<? extends QuickFixProvider>> createQuickFixClasses() {
-
-    Reflections quickFixReflections = new Reflections(
-      new ConfigurationBuilder()
-        .setUrls(
-          ClasspathHelper.forPackage(
-            BSLDiagnostic.class.getPackage().getName(),
-            ClasspathHelper.contextClassLoader(),
-            ClasspathHelper.staticClassLoader()
-          )
-        )
-    );
-
-    return new ArrayList<>(quickFixReflections.getSubTypesOf(QuickFixProvider.class));
+  @PostConstruct
+  @SuppressWarnings("unchecked")
+  private void createQuickFixClasses() {
+    var beanNames = applicationContext.getBeanNamesForType(QuickFixProvider.class);
+    quickFixClasses = Arrays.stream(beanNames)
+      .map(applicationContext::getType)
+      .filter(Objects::nonNull)
+      .filter(QuickFixProvider.class::isAssignableFrom)
+      .map(aClass -> (Class<? extends QuickFixProvider>) aClass)
+      .collect(Collectors.toList());
   }
 
 }
