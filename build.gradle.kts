@@ -43,6 +43,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 
 val jacksonVersion = "2.10.3"
 val junitVersion = "5.6.1"
+val languageToolVersion = "4.2"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
@@ -50,13 +51,13 @@ dependencies {
         exclude("org.eclipse.lsp4j", "org.eclipse.lsp4j.generator")
     }
 
-    implementation("org.languagetool", "languagetool-core", "4.2")
+    implementation("org.languagetool", "languagetool-core", languageToolVersion)
 
     // https://mvnrepository.com/artifact/org.languagetool/language-en
-    implementation("org.languagetool", "language-en", "4.2")
+    implementation("org.languagetool", "language-en", languageToolVersion)
 
     // https://mvnrepository.com/artifact/org.languagetool/language-ru
-    implementation("org.languagetool", "language-ru", "4.2")
+    implementation("org.languagetool", "language-ru", languageToolVersion)
 
     implementation("info.picocli", "picocli", "4.2.0")
 
