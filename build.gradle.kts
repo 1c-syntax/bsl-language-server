@@ -47,9 +47,7 @@ val languageToolVersion = "4.2"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0") {
-        exclude("org.eclipse.lsp4j", "org.eclipse.lsp4j.generator")
-    }
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
 
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
 
