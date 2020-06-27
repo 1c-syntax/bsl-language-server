@@ -46,7 +46,9 @@ val junitVersion = "5.6.1"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
-    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
+    implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0") {
+        exclude("org.eclipse.lsp4j", "org.eclipse.lsp4j.generator")
+    }
 
     implementation("org.languagetool", "languagetool-core", "4.2")
 
