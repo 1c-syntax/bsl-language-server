@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,6 +32,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
+@Component
+@Scope("prototype")
 public @interface DiagnosticMetadata {
   DiagnosticType type() default DiagnosticType.ERROR;
 

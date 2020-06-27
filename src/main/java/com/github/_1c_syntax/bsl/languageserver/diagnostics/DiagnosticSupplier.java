@@ -36,12 +36,14 @@ import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -55,9 +57,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DiagnosticSupplier {
+public class DiagnosticSupplier implements ApplicationContextAware {
 
   private final LanguageServerConfiguration configuration;
+  @Setter
+  private ApplicationContext applicationContext;
+
   private static final List<Class<? extends BSLDiagnostic>> diagnosticClasses = createDiagnosticClasses();
 
   public <T extends Either<String, Number>> Optional<Class<? extends BSLDiagnostic>> getDiagnosticClass(
@@ -87,7 +92,6 @@ public class DiagnosticSupplier {
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(this::createDiagnosticInstance)
-        .peek(this::configureDiagnostic)
         .collect(Collectors.toList());
     } else {
       return Collections.emptyList();
@@ -97,31 +101,15 @@ public class DiagnosticSupplier {
 
   public BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass) {
     DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, configuration.getLanguage());
-    BSLDiagnostic diagnosticInstance = createDiagnosticInstance(info);
-    configureDiagnostic(diagnosticInstance);
-
-    return diagnosticInstance;
+    return createDiagnosticInstance(info);
   }
 
-  @SneakyThrows
   private BSLDiagnostic createDiagnosticInstance(DiagnosticInfo diagnosticInfo) {
-    Class<? extends BSLDiagnostic> diagnosticClass = diagnosticInfo.getDiagnosticClass();
-    DiagnosticInfo info = createDiagnosticInfo(diagnosticClass);
-
-    return diagnosticClass.getDeclaredConstructor(DiagnosticInfo.class).newInstance(info);
+    return applicationContext.getBean(diagnosticInfo.getDiagnosticClass(), diagnosticInfo);
   }
 
   private DiagnosticInfo createDiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
     return new DiagnosticInfo(diagnosticClass, configuration.getLanguage());
-  }
-
-  private void configureDiagnostic(BSLDiagnostic diagnostic) {
-    Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnosticsOptions().getParameters().get(diagnostic.getInfo().getCode().getStringValue());
-
-    if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
-      diagnostic.configure(diagnosticConfiguration.getRight());
-    }
   }
 
   private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
