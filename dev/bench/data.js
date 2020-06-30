@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1593261801565,
+  "lastUpdate": 1593532194547,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4154,6 +4154,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.388110720457069",
             "extra": "mean: 59.36297790209452 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "29900a726e4b60a64ac1e6534d9f7ff934b8eadc",
+          "message": "Revert \"Облегчение итогового jar\"\n\nThis reverts commit 4118db6f47d305eab4a6c9226cab12d3054868e8.",
+          "timestamp": "2020-06-30T18:37:06+03:00",
+          "tree_id": "1e88080d3dc8fd55fa77d9270274da32446f16a0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/29900a726e4b60a64ac1e6534d9f7ff934b8eadc"
+        },
+        "date": 1593532192043,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 58.39071281750997,
+            "unit": "sec",
+            "range": "stddev: 1.6723308859521164",
+            "extra": "mean: 58.39071281750997 sec\nrounds: 3"
           }
         ]
       }
