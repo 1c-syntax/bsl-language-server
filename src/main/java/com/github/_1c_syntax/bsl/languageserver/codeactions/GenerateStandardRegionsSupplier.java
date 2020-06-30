@@ -35,7 +35,6 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,11 +52,10 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
    * @param params параметры вызова генерации {@code codeAction}
    * @param documentContext представление программного модуля
    * @return {@code List<CodeAction>} если модуль не содержит всех стандартных областей,
-   * пустой {@code ArrayList} если генерация областей не требуется
+   * пустой {@code List} если генерация областей не требуется
    */
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
-    List<CodeAction> codeActions = new ArrayList<>();
 
     ModuleType moduleType = documentContext.getModuleType();
     ScriptVariant configurationLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
@@ -69,11 +67,11 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
     FileType fileType = documentContext.getFileType();
 
     if (neededStandardRegions.isEmpty() || fileType == FileType.OS) {
-      return codeActions;
+      return Collections.emptyList();
     }
 
     String regionFormat =
-      configurationLanguage == ScriptVariant.ENGLISH ? "#Region %s%n#EndRegion%n" : "#Область %s%n#КонецОбласти%n";
+      configurationLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
 
     String result = neededStandardRegions.stream()
       .map(s -> String .format(regionFormat, s))
@@ -81,16 +79,14 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
     TextEdit textEdit = new TextEdit(params.getRange(), result);
 
     WorkspaceEdit edit = new WorkspaceEdit();
-    Map<String, List<TextEdit>> changes = new HashMap<>();
-    changes.put(documentContext.getUri().toString(), Collections.singletonList(textEdit));
+    Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(),
+      Collections.singletonList(textEdit));
     edit.setChanges(changes);
 
     CodeAction codeAction = new CodeAction("Generate missing regions");
     codeAction.setDiagnostics(new ArrayList<>());
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
-    codeActions.add(codeAction);
-
-    return codeActions;
+    return List.of(codeAction);
   }
 }
