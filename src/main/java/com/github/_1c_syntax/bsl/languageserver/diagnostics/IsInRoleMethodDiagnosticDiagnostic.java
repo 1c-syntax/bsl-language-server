@@ -66,18 +66,35 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
-    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx, BSLParser.RULE_complexIdentifier);
+    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
 
     if (listIdentifier.isEmpty()) {
       return super.visitIfBranch(ctx);
     }
 
+    computeDiagnostics(listIdentifier);
+
+    return super.visitIfBranch(ctx);
+  }
+
+  @Override
+  public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
+    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
+
+    if (listIdentifier.isEmpty()) {
+      return super.visitElsifBranch(ctx);
+    }
+
+    computeDiagnostics(listIdentifier);
+
+    return super.visitElsifBranch(ctx);
+  }
+
+  private void computeDiagnostics(Collection<ParseTree> listIdentifier) {
     listIdentifier.stream().map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
       .filter(complexCtx -> IS_IN_ROLE_VARS.contains(complexCtx.getText()))
       .filter(IsInRoleMethodDiagnosticDiagnostic::checkStatement)
       .forEach(diagnosticStorage::addDiagnostic);
-
-    return super.visitIfBranch(ctx);
   }
 
   @Override
