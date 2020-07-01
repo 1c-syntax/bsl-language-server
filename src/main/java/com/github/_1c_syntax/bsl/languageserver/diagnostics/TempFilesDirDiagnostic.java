@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -49,8 +48,8 @@ public class TempFilesDirDiagnostic extends AbstractFindMethodDiagnostic {
     "КаталогВременныхФайлов|TempFilesDir"
   );
 
-  public TempFilesDirDiagnostic(DiagnosticInfo info) {
-    super(info, MESSAGE_PATTERN);
+  public TempFilesDirDiagnostic() {
+    super(MESSAGE_PATTERN);
   }
 
   @Override

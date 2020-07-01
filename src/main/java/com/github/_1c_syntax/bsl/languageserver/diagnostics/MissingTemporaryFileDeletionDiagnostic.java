@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -66,15 +65,8 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
     "^(" + REGEX_DELETION_FILE + ")"
   );
 
-  public MissingTemporaryFileDeletionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     String searchDeleteFileMethodProperty =
       (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
     searchDeleteFileMethod = CaseInsensitivePattern.compile(

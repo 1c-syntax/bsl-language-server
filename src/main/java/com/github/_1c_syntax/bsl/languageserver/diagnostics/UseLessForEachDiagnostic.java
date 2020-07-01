@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -46,10 +45,6 @@ import java.util.function.Predicate;
   }
 )
 public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
-
-  public UseLessForEachDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static Predicate<ParseTree> parentClassMatchTo(Class<?> clazzName) {
     return e -> e.getParent().getClass().equals(clazzName);

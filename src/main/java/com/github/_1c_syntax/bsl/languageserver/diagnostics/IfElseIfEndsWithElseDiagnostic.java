@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -38,10 +37,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
   }
 )
 public class IfElseIfEndsWithElseDiagnostic extends AbstractVisitorDiagnostic {
-
-  public IfElseIfEndsWithElseDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {

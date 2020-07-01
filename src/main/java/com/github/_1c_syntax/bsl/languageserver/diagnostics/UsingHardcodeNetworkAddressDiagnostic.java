@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -76,10 +75,6 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
     defaultValue = REGEX_EXCLUSION
   )
   private Pattern searchWordsExclusion = CaseInsensitivePattern.compile(REGEX_EXCLUSION);
-
-  public UsingHardcodeNetworkAddressDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void configure(Map<String, Object> configuration) {

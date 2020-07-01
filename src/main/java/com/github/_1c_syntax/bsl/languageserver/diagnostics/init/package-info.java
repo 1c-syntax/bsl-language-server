@@ -19,31 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.diagnostics.init;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import lombok.Getter;
-import lombok.Setter;
-import org.eclipse.lsp4j.Diagnostic;
-
-import java.util.List;
-
-public abstract class AbstractDiagnostic implements BSLDiagnostic {
-
-  @Getter
-  @Setter
-  protected DiagnosticInfo info;
-  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  protected DocumentContext documentContext;
-
-  @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    this.documentContext = documentContext;
-    diagnosticStorage.clearDiagnostics();
-    check();
-    return diagnosticStorage.getDiagnostics();
-  }
-
-  protected abstract void check();
-}
+import javax.annotation.ParametersAreNonnullByDefault;

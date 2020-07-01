@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -74,10 +73,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
   private VariableScope currentScope;
-
-  public CreateQueryInCycleDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
     String result;

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -53,10 +52,6 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
   );
   private static final Predicate<MethodCallContext> MATCH_METHOD_CALL_DELETE
     = e -> DELETE_CALL_PATTERN.matcher(e.methodName().getText()).matches();
-
-  public DeletingCollectionItemDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static boolean namesEqual(CallStatementContext callStatement, String collectionExpression) {
 

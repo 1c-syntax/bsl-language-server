@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -76,10 +75,6 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     defaultValue = "" + ANALYZING_MAIL
   )
   private boolean analyzeInternetMailProfileZeroTimeout = ANALYZING_MAIL;
-
-  public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private Pattern getPatternNewExpression() {
     if (analyzeInternetMailProfileZeroTimeout) {

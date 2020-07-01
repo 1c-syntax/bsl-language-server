@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -62,10 +61,6 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + DEFAULT_ALLOW_MAGIC_NUMBER
   )
   private boolean allowMagicIndexes = DEFAULT_ALLOW_MAGIC_NUMBER;
-
-  public MagicNumberDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void configure(Map<String, Object> configuration) {

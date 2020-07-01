@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
@@ -35,14 +35,15 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class GenericIssueReport {
@@ -54,9 +55,17 @@ public class GenericIssueReport {
   private static final String SEVERITY_MAJOR = "MAJOR";
   private static final String SEVERITY_MINOR = "MINOR";
 
-  // TODO: пробросить из analyze?
-  private static final LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
+  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(Collections.emptyList()) {
+    @Override
+    public List<BSLDiagnostic> getDiagnosticInstances(@NotNull DocumentContext documentContext) {
+      return null;
+    }
+
+    @Override
+    public BSLDiagnostic getDiagnosticInstance(@NotNull Class<? extends BSLDiagnostic> diagnosticClass) {
+      return null;
+    }
+  };
   private static final Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
   private static final Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
 
@@ -138,16 +147,9 @@ public class GenericIssueReport {
       type = typeMap.get(localSeverity);
       primaryLocation = new Location(fileName, diagnostic);
 
-      Optional<Class<? extends BSLDiagnostic>> diagnosticClass =
-        diagnosticSupplier.getDiagnosticClass(diagnostic.getCode());
-      if (diagnosticClass.isPresent()) {
-        DiagnosticInfo info = new DiagnosticInfo(
-          diagnosticClass.get(), configuration.getLanguage()
-        );
-        effortMinutes = info.getMinutesToFix();
-      } else {
-        effortMinutes = 0;
-      }
+      effortMinutes = diagnosticSupplier.getDiagnosticInfo(diagnostic.getCode())
+        .map(DiagnosticInfo::getMinutesToFix)
+        .orElse(0);
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {

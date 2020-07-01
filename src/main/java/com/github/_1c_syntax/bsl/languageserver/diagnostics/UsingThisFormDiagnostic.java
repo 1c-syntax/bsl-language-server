@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -68,10 +67,6 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   private static final Pattern ONLY_RU_PATTERN = CaseInsensitivePattern.compile("этаформа");
   private static final String THIS_OBJECT = "ЭтотОбъект";
   private static final String THIS_OBJECT_EN = "ThisObject";
-
-  public UsingThisFormDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {

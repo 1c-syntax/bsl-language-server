@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -72,10 +71,6 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     AnnotationKind.BEFORE,
     AnnotationKind.CHANGEANDVALIDATE
   );
-
-  public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static boolean isAttachable(MethodSymbol methodSymbol) {
     return ATTACHABLE_PATTERN.matcher(methodSymbol.getName()).matches();

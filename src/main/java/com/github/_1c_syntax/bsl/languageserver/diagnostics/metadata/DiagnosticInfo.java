@@ -52,6 +52,7 @@ public class DiagnosticInfo {
 
   private final DiagnosticCode diagnosticCode;
   private final DiagnosticMetadata diagnosticMetadata;
+  // TODO: Lazy
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
   public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, Language language) {

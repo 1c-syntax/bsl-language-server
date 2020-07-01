@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -54,10 +53,6 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
-
-  public UsingServiceTagDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void configure(Map<String, Object> configuration) {

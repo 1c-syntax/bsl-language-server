@@ -19,9 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.init;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -34,6 +36,20 @@ import java.util.Map;
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
+
+  @Override
+  public Object postProcessBeforeInitialization(Object bean, String beanName) {
+    if (!BSLDiagnostic.class.isAssignableFrom(bean.getClass())) {
+      return bean;
+    }
+
+    BSLDiagnostic diagnostic = (BSLDiagnostic) bean;
+
+    var info = new DiagnosticInfo(diagnostic.getClass(), configuration.getLanguage());
+    diagnostic.setInfo(info);
+
+    return diagnostic;
+  }
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {

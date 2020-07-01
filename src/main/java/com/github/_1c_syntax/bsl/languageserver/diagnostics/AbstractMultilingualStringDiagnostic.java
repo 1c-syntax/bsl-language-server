@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -39,10 +38,6 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
   )
   private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
   protected MultilingualStringAnalyser parser = new MultilingualStringAnalyser(DECLARED_LANGUAGES_DEFAULT);
-
-  public AbstractMultilingualStringDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void configure(Map<String, Object> configuration) {

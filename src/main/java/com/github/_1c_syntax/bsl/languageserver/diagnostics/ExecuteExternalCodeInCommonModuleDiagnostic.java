@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -46,9 +45,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
   }
 )
 public class ExecuteExternalCodeInCommonModuleDiagnostic extends AbstractExecuteExternalCodeDiagnostic {
-  public ExecuteExternalCodeInCommonModuleDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {

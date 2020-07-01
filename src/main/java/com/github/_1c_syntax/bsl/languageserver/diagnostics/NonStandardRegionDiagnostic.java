@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -88,11 +87,6 @@ public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
     createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
 
   private static final Map<ModuleType, Set<Pattern>> standardRegionsByModuleType = makeStandardRegions();
-
-  public NonStandardRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
-
-  }
 
   private static Map<ModuleType, Set<Pattern>> makeStandardRegions() {
     Map<ModuleType, Set<Pattern>> standardRegions = new EnumMap<>(ModuleType.class);

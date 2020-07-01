@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -76,10 +75,6 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
     defaultValue = "" + CASE_SENSITIVE_FOR_STRING
   )
   private boolean caseSensitiveForString = CASE_SENSITIVE_FOR_STRING;
-
-  public FunctionReturnsSamePrimitiveDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {

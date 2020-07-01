@@ -24,13 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -48,26 +48,14 @@ public class QuickFixSupplier {
   // Возможно через аннотацию.
   private final DiagnosticSupplier diagnosticSupplier;
 
-  public List<Class<? extends QuickFixProvider>> getQuickFixClasses() {
-    return new ArrayList<>(quickFixClasses);
-  }
-
   @SuppressWarnings("unchecked")
   public <T extends Either<String, Number>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
     T diagnosticCode
   ) {
-    Optional<Class<? extends BSLDiagnostic>> diagnosticClass = diagnosticSupplier.getDiagnosticClass(diagnosticCode);
-    if (diagnosticClass.isEmpty()) {
-      return Optional.empty();
-    }
-
-    final Class<? extends BSLDiagnostic> bslDiagnosticClass = diagnosticClass.get();
-    if (!quickFixClasses.contains(bslDiagnosticClass)) {
-      return Optional.empty();
-    }
-
-    Class<? extends QuickFixProvider> quickFixClass = (Class<? extends QuickFixProvider>) bslDiagnosticClass;
-    return Optional.of(quickFixClass);
+    return diagnosticSupplier.getDiagnosticInfo(diagnosticCode)
+      .map(DiagnosticInfo::getDiagnosticClass)
+      .filter(quickFixClasses::contains)
+      .map(aClass -> (Class<? extends QuickFixProvider>) aClass);
   }
 
   @SuppressWarnings("unchecked")
@@ -78,6 +66,7 @@ public class QuickFixSupplier {
 
   @PostConstruct
   @SuppressWarnings("unchecked")
+  // TODO: в final-поле через java-config
   private void createQuickFixClasses() {
     var beanNames = applicationContext.getBeanNamesForType(QuickFixProvider.class);
     quickFixClasses = Arrays.stream(beanNames)

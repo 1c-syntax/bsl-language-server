@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -114,10 +113,6 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   private String indexWordLeftMsg;
   private String indexWordRightMsg;
   private String indexWordLeftRightMsg;
-
-  public MissingSpaceDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void check() {

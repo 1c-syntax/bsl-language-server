@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -48,10 +47,6 @@ public class MethodSizeDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + MAX_METHOD_SIZE
   )
   private int maxMethodSize = MAX_METHOD_SIZE;
-
-  public MethodSizeDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {

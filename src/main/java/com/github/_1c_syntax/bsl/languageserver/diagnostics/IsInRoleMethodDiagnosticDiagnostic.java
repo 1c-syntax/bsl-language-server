@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,10 +58,6 @@ public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnosti
   private static final Pattern PRIVILEGED_MODE_NAME_PATTERN = CaseInsensitivePattern.compile(
     "(PrivilegedMode|ПривилегированныйРежим)"
   );
-
-  public IsInRoleMethodDiagnosticDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {

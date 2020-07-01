@@ -42,6 +42,8 @@ public interface BSLDiagnostic {
 
   List<Diagnostic> getDiagnostics(DocumentContext documentContext);
 
+  void setInfo(DiagnosticInfo info);
+
   DiagnosticInfo getInfo();
 
   default void configure(Map<String, Object> configuration) {

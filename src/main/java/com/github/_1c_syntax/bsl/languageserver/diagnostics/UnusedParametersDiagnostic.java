@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -52,10 +51,6 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
     "(ПриСозданииОбъекта|OnObjectCreate)"
   );
-
-  public UnusedParametersDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
