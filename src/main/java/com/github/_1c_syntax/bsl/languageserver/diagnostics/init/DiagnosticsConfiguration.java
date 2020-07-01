@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
@@ -38,34 +37,29 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Configuration
 @RequiredArgsConstructor
-public class DiagnosticsConfiguration {
+public abstract class DiagnosticsConfiguration {
 
-  private final ApplicationContext applicationContext;
   private final LanguageServerConfiguration configuration;
+  private final DiagnosticConfiguration diagnosticConfiguration;
 
   @Bean
   @Scope("prototype")
-  public List<BSLDiagnostic> diagnostics(
-    @Autowired(required = false)  DocumentContext documentContext
-  ) {
+  public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
 
-    List<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
+    Map<String, DiagnosticInfo> diagnosticInfos = diagnosticInfos();
 
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
@@ -77,37 +71,21 @@ public class DiagnosticsConfiguration {
         .getCompatibilityMode();
       ModuleType moduleType = documentContext.getModuleType();
 
-      return diagnosticInfos.stream()
+      return diagnosticInfos.values().stream()
         .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(DiagnosticInfo::getDiagnosticClass)
-        .map(this::diagnostic)
+        .map(diagnosticConfiguration::diagnostic)
         .collect(Collectors.toList());
     } else {
       return Collections.emptyList();
     }
   }
 
-  @Bean
-  @Scope("prototype")
-  public BSLDiagnostic diagnostic(@Autowired(required = false) Class<? extends BSLDiagnostic> clazz) {
-    return applicationContext.getBean(clazz);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Bean
-  public List<DiagnosticInfo> diagnosticInfos() {
-    var beanNames = applicationContext.getBeanNamesForAnnotation(DiagnosticMetadata.class);
-    return Arrays.stream(beanNames)
-      .map(applicationContext::getType)
-      .filter(Objects::nonNull)
-      .filter(BSLDiagnostic.class::isAssignableFrom)
-      .map(aClass -> (Class<? extends BSLDiagnostic>) aClass)
-      .map(this::createDiagnosticInfo)
-      .collect(Collectors.toList());
-  }
+  @Lookup("diagnosticInfos")
+  protected abstract Map<String, DiagnosticInfo> diagnosticInfos();
 
   private static boolean needToComputeDiagnostics(
     DocumentContext documentContext,
@@ -141,11 +119,6 @@ public class DiagnosticsConfiguration {
     return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
   }
 
-
-  private DiagnosticInfo createDiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
-    return new DiagnosticInfo(diagnosticClass, configuration.getLanguage());
-  }
-
   private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
 
     var mode = diagnosticsOptions.getMode();
@@ -153,17 +126,17 @@ public class DiagnosticsConfiguration {
       return false;
     }
 
-    Either<Boolean, Map<String, Object>> diagnosticConfiguration =
+    Either<Boolean, Map<String, Object>> diagnosticParameters =
       configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getCode().getStringValue());
 
-    boolean activatedByDefault = diagnosticConfiguration == null && diagnosticInfo.isActivatedByDefault();
-    boolean hasCustomConfiguration = diagnosticConfiguration != null && diagnosticConfiguration.isRight();
-    boolean enabledDirectly = diagnosticConfiguration != null
-      && diagnosticConfiguration.isLeft()
-      && diagnosticConfiguration.getLeft();
-    boolean disabledDirectly = diagnosticConfiguration != null
-      && diagnosticConfiguration.isLeft()
-      && !diagnosticConfiguration.getLeft();
+    boolean activatedByDefault = diagnosticParameters == null && diagnosticInfo.isActivatedByDefault();
+    boolean hasCustomConfiguration = diagnosticParameters != null && diagnosticParameters.isRight();
+    boolean enabledDirectly = diagnosticParameters != null
+      && diagnosticParameters.isLeft()
+      && diagnosticParameters.getLeft();
+    boolean disabledDirectly = diagnosticParameters != null
+      && diagnosticParameters.isLeft()
+      && !diagnosticParameters.getLeft();
     boolean hasDefinedSetting = enabledDirectly || hasCustomConfiguration;
 
     boolean passedAllMode = mode == Mode.ALL;

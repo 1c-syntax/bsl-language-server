@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -37,14 +39,14 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public abstract class DiagnosticSupplier {
 
-  private final List<DiagnosticInfo> diagnosticInfos;
+  private final Map<String, DiagnosticInfo> diagnosticInfos;
 
   public <T extends Either<String, Number>> Optional<DiagnosticInfo> getDiagnosticInfo(
     T diagnosticCode
   ) {
-    return diagnosticInfos.stream()
-      .filter(diagnosticInfo -> diagnosticInfo.getCode().equals(diagnosticCode))
-      .findAny();
+    return Optional.ofNullable(
+      diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
+    );
   }
 
   @Lookup("diagnostics")

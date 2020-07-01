@@ -55,7 +55,7 @@ public class GenericIssueReport {
   private static final String SEVERITY_MAJOR = "MAJOR";
   private static final String SEVERITY_MINOR = "MINOR";
 
-  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(Collections.emptyList()) {
+  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(Collections.emptyMap()) {
     @Override
     public List<BSLDiagnostic> getDiagnosticInstances(@NotNull DocumentContext documentContext) {
       return null;
