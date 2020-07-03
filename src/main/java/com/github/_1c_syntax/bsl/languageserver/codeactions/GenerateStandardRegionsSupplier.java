@@ -58,15 +58,22 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
 
     ModuleType moduleType = documentContext.getModuleType();
+    FileType fileType = documentContext.getFileType();
     ScriptVariant configurationLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
-    Set<String> neededStandardRegions = Regions.getStandardRegionsNamesByModuleType(moduleType, configurationLanguage);
+    Set<String> neededStandardRegions;
+
+    if (fileType == FileType.BSL) {
+      neededStandardRegions = Regions.getStandardRegionsNamesByModuleType(moduleType, configurationLanguage);
+    } else {
+      neededStandardRegions = Regions.getOneScriptStandardRegions(configurationLanguage);
+    }
+
     Set<String> documentRegionsNames = documentContext.getSymbolTree().getModuleLevelRegions().stream()
       .map(RegionSymbol::getName)
       .collect(Collectors.toSet());
     neededStandardRegions.removeAll(documentRegionsNames);
-    FileType fileType = documentContext.getFileType();
 
-    if (neededStandardRegions.isEmpty() || fileType == FileType.OS) {
+    if (neededStandardRegions.isEmpty()) {
       return Collections.emptyList();
     }
 

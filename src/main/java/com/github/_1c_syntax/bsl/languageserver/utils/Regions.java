@@ -133,6 +133,27 @@ public class Regions {
     return standardRegions;
   }
 
+  /** Получает стандартные области OneScript, на основании языка
+   * @param configurationLanguage язык конфигурации, может быть русским или английским
+   * @return множество имен стандартных областей OneSCript
+   */
+  public static Set<String> getOneScriptStandardRegions(ScriptVariant configurationLanguage) {
+
+    Set<String> regionsName = new HashSet<>();
+
+    if (configurationLanguage == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.PUBLIC_REGION_EN);
+      regionsName.add(Keywords.INTERNAL_REGION_EN);
+      regionsName.add(Keywords.PRIVATE_REGION_EN);
+      return regionsName;
+    }
+
+    regionsName.add(Keywords.PUBLIC_REGION_RU);
+    regionsName.add(Keywords.INTERNAL_REGION_RU);
+    regionsName.add(Keywords.PRIVATE_REGION_RU);
+    return regionsName;
+  }
+
   /**
    * Получает стандартные имена областей 1С, на основании типа программного модуля
    * и языка конфигурации
@@ -318,5 +339,4 @@ public class Regions {
       String.format(template, keywordRu, keywordEn)
     );
   }
-
 }
