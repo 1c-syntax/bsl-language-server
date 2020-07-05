@@ -2,14 +2,14 @@
 
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="ru" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
       
-        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/IsInRoleMethodDiagnostic/">
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/IsInRoleMethod/">
       
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
@@ -17,7 +17,7 @@
     
     
       
-        <title>IsInRole global method call (IsInRoleMethodDiagnostic) - BSL Language Server Dev</title>
+        <title>Использование метода РольДоступна (IsInRoleMethod) - BSL Language Server Dev</title>
       
     
     
@@ -57,7 +57,7 @@
   
     
     
-    <body dir="ltr" data-md-color-primary="white" data-md-color-accent="indigo">
+    <body dir="" data-md-color-primary="white" data-md-color-accent="indigo">
   
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -65,8 +65,8 @@
     <div data-md-component="skip">
       
         
-        <a href="#isinrole-global-method-call-isinrolemethoddiagnostic" class="md-skip">
-          Skip to content
+        <a href="#isinrolemethod" class="md-skip">
+          Перейти к содержанию
         </a>
       
     </div>
@@ -75,7 +75,7 @@
     </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
+  <nav class="md-header-nav md-grid" aria-label="">
     <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-header-nav__button md-logo" aria-label="BSL Language Server Dev">
       
   <img src="../../assets/images/logo.png" alt="logo">
@@ -92,7 +92,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              IsInRole global method call (IsInRoleMethodDiagnostic)
+              Использование метода РольДоступна (IsInRoleMethod)
             
           </span>
         </div>
@@ -107,12 +107,12 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <input type="text" class="md-search__input" name="query" aria-label="Поиск" placeholder="Поиск" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
       <label class="md-search__icon md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+      <button type="reset" class="md-search__icon md-icon" aria-label="" data-md-component="search-reset" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
@@ -120,7 +120,7 @@
       <div class="md-search__scrollwrap" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Type to start searching
+            Начните печатать для поиска
           </div>
           <ol class="md-search-result__list"></ol>
         </div>
@@ -132,7 +132,7 @@
     
       <div class="md-header-nav__source">
         
-<a href="https://github.com/1c-syntax/bsl-language-server/" title="Go to repository" class="md-source">
+<a href="https://github.com/1c-syntax/bsl-language-server/" title="Перейти к репозиторию" class="md-source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
@@ -160,7 +160,7 @@
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+                    <nav class="md-nav md-nav--primary" aria-label="" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="BSL Language Server Dev" class="md-nav__button md-logo" aria-label="BSL Language Server Dev">
       
@@ -172,7 +172,7 @@
   
     <div class="md-nav__source">
       
-<a href="https://github.com/1c-syntax/bsl-language-server/" title="Go to repository" class="md-source">
+<a href="https://github.com/1c-syntax/bsl-language-server/" title="Перейти к репозиторию" class="md-source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
@@ -191,8 +191,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../.." title="Home" class="md-nav__link">
-      Home
+    <a href="../.." title="Домашняя" class="md-nav__link">
+      Домашняя
     </a>
   </li>
 
@@ -203,8 +203,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../contributing/" title="Contributing" class="md-nav__link">
-      Contributing
+    <a href="../../contributing/" title="Руководство контрибьютора" class="md-nav__link">
+      Руководство контрибьютора
     </a>
   </li>
 
@@ -215,8 +215,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../reporters/" title="Reporters" class="md-nav__link">
-      Reporters
+    <a href="../../reporters/" title="Репортеры" class="md-nav__link">
+      Репортеры
     </a>
   </li>
 
@@ -227,8 +227,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../" title="Diagnostics" class="md-nav__link">
-      Diagnostics
+    <a href="../" title="Диагностики" class="md-nav__link">
+      Диагностики
     </a>
   </li>
 
@@ -239,8 +239,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../../features/" title="Features" class="md-nav__link">
-      Features
+    <a href="../../features/" title="Дополнительные возможности" class="md-nav__link">
+      Дополнительные возможности
     </a>
   </li>
 
@@ -251,8 +251,8 @@
 
 
   <li class="md-nav__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server/dev" title="Russian" class="md-nav__link">
-      Russian
+    <a href="https://1c-syntax.github.io/bsl-language-server/dev/en" title="English" class="md-nav__link">
+      English
     </a>
   </li>
 
@@ -268,7 +268,7 @@
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
   
   
     
@@ -278,49 +278,49 @@
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
       </span>
-      Table of contents
+      Содержание
     </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    Description
+  <a href="#_1" class="md-nav__link">
+    Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    Examples
+  <a href="#_2" class="md-nav__link">
+    Примеры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sources" class="md-nav__link">
-    Sources
+  <a href="#_3" class="md-nav__link">
+    Источники
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#snippets" class="md-nav__link">
-    Snippets
+  <a href="#_4" class="md-nav__link">
+    Сниппеты
   </a>
   
-    <nav class="md-nav" aria-label="Snippets">
+    <nav class="md-nav" aria-label="Сниппеты">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
-    Diagnostic ignorance in code
+  <a href="#_5" class="md-nav__link">
+    Экранирование кода
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#parameter-for-config" class="md-nav__link">
-    Parameter for config
+  <a href="#_6" class="md-nav__link">
+    Параметр конфигурационного файла
   </a>
   
 </li>
@@ -342,7 +342,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/IsInRoleMethodDiagnostic.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/diagnostics/IsInRoleMethod.md" title="Редактировать страницу" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
                   </a>
                 
@@ -350,24 +350,24 @@
                   
                 
                 
-                <h1 id="isinrole-global-method-call-isinrolemethoddiagnostic">IsInRole global method call (IsInRoleMethodDiagnostic)<a class="headerlink" href="#isinrole-global-method-call-isinrolemethoddiagnostic" title="Permanent link">Link</a></h1>
+                <h1 id="isinrolemethod">Использование метода РольДоступна (IsInRoleMethod)<a class="headerlink" href="#isinrolemethod" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
-<th align="center">Tags</th>
+<th align="center">Тип</th>
+<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Важность</th>
+<th align="center">Включена<br/>по умолчанию</th>
+<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Тэги</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>Code smell</code></td>
+<td align="center"><code>Дефект кода</code></td>
 <td align="center"><code>BSL</code></td>
-<td align="center"><code>Major</code></td>
-<td align="center"><code>Yes</code></td>
+<td align="center"><code>Важный</code></td>
+<td align="center"><code>Да</code></td>
 <td align="center"><code>5</code></td>
 <td align="center"><code>error</code></td>
 </tr>
@@ -375,48 +375,56 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
-<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-<p>To check access rights in the code, use the AccessRight method.</p>
-<p>When a role does not grant access rights to metadata objects and defines an additional access right only, use the IsInRole method. If Standard Subsystems Library is used in a configuration, use the RolesAvailable function of the Users common module, otherwise IsInRole method call must be combined with PrivilegedMode() method call.</p>
-<p>If Standard Subsystems Library is used in a configuration, use the RolesAvailable() function of the Users common module, otherwise IsInRole() method call must be combined with PrivilegedMode() method call.</p>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
+<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+Для проверки прав доступа в коде следует использовать метод ПравоДоступа.</p>
+<p>В тех случаях, где роль не дает никаких прав на объекты метаданных, а служит только для определения того или иного дополнительного права, 
+следует использовать метод РольДоступна. </p>
+<p>При использовании в конфигурации Библиотеки стандартных подсистем (БСП) следует 
+использовать функцию РолиДоступны общего модуля Пользователи. 
+Если в конфигурации не используется БСП, следует обязательно совмещать вызов РольДоступна() с проверкой на ПривилегированныйРежим().</p>
+<h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;AddChangeWorldCountries&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;ViewPopularCountriesReport&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
+<div class="codehilite"><pre><span></span><code><span class="err">Неправильно</span><span class="o">:</span>
+<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;ДобавлениеИзменениеСтранМира&quot;</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
+<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;ПросмотрОтчетаПопулярныеСтраны&quot;</span><span class="o">)</span> <span class="err">Тогда</span>
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="err">Correct example: If AccessRight(&quot;Edit&quot;, Metadata.Catalogs.WorldCountries) Then ... If AccessRight(&quot;View&quot;, Metadata.Reports.PopularCountries) Then ...</span>
+<div class="codehilite"><pre><span></span><code><span class="err">Правильно</span><span class="o">:</span>
+<span class="err">Если</span> <span class="err">ПравоДоступа</span><span class="o">(</span><span class="s2">&quot;Редактирование&quot;</span><span class="o">,</span> <span class="err">Метаданные</span><span class="o">.</span><span class="err">Справочники</span><span class="o">.</span><span class="err">СтраныМира</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
+<span class="err">Если</span> <span class="err">ПравоДоступа</span><span class="o">(</span><span class="s2">&quot;Просмотр&quot;</span><span class="o">,</span> <span class="err">Метаданные</span><span class="o">.</span><span class="err">Отчеты</span><span class="o">.</span><span class="err">ПопулярныеСтраны</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;Paymaster&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
+<div class="codehilite"><pre><span></span><code><span class="err">Неправильно</span><span class="o">:</span>
+<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;Казначей&quot;</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 
 
-<div class="codehilite"><pre><span></span><code><span class="err">Correct example: If IsInRole(&quot;Paymaster&quot;) OR PrivilegedMode() Then ...</span>
+<div class="codehilite"><pre><span></span><code><span class="err">Правильно</span><span class="o">:</span>
+<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;Казначей&quot;</span><span class="o">)</span> <span class="err">ИЛИ</span> <span class="err">ПривилегированныйРежим</span><span class="o">()</span> <span class="err">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 
 
-<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
+<h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
-<li><a href="https://support.1ci.com/hc/en-us/articles/360011003180-Checking-access-rights">Standard: Checking access rights</a></li>
+<li>Источник: <a href="https://its.1c.ru/db/v8std#content:737:hdoc">Стандарт: Проверка прав доступа</a></li>
 </ul>
-<h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
+<h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
-<h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethodDiagnostic-off</span>
-<span class="c c-Singleline">// BSLLS:IsInRoleMethodDiagnostic-on</span>
+<h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
+<span class="c c-Singleline">// BSLLS:IsInRoleMethod-on</span>
 </code></pre></div>
 
 
-<h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IsInRoleMethodDiagnostic&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IsInRoleMethod&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               
@@ -466,7 +474,7 @@
     </div>
     
       <script src="../../assets/javascripts/vendor.f45d2d8d.min.js"></script>
-      <script src="../../assets/javascripts/bundle.74d0b805.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../../assets/javascripts/bundle.74d0b805.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432 \u0431\u0443\u0444\u0435\u0440", "clipboard.copied": "\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0432 \u0431\u0443\u0444\u0435\u0440", "search.config.lang": "ru", "search.config.pipeline": "", "search.config.separator": "", "search.result.placeholder": "\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u043f\u0435\u0447\u0430\u0442\u0430\u0442\u044c \u0434\u043b\u044f \u043f\u043e\u0438\u0441\u043a\u0430", "search.result.none": "\u0421\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", "search.result.one": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e 1 \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435", "search.result.other": "\u041d\u0430\u0439\u0434\u0435\u043d\u043e # \u0441\u043e\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0439"}</script>
       
       <script>
         app = initialize({

@@ -182,8 +182,8 @@
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
-                "IsInRoleMethodDiagnostic": {
-                    "$ref": "parameters-schema.json#/definitions/IsInRoleMethodDiagnostic"
+                "IsInRoleMethod": {
+                    "$ref": "parameters-schema.json#/definitions/IsInRoleMethod"
                 },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
