@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @UtilityClass
 public final class Trees {
@@ -265,14 +266,30 @@ public final class Trees {
    * Получает детей с нужными типами
    */
   public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
+    return getChildrenStream(t, ruleIndex)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Получает первого ребенка с одним из нужных типов
+   *
+   * @param t       - нода, для которой ищем ребенка
+   * @param ruleIndex - arrays of BSLParser.RULE_*
+   * @return child - если первый ребенок не найден, вернет Optional
+   */
+  public static Optional<BSLParserRuleContext> getFirstChild(Tree t, Integer... ruleIndex) {
+    return getChildrenStream(t, ruleIndex)
+      .findFirst();
+  }
+
+  private static Stream<BSLParserRuleContext> getChildrenStream(Tree t, Integer[] ruleIndex) {
     List<Integer> indexes = Arrays.asList(ruleIndex);
     return IntStream.range(0, t.getChildCount())
       .mapToObj(t::getChild)
       .filter((Tree child) ->
         child instanceof BSLParserRuleContext
           && indexes.contains(((BSLParserRuleContext) child).getRuleIndex()))
-      .map(child -> (BSLParserRuleContext) child)
-      .collect(Collectors.toList());
+      .map(child -> (BSLParserRuleContext) child);
   }
 
   /**

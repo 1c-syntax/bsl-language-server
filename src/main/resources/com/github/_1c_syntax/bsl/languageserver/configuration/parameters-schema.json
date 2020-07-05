@@ -624,7 +624,7 @@
             "title": "Invalid character",
             "$id": "#/definitions/InvalidCharacterInFile"
         },
-        "IsInRoleMethodDiagnostic": {
+        "IsInRoleMethod": {
             "description": "IsInRole global method call",
             "default": true,
             "type": [
@@ -632,7 +632,7 @@
                 "object"
             ],
             "title": "IsInRole global method call",
-            "$id": "#/definitions/IsInRoleMethodDiagnostic"
+            "$id": "#/definitions/IsInRoleMethod"
         },
         "LineLength": {
             "description": "Line Length limit",
