@@ -205,7 +205,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
-    List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
     String mdoRef = "";
     Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
@@ -217,7 +217,6 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearSecondaryData();
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;
   }

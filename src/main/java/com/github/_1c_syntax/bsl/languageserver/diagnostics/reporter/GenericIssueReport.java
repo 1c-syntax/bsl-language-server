@@ -22,8 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
@@ -35,7 +33,6 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
 import java.nio.file.Paths;
@@ -55,17 +52,7 @@ public class GenericIssueReport {
   private static final String SEVERITY_MAJOR = "MAJOR";
   private static final String SEVERITY_MINOR = "MINOR";
 
-  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(Collections.emptyMap()) {
-    @Override
-    public List<BSLDiagnostic> getDiagnosticInstances(@NotNull DocumentContext documentContext) {
-      return null;
-    }
-
-    @Override
-    public BSLDiagnostic getDiagnosticInstance(@NotNull Class<? extends BSLDiagnostic> diagnosticClass) {
-      return null;
-    }
-  };
+  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(Collections.emptyMap());
   private static final Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
   private static final Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
 

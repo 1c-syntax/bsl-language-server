@@ -22,9 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
@@ -32,15 +29,8 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -49,60 +39,16 @@ public final class DiagnosticProvider {
 
   public static final String SOURCE = "bsl-language-server";
 
-  private final Map<URI, Set<Diagnostic>> computedDiagnostics = new HashMap<>();
-  private final DiagnosticSupplier diagnosticSupplier;
-
   public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
-    List<Diagnostic> diagnostics = computeDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics();
 
     client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics));
   }
 
   public void publishEmptyDiagnosticList(LanguageClient client, DocumentContext documentContext) {
-    List<Diagnostic> diagnostics = new ArrayList<>();
-    computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
     client.publishDiagnostics(
-      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics)
+      new PublishDiagnosticsParams(documentContext.getUri().toString(), Collections.emptyList())
     );
   }
 
-  public List<Diagnostic> computeDiagnostics(DocumentContext documentContext) {
-    DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
-
-    List<Diagnostic> diagnostics =
-      diagnosticSupplier.getDiagnosticInstances(documentContext).parallelStream()
-        .flatMap((BSLDiagnostic diagnostic) -> {
-          try {
-            return diagnostic.getDiagnostics(documentContext).stream();
-          } catch (RuntimeException e) {
-            String message = String.format(
-              "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
-              documentContext.getUri(),
-              diagnostic.getInfo().getCode()
-            );
-            LOGGER.error(message, e);
-
-            return Stream.empty();
-          }
-        })
-        .filter((Diagnostic diagnostic) ->
-          !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-        .collect(Collectors.toList());
-
-    computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>(diagnostics));
-
-    return diagnostics;
-  }
-
-  public Set<Diagnostic> getComputedDiagnostics(DocumentContext documentContext) {
-    return computedDiagnostics.getOrDefault(documentContext.getUri(), new LinkedHashSet<>());
-  }
-
-  public void clearComputedDiagnostics(DocumentContext documentContext) {
-    computedDiagnostics.put(documentContext.getUri(), new LinkedHashSet<>());
-  }
-
-  public void clearAllComputedDiagnostics() {
-    computedDiagnostics.clear();
-  }
 }

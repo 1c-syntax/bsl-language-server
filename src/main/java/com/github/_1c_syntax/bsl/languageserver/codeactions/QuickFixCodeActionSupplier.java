@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -37,8 +36,8 @@ import java.util.stream.Stream;
 @Component
 public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
 
-  public QuickFixCodeActionSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
-    super(diagnosticProvider, quickFixSupplier);
+  public QuickFixCodeActionSupplier(QuickFixSupplier quickFixSupplier) {
+    super(quickFixSupplier);
   }
 
   @Override

@@ -21,26 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public abstract class DiagnosticSupplier {
+@Deprecated
+public class DiagnosticSupplier {
 
   private final Map<String, DiagnosticInfo> diagnosticInfos;
 
+  @Deprecated
   public <T extends Either<String, Number>> Optional<DiagnosticInfo> getDiagnosticInfo(
     T diagnosticCode
   ) {
@@ -48,11 +47,5 @@ public abstract class DiagnosticSupplier {
       diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
     );
   }
-
-  @Lookup("diagnostics")
-  public abstract List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext);
-
-  @Lookup
-  public abstract BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass);
 
 }

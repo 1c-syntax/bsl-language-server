@@ -239,7 +239,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
     documentContext.rebuild(params.getContentChanges().get(0).getText());
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
@@ -255,7 +254,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     }
 
     documentContext.clearSecondaryData();
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     if (client != null) {
       diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
@@ -290,7 +288,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   public void reset() {
-    diagnosticProvider.clearAllComputedDiagnostics();
     context.clear();
   }
 

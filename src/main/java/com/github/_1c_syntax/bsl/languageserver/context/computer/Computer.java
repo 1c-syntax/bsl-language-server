@@ -21,6 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+
 public interface Computer<T> {
+  @Deprecated
   T compute();
+
+  default T compute(DocumentContext documentContext) {
+    return null;
+  }
 }

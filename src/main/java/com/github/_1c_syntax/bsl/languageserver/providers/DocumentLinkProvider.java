@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class DocumentLinkProvider {
-  private final DiagnosticProvider diagnosticProvider;
   private final LanguageServerConfiguration configuration;
 
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
@@ -59,7 +58,7 @@ public class DocumentLinkProvider {
       languageSuffix
     );
 
-    return diagnosticProvider.getComputedDiagnostics(documentContext).stream()
+    return documentContext.getComputedDiagnostics().stream()
       .map((Diagnostic diagnostic) -> {
         var diagnosticCode = DiagnosticCode.getStringValue(diagnostic.getCode());
 

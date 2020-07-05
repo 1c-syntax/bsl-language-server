@@ -25,10 +25,13 @@ import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
@@ -47,20 +50,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @Component
-public class ServerContext {
+@RequiredArgsConstructor
+public abstract class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
+  @Setter
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
-  public ServerContext() {
-    this(null);
-  }
-
+  @Deprecated
   public ServerContext(@CheckForNull Path configurationRoot) {
     this.configurationRoot = configurationRoot;
   }
@@ -153,13 +155,12 @@ public class ServerContext {
     configurationMetadata.clear();
   }
 
-  public void setConfigurationRoot(@CheckForNull Path configurationRoot) {
-    this.configurationRoot = configurationRoot;
-  }
-
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
+
+  @Lookup
+  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content);
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file) {
@@ -170,7 +171,8 @@ public class ServerContext {
   private DocumentContext createDocumentContext(URI uri, String content) {
     URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = new DocumentContext(absoluteURI, content, this);
+    DocumentContext documentContext = lookupDocumentContext(absoluteURI, content);
+
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);
 
