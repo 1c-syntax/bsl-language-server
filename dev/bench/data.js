@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1593532194547,
+  "lastUpdate": 1593945170343,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4185,6 +4185,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6723308859521164",
             "extra": "mean: 58.39071281750997 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f88a0bbae889af3bd992ed4cf8181fbf6d02214d",
+          "message": "Merge pull request #1255 from EightM/feature/generateRegionsCodeAction\n\nFeature/generate regions code action",
+          "timestamp": "2020-07-05T13:26:20+03:00",
+          "tree_id": "9e78d4d82188977c86e9c54759230047e182c740",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f88a0bbae889af3bd992ed4cf8181fbf6d02214d"
+        },
+        "date": 1593945166815,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 59.184970696767174,
+            "unit": "sec",
+            "range": "stddev: 1.7908927122012797",
+            "extra": "mean: 59.184970696767174 sec\nrounds: 3"
           }
         ]
       }
