@@ -98,9 +98,14 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   )
   private boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS;
 
+  private String mainMessage;
+  private String indexWordLeftMsg;
+  private String indexWordRightMsg;
+  private String indexWordLeftRightMsg;
+
   private Set<String> setL = Set.of(listForCheckLeft.split(" "));
   private Set<String> setR = Set.of(listForCheckRight.split(" "));
-  private Set<String> setLr = Set.of(listForCheckLeftAndRight.split(" "));
+  private Set<String> setLR = Set.of(listForCheckLeftAndRight.split(" "));
   private final Set<String> setUnary = Set.of(UNARY.split(" "));
 
   public MissingSpaceDiagnostic(DiagnosticInfo info) {
@@ -110,10 +115,10 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   @Override
   public void check() {
 
-    String mainMessage = info.getMessage();
-    String indexWordLeftMsg = info.getResourceString("wordLeft");
-    String indexWordRightMsg = info.getResourceString("wordRight");
-    String indexWordLeftRightMsg = info.getResourceString("wordLeftAndRight");
+    mainMessage = info.getMessage();
+    indexWordLeftMsg = info.getResourceString("wordLeft");
+    indexWordRightMsg = info.getResourceString("wordRight");
+    indexWordLeftRightMsg = info.getResourceString("wordLeftAndRight");
 
     List<Token> tokens = documentContext.getTokens();
 
@@ -140,23 +145,16 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
       }
 
       // проверяем слева и справа
-      if (setLr.contains(tokenText)) {
+      if (setLR.contains(tokenText)) {
         if (!leftComputed) {
           noSpaceLeft = noSpaceLeft(tokens, token);
         }
         if (!rightComputed) {
           noSpaceRight = noSpaceRight(tokens, token);
         }
-        if (noSpaceLeft && !noSpaceRight) {
-          addDiagnostic(token, mainMessage, indexWordLeftMsg);
-        }
-        if (noSpaceLeft && noSpaceRight) {
-          addDiagnostic(token, mainMessage, indexWordLeftRightMsg);
-        }
-        if (!noSpaceLeft && noSpaceRight) {
-          addDiagnostic(token, mainMessage, indexWordRightMsg);
-        }
+        addDiagnosticLeftRight(token, noSpaceLeft, noSpaceRight);
       }
+
     }
 
   }
@@ -167,7 +165,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
     setL = Set.of(listForCheckLeft.split(" "));
     setR = Set.of(listForCheckRight.split(" "));
-    setLr = Set.of(listForCheckLeftAndRight.split(" "));
+    setLR = Set.of(listForCheckLeftAndRight.split(" "));
   }
 
   @Override
@@ -214,6 +212,21 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     diagnosticStorage.addDiagnostic(t, getErrorMessage(mainMessage, errorMessage, t.getText()));
   }
 
+  private void addDiagnosticLeftRight(Token token, boolean noSpaceLeft, boolean noSpaceRight) {
+    String errorMessage;
+    if (noSpaceLeft && !noSpaceRight) {
+      errorMessage = indexWordLeftMsg;
+    } else if (noSpaceLeft) {
+      errorMessage = indexWordLeftRightMsg;
+    } else if (noSpaceRight) {
+      errorMessage = indexWordRightMsg;
+    } else {
+      return;
+    }
+
+    addDiagnostic(token, mainMessage, errorMessage);
+  }
+
   private static boolean noSpaceLeft(List<Token> tokens, Token t) {
 
     Token previousToken = tokens.get(t.getTokenIndex() - 1);
@@ -239,7 +252,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
       }
 
       // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
-      if (!Boolean.TRUE.equals(allowMultipleCommas)
+      if (!allowMultipleCommas
         || t.getType() != BSLLexer.COMMA
         || nextToken.getType() != BSLLexer.COMMA) {
         return !StringUtils.isWhitespace(nextToken.getText());
