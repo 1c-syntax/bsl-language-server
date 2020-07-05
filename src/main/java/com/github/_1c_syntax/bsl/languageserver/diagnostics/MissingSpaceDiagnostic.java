@@ -119,21 +119,34 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
     for (Token token : tokens) {
 
-      // проверяем слева
+      boolean leftComputed = false;
+      boolean rightComputed = false;
+
+      boolean noSpaceLeft = false;
+      boolean noSpaceRight = false;
+
       String tokenText = token.getText();
-      if (setL.contains(tokenText) && noSpaceLeft(tokens, token)) {
+
+      // проверяем слева
+      if (setL.contains(tokenText) && (noSpaceLeft = noSpaceLeft(tokens, token))) {
+        leftComputed = true;
         addDiagnostic(token, mainMessage, indexWordLeftMsg);
       }
 
       // проверяем справа
-      boolean noSpaceRight = noSpaceRight(tokens, token);
-      if (setR.contains(tokenText) && noSpaceRight) {
+      if (setR.contains(tokenText) && (noSpaceRight = noSpaceRight(tokens, token))) {
+        rightComputed = true;
         addDiagnostic(token, mainMessage, indexWordRightMsg);
       }
 
       // проверяем слева и справа
       if (setLr.contains(tokenText)) {
-        boolean noSpaceLeft = noSpaceLeft(tokens, token);
+        if (!leftComputed) {
+          noSpaceLeft = noSpaceLeft(tokens, token);
+        }
+        if (!rightComputed) {
+          noSpaceRight = noSpaceRight(tokens, token);
+        }
         if (noSpaceLeft && !noSpaceRight) {
           addDiagnostic(token, mainMessage, indexWordLeftMsg);
         }
