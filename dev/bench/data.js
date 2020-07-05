@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1593945170343,
+  "lastUpdate": 1593945547515,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4216,6 +4216,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.7908927122012797",
             "extra": "mean: 59.184970696767174 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "61b2ae8da4649b948ab46ea1af32791b9f6fe34e",
+          "message": "Merge pull request #1261 from artbear/IsInRoleMethodDiagnostic-fix\n\nисправил дубль в именах IsInRoleDiagnosticDiagnostic + оптимизация",
+          "timestamp": "2020-07-05T13:30:40+03:00",
+          "tree_id": "a26b9723ced0d67344c39e7028d0e02cbc668006",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/61b2ae8da4649b948ab46ea1af32791b9f6fe34e"
+        },
+        "date": 1593945544100,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 57.82558878262838,
+            "unit": "sec",
+            "range": "stddev: 0.665079413321837",
+            "extra": "mean: 57.82558878262838 sec\nrounds: 3"
           }
         ]
       }
