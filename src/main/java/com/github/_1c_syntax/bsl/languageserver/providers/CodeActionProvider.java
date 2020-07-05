@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.codeactions.CodeActionSupplier;
 import com.github._1c_syntax.bsl.languageserver.codeactions.FixAllCodeActionSupplier;
+import com.github._1c_syntax.bsl.languageserver.codeactions.GenerateStandardRegionsSupplier;
 import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixCodeActionSupplier;
 import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
@@ -95,9 +96,12 @@ public final class CodeActionProvider {
       = new FixAllCodeActionSupplier(diagnosticProvider, quickFixSupplier);
     CodeActionSupplier quickFixCodeActionSupplier
       = new QuickFixCodeActionSupplier(diagnosticProvider, quickFixSupplier);
+    CodeActionSupplier generateStandardRegions
+      = new GenerateStandardRegionsSupplier();
 
     codeActions.addAll(quickFixCodeActionSupplier.getCodeActions(params, documentContext));
     codeActions.addAll(fixAllCodeActionSupplier.getCodeActions(params, documentContext));
+    codeActions.addAll(generateStandardRegions.getCodeActions(params, documentContext));
 
     return convertCodeActionListToEitherList(codeActions);
   }

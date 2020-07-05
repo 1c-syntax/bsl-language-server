@@ -29,13 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,40 +51,6 @@ import java.util.regex.Pattern;
 )
 public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
 
-  private static final Pattern PUBLIC_REGION_NAME =
-    createPattern(Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN);
-
-  private static final Pattern INTERNAL_REGION_NAME =
-    createPattern(Keywords.INTERNAL_REGION_RU, Keywords.INTERNAL_REGION_EN);
-
-  private static final Pattern PRIVATE_REGION_NAME =
-    createPattern(Keywords.PRIVATE_REGION_RU, Keywords.PRIVATE_REGION_EN);
-
-  private static final Pattern EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.EVENT_HANDLERS_REGION_RU, Keywords.EVENT_HANDLERS_REGION_EN);
-
-  private static final Pattern FORM_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_EVENT_HANDLERS_REGION_RU, Keywords.FORM_EVENT_HANDLERS_REGION_EN);
-
-  private static final Pattern FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_RU,
-      Keywords.FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_EN);
-
-  private static final Pattern FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_RU,
-      Keywords.FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_START_EN,
-      "^(?:%s|%s)[\\wа-яёЁ]*$");
-
-  private static final Pattern FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME =
-    createPattern(Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_RU, Keywords.FORM_COMMANDS_EVENT_HANDLERS_REGION_EN);
-
-  private static final Pattern VARIABLES_REGION_NAME =
-    createPattern(Keywords.VARIABLES_REGION_RU,
-      Keywords.VARIABLES_REGION_EN);
-
-  private static final Pattern INITIALIZE_REGION_NAME =
-    createPattern(Keywords.INITIALIZE_REGION_RU, Keywords.INITIALIZE_REGION_EN);
-
   private static final Map<ModuleType, Set<Pattern>> standardRegionsByModuleType = makeStandardRegions();
 
   public NonStandardRegionDiagnostic(DiagnosticInfo info) {
@@ -97,87 +61,10 @@ public class NonStandardRegionDiagnostic extends AbstractDiagnostic {
   private static Map<ModuleType, Set<Pattern>> makeStandardRegions() {
     Map<ModuleType, Set<Pattern>> standardRegions = new EnumMap<>(ModuleType.class);
     for (ModuleType moduleType : ModuleType.values()) {
-      standardRegions.put(moduleType, getStandardRegionsByModuleType(moduleType));
+      standardRegions.put(moduleType, Regions.getStandardRegionsPatternsByModuleType(moduleType));
     }
 
     return standardRegions;
-  }
-
-  private static Set<Pattern> getStandardRegionsByModuleType(ModuleType moduleType) {
-
-    if (moduleType == ModuleType.UNKNOWN) {
-      return Collections.emptySet();
-    }
-
-    Set<Pattern> standardRegions = new HashSet<>();
-
-    switch (moduleType) {
-      case FormModule:
-        standardRegions.add(VARIABLES_REGION_NAME);
-        standardRegions.add(FORM_EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(FORM_HEADER_ITEMS_EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(FORM_TABLE_ITEMS_EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(FORM_COMMANDS_EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(INITIALIZE_REGION_NAME);
-        break;
-      case ObjectModule:
-      case RecordSetModule:
-        standardRegions.add(VARIABLES_REGION_NAME);
-        standardRegions.add(PUBLIC_REGION_NAME);
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(INTERNAL_REGION_NAME);
-        standardRegions.add(INITIALIZE_REGION_NAME);
-        break;
-      case ValueManagerModule:
-        standardRegions.add(VARIABLES_REGION_NAME);
-        standardRegions.add(PUBLIC_REGION_NAME);
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(INTERNAL_REGION_NAME);
-        break;
-      case CommonModule:
-        standardRegions.add(PUBLIC_REGION_NAME);
-        standardRegions.add(INTERNAL_REGION_NAME);
-        break;
-      case ApplicationModule:
-      case ManagedApplicationModule:
-      case OrdinaryApplicationModule:
-        standardRegions.add(VARIABLES_REGION_NAME);
-        standardRegions.add(PUBLIC_REGION_NAME);
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        break;
-      case CommandModule:
-      case SessionModule:
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        break;
-      case ExternalConnectionModule:
-        standardRegions.add(PUBLIC_REGION_NAME);
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        break;
-      case ManagerModule:
-        standardRegions.add(PUBLIC_REGION_NAME);
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        standardRegions.add(INTERNAL_REGION_NAME);
-        break;
-      case HTTPServiceModule:
-        standardRegions.add(EVENT_HANDLERS_REGION_NAME);
-        break;
-      default:
-        // для Unknown ничего
-    }
-
-    // у всех типов модулей есть такая область
-    standardRegions.add(PRIVATE_REGION_NAME);
-    return standardRegions;
-  }
-
-  private static Pattern createPattern(String keywordRu, String keywordEn) {
-    return createPattern(keywordRu, keywordEn, "^(?:%s|%s)$");
-  }
-
-  private static Pattern createPattern(String keywordRu, String keywordEn, String template) {
-    return CaseInsensitivePattern.compile(
-      String.format(template, keywordRu, keywordEn)
-    );
   }
 
   @Override
