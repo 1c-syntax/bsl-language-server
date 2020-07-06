@@ -23,11 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -35,9 +35,10 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public abstract class QuickFixSupplier {
+public class QuickFixSupplier {
 
   private final Map<String, DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticConfiguration diagnosticConfiguration;
 
   // TODO: Рефакторинг апи квик-фиксов.
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
@@ -58,10 +59,7 @@ public abstract class QuickFixSupplier {
   @SuppressWarnings("unchecked")
   public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
-    return (QuickFixProvider) getDiagnosticInstance(diagnosticClass);
+    return (QuickFixProvider) diagnosticConfiguration.diagnostic(diagnosticClass);
   }
 
-  @Lookup
-  // TODO: refactor
-  public abstract BSLDiagnostic getDiagnosticInstance(Class<? extends BSLDiagnostic> diagnosticClass);
 }
