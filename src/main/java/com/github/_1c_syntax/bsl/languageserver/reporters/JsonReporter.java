@@ -19,47 +19,35 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
-public class TSLintReporter extends AbstractDiagnosticReporter {
+@Component
+public class JsonReporter implements DiagnosticReporter {
 
-  public static final String KEY = "tslint";
-
-  public TSLintReporter() {
-    super();
-  }
-
-  public TSLintReporter(Path outputDir) {
-    super(outputDir);
+  @Override
+  public String key() {
+    return "json";
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo) {
-    List<TSLintReportEntry> tsLintReport = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
-      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        TSLintReportEntry entry = new TSLintReportEntry(fileInfo.getPath().toString(), diagnostic);
-        tsLintReport.add(entry);
-      }
-    }
-    ObjectMapper mapper = new ObjectMapper();
+  public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    ObjectMapper mapper = new AnalysisInfoObjectMapper();
 
     try {
-      File reportFile = new File(outputDir.toFile(), "./bsl-tslint.json");
-      mapper.writeValue(reportFile, tsLintReport);
-      LOGGER.info("TSLint report saved to {}", reportFile.getAbsolutePath());
+      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
+      mapper.writeValue(reportFile, analysisInfo);
+      LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

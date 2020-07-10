@@ -19,27 +19,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.databind;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Сериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
- * См. {@link DiagnosticCode}
- */
-public class DiagnosticCodeSerializer extends JsonSerializer<Either<String, Number>> {
-  @Override
-  public void serialize(
-    Either<String, Number> value,
-    JsonGenerator gen,
-    SerializerProvider serializers
-  ) throws IOException {
-    gen.writeString(DiagnosticCode.getStringValue(value));
+@Component
+@RequiredArgsConstructor
+public class ReportersAggregator {
+  private final List<DiagnosticReporter> reporters;
+
+  public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    reporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo, outputDir));
+  }
+
+  public List<String> reporterKeys() {
+    return reporters.stream()
+      .map(DiagnosticReporter::key)
+      .collect(Collectors.toList());
   }
 }

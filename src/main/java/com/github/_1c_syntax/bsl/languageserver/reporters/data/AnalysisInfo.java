@@ -19,14 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters.data;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import lombok.Data;
 
 import java.time.LocalDateTime;

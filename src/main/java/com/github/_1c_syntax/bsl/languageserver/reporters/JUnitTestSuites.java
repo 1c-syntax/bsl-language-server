@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
@@ -32,8 +32,9 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;

@@ -25,10 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -90,9 +89,11 @@ import static picocli.CommandLine.Option;
 @RequiredArgsConstructor
 public class AnalyzeCommand implements Callable<Integer> {
 
+  private final ReportersAggregator aggregator;
+
   private static class ReportersKeys extends ArrayList<String> {
-    ReportersKeys() {
-      super(ReportersAggregator.reporterMap().keySet());
+    ReportersKeys(ReportersAggregator aggregator) {
+      super(aggregator.reporterKeys());
     }
   }
 
@@ -143,7 +144,6 @@ public class AnalyzeCommand implements Callable<Integer> {
   private boolean silentMode;
 
   private final LanguageServerConfiguration configuration;
-  private final DiagnosticProvider diagnosticProvider;
   private final ServerContext context;
 
   public Integer call() {
@@ -188,9 +188,7 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
     Path outputDir = Absolute.path(outputDirOption);
-    var reporters = Optional.ofNullable(reportersOptions).orElse(new String[0]);
-    ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
-    aggregator.report(analysisInfo);
+    aggregator.report(analysisInfo, outputDir);
     return 0;
   }
 

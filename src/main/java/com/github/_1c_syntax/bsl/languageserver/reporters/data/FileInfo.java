@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.reporters.data;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;

@@ -19,44 +19,39 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 
 @Slf4j
-public class GenericCoverageReporter extends AbstractDiagnosticReporter {
+@Component
+public class JUnitReporter implements DiagnosticReporter {
 
-  public static final String KEY = "genericCoverage";
-
-  public GenericCoverageReporter() {
-    super();
-  }
-
-  public GenericCoverageReporter(Path outputDir) {
-    super(outputDir);
+  @Override
+  public String key() {
+    return "junit";
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo) {
+  @SneakyThrows
+  public void report(AnalysisInfo analysisInfo, Path outputDir) {
 
-    GenericCoverageReport report = new GenericCoverageReport(analysisInfo);
+    JUnitTestSuites jUnitReport = new JUnitTestSuites(analysisInfo);
 
     ObjectMapper mapper = new XmlMapper();
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-    try {
-      File reportFile = new File(outputDir.toFile(), "genericCoverage.xml");
-      mapper.writeValue(reportFile, report);
-      LOGGER.info("Generic coverage report saved to {}", reportFile.getCanonicalPath());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    File reportFile = new File(outputDir.toFile(), "./bsl-junit.xml");
+    mapper.writeValue(reportFile, jUnitReport);
+    LOGGER.info("JUnit report saved to {}", reportFile.getCanonicalPath());
   }
 }

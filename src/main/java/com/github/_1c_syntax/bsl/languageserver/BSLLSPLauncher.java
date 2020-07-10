@@ -45,6 +45,12 @@ import static picocli.CommandLine.Command;
 
 @Command(
   name = "bsl-language-server",
+  subcommands = {
+    AnalyzeCommand.class,
+    FormatCommand.class,
+    VersionCommand.class,
+    LanguageServerStartCommand.class
+  },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
   footer = "@|green Copyright(c) 2018-2020|@",
@@ -69,10 +75,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
     defaultValue = "")
   private String configurationOption;
 
-  private final AnalyzeCommand analyzeCommand;
-  private final FormatCommand formatCommand;
-  private final LanguageServerStartCommand languageServerStartCommand;
-  private final VersionCommand versionCommand;
+  private final CommandLine.IFactory picocliFactory;
 
   public static void main(String[] args) {
     new SpringApplicationBuilder(BSLLSPLauncher.class)
@@ -83,11 +86,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
 
   @Override
   public void run(String[] args) {
-    var cmd = new CommandLine(this);
-    cmd.addSubcommand("analyze", analyzeCommand);
-    cmd.addSubcommand("format", formatCommand);
-    cmd.addSubcommand("lsp", languageServerStartCommand);
-    cmd.addSubcommand("version", versionCommand);
+    var cmd = new CommandLine(this, picocliFactory);
 
     // проверка использования дефолтной команды
     // если строка параметров пуста, то это точно вызов команды по умолчанию

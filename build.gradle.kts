@@ -51,6 +51,7 @@ val languageToolVersion = "4.2"
 dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("info.picocli:picocli-spring-boot-starter:4.4.0")
 
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")

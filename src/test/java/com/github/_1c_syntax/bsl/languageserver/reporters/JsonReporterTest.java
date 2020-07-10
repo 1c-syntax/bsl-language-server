@@ -19,40 +19,44 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
-class ConsoleReporterTest {
+class JsonReporterTest {
 
-  private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-  private final PrintStream originalOut = System.out;
+  private final File file = new File("./bsl-json.json");
 
   @BeforeEach
-  void setUpStreams() {
-    System.setOut(new PrintStream(outContent));
+  void setUp() {
+    FileUtils.deleteQuietly(file);
   }
 
   @AfterEach
-  void restoreStreams() {
-    System.setOut(originalOut);
+  void tearDown() {
+    FileUtils.deleteQuietly(file);
   }
 
   @Test
-  void report() {
+  void report() throws IOException {
 
     // given
     Diagnostic diagnostic = new Diagnostic(
@@ -64,19 +68,22 @@ class ConsoleReporterTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
-
     String sourceDir = ".";
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
-    ConsoleReporter reporter = new ConsoleReporter();
+    JsonReporter reporter = new JsonReporter();
 
     // when
     reporter.report(analysisInfo);
 
     // then
-    // FIXME How test logger?
-    // assertThat(outContent.toString()).containsIgnoringCase("Analysis date: ");
+    ObjectMapper mapper = new AnalysisInfoObjectMapper();
+
+    mapper.findAndRegisterModules();
+    AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
+
+    Assertions.assertThat(report.getFileinfos()).hasSize(1);
 
   }
 }

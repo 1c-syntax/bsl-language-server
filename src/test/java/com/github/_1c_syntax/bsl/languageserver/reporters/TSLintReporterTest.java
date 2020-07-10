@@ -19,14 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,12 +40,13 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class GenericCoverageTest {
+class TSLintReporterTest {
 
-  private final File file = new File("./genericCoverage.xml");
+  private final File file = new File("./bsl-tslint.json");
 
   @BeforeEach
   void setUp() {
@@ -57,33 +62,33 @@ public class GenericCoverageTest {
   void report() throws IOException {
 
     // given
-    String sourceDir = ".";
-    String filePath = "./src/test/resources/context/DocumentContextLocForCoverTest.bsl";
+    Diagnostic diagnostic = new Diagnostic(
+      Ranges.create(0, 1, 2, 3),
+      "message",
+      DiagnosticSeverity.Error,
+      "test-source",
+      "test"
+    );
 
-    // when
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>());
+    DocumentContext documentContext = TestUtils.getDocumentContext("");
+    String sourceDir = ".";
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
-    AbstractDiagnosticReporter reporter = new GenericCoverageReporter();
+    TSLintReporter reporter = new TSLintReporter();
+
+    // when
     reporter.report(analysisInfo);
 
     // then
-    ObjectMapper mapper = new XmlMapper();
-    GenericCoverageReport report = mapper.readValue(file, GenericCoverageReport.class);
+    ObjectMapper mapper = new ObjectMapper();
+    List<TSLintReportEntry> report = mapper.readValue(
+      file,
+      new TypeReference<ArrayList<TSLintReportEntry>>() {
+      }
+    );
 
-    assertThat(report).isNotNull();
-    assertThat(report.getVersion()).isEqualTo("1");
-    assertThat(report.getFile().size()).isEqualTo(1);
+    assertThat(report).hasSize(1);
 
-    GenericCoverageReport.GenericCoverageReportEntry fileEntry = report.getFile().get(0);
-
-    assertThat(fileEntry.getPath()).isEqualTo(fileInfo.getPath().toString());
-    assertThat(fileEntry.getLineToCover().size()).isEqualTo(12);
-
-    GenericCoverageReport.LineToCoverEntry lineToCover = fileEntry.getLineToCover().get(0);
-
-    assertThat(lineToCover.getLineNumber()).isEqualTo(5);
-    assertThat(lineToCover.isCovered()).isFalse();
   }
 }

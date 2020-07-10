@@ -19,18 +19,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.databind.AnalysisInfoObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
-import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,11 +35,14 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 
-class JsonReporterTest {
+import static org.assertj.core.api.Assertions.assertThat;
 
-  private final File file = new File("./bsl-json.json");
+public class GenericCoverageTest {
+
+  private final File file = new File("./genericCoverage.xml");
 
   @BeforeEach
   void setUp() {
@@ -58,31 +58,33 @@ class JsonReporterTest {
   void report() throws IOException {
 
     // given
-    Diagnostic diagnostic = new Diagnostic(
-      Ranges.create(0, 1, 2, 3),
-      "message",
-      DiagnosticSeverity.Error,
-      "test-source",
-      "test"
-    );
-
-    DocumentContext documentContext = TestUtils.getDocumentContext("");
     String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
-
-    JsonReporter reporter = new JsonReporter();
+    String filePath = "./src/test/resources/context/DocumentContextLocForCoverTest.bsl";
 
     // when
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>());
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
+
+    AbstractDiagnosticReporter reporter = new GenericCoverageReporter();
     reporter.report(analysisInfo);
 
     // then
-    ObjectMapper mapper = new AnalysisInfoObjectMapper();
+    ObjectMapper mapper = new XmlMapper();
+    GenericCoverageReport report = mapper.readValue(file, GenericCoverageReport.class);
 
-    mapper.findAndRegisterModules();
-    AnalysisInfo report = mapper.readValue(file, AnalysisInfo.class);
+    assertThat(report).isNotNull();
+    assertThat(report.getVersion()).isEqualTo("1");
+    assertThat(report.getFile().size()).isEqualTo(1);
 
-    Assertions.assertThat(report.getFileinfos()).hasSize(1);
+    GenericCoverageReport.GenericCoverageReportEntry fileEntry = report.getFile().get(0);
 
+    assertThat(fileEntry.getPath()).isEqualTo(fileInfo.getPath().toString());
+    assertThat(fileEntry.getLineToCover().size()).isEqualTo(12);
+
+    GenericCoverageReport.LineToCoverEntry lineToCover = fileEntry.getLineToCover().get(0);
+
+    assertThat(lineToCover.getLineNumber()).isEqualTo(5);
+    assertThat(lineToCover.isCovered()).isFalse();
   }
 }

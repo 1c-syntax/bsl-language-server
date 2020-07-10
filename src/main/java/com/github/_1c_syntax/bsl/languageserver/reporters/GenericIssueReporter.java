@@ -19,41 +19,44 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 @Slf4j
-public class GenericIssueReporter extends AbstractDiagnosticReporter {
+@Component
+@RequiredArgsConstructor
+public class GenericIssueReporter implements DiagnosticReporter {
 
-  public static final String KEY = "generic";
+  private final Map<String, DiagnosticInfo> diagnosticInfos;
 
-  public GenericIssueReporter() {
-    super();
-  }
-
-  public GenericIssueReporter(Path outputDir) {
-    super(outputDir);
+  @Override
+  public String key() {
+    return "generic";
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo) {
+  @SneakyThrows
+  public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    GenericIssueReport report = new GenericIssueReport(analysisInfo, diagnosticInfos);
 
-    GenericIssueReport report = new GenericIssueReport(analysisInfo);
     ObjectMapper mapper = new ObjectMapper();
-    try {
-      File reportFile = new File(outputDir.toFile(), "bsl-generic-json.json");
-      mapper.writeValue(reportFile, report);
-      LOGGER.info("Generic issue report saved to {}", reportFile.getCanonicalPath());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
+    File reportFile = new File(outputDir.toFile(), "bsl-generic-json.json");
+    mapper.writeValue(reportFile, report);
+    LOGGER.info("Generic issue report saved to {}", reportFile.getCanonicalPath());
   }
 
 }

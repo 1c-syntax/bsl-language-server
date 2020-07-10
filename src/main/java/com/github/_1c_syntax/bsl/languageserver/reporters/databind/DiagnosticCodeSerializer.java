@@ -19,28 +19,27 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.databind;
+package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.io.IOException;
 
 /**
- * Десериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
+ * Сериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}
  */
-public class DiagnosticCodeDeserializer extends JsonDeserializer<Either<String, Number>> {
-
+public class DiagnosticCodeSerializer extends JsonSerializer<Either<String, Number>> {
   @Override
-  public Either<String, Number> deserialize(
-    JsonParser p,
-    DeserializationContext ctxt
+  public void serialize(
+    Either<String, Number> value,
+    JsonGenerator gen,
+    SerializerProvider serializers
   ) throws IOException {
-    return Either.forLeft(p.getValueAsString());
+    gen.writeString(DiagnosticCode.getStringValue(value));
   }
-
 }

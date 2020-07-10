@@ -19,28 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
-import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import org.eclipse.lsp4j.Diagnostic;
 
-import java.nio.file.Path;
-
-@Slf4j
-public class ConsoleReporter extends AbstractDiagnosticReporter {
-
-  public static final String KEY = "console";
-
-  public ConsoleReporter() {
+/**
+ * Преднастроенный object mapper для (де)сериализации класса {@link AnalysisInfo}
+ */
+public class AnalysisInfoObjectMapper extends ObjectMapper {
+  public AnalysisInfoObjectMapper() {
     super();
-  }
-
-  public ConsoleReporter(Path outputDir) {
-    super(outputDir);
-  }
-
-  @Override
-  public void report(AnalysisInfo analysisInfo) {
-    LOGGER.info("Analysis date: {}", analysisInfo.getDate());
-    LOGGER.info("File info:\n{}", analysisInfo.getFileinfos());
+    _mixIns.addLocalDefinition(Diagnostic.class, DiagnosticMixIn.class);
   }
 }

@@ -19,22 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
+
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-public abstract class AbstractDiagnosticReporter {
-  protected final Path outputDir;
-
-  protected AbstractDiagnosticReporter() {
-    this.outputDir = Paths.get("./");
-  }
-
-  protected AbstractDiagnosticReporter(Path outputDir) {
-    this.outputDir = outputDir;
-  }
-
-  public abstract void report(AnalysisInfo analysisInfo);
-
+public interface DiagnosticReporter {
+  String key();
+  void report(AnalysisInfo analysisInfo, Path outputDir);
 }

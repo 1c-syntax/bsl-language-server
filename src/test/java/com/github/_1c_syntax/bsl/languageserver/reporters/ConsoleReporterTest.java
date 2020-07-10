@@ -19,46 +19,41 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+class ConsoleReporterTest {
 
-class TSLintReporterTest {
-
-  private final File file = new File("./bsl-tslint.json");
+  private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+  private final PrintStream originalOut = System.out;
 
   @BeforeEach
-  void setUp() {
-    FileUtils.deleteQuietly(file);
+  void setUpStreams() {
+    System.setOut(new PrintStream(outContent));
   }
 
   @AfterEach
-  void tearDown() {
-    FileUtils.deleteQuietly(file);
+  void restoreStreams() {
+    System.setOut(originalOut);
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     Diagnostic diagnostic = new Diagnostic(
@@ -70,24 +65,19 @@ class TSLintReporterTest {
     );
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
+
     String sourceDir = ".";
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
-    TSLintReporter reporter = new TSLintReporter();
+    ConsoleReporter reporter = new ConsoleReporter();
 
     // when
-    reporter.report(analysisInfo);
+    reporter.report(analysisInfo, outputDir);
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
-    List<TSLintReportEntry> report = mapper.readValue(
-      file,
-      new TypeReference<ArrayList<TSLintReportEntry>>() {
-      }
-    );
-
-    assertThat(report).hasSize(1);
+    // FIXME How test logger?
+    // assertThat(outContent.toString()).containsIgnoringCase("Analysis date: ");
 
   }
 }

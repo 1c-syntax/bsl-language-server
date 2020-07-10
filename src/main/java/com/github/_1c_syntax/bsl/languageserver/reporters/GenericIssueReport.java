@@ -19,56 +19,28 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.reporter;
+package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GenericIssueReport {
-
-  private static final String RULETYPE_BUG = "BUG";
-  private static final String RULETYPE_CODE_SMELL = "CODE_SMELL";
-  private static final String SEVERITY_INFO = "INFO";
-  private static final String SEVERITY_CRITICAL = "CRITICAL";
-  private static final String SEVERITY_MAJOR = "MAJOR";
-  private static final String SEVERITY_MINOR = "MINOR";
-
-  private static final DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(Collections.emptyMap());
-  private static final Map<DiagnosticSeverity, String> severityMap = new EnumMap<>(DiagnosticSeverity.class);
-  private static final Map<DiagnosticSeverity, String> typeMap = new EnumMap<>(DiagnosticSeverity.class);
-
-  static {
-    severityMap.put(DiagnosticSeverity.Error, SEVERITY_CRITICAL);
-    severityMap.put(DiagnosticSeverity.Hint, SEVERITY_INFO);
-    severityMap.put(DiagnosticSeverity.Information, SEVERITY_MINOR);
-    severityMap.put(DiagnosticSeverity.Warning, SEVERITY_MAJOR);
-  }
-
-  static {
-    typeMap.put(DiagnosticSeverity.Error, RULETYPE_BUG);
-    typeMap.put(DiagnosticSeverity.Hint, RULETYPE_CODE_SMELL);
-    typeMap.put(DiagnosticSeverity.Information, RULETYPE_CODE_SMELL);
-    typeMap.put(DiagnosticSeverity.Warning, RULETYPE_CODE_SMELL);
-  }
 
   @Getter
   @JsonProperty("issues")
@@ -80,18 +52,18 @@ public class GenericIssueReport {
     this.issues = new ArrayList<>(issues);
   }
 
-  public GenericIssueReport(AnalysisInfo analysisInfo) {
-    List<GenericIssueEntry> listGenericIssueEntry = new ArrayList<>();
+  public GenericIssueReport(AnalysisInfo analysisInfo, Map<String, DiagnosticInfo> diagnosticInfos) {
+    issues = new ArrayList<>();
     for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         GenericIssueEntry entry = new GenericIssueEntry(
           fileInfo.getPath().toString(),
-          diagnostic
+          diagnostic,
+          diagnosticInfos.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
         );
-        listGenericIssueEntry.add(entry);
+        issues.add(entry);
       }
     }
-    issues = listGenericIssueEntry;
   }
 
   @Value
@@ -123,20 +95,13 @@ public class GenericIssueReport {
       this.secondaryLocations = new ArrayList<>(secondaryLocations);
     }
 
-    public GenericIssueEntry(String fileName, Diagnostic diagnostic) {
-      DiagnosticSeverity localSeverity = diagnostic.getSeverity();
-
-
+    public GenericIssueEntry(String fileName, Diagnostic diagnostic, DiagnosticInfo diagnosticInfo) {
       engineId = diagnostic.getSource();
-
-      ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
-      severity = severityMap.get(localSeverity);
-      type = typeMap.get(localSeverity);
+      ruleId = diagnosticInfo.getCode().getStringValue();
+      severity = diagnosticInfo.getSeverity().name();
+      type = diagnosticInfo.getType().name();
       primaryLocation = new Location(fileName, diagnostic);
-
-      effortMinutes = diagnosticSupplier.getDiagnosticInfo(diagnostic.getCode())
-        .map(DiagnosticInfo::getMinutesToFix)
-        .orElse(0);
+      effortMinutes = diagnosticInfo.getMinutesToFix();
 
       List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {
@@ -181,7 +146,6 @@ public class GenericIssueReport {
 
   @Value
   static class TextRange {
-
     int startLine;
     int endLine;
     int startColumn;
@@ -200,7 +164,6 @@ public class GenericIssueReport {
     }
 
     public TextRange(Range range) {
-
       Position startPosition = range.getStart();
       Position endPosition = range.getEnd();
 
@@ -208,8 +171,7 @@ public class GenericIssueReport {
       startColumn = startPosition.getCharacter();
 
       endLine = endPosition.getLine() + 1;
-      endColumn = endPosition.getCharacter(); // пока без лага
-
+      endColumn = endPosition.getCharacter();
     }
 
   }
