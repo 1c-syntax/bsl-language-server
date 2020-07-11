@@ -23,10 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -36,7 +36,9 @@ import java.util.stream.Stream;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public abstract class DiagnosticComputer implements Computer<List<Diagnostic>> {
+public class DiagnosticComputer implements Computer<List<Diagnostic>> {
+
+  private final DiagnosticsConfiguration diagnosticsConfiguration;
 
   @Override
   public List<Diagnostic> compute() {
@@ -48,7 +50,7 @@ public abstract class DiagnosticComputer implements Computer<List<Diagnostic>> {
 
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
-    return getDiagnosticInstances(documentContext).parallelStream()
+    return diagnosticsConfiguration.diagnostics(documentContext).parallelStream()
         .flatMap((BSLDiagnostic diagnostic) -> {
           try {
             return diagnostic.getDiagnostics(documentContext).stream();
@@ -68,7 +70,4 @@ public abstract class DiagnosticComputer implements Computer<List<Diagnostic>> {
         .collect(Collectors.toList());
 
   }
-
-  @Lookup("diagnostics")
-  public abstract List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext);
 }
