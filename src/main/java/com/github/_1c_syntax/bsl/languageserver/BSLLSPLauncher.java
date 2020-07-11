@@ -27,12 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -81,10 +79,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   private int exitCode;
 
   public static void main(String[] args) {
-    var applicationContext = new SpringApplicationBuilder(BSLLSPLauncher.class)
-      .logStartupInfo(false)
-      .bannerMode(Banner.Mode.OFF)
-      .run(args);
+    var applicationContext = new SpringApplication(BSLLSPLauncher.class).run(args);
     System.exit(
       SpringApplication.exit(applicationContext)
     );

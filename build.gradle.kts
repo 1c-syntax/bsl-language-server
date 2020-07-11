@@ -15,7 +15,6 @@ plugins {
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.28.0"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
     id("io.freefair.javadoc-links") version "5.1.0"
     id("org.springframework.boot") version "2.3.1.RELEASE"
 }
@@ -127,14 +126,7 @@ tasks.jar {
         attributes["Implementation-Version"] = archiveVersion.get()
     }
 
-    enabled = false
-    dependsOn(tasks.shadowJar)
-}
-
-tasks.shadowJar {
-    project.configurations.implementation.get().isCanBeResolved = true
-    configurations = listOf(project.configurations["implementation"])
-    archiveClassifier.set("")
+    dependsOn(tasks.bootJar)
 }
 
 tasks.test {
@@ -254,7 +246,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             artifact(tasks["sourcesJar"])
-            artifact(tasks["shadowJar"])
+            artifact(tasks["bootJar"])
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
