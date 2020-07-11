@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
@@ -80,6 +81,7 @@ public class LanguageServerStartCommand implements Callable<Integer> {
   private final LanguageServerConfiguration configuration;
   private final LanguageServer server;
 
+  @SneakyThrows
   public Integer call() {
 
     File configurationFile = new File(configurationOption);
@@ -90,8 +92,8 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     LanguageClient client = launcher.getRemoteProxy();
     ((LanguageClientAware) server).connect(client);
 
-    launcher.startListening();
-    return -1;
+    launcher.startListening().get();
+    return 0;
   }
 
   private static Launcher<LanguageClient> getLanguageClientLauncher(
