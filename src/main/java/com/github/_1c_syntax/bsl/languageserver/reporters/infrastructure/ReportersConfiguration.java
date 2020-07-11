@@ -19,39 +19,31 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.reporters;
+package com.github._1c_syntax.bsl.languageserver.reporters.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
+import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
-import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
-@RequiredArgsConstructor
-public class ReportersAggregator {
+@Configuration
+public class ReportersConfiguration {
 
-  @Autowired
-  private final List<DiagnosticReporter> reporters;
-
-  @Autowired
-  @Qualifier("filteredReporters")
+  @Bean
   @Lazy
-  // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.
-  private final List<DiagnosticReporter> filteredReporters;
-
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    filteredReporters.forEach(diagnosticReporter -> diagnosticReporter.report(analysisInfo, outputDir));
-  }
-
-  public List<String> reporterKeys() {
-    return reporters.stream()
-      .map(DiagnosticReporter::key)
+  public List<DiagnosticReporter> filteredReporters(
+    Collection<DiagnosticReporter> allReporters,
+    AnalyzeCommand command
+  ) {
+    List<String> reporterKeys = Arrays.asList(command.getReportersOptions());
+    return allReporters.stream()
+      .filter(diagnosticReporter -> reporterKeys.contains(diagnosticReporter.key()))
       .collect(Collectors.toList());
   }
 }

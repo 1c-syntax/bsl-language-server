@@ -69,6 +69,6 @@ public abstract class DiagnosticComputer implements Computer<List<Diagnostic>> {
 
   }
 
-  @Lookup
+  @Lookup("diagnostics")
   public abstract List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext);
 }

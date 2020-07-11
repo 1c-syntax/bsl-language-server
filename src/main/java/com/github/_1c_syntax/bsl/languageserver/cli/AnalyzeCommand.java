@@ -89,8 +89,6 @@ import static picocli.CommandLine.Option;
 @RequiredArgsConstructor
 public class AnalyzeCommand implements Callable<Integer> {
 
-  private final ReportersAggregator aggregator;
-
   private static class ReportersKeys extends ArrayList<String> {
     ReportersKeys(ReportersAggregator aggregator) {
       super(aggregator.reporterKeys());
@@ -136,13 +134,14 @@ public class AnalyzeCommand implements Callable<Integer> {
     paramLabel = "<keys>",
     completionCandidates = ReportersKeys.class,
     description = "Reporter key (${COMPLETION-CANDIDATES})")
-  private String[] reportersOptions;
+  private String[] reportersOptions = {};
 
   @Option(
     names = {"-q", "--silent"},
     description = "Silent mode")
   private boolean silentMode;
 
+  private final ReportersAggregator aggregator;
   private final LanguageServerConfiguration configuration;
   private final ServerContext context;
 
@@ -190,6 +189,10 @@ public class AnalyzeCommand implements Callable<Integer> {
     Path outputDir = Absolute.path(outputDirOption);
     aggregator.report(analysisInfo, outputDir);
     return 0;
+  }
+
+  public String[] getReportersOptions() {
+    return reportersOptions.clone();
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
