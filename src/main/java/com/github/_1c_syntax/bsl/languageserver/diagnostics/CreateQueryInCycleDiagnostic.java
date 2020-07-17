@@ -26,25 +26,22 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.V8BasicType;
-import com.github._1c_syntax.bsl.languageserver.utils.V8Type;
-import com.github._1c_syntax.bsl.languageserver.utils.V8TypeFromPresentationSupplier;
-import com.github._1c_syntax.bsl.languageserver.utils.V8TypeFromVariableSupplier;
-import com.github._1c_syntax.bsl.languageserver.utils.V8TypeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.scope.CodeFlowType;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.scope.ProgramScope;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.scope.VariableDefinition;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.types.V8Type;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.types.V8TypeFromPresentationSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.types.V8TypeHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import lombok.ToString;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.ArrayDeque;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -55,7 +52,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.PERFORMANCE
   }
 )
-public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic implements V8TypeFromPresentationSupplier, V8TypeFromVariableSupplier {
+public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern EXECUTE_CALL_PATTERN = CaseInsensitivePattern.compile("Выполнить|Execute");
   private static final Pattern QUERY_BUILDER_PATTERN =
     CaseInsensitivePattern.compile("ПостроительЗапроса|QueryBuilder");
@@ -66,56 +63,91 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic impl
   private static final String GLOBAL_SCOPE = "GLOBAL_SCOPE";
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
-  private VariableScope currentScope;
+  private ProgramScope programScope = new ProgramScope();
 
   public CreateQueryInCycleDiagnostic(DiagnosticInfo info) {
     super(info);
+    programScope.getTypeSuppliers().add(getTypeSupplier());
   }
 
-  private static V8TypeFromPresentationSupplier getTypeSupplier() {
+  public static V8TypeFromPresentationSupplier getTypeSupplier() {
     return (typeName) -> {
-      if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
-        return Optional.of(NecessaryTypes.QUERY_BUILDER_TYPE);
+      if (QUERY_PATTERN.matcher(typeName).matches()) {
+        return Optional.of(NecessaryTypes.QUERY_TYPE);
       } else if (REPORT_BUILDER_PATTERN.matcher(typeName).matches()) {
         return Optional.of(NecessaryTypes.REPORT_BUILDER_TYPE);
-      } else if (QUERY_PATTERN.matcher(typeName).matches()) {
-        return Optional.of(NecessaryTypes.QUERY_TYPE);
+      } else if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
+        return Optional.of(NecessaryTypes.QUERY_BUILDER_TYPE);
       }
       return Optional.empty();
     };
   }
 
+  private static BSLParserRuleContext getProperErrorContext(BSLParser.AccessCallContext ctx) {
+    BSLParserRuleContext errorContext = null;
+    BSLParserRuleContext parent = (BSLParserRuleContext) ctx.getParent();
+    if (parent instanceof BSLParser.CallStatementContext) {
+      errorContext = parent;
+    } else if (parent instanceof BSLParser.ModifierContext) {
+      BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
+      errorContext = (BSLParserRuleContext) callModifier.getParent();
+    }
+    return errorContext;
+  }
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    currentScope = new VariableScope();
-    currentScope.enterScope(GLOBAL_SCOPE);
+    programScope.enterScope(GLOBAL_SCOPE);
     ParseTree result = super.visitFile(ctx);
-    currentScope = null;
+    programScope = null;
     return result;
   }
 
   @Override
   public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
-    currentScope.enterScope(MODULE_SCOPE);
+    programScope.enterScope(MODULE_SCOPE);
     ParseTree result = super.visitFileCodeBlock(ctx);
-    currentScope.leaveScope();
+    programScope.leaveScope();
     return result;
   }
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-    currentScope.enterScope(ctx.procDeclaration().subName().getText());
+    programScope.enterScope(ctx.procDeclaration().subName().getText());
     ParseTree result = super.visitProcedure(ctx);
-    currentScope.leaveScope();
+    programScope.leaveScope();
     return result;
   }
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-    currentScope.enterScope(ctx.funcDeclaration().subName().getText());
+    programScope.enterScope(ctx.funcDeclaration().subName().getText());
     ParseTree result = super.visitFunction(ctx);
-    currentScope.leaveScope();
+    programScope.leaveScope();
     return result;
+  }
+
+  @Override
+  public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
+    if (ctx.ifBranch() != null) {
+      visitExpression(ctx.ifBranch().expression());
+      programScope.enterFlowScope(CodeFlowType.CONDITIONAL);
+      visitCodeBlock(ctx.ifBranch().codeBlock());
+      programScope.leaveFlowScope();
+    }
+    for (var branch : ctx.elsifBranch()) {
+      visitExpression(branch.expression());
+      programScope.enterFlowScope(CodeFlowType.CONDITIONAL);
+      visitCodeBlock(branch.codeBlock());
+      programScope.leaveFlowScope();
+    }
+    if (ctx.elseBranch() != null) {
+      programScope.enterFlowScope(CodeFlowType.CONDITIONAL);
+      visitCodeBlock(ctx.elseBranch().codeBlock());
+      programScope.leaveFlowScope();
+    }
+
+    return null;
   }
 
   @Override
@@ -124,32 +156,34 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic impl
       return super.visitAssignment(ctx);
     }
 
-    BSLParser.MemberContext firstMember = ctx.expression().member(0);
-    if (firstMember == null) {
+    Set<V8Type> types = V8TypeHelper.getTypesFromExpressionContext(ctx.expression(), programScope);
+    if (types == null) {
       return super.visitAssignment(ctx);
     }
+
     String variableName = ctx.lValue().getText();
-    VariableDefinition currentVariable = new VariableDefinition(variableName);
-    currentVariable.addDeclaration(ctx.lValue());
 
-    if (firstMember.complexIdentifier() != null) {
-      currentVariable.types.addAll(V8TypeHelper.getTypesFromComplexIdentifier(firstMember.complexIdentifier(), this));
-    } else if (firstMember.constValue() != null) {
-      currentVariable.types.add(V8TypeHelper.getConstValueType(firstMember.constValue()));
+    VariableDefinition currentVariable = programScope.getVariableByName(variableName)
+      .orElseGet(() -> programScope.addVariable(VariableDefinition.fromLValue(ctx.lValue())));
+
+    if (programScope.codeFlowInConditionalBlock()) {
+      currentVariable.addAll(types);
     } else {
-      currentVariable.addType(V8BasicType.UNDEFINED_TYPE);
+      currentVariable.replaceAll(types);
     }
-
-    currentScope.addVariable(currentVariable);
     return super.visitAssignment(ctx);
   }
 
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
-    Optional.ofNullable(ctx)
-      .map(e -> e.children)
-      .stream()
-      .flatMap(Collection::stream)
-      .forEach(t -> t.accept(this));
+  @Override
+  public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
+    return Optional.ofNullable(ctx)
+      .map(super::visitCodeBlock).orElse(null);
+  }
+
+  @Override
+  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
+    return Optional.ofNullable(ctx)
+      .map(super::visitExpression).orElse(null);
   }
 
   @Override
@@ -157,86 +191,51 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic impl
     if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()) {
       return super.visitAccessCall(ctx);
     }
-    if (!currentScope.codeFlowInCycle()) {
+    if (!programScope.codeFlowInCycle()) {
       return super.visitAccessCall(ctx);
     }
 
-    String variableName = null;
-    BSLParserRuleContext errorContext = null;
-    BSLParserRuleContext parent = (BSLParserRuleContext) ctx.getParent();
-    if (parent instanceof BSLParser.CallStatementContext) {
-      errorContext = parent;
-      variableName = V8TypeHelper.getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent, ctx);
-    } else if (parent instanceof BSLParser.ModifierContext) {
-      BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
-      errorContext = (BSLParserRuleContext) callModifier.getParent();
-      variableName = V8TypeHelper.getVariableNameFromModifierContext(callModifier);
+    BSLParserRuleContext errorContext = getProperErrorContext(ctx);
+    if (errorContext != null) {
+      String variableName = V8TypeHelper.getVariableNameFromAccessCallContext(ctx);
+      programScope.getVariableByName(variableName)
+        .filter(Predicate.not((VariableDefinition definition) -> Collections.disjoint(definition.getTypes(), NecessaryTypes.FULL_COLLECTION)))
+        .ifPresent(e -> diagnosticStorage.addDiagnostic(errorContext));
     }
-    Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
-    BSLParserRuleContext finalErrorContext = errorContext;
-    if (finalErrorContext != null) {
-      variableDefinition.ifPresent((VariableDefinition definition) -> {
-
-        if (definition.types.contains(NecessaryTypes.QUERY_BUILDER_TYPE)
-          || definition.types.contains(NecessaryTypes.REPORT_BUILDER_TYPE)
-          || definition.types.contains(NecessaryTypes.QUERY_TYPE)) {
-          diagnosticStorage.addDiagnostic(finalErrorContext);
-        }
-
-      });
-    }
-
     return super.visitAccessCall(ctx);
   }
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
-    boolean alreadyInCycle = currentScope.codeFlowInCycle();
-    currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if (alreadyInCycle) {
-      Optional.ofNullable(ctx.expression())
-        .ifPresent(e -> e.accept(this));
-    }
-    visitDescendantCodeBlock(ctx.codeBlock());
-    currentScope.flowMode.pop();
+    visitExpression(ctx.expression());
+    programScope.enterFlowScope(CodeFlowType.CYCLE);
+    visitCodeBlock(ctx.codeBlock());
+    programScope.leaveFlowScope();
     return ctx;
   }
 
   @Override
   public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-    currentScope.flowMode.push(CodeFlowType.CYCLE);
+    programScope.enterFlowScope(CodeFlowType.CYCLE);
     ParseTree result = super.visitWhileStatement(ctx);
-    currentScope.flowMode.pop();
+    programScope.leaveFlowScope();
     return result;
   }
 
   @Override
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
-    boolean alreadyInCycle = currentScope.codeFlowInCycle();
-    currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if (alreadyInCycle) {
-      ctx.expression()
-        .forEach(e -> e.accept(this));
-    }
-    visitDescendantCodeBlock(ctx.codeBlock());
-    currentScope.flowMode.pop();
+
+    ctx.expression()
+      .forEach(this::visitExpression);
+    programScope.enterFlowScope(CodeFlowType.CYCLE);
+    visitCodeBlock(ctx.codeBlock());
+    programScope.leaveFlowScope();
     return ctx;
-  }
-
-  @Override
-  public Optional<V8Type> getTypeFromPresentation(String presentation) {
-    return getTypeSupplier().getTypeFromPresentation(presentation);
-  }
-
-  @Override
-  public Optional<Set<V8Type>> getTypesFromVariable(String variableName) {
-    return currentScope.getVariableByName(variableName)
-      .map(variableDefinition -> variableDefinition.types);
   }
 
   enum NecessaryTypes implements V8Type {
     REPORT_BUILDER_TYPE("ReportBuilder"), QUERY_BUILDER_TYPE("QueryBuilder"), QUERY_TYPE("Query");
-
+    public static Set<NecessaryTypes> FULL_COLLECTION = Set.of(QUERY_TYPE, REPORT_BUILDER_TYPE, QUERY_BUILDER_TYPE);
     String name;
 
     NecessaryTypes(String name) {
@@ -244,105 +243,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic impl
     }
 
     @Override
-    public String presentation() {
+    public String getName() {
       return this.name;
     }
   }
 
-  public enum CodeFlowType {
-    LINEAR, CYCLE
-  }
-
-  @ToString
-  public static class VariableDefinition {
-    private final String variableName;
-    private final Set<V8Type> types = new HashSet<>();
-    private ParseTree firstDeclaration;
-
-    VariableDefinition(String variableName) {
-      this.variableName = variableName;
-    }
-
-    public void addType(V8Type type) {
-      this.types.add(type);
-    }
-
-    public void addDeclaration(ParseTree firstDeclaration) {
-      if (this.firstDeclaration == null) {
-        this.firstDeclaration = firstDeclaration;
-      }
-    }
-  }
-
-  private static class Scope {
-    private final String name;
-
-    private final HashMap<String, VariableDefinition> variables = new HashMap<>();
-
-    public Scope(String name) {
-      this.name = name;
-    }
-
-    public void addVariable(VariableDefinition variableDefinition, boolean typesMerge) {
-      this.variables.merge(
-        variableDefinition.variableName,
-        variableDefinition,
-        (VariableDefinition key, VariableDefinition value) -> {
-          if (!typesMerge) {
-            key.types.clear();
-          }
-          key.types.addAll(value.types);
-
-          return key;
-        });
-    }
-
-    public String getName() {
-      return name;
-    }
-  }
-
-  private static class VariableScope extends ArrayDeque<Scope> {
-    private final Deque<CodeFlowType> flowMode = new ArrayDeque<>();
-
-    public boolean codeFlowInCycle() {
-      final CodeFlowType flowType = flowMode.peek();
-      if (flowType == null) {
-        return false;
-      }
-      return flowType == CodeFlowType.CYCLE;
-    }
-
-    public Optional<VariableDefinition> getVariableByName(String variableName) {
-      return Optional.ofNullable(current().variables.get(variableName));
-    }
-
-    public void addVariable(VariableDefinition variableDefinition) {
-      final CodeFlowType flowType = flowMode.peek();
-      if (flowType == null) {
-        return;
-      }
-      this.current().addVariable(variableDefinition, flowType == CodeFlowType.CYCLE);
-    }
-
-    public void enterScope(String name) {
-      Scope newScope = new Scope(name);
-      if (!this.isEmpty()) {
-        Scope prevScope = this.peek();
-        newScope.variables.putAll(prevScope.variables);
-      }
-      this.push(newScope);
-      flowMode.push(CodeFlowType.LINEAR);
-    }
-
-    public void leaveScope() {
-      this.pop();
-      flowMode.pop();
-    }
-
-    public Scope current() {
-      return this.peek();
-    }
-
-  }
 }

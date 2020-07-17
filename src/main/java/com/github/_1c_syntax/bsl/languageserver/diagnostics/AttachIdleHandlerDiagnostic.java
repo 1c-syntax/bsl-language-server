@@ -26,10 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.V8TypeHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.types.V8TypeHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
 
@@ -46,44 +47,70 @@ import java.util.regex.Pattern;
   }
 
 )
-public class AttachIdleHandlerDiagnostic extends AbstractFindMethodDiagnostic {
+public class AttachIdleHandlerDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
-    "ПодключитьОбработчикОжидания|AttachIdleHandler|ОтключитьОбработчикОжидания|DetachIdleHandler"
+  private static final Pattern MESSAGE_PATTERN_ATTACH = CaseInsensitivePattern.compile(
+    "ПодключитьОбработчикОжидания|AttachIdleHandler"
+  );
+  private static final Pattern MESSAGE_PATTERN_DETACH = CaseInsensitivePattern.compile(
+    "ОтключитьОбработчикОжидания|DetachIdleHandler"
   );
 
-  /**
-   * Конструктор по умолчанию
-   *
-   * @param info служебная информация о диагностике
-   */
-  AttachIdleHandlerDiagnostic(DiagnosticInfo info) {
-    super(info, MESSAGE_PATTERN);
+  public AttachIdleHandlerDiagnostic(DiagnosticInfo info) {
+    super(info);
   }
 
   @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+
+    if (checkGlobalMethodCall(ctx)) {
+      diagnosticStorage.addDiagnostic(ctx.methodName(), getMessage(ctx));
+    }
+
+    return super.visitGlobalMethodCall(ctx);
+  }
+
+  /**
+   * Получает сообщение диагностики для пользователя
+   *
+   * @param ctx контекст узла
+   * @return В случае если передан контекст метода, параметризованное сообщение,
+   * первым параметром которого <b>всегда</b> будет имя метода.
+   * В противном случае возвращается обычное сообщение без параметров.
+   */
+  protected String getMessage(BSLParser.GlobalMethodCallContext ctx) {
+    return ctx.methodName().getText();
+  }
+
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (!getMethodPattern().matcher(ctx.methodName().getText()).matches()) {
+    boolean isAttachHandler = MESSAGE_PATTERN_ATTACH.matcher(ctx.methodName().getText()).matches();
+    if (!(isAttachHandler
+      || MESSAGE_PATTERN_DETACH.matcher(ctx.methodName().getText()).matches())) {
       return false;
     }
+
     var callContext = ctx.doCall();
     // Проверка на существование метода в текущем контексте без параметров
     boolean hasError = V8TypeHelper.getStringConstantFromFirstParam(callContext)
-      .get().map(methodName -> {
-        boolean methodExist = documentContext.getSymbolTree().getMethods()
-          .stream()
-          .anyMatch(e -> e.getName().equalsIgnoreCase(methodName)
-            && e.getParameters().size() == 0);
-        return !methodExist;
-      }).orElse(false);
+      .get().map(methodName -> documentContext.getSymbolTree().getMethods()
+        .stream()
+        .noneMatch(method -> method.getName().equalsIgnoreCase(methodName) && method.getParameters().size() == 0)
+      ).orElse(false);
+
+    if (!isAttachHandler) {
+      return hasError;
+    }
 
     // Проверка что при таймауте меньше 1 секунды, третий параметр не равен Ложь
     hasError = hasError || V8TypeHelper.getFloatNumberConstantFromParam(callContext, 1)
       .get()
-      .filter(e -> e < 1.0)
-      .map(e -> V8TypeHelper.getBooleanConstantFromParam(callContext, 2)
-        .get().map(be -> be.equals(Boolean.FALSE))
+      .filter(timeout -> timeout < 1.0f)
+      // TODO change while got context
+      .map(e -> V8TypeHelper.getBooleanConstantFromParam(callContext, 2, Boolean.FALSE)
+        // .map(e -> V8TypeHelper.get(Boolean.FALSE, (constValue) -> constValue.TRUE() != null).apply(callContext,2)
+        .get()
+        .map(be -> be.equals(Boolean.FALSE))
         .orElse(false)
       )
       .orElse(false);

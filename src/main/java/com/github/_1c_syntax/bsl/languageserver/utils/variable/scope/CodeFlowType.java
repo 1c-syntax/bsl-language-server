@@ -19,11 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.utils.variable.scope;
 
-import java.util.Optional;
-import java.util.Set;
-
-public interface V8TypeFromVariableSupplier extends V8TypeSupplier {
-  Optional<Set<V8Type>> getTypesFromVariable(String variableName);
+public enum CodeFlowType {
+  LINEAR, CYCLE, CONDITIONAL
 }

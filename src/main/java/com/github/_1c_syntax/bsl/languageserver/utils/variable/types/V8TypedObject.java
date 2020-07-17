@@ -19,35 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.utils.variable.types;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-
-class AttachIdleHandlerDiagnosticTest extends AbstractDiagnosticTest<AttachIdleHandlerDiagnostic> {
-  AttachIdleHandlerDiagnosticTest() {
-    super(AttachIdleHandlerDiagnostic.class);
-  }
-
-
-  @Test
-  void test() {
-
-    List<Diagnostic> diagnostics = getDiagnostics();
-
-    assertThat(diagnostics).hasSize(5);
-    assertThat(diagnostics, true)
-      .hasRange(9, 4, 9, 32)
-      .hasRange(38, 0, 38, 27)
-      .hasRange(42, 0, 42, 28)
-      .hasRange(44, 0, 44, 28)
-      .hasRange(52, 0, 52, 28);
-
-
-  }
-
+public interface V8TypedObject {
+  V8Type getType();
 }

@@ -19,10 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.utils.variable.values;
 
-import java.util.Optional;
-
-public interface V8TypeSupplier {
-
+public interface V8NamedObject {
+   String getName();
 }

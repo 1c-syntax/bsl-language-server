@@ -19,10 +19,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.utils;
+package com.github._1c_syntax.bsl.languageserver.utils.variable.types;
 
-import java.util.Optional;
+import com.github._1c_syntax.bsl.languageserver.utils.variable.values.V8NamedObject;
 
-public interface V8TypeFromPresentationSupplier extends V8TypeSupplier {
-  Optional<V8Type> getTypeFromPresentation(String presentation);
+public interface V8Type extends V8NamedObject {
 }
