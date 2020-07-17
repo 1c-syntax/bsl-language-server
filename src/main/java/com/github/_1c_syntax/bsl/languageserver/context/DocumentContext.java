@@ -206,15 +206,9 @@ public class DocumentContext {
   }
 
   public List<Diagnostic> getComputedDiagnostics() {
-    diagnosticsLock.lock();
-    List<Diagnostic> diagnosticList;
-    if (diagnostics.isPresent()) {
-      diagnosticList = diagnostics.getOrCompute();
-    } else {
-      diagnosticList = Collections.emptyList();
-    }
-    diagnosticsLock.unlock();
-    return diagnosticList;
+    return Optional
+      .ofNullable(diagnostics.get())
+      .orElseGet(Collections::emptyList);
   }
 
   public void rebuild(String content) {
