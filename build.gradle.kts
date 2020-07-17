@@ -43,7 +43,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 
 val jacksonVersion = "2.10.3"
 val junitVersion = "5.6.1"
-val languageToolVersion = "4.2"
+val languageToolVersion = "5.0"
 
 dependencies {
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
