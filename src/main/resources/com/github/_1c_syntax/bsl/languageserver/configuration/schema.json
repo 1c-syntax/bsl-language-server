@@ -23,6 +23,9 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "AttachIdleHandler": {
+                    "$ref": "parameters-schema.json#/definitions/AttachIdleHandler"
+                },
                 "BeginTransactionBeforeTryCatch": {
                     "$ref": "parameters-schema.json#/definitions/BeginTransactionBeforeTryCatch"
                 },

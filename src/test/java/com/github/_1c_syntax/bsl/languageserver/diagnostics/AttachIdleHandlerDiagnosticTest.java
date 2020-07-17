@@ -28,29 +28,26 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-
-class CreateQueryInCycleDiagnosticTest extends AbstractDiagnosticTest<CreateQueryInCycleDiagnostic> {
-
-  CreateQueryInCycleDiagnosticTest() {
-    super(CreateQueryInCycleDiagnostic.class);
+class AttachIdleHandlerDiagnosticTest extends AbstractDiagnosticTest<AttachIdleHandlerDiagnostic> {
+  AttachIdleHandlerDiagnosticTest() {
+    super(AttachIdleHandlerDiagnostic.class);
   }
+
 
   @Test
   void test() {
+
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
-      .hasRange(4, 8, 4, 36)
-      .hasRange(27, 23, 27, 47)
-      .hasRange(44, 4, 44, 22)
-      .hasRange(48, 4, 48, 22)
-      .hasRange(59, 4, 59, 18)
-      .hasRange(60, 4, 60, 24)
-      .hasRange(66, 4, 66, 22)
-      .hasRange(73, 2, 73, 30)
-      .hasRange(79, 4, 79, 34)
-      .hasRange(90, 41, 90, 71)
-      .hasRange(103, 4, 103, 25);
+      .hasRange(9, 4, 9, 32)
+      .hasRange(38, 0, 38, 27)
+      .hasRange(42, 0, 42, 28)
+      .hasRange(44, 0, 44, 28)
+      .hasRange(52, 0, 52, 28);
+
+
   }
+
 }

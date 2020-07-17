@@ -8,15 +8,16 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **113**
+Total: **114**
 
-* Error: **35**
+* Error: **36**
 * Code smell: **71**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
+| [AttachIdleHandler](AttachIdleHandler.md) | Usage AttachIdleHandler | Yes | Info | Error | `error`<br/>`unpredictable` |
 | [BeginTransactionBeforeTryCatch](BeginTransactionBeforeTryCatch.md) | Violating transaction rules for the 'BeginTransaction' method | Yes | Major | Error | `standard` |
 | [CachedPublic](CachedPublic.md) | Cached public methods | Yes | Major | Code smell | `standard`<br/>`design` |
 | [CanonicalSpellingKeywords](CanonicalSpellingKeywords.md) | Canonical keyword writing | Yes | Info | Code smell | `standard` |
