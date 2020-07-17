@@ -36,16 +36,10 @@ import java.util.stream.Stream;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DiagnosticComputer implements Computer<List<Diagnostic>> {
+public class DiagnosticComputer {
 
   private final DiagnosticsConfiguration diagnosticsConfiguration;
 
-  @Override
-  public List<Diagnostic> compute() {
-    return null;
-  }
-
-  @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
 
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();

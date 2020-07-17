@@ -62,11 +62,6 @@ public abstract class ServerContext {
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
-  @Deprecated
-  public ServerContext(@CheckForNull Path configurationRoot) {
-    this.configurationRoot = configurationRoot;
-  }
-
   public void populateContext() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");

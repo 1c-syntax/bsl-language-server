@@ -68,7 +68,7 @@ public class DocumentContext {
   private final ServerContext context;
   private final DiagnosticComputer diagnosticComputer;
 
-  private FileType fileType;
+  private final FileType fileType;
   private Tokenizer tokenizer;
 
   private final ReentrantLock computeLock = new ReentrantLock();
