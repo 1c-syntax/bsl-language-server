@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Component;
@@ -58,7 +57,7 @@ import static picocli.CommandLine.Command;
 @SpringBootApplication
 @Component
 @RequiredArgsConstructor
-public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
+public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -76,13 +75,9 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   private String configurationOption;
 
   private final CommandLine.IFactory picocliFactory;
-  private int exitCode;
 
   public static void main(String[] args) {
-    var applicationContext = new SpringApplication(BSLLSPLauncher.class).run(args);
-    System.exit(
-      SpringApplication.exit(applicationContext)
-    );
+    new SpringApplication(BSLLSPLauncher.class).run(args);
   }
 
   @Override
@@ -112,12 +107,10 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
       }
     }
 
-    exitCode = cmd.execute(args);
-  }
-
-  @Override
-  public int getExitCode() {
-    return exitCode;
+    int result = cmd.execute(args);
+    if (result >= 0) {
+      System.exit(result);
+    }
   }
 
   @NotNull
