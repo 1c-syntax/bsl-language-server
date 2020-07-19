@@ -35,9 +35,12 @@ import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +48,11 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class GenericReporterTest {
+
+  @Autowired
+  private GenericIssueReporter reporter;
 
   private final File file = new File("./bsl-generic-json.json");
 
@@ -96,10 +103,8 @@ class GenericReporterTest {
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics);
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
-    AbstractDiagnosticReporter reporter = new GenericIssueReporter();
-
     // when
-    reporter.report(analysisInfo);
+    reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
     ObjectMapper mapper = new ObjectMapper();

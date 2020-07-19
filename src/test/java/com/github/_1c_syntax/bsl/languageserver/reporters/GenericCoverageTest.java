@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,8 +67,8 @@ public class GenericCoverageTest {
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>());
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
-    AbstractDiagnosticReporter reporter = new GenericCoverageReporter();
-    reporter.report(analysisInfo);
+    DiagnosticReporter reporter = new GenericCoverageReporter();
+    reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
     ObjectMapper mapper = new XmlMapper();

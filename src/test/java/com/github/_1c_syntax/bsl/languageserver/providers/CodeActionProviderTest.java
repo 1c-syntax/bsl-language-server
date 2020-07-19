@@ -21,11 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -39,39 +37,39 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class CodeActionProviderTest {
 
+  @Autowired
+  private CodeActionProvider codeActionProvider;
+
   @Test
-  void testGetCodeActions() throws IOException {
+  void testGetCodeActions() {
 
     // given
     String filePath = "./src/test/resources/providers/codeAction.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     final LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext).stream()
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
       .filter(diagnostic -> {
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
           CanonicalSpellingKeywordsDiagnostic.class,
-          configuration.getLanguage()
+          configuration
         );
         DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
         return diagnostic.getCode().equals(diagnosticCode);
       })
       .collect(Collectors.toList());
-
-    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
@@ -98,15 +96,10 @@ class CodeActionProviderTest {
   }
 
   @Test
-  void testEmptyDiagnosticList() throws IOException {
+  void testEmptyDiagnosticList() {
     // given
     String filePath = "./src/test/resources/providers/codeAction.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-    DiagnosticProvider diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    CodeActionProvider codeActionProvider = new CodeActionProvider(diagnosticProvider, quickFixSupplier);
 
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
@@ -124,6 +117,6 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
-      .hasSize(0);
+      .isEmpty();
   }
 }

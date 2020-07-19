@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -73,7 +74,7 @@ class ConsoleReporterTest {
     ConsoleReporter reporter = new ConsoleReporter();
 
     // when
-    reporter.report(analysisInfo, outputDir);
+    reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
     // FIXME How test logger?

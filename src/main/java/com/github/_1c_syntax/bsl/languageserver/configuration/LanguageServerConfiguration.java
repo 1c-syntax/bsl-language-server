@@ -115,6 +115,8 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
+    // non-standard getter
+    this.documentLinkOptions.setUseDevSite(configuration.documentLinkOptions.useDevSite());
   }
 
   public static LanguageServerConfiguration create() {

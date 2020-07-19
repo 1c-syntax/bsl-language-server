@@ -29,19 +29,25 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class DocumentSymbolProviderTest {
+
+  @Autowired
+  private DocumentSymbolProvider documentSymbolProvider;
 
   @Test
   void testDocumentSymbol() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
-    List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = DocumentSymbolProvider.getDocumentSymbols(documentContext);
+    List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
 
     assertThat(documentSymbols).hasSize(9);
 

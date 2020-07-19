@@ -32,6 +32,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,12 +42,16 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 public class MethodSymbolComputerTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
+
+  @Autowired
+  private ServerContext serverContext;
 
   @Test
   void testMethodSymbolComputer() {
@@ -240,7 +246,7 @@ public class MethodSymbolComputerTest {
   void testMdoRef() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);
-    var serverContext = new ServerContext(path);
+    serverContext.setConfigurationRoot(path);
     checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 5);
     checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 1);
     checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1", 1);

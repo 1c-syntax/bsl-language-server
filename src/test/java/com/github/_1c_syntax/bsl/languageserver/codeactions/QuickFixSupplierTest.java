@@ -21,24 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CommentedCodeDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class QuickFixSupplierTest {
+
+  @Autowired
+  private QuickFixSupplier quickFixSupplier;
 
   @Test
   void testGetQuickFixClass() {
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-
     Optional<Class<? extends QuickFixProvider>> quickFixClass =
       quickFixSupplier.getQuickFixClass(new DiagnosticCode("NON_EXISTING"));
     assertThat(quickFixClass).isEmpty();

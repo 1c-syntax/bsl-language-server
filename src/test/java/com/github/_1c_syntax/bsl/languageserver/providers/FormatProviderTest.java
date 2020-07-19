@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -32,6 +32,8 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextEdit;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +44,11 @@ import java.util.StringJoiner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class FormatProviderTest {
+
+  @Autowired
+  private FormatProvider formatProvider;
 
   @Test
   void testRangeFormat() throws IOException {
@@ -68,14 +74,13 @@ class FormatProviderTest {
 
     formattedFileContent = joiner.toString();
 
-    DocumentContext documentContext = new DocumentContext(
+    DocumentContext documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
-      fileContent,
-      new ServerContext()
+      fileContent
     );
 
     // when
-    List<TextEdit> textEdits = FormatProvider.getRangeFormatting(params, documentContext);
+    List<TextEdit> textEdits = formatProvider.getRangeFormatting(params, documentContext);
 
     // then
     assertThat(textEdits).hasSize(1);
@@ -94,13 +99,13 @@ class FormatProviderTest {
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
     String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
 
-    DocumentContext documentContext = new DocumentContext(
+    DocumentContext documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
-      fileContent, new ServerContext()
+      fileContent
     );
 
     // when
-    List<TextEdit> textEdits = FormatProvider.getFormatting(params, documentContext);
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
 
     // then
     assertThat(textEdits).hasSize(1);

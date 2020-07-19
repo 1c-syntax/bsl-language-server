@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,7 +79,7 @@ class TSLintReporterTest {
     TSLintReporter reporter = new TSLintReporter();
 
     // when
-    reporter.report(analysisInfo);
+    reporter.report(analysisInfo, Path.of(sourceDir));
 
     // then
     ObjectMapper mapper = new ObjectMapper();
