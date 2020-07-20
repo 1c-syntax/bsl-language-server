@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
@@ -54,6 +55,8 @@ class DiagnosticsTest {
   private LanguageServerConfiguration configuration;
   @Autowired
   protected ServerContext context;
+  @Autowired
+  protected DiagnosticsConfiguration diagnosticsConfiguration;
 
   @Test
   void configureNullDryRun() {
@@ -349,9 +352,9 @@ class DiagnosticsTest {
 
     configuration.getDiagnosticsOptions().setParameters(rules);
 
-    assertThat(documentContext.getDiagnostics())
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .hasSizeGreaterThan(10)
-      .flatExtracting(Object::getClass)
+      .flatExtracting(BSLDiagnostic::getClass)
       .doesNotContain(TypoDiagnostic.class)
       .doesNotContain(TooManyReturnsDiagnostic.class)
       .contains(TernaryOperatorUsageDiagnostic.class)
