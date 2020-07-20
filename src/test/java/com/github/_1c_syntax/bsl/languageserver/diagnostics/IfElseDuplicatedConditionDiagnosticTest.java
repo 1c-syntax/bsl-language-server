@@ -38,8 +38,6 @@ class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticTest<IfE
     super(IfElseDuplicatedConditionDiagnostic.class);
   }
 
-  private final String relatedMessage = diagnosticInstance.getInfo().getResourceString("identicalConditionRelatedMessage");
-
   @Test
   void test() {
 
@@ -90,6 +88,8 @@ class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticTest<IfE
     Diagnostic diagnostic,
     Range diagnosticRange,
     List<Range> diagnosticRelatedInformation) {
+
+    String relatedMessage = diagnosticInstance.getInfo().getResourceString("identicalConditionRelatedMessage");
 
     assertThat(diagnostic.getRange()).isEqualTo(diagnosticRange);
 
