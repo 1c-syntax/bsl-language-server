@@ -77,7 +77,7 @@ public final class DiagnosticParameterInfo {
   }
 
   static List<DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
-    return Arrays.stream(diagnosticInfo.getDiagnosticClass().getFields())
+    return Arrays.stream(diagnosticInfo.getDiagnosticClass().getDeclaredFields())
       .filter(field -> field.isAnnotationPresent(DiagnosticParameter.class))
       .map(field -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))
       .collect(Collectors.toList());
