@@ -24,23 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
-import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
-import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,18 +42,18 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-class DiagnosticSupplierTest {
+class DiagnosticsTest {
 
+  @Autowired
+  private Map<String, DiagnosticInfo> diagnosticInfos;
   @Autowired
   private LanguageServerConfiguration configuration;
-
   @Autowired
-  private List<DiagnosticInfo> diagnosticInfos;
+  protected ServerContext context;
 
   @Test
   void configureNullDryRun() {
@@ -80,9 +73,8 @@ class DiagnosticSupplierTest {
   @Test
   void testAllDiagnosticsHaveMetadataAnnotation() {
     // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticInfos.stream()
-      .map(DiagnosticInfo::getDiagnosticClass)
-      .collect(Collectors.toList());
+    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticInfos.values().stream()
+      .map(DiagnosticInfo::getDiagnosticClass).collect(Collectors.toList());
 
     // then
     assertThat(diagnosticClasses)
@@ -93,77 +85,33 @@ class DiagnosticSupplierTest {
 
   @Test
   void testAddDiagnosticsHaveDiagnosticName() {
-    // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticInfos.stream()
-      .map(DiagnosticInfo::getDiagnosticClass)
-      .collect(Collectors.toList());
-
-    // then
-    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass);
-        String diagnosticName;
-        try {
-          diagnosticName = info.getName();
-        } catch (MissingResourceException e) {
-          throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have diagnosticName", e);
-        }
-        assertThat(diagnosticName).isNotEmpty();
-      }
-    )).doesNotThrowAnyException();
+    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
+      -> assertThat(diagnosticInfo.getName()).isNotEmpty()))
+      .doesNotThrowAnyException();
   }
 
   @Test
   void testAllDiagnosticsHaveDiagnosticMessage() {
-//    // when
-//    List<BSLDiagnostic> diagnosticInstances = DiagnosticSupplier.getDiagnosticClasses().stream()
-//      .map(diagnosticSupplier::getDiagnosticInstance)
-//      .collect(Collectors.toList());
-//
-//    // then
-//    assertThatCode(() -> diagnosticInstances.forEach(diagnostic -> {
-//        String diagnosticMessage;
-//        try {
-//          diagnosticMessage = diagnostic.getInfo().getMessage();
-//        } catch (MissingResourceException e) {
-//          throw new RuntimeException(diagnostic.getClass().getSimpleName() + " does not have diagnosticMessage", e);
-//        }
-//        assertThat(diagnosticMessage).isNotEmpty();
-//      }
-//    )).doesNotThrowAnyException();
+    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
+      -> assertThat(diagnosticInfo.getMessage()).isNotEmpty()))
+      .doesNotThrowAnyException();
   }
 
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
-
-//    // when
-//    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
-//
-//    // then
-//    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-//        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass);
-//        String diagnosticDescription;
-//        try {
-//          diagnosticDescription = info.getDescription();
-//        } catch (MissingResourceException e) {
-//          throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have diagnostic description file", e);
-//        }
-//        assertThat(diagnosticDescription).isNotEmpty();
-//      }
-//    )).doesNotThrowAnyException();
+    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
+      -> assertThat(diagnosticInfo.getDescription()).isNotEmpty()))
+      .doesNotThrowAnyException();
   }
 
   @Test
   void testAllDiagnosticsHaveTags() {
-//    // when
-//    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
-//
-//    // then
-//    assertThat(diagnosticClasses)
-//      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) -> {
-//        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(diagnosticClass);
-//        return diagnosticInfo.getTags().size() > 0
-//          && diagnosticInfo.getTags().size() <= 3;
-//      });
+    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
+      -> assertThat(
+      diagnosticInfo.getTags().size() > 0
+        && diagnosticInfo.getTags().size() <= 3)
+      .isTrue()))
+      .doesNotThrowAnyException();
   }
 
   @Test
@@ -390,28 +338,25 @@ class DiagnosticSupplierTest {
 
   @Test
   void testDiagnosticModeExcept() {
-//    // given
-//    var lsConfiguration = LanguageServerConfiguration.create();
-//    var documentContext = TestUtils.getDocumentContext("");
-//    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
-//
-//    // when
-//    lsConfiguration.getDiagnosticsOptions().setMode(Mode.EXCEPT);
-//    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
-//    rules.put("Typo", Either.forLeft(false));
-//    rules.put("TooManyReturns", Either.forLeft(true));
-//
-//    lsConfiguration.getDiagnosticsOptions().setParameters(rules);
-//    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
-//
-//    assertThat(diagnostics)
-//      .hasSizeGreaterThan(10)
-//      .flatExtracting(Object::getClass)
-//      .doesNotContain(TypoDiagnostic.class)
-//      .doesNotContain(TooManyReturnsDiagnostic.class)
-//      .contains(TernaryOperatorUsageDiagnostic.class)
-//      .contains(EmptyRegionDiagnostic.class)
-//    ;
+    // given
+    var documentContext = TestUtils.getDocumentContext("", context);
+
+    // when
+    configuration.getDiagnosticsOptions().setMode(Mode.EXCEPT);
+    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
+    rules.put("Typo", Either.forLeft(false));
+    rules.put("TooManyReturns", Either.forLeft(true));
+
+    configuration.getDiagnosticsOptions().setParameters(rules);
+
+    assertThat(documentContext.getDiagnostics())
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .doesNotContain(TypoDiagnostic.class)
+      .doesNotContain(TooManyReturnsDiagnostic.class)
+      .contains(TernaryOperatorUsageDiagnostic.class)
+      .contains(EmptyRegionDiagnostic.class)
+    ;
   }
 
   @Test
@@ -420,29 +365,21 @@ class DiagnosticSupplierTest {
   }
 
   void allParametersHaveResources(Language language) {
+    var config = spy(configuration);
+    when(config.getLanguage()).thenReturn(language);
 
-//    // when
-//    List<Class<? extends BSLDiagnostic>> diagnosticClasses = DiagnosticSupplier.getDiagnosticClasses();
-//
-//    // then
-//    assertThatCode(() -> diagnosticClasses.forEach(diagnosticClass -> {
-//        DiagnosticInfo info = new DiagnosticInfo(diagnosticClass, language);
-//        boolean allParametersHaveDescription;
-//        try {
-//          allParametersHaveDescription = info.getParameters().stream()
-//            .map(DiagnosticParameterInfo::getDescription)
-//            .noneMatch(String::isEmpty);
-//        } catch (MissingResourceException e) {
-//          throw new RuntimeException(diagnosticClass.getSimpleName() + " does not have parameters description in resources", e);
-//        }
-//        assertThat(allParametersHaveDescription).isTrue();
-//      }
-//    )).doesNotThrowAnyException();
+    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo -> {
+      boolean allParametersHaveDescription;
 
+      try {
+        var info = new DiagnosticInfo(diagnosticInfo.getDiagnosticClass(), config);
+        allParametersHaveDescription = info.getParameters().stream()
+          .map(DiagnosticParameterInfo::getDescription)
+          .noneMatch(String::isEmpty);
+      } catch (MissingResourceException e) {
+        throw new RuntimeException(diagnosticInfo.getDiagnosticClass().getSimpleName() + " does not have parameters description in resources", e);
+      }
+      assertThat(allParametersHaveDescription).isTrue();
+    })).doesNotThrowAnyException();
   }
-
-//  private DiagnosticSupplier getDefaultDiagnosticSupplier() {
-//    return new DiagnosticSupplier(LanguageServerConfiguration.create());
-//  }
-
 }
