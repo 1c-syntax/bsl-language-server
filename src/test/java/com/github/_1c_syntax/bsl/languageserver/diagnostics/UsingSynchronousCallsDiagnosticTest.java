@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestApplicationContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
@@ -129,11 +130,10 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     when(configuration.getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
     when(serverContext.getConfiguration()).thenReturn(configuration);
 
-    return TestUtils.getDocumentContext(
-      testFile.toUri(),
-      getText(),
-      serverContext
-    );
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+
+    return documentContext;
   }
 
 }
