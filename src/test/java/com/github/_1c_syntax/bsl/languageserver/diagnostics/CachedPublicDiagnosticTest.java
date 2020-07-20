@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
 import com.github._1c_syntax.utils.Absolute;
@@ -123,12 +124,12 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
 
 
-    ServerContext serverContext = new ServerContext(path);
-    var configuration = serverContext.getConfiguration();
-    documentContext = spy(new DocumentContext(
+    initServerContext(path);
+    var configuration = context.getConfiguration();
+    documentContext = spy(TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      serverContext
+      context
     ));
 
 

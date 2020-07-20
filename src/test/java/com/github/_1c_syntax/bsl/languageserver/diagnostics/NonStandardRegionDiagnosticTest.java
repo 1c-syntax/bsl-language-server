@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -231,10 +232,11 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       pathByModuleType.getOrDefault(moduleType, "Module.bsl")
     );
 
-    return new DocumentContext(
+    initServerContext(CONFIGURATION_PATH.toRealPath());
+    return TestUtils.getDocumentContext(
       tempFile.toRealPath().toUri(),
       FileUtils.readFileToString(tempFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(CONFIGURATION_PATH.toRealPath())
+      context
     );
   }
 }

@@ -40,6 +40,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -65,6 +66,10 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   protected void initServerContext(String path) {
     var configurationRoot = Absolute.path(path);
+    initServerContext(configurationRoot);
+  }
+
+  protected void initServerContext(Path configurationRoot) {
     context.setConfigurationRoot(configurationRoot);
     context.populateContext();
   }

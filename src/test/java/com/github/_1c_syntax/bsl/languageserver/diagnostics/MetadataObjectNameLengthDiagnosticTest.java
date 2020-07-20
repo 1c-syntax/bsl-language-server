@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -150,12 +151,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
 
     initServerContext(PATH_TO_METADATA);
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
-
-    if (content == null) {
-      content = FileUtils.readFileToString(testFile, StandardCharsets.UTF_8);
-    }
-
-    documentContext = spy(new DocumentContext(testFile.toURI(), content, context));
+    documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));
 
     module = spy(Objects.requireNonNull(context).getConfiguration().getModulesByObject().get(documentContext.getUri()));
   }

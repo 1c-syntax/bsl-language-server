@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -92,10 +93,11 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
     // when
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic.bsl").toAbsolutePath();
-    DocumentContext newDocumentContext = new DocumentContext(
+    initServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath());
+    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath())
+      context
     );
 
     List<Diagnostic> diagnostics = getDiagnostics(newDocumentContext);
@@ -135,10 +137,11 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
       StandardCharsets.UTF_8);
 
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic836.bsl").toAbsolutePath();
-    DocumentContext newDocumentContext = new DocumentContext(
+    initServerContext(tempDir.toAbsolutePath());
+    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(tempDir.toAbsolutePath())
+      context
     );
 
     List<Diagnostic> diagnostics = getDiagnostics(newDocumentContext);
@@ -178,10 +181,11 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
       StandardCharsets.UTF_8);
 
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic837.bsl").toAbsolutePath();
-    DocumentContext newDocumentContext = new DocumentContext(
+    initServerContext(tempDir.toAbsolutePath());
+    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(tempDir.toAbsolutePath())
+      context
     );
 
     List<Diagnostic> diagnostics = getDiagnostics(newDocumentContext);

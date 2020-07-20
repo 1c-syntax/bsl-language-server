@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.Absolute;
@@ -90,12 +91,13 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     var path = Absolute.path(PATH_TO_METADATA);
     var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
-    var serverContext = spy(new ServerContext(path));
+    initServerContext(path);
+    var serverContext = spy(context);
     var configuration = spy(serverContext.getConfiguration());
     when(configuration.getModalityUseMode()).thenReturn(useMode);
     when(serverContext.getConfiguration()).thenReturn(configuration);
 
-    return new DocumentContext(
+    return TestUtils.getDocumentContext(
       testFile.toUri(),
       getText(),
       serverContext
