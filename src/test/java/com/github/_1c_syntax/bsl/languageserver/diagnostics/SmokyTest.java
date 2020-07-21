@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -45,13 +46,14 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class SmokyTest {
 
   @Autowired
   private LanguageServerConfiguration configuration;
 
   @Autowired
-  private List<DiagnosticInfo> diagnosticInfos;
+  private Map<String, DiagnosticInfo> diagnosticInfos;
 
   @Test
   @ExpectSystemExitWithStatus(0)
@@ -97,7 +99,8 @@ class SmokyTest {
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.values()
+      .stream()
       .map(DiagnosticInfo::getCode)
       .collect(Collectors.toMap(
         diagnosticCode -> diagnosticCode.getStringValue(),
