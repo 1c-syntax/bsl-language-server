@@ -25,16 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,7 +63,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     configuration.put("maxMetadataObjectNameLength", 10);
     diagnosticInstance.configure(configuration);
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", null);
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", " ");
 
     // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -80,7 +79,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     configuration.put("maxMetadataObjectNameLength", 90);
     diagnosticInstance.configure(configuration);
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", null);
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", " ");
 
     // given
     when(module.getName()).thenReturn(LONG_NAME);
@@ -117,7 +116,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   })
   void test(String modulePath) {
 
-    getDocumentContextFromFile(modulePath, null);
+    getDocumentContextFromFile(modulePath, " ");
 
     // given
     when(module.getName()).thenReturn(LONG_NAME);
@@ -134,7 +133,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   @Test
   void testNegative() {
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", null);
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", " ");
 
     // given
     when(module.getName()).thenReturn("Short");
@@ -152,7 +151,6 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     initServerContext(PATH_TO_METADATA);
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
     documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));
-
     module = spy(Objects.requireNonNull(context).getConfiguration().getModulesByObject().get(documentContext.getUri()));
   }
 
