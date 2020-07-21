@@ -21,28 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
+import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -50,299 +52,218 @@ import static org.mockito.Mockito.when;
 class DiagnosticsTest {
 
   @Autowired
-  private Map<String, DiagnosticInfo> diagnosticInfos;
-  @Autowired
   private LanguageServerConfiguration configuration;
   @Autowired
   protected ServerContext context;
   @Autowired
   protected DiagnosticsConfiguration diagnosticsConfiguration;
 
-  @Test
-  void configureNullDryRun() {
-    // given
-//    List<BSLDiagnostic> diagnosticInstances = DiagnosticSupplier.getDiagnosticClasses().stream()
-//      .map(diagnosticSupplier::getDiagnosticInstance)
-//      .collect(Collectors.toList());
-//
-//    // when
-//    diagnosticInstances.forEach(diagnostic -> diagnostic.configure(null));
+  private DocumentContext documentContext;
 
-    // then
-    // should run without runtime errors
-  }
-
-
-  @Test
-  void testAllDiagnosticsHaveMetadataAnnotation() {
-    // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticInfos.values().stream()
-      .map(DiagnosticInfo::getDiagnosticClass).collect(Collectors.toList());
-
-    // then
-    assertThat(diagnosticClasses)
-      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
-        diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class)
-      );
-  }
-
-  @Test
-  void testAddDiagnosticsHaveDiagnosticName() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getName()).isNotEmpty()))
-      .doesNotThrowAnyException();
-  }
-
-  @Test
-  void testAllDiagnosticsHaveDiagnosticMessage() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getMessage()).isNotEmpty()))
-      .doesNotThrowAnyException();
-  }
-
-  @Test
-  void testAllDiagnosticsHaveDescriptionResource() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getDescription()).isNotEmpty()))
-      .doesNotThrowAnyException();
-  }
-
-  @Test
-  void testAllDiagnosticsHaveTags() {
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(
-      diagnosticInfo.getTags().size() > 0
-        && diagnosticInfo.getTags().size() <= 3)
-      .isTrue()))
-      .doesNotThrowAnyException();
+  @BeforeEach
+  void createDocumentContext() {
+    documentContext = TestUtils.getDocumentContext("", context);
   }
 
   @Test
   void testCompatibilityMode() {
-//    // given
-//    var documentContext = spy(TestUtils.getDocumentContext(""));
-//    var serverContext = spy(documentContext.getServerContext());
-//    var configuration = spy(serverContext.getConfiguration());
-//
-//    when(documentContext.getServerContext()).thenReturn(serverContext);
-//    when(serverContext.getConfiguration()).thenReturn(configuration);
-//
-//    // when-then pairs
-//    when(configuration.getCompatibilityMode()).thenReturn(new CompatibilityMode(3, 10));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
-//
-//    when(configuration.getCompatibilityMode()).thenReturn(new CompatibilityMode(3, 6));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
-//
-//    when(configuration.getCompatibilityMode()).thenReturn(new CompatibilityMode(2, 16));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .noneMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
+    // given
+    documentContext = spy(TestUtils.getDocumentContext("", context));
+    var serverContext = spy(context);
+    var bslConfiguration = spy(serverContext.getConfiguration());
+
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+    when(serverContext.getConfiguration()).thenReturn(bslConfiguration);
+
+    configuration.getDiagnosticsOptions().setMode(Mode.ON);
+
+    // when-then pairs
+    when(bslConfiguration.getCompatibilityMode()).thenReturn(new CompatibilityMode(3, 10));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
+
+    when(bslConfiguration.getCompatibilityMode()).thenReturn(new CompatibilityMode(3, 6));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
+
+    when(bslConfiguration.getCompatibilityMode()).thenReturn(new CompatibilityMode(2, 16));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .noneMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
   }
 
   @Test
   void testModuleType() {
-//    // given
-//    var documentContext = spy(TestUtils.getDocumentContext(""));
-//
-//    // when-then pairs
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.CommandModule);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
-//
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
-//
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
-//
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
+    // given
+    documentContext = spy(TestUtils.getDocumentContext("", context));
+
+    // when-then pairs
+    when(documentContext.getModuleType()).thenReturn(ModuleType.CommandModule);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
   }
 
   @Test
   void testAllScope() {
-//    // given
-//    var documentContext = spy(TestUtils.getDocumentContext(""));
-//
-//    // when-then pairs
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
-//    when(documentContext.getFileType()).thenReturn(FileType.BSL);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
-//
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
-//    when(documentContext.getFileType()).thenReturn(FileType.BSL);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .noneMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
-//
-//    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
-//    when(documentContext.getFileType()).thenReturn(FileType.OS);
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+    // given
+    documentContext = spy(TestUtils.getDocumentContext("", context));
+
+    // when-then pairs
+    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
+    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
+    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .noneMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
+
+    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
   }
 
   @Test
   void testSkipSupport() {
 
-//    // given
-//    var lsConfiguration = LanguageServerConfiguration.create();
-//    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
-//    var documentContext = spy(TestUtils.getDocumentContext("А = 0"));
-//    var supportConfiguration = mock(SupportConfiguration.class);
-//
-//    // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
-//    lsConfiguration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
-//    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
-//    lsConfiguration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
-//    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isEmpty();
-//
-//    // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
-//    lsConfiguration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
-//    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isNotEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isEmpty();
-//
-//    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
-//    assertThat(diagnosticSupplier.getDiagnosticInstances(documentContext))
-//      .isEmpty();
-  }
+    // given
+    documentContext = spy(TestUtils.getDocumentContext("А = 0", context));
+    var supportConfiguration = mock(SupportConfiguration.class);
 
-  @Test
-  void TestAllParametersHaveResourcesRU() {
-    allParametersHaveResources(Language.RU);
+    // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
+    configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
+    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
+    configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
+    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+
+    // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
+    configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
+    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isNotEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
+
+    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .isEmpty();
   }
 
   @Test
   void testDiagnosticModeOff() {
-//    // given
-//    var lsConfiguration = LanguageServerConfiguration.create();
-//    var documentContext = TestUtils.getDocumentContext("");
-//    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
-//
-//    // when-then pairs
-//    lsConfiguration.getDiagnosticsOptions().setMode(Mode.OFF);
-//    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
-//
-//    assertThat(diagnostics).isEmpty();
+
+    // when
+    configuration.getDiagnosticsOptions().setMode(Mode.OFF);
+
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext)).isEmpty();
   }
 
   @Test
   void testDiagnosticModeOn() {
-//    // given
-//    var lsConfiguration = LanguageServerConfiguration.create();
-//    var documentContext = TestUtils.getDocumentContext("");
-//    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
-//
-//    // when
-//    lsConfiguration.getDiagnosticsOptions().setMode(Mode.ON);
-//    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
-//
-//    assertThat(diagnostics)
-//      .hasSizeGreaterThan(10)
-//      .flatExtracting(Object::getClass)
-//      .doesNotContain(TooManyReturnsDiagnostic.class);
+
+    // when
+    configuration.getDiagnosticsOptions().setMode(Mode.ON);
+
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .doesNotContain(TooManyReturnsDiagnostic.class);
   }
 
   @Test
   void testDiagnosticModeAll() {
-//    // given
-//    var lsConfiguration = LanguageServerConfiguration.create();
-//    var documentContext = TestUtils.getDocumentContext("");
-//    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
-//
-//    // when
-//    lsConfiguration.getDiagnosticsOptions().setMode(Mode.ALL);
-//    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
-//
-//    assertThat(diagnostics)
-//      .hasSizeGreaterThan(10)
-//      .flatExtracting(Object::getClass)
-//      .contains(TooManyReturnsDiagnostic.class);
+
+    // when
+    configuration.getDiagnosticsOptions().setMode(Mode.ALL);
+
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .hasSizeGreaterThan(10)
+      .flatExtracting(Object::getClass)
+      .contains(TooManyReturnsDiagnostic.class);
   }
 
   @Test
   void testDiagnosticModeOnly() {
-//    // given
-//    var lsConfiguration = LanguageServerConfiguration.create();
-//    var documentContext = TestUtils.getDocumentContext("");
-//    diagnosticSupplier = new DiagnosticSupplier(lsConfiguration);
-//
-//    // when
-//    lsConfiguration.getDiagnosticsOptions().setMode(Mode.ONLY);
-//    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
-//    rules.put("Typo", Either.forLeft(false));
-//    rules.put("TooManyReturns", Either.forLeft(true));
-//
-//    lsConfiguration.getDiagnosticsOptions().setParameters(rules);
-//    List<BSLDiagnostic> diagnostics = diagnosticSupplier.getDiagnosticInstances(documentContext);
-//
-//    assertThat(diagnostics)
-//      .hasSize(1)
-//      .flatExtracting(Object::getClass)
-//      .doesNotContain(TypoDiagnostic.class)
-//      .contains(TooManyReturnsDiagnostic.class)
-//    ;
+
+    // when
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
+    rules.put("Typo", Either.forLeft(false));
+    rules.put("TooManyReturns", Either.forLeft(true));
+
+    configuration.getDiagnosticsOptions().setParameters(rules);
+
+    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+      .hasSize(1)
+      .flatExtracting(Object::getClass)
+      .doesNotContain(TypoDiagnostic.class)
+      .contains(TooManyReturnsDiagnostic.class)
+    ;
   }
 
   @Test
   void testDiagnosticModeExcept() {
-    // given
-    var documentContext = TestUtils.getDocumentContext("", context);
 
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.EXCEPT);
@@ -351,7 +272,6 @@ class DiagnosticsTest {
     rules.put("TooManyReturns", Either.forLeft(true));
 
     configuration.getDiagnosticsOptions().setParameters(rules);
-
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .hasSizeGreaterThan(10)
       .flatExtracting(BSLDiagnostic::getClass)
@@ -362,27 +282,4 @@ class DiagnosticsTest {
     ;
   }
 
-  @Test
-  void TestAllParametersHaveResourcesEN() {
-    allParametersHaveResources(Language.EN);
-  }
-
-  void allParametersHaveResources(Language language) {
-    var config = spy(configuration);
-    when(config.getLanguage()).thenReturn(language);
-
-    assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo -> {
-      boolean allParametersHaveDescription;
-
-      try {
-        var info = new DiagnosticInfo(diagnosticInfo.getDiagnosticClass(), config);
-        allParametersHaveDescription = info.getParameters().stream()
-          .map(DiagnosticParameterInfo::getDescription)
-          .noneMatch(String::isEmpty);
-      } catch (MissingResourceException e) {
-        throw new RuntimeException(diagnosticInfo.getDiagnosticClass().getSimpleName() + " does not have parameters description in resources", e);
-      }
-      assertThat(allParametersHaveDescription).isTrue();
-    })).doesNotThrowAnyException();
-  }
 }
