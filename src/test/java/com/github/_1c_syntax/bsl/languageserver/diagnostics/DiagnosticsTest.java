@@ -62,13 +62,13 @@ class DiagnosticsTest {
 
   @BeforeEach
   void createDocumentContext() {
-    documentContext = TestUtils.getDocumentContext("", context);
+    documentContext = TestUtils.getDocumentContext("");
   }
 
   @Test
   void testCompatibilityMode() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext("", context));
+    documentContext = spy(TestUtils.getDocumentContext(""));
     var serverContext = spy(context);
     var bslConfiguration = spy(serverContext.getConfiguration());
 
@@ -94,7 +94,7 @@ class DiagnosticsTest {
   @Test
   void testModuleType() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext("", context));
+    documentContext = spy(TestUtils.getDocumentContext(""));
 
     // when-then pairs
     when(documentContext.getModuleType()).thenReturn(ModuleType.CommandModule);
@@ -117,7 +117,7 @@ class DiagnosticsTest {
   @Test
   void testAllScope() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext("", context));
+    documentContext = spy(TestUtils.getDocumentContext(""));
 
     // when-then pairs
     when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
@@ -140,7 +140,7 @@ class DiagnosticsTest {
   void testSkipSupport() {
 
     // given
-    documentContext = spy(TestUtils.getDocumentContext("А = 0", context));
+    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
     var supportConfiguration = mock(SupportConfiguration.class);
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
