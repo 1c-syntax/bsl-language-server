@@ -35,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -47,10 +49,10 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 class ReportersAggregatorTest {
 
-  @Mock
+  @SpyBean
   private AnalyzeCommand command;
 
-  @InjectMocks
+  @SpyBean
   private ReportersAggregator aggregator;
 
   private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
