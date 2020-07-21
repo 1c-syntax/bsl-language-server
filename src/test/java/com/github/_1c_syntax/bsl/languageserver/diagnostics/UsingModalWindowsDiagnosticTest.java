@@ -23,12 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -38,6 +38,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalWindowsDiagnostic> {
+  @SpyBean
+  private ServerContext context;
+
   UsingModalWindowsDiagnosticTest() {
     super(UsingModalWindowsDiagnostic.class);
   }
@@ -51,8 +54,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     var documentContext = getDocumentContextWithUseFlag(UseMode.DONT_USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(12);
-    assertThat(diagnostics)
+    assertThat(diagnostics).hasSize(12)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(2, 12, 3, 57))
         && diagnostic.getMessage().matches(".*(модального|modal).*Вопрос.*ПоказатьВопрос.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 4, 21, 84))
@@ -84,7 +86,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
 
     DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
@@ -92,16 +94,11 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
-    var serverContext = spy(context);
-    var configuration = spy(serverContext.getConfiguration());
+    var configuration = spy(context.getConfiguration());
     when(configuration.getModalityUseMode()).thenReturn(useMode);
-    when(serverContext.getConfiguration()).thenReturn(configuration);
+    when(context.getConfiguration()).thenReturn(configuration);
 
-    return TestUtils.getDocumentContext(
-      testFile.toUri(),
-      getText(),
-      serverContext
-    );
+    return context.addDocument(testFile.toUri(), getText());
   }
 
 }
