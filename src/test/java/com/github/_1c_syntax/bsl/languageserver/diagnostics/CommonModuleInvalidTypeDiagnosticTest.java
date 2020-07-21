@@ -30,6 +30,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -41,6 +42,8 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<CommonModuleInvalidTypeDiagnostic> {
   CommonModuleInvalidTypeDiagnosticTest() {
     super(CommonModuleInvalidTypeDiagnostic.class);
