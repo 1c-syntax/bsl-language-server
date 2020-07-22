@@ -25,12 +25,16 @@ import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class BSLLSPLauncherTest {
 
   private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -83,8 +87,8 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
-    // TODO:
-    // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
   }
 
   @Test
@@ -141,8 +145,8 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
-    // TODO:
-    // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
   }
 
   @Test

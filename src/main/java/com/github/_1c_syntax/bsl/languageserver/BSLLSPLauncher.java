@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Component;
@@ -57,7 +58,7 @@ import static picocli.CommandLine.Command;
 @SpringBootApplication
 @Component
 @RequiredArgsConstructor
-public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
+public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -76,8 +77,10 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
 
   private final CommandLine.IFactory picocliFactory;
 
+  private int exitCode;
+
   public static void main(String[] args) {
-    new SpringApplication(BSLLSPLauncher.class).run(args);
+    System.exit(SpringApplication.exit(SpringApplication.run(BSLLSPLauncher.class, args)));
   }
 
   @Override
@@ -95,7 +98,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
         var parseResult = cmd.parseArgs(args);
         // если переданы параметры без команды и это не справка
         // то считаем, что параметры для команды по умолчанию
-        if(!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+        if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
           args = addDefaultCommand(args);
         }
       } catch (ParameterException ex) {
@@ -107,10 +110,8 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
       }
     }
 
-    int result = cmd.execute(args);
-    if (result >= 0) {
-      System.exit(result);
-    }
+    exitCode = cmd.execute(args);
+
   }
 
   @NotNull
@@ -119,6 +120,11 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner {
     tmpList.add(0, DEFAULT_COMMAND);
     args = tmpList.toArray(new String[0]);
     return args;
+  }
+
+  @Override
+  public int getExitCode() {
+    return exitCode;
   }
 
   public Integer call() {
