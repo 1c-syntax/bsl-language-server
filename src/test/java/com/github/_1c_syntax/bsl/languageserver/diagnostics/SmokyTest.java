@@ -57,19 +57,16 @@ class SmokyTest {
   private Map<String, DiagnosticInfo> diagnosticInfos;
 
   @Test
-  @ExpectSystemExitWithStatus(0)
-  @SuppressWarnings("unchecked")
-  void test() throws ClassNotFoundException {
+  void test() {
 
     // given
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
-    var expectedCause = (Class<? extends Throwable>) Class.forName("com.ginsberg.junit.exit.SystemExitPreventedException");
 
     // when
-    var exception = catchThrowableOfType(() -> BSLLSPLauncher.main(args), IllegalStateException.class);
+    BSLLSPLauncher.main(args);
 
     // then
-    assertThat(exception).hasCauseExactlyInstanceOf(expectedCause);
+    assertThat(true).isTrue();
   }
 
   @Test
