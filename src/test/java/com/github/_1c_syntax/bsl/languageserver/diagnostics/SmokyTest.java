@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -57,13 +58,18 @@ class SmokyTest {
 
   @Test
   @ExpectSystemExitWithStatus(0)
-  void test() {
+  @SuppressWarnings("unchecked")
+  void test() throws ClassNotFoundException {
 
+    // given
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
+    var expectedCause = (Class<? extends Throwable>) Class.forName("com.ginsberg.junit.exit.SystemExitPreventedException");
 
-    BSLLSPLauncher.main(args);
+    // when
+    var exception = catchThrowableOfType(() -> BSLLSPLauncher.main(args), IllegalStateException.class);
 
-    assertThat(true).isTrue(); // TODO что проверять?
+    // then
+    assertThat(exception).hasCauseExactlyInstanceOf(expectedCause);
   }
 
   @Test
