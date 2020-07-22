@@ -42,7 +42,7 @@ public abstract class DiagnosticComputer {
 
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
-    return getDiagnosticInstances(documentContext).parallelStream()
+    return diagnostics(documentContext).parallelStream()
         .flatMap((BSLDiagnostic diagnostic) -> {
           try {
             return diagnostic.getDiagnostics(documentContext).stream();
@@ -64,5 +64,5 @@ public abstract class DiagnosticComputer {
   }
 
   @Lookup("diagnostics")
-  public abstract List<BSLDiagnostic> getDiagnosticInstances(DocumentContext documentContext);
+  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
 }
