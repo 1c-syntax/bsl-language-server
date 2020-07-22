@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -57,6 +56,7 @@ class SmokyTest {
   private Map<String, DiagnosticInfo> diagnosticInfos;
 
   @Test
+  @ExpectSystemExitWithStatus(0)
   void test() {
 
     // given
