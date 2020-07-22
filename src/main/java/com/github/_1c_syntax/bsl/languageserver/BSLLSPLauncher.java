@@ -80,9 +80,12 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   private int exitCode;
 
   public static void main(String[] args) {
-    var code = SpringApplication.exit(SpringApplication.run(BSLLSPLauncher.class, args));
-    if (code >= 0) {
-      System.exit(code);
+    var applicationContext = SpringApplication.run(BSLLSPLauncher.class, args);
+    var launcher = applicationContext.getBean(BSLLSPLauncher.class);
+    if (launcher.getExitCode() >= 0) {
+      System.exit(
+        SpringApplication.exit(applicationContext)
+      );
     }
   }
 
