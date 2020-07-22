@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -32,27 +31,25 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
-import static org.mockito.Mockito.when;
-
-@SpringBootTest
+@SpringBootTest(properties = {"spring.main.allow-bean-definition-overriding=true"})
+@ActiveProfiles("reportersAggregator")
 class ReportersAggregatorTest {
 
-  @SpyBean
-  private AnalyzeCommand command;
-
-  @SpyBean
+  @Autowired
   private ReportersAggregator aggregator;
 
   private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -60,7 +57,6 @@ class ReportersAggregatorTest {
 
   @BeforeEach
   void setUpStreams() {
-    when(command.getReportersOptions()).thenReturn(new String[]{"console"});
     System.setOut(new PrintStream(outContent));
   }
 
@@ -91,5 +87,15 @@ class ReportersAggregatorTest {
     // then
     // FIXME How test logger?
     // assertThat(outContent.toString()).containsIgnoringCase("Analysis date: ");
+  }
+
+  @TestConfiguration
+  @Profile("reportersAggregator")
+  static class Configuration {
+
+    @Bean
+    public List<DiagnosticReporter> filteredReporters(ConsoleReporter consoleReporter) {
+      return List.of(consoleReporter);
+    }
   }
 }
