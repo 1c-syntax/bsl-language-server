@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -45,6 +46,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,6 +55,9 @@ class GenericReporterTest {
 
   @Autowired
   private GenericIssueReporter reporter;
+
+  @Autowired
+  private Map<String, DiagnosticInfo> diagnosticInfos;
 
   private final File file = new File("./bsl-generic-json.json");
 
@@ -71,12 +76,15 @@ class GenericReporterTest {
 
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
+    var iterator = diagnosticInfos.entrySet().iterator();
+    var firstInfo = iterator.next().getValue();
+    var secondInfo = iterator.next().getValue();
     diagnostics.add(new Diagnostic(
       Ranges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
-      "test"
+      firstInfo.getCode().getStringValue()
     ));
 
     diagnostics.add(new Diagnostic(
@@ -84,7 +92,7 @@ class GenericReporterTest {
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
-      "test3"
+      firstInfo.getCode().getStringValue()
     ));
 
     diagnostics.add(new Diagnostic(
@@ -92,7 +100,7 @@ class GenericReporterTest {
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
-      "test3"
+      secondInfo.getCode().getStringValue()
     ));
 
     DocumentContext documentContext = TestUtils.getDocumentContext("");
@@ -115,8 +123,8 @@ class GenericReporterTest {
     assertThat(report.getIssues().get(0).getPrimaryLocation()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations().size()).isEqualTo(1);
-    assertThat(report.getIssues().get(2).getRuleId()).isEqualTo("test3");
-    assertThat(report.getIssues().get(1).getSeverity()).isEqualTo("CRITICAL");
+    assertThat(report.getIssues().get(2).getRuleId()).isEqualTo(secondInfo.getCode().getStringValue());
+    assertThat(report.getIssues().get(1).getSeverity()).isEqualTo(firstInfo.getSeverity().name());
   }
 
 }
