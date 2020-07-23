@@ -27,7 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.Variable
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,12 +38,16 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class VariableSymbolTest {
+@SpringBootTest
+class VariableSymbolTest {
 
+  @Autowired
   static DocumentContext documentContext;
+  @Autowired
   static List<VariableSymbol> variableSymbols;
 
-  static {
+  @BeforeEach
+  void setup() {
     documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/variableSymbolTest.bsl");
     variableSymbols = documentContext.getSymbolTree().getVariables();
   }
