@@ -53,7 +53,7 @@ class BSLLSPLauncherTest {
   @AfterEach
   void restoreStreams() {
     System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
-    System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+    System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
   }
 
   @Test
