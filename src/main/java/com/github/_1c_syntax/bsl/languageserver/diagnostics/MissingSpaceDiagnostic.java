@@ -168,10 +168,6 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     DiagnosticHelper.configureDiagnostic(this, configuration,
       "checkSpaceToRightOfUnary", "allowMultipleCommas");
 

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,43 @@ class DiagnosticInfoTest {
 
     assertThat(parameter.getDefaultValue()).isEqualTo(false);
     assertThat(parameter.getType()).isEqualTo(Boolean.class);
+
+    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
+    assertThat(maybeParameter).isPresent();
+    assertThat(maybeParameter).hasValue(parameter);
+
+    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
+    assertThat(maybeFakeParameter).isEmpty();
+  }
+
+  @Test
+  void testParameterSuper() {
+
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration);
+
+    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
+    Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage("")).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.ERROR);
+    Assertions.assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MINOR);
+    Assertions.assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+    Assertions.assertThat(diagnosticInfo.getCompatibilityMode()).isEqualTo(DiagnosticCompatibilityMode.UNDEFINED);
+    Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.BSL);
+    Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(2);
+    Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
+    Assertions.assertThat(diagnosticInfo.getTags().size()).isNotZero();
+
+    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isNotZero();
+    Assertions.assertThat(diagnosticInfo.getParameters().size()).isEqualTo(1);
+
+
+    DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
+    assertThat(parameter.getDescription())
+      .isEqualTo("Заявленные языки");
+
+    assertThat(parameter.getDefaultValue()).isEqualTo("ru");
+    assertThat(parameter.getType()).isEqualTo(String.class);
 
     Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
     assertThat(maybeParameter).isPresent();

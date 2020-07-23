@@ -64,9 +64,6 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     DiagnosticHelper.configureDiagnostic(this, configuration, "allowMagicIndexes");
 
     String authorizedNumbersString =

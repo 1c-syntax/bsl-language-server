@@ -78,11 +78,6 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
 
   @Override
   public void configure(Map<String, Object> configuration) {
-
-    if (configuration == null) {
-      return;
-    }
-
     // Слова исключения, при поиске IP адресов
     String searchWordsExclusionProperty =
       (String) configuration.getOrDefault("searchWordsExclusion", REGEX_EXCLUSION);

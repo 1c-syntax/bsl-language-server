@@ -69,10 +69,6 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty =
       (String) configuration.getOrDefault("searchWordsStdPathsUnix", REGEX_STD_PATHS_UNIX);

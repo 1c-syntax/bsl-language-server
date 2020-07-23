@@ -75,9 +75,6 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     String searchWordsProperty = (String) configuration.getOrDefault("searchWords", FIND_WORD_DEFAULT);
     searchWords = getPatternSearch(searchWordsProperty);
   }

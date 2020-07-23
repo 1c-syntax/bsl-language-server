@@ -56,9 +56,6 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     serviceTags = (String) configuration.getOrDefault("serviceTags", serviceTags);
     pattern = getPatternSearch(serviceTags);
   }

@@ -41,10 +41,6 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     declaredLanguages = (String) configuration.get("declaredLanguages");
     parser = new MultilingualStringAnalyser(declaredLanguages);
   }

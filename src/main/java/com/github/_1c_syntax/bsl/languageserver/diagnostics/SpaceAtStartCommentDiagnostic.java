@@ -86,10 +86,6 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     String commentsAnnotationString =
       (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION);
     this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));
