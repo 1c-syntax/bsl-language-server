@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
@@ -41,9 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class VariableSymbolTest {
 
-  @Autowired
   static DocumentContext documentContext;
-  @Autowired
   static List<VariableSymbol> variableSymbols;
 
   @BeforeEach
