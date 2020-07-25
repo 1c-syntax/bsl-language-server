@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-25</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/contributing/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-25</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/reporters/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-25</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-25</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://1c-syntax.github.io/bsl-language-server/dev/features/</loc>
-     <lastmod>2020-07-19</lastmod>
+     <lastmod>2020-07-25</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
