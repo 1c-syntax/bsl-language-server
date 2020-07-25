@@ -32,8 +32,8 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -46,126 +46,123 @@ import java.util.regex.Pattern;
   }
 
 )
-public class IsInRoleMethodDiagnosticDiagnostic extends AbstractVisitorDiagnostic {
-
-  private static final HashSet<String> IS_IN_ROLE_VARS = new HashSet<>();
-  private static final HashSet<String> PRIVILEGED_MODE_NAME_VARS = new HashSet<>();
+public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern IS_IN_ROLE_NAME_PATTERN = CaseInsensitivePattern.compile(
     "(РольДоступна|IsInRole)"
   );
 
   private static final Pattern PRIVILEGED_MODE_NAME_PATTERN = CaseInsensitivePattern.compile(
-    "(PrivilegedMode|ПривилегированныйРежим)"
+    "(ПривилегированныйРежим|PrivilegedMode)"
   );
+  private static final Set<Integer> ROOT_PARENTS_FOR_GLOBAL_METHODS =
+    Set.of(BSLParser.RULE_ifStatement, BSLParser.RULE_assignment);
+
+  private final Set<String> isInRoleVars = new HashSet<>();
+  private final Set<String> privilegedModeNameVars = new HashSet<>();
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    isInRoleVars.clear();
+    privilegedModeNameVars.clear();
+
+    return super.visitFile(ctx);
+  }
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
-    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
-
-    if (listIdentifier.isEmpty()) {
-      return super.visitIfBranch(ctx);
-    }
-
-    computeDiagnostics(listIdentifier);
-
+    computeDiagnostics(ctx.expression());
     return super.visitIfBranch(ctx);
   }
 
   @Override
   public ParseTree visitElsifBranch(BSLParser.ElsifBranchContext ctx) {
-    Collection<ParseTree> listIdentifier = Trees.findAllRuleNodes(ctx.expression(), BSLParser.RULE_complexIdentifier);
-
-    if (listIdentifier.isEmpty()) {
-      return super.visitElsifBranch(ctx);
-    }
-
-    computeDiagnostics(listIdentifier);
-
+    computeDiagnostics(ctx.expression());
     return super.visitElsifBranch(ctx);
   }
 
-  private void computeDiagnostics(Collection<ParseTree> listIdentifier) {
-    listIdentifier.stream().map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
-      .filter(complexCtx -> IS_IN_ROLE_VARS.contains(complexCtx.getText()))
-      .filter(IsInRoleMethodDiagnosticDiagnostic::checkStatement)
+  private void computeDiagnostics(BSLParser.ExpressionContext expression) {
+    Trees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier).stream()
+      .map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
+      .filter(complexCtx -> isInRoleVars.contains(complexCtx.getText()))
+      .filter(ctx -> checkStatement(ctx, expression))
       .forEach(diagnosticStorage::addDiagnostic);
   }
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (IS_IN_ROLE_NAME_PATTERN.matcher(ctx.methodName().getText()).matches()) {
+    final var text = ctx.methodName().getText();
+    if (IS_IN_ROLE_NAME_PATTERN.matcher(text).matches()) {
       handleIsInRoleGlobalMethod(ctx);
-    } else if (PRIVILEGED_MODE_NAME_PATTERN.matcher(ctx.methodName().getText()).matches()) {
+    } else if (PRIVILEGED_MODE_NAME_PATTERN.matcher(text).matches()) {
       handlePrivilegedModeGlobalMethod(ctx);
-    } else {
-      return super.visitGlobalMethodCall(ctx);
     }
 
     return super.visitGlobalMethodCall(ctx);
   }
 
   private void handleIsInRoleGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
-    var ifStatementNode = Trees.getRootParent(ctx, BSLParser.RULE_ifStatement);
-    if (ifStatementNode != null && checkStatement(ctx)) {
-      diagnosticStorage.addDiagnostic(ctx);
+    var rootParent = Trees.getRootParent(ctx, ROOT_PARENTS_FOR_GLOBAL_METHODS);
+    if (rootParent == null){
+      return;
     }
+    if (rootParent.getRuleIndex() == BSLParser.RULE_ifStatement) {
+      if (checkStatement(ctx)) {
+        diagnosticStorage.addDiagnostic(ctx);
+      }
+    } else if (rootParent.getRuleIndex() == BSLParser.RULE_assignment){
+        addAssignedNameVar(rootParent, isInRoleVars);
+      }
+  }
 
+  private void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
     var assignmentNode = Trees.getRootParent(ctx, BSLParser.RULE_assignment);
     if (assignmentNode != null) {
-      var childNodes = Trees.getChildren(assignmentNode, BSLParser.RULE_lValue);
-      if (!childNodes.isEmpty()) {
-        IS_IN_ROLE_VARS.add(childNodes.get(0).getText());
-      }
+      addAssignedNameVar(assignmentNode, privilegedModeNameVars);
     }
   }
 
-  private static void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
-    var assignmentNode = Trees.getRootParent(ctx, BSLParser.RULE_assignment);
-    if (assignmentNode != null) {
-      var childNodes = Trees.getChildren(assignmentNode, BSLParser.RULE_lValue);
-      if (!childNodes.isEmpty()) {
-        PRIVILEGED_MODE_NAME_VARS.add(childNodes.get(0).getText());
-      }
-    }
+  private static void addAssignedNameVar(BSLParserRuleContext assignmentNode, Set<String> nameVars) {
+    var childNode = Trees.getFirstChild(assignmentNode, BSLParser.RULE_lValue);
+    childNode.ifPresent(node -> nameVars.add(node.getText()));
   }
 
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
-    var childNodes = Trees.getChildren(ctx, BSLParser.RULE_lValue);
-
-    if (!childNodes.isEmpty()) {
-      IS_IN_ROLE_VARS.remove(childNodes.get(0).getText());
-      PRIVILEGED_MODE_NAME_VARS.remove(childNodes.get(0).getText());
-    }
+    var childNode = Trees.getFirstChild(ctx, BSLParser.RULE_lValue);
+    childNode.ifPresent(node ->
+    {
+      isInRoleVars.remove(node.getText());
+      privilegedModeNameVars.remove(node.getText());
+    });
     return super.visitAssignment(ctx);
   }
 
-  private static boolean checkStatement(BSLParserRuleContext ctx) {
+  private boolean checkStatement(BSLParserRuleContext ctx) {
     var parentExpression = Trees.getRootParent(ctx, BSLParser.RULE_expression);
+    return checkStatement(ctx, parentExpression);
+  }
+
+  private boolean checkStatement(BSLParserRuleContext ctx, BSLParserRuleContext parentExpression) {
 
     if (parentExpression == null) {
       return false;
     }
 
-    boolean hasPrivilegedModeCheck = false;
-
     var identifierList = Trees.findAllRuleNodes(parentExpression, BSLParser.RULE_complexIdentifier);
     for (ParseTree parseTree : identifierList) {
-      if (PRIVILEGED_MODE_NAME_VARS.contains(parseTree.getText())) {
-        hasPrivilegedModeCheck = true;
+      if (privilegedModeNameVars.contains(parseTree.getText())) {
+        return false;
       }
     }
 
-    if (!hasPrivilegedModeCheck) {
-      var nextGlobalMethodNode = Trees.getNextNode(parentExpression,
-        ctx, BSLParser.RULE_globalMethodCall);
+    var nextGlobalMethodNode = Trees.getNextNode(parentExpression,
+      ctx, BSLParser.RULE_globalMethodCall);
 
-      hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext
+    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext
         && PRIVILEGED_MODE_NAME_PATTERN.matcher(((BSLParser.GlobalMethodCallContext) nextGlobalMethodNode)
         .methodName().getText()).matches());
-    }
 
     return !hasPrivilegedModeCheck;
   }

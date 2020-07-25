@@ -28,24 +28,21 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -68,28 +65,25 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   // Разрешить несколько запятых подряд
   private static final boolean DEFAULT_ALLOW_MULTIPLE_COMMAS = false;
 
-  @Nonnull
-  private static final Pattern patternNotSpace = CaseInsensitivePattern.compile("\\S+");
-  private static final Pattern BEFORE_UNARY_CHAR_PATTERN = CaseInsensitivePattern.compile(
-    getRegularString("+ - * / = % < > ( [ , Возврат <> <= >="));
+  private static final String UNARY = "+ - * / = % < > ( [ , Возврат Return <> <= >=";
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
   )
-  private String listForCheckLeft = getRegularString(DEFAULT_LIST_FOR_CHECK_LEFT);
+  private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT
   )
-  private String listForCheckRight = getRegularString(DEFAULT_LIST_FOR_CHECK_RIGHT);
+  private String listForCheckRight = DEFAULT_LIST_FOR_CHECK_RIGHT;
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
   )
-  private String listForCheckLeftAndRight = getRegularString(DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
+  private String listForCheckLeftAndRight = DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT;
 
   @DiagnosticParameter(
     type = Boolean.class,
@@ -103,89 +97,70 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   )
   private boolean allowMultipleCommas = DEFAULT_ALLOW_MULTIPLE_COMMAS;
 
-  @Nullable
-  private Pattern patternL = compilePattern(listForCheckLeft);
-  @Nullable
-  private Pattern patternR = compilePattern(listForCheckRight);
-  @Nullable
-  private Pattern patternLr = compilePattern(listForCheckLeftAndRight);
   private String mainMessage;
   private String indexWordLeftMsg;
   private String indexWordRightMsg;
   private String indexWordLeftRightMsg;
 
+  private Set<String> setL = Set.of(listForCheckLeft.split(" "));
+  private Set<String> setR = Set.of(listForCheckRight.split(" "));
+  private Set<String> setLR = Set.of(listForCheckLeftAndRight.split(" "));
+  private final Set<String> setUnary = Set.of(UNARY.split(" "));
+
   @Override
   public void check() {
-
-    if (patternL == null && patternR == null && patternLr == null) {
-      return;
-    }
 
     mainMessage = info.getMessage();
     indexWordLeftMsg = info.getResourceString("wordLeft");
     indexWordRightMsg = info.getResourceString("wordRight");
     indexWordLeftRightMsg = info.getResourceString("wordLeftAndRight");
 
-    List<Token> tokens = documentContext.getTokensFromDefaultChannel();
-    boolean noSpaceLeft = false;
-    boolean noSpaceRight = false;
+    List<Token> tokens = documentContext.getTokens();
 
-    for (int i = 0; i < tokens.size(); i++) {
-      var token = tokens.get(i);
+    for (Token token : tokens) {
 
-      boolean checkLeft = false;
-      boolean checkRight = false;
+      boolean leftComputed = false;
+      boolean rightComputed = false;
 
-      final var text = token.getText();
+      boolean noSpaceLeft = false;
+      boolean noSpaceRight = false;
 
-      if (patternL != null && patternL.matcher(text).matches()) {
-        noSpaceLeft = noSpaceLeft(tokens, token, i);
-        checkLeft = true;
+      String tokenText = token.getText();
 
-        if (noSpaceLeft) {
-          addDiagnostic(token, mainMessage, indexWordLeftMsg);
-        }
+      // проверяем слева
+      if (setL.contains(tokenText) && (noSpaceLeft = noSpaceLeft(tokens, token))) {
+        leftComputed = true;
+        addDiagnostic(token, mainMessage, indexWordLeftMsg);
       }
-      if (patternR != null && patternR.matcher(text).matches()) {
-        noSpaceRight = noSpaceRight(tokens, token, i);
-        checkRight = true;
 
-        if (noSpaceRight) {
-          addDiagnostic(token, mainMessage, indexWordRightMsg);
-        }
+      // проверяем справа
+      if (setR.contains(tokenText) && (noSpaceRight = noSpaceRight(tokens, token))) {
+        rightComputed = true;
+        addDiagnostic(token, mainMessage, indexWordRightMsg);
       }
-      if (patternLr != null && patternLr.matcher(text).matches()) {
-        if (!checkLeft) {
-          noSpaceLeft = noSpaceLeft(tokens, token, i);
+
+      // проверяем слева и справа
+      if (setLR.contains(tokenText)) {
+        if (!leftComputed) {
+          noSpaceLeft = noSpaceLeft(tokens, token);
         }
-        if (!checkRight) {
-          noSpaceRight = noSpaceRight(tokens, token, i);
+        if (!rightComputed) {
+          noSpaceRight = noSpaceRight(tokens, token);
         }
-        checkLeftRight(token, noSpaceLeft, noSpaceRight);
+        addDiagnosticLeftRight(token, noSpaceLeft, noSpaceRight);
       }
+
     }
+
   }
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    DiagnosticHelper.configureDiagnostic(this, configuration,
-      "checkSpaceToRightOfUnary", "allowMultipleCommas");
+    super.configure(configuration);
 
-    String listLParam =
-      (String) configuration.getOrDefault("listForCheckLeft", DEFAULT_LIST_FOR_CHECK_LEFT);
-    listForCheckLeft = getRegularString(listLParam);
-    patternL = compilePattern(listForCheckLeft);
-
-    String listRParam =
-      (String) configuration.getOrDefault("listForCheckRight", DEFAULT_LIST_FOR_CHECK_RIGHT);
-    listForCheckRight = getRegularString(listRParam);
-    patternR = compilePattern(listForCheckRight);
-
-    String listLRParam =
-      (String) configuration.getOrDefault("listForCheckLeftAndRight", DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT);
-    listForCheckLeftAndRight = getRegularString(listLRParam);
-    patternLr = compilePattern(listForCheckLeftAndRight);
-
+    setL = Set.of(listForCheckLeft.split(" "));
+    setR = Set.of(listForCheckRight.split(" "));
+    setLR = Set.of(listForCheckLeftAndRight.split(" "));
   }
 
   @Override
@@ -228,110 +203,68 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     );
   }
 
-  private void checkLeftRight(Token t, boolean noSpaceLeft, boolean noSpaceRight) {
-
-    String errorMessage = null;
-    if (noSpaceLeft && !noSpaceRight) {
-      errorMessage = indexWordLeftMsg;
-    } else {
-      if (!noSpaceLeft && noSpaceRight) {
-        errorMessage = indexWordRightMsg;
-      } else {
-        if (noSpaceLeft) {
-          errorMessage = indexWordLeftRightMsg;
-        }
-      }
-    }
-    if (errorMessage != null) {
-      addDiagnostic(t, mainMessage, errorMessage);
-    }
-  }
-
   private void addDiagnostic(Token t, String mainMessage, String errorMessage) {
     diagnosticStorage.addDiagnostic(t, getErrorMessage(mainMessage, errorMessage, t.getText()));
   }
 
-  private static String getRegularString(String string) {
-
-    if (string.isEmpty()) {
-      return "";
+  private void addDiagnosticLeftRight(Token token, boolean noSpaceLeft, boolean noSpaceRight) {
+    String errorMessage;
+    if (noSpaceLeft && !noSpaceRight) {
+      errorMessage = indexWordLeftMsg;
+    } else if (noSpaceLeft) {
+      errorMessage = indexWordLeftRightMsg;
+    } else if (noSpaceRight) {
+      errorMessage = indexWordRightMsg;
+    } else {
+      return;
     }
 
-    StringBuilder singleChar = new StringBuilder();
-    StringBuilder doubleChar = new StringBuilder();
-
-    String[] listOfString = string.trim().split(" ");
-
-    for (String s : listOfString) {
-      if (s.length() == 1) {
-        singleChar.append(s);
-      } else {
-        doubleChar.append("|(?:").append(s).append(")");
-      }
-    }
-
-    return "[\\Q" + singleChar + "\\E]" + doubleChar;
+    addDiagnostic(token, mainMessage, errorMessage);
   }
 
-  private static Pattern compilePattern(String string) {
+  private static boolean noSpaceLeft(List<Token> tokens, Token t) {
 
-    if (string.isEmpty()) {
-      return null;
-    }
-
-    return CaseInsensitivePattern.compile(string);
-  }
-
-  private static boolean noSpaceLeft(List<Token> tokens, Token t, int i) {
-
-    Token previousToken = tokens.get(i - 1);
-
+    Token previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
-      && noSpaceBetween(previousToken, t) && patternNotSpace.matcher(previousToken.getText()).find();
+      && !StringUtils.isWhitespace(previousToken.getText());
   }
 
-  private static boolean noSpaceBetween(Token prev, Token next) {
-    return prev.getLine() == next.getLine()
-      && getLastCharPositionInLine(prev) + 1 == next.getCharPositionInLine();
-  }
-
-  private static int getLastCharPositionInLine(Token t) {
-    return t.getCharPositionInLine() + t.getStopIndex() - t.getStartIndex();
-  }
-
-  private boolean noSpaceRight(List<Token> tokens, Token t, int i) {
+  private boolean noSpaceRight(List<Token> tokens, Token t) {
 
     // Если это унарный + или -, то пробел справа проверяем в соответствии с параметром checkSpaceToRightOfUnary
     // Надо понять, что они унарные
-    if (i + 1 >= tokens.size() || !checkSpaceToRightOfUnary
+    if (!checkSpaceToRightOfUnary
       && (t.getType() == BSLLexer.PLUS || t.getType() == BSLLexer.MINUS)
-      && isUnaryChar(tokens, i)) {
+      && isUnaryChar(tokens, t)) {
       return false;
     }
 
-    Token nextToken = tokens.get(i + 1);
+    Token nextToken;
+    if (tokens.size() > t.getTokenIndex() + 1) {
+      nextToken = tokens.get(t.getTokenIndex() + 1);
+      if (nextToken.getType() == Token.EOF) {
+        return false;
+      }
 
-    // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
-    if (allowMultipleCommas
-      && t.getType() == BSLLexer.COMMA
-      && nextToken.getType() == BSLLexer.COMMA) {
-      return false;
+      // Если это запятая и включен allowMultipleCommas, то допустимо что бы справа от нее была еще запятая
+      if (!allowMultipleCommas
+        || t.getType() != BSLLexer.COMMA
+        || nextToken.getType() != BSLLexer.COMMA) {
+        return !StringUtils.isWhitespace(nextToken.getText());
+      }
     }
-
-    return noSpaceBetween(t, nextToken) && patternNotSpace.matcher(nextToken.getText()).find();
+    return false;
   }
 
-  private static boolean isUnaryChar(List<Token> tokens, int i) {
+  private boolean isUnaryChar(List<Token> tokens, Token t) {
 
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
-
-    int currentIndex = i - 1;
+    int currentIndex = t.getTokenIndex() - 1;
     while (currentIndex > 0) {
 
-      final var text = tokens.get(currentIndex).getText();
-      if (patternNotSpace.matcher(text).find()) {
-        return BEFORE_UNARY_CHAR_PATTERN.matcher(text).find();
+      if (!StringUtils.isWhitespace(tokens.get(currentIndex).getText())) {
+        return setUnary.contains(tokens.get(currentIndex).getText());
       }
 
       currentIndex--;

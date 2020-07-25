@@ -1,4 +1,4 @@
-# IsInRole global method call (IsInRoleMethodDiagnostic)
+# IsInRole global method call (IsInRoleMethod)
 
 | Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -47,12 +47,12 @@ Correct example: If IsInRole("Paymaster") OR PrivilegedMode() Then ...
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:IsInRoleMethodDiagnostic-off
-// BSLLS:IsInRoleMethodDiagnostic-on
+// BSLLS:IsInRoleMethod-off
+// BSLLS:IsInRoleMethod-on
 ```
 
 ### Parameter for config
 
 ```json
-"IsInRoleMethodDiagnostic": false
+"IsInRoleMethod": false
 ```

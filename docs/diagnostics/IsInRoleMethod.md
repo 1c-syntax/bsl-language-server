@@ -1,4 +1,4 @@
-# Использование метода РольДоступна (IsInRoleMethodDiagnostic)
+# Использование метода РольДоступна (IsInRoleMethod)
 
 | Тип | Поддерживаются<br/>языки | Важность | Включена<br/>по умолчанию | Время на<br/>исправление (мин) | Тэги |
 | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -46,12 +46,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:IsInRoleMethodDiagnostic-off
-// BSLLS:IsInRoleMethodDiagnostic-on
+// BSLLS:IsInRoleMethod-off
+// BSLLS:IsInRoleMethod-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"IsInRoleMethodDiagnostic": false
+"IsInRoleMethod": false
 ```
