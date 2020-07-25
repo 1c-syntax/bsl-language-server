@@ -22,11 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.codeactions.CodeActionSupplier;
-import com.github._1c_syntax.bsl.languageserver.codeactions.FixAllCodeActionSupplier;
-import com.github._1c_syntax.bsl.languageserver.codeactions.GenerateStandardRegionsSupplier;
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixCodeActionSupplier;
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -35,25 +32,20 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Component
+@RequiredArgsConstructor
 public final class CodeActionProvider {
 
-  private final DiagnosticProvider diagnosticProvider;
-  private final QuickFixSupplier quickFixSupplier;
-
-  public CodeActionProvider(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
-    this.diagnosticProvider = diagnosticProvider;
-    this.quickFixSupplier = quickFixSupplier;
-  }
+  private final List<CodeActionSupplier> codeActionSuppliers;
 
   public static List<CodeAction> createCodeActions(
     List<TextEdit> textEdits,
@@ -90,25 +82,10 @@ public final class CodeActionProvider {
     DocumentContext documentContext
   ) {
 
-    List<CodeAction> codeActions = new ArrayList<>();
-
-    CodeActionSupplier fixAllCodeActionSupplier
-      = new FixAllCodeActionSupplier(diagnosticProvider, quickFixSupplier);
-    CodeActionSupplier quickFixCodeActionSupplier
-      = new QuickFixCodeActionSupplier(diagnosticProvider, quickFixSupplier);
-    CodeActionSupplier generateStandardRegions
-      = new GenerateStandardRegionsSupplier();
-
-    codeActions.addAll(quickFixCodeActionSupplier.getCodeActions(params, documentContext));
-    codeActions.addAll(fixAllCodeActionSupplier.getCodeActions(params, documentContext));
-    codeActions.addAll(generateStandardRegions.getCodeActions(params, documentContext));
-
-    return convertCodeActionListToEitherList(codeActions);
-  }
-
-  private static List<Either<Command, CodeAction>> convertCodeActionListToEitherList(List<CodeAction> actions) {
-    return actions.stream().map(
-      (Function<CodeAction, Either<Command, CodeAction>>) Either::forRight).collect(Collectors.toList());
+    return codeActionSuppliers.stream()
+      .flatMap(codeActionSupplier -> codeActionSupplier.getCodeActions(params, documentContext).stream())
+      .map(Either::<Command, CodeAction>forRight)
+      .collect(Collectors.toList());
   }
 
 }

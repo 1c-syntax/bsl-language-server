@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -66,10 +65,6 @@ public class CyclomaticComplexityDiagnostic extends AbstractVisitorDiagnostic {
   private boolean checkModuleBody = CHECK_MODULE_BODY;
 
   private boolean fileCodeBlockChecked;
-
-  public CyclomaticComplexityDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();

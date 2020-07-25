@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -48,8 +47,8 @@ public class CommonModuleNameServerCallDiagnostic extends AbstractCommonModuleNa
 
   private static final String REGEXP = "вызовсервера|servercall";
 
-  public CommonModuleNameServerCallDiagnostic(DiagnosticInfo info) {
-    super(info, REGEXP);
+  public CommonModuleNameServerCallDiagnostic() {
+    super(REGEXP);
   }
 
   @Override

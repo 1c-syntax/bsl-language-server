@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -107,10 +106,6 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   private Set<String> setR = Set.of(listForCheckRight.split(" "));
   private Set<String> setLR = Set.of(listForCheckLeftAndRight.split(" "));
   private final Set<String> setUnary = Set.of(UNARY.split(" "));
-
-  public MissingSpaceDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void check() {

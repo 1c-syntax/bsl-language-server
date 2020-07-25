@@ -73,10 +73,6 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   )
   private boolean findFirst = FIND_FIRST;
 
-  public DataExchangeLoadingDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
     Optional.of(ctx)

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -50,10 +49,6 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
     defaultValue = "" + MAX_METADATA_OBJECT_NAME_LENGTH
   )
   private int maxMetadataObjectNameLength = MAX_METADATA_OBJECT_NAME_LENGTH;
-
-  public MetadataObjectNameLengthDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   protected void check() {

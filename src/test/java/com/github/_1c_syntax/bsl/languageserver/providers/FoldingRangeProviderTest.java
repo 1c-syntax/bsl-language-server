@@ -26,19 +26,25 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class FoldingRangeProviderTest {
+
+  @Autowired
+  private FoldingRangeProvider foldingRangeProvider;
 
   @Test
   void testFoldingRange() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRange.bsl");
 
-    List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
     assertThat(foldingRanges).hasSize(11);
 
@@ -76,7 +82,7 @@ class FoldingRangeProviderTest {
   void testFoldingRangeParseError() {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/foldingRangeParseError.bsl");
-    List<FoldingRange> foldingRanges = FoldingRangeProvider.getFoldingRange(documentContext);
+    List<FoldingRange> foldingRanges = foldingRangeProvider.getFoldingRange(documentContext);
 
     assertThat(foldingRanges).hasSize(0);
 

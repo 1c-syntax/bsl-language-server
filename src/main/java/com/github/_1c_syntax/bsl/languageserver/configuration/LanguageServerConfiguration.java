@@ -29,9 +29,17 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Role;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -54,23 +62,29 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
  * и безопасно сохранять ссылку на конфигурацию или ее части.
  */
 @Data
+@Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class LanguageServerConfiguration {
+public class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
-  private Language language;
+  private Language language = Language.DEFAULT_LANGUAGE;
 
   @JsonProperty("diagnostics")
-  private final DiagnosticsOptions diagnosticsOptions;
+  @Setter(value = AccessLevel.NONE)
+  private DiagnosticsOptions diagnosticsOptions = new DiagnosticsOptions();
 
   @JsonProperty("codeLens")
-  private final CodeLensOptions codeLensOptions;
+  @Setter(value = AccessLevel.NONE)
+  private CodeLensOptions codeLensOptions = new CodeLensOptions();
 
   @JsonProperty("documentLink")
-  private final DocumentLinkOptions documentLinkOptions;
+  @Setter(value = AccessLevel.NONE)
+  private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
 
   @Nullable
   private File traceLog;
@@ -78,34 +92,31 @@ public final class LanguageServerConfiguration {
   @Nullable
   private Path configurationRoot;
 
-  private LanguageServerConfiguration() {
-    this(
-      Language.DEFAULT_LANGUAGE,
-      new DiagnosticsOptions(),
-      new CodeLensOptions(),
-      new DocumentLinkOptions(),
-      null,
-      null
-    );
-  }
-
-  public static LanguageServerConfiguration create(File configurationFile) {
-    LanguageServerConfiguration configuration = null;
-    if (configurationFile.exists()) {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-      try {
-        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-      } catch (IOException e) {
-        LOGGER.error("Can't deserialize configuration file", e);
-      }
+  @SneakyThrows
+  public void updateConfiguration(File configurationFile) {
+    if (!configurationFile.exists()) {
+      return;
     }
 
-    if (configuration == null) {
-      configuration = create();
+    LanguageServerConfiguration configuration;
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
+    try {
+      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    } catch (IOException e) {
+      LOGGER.error("Can't deserialize configuration file", e);
+      return;
     }
-    return configuration;
+
+    // todo: refactor
+    PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
+    PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
+    // non-standard getter
+    this.documentLinkOptions.setUseDevSite(configuration.documentLinkOptions.useDevSite());
   }
 
   public static LanguageServerConfiguration create() {

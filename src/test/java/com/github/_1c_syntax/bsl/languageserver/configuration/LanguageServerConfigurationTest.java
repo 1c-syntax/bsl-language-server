@@ -29,6 +29,9 @@ import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +44,8 @@ import java.util.Map;
 import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
@@ -48,6 +53,9 @@ class LanguageServerConfigurationTest {
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
     = "./src/test/resources/.partial-bsl-language-server.json";
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void startUp() throws IOException {
@@ -60,9 +68,6 @@ class LanguageServerConfigurationTest {
 
   @Test
   void createDefault() {
-    // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-
     // then
     assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
     assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
@@ -75,7 +80,7 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.updateConfiguration(configurationFile);
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
@@ -110,7 +115,7 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_EMPTY_CONFIGURATION_FILE);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.updateConfiguration(configurationFile);
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
@@ -125,13 +130,12 @@ class LanguageServerConfigurationTest {
   @Test
   void test_GetCustomConfigurationRoot() {
 
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
     Path path = Paths.get(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
-    configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.updateConfiguration(configurationFile);
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
@@ -141,10 +145,9 @@ class LanguageServerConfigurationTest {
   void testPartialInitialization() {
     // given
     File configurationFile = new File(PATH_TO_PARTIAL_CONFIGURATION_FILE);
+    configuration.updateConfiguration(configurationFile);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-
     CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 

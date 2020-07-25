@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,8 +58,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
-  public UsingModalWindowsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public UsingModalWindowsDiagnostic() {
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
     pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");

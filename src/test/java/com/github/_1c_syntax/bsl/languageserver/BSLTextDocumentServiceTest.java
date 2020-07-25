@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -40,6 +38,8 @@ import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,11 +52,11 @@ import java.util.concurrent.ExecutionException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+@SpringBootTest
 class BSLTextDocumentServiceTest {
 
-  private final BSLTextDocumentService textDocumentService = new BSLTextDocumentService(
-    LanguageServerConfiguration.create(),
-    new ServerContext());
+  @Autowired
+  private BSLTextDocumentService textDocumentService;
 
   @Test
   void completion() throws ExecutionException, InterruptedException {

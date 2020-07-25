@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -68,16 +67,8 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
   )
   private Pattern searchWordsStdPathsUnix = CaseInsensitivePattern.compile("^\\/(" + REGEX_STD_PATHS_UNIX + ")");
 
-  public UsingHardcodePathDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     // Слова поиска стандартных корневых каталогов Unix
     String searchWordsStdPathsUnixProperty =
       (String) configuration.getOrDefault("searchWordsStdPathsUnix", REGEX_STD_PATHS_UNIX);

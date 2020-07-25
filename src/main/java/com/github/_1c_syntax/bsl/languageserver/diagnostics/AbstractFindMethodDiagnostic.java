@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
@@ -47,11 +46,9 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Конструктор по умолчанию
-   * @param info служебная информация о диагностике
    * @param pattern регулярное выражение для проверки
    */
-  AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
-    super(info);
+  AbstractFindMethodDiagnostic(Pattern pattern) {
     methodPattern = pattern;
   }
 

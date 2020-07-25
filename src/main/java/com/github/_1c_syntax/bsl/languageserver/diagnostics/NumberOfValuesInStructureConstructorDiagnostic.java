@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -54,10 +53,6 @@ public class NumberOfValuesInStructureConstructorDiagnostic extends AbstractVisi
     defaultValue = "" + MAX_VALUES_COUNT
   )
   private int maxValuesCount = MAX_VALUES_COUNT;
-
-  public NumberOfValuesInStructureConstructorDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {

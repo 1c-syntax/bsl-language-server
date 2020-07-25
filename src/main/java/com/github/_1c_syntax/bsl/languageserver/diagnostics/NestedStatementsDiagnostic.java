@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -35,6 +34,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 )
 public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
 
-  private final String relatedMessage;
+  private String relatedMessage;
   private static final int MAX_ALLOWED_LEVEL = 4;
 
   @DiagnosticParameter(
@@ -66,8 +66,8 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   private ParseTree lastCtx;
   private final Deque<ParseTree> nestedParents = new ArrayDeque<>();
 
-  public NestedStatementsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @PostConstruct
+  public void init() {
     relatedMessage = this.info.getResourceString("parentStatementRelatedMessage");
   }
 

@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -71,8 +70,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
   )
   private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
 
-  public SpaceAtStartCommentDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public SpaceAtStartCommentDiagnostic() {
     this.codeRecognizer = new CodeRecognizer(COMMENTED_CODE_THRESHOLD, new BSLFootprint());
   }
 
@@ -88,10 +86,6 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     String commentsAnnotationString =
       (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION);
     this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));

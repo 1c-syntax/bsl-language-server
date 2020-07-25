@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ import java.util.jar.Manifest;
   description = "Print version",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
+@Component
 public class VersionCommand implements Callable<Integer> {
 
   public Integer call() {

@@ -25,7 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.ExitCodeGenerator;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
@@ -49,7 +55,10 @@ import static picocli.CommandLine.Command;
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
   footer = "@|green Copyright(c) 2018-2020|@",
   header = "@|green BSL language server|@")
-public class BSLLSPLauncher implements Callable<Integer> {
+@SpringBootApplication
+@Component
+@RequiredArgsConstructor
+public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
 
   private static final String DEFAULT_COMMAND = "lsp";
 
@@ -66,9 +75,23 @@ public class BSLLSPLauncher implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  private final CommandLine.IFactory picocliFactory;
+
+  private int exitCode;
+
   public static void main(String[] args) {
-    var app = new BSLLSPLauncher();
-    var cmd = new CommandLine(app);
+    var applicationContext = SpringApplication.run(BSLLSPLauncher.class, args);
+    var launcher = applicationContext.getBean(BSLLSPLauncher.class);
+    if (launcher.getExitCode() >= 0) {
+      System.exit(
+        SpringApplication.exit(applicationContext)
+      );
+    }
+  }
+
+  @Override
+  public void run(String[] args) {
+    var cmd = new CommandLine(this, picocliFactory);
 
     // проверка использования дефолтной команды
     // если строка параметров пуста, то это точно вызов команды по умолчанию
@@ -81,7 +104,7 @@ public class BSLLSPLauncher implements Callable<Integer> {
         var parseResult = cmd.parseArgs(args);
         // если переданы параметры без команды и это не справка
         // то считаем, что параметры для команды по умолчанию
-        if(!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+        if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
           args = addDefaultCommand(args);
         }
       } catch (ParameterException ex) {
@@ -93,10 +116,8 @@ public class BSLLSPLauncher implements Callable<Integer> {
       }
     }
 
-    int result = cmd.execute(args);
-    if (result >= 0) {
-      System.exit(result);
-    }
+    exitCode = cmd.execute(args);
+
   }
 
   @NotNull
@@ -105,6 +126,11 @@ public class BSLLSPLauncher implements Callable<Integer> {
     tmpList.add(0, DEFAULT_COMMAND);
     args = tmpList.toArray(new String[0]);
     return args;
+  }
+
+  @Override
+  public int getExitCode() {
+    return exitCode;
   }
 
   public Integer call() {

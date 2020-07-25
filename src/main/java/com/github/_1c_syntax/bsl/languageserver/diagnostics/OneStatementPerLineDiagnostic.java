@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -61,10 +60,6 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
   );
   private int previousLineNumber;
   private final List<BSLParser.StatementContext> statementsPerLine = new ArrayList<>();
-
-  public OneStatementPerLineDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private List<DiagnosticRelatedInformation> getRelatedInformation(BSLParser.StatementContext self) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();

@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -55,10 +54,6 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
   private int currentRegionLevel;
   private int currentUsageLevel;
   private final Deque<BSLParser.RegionStartContext> regions = new ArrayDeque<>();
-
-  public EmptyRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void enterEveryRule(ParserRuleContext ctx) {

@@ -31,11 +31,13 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component
 public final class DocumentSymbolProvider {
 
   private static final Map<Class<? extends Symbol>, SymbolKind> symbolKinds = Map.of(
@@ -44,11 +46,7 @@ public final class DocumentSymbolProvider {
     VariableSymbol.class, SymbolKind.Variable
   );
 
-  private DocumentSymbolProvider() {
-    // only statics
-  }
-
-  public static List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
+  public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .map(Either::<SymbolInformation, DocumentSymbol>forRight)

@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -71,16 +70,12 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
   private List<MethodDescription> methodDescriptions;
   private CodeRecognizer codeRecognizer;
 
-  public CommentedCodeDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public CommentedCodeDiagnostic() {
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     threshold = (float) configuration.getOrDefault("threshold", threshold);
     codeRecognizer = new CodeRecognizer(threshold, new BSLFootprint());
   }

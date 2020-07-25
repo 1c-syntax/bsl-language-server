@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -39,8 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
-
 @Slf4j
 public class DiagnosticInfo {
 
@@ -48,23 +46,27 @@ public class DiagnosticInfo {
     = createSeverityToLSPSeverityMap();
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
-  private final Language language;
+  private final LanguageServerConfiguration configuration;
 
   private final DiagnosticCode diagnosticCode;
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
-  public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass, Language language) {
+  public DiagnosticInfo(
+    Class<? extends BSLDiagnostic> diagnosticClass,
+    LanguageServerConfiguration configuration
+  ) {
     this.diagnosticClass = diagnosticClass;
-    this.language = language;
+    this.configuration = configuration;
 
     diagnosticCode = createDiagnosticCode();
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
   }
 
+  @Deprecated
   public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
-    this(diagnosticClass, DEFAULT_LANGUAGE);
+    this(diagnosticClass, null);
   }
 
   public Class<? extends BSLDiagnostic> getDiagnosticClass() {
@@ -80,7 +82,7 @@ public class DiagnosticInfo {
   }
 
   public String getDescription() {
-    String langCode = language.getLanguageCode();
+    String langCode = configuration.getLanguage().getLanguageCode();
 
     String resourceName = langCode + "/" + diagnosticCode.getStringValue() + ".md";
     InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
@@ -107,11 +109,11 @@ public class DiagnosticInfo {
   }
 
   public String getResourceString(String key) {
-    return Resources.getResourceString(language, diagnosticClass, key);
+    return Resources.getResourceString(configuration.getLanguage(), diagnosticClass, key);
   }
 
   public String getResourceString(String key, Object... args) {
-    return Resources.getResourceString(language, diagnosticClass, key, args);
+    return Resources.getResourceString(configuration.getLanguage(), diagnosticClass, key, args);
   }
 
   public DiagnosticType getType() {

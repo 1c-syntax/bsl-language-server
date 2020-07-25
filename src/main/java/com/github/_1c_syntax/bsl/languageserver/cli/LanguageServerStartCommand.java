@@ -21,14 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLanguageServer;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -60,6 +61,8 @@ import static picocli.CommandLine.Option;
   description = "LSP server mode (default)",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
+@Component
+@RequiredArgsConstructor
 public class LanguageServerStartCommand implements Callable<Integer> {
   @Option(
     names = {"-h", "--help"},
@@ -74,12 +77,13 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
+  private final LanguageServerConfiguration configuration;
+  private final LanguageServer server;
+
   public Integer call() {
 
     File configurationFile = new File(configurationOption);
-
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
-    LanguageServer server = new BSLLanguageServer(configuration);
+    configuration.updateConfiguration(configurationFile);
 
     Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
 

@@ -32,6 +32,7 @@ import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +45,8 @@ import java.util.stream.Collectors;
  * {@code Supplier} {@code codeAction} для генерации отсутствующих
  * стандартных программных областей
  */
-public class GenerateStandardRegionsSupplier implements CodeActionSupplier{
+@Component
+public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
 
   /**
    * При необходимости создает {@code CodeAction} для генерации отсутствующих

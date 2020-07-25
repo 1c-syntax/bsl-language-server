@@ -28,6 +28,9 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,21 +40,26 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ServerContextTest {
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+class ServerContextTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
   private static final String PATH_TO_CATALOG_FILE = "Catalogs/Справочник1/Ext/ManagerModule.bsl";
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
+  @Autowired
+  private ServerContext serverContext;
+
   @Test
   void testConfigurationMetadata() {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    ServerContext serverContext = new ServerContext(path);
+    serverContext.setConfigurationRoot(path);
     Configuration configurationMetadata = serverContext.getConfiguration();
 
-    assertThat(configurationMetadata).isNotEqualTo(null);
+    assertThat(configurationMetadata).isNotNull();
 
     assertThat(configurationMetadata.getScriptVariant()).isEqualTo(ScriptVariant.RUSSIAN);
 
@@ -71,7 +79,7 @@ public class ServerContextTest {
   void testMdoRefs() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);
-    var serverContext = new ServerContext(path);
+    serverContext.setConfigurationRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
     DocumentContext documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
@@ -103,21 +111,20 @@ public class ServerContextTest {
   void testErrorConfigurationMetadata() {
     Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
 
-    ServerContext serverContext = new ServerContext();
     serverContext.setConfigurationRoot(path);
     Configuration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
-    assertThat(configurationMetadata.getModulesByType()).hasSize(0);
+    assertThat(configurationMetadata.getModulesByType()).isEmpty();
   }
 
   @Test
   void testPopulateContext() {
     // given
     Path path = Absolute.path(PATH_TO_METADATA);
-    ServerContext serverContext = new ServerContext(path);
+    serverContext.setConfigurationRoot(path);
 
-    assertThat(serverContext.getDocuments()).hasSize(0);
+    assertThat(serverContext.getDocuments()).isEmpty();
 
     // when
     serverContext.populateContext();

@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,10 +58,6 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + MAX_RETURNS_COUNT
   )
   private int maxReturnsCount = MAX_RETURNS_COUNT;
-
-  public TooManyReturnsDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static String leftSubStr(String inputString) {
     if (inputString.length() < MAX_RELATION_TEXT_LENGTH) {

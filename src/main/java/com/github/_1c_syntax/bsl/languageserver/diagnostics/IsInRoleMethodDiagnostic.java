@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -61,10 +60,6 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private final Set<String> isInRoleVars = new HashSet<>();
   private final Set<String> privilegedModeNameVars = new HashSet<>();
-
-  public IsInRoleMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {

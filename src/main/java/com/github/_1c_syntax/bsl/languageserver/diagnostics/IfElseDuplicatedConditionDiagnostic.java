@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -33,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,11 +52,11 @@ import java.util.stream.Collectors;
 )
 public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final String relatedMessage;
+  private String relatedMessage;
   private final Set<BSLParser.ExpressionContext> checkedConditions = new HashSet<>();
 
-  public IfElseDuplicatedConditionDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @PostConstruct
+  public void init() {
     relatedMessage = this.info.getResourceString("identicalConditionRelatedMessage");
   }
 

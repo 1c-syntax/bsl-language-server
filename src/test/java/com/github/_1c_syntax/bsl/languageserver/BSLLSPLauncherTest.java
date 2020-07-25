@@ -25,29 +25,35 @@ import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class BSLLSPLauncherTest {
 
-  private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-  private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-  private final PrintStream originalOut = System.out;
-  private final PrintStream originalErr = System.err;
+  private ByteArrayOutputStream outContent;
+  private ByteArrayOutputStream errContent;
 
   @BeforeEach
   void setUpStreams() {
+    outContent = new ByteArrayOutputStream();
+    errContent = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outContent));
     System.setErr(new PrintStream(errContent));
   }
 
   @AfterEach
   void restoreStreams() {
-    System.setOut(originalOut);
-    System.setErr(originalErr);
+    System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+    System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
   }
 
   @Test
@@ -83,8 +89,8 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
-    // TODO:
-    // assertThat(errContent.toString()).contains("100%");
+   // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
   }
 
   @Test
@@ -141,8 +147,8 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
-    // TODO:
     // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
   }
 
   @Test

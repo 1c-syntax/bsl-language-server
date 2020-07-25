@@ -24,20 +24,20 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Component
+@RequiredArgsConstructor
 public final class CodeLensProvider {
 
   private final LanguageServerConfiguration configuration;
-
-  public CodeLensProvider(LanguageServerConfiguration configuration) {
-    this.configuration = configuration;
-  }
 
   public List<CodeLens> getCodeLens(DocumentContext documentContext) {
     List<CodeLens> codeLenses = new ArrayList<>();

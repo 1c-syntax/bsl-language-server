@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -54,10 +53,6 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
   private static final Pattern ERROR_EXPRESSION = CaseInsensitivePattern.compile(
     "(\\.Свойство\\(\"АвтоТест\"\\)|=\"АвтоТест\"|\\.Property\\(\"AutoTest\"\\)|=\"AutoTest\")$"
   );
-
-  public ExcessiveAutoTestCheckDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {

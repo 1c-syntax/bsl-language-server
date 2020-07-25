@@ -24,22 +24,22 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class BSLLanguageServerTest {
 
+  @Autowired
   private BSLLanguageServer server;
-
-  @BeforeEach
-  void setUp() {
-    server = new BSLLanguageServer();
-  }
 
   @Test
   void initialize() {

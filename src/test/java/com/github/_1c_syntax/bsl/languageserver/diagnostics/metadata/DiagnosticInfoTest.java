@@ -22,22 +22,29 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-
+@SpringBootTest
 class DiagnosticInfoTest {
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testParameter() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class);
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -72,9 +79,52 @@ class DiagnosticInfoTest {
   }
 
   @Test
+  void testParameterSuper() {
+
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration);
+
+    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
+    Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getMessage("")).isNotEmpty();
+    Assertions.assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.ERROR);
+    Assertions.assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MINOR);
+    Assertions.assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+    Assertions.assertThat(diagnosticInfo.getCompatibilityMode()).isEqualTo(DiagnosticCompatibilityMode.UNDEFINED);
+    Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.BSL);
+    Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(2);
+    Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
+    Assertions.assertThat(diagnosticInfo.getTags().size()).isNotZero();
+
+    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isNotZero();
+    Assertions.assertThat(diagnosticInfo.getParameters().size()).isEqualTo(1);
+
+
+    DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
+    assertThat(parameter.getDescription())
+      .isEqualTo("Заявленные языки");
+
+    assertThat(parameter.getDefaultValue()).isEqualTo("ru");
+    assertThat(parameter.getType()).isEqualTo(String.class);
+
+    Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
+    assertThat(maybeParameter).isPresent();
+    assertThat(maybeParameter).hasValue(parameter);
+
+    Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
+    assertThat(maybeFakeParameter).isEmpty();
+  }
+
+  @Test
   void testParameterEn() {
 
-    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, Language.EN);
+    // given
+    configuration.setLanguage(Language.EN);
+
+    // when
+    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
+
+    // then
     assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())
       .isEqualTo("Comment as code");
 

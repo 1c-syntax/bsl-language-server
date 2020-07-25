@@ -15,9 +15,11 @@ plugins {
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.28.0"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
     id("io.freefair.javadoc-links") version "5.1.0"
+    id("org.springframework.boot") version "2.3.1.RELEASE"
 }
+
+apply(plugin = "io.spring.dependency-management")
 
 repositories {
     mavenCentral()
@@ -46,6 +48,10 @@ val junitVersion = "5.6.1"
 val languageToolVersion = "5.0"
 
 dependencies {
+
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("info.picocli:picocli-spring-boot-starter:4.4.0")
+
     // https://mvnrepository.com/artifact/org.eclipse.lsp4j/org.eclipse.lsp4j
     implementation("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
 
@@ -77,8 +83,6 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    implementation("org.reflections", "reflections", "0.9.10")
-
     implementation("com.github.1c-syntax", "bsl-parser", "0.14.1") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
@@ -88,7 +92,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
 
-    implementation("com.github.1c-syntax", "utils", "0.3.0")
+    implementation("com.github.1c-syntax", "utils", "9202a75f5cc6f1ecff13855e478c4d67a3bb62c2")
     implementation("com.github.1c-syntax", "mdclasses", "cff4b25f84bb7edcb2f55cfa0a12668f9461c816")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
@@ -96,6 +100,8 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
     testImplementation("org.junit.jupiter", "junit-jupiter-params", junitVersion)
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     testImplementation("org.assertj", "assertj-core", "3.16.1")
     testImplementation("org.mockito", "mockito-core", "3.3.3")
@@ -122,14 +128,7 @@ tasks.jar {
         attributes["Implementation-Version"] = archiveVersion.get()
     }
 
-    enabled = false
-    dependsOn(tasks.shadowJar)
-}
-
-tasks.shadowJar {
-    project.configurations.implementation.get().isCanBeResolved = true
-    configurations = listOf(project.configurations["implementation"])
-    archiveClassifier.set("")
+    dependsOn(tasks.bootJar)
 }
 
 tasks.test {
@@ -249,7 +248,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             artifact(tasks["sourcesJar"])
-            artifact(tasks["shadowJar"])
+            artifact(tasks["bootJar"])
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")

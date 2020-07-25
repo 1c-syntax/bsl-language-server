@@ -26,14 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 
 import java.util.List;
 
 public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic implements SymbolTreeVisitor {
-  public AbstractSymbolTreeDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   protected void check() {

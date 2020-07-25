@@ -24,16 +24,24 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class DocumentLinkProviderTest {
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
+
+  @Autowired
+  private DocumentLinkProvider documentLinkProvider;
 
   private static final String SITE_URL = "https://1c-syntax.github.io/bsl-language-server/";
   private static final String SITE_EN_URL = "https://1c-syntax.github.io/bsl-language-server/en/";
@@ -41,11 +49,8 @@ class DocumentLinkProviderTest {
 
   @Test
   void testGetDocumentLinks() {
-
     // given
-    var configuration = LanguageServerConfiguration.create();
     var documentContext = getDocumentContext();
-    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
 
     // when
     var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
@@ -65,9 +70,9 @@ class DocumentLinkProviderTest {
 
     // given
     var configurationFile = new File("./src/test/resources/.bsl-language-server-only-en-param.json");
-    var configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.updateConfiguration(configurationFile);
+
     var documentContext = getDocumentContext();
-    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
 
     // when
     var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
@@ -85,10 +90,8 @@ class DocumentLinkProviderTest {
   @Test
   void testDevSite() {
     // given
-    var configuration = LanguageServerConfiguration.create();
     var documentLinkOptions = configuration.getDocumentLinkOptions();
     var documentContext = getDocumentContext();
-    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
 
     // when
     documentLinkOptions.setUseDevSite(false);
@@ -120,9 +123,8 @@ class DocumentLinkProviderTest {
 
   @Test
   void testTooltip() {
-    var configuration = LanguageServerConfiguration.create();
+    // given
     var documentContext = getDocumentContext();
-    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
 
     // when
     configuration.setLanguage(Language.RU);
@@ -147,9 +149,7 @@ class DocumentLinkProviderTest {
 
   @Test
   void testSiteRoot() {
-    var configuration = LanguageServerConfiguration.create();
     var documentContext = getDocumentContext();
-    var documentLinkProvider = getDocumentLinkProvider(configuration, documentContext);
 
     // when
     var documentLinks = documentLinkProvider.getDocumentLinks(documentContext);
@@ -170,16 +170,10 @@ class DocumentLinkProviderTest {
   }
 
   @NotNull
-  private DocumentLinkProvider getDocumentLinkProvider(LanguageServerConfiguration configuration, DocumentContext documentContext) {
-    var diagnosticSupplier = new DiagnosticSupplier(configuration);
-    var diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    diagnosticProvider.computeDiagnostics(documentContext);
-    return new DocumentLinkProvider(configuration, diagnosticProvider);
-  }
-
-  @NotNull
   private DocumentContext getDocumentContext() {
     var filePath = "./src/test/resources/providers/documentLinkProvider.bsl";
-    return TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    documentContext.getDiagnostics();
+    return documentContext;
   }
 }

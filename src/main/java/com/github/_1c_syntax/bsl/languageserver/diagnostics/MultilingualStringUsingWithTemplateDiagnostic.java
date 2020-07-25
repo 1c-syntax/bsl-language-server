@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -39,10 +38,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
   }
 )
 public class MultilingualStringUsingWithTemplateDiagnostic extends AbstractMultilingualStringDiagnostic {
-
-  public MultilingualStringUsingWithTemplateDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   protected boolean check() {
