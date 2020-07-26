@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1595684032746,
+  "lastUpdate": 1595772523803,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4340,6 +4340,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.2301061923619085",
             "extra": "mean: 62.912076552708946 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7d3b79dc457b650acdbc42129d9cd81a7c6da22a",
+          "message": "Merge pull request #1305 from 1c-syntax/fix/diagnostic-instantiation-speedup\n\nУскорение получения DiagnosticInfo в BPP",
+          "timestamp": "2020-07-26T16:57:36+03:00",
+          "tree_id": "fd9235145275af5f8678de1845893fde3ca70c74",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7d3b79dc457b650acdbc42129d9cd81a7c6da22a"
+        },
+        "date": 1595772520280,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 63.334672609965004,
+            "unit": "sec",
+            "range": "stddev: 1.4717309836879306",
+            "extra": "mean: 63.334672609965004 sec\nrounds: 3"
           }
         ]
       }
