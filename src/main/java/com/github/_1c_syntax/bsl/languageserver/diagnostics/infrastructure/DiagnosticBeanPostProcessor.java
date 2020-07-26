@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 
@@ -34,9 +33,10 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
-public abstract class DiagnosticBeanPostProcessor implements BeanPostProcessor {
+public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final LanguageServerConfiguration configuration;
+  private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -46,7 +46,7 @@ public abstract class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
     BSLDiagnostic diagnostic = (BSLDiagnostic) bean;
 
-    var info = diagnosticInfo(diagnostic.getClass());
+    var info = diagnosticInfos.get(diagnostic.getClass());
     diagnostic.setInfo(info);
 
     return diagnostic;
@@ -71,6 +71,4 @@ public abstract class DiagnosticBeanPostProcessor implements BeanPostProcessor {
     return diagnostic;
   }
 
-  @Lookup
-  public abstract DiagnosticInfo diagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass);
 }
