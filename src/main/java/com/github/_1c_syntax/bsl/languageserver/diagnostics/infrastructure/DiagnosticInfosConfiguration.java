@@ -27,9 +27,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticI
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
 import org.springframework.context.annotation.Scope;
 
 import java.util.Arrays;
@@ -39,6 +41,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Configuration
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @RequiredArgsConstructor
 public class DiagnosticInfosConfiguration {
 
@@ -47,6 +50,7 @@ public class DiagnosticInfosConfiguration {
 
   @SuppressWarnings("unchecked")
   @Bean("diagnosticInfos")
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   public Map<String, DiagnosticInfo> diagnosticInfosByCode() {
     var beanNames = applicationContext.getBeanNamesForAnnotation(DiagnosticMetadata.class);
 
@@ -60,6 +64,7 @@ public class DiagnosticInfosConfiguration {
   }
 
   @Bean("diagnosticInfosByDiagnosticClass")
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   public Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByDiagnosticClass() {
     return diagnosticInfosByCode().values().stream()
       .collect(Collectors.toMap(DiagnosticInfo::getDiagnosticClass, Function.identity()));
