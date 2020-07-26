@@ -8,8 +8,8 @@
 
 | Имя | Тип | Описание | Значение по умолчанию |
 | :-: | :-: | :-- | :-: |
-| `checkModuleBody` | `Булево` | ```Проверять тело модуля``` | ```true``` |
 | `complexityThreshold` | `Целое` | ```Допустимая когнитивная сложность метода``` | ```15``` |
+| `checkModuleBody` | `Булево` | ```Проверять тело модуля``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -231,7 +231,7 @@
 
 ```json
 "CognitiveComplexity": {
-    "checkModuleBody": true,
-    "complexityThreshold": 15
+    "complexityThreshold": 15,
+    "checkModuleBody": true
 }
 ```
