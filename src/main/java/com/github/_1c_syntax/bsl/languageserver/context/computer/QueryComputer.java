@@ -40,7 +40,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private final DocumentContext documentContext;
   private final List<SDBLTokenizer> queries = new ArrayList<>();
 
-  private final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
+  private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
 
   public QueryComputer(DocumentContext documentContext) {
@@ -59,7 +59,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     int startLine = 0;
     var text = "";
-    if (ctx.getTokens().size() > 0) {
+    if (!ctx.getTokens().isEmpty()) {
       startLine = ctx.getTokens().get(0).getLine();
       text = StringUtils.repeat('\n', startLine);
     }
@@ -90,7 +90,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     return string;
   }
 
-  private String addEmptyLines(int startLine, Token token) {
+  private static String addEmptyLines(int startLine, Token token) {
     if (token.getLine() > startLine + 1) {
       return StringUtils.repeat('\n', (token.getLine() - startLine - 1));
     }
