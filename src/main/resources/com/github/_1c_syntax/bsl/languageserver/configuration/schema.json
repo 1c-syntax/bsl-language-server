@@ -188,6 +188,9 @@
                 "JoinWithSubQuery": {
                     "$ref": "parameters-schema.json#/definitions/JoinWithSubQuery"
                 },
+                "JoinWithVirtualTable": {
+                    "$ref": "parameters-schema.json#/definitions/JoinWithVirtualTable"
+                },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },

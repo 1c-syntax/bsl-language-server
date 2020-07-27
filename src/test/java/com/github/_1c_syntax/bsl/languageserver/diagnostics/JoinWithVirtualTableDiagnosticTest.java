@@ -21,32 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
-import lombok.Getter;
-import lombok.Setter;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-public class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
-  @Getter
-  @Setter
-  protected DiagnosticInfo info;
-  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  protected DocumentContext documentContext;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-  @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    this.documentContext = documentContext;
-    diagnosticStorage.clearDiagnostics();
-    var queries = documentContext.getQueries();
-    if (!queries.isEmpty()) {
-      queries.forEach(sdblTokenizer -> this.visitQueryPackage(sdblTokenizer.getAst()));
-    }
+class JoinWithVirtualTableDiagnosticTest extends AbstractDiagnosticTest<JoinWithVirtualTableDiagnostic> {
+  JoinWithVirtualTableDiagnosticTest() {
+    super(JoinWithVirtualTableDiagnostic.class);
+  }
 
-    return diagnosticStorage.getDiagnostics();
+  @Test
+  void test() {
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics, true)
+      .hasRange(3, 84, 119)
+      .hasRange(12, 5, 56)
+      .hasRange(22, 5, 56)
+      .hasRange(31, 9, 53)
+      .hasRange(33, 5, 56);
+
   }
 }

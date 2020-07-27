@@ -90,7 +90,7 @@ public class DocumentContext {
   private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
   private final Lazy<List<Diagnostic>> diagnostics = new Lazy<>(this::computeDiagnostics, diagnosticsLock);
 
-  private final Lazy<Map<BSLParserRuleContext, SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
+  private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
   public DocumentContext(URI uri, String content, ServerContext context, DiagnosticComputer diagnosticComputer) {
     this.uri = uri;
@@ -205,7 +205,7 @@ public class DocumentContext {
     return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 
-  public Map<BSLParserRuleContext, SDBLTokenizer> getQueries() {
+  public List<SDBLTokenizer> getQueries() {
     return queries.getOrCompute();
   }
 
@@ -355,7 +355,7 @@ public class DocumentContext {
     return diagnosticComputer.compute(this);
   }
 
-  private Map<BSLParserRuleContext, SDBLTokenizer> computeQueries() {
+  private List<SDBLTokenizer> computeQueries() {
     return (new QueryComputer(this)).compute();
   }
 }

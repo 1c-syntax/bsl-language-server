@@ -71,8 +71,10 @@
 Класс должен реализовывать интерфейс `BSLDiagnostic`. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих `BSLDiagnostic`:
 
 - для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
-- при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наслодовать класс от `AbstractListenerDiagnostic`
-- в остальных случаях нужно использовать стратегию `визитера` и `AbstractVisitorDiagnostic`
+- при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наследовать класс от `AbstractListenerDiagnostic`
+- в остальных случаях нужно использовать стратегию `визитера` и 
+  - `AbstractVisitorDiagnostic` для диагностик кода 1С
+  - `AbstractSDBLVisitorDiagnostic` для диагностик запросов 1С
 
 Примеры
 
@@ -90,6 +92,10 @@ public class TemplateDiagnostic extends AbstractVisitorDiagnostic
 
 ```java
 public class TemplateDiagnostic extends AbstractListenerDiagnostic
+```
+
+```java
+public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic
 ```
 
 Диагностика может предоставлять т.н. `быстрые исправления`, для чего класс диагностики должен реализовывать интерфейс `QuickFixProvider`. Подробно о добавлении `быстрых исправлений` в диагностику написано [статье](DiagnosticQuickFix.md).
@@ -110,6 +116,10 @@ public class TemplateDiagnostic extends AbstractVisitorDiagnostic implements Qui
 
 ```java
 public class TemplateDiagnostic extends AbstractListenerDiagnostic implements QuickFixProvider
+```
+
+```java
+public class TemplateDiagnostic extends AbstractSDBLVisitorDiagnostic implements QuickFixProvider
 ```
 
 После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в [статье](DiagnostcAddSettings.md).
@@ -197,6 +207,12 @@ private final DiagnosticInfo info;
 
 - Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует
 - Диагностика для блока условия или области должна вызывать `super-метод`, т.к. они существуют и используются (например `return super.visitSub(ctx)` для методов)
+
+### Класс диагностики, унаследованный от AbstractSDBLVisitorDiagnostic
+
+В классе диагностики необходимо реализовать методы всех соответствующих `визитеров AST`, в соответствии грамматикой языка запросов, описанной в проекте [BSLParser](https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4).  Полный список существующих методов-визитеров находится в классе `SDBLParserBaseVisitor`. 
+
+Остальные правила использования идентичны `AbstractVisitorDiagnostic`.
 
 ### Класс диагностики, унаследованный от AbstractListenerDiagnostic **(В РАЗРАБОТКЕ)**
 

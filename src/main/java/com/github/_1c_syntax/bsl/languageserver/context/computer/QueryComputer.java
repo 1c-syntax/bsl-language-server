@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
@@ -33,14 +32,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.regex.Pattern;
 
-public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<Map<BSLParserRuleContext, SDBLTokenizer>> {
+public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
 
   private final DocumentContext documentContext;
-  private final Map<BSLParserRuleContext, SDBLTokenizer> queries = new HashMap<>();
+  private final List<SDBLTokenizer> queries = new ArrayList<>();
 
   private final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
@@ -50,10 +48,10 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   }
 
   @Override
-  public Map<BSLParserRuleContext, SDBLTokenizer> compute() {
+  public List<SDBLTokenizer> compute() {
     queries.clear();
     visitFile(documentContext.getAst());
-    return new HashMap<>(queries);
+    return new ArrayList<>(queries);
   }
 
   @Override
@@ -75,7 +73,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     if (QUERIES_ROOT_KEY.matcher(text).find()) {
       // в токенайзер передадим строку без кавычек
-      queries.put(ctx, new SDBLTokenizer(text.substring(1, text.length() - 1)));
+      queries.add(new SDBLTokenizer(text.substring(1, text.length() - 1)));
     }
 
     return ctx;
