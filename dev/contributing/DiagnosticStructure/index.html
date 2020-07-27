@@ -511,10 +511,10 @@
 </code></pre></div>
 
 
-<p>После объявления класса, для параметрирезуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в <a href="../DiagnostcAddSettings/">статье</a>.</p>
+<p>После объявления класса, для параметризуемых диагностик располагается блок с их параметрами. Подробно о параметрах диагностик написано в <a href="../DiagnostcAddSettings/">статье</a>.</p>
 <p>Ниже приведены отличия в реализации классов диагностик.</p>
 <h3 id="bsldiagnostic">Класс диагностики, реализующий интерфейс BSLDiagnostic<a class="headerlink" href="#bsldiagnostic" title="Permanent link">&para;</a></h3>
-<p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
+<p>В классе необходимо определить приватное поле <code>diagnosticStorage</code> типа <code>DiagnosticStorage</code>, которое будет хранилищем обнаруженных замечаний, и приватное свойство <code>info</code> типа <code>DiagnosticInfo</code>, которое будет предоставлять доступ к данным диагностики.</p>
 <div class="codehilite"><pre><span></span><code> <span class="kd">private</span> <span class="n">DiagnosticStorage</span> <span class="n">diagnosticStorage</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DiagnosticStorage</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
 <span class="kd">private</span> <span class="kd">final</span> <span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">;</span>
 </code></pre></div>
@@ -522,9 +522,9 @@
 
 <p>В классе необходимо реализовать:</p>
 <ul>
-<li>конструктор, инициализирующий свойство <code>info</code></li>
 <li>метод <code>getDiagnostics</code> принимающий контекст анализируемого файла и возвращающий список обнаруженных замечаний <code>List&lt;Diagnostic&gt;</code></li>
 <li>метод <code>getInfo</code>, возвращающий значение свойства <code>info</code></li>
+<li>метод <code>setInfo</code>, для установки значения свойства <code>info</code></li>
 </ul>
 <p>Ниже приведена общая структура метода <code>getDiagnostics</code></p>
 <div class="codehilite"><pre><span></span><code>  <span class="nd">@Override</span>
@@ -548,16 +548,10 @@
 
 <h3 id="abstractdiagnostic">Класс диагностики, унаследованный от AbstractDiagnostic<a class="headerlink" href="#abstractdiagnostic" title="Permanent link">&para;</a></h3>
 <p>Для простых диагностик стоит наследовать класс своей диагностики от класса AbstractDiagnostic. 
-В классе диагностики необходимо переопределить метод <code>check</code>, принимающий в качестве параметра контекст анализируемоего файла <code>DocumentContext</code>, и конструктор с инициализацией свойства <code>info</code> базового класса   </p>
-<p>Метод <code>check</code> должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
+В классе диагностики необходимо реализовать метод <code>check</code> - он должен проанализировать контекст документа и, при наличии замечаний, добавить диагностику в <code>diagnosticStorage</code>.</p>
 <p>Пример:</p>
 <div class="codehilite"><pre><span></span><code>  <span class="nd">@Override</span>
-  <span class="kd">public</span> <span class="nf">TemplateDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nd">@Override</span>
-  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">(</span><span class="n">DocumentContext</span> <span class="n">documentContext</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">check</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">documentContext</span><span class="p">.</span><span class="na">getTokensFromDefaultChannel</span><span class="p">()</span>
       <span class="p">.</span><span class="na">parallelStream</span><span class="p">()</span>
       <span class="p">.</span><span class="na">filter</span><span class="p">((</span><span class="n">Token</span> <span class="n">t</span><span class="p">)</span> <span class="o">-&gt;</span>
@@ -569,15 +563,6 @@
 
 
 <h3 id="abstractvisitordiagnostic">Класс диагностики, унаследованный от AbstractVisitorDiagnostic<a class="headerlink" href="#abstractvisitordiagnostic" title="Permanent link">&para;</a></h3>
-<p>В классе должен быть реализован конструктор для инициализации свойства <code>info</code> базового класса</p>
-<p>Пример:</p>
-<div class="codehilite"><pre><span></span><code>  <span class="nd">@Override</span>
-  <span class="kd">public</span> <span class="nf">TemplateDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
-  <span class="p">}</span>
-</code></pre></div>
-
-
 <p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>BSLParserBaseVisitor</code>. Необходимо обратить внимание, что для упрощения добавлены <code>обобщенные</code> визитеры, например вместо реализации <code>visitFunction</code> для функции и <code>visitProcedure</code> для процедуры можно использовать <code>visitSub</code>, обобщающий работу с методами.</p>
 <p>В качестве параметра, в каждый метод визитера передается узел AST соответствующего типа. В теле метода необходимо проанализировать узел и/или его дочерние узлы и принять решение о наличии замечания. При обнаружении проблемы, необходимо добавить замечание в хранилище <code>diagnosticStorage</code> <em>(поле уже определено в абстрактном классе)</em>. Замечания может быть привязано как непосредственно к переданному узлу, так и к его дочерним или родительским узлам, к нужному блоку кода.</p>
 <p>Примерная структура метода</p>
@@ -592,7 +577,7 @@
 
 
 <p>Если диагностика <strong>не предусматривает</strong> анализ вложенных блоков, то она должна возвращать переданный входной параметр, в противном случае необходимо вызвать аналогичный <code>super-метод</code>.<br />
-Следует внимательно относится к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.</p>
+Следует внимательно относиться к этому правилу, т.к. оно позволит сэкономить ресурсы приложения не выполняя бессмысленный вызов.</p>
 <p>Примеры:</p>
 <ul>
 <li>Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует</li>
@@ -601,7 +586,7 @@
 <h3 id="abstractlistenerdiagnostic">Класс диагностики, унаследованный от AbstractListenerDiagnostic <strong>(В РАЗРАБОТКЕ)</strong><a class="headerlink" href="#abstractlistenerdiagnostic" title="Permanent link">&para;</a></h3>
 <p><em><strong>&lt;В разработке&gt;</strong></em></p>
 <h2 id="_4">Класс теста диагностики<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p>При написании тестов используется фреймворк <a href="https://junit.org/junit5/">JUnit5</a>, для утверждений используется библиотека <a href="https://joel-costigliola.github.io/assertj/">AssertJ</a>, предоставляющая <a href="https://ru.wikipedia.org/wiki/Fluent_interface">текучий/fluent-интерфейс</a> "ожиданий", подобно привычной многим библиотеке <a href="https://github.com/oscript-library/asserts">asserts</a> для <a href="http://oscript.io/">OneScript</a>.</p>
+<p>При написании тестов используется фреймворк <a href="https://junit.org/junit5/">JUnit5</a>, для утверждений - библиотека <a href="https://joel-costigliola.github.io/assertj/">AssertJ</a>, предоставляющая <a href="https://ru.wikipedia.org/wiki/Fluent_interface">текучий/fluent-интерфейс</a> "ожиданий", подобно привычной многим библиотеке <a href="https://github.com/oscript-library/asserts">asserts</a> для <a href="http://oscript.io/">OneScript</a>.</p>
 <p>Теста реализуется посредством добавления java-класса в пакет <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> в каталоге <code>src/test/java</code>.  </p>
 <p>В теле файла, нужно указать пакет, в который добавлен класс и блок импорта <em>(аналогично классу реализации диагностики)</em>.<br />
 В файле необходимо создать одноименный файлу класс, унаследованый от класса <code>AbstractDiagnosticTest</code> для созданного класса диагностики.</p>
@@ -628,9 +613,9 @@
 <p>Для добавления нового теста в созданный класс, необходимо добавить процедуру, аннотированную как тест <code>@Test</code>.</p>
 <p>В тестовом классе обязательно должны присутствовать методы для тестирования</p>
 <ul>
-<li>тест диагностики, саой по себе</li>
+<li>тест диагностики, самой по себе</li>
 <li>тест метода конфигурирования для параметризованных диагностик</li>
-<li>тест "быстрых замен" при их налиичии</li>
+<li>тест "быстрых замен" при их наличии</li>
 </ul>
 <h3 id="_5">Тест диагностики<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <p>Упрощенно, тест диагностики состоит из следующих шагов</p>
@@ -716,7 +701,7 @@
 <ul>
 <li>Заголовок, равный значению <code>diagnosticName</code> из файла ресурса диагностики соответствующего языка</li>
 <li>Описание параметров диагностики при их наличии</li>
-<li>Тело с описание диагностики, указанием "почему так плохо"</li>
+<li>Тело с описанием диагностики, указанием "почему так плохо"</li>
 <li>Исключительные ситуации, когда диагностика не детектирует замечание</li>
 <li>Примеры плохого и хорошего кода</li>
 <li>Алгоритм работы диагностики для сложных</li>
