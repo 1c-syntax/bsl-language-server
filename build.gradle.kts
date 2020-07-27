@@ -84,7 +84,7 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "0.14.1") {
+    implementation("com.github.1c-syntax", "bsl-parser", "2e41836b9c5035b53324a953ec783b391fefc00f") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")

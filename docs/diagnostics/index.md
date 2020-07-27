@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **113**
+Общее количество: **114**
 
-* Дефект кода: **71**
+* Дефект кода: **72**
 * Уязвимость: **3**
 * Ошибка: **35**
 * Потенциальная уязвимость: **4**
@@ -71,6 +71,7 @@
 | [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` |
 | [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br/>`standard`<br/>`unpredictable` |
 | [IsInRoleMethod](IsInRoleMethod.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` |
+| [JoinWithSubQuery](JoinWithSubQuery.md) | Соединение с вложенными запросами | Да | Важный | Дефект кода | `sql`<br/>`standard`<br/>`performance` |
 | [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br/>`badpractice` |
 | [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` |
 | [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` |

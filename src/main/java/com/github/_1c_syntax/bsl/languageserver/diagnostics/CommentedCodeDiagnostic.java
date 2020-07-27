@@ -33,7 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -174,7 +174,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
       return false;
     }
 
-    Tokenizer tokenizer = new Tokenizer(uncomment(text));
+    BSLTokenizer tokenizer = new BSLTokenizer(uncomment(text));
     final List<Token> tokens = tokenizer.getTokens();
 
     // Если меньше двух токенов нет смысла анализировать - это код

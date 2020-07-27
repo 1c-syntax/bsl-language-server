@@ -185,6 +185,9 @@
                 "IsInRoleMethod": {
                     "$ref": "parameters-schema.json#/definitions/IsInRoleMethod"
                 },
+                "JoinWithSubQuery": {
+                    "$ref": "parameters-schema.json#/definitions/JoinWithSubQuery"
+                },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
