@@ -26,15 +26,12 @@
 ### Класс реализации диагностики
 
 В соответствии с правилами, каталоге `src/main/java` в пакете `com.github._1c_syntax.bsl.languageserver.diagnostics` создадим файл `SemicolonPresenceDiagnostic.java` класса диагностики.  
-В файле создаем одноименный класс, унаследованный от класса `AbstractVisitorDiagnostic`. Обратите внимание, что для каждого класса диагностики необходимо создать конструктор. В результате имеем следующее
+В файле создаем одноименный класс, унаследованный от класса `AbstractVisitorDiagnostic`. В результате имеем следующее
 
 ```java
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
-  public SemicolonPresenceDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 }
 ```
 
@@ -53,9 +50,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
   }
 )
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
-  public SemicolonPresenceDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 }
 ```
 
@@ -81,7 +75,7 @@ diagnosticName=Statement should end with ";"
 
 ### Фикстуры для теста
 
-Для тестирования добавим в проект файл, содержщий примеры как ошибочного, так и корректного кода. Файл `SemicolonPresenceDiagnostic.bsl` с фикстурами разместим в каталоге `src/test/resources` в пакете `diagnostics`.  
+Для тестирования добавим в проект файл, содержащий примеры как ошибочного, так и корректного кода. Файл `SemicolonPresenceDiagnostic.bsl` с фикстурами разместим в каталоге `src/test/resources` в пакете `diagnostics`.  
 В качестве данных для тестирвоания, внесем в файл следующий код
 
 ```bsl
@@ -163,10 +157,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
   }
 )
 public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
-    public SemicolonPresenceDiagnostic(DiagnosticInfo info) {
-      super(info);
-    }
-
     @Override
     public ParseTree visitStatement(BSLParser.StatementContext ctx) { // выбранный визитер
         if (ctx.SEMICOLON() == null) {                                // получение дочернего узла SEMICOLON
@@ -176,7 +166,6 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic {
         // обязательно должен вызываться super-метод.
         return super.visitStatement(ctx);
     }
-
 }
 ```
 

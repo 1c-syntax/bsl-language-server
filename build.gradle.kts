@@ -17,13 +17,14 @@ plugins {
     id("com.github.ben-manes.versions") version "0.28.0"
     id("io.freefair.javadoc-links") version "5.1.0"
     id("org.springframework.boot") version "2.3.1.RELEASE"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.2.3"
 }
 
 apply(plugin = "io.spring.dependency-management")
 
 repositories {
     mavenCentral()
-    maven { url = URI("https://jitpack.io") }
+    maven(url = "https://jitpack.io")
 }
 
 group = "com.github.1c-syntax"
@@ -107,6 +108,7 @@ dependencies {
     testImplementation("org.mockito", "mockito-core", "3.3.3")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+
 }
 
 java {
@@ -199,20 +201,6 @@ sonarqube {
 lombok {
     version = "1.18.12"
     sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
-}
-
-// custom developers tools
-apply(from = "gradle/tools-new-diagnostic.gradle.kts")
-apply(from = "gradle/developer-tools.gradle.kts")
-
-tasks.register("precommit") {
-    description = "Run all precommit tasks"
-    group = "Developer tools"
-    dependsOn(":test")
-    dependsOn(":licenseFormat")
-    dependsOn(":updateDiagnosticDocs")
-    dependsOn(":updateDiagnosticsIndex")
-    dependsOn(":updateJsonSchema")
 }
 
 tasks {

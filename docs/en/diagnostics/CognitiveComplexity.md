@@ -8,8 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` |
 | `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```15``` |
+| `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -229,7 +229,7 @@ EndFunction
 
 ```json
 "CognitiveComplexity": {
-    "checkModuleBody": true,
-    "complexityThreshold": 15
+    "complexityThreshold": 15,
+    "checkModuleBody": true
 }
 ```

@@ -8,11 +8,11 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `checkSpaceToRightOfUnary` | `Boolean` | ```Check for space to the right of unary signs (+ -)``` | ```false``` |
-| `listForCheckRight` | `String` | ```List of symbols to check for the space to the right of (separated by space)``` | ```, ;``` |
 | `listForCheckLeft` | `String` | ```List of symbols to check for the space to the left of (separated by space)``` | `````` |
-| `allowMultipleCommas` | `Boolean` | ```Allow several commas in a row``` | ```false``` |
+| `listForCheckRight` | `String` | ```List of symbols to check for the space to the right of (separated by space)``` | ```, ;``` |
 | `listForCheckLeftAndRight` | `String` | ```List of symbols to check for the space from both sides of (separated by space)``` | ```+ - * / = % < > <> <= >=``` |
+| `checkSpaceToRightOfUnary` | `Boolean` | ```Check for space to the right of unary signs (+ -)``` | ```false``` |
+| `allowMultipleCommas` | `Boolean` | ```Allow several commas in a row``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -91,10 +91,10 @@ CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correc
 
 ```json
 "MissingSpace": {
-    "checkSpaceToRightOfUnary": false,
-    "listForCheckRight": ", ;",
     "listForCheckLeft": "",
-    "allowMultipleCommas": false,
-    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >="
+    "listForCheckRight": ", ;",
+    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >=",
+    "checkSpaceToRightOfUnary": false,
+    "allowMultipleCommas": false
 }
 ```

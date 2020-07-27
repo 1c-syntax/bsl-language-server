@@ -8,11 +8,11 @@
 
 | Имя | Тип | Описание | Значение по умолчанию |
 | :-: | :-: | :-- | :-: |
-| `checkSpaceToRightOfUnary` | `Булево` | ```Проверять наличие пробела справа от унарных знаков (+ -)``` | ```false``` |
-| `listForCheckRight` | `Строка` | ```Список символов для проверки справа (разделенные пробелом). Например: ( =``` | ```, ;``` |
 | `listForCheckLeft` | `Строка` | ```Список символов для проверки слева (разделенные пробелом). Например: ) =``` | `````` |
-| `allowMultipleCommas` | `Булево` | ```Разрешать несколько запятых подряд``` | ```false``` |
+| `listForCheckRight` | `Строка` | ```Список символов для проверки справа (разделенные пробелом). Например: ( =``` | ```, ;``` |
 | `listForCheckLeftAndRight` | `Строка` | ```Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >``` | ```+ - * / = % < > <> <= >=``` |
+| `checkSpaceToRightOfUnary` | `Булево` | ```Проверять наличие пробела справа от унарных знаков (+ -)``` | ```false``` |
+| `allowMultipleCommas` | `Булево` | ```Разрешать несколько запятых подряд``` | ```false``` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -92,10 +92,10 @@
 
 ```json
 "MissingSpace": {
-    "checkSpaceToRightOfUnary": false,
-    "listForCheckRight": ", ;",
     "listForCheckLeft": "",
-    "allowMultipleCommas": false,
-    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >="
+    "listForCheckRight": ", ;",
+    "listForCheckLeftAndRight": "+ - * / = % < > <> <= >=",
+    "checkSpaceToRightOfUnary": false,
+    "allowMultipleCommas": false
 }
 ```

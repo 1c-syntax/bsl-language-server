@@ -37,11 +37,6 @@
 ```java
  @Override
   public void configure(Map<String, Object> configuration) {
-    
-    if (configuration == null) {
-      return;
-    }
-    
     // для установки "простых свойств", включая "commentAsCode"
     super.configure(configuration);
 

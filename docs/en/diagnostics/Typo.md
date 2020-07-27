@@ -8,8 +8,8 @@
 
 | Name | Type | Description | Default value |
 | :-: | :-: | :-- | :-: |
-| `userWordsToIgnore` | `String` | ```Dictionary for excluding words (comma separated, without spaces)``` | `````` |
 | `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```3``` |
+| `userWordsToIgnore` | `String` | ```Dictionary for excluding words (comma separated, without spaces)``` | `````` |
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -37,7 +37,7 @@ and checked in the built-in dictionary.
 
 ```json
 "Typo": {
-    "userWordsToIgnore": "",
-    "minWordLength": 3
+    "minWordLength": 3,
+    "userWordsToIgnore": ""
 }
 ```
