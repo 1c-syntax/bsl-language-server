@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1595831614703,
+  "lastUpdate": 1595847200998,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4433,6 +4433,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9289230679311291",
             "extra": "mean: 62.447903315226235 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a0ceb6cb1c148264f5f32250b18a8934c3fcdc15",
+          "message": "Merge pull request #1306 from 1c-syntax/fix/slow-metadata-compute\n\nРасчет метаданных в отдельном тред-пуле",
+          "timestamp": "2020-07-27T13:46:55+03:00",
+          "tree_id": "f8b742ec097ac4c24765b1a70fbf45dc898c144d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a0ceb6cb1c148264f5f32250b18a8934c3fcdc15"
+        },
+        "date": 1595847197711,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 61.912729342778526,
+            "unit": "sec",
+            "range": "stddev: 1.4279963655291752",
+            "extra": "mean: 61.912729342778526 sec\nrounds: 3"
           }
         ]
       }
