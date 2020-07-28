@@ -72,16 +72,20 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       startEmptyLines = "\n".repeat(startLine);
     }
 
+    boolean isQuery = false;
+
     var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
-      strings.add(getString(startLine, token));
+      var partString = getString(startLine, token);
+      if (!isQuery) {
+        isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
+      }
+      strings.add(partString);
       startLine = token.getLine();
     }
 
-    text = strings.toString();
-
-    if (QUERIES_ROOT_KEY.matcher(text).find()) {
-      text = startEmptyLines + text;
+    if (isQuery) {
+      text = startEmptyLines + strings.toString();
       // в токенайзер передадим строку без кавычек
       queries.add(new SDBLTokenizer(text.substring(1, text.length() - 1)));
     }
