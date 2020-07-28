@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
@@ -122,7 +121,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -141,7 +140,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -161,7 +160,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -181,7 +180,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -201,7 +200,7 @@ class CommonModuleNameGlobalClientDiagnosticTest extends AbstractDiagnosticTest<
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 

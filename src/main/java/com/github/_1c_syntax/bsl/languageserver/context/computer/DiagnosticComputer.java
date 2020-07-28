@@ -43,23 +43,23 @@ public abstract class DiagnosticComputer {
     DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     return diagnostics(documentContext).parallelStream()
-        .flatMap((BSLDiagnostic diagnostic) -> {
-          try {
-            return diagnostic.getDiagnostics(documentContext).stream();
-          } catch (RuntimeException e) {
-            String message = String.format(
-              "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
-              documentContext.getUri(),
-              diagnostic.getInfo().getCode()
-            );
-            LOGGER.error(message, e);
+      .flatMap((BSLDiagnostic diagnostic) -> {
+        try {
+          return diagnostic.getDiagnostics(documentContext).stream();
+        } catch (RuntimeException e) {
+          String message = String.format(
+            "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
+            documentContext.getUri(),
+            diagnostic.getInfo().getCode()
+          );
+          LOGGER.error(message, e);
 
-            return Stream.empty();
-          }
-        })
-        .filter((Diagnostic diagnostic) ->
-          !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-        .collect(Collectors.toList());
+          return Stream.empty();
+        }
+      })
+      .filter((Diagnostic diagnostic) ->
+        !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
+      .collect(Collectors.toList());
 
   }
 

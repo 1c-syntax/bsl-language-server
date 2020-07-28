@@ -84,6 +84,6 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
 
     List<Diagnostic> diagnostics = getDiagnostics("EmptyCodeBlockDiagnosticFileCodeBlock");
 
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   }
 }

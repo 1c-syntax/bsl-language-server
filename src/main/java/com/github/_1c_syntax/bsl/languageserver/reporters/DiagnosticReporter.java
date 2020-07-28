@@ -27,5 +27,6 @@ import java.nio.file.Path;
 
 public interface DiagnosticReporter {
   String key();
+
   void report(AnalysisInfo analysisInfo, Path outputDir);
 }

@@ -51,7 +51,8 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
   /**
    * При необходимости создает {@code CodeAction} для генерации отсутствующих
    * стандартных областей 1С
-   * @param params параметры вызова генерации {@code codeAction}
+   *
+   * @param params          параметры вызова генерации {@code codeAction}
    * @param documentContext представление программного модуля
    * @return {@code List<CodeAction>} если модуль не содержит всех стандартных областей,
    * пустой {@code List} если генерация областей не требуется
@@ -83,7 +84,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
       configurationLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
 
     String result = neededStandardRegions.stream()
-      .map(s -> String .format(regionFormat, s))
+      .map(s -> String.format(regionFormat, s))
       .collect(Collectors.joining("\n"));
     TextEdit textEdit = new TextEdit(params.getRange(), result);
 

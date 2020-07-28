@@ -245,7 +245,7 @@ public final class Trees {
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
    *
-   * @param tnc       - нода, для которой ищем родителя
+   * @param tnc     - нода, для которой ищем родителя
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
@@ -273,7 +273,7 @@ public final class Trees {
   /**
    * Получает первого ребенка с одним из нужных типов
    *
-   * @param t       - нода, для которой ищем ребенка
+   * @param t         - нода, для которой ищем ребенка
    * @param ruleIndex - arrays of BSLParser.RULE_*
    * @return child - если первый ребенок не найден, вернет Optional
    */

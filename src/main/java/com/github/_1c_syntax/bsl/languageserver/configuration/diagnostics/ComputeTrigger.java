@@ -34,7 +34,7 @@ public enum ComputeTrigger {
    * При сохранении файла
    */
   ONSAVE,
-  
+
   /**
    * Никогда
    */

@@ -222,12 +222,12 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx){
+  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
       .flatMap(Collection::stream)
-      .forEach( t -> t.accept(this));
+      .forEach(t -> t.accept(this));
   }
 
   @Override
@@ -271,9 +271,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       Optional.ofNullable(ctx.expression())
-        .ifPresent( e -> e.accept(this));
+        .ifPresent(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
@@ -292,9 +292,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       ctx.expression()
-        .forEach( e-> e.accept(this));
+        .forEach(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();

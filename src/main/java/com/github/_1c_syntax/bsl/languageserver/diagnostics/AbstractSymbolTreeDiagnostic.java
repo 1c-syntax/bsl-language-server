@@ -40,7 +40,7 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
     children.forEach(this::visit);
   }
 
-  void visit(Symbol symbol){
+  void visit(Symbol symbol) {
     symbol.accept(this);
   }
 

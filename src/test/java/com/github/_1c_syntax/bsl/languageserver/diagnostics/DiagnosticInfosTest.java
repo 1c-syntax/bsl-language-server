@@ -57,9 +57,7 @@ class DiagnosticInfosTest {
 
     // then
     assertThat(diagnosticClasses)
-      .allMatch((Class<? extends BSLDiagnostic> diagnosticClass) ->
-        diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class)
-      );
+      .allMatch(diagnosticClass -> diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class));
   }
 
   @Test

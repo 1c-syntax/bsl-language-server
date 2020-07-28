@@ -54,8 +54,8 @@ class UsingHardcodeNetworkAddressDiagnosticTest extends AbstractDiagnosticTest<U
       .hasRange(23, 7, 23, 119)
       .hasRange(43, 33, 43, 42)
       .hasRange(55, 13, 18)
-      .hasRange(57, 104,114)
-      .hasRange(65, 9,22)
+      .hasRange(57, 104, 114)
+      .hasRange(65, 9, 22)
     ;
 
   }

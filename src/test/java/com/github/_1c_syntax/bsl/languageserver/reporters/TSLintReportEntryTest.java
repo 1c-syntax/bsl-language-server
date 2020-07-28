@@ -41,19 +41,22 @@ class TSLintReportEntryTest {
     );
     TSLintReportEntry entry = new TSLintReportEntry("file.txt", diagnostic);
 
-    assertThat(entry).hasNoNullFieldsOrProperties();
-    assertThat(entry).hasFieldOrPropertyWithValue("failure", "message");
-    assertThat(entry).hasFieldOrPropertyWithValue("name", "file.txt");
-    assertThat(entry).hasFieldOrPropertyWithValue("ruleName", "test");
-    assertThat(entry).hasFieldOrPropertyWithValue("ruleSeverity", "error");
+    assertThat(entry)
+      .hasNoNullFieldsOrProperties()
+      .hasFieldOrPropertyWithValue("failure", "message")
+      .hasFieldOrPropertyWithValue("name", "file.txt")
+      .hasFieldOrPropertyWithValue("ruleName", "test")
+      .hasFieldOrPropertyWithValue("ruleSeverity", "error");
 
-    assertThat(entry.getStartPosition()).hasFieldOrPropertyWithValue("line", 0);
-    assertThat(entry.getStartPosition()).hasFieldOrPropertyWithValue("character", 1);
-    assertThat(entry.getStartPosition()).hasFieldOrPropertyWithValue("position", 1);
+    assertThat(entry.getStartPosition())
+      .hasFieldOrPropertyWithValue("line", 0)
+      .hasFieldOrPropertyWithValue("character", 1)
+      .hasFieldOrPropertyWithValue("position", 1);
 
-    assertThat(entry.getEndPosition()).hasFieldOrPropertyWithValue("line", 2);
-    assertThat(entry.getEndPosition()).hasFieldOrPropertyWithValue("character", 3);
-    assertThat(entry.getEndPosition()).hasFieldOrPropertyWithValue("position", 3);
+    assertThat(entry.getEndPosition())
+      .hasFieldOrPropertyWithValue("line", 2)
+      .hasFieldOrPropertyWithValue("character", 3)
+      .hasFieldOrPropertyWithValue("position", 3);
   }
 
 }
