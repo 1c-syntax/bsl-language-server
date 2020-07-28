@@ -33,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
@@ -42,6 +43,8 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
+
+  private static final int MINIMAL_QUERY_STRING_LENGTH = 6;
 
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -59,19 +62,26 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     int startLine = 0;
     var text = "";
+    var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
       startLine = ctx.getTokens().get(0).getLine();
-      text = StringUtils.repeat('\n', startLine);
+      startEmptyLines = StringUtils.repeat('\n', startLine);
     }
 
-    var strings = new ArrayList<>();
+    var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
       strings.add(getString(startLine, token));
       startLine = token.getLine();
     }
-    text += StringUtils.join(strings, '\n');
+
+    text = strings.toString();
+    // проверка на минимальную длину
+    if (text.length() < MINIMAL_QUERY_STRING_LENGTH) {
+      return ctx;
+    }
 
     if (QUERIES_ROOT_KEY.matcher(text).find()) {
+      text = startEmptyLines + text;
       // в токенайзер передадим строку без кавычек
       queries.add(new SDBLTokenizer(text.substring(1, text.length() - 1)));
     }
