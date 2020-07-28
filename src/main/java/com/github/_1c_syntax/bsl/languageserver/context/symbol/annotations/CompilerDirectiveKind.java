@@ -47,7 +47,7 @@ public enum CompilerDirectiveKind {
     return tokenType;
   }
 
-  public static Optional<CompilerDirectiveKind> of(int tokenType){
+  public static Optional<CompilerDirectiveKind> of(int tokenType) {
     return Stream.of(values())
       .filter(compilerDirective -> compilerDirective.getTokenType() == tokenType)
       .findAny();

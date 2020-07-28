@@ -60,7 +60,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
     if (ctx instanceof BSLParser.RegionStartContext) {
       currentRegionLevel++;
       regions.push((BSLParser.RegionStartContext) ctx);
-    } else if (! (ctx instanceof BSLParser.PreprocessorContext
+    } else if (!(ctx instanceof BSLParser.PreprocessorContext
       || ctx instanceof BSLParser.RegionNameContext
       || ctx instanceof BSLParser.RegionEndContext
       || ctx instanceof BSLParser.StatementContext)

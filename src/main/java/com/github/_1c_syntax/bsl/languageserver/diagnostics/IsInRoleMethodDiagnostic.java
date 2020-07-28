@@ -83,7 +83,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private void computeDiagnostics(BSLParser.ExpressionContext expression) {
     Trees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier).stream()
-      .map(complexCtx -> (BSLParser.ComplexIdentifierContext)complexCtx)
+      .map(complexCtx -> (BSLParser.ComplexIdentifierContext) complexCtx)
       .filter(complexCtx -> isInRoleVars.contains(complexCtx.getText()))
       .filter(ctx -> checkStatement(ctx, expression))
       .forEach(diagnosticStorage::addDiagnostic);
@@ -104,16 +104,16 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
 
   private void handleIsInRoleGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
     var rootParent = Trees.getRootParent(ctx, ROOT_PARENTS_FOR_GLOBAL_METHODS);
-    if (rootParent == null){
+    if (rootParent == null) {
       return;
     }
     if (rootParent.getRuleIndex() == BSLParser.RULE_ifStatement) {
       if (checkStatement(ctx)) {
         diagnosticStorage.addDiagnostic(ctx);
       }
-    } else if (rootParent.getRuleIndex() == BSLParser.RULE_assignment){
-        addAssignedNameVar(rootParent, isInRoleVars);
-      }
+    } else if (rootParent.getRuleIndex() == BSLParser.RULE_assignment) {
+      addAssignedNameVar(rootParent, isInRoleVars);
+    }
   }
 
   private void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
@@ -131,7 +131,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
     var childNode = Trees.getFirstChild(ctx, BSLParser.RULE_lValue);
-    childNode.ifPresent(node ->
+    childNode.ifPresent((BSLParserRuleContext node) ->
     {
       isInRoleVars.remove(node.getText());
       privilegedModeNameVars.remove(node.getText());
@@ -161,8 +161,8 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
       ctx, BSLParser.RULE_globalMethodCall);
 
     boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext
-        && PRIVILEGED_MODE_NAME_PATTERN.matcher(((BSLParser.GlobalMethodCallContext) nextGlobalMethodNode)
-        .methodName().getText()).matches());
+      && PRIVILEGED_MODE_NAME_PATTERN.matcher(((BSLParser.GlobalMethodCallContext) nextGlobalMethodNode)
+      .methodName().getText()).matches());
 
     return !hasPrivilegedModeCheck;
   }

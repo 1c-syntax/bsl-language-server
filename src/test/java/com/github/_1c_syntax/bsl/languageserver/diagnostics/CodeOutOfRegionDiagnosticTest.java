@@ -56,7 +56,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
   void emptyTest() {
 
     List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmpty");
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 

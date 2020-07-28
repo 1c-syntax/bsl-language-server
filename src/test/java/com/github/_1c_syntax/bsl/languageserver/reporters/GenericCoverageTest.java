@@ -43,7 +43,7 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-public class GenericCoverageTest {
+class GenericCoverageTest {
 
   private final File file = new File("./genericCoverage.xml");
 

@@ -232,7 +232,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     String module = getText();
 
-    if (use_CR_WithTab){
+    if (use_CR_WithTab) {
       module = module.replace("\n", "\r");
       module = module.replace("  ", "\t");
     }
@@ -291,7 +291,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
 
     final CodeAction quickFix = quickFixes.get(0);
 
-    if (haveFix){
+    if (haveFix) {
       assertThat(quickFix).of(diagnosticInstance).in(documentContext)
         .fixes(diagnostic);
 

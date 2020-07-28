@@ -23,4 +23,4 @@
 /**
  * Пакет содержит дополнительные классы для настройки сериализации и десериализации классов родительского пакета.
  */
-package com.github._1c_syntax.bsl.languageserver.diagnostics.databind;
+package com.github._1c_syntax.bsl.languageserver.reporters.databind;

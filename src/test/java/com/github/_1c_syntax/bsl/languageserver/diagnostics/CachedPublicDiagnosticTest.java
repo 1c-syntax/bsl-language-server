@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
@@ -77,6 +76,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
       .hasRange(16, 9, 15);
 
   }
+
   @Test
   void testSession() {
 
@@ -113,7 +113,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 

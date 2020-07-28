@@ -70,7 +70,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    if (!super.checkGlobalMethodCall(ctx)){
+    if (!super.checkGlobalMethodCall(ctx)) {
       return false;
     }
 
@@ -83,7 +83,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
   }
 
   private static boolean nonValidExpression(BSLParser.MemberContext currentRootMember) {
-    if (currentRootMember.unaryModifier() != null){
+    if (currentRootMember.unaryModifier() != null) {
       return true;
     }
 
@@ -93,7 +93,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
       return false;
     }
-    if (rootExpressionNode.getChildCount() == 1 && IF_BRANCHES.contains(rootIfNode.getRuleIndex())){
+    if (rootExpressionNode.getChildCount() == 1 && IF_BRANCHES.contains(rootIfNode.getRuleIndex())) {
       return true;
     }
 
@@ -106,7 +106,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
     if (indexOfCurrentMemberNode > 0) {
       var prev = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode - 1);
-      if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)){
+      if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)) {
         return false;
       }
       haveNeighboorBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
@@ -114,10 +114,10 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     if (indexOfCurrentMemberNode < rootExpressionNode.getChildCount() - 1) {
 
       var next = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
-      if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)){
+      if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)) {
         return false;
       }
-      if (!haveNeighboorBoolOperation){
+      if (!haveNeighboorBoolOperation) {
         haveNeighboorBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
       }
     }

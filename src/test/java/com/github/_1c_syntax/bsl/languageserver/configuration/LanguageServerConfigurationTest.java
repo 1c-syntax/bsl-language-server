@@ -99,10 +99,10 @@ class LanguageServerConfigurationTest {
 
     Either<Boolean, Map<String, Object>> methodSize = parameters.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
-    assertThat(methodSize.getLeft()).isEqualTo(false);
+    assertThat(methodSize.getLeft()).isFalse();
 
     Path configurationRoot = configuration.getConfigurationRoot();
-    assertThat(configurationRoot).isNotEqualTo(null);
+    assertThat(configurationRoot).isNotNull();
 
     assertThat(configuration.getDocumentLinkOptions().useDevSite()).isTrue();
 

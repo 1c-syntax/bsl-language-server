@@ -58,8 +58,8 @@ class CodeLensProviderTest {
     int cyclomaticComplexityFirstMethod = methodsCyclomaticComplexity.get(firstMethod);
     int cyclomaticComplexitySecondMethod = methodsCyclomaticComplexity.get(secondMethod);
 
-    assertThat(codeLenses).hasSize(4);
     assertThat(codeLenses)
+      .hasSize(4)
       .anyMatch(codeLens -> codeLens.getRange().equals(firstMethod.getSubNameRange()))
       .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cognitiveComplexityFirstMethod)))
       .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(cyclomaticComplexityFirstMethod)))

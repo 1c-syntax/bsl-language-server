@@ -74,6 +74,7 @@ public class Regions {
   /**
    * Метод возвращает паттерны регулярных выражений
    * удовлетворяющих стандартным наименованиям областей 1С на русском и английском языках
+   *
    * @param moduleType тип программного модуля 1С
    * @return множество паттернов имен областей 1С для конкретного типа модуля
    */
@@ -133,7 +134,9 @@ public class Regions {
     return standardRegions;
   }
 
-  /** Получает стандартные области OneScript, на основании языка
+  /**
+   * Получает стандартные области OneScript, на основании языка
+   *
    * @param configurationLanguage язык конфигурации, может быть русским или английским
    * @return множество имен стандартных областей OneSCript
    */
@@ -157,8 +160,9 @@ public class Regions {
   /**
    * Получает стандартные имена областей 1С, на основании типа программного модуля
    * и языка конфигурации
+   *
    * @param moduleType тип программного модуля 1С
-   * @param language язык конфигурации, может быть русским или английским
+   * @param language   язык конфигурации, может быть русским или английским
    * @return множество имен стандартных областей 1С
    */
   public Set<String> getStandardRegionsNamesByModuleType(ModuleType moduleType, ScriptVariant language) {
@@ -251,6 +255,7 @@ public class Regions {
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.EVENT_HANDLERS_REGION_RU);
   }
+
   private static void addCommonModuleRegionNames(Set<String> regionsName, ScriptVariant language) {
 
     if (language == ScriptVariant.ENGLISH) {

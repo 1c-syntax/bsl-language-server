@@ -54,7 +54,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
   protected void check() {
     if (!documentContext.getTokens().isEmpty()
       && documentContext.getTokens().get(0).getType() != Token.EOF
-    )
+    ) {
       documentContext
         .getMdObject()
         .map(MDObjectBase::getName)
@@ -63,6 +63,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
           documentContext.getTokens().get(0),
           info.getMessage(maxMetadataObjectNameLength))
         );
+    }
   }
 
   private boolean checkName(String name) {

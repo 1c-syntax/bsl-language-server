@@ -72,7 +72,7 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
       .parallelStream()
       .forEach((Token token) -> {
         Matcher matcher = pattern.matcher(token.getText());
-        if (!matcher.find()){
+        if (!matcher.find()) {
           return;
         }
         diagnosticStorage.addDiagnostic(

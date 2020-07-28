@@ -62,7 +62,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   protected void check() {
 
     final var tokens = documentContext.getTokens();
-    if (tokens.isEmpty()){
+    if (tokens.isEmpty()) {
       return;
     }
 
@@ -82,7 +82,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   private void checkEmptyLines(int currentLine, int previousLine) {
-    if (currentLine - previousLine > allowedEmptyLinesCount){
+    if (currentLine - previousLine > allowedEmptyLinesCount) {
       addIssue(previousLine, currentLine);
     }
   }
@@ -97,7 +97,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
   @Override
   public List<CodeAction> getQuickFixes(
-      List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
+    List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext) {
 
     var eofTokenLine = getEofTokenLine(documentContext.getTokens());
 
@@ -118,7 +118,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
     int endLine = range.getEnd().getLine() + 1;
     String newText = "\n";
-    if (endLine == eofTokenLine){
+    if (endLine == eofTokenLine) {
       endLine--;
       newText = "";
     }

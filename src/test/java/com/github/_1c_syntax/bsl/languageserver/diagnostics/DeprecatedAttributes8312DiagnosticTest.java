@@ -77,7 +77,7 @@ class DeprecatedAttributes8312DiagnosticTest extends AbstractDiagnosticTest<Depr
       .hasRange(47, 9, 47, 22)
       .hasRange(48, 9, 48, 35)
       .hasRange(49, 9, 49, 33)
-      .hasRange(50, 9, 50 ,34)
+      .hasRange(50, 9, 50, 34)
       .hasRange(52, 10, 52, 22)
       .hasRange(53, 10, 53, 26)
       .hasRange(58, 17, 58, 46)

@@ -37,6 +37,7 @@ public interface Symbol {
   Range getRange();
 
   Optional<Symbol> getParent();
+
   void setParent(Optional<Symbol> symbol);
 
   List<Symbol> getChildren();
@@ -49,11 +50,19 @@ public interface Symbol {
 
   static Symbol emptySymbol() {
     return new Symbol() {
-      @Getter private final String name = "empty";
-      @Getter private final Range range = Ranges.create(-1, 0, -1, 0);
-      @Getter @Setter private Optional<Symbol> parent = Optional.empty();
-      @Getter private final List<Symbol> children = Collections.emptyList();
-      @Override public void accept(SymbolTreeVisitor visitor) { }
+      @Getter
+      private final String name = "empty";
+      @Getter
+      private final Range range = Ranges.create(-1, 0, -1, 0);
+      @Getter
+      @Setter
+      private Optional<Symbol> parent = Optional.empty();
+      @Getter
+      private final List<Symbol> children = Collections.emptyList();
+
+      @Override
+      public void accept(SymbolTreeVisitor visitor) {
+      }
     };
   }
 

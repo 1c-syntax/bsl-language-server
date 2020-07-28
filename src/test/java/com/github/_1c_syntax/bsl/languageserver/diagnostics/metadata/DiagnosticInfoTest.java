@@ -58,9 +58,9 @@ class DiagnosticInfoTest {
     Assertions.assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.ALL);
     Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(5);
     Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
-    Assertions.assertThat(diagnosticInfo.getTags().size()).isGreaterThan(0);
+    Assertions.assertThat(diagnosticInfo.getTags().size()).isPositive();
 
-    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isGreaterThan(0);
+    Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isPositive();
 
 
     DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
@@ -71,8 +71,9 @@ class DiagnosticInfoTest {
     assertThat(parameter.getType()).isEqualTo(Boolean.class);
 
     Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
-    assertThat(maybeParameter).isPresent();
-    assertThat(maybeParameter).hasValue(parameter);
+    assertThat(maybeParameter)
+      .isPresent()
+      .hasValue(parameter);
 
     Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
     assertThat(maybeFakeParameter).isEmpty();
@@ -108,8 +109,9 @@ class DiagnosticInfoTest {
     assertThat(parameter.getType()).isEqualTo(String.class);
 
     Optional<DiagnosticParameterInfo> maybeParameter = diagnosticInfo.getParameter(parameter.getName());
-    assertThat(maybeParameter).isPresent();
-    assertThat(maybeParameter).hasValue(parameter);
+    assertThat(maybeParameter)
+      .isPresent()
+      .hasValue(parameter);
 
     Optional<DiagnosticParameterInfo> maybeFakeParameter = diagnosticInfo.getParameter("fakeParameterName");
     assertThat(maybeFakeParameter).isEmpty();

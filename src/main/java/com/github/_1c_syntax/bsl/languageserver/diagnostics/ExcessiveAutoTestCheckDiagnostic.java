@@ -65,11 +65,11 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
     return super.visitIfBranch(ctx);
   }
 
-  private boolean expressionMatchesPattern(BSLParser.ExpressionContext expression) {
+  private static boolean expressionMatchesPattern(BSLParser.ExpressionContext expression) {
     return ERROR_EXPRESSION.matcher(expression.getText()).find();
   }
 
-  private boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
+  private static boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
     List<? extends BSLParser.StatementContext> statements = codeBlock.statement();
 
     if (statements.size() == 1) {

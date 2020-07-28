@@ -105,11 +105,11 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       );
 
     var description =
-    VariableDescription.builder()
-      .description(commentsText)
-      .range(getRangeForDescription(comments))
-      .trailingDescription(trailingDescription)
-      .build();
+      VariableDescription.builder()
+        .description(commentsText)
+        .range(getRangeForDescription(comments))
+        .trailingDescription(trailingDescription)
+        .build();
 
     return Optional.of(description);
   }
