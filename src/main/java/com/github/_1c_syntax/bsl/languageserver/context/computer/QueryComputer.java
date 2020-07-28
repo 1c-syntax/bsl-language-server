@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -70,7 +69,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
       startLine = ctx.getTokens().get(0).getLine();
-      startEmptyLines = StringUtils.repeat('\n', startLine);
+      startEmptyLines = "\n".repeat(startLine);
     }
 
     var strings = new StringJoiner("\n");
@@ -92,7 +91,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   @NotNull
   private String getString(int startLine, Token token) {
-    var string = addEmptyLines(startLine, token) + StringUtils.repeat(' ', token.getCharPositionInLine());
+    var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
       string += " " + token.getText().substring(1);
     } else {
@@ -103,7 +102,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static String addEmptyLines(int startLine, Token token) {
     if (token.getLine() > startLine + 1) {
-      return StringUtils.repeat('\n', (token.getLine() - startLine - 1));
+      return "\n".repeat(token.getLine() - startLine - 1);
     }
     return "";
   }
