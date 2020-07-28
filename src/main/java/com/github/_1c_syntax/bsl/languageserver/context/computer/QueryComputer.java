@@ -44,7 +44,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
 
-  private static final int MINIMAL_QUERY_STRING_LENGTH = 6;
+  private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
 
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -59,6 +59,11 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
+
+    // проверка на минимальную длину
+    if (ctx.getText().length() < MINIMAL_QUERY_STRING_LENGTH) {
+      return ctx;
+    }
 
     int startLine = 0;
     var text = "";
@@ -75,10 +80,6 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     }
 
     text = strings.toString();
-    // проверка на минимальную длину
-    if (text.length() < MINIMAL_QUERY_STRING_LENGTH) {
-      return ctx;
-    }
 
     if (QUERIES_ROOT_KEY.matcher(text).find()) {
       text = startEmptyLines + text;
