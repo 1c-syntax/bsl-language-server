@@ -319,17 +319,16 @@
                 <h1 id="json-reporter">JSON reporter<a class="headerlink" href="#json-reporter" title="Permanent link">&para;</a></h1>
 <p>Ключ репортера - <code>json</code></p>
 <h2 id="_1">Описание<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>Выводит результаты анализа в файл <code>bsl-json.json</code> в текущей рабочей директории. Выводится результат работы метода сериализиатора JSON для объекта <a href="https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/reporter/AnalysisInfo.java">AnalysisInfo</a></p>
+<p>Выводит результаты анализа в файл <code>bsl-json.json</code> в текущей рабочей директории. Выводится результат работы метода сериализатора JSON для объекта <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/data/AnalysisInfo.java">AnalysisInfo</a></p>
 <h2 id="_2">Пример вывода<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><code><span class="p">{</span>
     <span class="nt">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;2019-01-21 01:29:27&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;sourceDir&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///tmp/src&quot;</span><span class="p">,</span>
     <span class="nt">&quot;fileinfos&quot;</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">{</span>
+            <span class="nt">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///tmp/src/Module.bsl&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;mdoRef&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="nt">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;FunctionShouldHaveReturnDiagnostic&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Функция не содержит \&quot;Возврат\&quot;&quot;</span><span class="p">,</span>
                     <span class="nt">&quot;range&quot;</span><span class="p">:</span> <span class="p">{</span>
                         <span class="nt">&quot;end&quot;</span><span class="p">:</span> <span class="p">{</span>
                             <span class="nt">&quot;character&quot;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
@@ -340,13 +339,47 @@
                             <span class="nt">&quot;line&quot;</span><span class="p">:</span> <span class="mi">43</span>
                         <span class="p">}</span>
                     <span class="p">},</span>
-                    <span class="nt">&quot;relatedInformation&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
                     <span class="nt">&quot;severity&quot;</span><span class="p">:</span> <span class="s2">&quot;Error&quot;</span><span class="p">,</span>
-                    <span class="nt">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;bsl-language-server&quot;</span>
+                    <span class="nt">&quot;code&quot;</span><span class="p">:</span> <span class="s2">&quot;FunctionShouldHaveReturnDiagnostic&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;bsl-language-server&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Функция не содержит \&quot;Возврат\&quot;&quot;</span><span class="p">,</span>
+                    <span class="nt">&quot;tags&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
+                    <span class="nt">&quot;relatedInformation&quot;</span><span class="p">:</span> <span class="kc">null</span>
                 <span class="p">}</span>
-            <span class="p">]</span>
+            <span class="p">],</span>
+            <span class="nt">&quot;metrics&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;procedures&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nt">&quot;functions&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nt">&quot;lines&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="nt">&quot;ncloc&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+                <span class="nt">&quot;comments&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nt">&quot;statements&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+                <span class="nt">&quot;nclocData&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="mi">1</span><span class="p">,</span>
+                    <span class="mi">2</span><span class="p">,</span>
+                    <span class="mi">3</span><span class="p">,</span>
+                    <span class="mi">4</span><span class="p">,</span>
+                    <span class="mi">5</span><span class="p">,</span>
+                    <span class="mi">6</span><span class="p">,</span>
+                    <span class="mi">7</span><span class="p">,</span>
+                    <span class="mi">8</span><span class="p">,</span>
+                    <span class="mi">10</span>
+                <span class="p">],</span>
+                <span class="nt">&quot;covlocData&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="mi">2</span><span class="p">,</span>
+                    <span class="mi">3</span><span class="p">,</span>
+                    <span class="mi">4</span><span class="p">,</span>
+                    <span class="mi">5</span><span class="p">,</span>
+                    <span class="mi">6</span><span class="p">,</span>
+                    <span class="mi">7</span><span class="p">,</span>
+                    <span class="mi">8</span>
+                <span class="p">],</span>
+                <span class="nt">&quot;cognitiveComplexity&quot;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+                <span class="nt">&quot;cyclomaticComplexity&quot;</span><span class="p">:</span> <span class="mi">17</span>
+            <span class="p">}</span>
         <span class="p">}</span>
-    <span class="p">]</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;sourceDir&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///tmp/src&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
                 
