@@ -391,32 +391,6 @@ public final class Trees {
   }
 
   /**
-   * Находит первый токен из списка, находящийся в той же строке, что и переданный токен
-   *
-   * @param tokens - список токенов из DocumentContext
-   * @param token  - токен, на строке которого требуется найти первый токен
-   * @return - первый токен в строке
-   */
-  public Token getFirstTokenInLine(List<Token> tokens, Token token) {
-    int index = token.getTokenIndex();
-    int currentIndex = index - 1;
-    int line = token.getLine();
-
-    var firstToken = token;
-    while (currentIndex > 0) {
-      var previousToken = tokens.get(currentIndex);
-      if (previousToken.getLine() == line) {
-        firstToken = previousToken;
-        currentIndex--;
-      } else {
-        break;
-      }
-    }
-
-    return firstToken;
-  }
-
-  /**
    * Поиск комментариев назад от указанного токена
    *
    * @param tokens - список токенов DocumentContext
