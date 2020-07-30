@@ -174,7 +174,7 @@ public final class Trees {
   /**
    * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
    * @param tokenIndex - индекс текущего токена в переданном списке токенов
-   * @param tokenType - тип искомого токена (см. {@link com.github._1c_syntax.bsl.parser.BSLParser}
+   * @param tokenType  - тип искомого токена (см. {@link com.github._1c_syntax.bsl.parser.BSLParser}
    * @return предыдущий токен, если он был найден
    */
   public Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex, int tokenType) {
@@ -183,11 +183,8 @@ public final class Trees {
         return Optional.empty();
       }
       Token token = tokens.get(tokenIndex);
-      if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-        tokenIndex = tokenIndex - 1;
-        continue;
-      }
-      if(token.getType() != tokenType) {
+      if (token.getChannel() != Token.DEFAULT_CHANNEL
+        || token.getType() != tokenType) {
         tokenIndex = tokenIndex - 1;
         continue;
       }
@@ -398,7 +395,7 @@ public final class Trees {
    *
    * @param tokens - список токенов из DocumentContext
    * @param token  - токен, на строке которого требуется найти первый токен
-   * @return       - первый токен в строке
+   * @return - первый токен в строке
    */
   public Token getFirstTokenInLine(List<Token> tokens, Token token) {
     int index = token.getTokenIndex();
