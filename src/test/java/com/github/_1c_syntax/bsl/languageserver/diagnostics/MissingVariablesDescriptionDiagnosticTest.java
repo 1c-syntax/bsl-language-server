@@ -38,12 +38,13 @@ class MissingVariablesDescriptionDiagnosticTest extends AbstractDiagnosticTest<M
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(1, 6, 1, 27)
       .hasRange(3, 6, 3, 45)
       .hasRange(17, 6, 17, 38)
-      .hasRange(21, 6, 21, 56);
+      .hasRange(21, 6, 21, 56)
+      .hasRange(37, 6, 49);
 
   }
 }

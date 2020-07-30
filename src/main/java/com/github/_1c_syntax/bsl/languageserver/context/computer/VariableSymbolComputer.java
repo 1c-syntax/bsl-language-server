@@ -82,14 +82,21 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .variableNameRange(Ranges.create(varName))
       .export(export)
       .kind(kind)
-      .description(createDescription(getTokenToSearchComments(ctx)))
+      .description(createDescription(ctx))
       .build();
   }
 
-  private Optional<VariableDescription> createDescription(Token token) {
+  private Optional<VariableDescription> createDescription(BSLParserRuleContext ctx) {
     List<Token> tokens = documentContext.getTokens();
-    List<Token> comments = Trees.getComments(tokens, token);
-    Optional<Token> trailingComments = Trees.getTrailingComment(tokens, token);
+    List<Token> comments = new ArrayList<>();
+
+    // поиск комментариев начинается от первого токена - VAR
+    var varToken = Trees.getPreviousTokenFromDefaultChannel(tokens,
+      ctx.getStart().getTokenIndex(), BSLParser.VAR_KEYWORD);
+    varToken.ifPresent(value -> comments.addAll(Trees.getComments(tokens, value)));
+
+    // висячий комментарий смотрим по токену переменной, он должен находится в этой же строке
+    Optional<Token> trailingComments = Trees.getTrailingComment(tokens, ctx.getStop());
 
     if (comments.isEmpty() && trailingComments.isEmpty()) {
       return Optional.empty();
@@ -112,14 +119,6 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
         .build();
 
     return Optional.of(description);
-  }
-
-  private static Token getTokenToSearchComments(BSLParserRuleContext declaration) {
-    var parent = Trees.getAncestorByRuleIndex(declaration, BSLParser.RULE_moduleVar);
-    if (parent == null) {
-      return declaration.getStart();
-    }
-    return parent.getStart();
   }
 
   private static Range getRangeForDescription(List<Token> tokens) {

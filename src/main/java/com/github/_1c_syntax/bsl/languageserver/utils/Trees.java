@@ -174,6 +174,31 @@ public final class Trees {
   /**
    * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
    * @param tokenIndex - индекс текущего токена в переданном списке токенов
+   * @param tokenType - тип искомого токена (см. {@link com.github._1c_syntax.bsl.parser.BSLParser}
+   * @return предыдущий токен, если он был найден
+   */
+  public Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex, int tokenType) {
+    while (true) {
+      if (tokenIndex == 0) {
+        return Optional.empty();
+      }
+      Token token = tokens.get(tokenIndex);
+      if (token.getChannel() != Token.DEFAULT_CHANNEL) {
+        tokenIndex = tokenIndex - 1;
+        continue;
+      }
+      if(token.getType() != tokenType) {
+        tokenIndex = tokenIndex - 1;
+        continue;
+      }
+
+      return Optional.of(token);
+    }
+  }
+
+  /**
+   * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
+   * @param tokenIndex - индекс текущего токена в переданном списке токенов
    * @return предыдущий токен, если он был найден
    */
   public static Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex) {
@@ -369,6 +394,32 @@ public final class Trees {
   }
 
   /**
+   * Находит первый токен из списка, находящийся в той же строке, что и переданный токен
+   *
+   * @param tokens - список токенов из DocumentContext
+   * @param token  - токен, на строке которого требуется найти первый токен
+   * @return       - первый токен в строке
+   */
+  public Token getFirstTokenInLine(List<Token> tokens, Token token) {
+    int index = token.getTokenIndex();
+    int currentIndex = index - 1;
+    int line = token.getLine();
+
+    var firstToken = token;
+    while (currentIndex > 0) {
+      var previousToken = tokens.get(currentIndex);
+      if (previousToken.getLine() == line) {
+        firstToken = previousToken;
+        currentIndex--;
+      } else {
+        break;
+      }
+    }
+
+    return firstToken;
+  }
+
+  /**
    * Поиск комментариев назад от указанного токена
    *
    * @param tokens - список токенов DocumentContext
@@ -412,7 +463,6 @@ public final class Trees {
       && (previousToken.getTokenIndex() == 0
       || (previousToken.getLine() + 1) != currentToken.getLine());
   }
-
 
   private static boolean treeContainsErrors(ParseTree tnc, boolean recursive) {
     if (!(tnc instanceof BSLParserRuleContext)) {
