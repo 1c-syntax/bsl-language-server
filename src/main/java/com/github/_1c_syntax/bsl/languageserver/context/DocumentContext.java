@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -34,7 +35,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
+import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -69,7 +71,7 @@ public class DocumentContext {
   private final DiagnosticComputer diagnosticComputer;
 
   private final FileType fileType;
-  private Tokenizer tokenizer;
+  private BSLTokenizer tokenizer;
 
   private final ReentrantLock computeLock = new ReentrantLock();
   private final ReentrantLock diagnosticsLock = new ReentrantLock();
@@ -88,13 +90,15 @@ public class DocumentContext {
   private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
   private final Lazy<List<Diagnostic>> diagnostics = new Lazy<>(this::computeDiagnostics, diagnosticsLock);
 
+  private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
+
   public DocumentContext(URI uri, String content, ServerContext context, DiagnosticComputer diagnosticComputer) {
     this.uri = uri;
     this.content = content;
     this.context = context;
     this.diagnosticComputer = diagnosticComputer;
 
-    this.tokenizer = new Tokenizer(content);
+    this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
   }
 
@@ -201,6 +205,10 @@ public class DocumentContext {
     return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
   }
 
+  public List<SDBLTokenizer> getQueries() {
+    return queries.getOrCompute();
+  }
+
   public List<Diagnostic> getDiagnostics() {
     return diagnostics.getOrCompute();
   }
@@ -216,7 +224,7 @@ public class DocumentContext {
     clearSecondaryData();
     symbolTree.clear();
     this.content = content;
-    tokenizer = new Tokenizer(content);
+    tokenizer = new BSLTokenizer(content);
     computeLock.unlock();
   }
 
@@ -232,6 +240,7 @@ public class DocumentContext {
     metrics.clear();
     diagnosticIgnoranceData.clear();
     diagnostics.clear();
+    queries.clear();
     diagnosticsLock.unlock();
     computeLock.unlock();
   }
@@ -346,4 +355,7 @@ public class DocumentContext {
     return diagnosticComputer.compute(this);
   }
 
+  private List<SDBLTokenizer> computeQueries() {
+    return (new QueryComputer(this)).compute();
+  }
 }
