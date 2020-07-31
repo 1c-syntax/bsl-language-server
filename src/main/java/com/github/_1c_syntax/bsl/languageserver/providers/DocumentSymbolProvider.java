@@ -29,22 +29,14 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
 public final class DocumentSymbolProvider {
-
-  private static final Map<Class<? extends Symbol>, SymbolKind> symbolKinds = Map.of(
-    MethodSymbol.class, SymbolKind.Method,
-    RegionSymbol.class, SymbolKind.Namespace,
-    VariableSymbol.class, SymbolKind.Variable
-  );
 
   public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
@@ -56,7 +48,7 @@ public final class DocumentSymbolProvider {
   private static DocumentSymbol toDocumentSymbol(Symbol symbol) {
     var documentSymbol = new DocumentSymbol(
       symbol.getName(),
-      symbolKinds.get(symbol.getClass()),
+      symbol.getSymbolKind(),
       symbol.getRange(),
       getSelectionRange(symbol)
     );

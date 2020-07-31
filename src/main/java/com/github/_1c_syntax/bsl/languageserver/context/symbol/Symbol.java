@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +34,8 @@ import java.util.Optional;
 public interface Symbol {
 
   String getName();
+
+  SymbolKind getSymbolKind();
 
   Range getRange();
 
@@ -52,6 +55,8 @@ public interface Symbol {
     return new Symbol() {
       @Getter
       private final String name = "empty";
+      @Getter
+      private final SymbolKind symbolKind = SymbolKind.Null;
       @Getter
       private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter

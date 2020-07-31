@@ -24,23 +24,21 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.SymbolInformation;
-import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -52,13 +50,6 @@ import java.util.stream.Stream;
 public class SymbolProvider {
 
   private final ServerContext context;
-
-  // TODO: копипаст
-  private static final Map<Class<? extends Symbol>, SymbolKind> symbolKinds = Map.of(
-    MethodSymbol.class, SymbolKind.Method,
-    RegionSymbol.class, SymbolKind.Namespace,
-    VariableSymbol.class, SymbolKind.Variable
-  );
 
   public List<? extends SymbolInformation> getSymbols(WorkspaceSymbolParams params) {
     var queryString = params.getQuery();
@@ -78,24 +69,14 @@ public class SymbolProvider {
 
     return context.getDocuments().values().stream()
       .flatMap(SymbolProvider::getSymbolPairs)
-      .filter(symbolPair -> isSupported(symbolPair.getValue()))
       .filter(symbolPair -> finalQueryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
-      .map((Pair<URI, Symbol> symbolPair) -> {
-        var uri = symbolPair.getKey();
-        var symbol = symbolPair.getValue();
-        var symbolInformation = new SymbolInformation(
-          symbol.getName(),
-          symbolKinds.get(symbol.getClass()),
-          new Location(uri.toString(), symbol.getRange())
-        );
-        symbolInformation.setDeprecated(isDeprecated(symbol));
-        return symbolInformation;
-      })
+      .map(SymbolProvider::createSymbolInformation)
       .collect(Collectors.toList());
   }
 
   private static Stream<Pair<URI, Symbol>> getSymbolPairs(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildrenFlat().stream()
+      .filter(SymbolProvider::isSupported)
       .map(symbol -> Pair.of(documentContext.getUri(), symbol));
   }
 
@@ -110,6 +91,26 @@ public class SymbolProvider {
   }
 
   private static boolean isSupported(Symbol symbol) {
-    return symbol instanceof MethodSymbol || symbol instanceof VariableSymbol;
+    var symbolKind = symbol.getSymbolKind();
+    switch (symbolKind) {
+      case Method:
+        return true;
+      case Variable:
+        return ((VariableSymbol) symbol).getKind() != VariableKind.LOCAL;
+      default:
+        return false;
+    }
+  }
+
+  private static SymbolInformation createSymbolInformation(Pair<URI, Symbol> symbolPair) {
+    var uri = symbolPair.getKey();
+    var symbol = symbolPair.getValue();
+    var symbolInformation = new SymbolInformation(
+      symbol.getName(),
+      symbol.getSymbolKind(),
+      new Location(uri.toString(), symbol.getRange())
+    );
+    symbolInformation.setDeprecated(isDeprecated(symbol));
+    return symbolInformation;
   }
 }
