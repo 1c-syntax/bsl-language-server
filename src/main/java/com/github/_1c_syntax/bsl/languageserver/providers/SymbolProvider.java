@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -52,10 +53,8 @@ public class SymbolProvider {
   private final ServerContext context;
 
   public List<? extends SymbolInformation> getSymbols(WorkspaceSymbolParams params) {
-    var queryString = params.getQuery();
-    if (queryString == null) {
-      queryString = "";
-    }
+    var queryString = Optional.ofNullable(params.getQuery())
+      .orElse("");
 
     Pattern pattern;
     try {
@@ -65,11 +64,9 @@ public class SymbolProvider {
       return Collections.emptyList();
     }
 
-    String finalQueryString = queryString;
-
     return context.getDocuments().values().stream()
       .flatMap(SymbolProvider::getSymbolPairs)
-      .filter(symbolPair -> finalQueryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
+      .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
       .map(SymbolProvider::createSymbolInformation)
       .collect(Collectors.toList());
   }
