@@ -46,7 +46,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
 )
 public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "повнорноеиспользование|повтисп|сached";
+  private static final String REGEXP = "повнорноеиспользование|повтисп|cached";
 
   public CommonModuleNameCachedDiagnostic() {
     super(REGEXP);
