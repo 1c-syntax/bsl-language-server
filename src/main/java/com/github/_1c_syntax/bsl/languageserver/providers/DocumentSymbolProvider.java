@@ -57,7 +57,7 @@ public final class DocumentSymbolProvider {
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .collect(Collectors.toList());
 
-    documentSymbol.setDeprecated(isDeprecated(symbol));
+    documentSymbol.setDeprecated(symbol.isDeprecated());
     documentSymbol.setChildren(children);
 
     return documentSymbol;
@@ -77,13 +77,4 @@ public final class DocumentSymbolProvider {
     return selectionRange;
   }
 
-  private static boolean isDeprecated(Symbol symbol) {
-    boolean deprecated;
-    if (symbol instanceof MethodSymbol) {
-      deprecated = ((MethodSymbol) symbol).isDeprecated();
-    } else {
-      deprecated = false;
-    }
-    return deprecated;
-  }
 }

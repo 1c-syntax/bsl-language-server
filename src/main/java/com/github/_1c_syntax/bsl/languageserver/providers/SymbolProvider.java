@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -77,16 +76,6 @@ public class SymbolProvider {
       .map(symbol -> Pair.of(documentContext.getUri(), symbol));
   }
 
-  private static boolean isDeprecated(Symbol symbol) {
-    boolean deprecated;
-    if (symbol instanceof MethodSymbol) {
-      deprecated = ((MethodSymbol) symbol).isDeprecated();
-    } else {
-      deprecated = false;
-    }
-    return deprecated;
-  }
-
   private static boolean isSupported(Symbol symbol) {
     var symbolKind = symbol.getSymbolKind();
     switch (symbolKind) {
@@ -107,7 +96,7 @@ public class SymbolProvider {
       symbol.getSymbolKind(),
       new Location(uri.toString(), symbol.getRange())
     );
-    symbolInformation.setDeprecated(isDeprecated(symbol));
+    symbolInformation.setDeprecated(symbol.isDeprecated());
     return symbolInformation;
   }
 }

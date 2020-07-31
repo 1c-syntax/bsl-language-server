@@ -45,6 +45,10 @@ public interface Symbol {
 
   List<Symbol> getChildren();
 
+  default boolean isDeprecated() {
+    return false;
+  }
+
   default Optional<Symbol> getRootParent() {
     return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
   }
