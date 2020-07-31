@@ -319,6 +319,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#abstractsdblvisitordiagnostic" class="md-nav__link">
+    Класс диагностики, унаследованный от AbstractSDBLVisitorDiagnostic
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#abstractlistenerdiagnostic" class="md-nav__link">
     Класс диагностики, унаследованный от AbstractListenerDiagnostic (В РАЗРАБОТКЕ)
   </a>
@@ -473,8 +480,10 @@
 <p>Класс должен реализовывать интерфейс <code>BSLDiagnostic</code>. Если диагностика основывается на AST дереве, то класс реализации должен быть унаследован от одного из классов ниже, реализующих <code>BSLDiagnostic</code>:</p>
 <ul>
 <li>для простых диагностик (проверка контекста модуля) стоит использовать наследование <code>AbstractVisitor</code> с реализацией единственного метода <code>check</code></li>
-<li>при необходимости анализа посещения узла / последовательности узлов, использовать стратегию <code>слушателя</code> нужно наслодовать класс от <code>AbstractListenerDiagnostic</code></li>
-<li>в остальных случаях нужно использовать стратегию <code>визитера</code> и <code>AbstractVisitorDiagnostic</code></li>
+<li>при необходимости анализа посещения узла / последовательности узлов, использовать стратегию <code>слушателя</code> нужно наследовать класс от <code>AbstractListenerDiagnostic</code></li>
+<li>в остальных случаях нужно использовать стратегию <code>визитера</code> и </li>
+<li><code>AbstractVisitorDiagnostic</code> для диагностик кода 1С</li>
+<li><code>AbstractSDBLVisitorDiagnostic</code> для диагностик запросов 1С</li>
 </ul>
 <p>Примеры</p>
 <div class="codehilite"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span>
@@ -493,6 +502,10 @@
 </code></pre></div>
 
 
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span>
+</code></pre></div>
+
+
 <p>Диагностика может предоставлять т.н. <code>быстрые исправления</code>, для чего класс диагностики должен реализовывать интерфейс <code>QuickFixProvider</code>. Подробно о добавлении <code>быстрых исправлений</code> в диагностику написано <a href="../DiagnosticQuickFix/">статье</a>.</p>
 <p>Примеры</p>
 <div class="codehilite"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">implements</span> <span class="n">BSLDiagnostic</span><span class="p">,</span> <span class="n">QuickFixProvider</span>
@@ -508,6 +521,10 @@
 
 
 <div class="codehilite"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractListenerDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
+</code></pre></div>
+
+
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TemplateDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractSDBLVisitorDiagnostic</span> <span class="kd">implements</span> <span class="n">QuickFixProvider</span>
 </code></pre></div>
 
 
@@ -583,6 +600,9 @@
 <li>Диагностика для метода или файла должна сразу возвращать значение, т.к. вложенных методов / файлов не существует</li>
 <li>Диагностика для блока условия или области должна вызывать <code>super-метод</code>, т.к. они существуют и используются (например <code>return super.visitSub(ctx)</code> для методов)</li>
 </ul>
+<h3 id="abstractsdblvisitordiagnostic">Класс диагностики, унаследованный от AbstractSDBLVisitorDiagnostic<a class="headerlink" href="#abstractsdblvisitordiagnostic" title="Permanent link">&para;</a></h3>
+<p>В классе диагностики необходимо реализовать методы всех соответствующих <code>визитеров AST</code>, в соответствии грамматикой языка запросов, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/SDBLParser.g4">BSLParser</a>.  Полный список существующих методов-визитеров находится в классе <code>SDBLParserBaseVisitor</code>. </p>
+<p>Остальные правила использования идентичны <code>AbstractVisitorDiagnostic</code>.</p>
 <h3 id="abstractlistenerdiagnostic">Класс диагностики, унаследованный от AbstractListenerDiagnostic <strong>(В РАЗРАБОТКЕ)</strong><a class="headerlink" href="#abstractlistenerdiagnostic" title="Permanent link">&para;</a></h3>
 <p><em><strong>&lt;В разработке&gt;</strong></em></p>
 <h2 id="_4">Класс теста диагностики<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
