@@ -174,6 +174,28 @@ public final class Trees {
   /**
    * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
    * @param tokenIndex - индекс текущего токена в переданном списке токенов
+   * @param tokenType  - тип искомого токена (см. {@link com.github._1c_syntax.bsl.parser.BSLParser}
+   * @return предыдущий токен, если он был найден
+   */
+  public Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex, int tokenType) {
+    while (true) {
+      if (tokenIndex == 0) {
+        return Optional.empty();
+      }
+      Token token = tokens.get(tokenIndex);
+      if (token.getChannel() != Token.DEFAULT_CHANNEL
+        || token.getType() != tokenType) {
+        tokenIndex = tokenIndex - 1;
+        continue;
+      }
+
+      return Optional.of(token);
+    }
+  }
+
+  /**
+   * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
+   * @param tokenIndex - индекс текущего токена в переданном списке токенов
    * @return предыдущий токен, если он был найден
    */
   public static Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex) {
@@ -412,7 +434,6 @@ public final class Trees {
       && (previousToken.getTokenIndex() == 0
       || (previousToken.getLine() + 1) != currentToken.getLine());
   }
-
 
   private static boolean treeContainsErrors(ParseTree tnc, boolean recursive) {
     if (!(tnc instanceof BSLParserRuleContext)) {

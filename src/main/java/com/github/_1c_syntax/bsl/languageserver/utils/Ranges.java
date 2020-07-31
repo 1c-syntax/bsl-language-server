@@ -37,6 +37,18 @@ public final class Ranges {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
   }
 
+  /**
+   * Создание Range для линии
+   *
+   * @param lineNo    - номер строки
+   * @param startChar - номер первого символа
+   * @param endChar   - номер последнего символа
+   * @return - полученный Range
+   */
+  public static Range create(int lineNo, int startChar, int endChar) {
+    return new Range(new Position(lineNo, startChar), new Position(lineNo, endChar));
+  }
+
   public static Range create(ParserRuleContext ruleContext) {
     return create(ruleContext.getStart(), ruleContext.getStop());
   }
