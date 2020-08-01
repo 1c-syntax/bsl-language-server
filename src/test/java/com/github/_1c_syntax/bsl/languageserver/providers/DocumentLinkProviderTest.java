@@ -70,7 +70,7 @@ class DocumentLinkProviderTest {
 
     // given
     var configurationFile = new File("./src/test/resources/.bsl-language-server-only-en-param.json");
-    configuration.updateConfiguration(configurationFile);
+    configuration.update(configurationFile);
 
     var documentContext = getDocumentContext();
 

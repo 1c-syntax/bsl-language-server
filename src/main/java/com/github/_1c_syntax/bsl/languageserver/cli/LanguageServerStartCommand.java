@@ -83,7 +83,7 @@ public class LanguageServerStartCommand implements Callable<Integer> {
   public Integer call() {
 
     File configurationFile = new File(configurationOption);
-    configuration.updateConfiguration(configurationFile);
+    configuration.update(configurationFile);
 
     Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
 
