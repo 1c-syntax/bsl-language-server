@@ -31,6 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.nio.file.Paths;
+
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,29 +66,33 @@ class SymbolProviderTest {
       .hasSizeGreaterThan(0)
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
-          && symbolInformation.getLocation().getUri().contains("ПервыйОбщийМодуль")
+          && uriContains(symbolInformation, "ПервыйОбщийМодуль")
           && symbolInformation.getKind() == SymbolKind.Method
           && !symbolInformation.getDeprecated()
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
-          && symbolInformation.getLocation().getUri().contains("РегистрСведений1")
+          && uriContains(symbolInformation, "РегистрСведений1")
           && symbolInformation.getKind() == SymbolKind.Method
           && !symbolInformation.getDeprecated()
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("УстаревшаяПроцедура")
-          && symbolInformation.getLocation().getUri().contains("ПервыйОбщийМодуль")
+          && uriContains(symbolInformation, "ПервыйОбщийМодуль")
           && symbolInformation.getKind() == SymbolKind.Method
           && symbolInformation.getDeprecated()
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("ВалютаУчета")
-          && symbolInformation.getLocation().getUri().contains("ManagedApplicationModule")
+          && uriContains(symbolInformation, "ManagedApplicationModule")
           && symbolInformation.getKind() == SymbolKind.Variable
           && !symbolInformation.getDeprecated()
       )
     ;
+  }
+
+  private boolean uriContains(org.eclipse.lsp4j.SymbolInformation symbolInformation, String name) {
+    return Paths.get(Absolute.uri(symbolInformation.getLocation().getUri())).toString().contains(name);
   }
 
   @Test
@@ -134,7 +140,6 @@ class SymbolProviderTest {
 
     // then
     assertThat(symbols).isEmpty();
-    ;
   }
 
 
