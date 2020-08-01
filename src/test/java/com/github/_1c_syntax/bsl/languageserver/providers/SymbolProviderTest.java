@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.SneakyThrows;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.net.URI;
 import java.nio.file.Paths;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -91,8 +93,9 @@ class SymbolProviderTest {
     ;
   }
 
+  @SneakyThrows
   private boolean uriContains(org.eclipse.lsp4j.SymbolInformation symbolInformation, String name) {
-    return Paths.get(Absolute.uri(symbolInformation.getLocation().getUri())).toString().contains(name);
+    return Paths.get(new URI(symbolInformation.getLocation().getUri())).toString().contains(name);
   }
 
   @Test
