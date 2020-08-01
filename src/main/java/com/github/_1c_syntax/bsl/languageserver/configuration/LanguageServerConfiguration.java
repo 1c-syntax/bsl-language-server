@@ -22,22 +22,27 @@
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChange;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
@@ -68,7 +73,7 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LanguageServerConfiguration {
+public class LanguageServerConfiguration implements ApplicationEventPublisherAware {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
@@ -92,8 +97,15 @@ public class LanguageServerConfiguration {
   @Nullable
   private Path configurationRoot;
 
-  @SneakyThrows
-  public void updateConfiguration(File configurationFile) {
+  @JsonIgnore
+  @Setter(value = AccessLevel.NONE)
+  private File configurationFile = new File(".bsl-language-server.json");
+
+  @JsonIgnore
+  @Getter(value = AccessLevel.NONE)
+  private ApplicationEventPublisher applicationEventPublisher;
+
+  public void update(File configurationFile) {
     if (!configurationFile.exists()) {
       return;
     }
@@ -110,15 +122,19 @@ public class LanguageServerConfiguration {
       return;
     }
 
-    // todo: refactor
-    PropertyUtils.copyProperties(this, configuration);
-    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
-    PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
-    PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
+    this.configurationFile = configurationFile;
+    notifyConfigurationFileChanged();
 
-
+    copyPropertiesFrom(configuration);
   }
 
+
+  public void reset() {
+    copyPropertiesFrom(new LanguageServerConfiguration());
+    notifyConfigurationFileChanged();
+  }
+
+  @Deprecated
   public static LanguageServerConfiguration create() {
     return new LanguageServerConfiguration();
   }
@@ -175,4 +191,16 @@ public class LanguageServerConfiguration {
     return configurationFile;
   }
 
+  @SneakyThrows
+  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
+    // todo: refactor
+    PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
+    PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
+  }
+
+  private void notifyConfigurationFileChanged() {
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChange(this.configurationFile));
+  }
 }
