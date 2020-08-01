@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +35,8 @@ public interface Symbol {
 
   String getName();
 
+  SymbolKind getSymbolKind();
+
   Range getRange();
 
   Optional<Symbol> getParent();
@@ -41,6 +44,10 @@ public interface Symbol {
   void setParent(Optional<Symbol> symbol);
 
   List<Symbol> getChildren();
+
+  default boolean isDeprecated() {
+    return false;
+  }
 
   default Optional<Symbol> getRootParent() {
     return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
@@ -52,6 +59,8 @@ public interface Symbol {
     return new Symbol() {
       @Getter
       private final String name = "empty";
+      @Getter
+      private final SymbolKind symbolKind = SymbolKind.Null;
       @Getter
       private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter

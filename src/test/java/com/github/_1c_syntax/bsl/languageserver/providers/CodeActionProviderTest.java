@@ -39,6 +39,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class CodeActionProviderTest {
 
   @Autowired
@@ -87,11 +89,11 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
-      .hasSize(3)
       .extracting(Either::getRight)
+      .hasSizeGreaterThanOrEqualTo(3)
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(0)))
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(1)))
-      .allMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+      .anyMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
     ;
   }
 
@@ -117,6 +119,7 @@ class CodeActionProviderTest {
 
     // then
     assertThat(codeActions)
+      .filteredOn(codeAction -> codeAction.getRight().getKind().equals(CodeActionKind.QuickFix))
       .isEmpty();
   }
 }
