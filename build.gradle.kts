@@ -16,7 +16,7 @@ plugins {
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.28.0"
     id("io.freefair.javadoc-links") version "5.1.0"
-    id("org.springframework.boot") version "2.3.1.RELEASE"
+    id("org.springframework.boot") version "2.3.2.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.2.3"
 }
 
@@ -64,8 +64,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.languagetool/language-ru
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
-    implementation("info.picocli", "picocli", "4.2.0")
-
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io", "commons-io", "2.6")
     implementation("org.apache.commons", "commons-lang3", "3.10")
@@ -81,9 +79,6 @@ dependencies {
 
     implementation("me.tongfei", "progressbar", "0.8.1")
 
-    implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
-    implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
-
     implementation("com.github.1c-syntax", "bsl-parser", "2e41836b9c5035b53324a953ec783b391fefc00f") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
@@ -94,7 +89,9 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "9202a75f5cc6f1ecff13855e478c4d67a3bb62c2")
-    implementation("com.github.1c-syntax", "mdclasses", "cff4b25f84bb7edcb2f55cfa0a12668f9461c816")
+    implementation("com.github.1c-syntax", "mdclasses", "cff4b25f84bb7edcb2f55cfa0a12668f9461c816") {
+        exclude("org.slf4j", "slf4j-simple")
+    }
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
