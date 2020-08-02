@@ -39,6 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.HashSet;
+import java.util.Set;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -51,6 +53,7 @@ public class ConfigurationFileSystemWatcher {
 
   private final LanguageServerConfiguration configuration;
   private final ConfigurationFileChangeListener listener;
+  private final Set<Path> registeredPaths = new HashSet<>();
 
   private WatchService watchService;
 
@@ -96,6 +99,12 @@ public class ConfigurationFileSystemWatcher {
   @SneakyThrows
   private void registerWatchService(File configurationFile) {
     Path configurationDir = Absolute.path(configurationFile).getParent();
+
+    if (registeredPaths.contains(configurationDir)) {
+      return;
+    }
+    registeredPaths.add(configurationDir);
+
     configurationDir.register(
       watchService,
       ENTRY_CREATE,
