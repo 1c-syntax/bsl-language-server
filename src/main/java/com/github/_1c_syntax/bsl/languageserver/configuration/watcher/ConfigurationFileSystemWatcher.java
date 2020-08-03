@@ -79,16 +79,14 @@ public class ConfigurationFileSystemWatcher {
   /**
    * Фоновая процедура, отслеживающая изменения файлов.
    *
-   * @throws InterruptedException
-   *         если операция прервана в момент пуллинга.
    */
   @Scheduled(fixedDelay = 5000L)
   @Synchronized
-  public void watch() throws InterruptedException {
+  public void watch() {
     WatchKey key;
     // save last modified date to de-duplicate events
     long lastModified = 0L;
-    while ((key = watchService.take()) != null) {
+    while ((key = watchService.poll()) != null) {
       for (WatchEvent<?> watchEvent : key.pollEvents()) {
         Path context = (Path) watchEvent.context();
         if (context == null) {
