@@ -133,12 +133,7 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     copyPropertiesFrom(new LanguageServerConfiguration());
     notifyConfigurationFileChanged();
   }
-
-  @Deprecated
-  public static LanguageServerConfiguration create() {
-    return new LanguageServerConfiguration();
-  }
-
+  
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
