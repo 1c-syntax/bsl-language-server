@@ -46,6 +46,12 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
+/**
+ * Отслеживатель изменений файла конфигурации.
+ * <p>
+ * При обнаружении изменения в файле (удаление, создание, редактирование) делегирует обработку изменения в
+ * {@link ConfigurationFileChangeListener}.
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -68,6 +74,11 @@ public class ConfigurationFileSystemWatcher {
     watchService.close();
   }
 
+  /**
+   * Фоновая процедура, отслеживающая изменения файлов.
+   *
+   * @throws InterruptedException
+   */
   @Scheduled(fixedDelay = 5000L)
   public synchronized void watch() throws InterruptedException {
     WatchKey key;
@@ -90,6 +101,11 @@ public class ConfigurationFileSystemWatcher {
     }
   }
 
+  /**
+   * Обработчик события {@link LanguageServerConfigurationFileChange}.
+   *
+   * @param event Событие
+   */
   @EventListener
   public void handleEvent(LanguageServerConfigurationFileChange event) {
     registerWatchService(event.getSource());

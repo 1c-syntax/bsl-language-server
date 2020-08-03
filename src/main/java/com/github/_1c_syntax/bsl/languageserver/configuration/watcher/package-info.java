@@ -21,11 +21,10 @@
  */
 
 /**
- * В пакете содержатся классы для конфигурирования BSL Language Server.
- * <p>
- * Корневой пакет содержит корневой класс конфигурации
- * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}
- * , настройки верхнего уровня и дополнительные пакеты для настроек в разрезе провайдеров
- * (диагностики, code lens, и т.д.)
+ * В пакете содержатся классы, относящиеся к отслеживанию факта изменения (удаление, создание, редактирование) файла
+ * конфигурации ({@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}).
  */
-package com.github._1c_syntax.bsl.languageserver.configuration;
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
+
+import javax.annotation.ParametersAreNonnullByDefault;

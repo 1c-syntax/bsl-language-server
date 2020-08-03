@@ -25,6 +25,11 @@ import org.springframework.context.ApplicationEvent;
 
 import java.io.File;
 
+/**
+ * Описание события изменения файла конфигурации.
+ * <p>
+ * В качестве источника события содержит ссылку на файл конфигурации.
+ */
 public class LanguageServerConfigurationFileChange extends ApplicationEvent {
   public LanguageServerConfigurationFileChange(File configurationFile) {
     super(configurationFile);

@@ -33,6 +33,12 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
+/**
+ * Обработчик событий изменения файла конфигурации.
+ * <p>
+ * Выполняет обновление/сброс инстанса
+ * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -40,6 +46,14 @@ public class ConfigurationFileChangeListener {
 
   private final LanguageServerConfiguration configuration;
 
+  /**
+   * Обработчик изменения файла конфигурации. Актуализирует текущий активный инстанс конфигурации
+   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   *
+   * @param configurationFile Изменившийся файл конфигурации, содержащий
+   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * @param eventKind Тип события, произошедшего с файлом.
+   */
   public void onChange(File configurationFile, WatchEvent.Kind<?> eventKind) {
     if (ENTRY_CREATE.equals(eventKind) || ENTRY_MODIFY.equals(eventKind)) {
       configuration.update(configurationFile);
