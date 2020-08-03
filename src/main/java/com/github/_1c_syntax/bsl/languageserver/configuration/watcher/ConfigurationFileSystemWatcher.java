@@ -64,13 +64,12 @@ public class ConfigurationFileSystemWatcher {
   }
 
   @PreDestroy
-  public void onDestroy() throws IOException {
+  public synchronized void onDestroy() throws IOException {
     watchService.close();
   }
 
-  @SneakyThrows
   @Scheduled(fixedDelay = 5000L)
-  public void watch() {
+  public synchronized void watch() throws InterruptedException {
     WatchKey key;
     // save last modified date to de-duplicate events
     long lastModified = 0L;
