@@ -115,7 +115,7 @@ public class ConfigurationFileSystemWatcher {
   private void registerWatchService(File configurationFile) {
     Path configurationDir = Absolute.path(configurationFile).getParent();
 
-    if (registeredPaths.contains(configurationDir)) {
+    if (configurationDir == null || registeredPaths.contains(configurationDir)) {
       return;
     }
     registeredPaths.add(configurationDir);
