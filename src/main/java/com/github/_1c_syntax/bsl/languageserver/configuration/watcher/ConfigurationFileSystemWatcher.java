@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -70,7 +71,8 @@ public class ConfigurationFileSystemWatcher {
   }
 
   @PreDestroy
-  public synchronized void onDestroy() throws IOException {
+  @Synchronized
+  public void onDestroy() throws IOException {
     watchService.close();
   }
 
@@ -78,9 +80,11 @@ public class ConfigurationFileSystemWatcher {
    * Фоновая процедура, отслеживающая изменения файлов.
    *
    * @throws InterruptedException
+   *         если операция прервана в момент пуллинга.
    */
   @Scheduled(fixedDelay = 5000L)
-  public synchronized void watch() throws InterruptedException {
+  @Synchronized
+  public void watch() throws InterruptedException {
     WatchKey key;
     // save last modified date to de-duplicate events
     long lastModified = 0L;
