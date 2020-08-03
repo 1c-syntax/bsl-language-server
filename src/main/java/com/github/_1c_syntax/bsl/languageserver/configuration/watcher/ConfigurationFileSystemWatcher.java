@@ -40,8 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.HashSet;
-import java.util.Set;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -60,13 +58,12 @@ public class ConfigurationFileSystemWatcher {
 
   private final LanguageServerConfiguration configuration;
   private final ConfigurationFileChangeListener listener;
-  private final Set<Path> registeredPaths = new HashSet<>();
 
+  private Path registeredPath;
   private WatchService watchService;
 
   @PostConstruct
-  public void init() throws IOException {
-    watchService = FileSystems.getDefault().newWatchService();
+  public void init() {
     registerWatchService(configuration.getConfigurationFile());
   }
 
@@ -92,6 +89,7 @@ public class ConfigurationFileSystemWatcher {
         if (context == null) {
           continue;
         }
+
         File file = context.toFile();
         if (isConfigurationFile(file) && file.lastModified() != lastModified) {
           lastModified = file.lastModified();
@@ -117,12 +115,18 @@ public class ConfigurationFileSystemWatcher {
   private void registerWatchService(File configurationFile) {
     Path configurationDir = Absolute.path(configurationFile).getParent();
 
-    if (configurationDir == null || registeredPaths.contains(configurationDir)) {
+    if (configurationDir.equals(registeredPath)) {
       return;
     }
-    registeredPaths.add(configurationDir);
 
-    configurationDir.register(
+    if (watchService != null) {
+      watchService.close();
+    }
+
+    watchService = FileSystems.getDefault().newWatchService();
+    registeredPath = configurationDir;
+
+    registeredPath.register(
       watchService,
       ENTRY_CREATE,
       ENTRY_DELETE,
@@ -133,7 +137,8 @@ public class ConfigurationFileSystemWatcher {
   }
 
   private boolean isConfigurationFile(File pathname) {
-    var absolutePathname = Absolute.path(pathname);
+    var fullPathname = new File(registeredPath.toFile(), pathname.getName());
+    var absolutePathname = Absolute.path(fullPathname);
     var absoluteConfigurationFile = Absolute.path(configuration.getConfigurationFile());
     return absolutePathname.equals(absoluteConfigurationFile);
   }
