@@ -75,6 +75,12 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     defaultValue = "")
   private String configurationOption;
 
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
+
   private final CommandLine.IFactory picocliFactory;
 
   private int exitCode;

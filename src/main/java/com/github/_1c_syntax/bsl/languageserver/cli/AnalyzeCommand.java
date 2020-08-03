@@ -141,6 +141,12 @@ public class AnalyzeCommand implements Callable<Integer> {
     description = "Silent mode")
   private boolean silentMode;
 
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
+
   private final ReportersAggregator aggregator;
   private final LanguageServerConfiguration configuration;
   private final ServerContext context;
