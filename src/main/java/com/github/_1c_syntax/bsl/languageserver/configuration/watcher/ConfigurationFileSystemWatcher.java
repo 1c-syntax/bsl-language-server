@@ -61,44 +61,43 @@ public class ConfigurationFileSystemWatcher {
 
   private Path registeredPath;
   private WatchService watchService;
+  private WatchKey watchKey;
 
   @PostConstruct
-  public void init() {
+  public void init() throws IOException {
+    watchService = FileSystems.getDefault().newWatchService();
     registerWatchService(configuration.getConfigurationFile());
   }
 
   @PreDestroy
   @Synchronized
   public void onDestroy() throws IOException {
+    watchKey.cancel();
     watchService.close();
   }
 
   /**
    * Фоновая процедура, отслеживающая изменения файлов.
-   *
    */
   @Scheduled(fixedDelay = 5000L)
   @Synchronized
   public void watch() {
-    WatchKey key;
     // save last modified date to de-duplicate events
     long lastModified = 0L;
-    while ((key = watchService.poll()) != null) {
-      for (WatchEvent<?> watchEvent : key.pollEvents()) {
-        Path context = (Path) watchEvent.context();
-        if (context == null) {
-          continue;
-        }
-
-        File file = context.toFile();
-        if (isConfigurationFile(file) && file.lastModified() != lastModified) {
-          lastModified = file.lastModified();
-          listener.onChange(file, watchEvent.kind());
-        }
+    for (WatchEvent<?> watchEvent : watchKey.pollEvents()) {
+      Path context = (Path) watchEvent.context();
+      if (context == null) {
+        continue;
       }
 
-      key.reset();
+      var file = new File(registeredPath.toFile(), context.toFile().getName());
+      if (isConfigurationFile(file) && file.lastModified() != lastModified) {
+        lastModified = file.lastModified();
+        listener.onChange(file, watchEvent.kind());
+      }
     }
+
+    watchKey.reset();
   }
 
   /**
@@ -119,14 +118,13 @@ public class ConfigurationFileSystemWatcher {
       return;
     }
 
-    if (watchService != null) {
-      watchService.close();
+    if (watchKey != null) {
+      watchKey.cancel();
     }
 
-    watchService = FileSystems.getDefault().newWatchService();
     registeredPath = configurationDir;
 
-    registeredPath.register(
+    watchKey = registeredPath.register(
       watchService,
       ENTRY_CREATE,
       ENTRY_DELETE,
@@ -137,8 +135,7 @@ public class ConfigurationFileSystemWatcher {
   }
 
   private boolean isConfigurationFile(File pathname) {
-    var fullPathname = new File(registeredPath.toFile(), pathname.getName());
-    var absolutePathname = Absolute.path(fullPathname);
+    var absolutePathname = Absolute.path(pathname);
     var absoluteConfigurationFile = Absolute.path(configuration.getConfigurationFile());
     return absolutePathname.equals(absoluteConfigurationFile);
   }
