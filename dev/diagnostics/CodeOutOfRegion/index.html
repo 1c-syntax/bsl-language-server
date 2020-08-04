@@ -383,6 +383,36 @@
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<div class="codehilite"><pre><span></span><code><span class="kd">#Область &lt;ИмяОбласти&gt;</span>
+</code></pre></div>
+
+
+<p>Не смотря на то что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.</p>
+<p>Правильно:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">#Область СлужебныеПроцедурыИФункции</span>
+<span class="kd">#Область Печать</span>
+<span class="c c-Singleline">// Код процедур и функций</span>
+<span class="kd">#КонецОбласти</span>
+<span class="kd">#Область Прочее</span>
+<span class="c c-Singleline">// Код процедур и функций</span>
+<span class="kd">#КонецОбласти</span>
+<span class="kd">#КонецОбласти</span>
+</code></pre></div>
+
+
+<p>Таблица соответствия английских имён (полный список в <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">исходном коде</a>):
+| русск.  | англ. |
+| ------------- | ------------- |
+| ПрограммныйИнтерфейс  | Public  |
+| СлужебныйПрограммныйИнтерфейс  | Internal  |
+| СлужебныеПроцедурыИФункции  | Private  |
+| ОбработчикиСобытий  | EventHandlers  |
+| ОбработчикиСобытийФормы  | FormEventHandlers  |
+| ОбработчикиСобытийЭлементовШапкиФормы  | FormHeaderItemsEventHandlers  |
+| ОбработчикиКомандФормы  | FormCommandsEventHandlers  |
+| ОписаниеПеременных  | Variables  |
+| Инициализация  | Initialize  |
+| ОбработчикиСобытийЭлементовТаблицыФормы  | FormTableItemsEventHandlers  |</p>
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
