@@ -84,7 +84,7 @@ dependencies {
     implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
     implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "2e41836b9c5035b53324a953ec783b391fefc00f") {
+    implementation("com.github.1c-syntax", "bsl-parser", "0.15.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -94,7 +94,7 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "9202a75f5cc6f1ecff13855e478c4d67a3bb62c2")
-    implementation("com.github.1c-syntax", "mdclasses", "63f71aa098d11b17fc9d3625ae536b1b37631eef")
+    implementation("com.github.1c-syntax", "mdclasses", "0.6.0")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 
