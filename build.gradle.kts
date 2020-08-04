@@ -79,7 +79,7 @@ dependencies {
 
     implementation("me.tongfei", "progressbar", "0.8.1")
 
-    implementation("com.github.1c-syntax", "bsl-parser", "2e41836b9c5035b53324a953ec783b391fefc00f") {
+    implementation("com.github.1c-syntax", "bsl-parser", "0.15.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -89,9 +89,7 @@ dependencies {
     }
 
     implementation("com.github.1c-syntax", "utils", "9202a75f5cc6f1ecff13855e478c4d67a3bb62c2")
-    implementation("com.github.1c-syntax", "mdclasses", "cff4b25f84bb7edcb2f55cfa0a12668f9461c816") {
-        exclude("org.slf4j", "slf4j-simple")
-    }
+    implementation("com.github.1c-syntax", "mdclasses", "0.6.0")
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
 

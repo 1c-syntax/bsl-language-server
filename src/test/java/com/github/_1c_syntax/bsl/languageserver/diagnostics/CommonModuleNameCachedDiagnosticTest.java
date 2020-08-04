@@ -133,6 +133,24 @@ class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<Common
 
   }
 
+  @Test
+  void testLongName() {
+
+    getDocumentContextFromFile();
+
+    // given
+    when(module.getName()).thenReturn("ModuleПовторноеИспользование");
+    when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DURING_REQUEST);
+
+    when(documentContext.getMdObject()).thenReturn(Optional.of(module));
+
+    // when
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    //then
+    assertThat(diagnostics).hasSize(0);
+
+  }
 
   @Test
   void testEmptyFile() {
