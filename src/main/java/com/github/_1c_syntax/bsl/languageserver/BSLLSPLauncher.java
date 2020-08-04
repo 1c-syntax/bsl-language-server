@@ -31,7 +31,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -57,7 +56,6 @@ import static picocli.CommandLine.Command;
   footer = "@|green Copyright(c) 2018-2020|@",
   header = "@|green BSL language server|@")
 @SpringBootApplication
-@EnableScheduling
 @Component
 @RequiredArgsConstructor
 public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
