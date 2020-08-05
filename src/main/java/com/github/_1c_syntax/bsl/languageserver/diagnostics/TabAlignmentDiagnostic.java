@@ -25,15 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import org.antlr.v4.runtime.Token;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
   minutesToFix = 1,
-  activatedByDefault = false,
   tags = {
     DiagnosticTag.BADPRACTICE
   }
@@ -41,23 +41,33 @@ import java.util.regex.Pattern;
 )
 public class TabAlignmentDiagnostic extends AbstractDiagnostic {
 
-  private static final Pattern pattern = Pattern.compile("\\S[\\S ]*(\\t+)(?! *//)");
-
   @Override
   public void check() {
 
-    String[] lines = documentContext.getContentList();
-    for (int i = 0; i < lines.length; i++) {
-      String currentLine = lines[i].strip();
-      if (currentLine.startsWith("|")
-        || currentLine.startsWith("//")) {
-        continue;
+    List<Token> tokens = documentContext.getTokens();
+
+    int lineNum = 0;
+    boolean afterChar = false;
+
+    for (Token token : tokens) {
+
+      if (lineNum < token.getLine()) {
+        afterChar = false;
+        lineNum = token.getLine();
       }
 
-      Matcher matcher = pattern.matcher(lines[i].stripTrailing());
-      if (matcher.find()) {
-        diagnosticStorage.addDiagnostic(i, matcher.start(1), i, matcher.end(1));
+      if (afterChar
+        && token.getType() == BSLLexer.WHITE_SPACE
+        && !token.getText().contains("\n\t")
+        && token.getText().contains("\t")) {
+        diagnosticStorage.addDiagnostic(token);
       }
+
+      if (!afterChar && token.getType() != BSLLexer.WHITE_SPACE) {
+        afterChar = true;
+      }
+
     }
+
   }
 }
