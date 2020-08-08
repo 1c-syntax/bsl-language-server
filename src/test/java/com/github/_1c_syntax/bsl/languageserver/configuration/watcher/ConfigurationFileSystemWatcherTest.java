@@ -48,7 +48,7 @@ class ConfigurationFileSystemWatcherTest {
   private LanguageServerConfiguration configuration;
 
   @Test
-  void test() throws IOException, InterruptedException {
+  void test() throws IOException {
     // given
     var file = File.createTempFile("bsl-config", ".json");
     var content = "{\"language\": \"ru\"}";
@@ -59,7 +59,7 @@ class ConfigurationFileSystemWatcherTest {
     content = "{\"language\": \"en\"}";
     FileUtils.writeStringToFile(file, content, StandardCharsets.UTF_8);
 
-    await().atMost(2, SECONDS).untilAsserted(() -> {
+    await().atMost(10, SECONDS).untilAsserted(() -> {
       // when
       watcher.watch();
       // then
