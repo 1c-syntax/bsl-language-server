@@ -79,6 +79,8 @@ dependencies {
 
     implementation("me.tongfei", "progressbar", "0.8.1")
 
+    implementation("io.methvin", "directory-watcher", "0.10.0")
+
     implementation("com.github.1c-syntax", "bsl-parser", "0.15.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")

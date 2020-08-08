@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.Absolute;
+import io.methvin.watchservice.MacOSXListeningWatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
@@ -40,6 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Locale;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -65,7 +67,7 @@ public class ConfigurationFileSystemWatcher {
 
   @PostConstruct
   public void init() throws IOException {
-    watchService = FileSystems.getDefault().newWatchService();
+    watchService = osDefaultWatchService();
     registerWatchService(configuration.getConfigurationFile());
   }
 
@@ -138,5 +140,14 @@ public class ConfigurationFileSystemWatcher {
     var absolutePathname = Absolute.path(pathname);
     var absoluteConfigurationFile = Absolute.path(configuration.getConfigurationFile());
     return absolutePathname.equals(absoluteConfigurationFile);
+  }
+
+  private WatchService osDefaultWatchService() throws IOException {
+    boolean isMac = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("mac");
+    if (isMac) {
+      return new MacOSXListeningWatchService();
+    } else {
+      return FileSystems.getDefault().newWatchService();
+    }
   }
 }
