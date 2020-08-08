@@ -142,7 +142,7 @@ public class ConfigurationFileSystemWatcher {
     return absolutePathname.equals(absoluteConfigurationFile);
   }
 
-  private WatchService osDefaultWatchService() throws IOException {
+  private static WatchService osDefaultWatchService() throws IOException {
     boolean isMac = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("mac");
     if (isMac) {
       return new MacOSXListeningWatchService();
