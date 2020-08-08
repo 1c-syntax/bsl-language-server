@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
@@ -37,7 +38,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -46,13 +46,14 @@ import java.util.Collections;
 import java.util.List;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   @Autowired
   private DiagnosticConfiguration diagnosticConfiguration;
   @Autowired
   protected ServerContext context;
+  @Autowired
+  protected LanguageServerConfiguration configuration;
 
   private final Class<T> diagnosticClass;
   protected T diagnosticInstance;
@@ -64,6 +65,8 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   @PostConstruct
   public void init() {
     diagnosticInstance = diagnosticConfiguration.diagnostic(diagnosticClass);
+    context.clear();
+    configuration.reset();
   }
 
   protected void initServerContext(String path) {
