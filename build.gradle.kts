@@ -105,6 +105,7 @@ dependencies {
     testImplementation("org.mockito", "mockito-core", "3.3.3")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+    testImplementation("org.awaitility", "awaitility", "4.0.3")
 
 }
 

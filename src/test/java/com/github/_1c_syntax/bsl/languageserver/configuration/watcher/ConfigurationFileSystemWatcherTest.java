@@ -33,7 +33,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest(properties = {"app.scheduling.enabled=false"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -56,12 +58,14 @@ class ConfigurationFileSystemWatcherTest {
     // when
     content = "{\"language\": \"en\"}";
     FileUtils.writeStringToFile(file, content, StandardCharsets.UTF_8);
-    Thread.sleep(100);
 
-    watcher.watch();
+    await().atMost(2, SECONDS).untilAsserted(() -> {
+      // when
+      watcher.watch();
+      // then
+      assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
+    });
 
-    // then
-    assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
   }
 
 }
