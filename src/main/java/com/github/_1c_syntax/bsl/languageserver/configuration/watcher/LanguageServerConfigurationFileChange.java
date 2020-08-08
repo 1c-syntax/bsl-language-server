@@ -19,22 +19,24 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;
+package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.context.ApplicationEvent;
+
+import java.io.File;
 
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * Описание события изменения файла конфигурации.
+ * <p>
+ * В качестве источника события содержит ссылку на файл конфигурации.
  */
-@Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DocumentLinkOptions {
-  private boolean useDevSite;
-  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
+public class LanguageServerConfigurationFileChange extends ApplicationEvent {
+  public LanguageServerConfigurationFileChange(File configurationFile) {
+    super(configurationFile);
+  }
+
+  @Override
+  public File getSource() {
+    return (File) super.getSource();
+  }
 }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
@@ -51,6 +52,8 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   private DiagnosticConfiguration diagnosticConfiguration;
   @Autowired
   protected ServerContext context;
+  @Autowired
+  protected LanguageServerConfiguration configuration;
 
   private final Class<T> diagnosticClass;
   protected T diagnosticInstance;
@@ -62,6 +65,8 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   @PostConstruct
   public void init() {
     diagnosticInstance = diagnosticConfiguration.diagnostic(diagnosticClass);
+    context.clear();
+    configuration.reset();
   }
 
   protected void initServerContext(String path) {

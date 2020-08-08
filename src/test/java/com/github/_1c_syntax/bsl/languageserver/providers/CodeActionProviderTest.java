@@ -53,6 +53,8 @@ class CodeActionProviderTest {
 
   @Autowired
   private CodeActionProvider codeActionProvider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @Test
   void testGetCodeActions() {
@@ -61,7 +63,6 @@ class CodeActionProviderTest {
     String filePath = "./src/test/resources/providers/codeAction.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
-    final LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
     List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
       .filter(diagnostic -> {
         DiagnosticInfo diagnosticInfo = new DiagnosticInfo(

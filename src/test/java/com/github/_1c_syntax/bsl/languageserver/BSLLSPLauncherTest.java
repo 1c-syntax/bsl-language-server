@@ -127,8 +127,8 @@ class BSLLSPLauncherTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
-    assertThat(errContent.toString()).contains("is not exists");
+    assertThat(outContent.toString()).contains("is not exists");
+    assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
@@ -185,8 +185,8 @@ class BSLLSPLauncherTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
-    assertThat(errContent.toString()).contains("is not exists");
+    assertThat(outContent.toString()).contains("is not exists");
+    assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
@@ -237,8 +237,8 @@ class BSLLSPLauncherTest {
     }
 
     // then
-    assertThat(outContent.toString()).isEmpty();
-    assertThat(errContent.toString()).contains("LanguageServerStartCommand");
+    assertThat(outContent.toString()).contains("LanguageServerStartCommand");
+    assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
@@ -251,7 +251,7 @@ class BSLLSPLauncherTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).isEmpty();
-    assertThat(errContent.toString()).contains("Can't create LSP trace file");
+    assertThat(outContent.toString()).contains("Can't create LSP trace file");
+    assertThat(errContent.toString()).isEmpty();
   }
 }

@@ -19,22 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;
+package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * Spring-конфигурация для управления включением/отключением фоновых заданий.
+ * <p />
+ * См. {@link Configuration}
  */
-@Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DocumentLinkOptions {
-  private boolean useDevSite;
-  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
-}
+@Configuration
+@EnableScheduling
+@ConditionalOnProperty(prefix = "app.scheduling", name="enabled", havingValue="true", matchIfMissing = true)
+public class SchedulingConfiguration {}

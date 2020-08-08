@@ -19,22 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * Spring-специфичные классы для настройки внутренней инфраструктуры уровня приложения.
  */
-@Data
-@AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DocumentLinkOptions {
-  private boolean useDevSite;
-  private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
-}
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.infrastructure;
+
+import javax.annotation.ParametersAreNonnullByDefault;

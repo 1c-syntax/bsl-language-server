@@ -25,11 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class DeprecatedTypeManagedFormDiagnosticTest extends AbstractDiagnosticTest<DeprecatedTypeManagedFormDiagnostic> {
   DeprecatedTypeManagedFormDiagnosticTest() {
     super(DeprecatedTypeManagedFormDiagnostic.class);

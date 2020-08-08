@@ -16,7 +16,7 @@ plugins {
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.28.0"
     id("io.freefair.javadoc-links") version "5.1.0"
-    id("org.springframework.boot") version "2.3.1.RELEASE"
+    id("org.springframework.boot") version "2.3.2.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.2.3"
 }
 
@@ -64,8 +64,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.languagetool/language-ru
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
-    implementation("info.picocli", "picocli", "4.2.0")
-
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io", "commons-io", "2.6")
     implementation("org.apache.commons", "commons-lang3", "3.10")
@@ -80,9 +78,6 @@ dependencies {
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
 
     implementation("me.tongfei", "progressbar", "0.8.1")
-
-    implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
-    implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
 
     implementation("com.github.1c-syntax", "bsl-parser", "0.15.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
@@ -108,6 +103,7 @@ dependencies {
     testImplementation("org.mockito", "mockito-core", "3.3.3")
 
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+    testImplementation("org.awaitility", "awaitility", "4.0.3")
 
 }
 

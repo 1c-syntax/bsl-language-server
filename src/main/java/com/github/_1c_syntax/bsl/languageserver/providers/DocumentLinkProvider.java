@@ -48,7 +48,7 @@ public class DocumentLinkProvider {
     var language = configuration.getLanguage();
 
     var siteRoot = linkOptions.getSiteRoot();
-    var devSuffix = linkOptions.useDevSite() ? "/dev" : "";
+    var devSuffix = linkOptions.isUseDevSite() ? "/dev" : "";
     var languageSuffix = language == Language.EN ? "/en" : "";
 
     var siteDiagnosticsUrl = String.format(

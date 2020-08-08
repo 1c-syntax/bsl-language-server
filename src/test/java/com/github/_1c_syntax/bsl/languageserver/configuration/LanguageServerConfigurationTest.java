@@ -80,7 +80,7 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
 
     // when
-    configuration.updateConfiguration(configurationFile);
+    configuration.update(configurationFile);
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
@@ -104,7 +104,7 @@ class LanguageServerConfigurationTest {
     Path configurationRoot = configuration.getConfigurationRoot();
     assertThat(configurationRoot).isNotNull();
 
-    assertThat(configuration.getDocumentLinkOptions().useDevSite()).isTrue();
+    assertThat(configuration.getDocumentLinkOptions().isUseDevSite()).isTrue();
 
   }
 
@@ -115,7 +115,7 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_EMPTY_CONFIGURATION_FILE);
 
     // when
-    configuration.updateConfiguration(configurationFile);
+    configuration.update(configurationFile);
 
     // then
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
@@ -135,7 +135,7 @@ class LanguageServerConfigurationTest {
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
-    configuration.updateConfiguration(configurationFile);
+    configuration.update(configurationFile);
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
@@ -145,7 +145,7 @@ class LanguageServerConfigurationTest {
   void testPartialInitialization() {
     // given
     File configurationFile = new File(PATH_TO_PARTIAL_CONFIGURATION_FILE);
-    configuration.updateConfiguration(configurationFile);
+    configuration.update(configurationFile);
 
     // when
     CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();

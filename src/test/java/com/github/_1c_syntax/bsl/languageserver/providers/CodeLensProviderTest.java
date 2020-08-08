@@ -21,13 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeLens;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,11 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class CodeLensProviderTest {
+
+  @Autowired
+  private CodeLensProvider codeLensProvider;
 
   @Test
   void testGetCodeLens() {
@@ -43,8 +48,6 @@ class CodeLensProviderTest {
     // given
     String filePath = "./src/test/resources/providers/codeLens.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-
-    CodeLensProvider codeLensProvider = new CodeLensProvider(LanguageServerConfiguration.create());
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);
