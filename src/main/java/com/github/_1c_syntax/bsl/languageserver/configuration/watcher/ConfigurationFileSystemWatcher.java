@@ -23,8 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.utils.Absolute;
-import io.methvin.watchservice.MacOSXListeningWatchService;
-import io.methvin.watchservice.WatchablePath;
+import com.sun.nio.file.SensitivityWatchEventModifier;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
@@ -42,8 +41,6 @@ import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.nio.file.Watchable;
-import java.util.Locale;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -63,15 +60,13 @@ public class ConfigurationFileSystemWatcher {
   private final LanguageServerConfiguration configuration;
   private final ConfigurationFileChangeListener listener;
 
-  private final static boolean IS_MAC = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).contains("mac");
-
   private Path registeredPath;
   private WatchService watchService;
   private WatchKey watchKey;
 
   @PostConstruct
   public void init() throws IOException {
-    watchService = osDefaultWatchService();
+    watchService = FileSystems.getDefault().newWatchService();
     registerWatchService(configuration.getConfigurationFile());
   }
 
@@ -130,12 +125,14 @@ public class ConfigurationFileSystemWatcher {
 
     registeredPath = configurationDir;
 
-    Watchable watchable = IS_MAC ? new WatchablePath(registeredPath) : registeredPath;
-    watchKey = watchable.register(
+    watchKey = registeredPath.register(
       watchService,
-      ENTRY_CREATE,
-      ENTRY_DELETE,
-      ENTRY_MODIFY
+      new WatchEvent.Kind[]{
+        ENTRY_CREATE,
+        ENTRY_DELETE,
+        ENTRY_MODIFY
+      },
+      SensitivityWatchEventModifier.HIGH
     );
 
     LOGGER.debug("Watch for configuration file changes in {}", configurationDir.toString());
@@ -147,11 +144,4 @@ public class ConfigurationFileSystemWatcher {
     return absolutePathname.equals(absoluteConfigurationFile);
   }
 
-  private static WatchService osDefaultWatchService() throws IOException {
-    if (IS_MAC) {
-      return new MacOSXListeningWatchService();
-    } else {
-      return FileSystems.getDefault().newWatchService();
-    }
-  }
 }
