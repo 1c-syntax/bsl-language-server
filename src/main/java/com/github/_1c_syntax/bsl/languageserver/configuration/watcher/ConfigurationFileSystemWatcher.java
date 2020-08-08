@@ -102,12 +102,12 @@ public class ConfigurationFileSystemWatcher {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationFileChange}.
+   * Обработчик события {@link LanguageServerConfigurationFileChangeEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationFileChange event) {
+  public void handleEvent(LanguageServerConfigurationFileChangeEvent event) {
     registerWatchService(event.getSource());
   }
 

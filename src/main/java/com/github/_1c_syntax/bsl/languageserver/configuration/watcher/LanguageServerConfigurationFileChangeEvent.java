@@ -30,8 +30,8 @@ import java.io.File;
  * <p>
  * В качестве источника события содержит ссылку на файл конфигурации.
  */
-public class LanguageServerConfigurationFileChange extends ApplicationEvent {
-  public LanguageServerConfigurationFileChange(File configurationFile) {
+public class LanguageServerConfigurationFileChangeEvent extends ApplicationEvent {
+  public LanguageServerConfigurationFileChangeEvent(File configurationFile) {
     super(configurationFile);
   }
 
