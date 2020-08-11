@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChange;
+import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -196,6 +196,6 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
   }
 
   private void notifyConfigurationFileChanged() {
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChange(this.configurationFile));
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChangeEvent(this.configurationFile));
   }
 }
