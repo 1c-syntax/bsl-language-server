@@ -1,8 +1,14 @@
 # Using modal windows (UsingModalWindows)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

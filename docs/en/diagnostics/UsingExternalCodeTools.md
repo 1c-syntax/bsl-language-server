@@ -1,8 +1,14 @@
 # Using external code tools (UsingExternalCodeTools)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Security Hotspot` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `standard`<br>`design`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Security Hotspot` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `standard`<br>`design` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

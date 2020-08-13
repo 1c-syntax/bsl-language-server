@@ -1,8 +1,14 @@
 # Using method OSUsers (OSUsersMethod)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Security Hotspot` | `BSL` | `Critical` | `Yes` | `15` | `suspicious`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Security Hotspot` | `BSL` | `Critical` | `Yes` | `15` | `suspicious` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

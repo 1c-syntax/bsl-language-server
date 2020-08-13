@@ -1,14 +1,26 @@
 # Timeouts working with external resources (TimeoutsInExternalResources)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `unpredictable`<br>`standard`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `unpredictable`<br>`standard` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `analyzeInternetMailProfileZeroTimeout` | `Boolean` | `Analyze the timeout for "InternetMailProfile"` | `true`
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `analyzeInternetMailProfileZeroTimeout` | `Boolean` | ```Analyze the timeout for "InternetMailProfile"``` | ```true``` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

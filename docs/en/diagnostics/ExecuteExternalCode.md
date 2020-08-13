@@ -1,8 +1,14 @@
 # Executing of external code on the server (ExecuteExternalCode)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Vulnerability` | `BSL` | `Critical` | `Yes` | `1` | `error`<br>`standard`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Vulnerability` | `BSL` | `Critical` | `Yes` | `1` | `error`<br>`standard` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

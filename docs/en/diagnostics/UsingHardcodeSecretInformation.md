@@ -1,14 +1,26 @@
 # Storing confidential information in code (UsingHardcodeSecretInformation)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Vulnerability` | `BSL` | `Critical` | `Yes` | `15` | `standard` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `searchWords` | `String` | `Search keywords for confidential information in variables. structures, mappings.` | ```Пароль
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `searchWords` | `String` | ```Search keywords for confidential information in variables, structures, mappings.``` | ```Пароль|Password``` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

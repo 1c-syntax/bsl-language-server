@@ -1,15 +1,28 @@
 # Typo (Typo)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `badpractice` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `minWordLength` | `Integer` | `Minimum length for checked words` | `3`
 `userWordsToIgnore` | `String` | `Dictionary for excluding words (comma separated, without spaces)` | ``````
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```3``` 
+ `userWordsToIgnore` | `String` | ```Dictionary for excluding words (comma separated, without spaces)``` | `````` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

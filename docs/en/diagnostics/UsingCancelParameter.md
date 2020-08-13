@@ -1,8 +1,14 @@
 # Using parameter "Cancel" (UsingCancelParameter)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `standard`<br>`badpractice`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `10` | `standard`<br>`badpractice` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

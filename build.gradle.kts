@@ -2,7 +2,6 @@ import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
-import java.net.URI
 import java.util.*
 
 plugins {
@@ -17,7 +16,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.28.0"
     id("io.freefair.javadoc-links") version "5.1.0"
     id("org.springframework.boot") version "2.3.2.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "0.2.3"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.0"
 }
 
 apply(plugin = "io.spring.dependency-management")
@@ -236,7 +235,7 @@ publishing {
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
-                
+
                 configurations.implementation.get().dependencies.forEach { dependency ->
                     if (dependency !is SelfResolvingDependency) {
                         val dependencyNode = dependenciesNode.appendNode("dependency")

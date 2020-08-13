@@ -1,14 +1,26 @@
 # Control flow statements should not be nested too deep (NestedStatements)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br>`brainoverload`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br>`brainoverload` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `maxAllowedLevel` | `Integer` | `Max nested level` | `4`
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `maxAllowedLevel` | `Integer` | ```Max nested level``` | ```4``` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

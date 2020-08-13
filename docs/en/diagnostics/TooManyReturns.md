@@ -1,14 +1,26 @@
 # Methods should not have too many return statements (TooManyReturns)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `20` | `brainoverload`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `20` | `brainoverload` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` | `3`
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `maxReturnsCount` | `Integer` | ```Maximum allowed return statements per method``` | ```3``` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

@@ -1,8 +1,14 @@
 # Using deprecated type "ManagedForm" (DeprecatedTypeManagedForm)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`deprecated`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`deprecated` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

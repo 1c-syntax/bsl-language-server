@@ -1,14 +1,26 @@
 # Limit on the number of property values passed to the structure constructor (NumberOfValuesInStructureConstructor)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `10` | `standard`<br>`brainoverload`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `10` | `standard`<br>`brainoverload` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `maxValuesCount` | `Integer` | `Allowed number parameter values passed to structure constructor` | `3`
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `maxValuesCount` | `Integer` | ```Allowed number parameter values passed to structure constructor``` | ```3``` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

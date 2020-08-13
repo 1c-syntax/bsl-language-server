@@ -1,14 +1,26 @@
 # Limit number of optional parameters in method (NumberOfOptionalParams)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `30` | `standard`<br>`brainoverload`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `30` | `standard`<br>`brainoverload` 
+>>>>>>> develop
 
 ## Parameters
 
+<<<<<<< HEAD
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
 `maxOptionalParamsCount` | `Integer` | `Max number of optional parameters` | `3`
+=======
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `maxOptionalParamsCount` | `Integer` | ```Max number of optional parameters``` | ```3``` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 

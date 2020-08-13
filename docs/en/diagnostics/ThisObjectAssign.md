@@ -1,8 +1,14 @@
 # ThisObject assign (ThisObjectAssign)
 
+<<<<<<< HEAD
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
 `Error` | `BSL` | `Blocker` | `Yes` | `1` | `error`
+=======
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL` | `Blocker` | `Yes` | `1` | `error` 
+>>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
