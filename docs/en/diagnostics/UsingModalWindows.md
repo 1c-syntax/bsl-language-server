@@ -44,7 +44,7 @@ ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a do
 ## Sources
 
 - [Limit on the use of modal windows and synchronous calls (RU)](https://its.1c.ru/db/v8std/content/703/hdoc/)
-- Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
+- Useful information: [Refusal to use modal windows](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 
 ## Snippets
 
