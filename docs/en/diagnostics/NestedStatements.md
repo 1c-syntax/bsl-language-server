@@ -1,16 +1,17 @@
 # Control flow statements should not be nested too deep (NestedStatements)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br/>`brainoverload` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br>`brainoverload`
 
-## Parameters 
+## Parameters
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `maxAllowedLevel` | `Integer` | ```Max nested level``` | ```4``` |
+Name | Type | Description | Default value
+:-: | :-: | :-- | :-:
+`maxAllowedLevel` | `Integer` | `Max nested level` | `4`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 Nested operators "If", "For", "ForEach", "While" and "Try" are key ingredients for so called "spaghetti-code".
@@ -47,6 +48,7 @@ EndIf;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
