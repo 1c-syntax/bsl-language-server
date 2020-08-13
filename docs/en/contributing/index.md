@@ -7,7 +7,7 @@ This section contains articles containing information for developers of diagnost
 - Start
     - [Setting environment](EnvironmentSetting.md)
     - [Quick start](FastStart.md)
-    - [Руководство по стилю](StyleGuide.md)
+    - [Style guide](StyleGuide.md)
     - [JavaDoc](../javadoc/index.html)
 - Diagnostics development
     - [Diagnostic development workflow](DiagnosticDevWorkFlow.md)
