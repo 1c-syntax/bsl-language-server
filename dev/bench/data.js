@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1597131297328,
+  "lastUpdate": 1597315770786,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4805,6 +4805,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.600726323468414",
             "extra": "mean: 72.99698185920715 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "950dd0e3ce253172e322a079ecad8a33a035ec99",
+          "message": "Логирование conditional evalutation report принудительно переведено в INFO\n\nПри запуске в режиме lsp из vscode почему-то частично выводятся отладочные логи. CER мешает парсингу stdout в vsc",
+          "timestamp": "2020-08-13T13:41:55+03:00",
+          "tree_id": "c63482c6758e24a7317c9101ec6b0a0ae2d06a99",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/950dd0e3ce253172e322a079ecad8a33a035ec99"
+        },
+        "date": 1597315768257,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.978373448054,
+            "unit": "sec",
+            "range": "stddev: 1.7733728061996843",
+            "extra": "mean: 74.978373448054 sec\nrounds: 3"
           }
         ]
       }
