@@ -9,7 +9,7 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
       
-        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/Typo/">
+        <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/contributing/StyleGuide/">
       
       
       <link rel="shortcut icon" href="../../assets/images/logo.png">
@@ -17,7 +17,7 @@
     
     
       
-        <title>Typo (Typo) - BSL Language Server Dev</title>
+        <title>Code Style Guide - BSL Language Server Dev</title>
       
     
     
@@ -65,7 +65,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#typo-typo" class="md-skip">
+        <a href="#code-style-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +92,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Typo (Typo)
+              Code Style Guide
             
           </span>
         </div>
@@ -203,7 +203,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../contributing/" title="Contributing" class="md-nav__link">
+    <a href="../" title="Contributing" class="md-nav__link">
       Contributing
     </a>
   </li>
@@ -227,7 +227,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../" title="Diagnostics" class="md-nav__link">
+    <a href="../../diagnostics/" title="Diagnostics" class="md-nav__link">
       Diagnostics
     </a>
   </li>
@@ -283,50 +283,58 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
+  <a href="#general-recommendations" class="md-nav__link">
+    General recommendations
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    Description
+  <a href="#formatting" class="md-nav__link">
+    Formatting
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sources" class="md-nav__link">
-    Sources
+  <a href="#class-members-location" class="md-nav__link">
+    Class Members Location
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#snippets" class="md-nav__link">
-    Snippets
-  </a>
-  
-    <nav class="md-nav" aria-label="Snippets">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#diagnostic-ignorance-in-code" class="md-nav__link">
-    Diagnostic ignorance in code
+  <a href="#static-analysis" class="md-nav__link">
+    Static analysis
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#parameter-for-config" class="md-nav__link">
-    Parameter for config
+      
+        <li class="md-nav__item">
+  <a href="#linter" class="md-nav__link">
+    Linter
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#logging" class="md-nav__link">
+    Logging
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    Documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#external-dependencies" class="md-nav__link">
+    External dependencies
+  </a>
   
 </li>
       
@@ -342,7 +350,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/diagnostics/Typo.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/1c-syntax/bsl-language-server/edit/develop/docs/en/contributing/StyleGuide.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
                   </a>
                 
@@ -350,82 +358,55 @@
                   
                 
                 
-                <h1 id="typo-typo">Typo (Typo)<a class="headerlink" href="#typo-typo" title="Permanent link">Link</a></h1>
-<table>
-<thead>
-<tr>
-<th align="center">Type</th>
-<th align="center">Scope</th>
-<th align="center">Severity</th>
-<th align="center">Activated<br>by default</th>
-<th align="center">Minutes<br>to fix</th>
-<th align="center">Tags</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code><br><code>OS</code></td>
-<td align="center"><code>Info</code></td>
-<td align="center"><code>Yes</code></td>
-<td align="center"><code>1</code></td>
-<td align="center"><code>badpractice</code></td>
-</tr>
-</tbody>
-</table>
-<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">Link</a></h2>
-<table>
-<thead>
-<tr>
-<th align="center">Name</th>
-<th align="center">Type</th>
-<th align="left">Description</th>
-<th align="center">Default value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center"><code>minWordLength</code></td>
-<td align="center"><code>Integer</code></td>
-<td align="left"><code>Minimum length for checked words</code></td>
-<td align="center"><code>3</code></td>
-</tr>
-<tr>
-<td align="center"><code>userWordsToIgnore</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>Dictionary for excluding words (comma separated, without spaces)</code></td>
-<td align="center">``````</td>
-</tr>
-</tbody>
-</table>
-<!-- Блоки выше заполняются автоматически, не трогать -->
-
-<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-<p>Spell checking is done with <a href="https://languagetool.org/ru/">LanguageTool</a>. The strings are split into camelCase chunks and checked against a built-in dictionary.</p>
-<h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
-<ul>
-<li><a href="https://dictionary.cambridge.org/dictionary/essential-american-english/">American English Dictionary</a></li>
-<li><a href="https://languagetool.org/ru/">LanguageTool page</a></li>
-</ul>
-<h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
-<!-- Блоки ниже заполняются автоматически, не трогать -->
-
-<h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:Typo-off</span>
-<span class="c c-Singleline">// BSLLS:Typo-on</span>
-</code></pre></div>
-
-
-<h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;Typo&quot;</span><span class="err">:</span> <span class="p">{</span>
-    <span class="nt">&quot;minWordLength&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="nt">&quot;userWordsToIgnore&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
-<span class="p">}</span>
-</code></pre></div>
+                <h1 id="code-style-guide">Code Style Guide<a class="headerlink" href="#code-style-guide" title="Permanent link">Link</a></h1>
+<p>This document contains general guidelines for writing code in the BSL Language Server project.</p>
+<p>Try to stick to them and the code review process will be simple.</p>
+<h2 id="general-recommendations">General recommendations<a class="headerlink" href="#general-recommendations" title="Permanent link">Link</a></h2>
+<p>If a method can legally return <code>null</code>, it is recommended that you return <code>Optional&lt;T&gt;</code> instead of explicitly returning <code>null</code>. Exceptions (eg high frequency or performance functions) are negotiated separately.</p>
+<h2 id="formatting">Formatting<a class="headerlink" href="#formatting" title="Permanent link">Link</a></h2>
+<ol>
+<li>All code in the modules should be automatically formatted.</li>
+<li>Indents - spaces</li>
+<li>The indent size is 2 characters. Continuous indent are also two characters. IntelliJ IDEA sets indentation according to 2-2-2</li>
+</ol>
+<h2 id="class-members-location">Class Members Location<a class="headerlink" href="#class-members-location" title="Permanent link">Link</a></h2>
+<ol>
+<li>The location of fields, methods, modifiers in general must comply with Oracle recommendations - <a href="https://www.oracle.com/java/technologies/javase/codeconventions-fileorganization.html">File organization</a>, and SonarSource - <a href="https://rules.sonarsource.com/java/tag/convention/RSPEC-1124">Modifiers should be declared in the correct order</a></li>
+<li>Methods are <em>recommended</em> to be placed in the following order:<ol>
+<li>public object methods</li>
+<li>protected/package private object methods</li>
+<li>private object methods</li>
+<li>public class methods</li>
+<li>protected/package private class methods</li>
+<li>private class methods</li>
+</ol>
+</li>
+</ol>
+<h2 id="static-analysis">Static analysis<a class="headerlink" href="#static-analysis" title="Permanent link">Link</a></h2>
+<p>BSL Language Server code is automatically checked against coding standards on the SonarCloud service - <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server">project link</a>.</p>
+<p>The list of activated rules and their settings can be viewed in the quality profile <a href="https://sonarcloud.io/organizations/1c-syntax/rules?activation=true&amp;qprofile=AWdJBUnB2EsKsQgQiNpk">1c-syntax way</a>.</p>
+<p>Due to security restrictions, pull requests not from the repository  <code>1c-syntax/bsl-language-server</code> are not checked for compliance. After accepting the pull request, it is recommended to go to <a href="https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server">the project page on SonarCloud</a> and view the list of comments filtered by author.</p>
+<h2 id="linter">Linter<a class="headerlink" href="#linter" title="Permanent link">Link</a></h2>
+<p>To improve the quality of the code and preliminary check for compliance with standards, it is recommended to install plugin <a href="https://www.sonarlint.org">SonarLint</a> in your IDE.</p>
+<p>To automatically download and parameterize rules in accordance with the settings on SonarCloud, it may be necessary to "bind" the local project to the SonarCloud project. If your IDE cannot find a matching project on SonarCloud, contact the project maintainers to add you to the "Members" list on SonarCloud.</p>
+<h2 id="logging">Logging<a class="headerlink" href="#logging" title="Permanent link">Link</a></h2>
+<p>Library <code>Slf4j</code> is used for logging. The use of output in <code>System.out</code> and <code>System.err</code> is allowed only in exceptional cases (for example, in cli command handlers).</p>
+<p>To simplify the creation of a logger instance, it is recommended to use the <code>@lombok.extern.slf4j.Slf4j</code> class annotation.</p>
+<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">Link</a></h2>
+<ol>
+<li>Every new class must have javadoc. Exception - classes that implement interfaces <code>BSLDiagnostic</code> or <code>QuickFixSupplier</code>.</li>
+<li>Every new package must have <code>package-info.java</code> with the javadoc of the package.</li>
+<li>Every new public method in the <code>utils</code> package, helper classes, or classes that already have a javadoc must have a method javadoc.</li>
+</ol>
+<h2 id="external-dependencies">External dependencies<a class="headerlink" href="#external-dependencies" title="Permanent link">Link</a></h2>
+<ol>
+<li>Connecting new libraries to the implementation scope should be done carefully, with control over the increase in the size of the resulting jar file. If possible, "unnecessary" and unused sub-dependencies should be excluded through <code>exclude</code>.</li>
+<li>Explicit linking of the <code>com.google.guava</code>, <code>Google Collections</code> ibrary or other parts of the Guava family of libraries is prohibited. <strong>If absolutely necessary</strong>, it is permissible to copy the implementation from <code>Guava</code> inside the BSL Language Server, subject to the terms of the Guava license. For everything else, there is Apache Commons.</li>
+<li>Import of <code>*.google.*</code> classes, as well as other parts of Guava libraries, is prohibited. With no exceptions.</li>
+</ol>
+<blockquote>
+<p>In the process ...</p>
+</blockquote>
                 
               
               

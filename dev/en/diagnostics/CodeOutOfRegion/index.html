@@ -383,6 +383,74 @@
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<div class="codehilite"><pre><span></span><code><span class="kd">#Region &lt;RegionName&gt;</span>
+</code></pre></div>
+
+
+<p>The standard describes only 10 region names, the names of nested regions are not checked.</p>
+<p>Correct:</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">#Region Private</span>
+<span class="kd">#Region Print</span>
+<span class="c c-Singleline">// Methods code</span>
+<span class="kd">#EndRegion</span>
+<span class="kd">#Region Other</span>
+<span class="c c-Singleline">// Methods code</span>
+<span class="kd">#EndRegion</span>
+<span class="kd">#EndRegion</span>
+</code></pre></div>
+
+
+<p>Name matching table (full in <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">source code</a>):</p>
+<table>
+<thead>
+<tr>
+<th>RU</th>
+<th>EN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ПрограммныйИнтерфейс</td>
+<td>Public</td>
+</tr>
+<tr>
+<td>СлужебныйПрограммныйИнтерфейс</td>
+<td>Internal</td>
+</tr>
+<tr>
+<td>СлужебныеПроцедурыИФункции</td>
+<td>Private</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытий</td>
+<td>EventHandlers</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытийФормы</td>
+<td>FormEventHandlers</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытийЭлементовШапкиФормы</td>
+<td>FormHeaderItemsEventHandlers</td>
+</tr>
+<tr>
+<td>ОбработчикиКомандФормы</td>
+<td>FormCommandsEventHandlers</td>
+</tr>
+<tr>
+<td>ОписаниеПеременных</td>
+<td>Variables</td>
+</tr>
+<tr>
+<td>Инициализация</td>
+<td>Initialize</td>
+</tr>
+<tr>
+<td>ОбработчикиСобытийЭлементовТаблицыФормы</td>
+<td>FormTableItemsEventHandlers</td>
+</tr>
+</tbody>
+</table>
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 

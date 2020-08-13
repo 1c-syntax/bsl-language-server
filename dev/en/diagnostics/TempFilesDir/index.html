@@ -376,31 +376,45 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-When you use GetTemporaryFileName, 1С:Enterprise retains control over these files and by default deletes them as soon as a working process 
-(if a file is created on the server side) or client application (if a file is created on the client side) is restarted.</p>
-<p>If a temporary file name is generated otherwise, and the application code fails (or is for any other reason unable) to delete a temporary file,
- it is not controlled by the platform and is saved in the file system for an indefinite time. 
- Lost temporary files accumulated in the system can pose a serious problem, specifically for infobases with a great number of active users 
- (for example, in the service mode).</p>
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+<p>When you use GetTemporaryFileName, 1С:Enterprise retains control over these files and by default deletes them as soon as a working process (if a file is created on the server side) or client application (if a file is created on the client side) is restarted.</p>
+<p>If a temporary file name is generated otherwise, and the application code fails (or is for any other reason unable) to delete a temporary file, it is not controlled by the platform and is saved in the file system for an indefinite time. Lost temporary files accumulated in the system can pose a serious problem, specifically for infobases with a great number of active users (for example, in the service mode).</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span>
-<span class="n">Directory</span> <span class="o">=</span> <span class="n">TemporaryFilesDirectory</span><span class="o">();</span>
-<span class="n">FileName</span> <span class="o">=</span> <span class="n">String</span><span class="o">(</span><span class="n">New</span> <span class="n">UniqueIdentifier</span><span class="o">)</span> <span class="o">+</span> <span class="s2">&quot;.xml&quot;</span><span class="o">;</span>
-<span class="n">TemporaryFileName</span> <span class="o">=</span> <span class="n">Directory</span><span class="o">+</span> <span class="n">FileName</span><span class="o">;</span>
-<span class="n">Data</span><span class="o">.</span><span class="na">Write</span><span class="o">(</span><span class="n">TemporaryFileName</span><span class="o">);</span>
+<p>Wrong:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">Catalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">();</span>
+<span class="nv">FileName</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="k">New</span> <span class="nv">UUID</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&quot;.xml&quot;</span><span class="p">;</span>
+<span class="nv">TempFile</span> <span class="o">=</span> <span class="nv">Catalog</span> <span class="o">+</span> <span class="nv">FileName</span><span class="p">;</span>
+<span class="nv">Data</span><span class="o">.</span><span class="nv">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
+</code></pre></div>
 
-<span class="n">Correct</span><span class="o">:</span>
-<span class="n">TemporaryFileName</span><span class="o">=</span> <span class="n">GetTemporaryFileName</span><span class="o">(</span><span class="s2">&quot;xml&quot;</span><span class="o">);</span>
-<span class="n">Data</span><span class="o">.</span><span class="na">Write</span><span class="o">(</span><span class="n">TemporaryFileName</span><span class="o">);</span>
+
+<p>Correct:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">TempFile</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
+<span class="nv">Data</span><span class="o">.</span><span class="nv">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
+</code></pre></div>
+
+
+<p>To create a temporary directory, it is recommended to use the one obtained by the GetTempFileName method (with the exception of the web client).</p>
+<p>Wrong:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
+<span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">()</span><span class="o">+</span><span class="s1">&quot;main_zip\&quot;</span><span class="p">;</span>
+<span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
+<span class="nv">ArchFile</span><span class="o">.</span><span class="nv">ExtractAll</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
+</code></pre></div>
+
+
+<p>Correct:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
+<span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&quot;\main_zip\&quot;</span><span class="p">;</span>
+<span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
+<span class="nv">ArchFile</span><span class="o">.</span><span class="nv">ExtractAll</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 </code></pre></div>
 
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
 <ul>
 <li>Source: <a href="https://support.1ci.com/hc/en-us/articles/360011122319-Access-to-the-file-system-from-the-configuration-code">Standard: Temporary Files and Directories</a></li>
 </ul>
