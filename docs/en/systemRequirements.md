@@ -14,6 +14,6 @@ JDK vendor is also interesting. Due to the changed licensing policy of Oracle, i
 
 `BSL Language Server` should work on all systems running modern desktop and server operating systems which supported Java. The most popular environments are tested as part of the build pipelines:
 
-- гарантированно работает на последних версиях OS семейства Windows 7/10, включая серверные 2012 и выше
+- Windows 7/10, Windows server 2012 and higher supported
 - latest Linux OS supported
 - latest macos supported
