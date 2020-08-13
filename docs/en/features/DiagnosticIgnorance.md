@@ -6,8 +6,7 @@ Instead of manually mark a comment as irrelevant every time, BSL LS provides fun
 
 ## Description
 
-To hide part of the code from the BSL LS analyzer, you must add a special comment to the code.
- The escaping comment is formed as follows: `[Prefix][:DiagnosticKey]-[ActivationFlag]`. Now in more detail.
+To hide part of the code from the BSL LS analyzer, you must add a special comment to the code. The escaping comment is formed as follows: `[Prefix][:DiagnosticKey]-[ActivationFlag]`. Now in more detail.
 
 - `Prefix` always is `// BSLLS`
 - `DiagnosticKey` can be found in the [list of diagnostics](../diagnostics/index.md) by description.
