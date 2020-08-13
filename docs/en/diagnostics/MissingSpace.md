@@ -18,7 +18,7 @@ Name | Type | Description | Default value
 
 ## Description
 
-Для улучшения читаемости кода слева и справа от операторов `+ - * / = % < > <> <= >=` должны быть пробелы. Так же пробел должен быть справа от `,` и `;`
+To improve code readability to the left and right of operators `+ - * / = % < > <> <= >=` there must be spaces. Also, the space should be to the right of `,` и `;`
 
 ## Examples
 
@@ -35,11 +35,11 @@ EndProcedure
 Correct
 
 ```bsl
-Процедура ВычислитьСумму(Параметр1, Параметр2)
-    Если Параметр1 = Параметр2 Тогда
-        Сумма = Цена * Количество;
-    КонецЕсли;
-КонецПроцедуры
+Procedure Sum(Param1, Param2)
+     If Param1 = Param2 Then
+         Sum = Price * Quantity;
+     EndIf;
+EndProcedure
 ```
 
 ### Using `checkSpaceToRightOfUnary` parameter
