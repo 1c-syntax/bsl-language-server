@@ -15,8 +15,8 @@
 ## Description
 
 Cognitive complexity shows how difficult it is to perceive the written code.
-High cognitive complexity clearly indicates the need for refactoring to make future support easier.
-The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
+ High cognitive complexity clearly indicates the need for refactoring to make future support easier.
+ The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
 ### Cognitive Complexity calculation
 
@@ -73,7 +73,7 @@ ElseIf Condition2                                    // +1
 EndIf;
 
 Value = ?(Condition OR Condition2 OR NOT Condition3, // +3
-                ValueTrue, ValueFalse); 
+                ValueTrue, ValueFalse);
 
 Value = First OR Second;                             // +1
 
@@ -90,15 +90,15 @@ For Each Element In Collection Do
 EndDo;
 
 /// Loop For
-For It = Start To End Do              
+For It = Start To End Do
 
 // Loop While
-While Condition Do                    
+While Condition Do
 EndDo;
 
 
 // Condition
-If Condition Then    
+If Condition Then
 EndIf;
 
 // Ternary operator
@@ -106,14 +106,14 @@ Value = ?(Condition, ValueTrue, ValueFalse);
 
 Try
 // Except processing
-Except                                       
+Except
 EndTry;
 
 ~Label:
 
 ```
 
-### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
+#### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
 
 ## Examples
 
@@ -121,38 +121,38 @@ Bellow are code examples and their cognitive complexity calculation.
 
 ```bsl
 Function Example1(ClassType)
-    If ClassType.Unknown() Then                                             // +1, condition expression, no nesting
+    If ClassType.Unknown() Then                                                  // +1, condition expression, no nesting
         Return Chars.UnknownSymbol;
     EndIf;
 
     AmbiguityFound = False;
     ListSymbols = ClassType.GetSymbol().Children.Find("name");
-    For Each Symbol in ListSymbols Do                                       // +1, loop, no nesting
-        If Symbol.HasType(Symbols.Strage)                                   // +2, condition nested in loop, nesting 1
-            AND NOT Symbols.Export() Then                                   // +1, logival operation, nesting not taken into account
+    For Each Symbol in ListSymbols Do
+// +1, loop, no nesting
+        If Symbol.HasType(Symbols.Strage)                                         // +2, condition nested in loop, nesting 1
+            AND NOT Symbols.Export() Then                                            // +1, logival operation, nesting not taken into account
 
             If CanOverride(Symbol) Then                                     // +3, nested condition, nesting 2
                 Overrideability = CheckOverrideability(Symbol, ClassType);
-                If Overrideability = Undefined Then                         // +4, nested condition, nesting 3
-                    If NOT AmbiguityFound Then                              // +5, nested condition, nesting 4
+                If Overrideability = Undefined Then                           // +4, nested condition, nesting 3
+                    If NOT AmbiguityFound Then                                 // +5, nested condition, nesting 4
                         AmbiguityFound = True;
                     EndIf;
-                ElseIf Overrideability Then                                 // +1, alternative condition branch, nesting not taken into account
+                ElseIf Overrideability Then                                     // +1, alternative condition branch, nesting not taken into account
                     Return Symbol;
                 EndIf;
-            Else                                                            // +1, default branch, nesting not taken into account
+            Else                                                                      // +1, default branch, nesting not taken into account
                 Continue;
             EndIf;
         EndIf;
     EndDo;
 
-    If AmbiguityFound Then                                                  // +1, no nesting
+    If AmbiguityFound Then                                                   // +1, no nesting
         Return Symbols.UnknownSymbol;
     EndIf;
 
     Return Undefined;
 EndFunction
-
 ```
 
 ```bsl
@@ -213,7 +213,7 @@ EndFunction
 
 ## Sources
 
-* [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
+- [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
 
 ## Snippets
 

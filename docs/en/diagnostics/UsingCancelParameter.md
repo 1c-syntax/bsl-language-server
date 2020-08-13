@@ -41,7 +41,7 @@ Cancel = Cancel Или ЕстьОшибкиЗаполнения();
 
 ## Sources
 
-- [Standart: Working with the "Cancel" option in event handlers(RU)](https://its.1c.ru/db/v8std#content:686:hdoc)
+- [](https://its.1c.ru/db/v8std#content:686:hdoc)[Standart: Working with the "Cancel" option in event handlers(RU)](https://its.1c.ru/db/v8std#content:686:hdoc)
 
 ## Snippets
 

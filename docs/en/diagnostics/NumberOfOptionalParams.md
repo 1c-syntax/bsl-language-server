@@ -27,8 +27,7 @@ Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
 EndProcedure
 ```
 
-Correct:
- Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
+Correct: Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
 ```bsl
 // Create an item in the catalog "Goods"
@@ -39,7 +38,7 @@ EndProcedure
 
 ## Sources
 
-- [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
+- [](https://its.1c.ru/db/v8std#content:640:hdoc)[Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
 
 ## Snippets
 

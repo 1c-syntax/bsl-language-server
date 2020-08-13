@@ -16,6 +16,40 @@ The code of module should be structured and divided into regions.
 
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+```bsl
+#Region <RegionName>
+```
+
+The standard describes only 10 region names, the names of nested regions are not checked.
+
+Correct:
+
+```bsl
+#Region Private
+#Region Print
+// Methods code
+#EndRegion
+#Region Other
+// Methods code
+#EndRegion
+#EndRegion
+```
+
+Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+
+RU | EN
+--- | ---
+ПрограммныйИнтерфейс | Public
+СлужебныйПрограммныйИнтерфейс | Internal
+СлужебныеПроцедурыИФункции | Private
+ОбработчикиСобытий | EventHandlers
+ОбработчикиСобытийФормы | FormEventHandlers
+ОбработчикиСобытийЭлементовШапкиФормы | FormHeaderItemsEventHandlers
+ОбработчикиКомандФормы | FormCommandsEventHandlers
+ОписаниеПеременных | Variables
+Инициализация | Initialize
+ОбработчикиСобытийЭлементовТаблицыФормы | FormTableItemsEventHandlers
+
 ## Sources
 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->

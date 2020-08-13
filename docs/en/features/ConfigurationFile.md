@@ -37,14 +37,5 @@ The following is an example of a settings:
 - Enables the calculation of diagnostics in continuous mode ( `computeTrigger = onType` )
 
 ```json
-{
-  "$schema": "https://1c-syntax.github.io/bsl-language-server/configuration/schema.json",
-  "diagnosticLanguage": "en",
-  "diagnostics": {
-    "LineLength": {
-      "maxLineLength": 140
-    },
-    "MethodSize": false
-  }
-}
+{   "$schema": "https://1c-syntax.github.io/bsl-language-server/configuration/schema.json",   "diagnosticLanguage": "en",   "diagnostics": {     "LineLength": {       "maxLineLength": 140     },     "MethodSize": false   } }
 ```

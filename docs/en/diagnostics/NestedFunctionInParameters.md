@@ -9,8 +9,7 @@
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-When passing parameters to function, it is not recommended to use nested calls of other functions.
- Similarly, it is not recommended to use nested calls of other functions or other parameterized constructors when initializing constructor parameters.
+When passing parameters to function, it is not recommended to use nested calls of other functions. Similarly, it is not recommended to use nested calls of other functions or other parameterized constructors when initializing constructor parameters.
 
 At the same time, if the code with nested calls is compact (does not require the hyphenation of expressions) and is easy to read, then nested calls are acceptable.
 

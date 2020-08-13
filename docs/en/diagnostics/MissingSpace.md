@@ -35,9 +35,9 @@ Correct
 
 ```bsl
 Procedure Sum(Param1, Param2)
-    If Param1 = Param2 Then
-        Sum = Price * Quantity;
-    EndIf;
+     If Param1 = Param2 Then
+         Sum = Price * Quantity;
+     EndIf;
 EndProcedure
 ```
 
