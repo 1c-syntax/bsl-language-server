@@ -79,6 +79,9 @@ dependencies {
 
     implementation("me.tongfei", "progressbar", "0.8.1")
 
+    implementation("org.slf4j", "slf4j-api", "1.8.0-beta4")
+    implementation("org.slf4j", "slf4j-simple", "1.8.0-beta4")
+
     implementation("com.github.1c-syntax", "bsl-parser", "0.15.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
