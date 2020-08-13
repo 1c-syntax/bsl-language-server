@@ -23,7 +23,7 @@ In case of doubt (or confidence) that the diagnosis is not working correctly, th
 
 ## `BSL Language Server` and SonarQube plugin are the same things?
 
-`BSL Language Server` is a stand-alone application, the implementation of the server side of the LSP protocol. The plugin for SonarQube uses the `BSL Language Server` to analyze the BSL source code (1C configurations, 1Scipt and OSWeb scripts).
+`BSL Language Server` is a stand-alone application, the implementation of the server side of the LSP protocol. The plugin for `SonarQube` uses the `BSL Language Server` to analyze the BSL source code (1C configurations, 1Script and 1Script.Web scripts).
 
 `BSL Language Server` can be used with any application that has an LSP client implementation. Verified connections:
 
