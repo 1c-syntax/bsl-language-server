@@ -1,10 +1,11 @@
 # Executing of external code on the server (ExecuteExternalCode)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Vulnerability` | `BSL` | `Critical` | `Yes` | `1` | `error`<br/>`standard` |
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Vulnerability` | `BSL` | `Critical` | `Yes` | `1` | `error`<br>`standard`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,11 +28,11 @@ It is forbidden to use the methods `Execute ` and `Eval` in server methods of mo
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:ExecuteExternalCode-off
-// BSLLS:ExecuteExternalCode-on
+// BSLLS:ExecuteExternalCode-off // BSLLS:ExecuteExternalCode-on
 ```
 
 ### Parameter for config
