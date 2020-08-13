@@ -1,17 +1,10 @@
 # Using method OSUsers (OSUsersMethod)
 
-<<<<<<< HEAD
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Security Hotspot` | `BSL` | `Critical` | `Yes` | `15` | `suspicious`
-=======
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Security Hotspot` | `BSL` | `Critical` | `Yes` | `15` | `suspicious` 
->>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,11 +20,11 @@ Source: [Pass-the-hash attack](https://en.wikipedia.org/wiki/Pass_the_hash)
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:OSUsersMethod-off // BSLLS:OSUsersMethod-on
+// BSLLS:OSUsersMethod-off
+// BSLLS:OSUsersMethod-on
 ```
 
 ### Parameter for config

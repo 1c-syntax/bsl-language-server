@@ -1,31 +1,17 @@
 # Cyclomatic complexity (CyclomaticComplexity)
 
-<<<<<<< HEAD
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `25` | `brainoverload`
-=======
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `25` | `brainoverload` 
->>>>>>> develop
 
-## Parameters
+## Parameters 
 
-<<<<<<< HEAD
-Name | Type | Description | Default value
-:-: | :-: | :-- | :-:
-`complexityThreshold` | `Integer` | `Complexity threshold` | `20`
-`checkModuleBody` | `Boolean` | `Check module body` | `true`
-=======
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
  `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```20``` 
  `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` 
->>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -64,15 +50,18 @@ Cyclomatic complexity increases by 1 for each of following constructions:
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CyclomaticComplexity-off // BSLLS:CyclomaticComplexity-on
+// BSLLS:CyclomaticComplexity-off
+// BSLLS:CyclomaticComplexity-on
 ```
 
 ### Parameter for config
 
 ```json
-"CyclomaticComplexity": {     "complexityThreshold": 20,     "checkModuleBody": true }
+"CyclomaticComplexity": {
+    "complexityThreshold": 20,
+    "checkModuleBody": true
+}
 ```

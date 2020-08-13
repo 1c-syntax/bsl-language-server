@@ -4,7 +4,7 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `brainoverload` 
 
-## Parameters
+## Parameters 
 
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
@@ -12,7 +12,6 @@
  `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Cognitive complexity shows how difficult it is to perceive the written code.
@@ -219,7 +218,6 @@ EndFunction
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

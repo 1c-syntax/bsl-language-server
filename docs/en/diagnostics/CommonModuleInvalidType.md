@@ -1,17 +1,10 @@
 # Common module invalid type (CommonModuleInvalidType)
 
-<<<<<<< HEAD
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Error` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`unpredictable`<br>`design`
-=======
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Error` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`unpredictable`<br>`design` 
->>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 When developing common modules, you should choose one of four code execution contexts:
@@ -34,7 +27,6 @@ Client-server | CommonClientServer |   | + | + | + | +
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

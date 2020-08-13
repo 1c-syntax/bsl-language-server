@@ -1,17 +1,10 @@
 # Join with virtual table (JoinWithVirtualTable)
 
-<<<<<<< HEAD
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Major` | `Yes` | `10` | `sql`<br>`standard`<br>`performance`
-=======
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL` | `Major` | `Yes` | `10` | `sql`<br>`standard`<br>`performance` 
->>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -39,7 +32,6 @@ If the query uses a join to a virtual table (for example, AccumulationRegister.P
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

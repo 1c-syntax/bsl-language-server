@@ -5,7 +5,6 @@
  `Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `5` | `error` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -37,11 +36,11 @@ Method(); Message("Before methods");  Procedure Method() // Method body EndProce
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:CodeBlockBeforeSub-off // BSLLS:CodeBlockBeforeSub-on
+// BSLLS:CodeBlockBeforeSub-off
+// BSLLS:CodeBlockBeforeSub-on
 ```
 
 ### Parameter for config

@@ -1,17 +1,10 @@
 # Non-standard region of module (NonStandardRegion)
 
-<<<<<<< HEAD
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`
-=======
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard` 
->>>>>>> develop
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -32,11 +25,11 @@ All module code should be structured and divided into sections (regions).
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:NonStandardRegion-off // BSLLS:NonStandardRegion-on
+// BSLLS:NonStandardRegion-off
+// BSLLS:NonStandardRegion-on
 ```
 
 ### Parameter for config
