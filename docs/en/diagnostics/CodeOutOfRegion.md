@@ -18,27 +18,27 @@ The code of module should be structured and divided into regions.
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-#Область <ИмяОбласти>
+#Region <RegionName>
 ```
 
-Не смотря на то что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.
+The standard describes only 10 region names, the names of nested regions are not checked.
 
-Правильно:
+Correct:
 
 ```bsl
-#Область СлужебныеПроцедурыИФункции
-#Область Печать
-// Код процедур и функций
-#КонецОбласти
-#Область Прочее
-// Код процедур и функций
-#КонецОбласти
-#КонецОбласти
+#Region Private
+#Region Print
+// Methods code
+#EndRegion
+#Region Other
+// Methods code
+#EndRegion
+#EndRegion
 ```
 
-Таблица соответствия английских имён (полный список в [исходном коде](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
 
-русск. | англ.
+RU | EN
 --- | ---
 ПрограммныйИнтерфейс | Public
 СлужебныйПрограммныйИнтерфейс | Internal
