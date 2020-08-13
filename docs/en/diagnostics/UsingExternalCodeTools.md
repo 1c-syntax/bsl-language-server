@@ -36,7 +36,7 @@ At the moment, the server context is not analyzed, so diagnostic works both at c
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
-### Diagnostic ignorance in code
+### Parameter for config
 
 ```bsl
 // BSLLS:UsingExternalCodeTools-off // BSLLS:UsingExternalCodeTools-on
