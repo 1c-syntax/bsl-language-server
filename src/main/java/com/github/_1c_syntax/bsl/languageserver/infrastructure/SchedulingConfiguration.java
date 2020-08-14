@@ -27,7 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Spring-конфигурация для управления включением/отключением фоновых заданий.
- * <p />
+ * <p>
  * См. {@link Configuration}
  */
 @Configuration
