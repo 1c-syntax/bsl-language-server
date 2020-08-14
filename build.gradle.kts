@@ -16,6 +16,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.28.0"
     id("io.freefair.javadoc-links") version "5.1.0"
     id("org.springframework.boot") version "2.3.2.RELEASE"
+    id("com.github.johnrengelman.shadow") version "5.2.0"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.0"
 }
 
@@ -124,8 +125,21 @@ tasks.jar {
         attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
+}
 
+tasks.shadowJar {
+    project.configurations.implementation.get().isCanBeResolved = true
+    configurations = listOf(project.configurations["implementation"])
+    archiveClassifier.set("")
+}
+
+tasks.bootJar {
+    archiveClassifier.set("exec")
+}
+
+tasks.build {
     dependsOn(tasks.bootJar)
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.test {
@@ -232,6 +246,7 @@ publishing {
         create<MavenPublication>("maven") {
             artifact(tasks["sourcesJar"])
             artifact(tasks["bootJar"])
+            artifact(tasks["shadowJar"])
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
