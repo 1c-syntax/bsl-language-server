@@ -23,14 +23,17 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -43,6 +46,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -109,6 +113,19 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
   public void exit() {
     int status = shutdownWasCalled ? 0 : 1;
     System.exit(status);
+  }
+
+  /**
+   * См. {@link BSLTextDocumentService#diagnostics(DiagnosticParams)}
+   * @param params Параметры запроса.
+   * @return Список диагностик.
+   */
+  @JsonRequest(
+    value = "textDocument/x-diagnostics",
+    useSegment = false
+  )
+  public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
+    return textDocumentService.diagnostics(params);
   }
 
   @Override

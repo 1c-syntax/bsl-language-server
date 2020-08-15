@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -43,6 +44,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -77,6 +79,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -285,6 +288,24 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     }
 
     return CompletableFuture.supplyAsync(() -> documentLinkProvider.getDocumentLinks(documentContext));
+  }
+
+  /**
+   * Обработка нестандартного запроса <code>textDocument/x-diagnostics</code>.
+   * Позволяет получить список диагностик документа.
+   * <br>
+   * См. {@link BSLLanguageServer#diagnostics(DiagnosticParams)}
+   *
+   * @param params Параметры запроса.
+   * @return Список диагностик.
+   */
+  public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(documentContext::getDiagnostics);
   }
 
   public void reset() {
