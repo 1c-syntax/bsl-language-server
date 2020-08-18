@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
 @Component
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
-  private final String DISABLE_ALL_DIAGNOSTIC = "BSLLS-off";
+  private static final String DISABLE_ALL_DIAGNOSTIC = "BSLLS-off";
   private List<CodeAction> result;
   private CodeActionParams params;
   private DocumentContext documentContext;
@@ -73,7 +74,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
     initParams(params, documentContext);
 
-    if (params.getContext().getDiagnostics().size() > 0) {
+    if (!params.getContext().getDiagnostics().isEmpty()) {
       actionDisableDiagnosticInLine();
       actionDisableDiagnosticInRegion();
       actionDisableDiagnosticInFile();
@@ -132,26 +133,27 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
           );
 
           TextEdit textEdit = new TextEdit(range, String.format(" // BSLLS:%s-off", name));
-          WorkspaceEdit edit = new WorkspaceEdit();
-          Map<String, List<TextEdit>> changes = Map.of(
-            documentContext.getUri().toString(),
-            Collections.singletonList(textEdit)
-          );
-          edit.setChanges(changes);
-
           String codeActionTitle = String.format(
             isEnglish ? "Disable %s in line" : "Отключить %s в строке",
             name
           );
-
-          CodeAction codeAction = new CodeAction(codeActionTitle);
-          codeAction.setDiagnostics(new ArrayList<>());
-          codeAction.setKind(CodeActionKind.Refactor);
-          codeAction.setEdit(edit);
-          return codeAction;
+          return createCodeAction(codeActionTitle, Collections.singletonList(textEdit));
         })
-      .collect(Collectors.toList())
+        .collect(Collectors.toList())
     );
+  }
+
+  @NotNull
+  private CodeAction createCodeAction(String title, List<TextEdit> edits) {
+    Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), edits);
+    WorkspaceEdit edit = new WorkspaceEdit();
+    edit.setChanges(changes);
+
+    CodeAction codeAction = new CodeAction(title);
+    codeAction.setDiagnostics(new ArrayList<>());
+    codeAction.setKind(CodeActionKind.Refactor);
+    codeAction.setEdit(edit);
+    return codeAction;
   }
 
   private void actionDisableDiagnosticInRegion() {
@@ -175,35 +177,26 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
             params.getRange().getStart().getLine(),
             0
           );
-          TextEdit disableTextEdit = new TextEdit(disableRange, String.format("// BSLLS:%s-off\n", name));
+          TextEdit disableTextEdit = new TextEdit(disableRange, String.format("// BSLLS:%s-off%n", name));
           edits.add(disableTextEdit);
 
           Token last = lastTokenSelectedInLine.get();
           Range enableRange = Ranges.create(
-            params.getRange().getEnd().getLine() ,
+            params.getRange().getEnd().getLine(),
             last.getCharPositionInLine() + last.getText().length(),
             params.getRange().getEnd().getLine(),
             last.getCharPositionInLine() + last.getText().length()
           );
-          TextEdit enableTextEdit = new TextEdit(enableRange, String.format("\n// BSLLS:%s-on\n", name));
+          TextEdit enableTextEdit = new TextEdit(enableRange, String.format("%n// BSLLS:%s-on%n", name));
           edits.add(enableTextEdit);
-
-          Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), edits);
-          WorkspaceEdit edit = new WorkspaceEdit();
-          edit.setChanges(changes);
 
           String codeActionTitle = String.format(
             isEnglish ? "Disable %s in range" : "Отключить %s в выделеном диапазоне",
             name
           );
-
-          CodeAction codeAction = new CodeAction(codeActionTitle);
-          codeAction.setDiagnostics(new ArrayList<>());
-          codeAction.setKind(CodeActionKind.Refactor);
-          codeAction.setEdit(edit);
-          return codeAction;
-      })
-      .collect(Collectors.toList())
+          return createCodeAction(codeActionTitle, edits);
+        })
+        .collect(Collectors.toList())
     );
   }
 
@@ -218,26 +211,13 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .map(name -> {
           TextEdit textEdit = new TextEdit(
             Ranges.create(0, 0, 0, 0),
-            String.format("// BSLLS:%s-off\n", name)
+            String.format("// BSLLS:%s-off%n", name)
           );
-
-          WorkspaceEdit edit = new WorkspaceEdit();
-          Map<String, List<TextEdit>> changes = Map.of(
-            documentContext.getUri().toString(),
-            Collections.singletonList(textEdit)
-          );
-          edit.setChanges(changes);
-
           String codeActionTitle = String.format(
             isEnglish ? "Disable %s in file" : "Отключить %s в файле",
             name
           );
-
-          CodeAction codeAction = new CodeAction(codeActionTitle);
-          codeAction.setDiagnostics(new ArrayList<>());
-          codeAction.setKind(CodeActionKind.Refactor);
-          codeAction.setEdit(edit);
-          return codeAction;
+          return createCodeAction(codeActionTitle, Collections.singletonList(textEdit));
         })
         .collect(Collectors.toList())
     );
@@ -257,22 +237,10 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     );
 
     TextEdit textEdit = new TextEdit(range, "// " + DISABLE_ALL_DIAGNOSTIC);
-    WorkspaceEdit edit = new WorkspaceEdit();
-    Map<String, List<TextEdit>> changes = Map.of(
-      documentContext.getUri().toString(),
-      Collections.singletonList(textEdit)
-    );
-    edit.setChanges(changes);
-
     String codeActionTitle = isEnglish
       ? "Disable all diagnostic in line"
       : "Отключить все диагностики в строке";
-
-    CodeAction codeAction = new CodeAction(codeActionTitle);
-    codeAction.setDiagnostics(new ArrayList<>());
-    codeAction.setKind(CodeActionKind.Refactor);
-    codeAction.setEdit(edit);
-    result.add(codeAction);
+    result.add(createCodeAction(codeActionTitle, Collections.singletonList(textEdit)));
   }
 
   private void actionDisableAllDiagnosticInRegion() {
@@ -288,54 +256,31 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       params.getRange().getStart().getLine(),
       0
     );
-    TextEdit disableTextEdit = new TextEdit(disableRange, "// " + DISABLE_ALL_DIAGNOSTIC + "\n");
+    TextEdit disableTextEdit = new TextEdit(disableRange, "// " + DISABLE_ALL_DIAGNOSTIC + "%n");
     edits.add(disableTextEdit);
 
     Token last = lastTokenSelectedInLine.get();
     Range enableRange = Ranges.create(
-      params.getRange().getEnd().getLine() ,
+      params.getRange().getEnd().getLine(),
       last.getCharPositionInLine() + last.getText().length(),
       params.getRange().getEnd().getLine(),
       last.getCharPositionInLine() + last.getText().length()
     );
-    TextEdit enableTextEdit = new TextEdit(enableRange, "\n// BSLLS-on\n");
+    TextEdit enableTextEdit = new TextEdit(enableRange, "%n// BSLLS-on%n");
     edits.add(enableTextEdit);
-
-    Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(), edits);
-    WorkspaceEdit edit = new WorkspaceEdit();
-    edit.setChanges(changes);
-
     String codeActionTitle = isEnglish
       ? "Disable all diagnostic in range"
       : "Отключить все диагностики в выделеном диапазоне";
-
-    CodeAction codeAction = new CodeAction(codeActionTitle);
-    codeAction.setDiagnostics(new ArrayList<>());
-    codeAction.setKind(CodeActionKind.Refactor);
-    codeAction.setEdit(edit);
-    result.add(codeAction);
+    result.add(createCodeAction(codeActionTitle, edits));
   }
 
   private void actionDisableAllDiagnosticInFile() {
     TextEdit textEdit = new TextEdit(
       Ranges.create(0, 0, 0, 0),
-      "// " + DISABLE_ALL_DIAGNOSTIC + "\n"
+      "// " + DISABLE_ALL_DIAGNOSTIC + "%n"
     );
-
-    WorkspaceEdit edit = new WorkspaceEdit();
-    Map<String, List<TextEdit>> changes = Map.of(
-      documentContext.getUri().toString(),
-      Collections.singletonList(textEdit)
-    );
-    edit.setChanges(changes);
-
     String codeActionTitle = isEnglish ? "Disable all diagnostic in file" : "Отключить все диагностики в файле";
-
-    CodeAction codeAction = new CodeAction(codeActionTitle);
-    codeAction.setDiagnostics(new ArrayList<>());
-    codeAction.setKind(CodeActionKind.Refactor);
-    codeAction.setEdit(edit);
-    result.add(codeAction);
+    result.add(createCodeAction(codeActionTitle, Collections.singletonList(textEdit)));
   }
 
 }
