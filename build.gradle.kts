@@ -125,12 +125,13 @@ tasks.jar {
         attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
+    enabled = true
 }
 
 tasks.shadowJar {
     project.configurations.implementation.get().isCanBeResolved = true
     configurations = listOf(project.configurations["implementation"])
-    archiveClassifier.set("")
+    archiveClassifier.set("shadow")
 }
 
 tasks.bootJar {
