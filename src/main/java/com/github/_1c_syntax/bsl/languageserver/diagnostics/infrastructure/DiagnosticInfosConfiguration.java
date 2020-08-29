@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Role;
 import org.springframework.context.annotation.Scope;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -49,7 +50,7 @@ public class DiagnosticInfosConfiguration {
   private final LanguageServerConfiguration configuration;
 
   @SuppressWarnings("unchecked")
-  @Bean("diagnosticInfos")
+  @Bean("diagnosticInfosByCode")
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   public Map<String, DiagnosticInfo> diagnosticInfosByCode() {
     var beanNames = applicationContext.getBeanNamesForAnnotation(DiagnosticMetadata.class);
@@ -68,6 +69,12 @@ public class DiagnosticInfosConfiguration {
   public Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByDiagnosticClass() {
     return diagnosticInfosByCode().values().stream()
       .collect(Collectors.toMap(DiagnosticInfo::getDiagnosticClass, Function.identity()));
+  }
+
+  @Bean("diagnosticInfos")
+  @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+  public Collection<DiagnosticInfo> diagnosticInfos() {
+    return diagnosticInfosByCode().values();
   }
 
   @Bean
