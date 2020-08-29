@@ -1416,6 +1416,16 @@
             },
             "$id": "#/definitions/UsingServiceTag"
         },
+        "UsingStyleElementConstructors": {
+            "description": "Using style element constructors",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using style element constructors",
+            "$id": "#/definitions/UsingStyleElementConstructors"
+        },
         "UsingSynchronousCalls": {
             "description": "Using synchronous calls",
             "default": true,

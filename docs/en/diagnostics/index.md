@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **115**
+Total: **116**
 
-* Error: **35**
+* Error: **36**
 * Code smell: **73**
 * Vulnerability: **3**
 * Security Hotspot: **4**
@@ -128,6 +128,7 @@ Total: **115**
  [UsingModalWindows](UsingModalWindows.md) | Using modal windows | Yes | Major | Code smell | `standard` 
  [UsingObjectNotAvailableUnix](UsingObjectNotAvailableUnix.md) | Using unavailable in Unix objects | Yes | Critical | Error | `standard`<br>`lockinos` 
  [UsingServiceTag](UsingServiceTag.md) | Using service tags | Yes | Info | Code smell | `badpractice` 
+ [UsingStyleElementConstructors](UsingStyleElementConstructors.md) | Using style element constructors | Yes | Minor | Error | `standard`<br>`badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 

@@ -356,6 +356,9 @@
                 "UsingServiceTag": {
                     "$ref": "parameters-schema.json#/definitions/UsingServiceTag"
                 },
+                "UsingStyleElementConstructors": {
+                    "$ref": "parameters-schema.json#/definitions/UsingStyleElementConstructors"
+                },
                 "UsingSynchronousCalls": {
                     "$ref": "parameters-schema.json#/definitions/UsingSynchronousCalls"
                 },

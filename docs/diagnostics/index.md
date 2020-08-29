@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **115**
+Общее количество: **116**
 
 * Дефект кода: **73**
 * Уязвимость: **3**
-* Ошибка: **35**
+* Ошибка: **36**
 * Потенциальная уязвимость: **4**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -128,6 +128,7 @@
  [UsingModalWindows](UsingModalWindows.md) | Использование модальных окон | Да | Важный | Дефект кода | `standard` 
  [UsingObjectNotAvailableUnix](UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да | Критичный | Ошибка | `standard`<br>`lockinos` 
  [UsingServiceTag](UsingServiceTag.md) | Использование служебных тегов | Да | Информационный | Дефект кода | `badpractice` 
+ [UsingStyleElementConstructors](UsingStyleElementConstructors.md) | Использование конструкторов элементов стиля | Да | Незначительный | Ошибка | `standard`<br>`badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
