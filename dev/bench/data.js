@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1597517129715,
+  "lastUpdate": 1598812917604,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4929,6 +4929,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 4.499655740582059",
             "extra": "mean: 75.75718816121419 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1a95404e667215a8c102905c689fe7ce9989fb8a",
+          "message": "Merge pull request #1344 from 1c-syntax/feature/thin-jar",
+          "timestamp": "2020-08-30T21:34:41+03:00",
+          "tree_id": "3afb4a1b353d5aafe5e1ec84fef9b15c1a58c4aa",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/1a95404e667215a8c102905c689fe7ce9989fb8a"
+        },
+        "date": 1598812914331,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.91856988271077,
+            "unit": "sec",
+            "range": "stddev: 0.1272816824826404",
+            "extra": "mean: 72.91856988271077 sec\nrounds: 3"
           }
         ]
       }
