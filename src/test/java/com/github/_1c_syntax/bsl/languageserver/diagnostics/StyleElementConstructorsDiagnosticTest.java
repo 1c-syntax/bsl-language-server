@@ -38,14 +38,17 @@ class StyleElementConstructorsDiagnosticTest extends AbstractDiagnosticTest<Styl
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
-      .hasRange(2, 18, 2, 22)
-      .hasRange(3, 18, 3, 23)
-      .hasRange(4, 18, 4, 23)
-      .hasRange(8, 13, 8, 18)
-      .hasRange(9, 13, 9, 19)
-      .hasRange(10, 13, 10, 17);
+      .hasRange(2, 12, 2, 37)
+      .hasRange(3, 12, 3, 33)
+      .hasRange(4, 12, 4, 25)
+      .hasRange(8, 9, 8, 33)
+      .hasRange(9, 9, 9, 31)
+      .hasRange(10, 9, 10, 19)
+      .hasRange(12, 9, 12, 23)
+      .hasRange(13, 9, 13, 33)
+      .hasRange(14, 9, 14, 37);
 
   }
 }

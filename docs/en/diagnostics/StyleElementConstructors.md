@@ -1,4 +1,4 @@
-# Using style element constructors (StyleElementConstructors)
+# Style element constructor (StyleElementConstructors)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 

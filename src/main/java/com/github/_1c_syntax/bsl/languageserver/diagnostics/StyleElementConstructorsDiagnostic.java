@@ -45,16 +45,29 @@ import java.util.regex.Pattern;
 )
 public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(Рамка|Цвет|Шрифт|Color|Border|Font)$");
+  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^?(Рамка|Цвет|Шрифт|Color|Border|Font)?$");
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    var ctxTypeName = typeName(ctx);
 
-    if (PATTERN.matcher(ctx.typeName().getText()).find()) {
-      diagnosticStorage.addDiagnostic(ctx.typeName());
+    if (PATTERN.matcher(ctxTypeName).find()) {
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctxTypeName));
     }
 
     return ctx;
+  }
+
+  private static String typeName(BSLParser.NewExpressionContext ctx) {
+    if (ctx.typeName() != null) {
+      return ctx.typeName().getText();
+    }
+
+    if (ctx.doCall().callParamList().isEmpty()) {
+      return "";
+    }
+
+    return ctx.doCall().callParamList().callParam(0).getText().replaceAll("\"", "");
   }
 
 }

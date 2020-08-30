@@ -1115,13 +1115,13 @@
             "$id": "#/definitions/SpaceAtStartComment"
         },
         "StyleElementConstructors": {
-            "description": "Using style element constructors",
+            "description": "Style element constructor",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Using style element constructors",
+            "title": "Style element constructor",
             "$id": "#/definitions/StyleElementConstructors"
         },
         "TempFilesDir": {
