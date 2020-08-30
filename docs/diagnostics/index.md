@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **115**
+Общее количество: **116**
 
 * Дефект кода: **73**
 * Уязвимость: **3**
-* Ошибка: **35**
+* Ошибка: **36**
 * Потенциальная уязвимость: **4**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -104,6 +104,7 @@
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Ошибочное указание нескольких директив компиляции | Да | Критичный | Ошибка | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Пробел в начале комментария | Да | Информационный | Дефект кода | `standard` 
+ [StyleElementConstructors](StyleElementConstructors.md) | Конструктор элемента стиля | Да | Незначительный | Ошибка | `standard`<br>`badpractice` 
  [TempFilesDir](TempFilesDir.md) | Вызов функции КаталогВременныхФайлов() | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [TernaryOperatorUsage](TernaryOperatorUsage.md) | Использование тернарного оператора | Нет | Незначительный | Дефект кода | `brainoverload` 
  [ThisObjectAssign](ThisObjectAssign.md) | Присвоение значения свойству ЭтотОбъект | Да | Блокирующий | Ошибка | `error` 

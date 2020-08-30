@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **115**
+Total: **116**
 
-* Error: **35**
+* Error: **36**
 * Code smell: **73**
 * Vulnerability: **3**
 * Security Hotspot: **4**
@@ -104,6 +104,7 @@ Total: **115**
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` 
+ [StyleElementConstructors](StyleElementConstructors.md) | Style element constructor | Yes | Minor | Error | `standard`<br>`badpractice` 
  [TempFilesDir](TempFilesDir.md) | TempFilesDir() method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [TernaryOperatorUsage](TernaryOperatorUsage.md) | Ternary operator usage | No | Minor | Code smell | `brainoverload` 
  [ThisObjectAssign](ThisObjectAssign.md) | ThisObject assign | Yes | Blocker | Error | `error` 
