@@ -42,6 +42,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -59,7 +60,7 @@ public abstract class DiagnosticsConfiguration {
   @Scope("prototype")
   public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
 
-    Map<String, DiagnosticInfo> diagnosticInfos = diagnosticInfos();
+    Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
 
     DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
@@ -71,7 +72,7 @@ public abstract class DiagnosticsConfiguration {
         .getCompatibilityMode();
       ModuleType moduleType = documentContext.getModuleType();
 
-      return diagnosticInfos.values().stream()
+      return diagnosticInfos.stream()
         .filter(diagnosticInfo -> isEnabled(diagnosticInfo, diagnosticsOptions))
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
@@ -85,7 +86,7 @@ public abstract class DiagnosticsConfiguration {
   }
 
   @Lookup("diagnosticInfos")
-  protected abstract Map<String, DiagnosticInfo> diagnosticInfos();
+  protected abstract Collection<DiagnosticInfo> diagnosticInfos();
 
   private static boolean needToComputeDiagnostics(
     DocumentContext documentContext,

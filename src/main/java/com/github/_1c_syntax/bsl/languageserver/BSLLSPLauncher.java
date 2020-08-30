@@ -31,6 +31,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -57,6 +58,11 @@ import static picocli.CommandLine.Command;
   header = "@|green BSL language server|@")
 @SpringBootApplication
 @Component
+@ConditionalOnProperty(
+  prefix = "app.command.line.runner",
+  value = "enabled",
+  havingValue = "true",
+  matchIfMissing = true)
 @RequiredArgsConstructor
 public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
 

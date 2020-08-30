@@ -38,6 +38,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ class SmokyTest {
   private LanguageServerConfiguration configuration;
 
   @Autowired
-  private Map<String, DiagnosticInfo> diagnosticInfos;
+  private Collection<DiagnosticInfo> diagnosticInfos;
 
   @Test
   @ExpectSystemExitWithStatus(0)
@@ -102,8 +103,7 @@ class SmokyTest {
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.values()
-      .stream()
+    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
       .map(DiagnosticInfo::getCode)
       .collect(Collectors.toMap(
         diagnosticCode -> diagnosticCode.getStringValue(),
