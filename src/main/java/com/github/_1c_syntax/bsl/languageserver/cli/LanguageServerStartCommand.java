@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -57,7 +56,7 @@ import static picocli.CommandLine.Option;
   footer = "@|green Copyright(c) 2018-2020|@")
 @Component
 @RequiredArgsConstructor
-public abstract class LanguageServerStartCommand implements Callable<Integer> {
+public class LanguageServerStartCommand implements Callable<Integer> {
   @Option(
     names = {"-h", "--help"},
     usageHelp = true,
@@ -78,6 +77,7 @@ public abstract class LanguageServerStartCommand implements Callable<Integer> {
   private boolean debug;
 
   private final LanguageServerConfiguration configuration;
+  private final Launcher<LanguageClient> launcher;
   private final List<LanguageClientAware> languageClientAwares;
 
   public Integer call() {
@@ -85,7 +85,6 @@ public abstract class LanguageServerStartCommand implements Callable<Integer> {
     File configurationFile = new File(configurationOption);
     configuration.update(configurationFile);
 
-    var launcher = launcher();
     var languageClient = launcher.getRemoteProxy();
 
     languageClientAwares.forEach(languageClientAware -> languageClientAware.connect(languageClient));
@@ -93,8 +92,5 @@ public abstract class LanguageServerStartCommand implements Callable<Integer> {
     launcher.startListening();
     return -1;
   }
-
-  @Lookup
-  protected abstract Launcher<LanguageClient> launcher();
 
 }

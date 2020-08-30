@@ -34,8 +34,6 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -52,7 +50,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
+public class BSLLanguageServer implements LanguageServer {
 
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
@@ -138,8 +136,4 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     return workspaceService;
   }
 
-  @Override
-  public void connect(LanguageClient client) {
-    textDocumentService.connect(client);
-  }
 }
