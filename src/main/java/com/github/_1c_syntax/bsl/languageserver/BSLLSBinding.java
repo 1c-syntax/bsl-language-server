@@ -27,17 +27,17 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticI
 import lombok.Getter;
 import org.springframework.boot.Banner;
 import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.DefaultResourceLoader;
 
 import java.util.Collection;
 import java.util.Map;
 
-@SpringBootApplication(
-  scanBasePackages = {"com.github._1c_syntax.bsl.languageserver"}
-)
+@EnableAutoConfiguration
+@ComponentScan("com.github._1c_syntax.bsl.languageserver")
 public class BSLLSBinding {
 
   @Getter(lazy = true)
