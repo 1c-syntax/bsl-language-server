@@ -284,6 +284,9 @@
                 "SpaceAtStartComment": {
                     "$ref": "parameters-schema.json#/definitions/SpaceAtStartComment"
                 },
+                "StyleElementConstructors": {
+                    "$ref": "parameters-schema.json#/definitions/StyleElementConstructors"
+                },
                 "TempFilesDir": {
                     "$ref": "parameters-schema.json#/definitions/TempFilesDir"
                 },
