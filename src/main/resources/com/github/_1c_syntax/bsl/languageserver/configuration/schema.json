@@ -284,6 +284,9 @@
                 "SpaceAtStartComment": {
                     "$ref": "parameters-schema.json#/definitions/SpaceAtStartComment"
                 },
+                "StyleElementConstructors": {
+                    "$ref": "parameters-schema.json#/definitions/StyleElementConstructors"
+                },
                 "TempFilesDir": {
                     "$ref": "parameters-schema.json#/definitions/TempFilesDir"
                 },
@@ -355,9 +358,6 @@
                 },
                 "UsingServiceTag": {
                     "$ref": "parameters-schema.json#/definitions/UsingServiceTag"
-                },
-                "UsingStyleElementConstructors": {
-                    "$ref": "parameters-schema.json#/definitions/UsingStyleElementConstructors"
                 },
                 "UsingSynchronousCalls": {
                     "$ref": "parameters-schema.json#/definitions/UsingSynchronousCalls"

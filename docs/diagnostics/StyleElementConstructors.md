@@ -1,4 +1,4 @@
-# Использование конструкторов элементов стиля (UsingStyleElementConstructors)
+# Использование конструкторов элементов стиля (StyleElementConstructors)
 
  Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -26,12 +26,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:UsingStyleElementConstructors-off
-// BSLLS:UsingStyleElementConstructors-on
+// BSLLS:StyleElementConstructors-off
+// BSLLS:StyleElementConstructors-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"UsingStyleElementConstructors": false
+"StyleElementConstructors": false
 ```

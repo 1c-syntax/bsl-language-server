@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class UsingStyleElementConstructorsDiagnosticTest extends AbstractDiagnosticTest<UsingStyleElementConstructorsDiagnostic> {
-  UsingStyleElementConstructorsDiagnosticTest() {
-    super(UsingStyleElementConstructorsDiagnostic.class);
+class StyleElementConstructorsDiagnosticTest extends AbstractDiagnosticTest<StyleElementConstructorsDiagnostic> {
+  StyleElementConstructorsDiagnosticTest() {
+    super(StyleElementConstructorsDiagnostic.class);
   }
 
   @Test

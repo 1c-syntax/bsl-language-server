@@ -1,4 +1,4 @@
-# Using style element constructors (UsingStyleElementConstructors)
+# Using style element constructors (StyleElementConstructors)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -25,12 +25,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:UsingStyleElementConstructors-off
-// BSLLS:UsingStyleElementConstructors-on
+// BSLLS:StyleElementConstructors-off
+// BSLLS:StyleElementConstructors-on
 ```
 
 ### Parameter for config
 
 ```json
-"UsingStyleElementConstructors": false
+"StyleElementConstructors": false
 ```

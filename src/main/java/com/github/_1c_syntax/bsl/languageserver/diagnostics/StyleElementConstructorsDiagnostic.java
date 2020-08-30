@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class UsingStyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
+public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(Рамка|Цвет|Шрифт|Color|Border|Font)$");
 

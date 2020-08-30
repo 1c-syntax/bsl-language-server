@@ -104,6 +104,7 @@ Total: **116**
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
  [SeveralCompilerDirectives](SeveralCompilerDirectives.md) | Erroneous indication of several compilation directives | Yes | Critical | Error | `unpredictable`<br>`error` 
  [SpaceAtStartComment](SpaceAtStartComment.md) | Space at the beginning of the comment | Yes | Info | Code smell | `standard` 
+ [StyleElementConstructors](StyleElementConstructors.md) | Using style element constructors | Yes | Minor | Error | `standard`<br>`badpractice` 
  [TempFilesDir](TempFilesDir.md) | TempFilesDir() method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [TernaryOperatorUsage](TernaryOperatorUsage.md) | Ternary operator usage | No | Minor | Code smell | `brainoverload` 
  [ThisObjectAssign](ThisObjectAssign.md) | ThisObject assign | Yes | Blocker | Error | `error` 
@@ -128,7 +129,6 @@ Total: **116**
  [UsingModalWindows](UsingModalWindows.md) | Using modal windows | Yes | Major | Code smell | `standard` 
  [UsingObjectNotAvailableUnix](UsingObjectNotAvailableUnix.md) | Using unavailable in Unix objects | Yes | Critical | Error | `standard`<br>`lockinos` 
  [UsingServiceTag](UsingServiceTag.md) | Using service tags | Yes | Info | Code smell | `badpractice` 
- [UsingStyleElementConstructors](UsingStyleElementConstructors.md) | Using style element constructors | Yes | Minor | Error | `standard`<br>`badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
