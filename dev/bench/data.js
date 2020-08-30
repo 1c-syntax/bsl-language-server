@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1598812917604,
+  "lastUpdate": 1598821624667,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -4960,6 +4960,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.1272816824826404",
             "extra": "mean: 72.91856988271077 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "faaf99841cad3bd8abc36349540906de5152e56d",
+          "message": "Merge pull request #1345 from qtLex/feature/using-style-element-constructors\n\nЗапрет использования \"Новый Шрифт\", \"Новый Цвет\" и \"Новый Рамка\"",
+          "timestamp": "2020-08-30T23:59:41+03:00",
+          "tree_id": "5195a51dffd7b0bef3f019693fe3a265af64bab4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/faaf99841cad3bd8abc36349540906de5152e56d"
+        },
+        "date": 1598821621268,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.19707067807515,
+            "unit": "sec",
+            "range": "stddev: 2.2468572450712156",
+            "extra": "mean: 74.19707067807515 sec\nrounds: 3"
           }
         ]
       }
