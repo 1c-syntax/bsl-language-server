@@ -1234,6 +1234,16 @@
             "title": "Unary Plus sign in string concatenation",
             "$id": "#/definitions/UnaryPlusInConcatenation"
         },
+        "UnionAll": {
+            "description": "Construct UNION",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Construct UNION",
+            "$id": "#/definitions/UnionAll"
+        },
         "UnknownPreprocessorSymbol": {
             "description": "Unknown preprocessor symbol",
             "default": true,

@@ -1,8 +1,8 @@
-# Union all in query (UnionAll)
+# Construct UNION (UnionAll)
 
-<Metadata>
-
-## <Params>
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`sql`<br>`performance` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -20,8 +20,8 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
@@ -32,5 +32,5 @@
 ### Parameter for config
 
 ```json
-"UnionAll": <DiagnosticConfig>
+"UnionAll": false
 ```
