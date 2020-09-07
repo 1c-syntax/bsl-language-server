@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **116**
+Общее количество: **117**
 
-* Дефект кода: **73**
+* Дефект кода: **74**
 * Уязвимость: **3**
 * Ошибка: **36**
 * Потенциальная уязвимость: **4**
@@ -113,6 +113,7 @@
  [TryNumber](TryNumber.md) | Приведение к числу в попытке | Да | Важный | Дефект кода | `standard` 
  [Typo](Typo.md) | Опечатка | Да | Информационный | Дефект кода | `badpractice` 
  [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Унарный плюс в конкатенации строк | Да | Блокирующий | Ошибка | `suspicious`<br>`brainoverload` 
+ [UnionAll](UnionAll.md) | Использование ключевого слова "ОБЪЕДИНИТЬ" в запросах | Да | Незначительный | Дефект кода | `standard`<br>`sql`<br>`performance` 
  [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Неизвестный символ препроцессора | Да | Критичный | Ошибка | `standard`<br>`error` 
  [UnreachableCode](UnreachableCode.md) | Недостижимый код | Да | Незначительный | Ошибка | `design`<br>`suspicious` 
  [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Небезопасное использование функции БезопасныйРежим() | Да | Блокирующий | Ошибка | `deprecated`<br>`error` 

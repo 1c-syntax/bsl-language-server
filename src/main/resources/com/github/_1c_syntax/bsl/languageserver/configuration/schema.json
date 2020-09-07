@@ -311,6 +311,9 @@
                 "UnaryPlusInConcatenation": {
                     "$ref": "parameters-schema.json#/definitions/UnaryPlusInConcatenation"
                 },
+                "UnionAll": {
+                    "$ref": "parameters-schema.json#/definitions/UnionAll"
+                },
                 "UnknownPreprocessorSymbol": {
                     "$ref": "parameters-schema.json#/definitions/UnknownPreprocessorSymbol"
                 },
