@@ -45,7 +45,7 @@ public class UnionAllDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitUnion(SDBLParser.UnionContext ctx) {
-    if (ctx.all != null) {
+    if (ctx.ALL() != null) {
       return super.visitUnion(ctx);
     }
 
