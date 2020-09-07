@@ -1235,13 +1235,13 @@
             "$id": "#/definitions/UnaryPlusInConcatenation"
         },
         "UnionAll": {
-            "description": "Construct UNION",
+            "description": "Using keyword \"UNION\" in queries",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Construct UNION",
+            "title": "Using keyword \"UNION\" in queries",
             "$id": "#/definitions/UnionAll"
         },
         "UnknownPreprocessorSymbol": {

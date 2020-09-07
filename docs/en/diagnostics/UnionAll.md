@@ -1,4 +1,4 @@
-# Construct UNION (UnionAll)
+# Using keyword "UNION" in queries (UnionAll)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 

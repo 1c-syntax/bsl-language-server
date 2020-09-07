@@ -113,7 +113,7 @@ Total: **117**
  [TryNumber](TryNumber.md) | Cast to number of try catch block | Yes | Major | Code smell | `standard` 
  [Typo](Typo.md) | Typo | Yes | Info | Code smell | `badpractice` 
  [UnaryPlusInConcatenation](UnaryPlusInConcatenation.md) | Unary Plus sign in string concatenation | Yes | Blocker | Error | `suspicious`<br>`brainoverload` 
- [UnionAll](UnionAll.md) | Construct UNION | Yes | Minor | Code smell | `standard`<br>`sql`<br>`performance` 
+ [UnionAll](UnionAll.md) | Using keyword "UNION" in queries | Yes | Minor | Code smell | `standard`<br>`sql`<br>`performance` 
  [UnknownPreprocessorSymbol](UnknownPreprocessorSymbol.md) | Unknown preprocessor symbol | Yes | Critical | Error | `standard`<br>`error` 
  [UnreachableCode](UnreachableCode.md) | Unreachable Code | Yes | Minor | Error | `design`<br>`suspicious` 
  [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Unsafe SafeMode method call | Yes | Blocker | Error | `deprecated`<br>`error` 
