@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -70,7 +71,7 @@ public class FileAwarePrintWriter extends PrintWriter {
       this.file = file;
 
       if (file == null) {
-        this.isEmpty = true;
+        closeOutputStream();
         return;
       }
 
@@ -80,15 +81,15 @@ public class FileAwarePrintWriter extends PrintWriter {
         fileOutputStream = new FileOutputStream(file);
       } catch (FileNotFoundException e) {
         LOGGER.error("Can't create LSP trace file", e);
-        this.isEmpty = true;
         return;
       }
 
       if (file.isDirectory()) {
         LOGGER.error("Trace log setting must lead to file, not directory! {}", file.getAbsolutePath());
-        this.isEmpty = true;
         return;
       }
+
+      closeOutputStream();
 
       this.out = new BufferedWriter(new OutputStreamWriter(fileOutputStream, StandardCharsets.UTF_8));
       this.lock = this.out;
@@ -123,4 +124,9 @@ public class FileAwarePrintWriter extends PrintWriter {
     setFile(event.getSource().getTraceLog());
   }
 
+  @SneakyThrows
+  private void closeOutputStream() {
+    out.close();
+    isEmpty = true;
+  }
 }
