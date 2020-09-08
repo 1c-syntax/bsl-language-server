@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -46,6 +45,7 @@ import java.util.regex.Pattern;
 public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern PATTERN = CaseInsensitivePattern.compile("^?(Рамка|Цвет|Шрифт|Color|Border|Font)?$");
+  private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
 
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
@@ -67,7 +67,7 @@ public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnosti
       return "";
     }
 
-    return ctx.doCall().callParamList().callParam(0).getText().replaceAll("\"", "");
+    return QUOTE_PATTERN.matcher(ctx.doCall().callParamList().callParam(0).getText()).replaceAll("");
   }
 
 }

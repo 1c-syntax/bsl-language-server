@@ -57,6 +57,7 @@ class DiagnosticInfosTest {
 
     // then
     assertThat(diagnosticClasses)
+      .isNotEmpty()
       .allMatch(diagnosticClass -> diagnosticClass.isAnnotationPresent(DiagnosticMetadata.class));
   }
 

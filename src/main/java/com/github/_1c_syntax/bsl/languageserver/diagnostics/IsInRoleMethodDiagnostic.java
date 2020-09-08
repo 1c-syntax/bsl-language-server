@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -144,7 +145,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     return checkStatement(ctx, parentExpression);
   }
 
-  private boolean checkStatement(BSLParserRuleContext ctx, BSLParserRuleContext parentExpression) {
+  private boolean checkStatement(BSLParserRuleContext ctx, @Nullable BSLParserRuleContext parentExpression) {
 
     if (parentExpression == null) {
       return false;

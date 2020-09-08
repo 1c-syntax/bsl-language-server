@@ -30,8 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Optional;
-
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
@@ -53,11 +51,12 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
-    if (methodSymbol.flatMap(MethodSymbol::getCompilerDirectiveKind).isPresent()
-      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
-      diagnosticStorage.addDiagnostic(methodSymbol.get().getSubNameRange());
-    }
+    documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+      if (methodSymbol.getCompilerDirectiveKind().isPresent()
+        && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+        diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
+      }
+    });
 
     return ctx;
   }

@@ -129,7 +129,7 @@ class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<Common
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -148,7 +148,7 @@ class CommonModuleNameCachedDiagnosticTest extends AbstractDiagnosticTest<Common
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 

@@ -104,7 +104,8 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     final List<Diagnostic> diagnostics = bslDiagnostic.getDiagnostics(documentContext);
 
     // check if expected diagnostic is not present in new diagnostic list
-    Assertions.assertThat(diagnostics).doesNotContain(diagnostic);
+    Assertions.assertThat(diagnostics).doesNotContain(diagnostic)
+    ;
 
     // returning to original state
     documentContext.rebuild(cachedContent);

@@ -31,7 +31,7 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
 
-public class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
+public abstract class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
   @Getter
   @Setter
   protected DiagnosticInfo info;

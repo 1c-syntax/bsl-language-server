@@ -94,7 +94,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   }
 
   @NotNull
-  private String getString(int startLine, Token token) {
+  private static String getString(int startLine, Token token) {
     var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
       string += " " + token.getText().substring(1);
