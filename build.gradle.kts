@@ -134,6 +134,9 @@ tasks.jar {
 }
 
 tasks.bootJar {
+    manifest {
+        attributes["Implementation-Version"] = archiveVersion.get()
+    }
     archiveClassifier.set("exec")
 }
 
