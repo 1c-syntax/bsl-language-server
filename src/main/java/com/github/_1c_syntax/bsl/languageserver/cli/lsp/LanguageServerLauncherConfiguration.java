@@ -32,6 +32,9 @@ import org.springframework.context.annotation.Configuration;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * Конфигурация для создания объектов из lsp4j-слоя.
+ */
 @Configuration
 @Slf4j
 public class LanguageServerLauncherConfiguration {

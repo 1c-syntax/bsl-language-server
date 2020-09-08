@@ -19,7 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+/**
+ * Классы для конфигурирования и запуска команды
+ * {@link com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand}
+ */
 @ParametersAreNonnullByDefault
-package com.github._1c_syntax.bsl.languageserver;
+package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import javax.annotation.ParametersAreNonnullByDefault;

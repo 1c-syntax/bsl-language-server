@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.CheckForNull;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,6 +38,10 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
+/**
+ * Обертка над PrintWriter, позволяющая изменять выходной файловый поток "на-лету",
+ * в отличие от установки в конструкторе в оригинальном {@link PrintWriter}.
+ */
 @Component
 @Slf4j
 public class FileAwarePrintWriter extends PrintWriter {
@@ -44,11 +49,17 @@ public class FileAwarePrintWriter extends PrintWriter {
   private boolean isEmpty = true;
   private File file;
 
+  /**
+   * Конструктор по умолчанию. Отправляет вывод в /dev/null.
+   */
   public FileAwarePrintWriter() {
     super(OutputStream.nullOutputStream());
   }
 
-  public void setFile(File file) {
+  /**
+   * @param file Файл, в который отныне нужно перенаправлять вывод PrintWriter
+   */
+  public void setFile(@CheckForNull File file) {
 
     // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.
     synchronized (lock) {
