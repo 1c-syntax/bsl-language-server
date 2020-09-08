@@ -21,18 +21,39 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+
+import javax.annotation.Nullable;
 
 /**
  * Параметры запроса <code>textDocument/x-diagnostics</code>.
  * <br>
  * См. {@link com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService#diagnostics(DiagnosticParams)}
  */
-@Value
+@RequiredArgsConstructor
+@AllArgsConstructor
+@Getter
+@ToString
+@EqualsAndHashCode
 public class DiagnosticParams {
   /**
-   * The text document.
+   * Идентификатор текстового документа.
    */
-  TextDocumentIdentifier textDocument;
+  private final TextDocumentIdentifier textDocument;
+
+  /**
+   * Диапазон, для которого нужно получить список диагностик.
+   * <br>
+   * Если не передан, возвращается весь список диагностик документа.
+   */
+  @Nullable
+  @Setter
+  private Range range;
 }

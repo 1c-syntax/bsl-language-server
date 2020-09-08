@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -83,6 +84,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -305,7 +307,17 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
-    return CompletableFuture.supplyAsync(documentContext::getDiagnostics);
+    return CompletableFuture.supplyAsync(() -> {
+      var diagnostics = documentContext.getDiagnostics();
+
+      var range = params.getRange();
+      if (range != null) {
+        diagnostics = diagnostics.stream()
+          .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
+          .collect(Collectors.toList());
+      }
+      return diagnostics;
+    });
   }
 
   public void reset() {
