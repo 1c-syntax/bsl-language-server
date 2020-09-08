@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1599581594773,
+  "lastUpdate": 1599592796414,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5053,6 +5053,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.1607058576606897",
             "extra": "mean: 74.80751864115398 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7a5e0c40159eaff21bbef1d025ee1df815a24aca",
+          "message": "Merge pull request #1332 from 1c-syntax/feature/jsonrpc-diagnostics",
+          "timestamp": "2020-09-08T22:05:13+03:00",
+          "tree_id": "fdf1e61c1986000ed6680a83fab2b5bc937daf3c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7a5e0c40159eaff21bbef1d025ee1df815a24aca"
+        },
+        "date": 1599592793217,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 72.59995404879253,
+            "unit": "sec",
+            "range": "stddev: 1.1151927289929404",
+            "extra": "mean: 72.59995404879253 sec\nrounds: 3"
           }
         ]
       }
