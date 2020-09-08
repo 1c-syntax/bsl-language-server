@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -238,6 +240,47 @@ class BSLTextDocumentServiceTest {
   @Test
   void reset() {
     textDocumentService.reset();
+  }
+
+  @Test
+  void testDiagnosticsUnknownFile() throws ExecutionException, InterruptedException {
+    // when
+    var params = new DiagnosticParams(getTextDocumentIdentifier());
+    var diagnostics = textDocumentService.diagnostics(params).get();
+
+    // then
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testDiagnosticsKnownFile() throws ExecutionException, InterruptedException, IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when
+    var params = new DiagnosticParams(getTextDocumentIdentifier());
+    var diagnostics = textDocumentService.diagnostics(params).get();
+
+    // then
+    assertThat(diagnostics).isNotEmpty();
+  }
+
+  @Test
+  void testDiagnosticsKnownFileFilteredRange() throws ExecutionException, InterruptedException, IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when
+    var params = new DiagnosticParams(getTextDocumentIdentifier());
+    params.setRange(Ranges.create(1, 0, 2, 0));
+    var diagnostics = textDocumentService.diagnostics(params).get();
+
+    // then
+    assertThat(diagnostics).hasSize(1);
   }
 
   private File getTestFile() {
