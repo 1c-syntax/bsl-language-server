@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
@@ -126,12 +127,14 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     notifyConfigurationFileChanged();
 
     copyPropertiesFrom(configuration);
+    notifyConfigurationChanged();
   }
 
 
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
     notifyConfigurationFileChanged();
+    notifyConfigurationChanged();
   }
   
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
@@ -197,5 +200,9 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
 
   private void notifyConfigurationFileChanged() {
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChangeEvent(this.configurationFile));
+  }
+
+  private void notifyConfigurationChanged() {
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangeEvent(this));
   }
 }

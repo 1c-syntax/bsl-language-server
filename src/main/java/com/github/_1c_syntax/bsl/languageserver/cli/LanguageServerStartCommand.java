@@ -25,19 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
-import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static picocli.CommandLine.Command;
@@ -84,48 +77,20 @@ public class LanguageServerStartCommand implements Callable<Integer> {
   private boolean debug;
 
   private final LanguageServerConfiguration configuration;
-  private final LanguageServer server;
+  private final Launcher<LanguageClient> launcher;
+  private final List<LanguageClientAware> languageClientAwares;
 
   public Integer call() {
 
     File configurationFile = new File(configurationOption);
     configuration.update(configurationFile);
 
-    Launcher<LanguageClient> launcher = getLanguageClientLauncher(server, configuration);
+    var languageClient = launcher.getRemoteProxy();
 
-    LanguageClient client = launcher.getRemoteProxy();
-    ((LanguageClientAware) server).connect(client);
+    languageClientAwares.forEach(languageClientAware -> languageClientAware.connect(languageClient));
 
     launcher.startListening();
     return -1;
   }
 
-  private static Launcher<LanguageClient> getLanguageClientLauncher(
-    LanguageServer server,
-    LanguageServerConfiguration configuration
-  ) {
-    InputStream in = System.in;
-    OutputStream out = System.out;
-
-    File logFile = configuration.getTraceLog();
-    if (logFile == null) {
-      return LSPLauncher.createServerLauncher(server, in, out);
-    }
-
-    Launcher<LanguageClient> launcher;
-
-    try {
-      PrintWriter printWriter = new PrintWriter(logFile, StandardCharsets.UTF_8.name());
-      launcher = LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
-    } catch (FileNotFoundException | UnsupportedEncodingException e) {
-      LOGGER.error("Can't create LSP trace file", e);
-      if (logFile.isDirectory()) {
-        LOGGER.error("Trace log setting must lead to file, not directory! {}", logFile.getAbsolutePath());
-      }
-
-      launcher = LSPLauncher.createServerLauncher(server, in, out);
-    }
-
-    return launcher;
-  }
 }

@@ -233,11 +233,6 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void connect() {
-    textDocumentService.connect(null);
-  }
-
-  @Test
   void reset() {
     textDocumentService.reset();
   }
