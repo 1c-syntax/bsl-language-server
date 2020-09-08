@@ -1,5 +1,6 @@
 com.github._1c_syntax.bsl.languageserver
 com.github._1c_syntax.bsl.languageserver.cli
+com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
