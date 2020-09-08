@@ -251,7 +251,7 @@ class BSLLSPLauncherTest {
 
     // then
     // main-method should runs without exceptions
-    assertThat(outContent.toString()).contains("Can't create LSP trace file");
+    assertThat(outContent.toString()).contains("Trace log setting must lead to file, not directory");
     assertThat(errContent.toString()).isEmpty();
   }
 }

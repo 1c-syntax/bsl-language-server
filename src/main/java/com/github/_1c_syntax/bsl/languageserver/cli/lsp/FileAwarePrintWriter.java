@@ -75,17 +75,17 @@ public class FileAwarePrintWriter extends PrintWriter {
         return;
       }
 
+      if (file.isDirectory()) {
+        LOGGER.error("Trace log setting must lead to file, not directory! {}", file.getAbsolutePath());
+        return;
+      }
+
       FileOutputStream fileOutputStream;
       try {
         // stream is not closed, cause it used as output stream in writer. See this#out field.
         fileOutputStream = new FileOutputStream(file);
       } catch (FileNotFoundException e) {
         LOGGER.error("Can't create LSP trace file", e);
-        return;
-      }
-
-      if (file.isDirectory()) {
-        LOGGER.error("Trace log setting must lead to file, not directory! {}", file.getAbsolutePath());
         return;
       }
 
