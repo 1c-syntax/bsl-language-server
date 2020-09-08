@@ -50,6 +50,7 @@ public class FileAwarePrintWriter extends PrintWriter {
 
   public void setFile(File file) {
 
+    // sync on non-private field, cause this#lock is supposed to be used as lock-object. See field description.
     synchronized (lock) {
       if (Objects.equals(file, this.file)) {
         return;
@@ -64,6 +65,7 @@ public class FileAwarePrintWriter extends PrintWriter {
 
       FileOutputStream fileOutputStream;
       try {
+        // stream is not closed, cause it used as output stream in writer. See this#out field.
         fileOutputStream = new FileOutputStream(file);
       } catch (FileNotFoundException e) {
         LOGGER.error("Can't create LSP trace file", e);
