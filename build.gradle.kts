@@ -10,11 +10,11 @@ plugins {
     `maven-publish`
     jacoco
     id("com.github.hierynomus.license") version "0.15.0"
-    id("org.sonarqube") version "2.8"
+    id("org.sonarqube") version "3.0"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.28.0"
-    id("io.freefair.javadoc-links") version "5.1.0"
+    id("com.github.ben-manes.versions") version "0.31.0"
+    id("io.freefair.javadoc-links") version "5.2.1"
     id("org.springframework.boot") version "2.3.3.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.0"
 }
@@ -43,7 +43,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.10.3"
+val jacksonVersion = "2.11.2"
 val junitVersion = "5.6.1"
 val languageToolVersion = "5.0"
 
@@ -53,7 +53,7 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.4.0")
+    api("info.picocli:picocli-spring-boot-starter:4.5.1")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
@@ -67,17 +67,17 @@ dependencies {
         exclude("org.antlr", "antlr-runtime")
         exclude("org.glassfish", "javax.json")
     }
-    api("com.github.1c-syntax", "utils", "9202a75f5cc6f1ecff13855e478c4d67a3bb62c2")
-    api("com.github.1c-syntax", "mdclasses", "99e22dfa4f8910bad606d526b3d8d25379cdff5b")
+    api("com.github.1c-syntax", "utils", "0.3.1")
+    api("com.github.1c-syntax", "mdclasses", "0.6.1")
 
     // JLanguageTool
-    implementation("org.languagetool", "languagetool-core", languageToolVersion)
+    implementation("org.languagetool", "languagetool-core", "5.0.2")
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
     // commons utils
-    implementation("commons-io", "commons-io", "2.6")
-    implementation("org.apache.commons", "commons-lang3", "3.10")
+    implementation("commons-io", "commons-io", "2.8.0")
+    implementation("org.apache.commons", "commons-lang3", "3.11")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
 
     // progress bar
@@ -106,8 +106,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.16.1")
-    testImplementation("org.mockito", "mockito-core", "3.3.3")
+    testImplementation("org.assertj", "assertj-core", "3.17.2")
+    testImplementation("org.mockito", "mockito-core", "3.5.10")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
