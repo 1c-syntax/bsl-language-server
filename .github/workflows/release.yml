@@ -112,7 +112,7 @@ jobs:
                         names = os.listdir(dir)
                         for name in names:
                             fullname = os.path.join(dir, name)
-                            if os.path.isfile(fullname) and re.search(pattern, fullname) and fullname.find('sources.jar') == -1 and fullname.find('javadoc.jar') == -1:
+                            if os.path.isfile(fullname) and re.search(pattern, fullname) and fullname.find('exec.jar') != -1:
                                 return ntpath.basename(fullname)
                         return None
 
