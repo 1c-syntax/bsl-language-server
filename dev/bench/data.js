@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1599595046669,
+  "lastUpdate": 1599730140992,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5177,6 +5177,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5812745492929343",
             "extra": "mean: 75.1162629922231 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce92b6c80ce9f1bafae0a8352279a4a1cebd402b",
+          "message": "Merge pull request #1355 from qtLex/fix/StyleElementConstructorsDiagnostic\n\nFP в StyleElementConstructorsDiagnostic",
+          "timestamp": "2020-09-10T12:21:29+03:00",
+          "tree_id": "112ca77b2f6e2158ff2cbfc093ee7fd6571309b2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ce92b6c80ce9f1bafae0a8352279a4a1cebd402b"
+        },
+        "date": 1599730137574,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.54418325424194,
+            "unit": "sec",
+            "range": "stddev: 1.5077118617693108",
+            "extra": "mean: 74.54418325424194 sec\nrounds: 3"
           }
         ]
       }
