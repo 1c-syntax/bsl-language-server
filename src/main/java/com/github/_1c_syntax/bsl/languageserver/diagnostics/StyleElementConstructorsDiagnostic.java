@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 )
 public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^?(Рамка|Цвет|Шрифт|Color|Border|Font)?$");
+  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^(Рамка|Цвет|Шрифт|Color|Border|Font)$");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
 
   @Override
