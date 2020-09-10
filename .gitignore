@@ -68,3 +68,7 @@ gen/
 # mkdocs
 temp/
 public/
+
+# jpackage
+bsl-language-server/
+bsl-language-server_*.zip
