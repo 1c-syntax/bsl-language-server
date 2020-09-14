@@ -64,11 +64,6 @@ public class DiagnosticInfo {
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
   }
 
-  @Deprecated
-  public DiagnosticInfo(Class<? extends BSLDiagnostic> diagnosticClass) {
-    this(diagnosticClass, null);
-  }
-
   public Class<? extends BSLDiagnostic> getDiagnosticClass() {
     return diagnosticClass;
   }
