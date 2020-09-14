@@ -319,15 +319,15 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-        
           <li class="md-nav__item">
   <a href="#alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested" class="md-nav__link">
     Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -404,15 +404,15 @@
 <th align="center">Type</th>
 <th align="center">Scope</th>
 <th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
+<th align="center">Activated<br>by default</th>
+<th align="center">Minutes<br>to fix</th>
 <th align="center">Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>BSL</code><br><code>OS</code></td>
 <td align="center"><code>Critical</code></td>
 <td align="center"><code>Yes</code></td>
 <td align="center"><code>15</code></td>
@@ -432,16 +432,16 @@
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>checkModuleBody</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left"><code>Check module body</code></td>
-<td align="center"><code>true</code></td>
-</tr>
-<tr>
 <td align="center"><code>complexityThreshold</code></td>
 <td align="center"><code>Integer</code></td>
 <td align="left"><code>Complexity threshold</code></td>
 <td align="center"><code>15</code></td>
+</tr>
+<tr>
+<td align="center"><code>checkModuleBody</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left"><code>Check module body</code></td>
+<td align="center"><code>true</code></td>
 </tr>
 </tbody>
 </table>
@@ -449,8 +449,8 @@
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Cognitive complexity shows how difficult it is to perceive the written code.
-High cognitive complexity clearly indicates the need for refactoring to make future support easier.
-The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.</p>
+ High cognitive complexity clearly indicates the need for refactoring to make future support easier.
+ The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.</p>
 <h3 id="cognitive-complexity-calculation">Cognitive Complexity calculation<a class="headerlink" href="#cognitive-complexity-calculation" title="Permanent link">Link</a></h3>
 <p>Bellow are given code analysis rules, conditions increase cognitive complexity.</p>
 <h4 id="each-next-block-increases-complexity-by-1">Each next block increases complexity by 1<a class="headerlink" href="#each-next-block-increases-complexity-by-1" title="Permanent link">Link</a></h4>
@@ -501,7 +501,7 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 <span class="nv">EndIf</span><span class="p">;</span>
 
 <span class="nv">Value</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Condition</span> <span class="nv">OR</span> <span class="nv">Condition2</span> <span class="nv">OR</span> <span class="nv">NOT</span> <span class="nv">Condition3</span><span class="p">,</span> <span class="c c-Singleline">// +3</span>
-                <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span> 
+                <span class="nv">ValueTrue</span><span class="p">,</span> <span class="nv">ValueFalse</span><span class="p">);</span>
 
 <span class="nv">Value</span> <span class="o">=</span> <span class="nv">First</span> <span class="nv">OR</span> <span class="nb">Second</span><span class="p">;</span>                             <span class="c c-Singleline">// +1</span>
 
@@ -515,15 +515,15 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 <span class="k">EndDo</span><span class="p">;</span>
 
 <span class="c c-Singleline">/// Loop For</span>
-<span class="nv">For</span> <span class="nv">It</span> <span class="o">=</span> <span class="nv">Start</span> <span class="k">To</span> <span class="nv">End</span> <span class="nv">Do</span>              
+<span class="nv">For</span> <span class="nv">It</span> <span class="o">=</span> <span class="nv">Start</span> <span class="k">To</span> <span class="nv">End</span> <span class="k">Do</span>
 
 <span class="c c-Singleline">// Loop While</span>
-<span class="k">While</span> <span class="nv">Condition</span> <span class="nv">Do</span>                    
+<span class="k">While</span> <span class="nv">Condition</span> <span class="nv">Do</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
 
 <span class="c c-Singleline">// Condition</span>
-<span class="nv">If</span> <span class="nv">Condition</span> <span class="k">Then</span>    
+<span class="nv">If</span> <span class="nv">Condition</span> <span class="k">Then</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 
 <span class="c c-Singleline">// Ternary operator</span>
@@ -531,43 +531,44 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 
 <span class="k">Try</span>
 <span class="c c-Singleline">// Except processing</span>
-<span class="nv">Except</span>                                       
+<span class="nv">Except</span>
 <span class="k">EndTry</span><span class="p">;</span>
 
 <span class="err">~</span><span class="nv">Label</span><span class="p">:</span>
 </code></pre></div>
 
 
-<h3 id="alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested">Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.<a class="headerlink" href="#alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested" title="Permanent link">Link</a></h3>
+<h4 id="alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested">Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.<a class="headerlink" href="#alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested" title="Permanent link">Link</a></h4>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bellow are code examples and their cognitive complexity calculation.</p>
 <div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example1</span><span class="p">(</span><span class="nv">ClassType</span><span class="p">)</span>
-    <span class="nv">If</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nv">Unknown</span><span class="p">()</span> <span class="k">Then</span>                                             <span class="c c-Singleline">// +1, condition expression, no nesting</span>
+    <span class="nv">If</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nv">Unknown</span><span class="p">()</span> <span class="k">Then</span>                                                  <span class="c c-Singleline">// +1, condition expression, no nesting</span>
         <span class="k">Return</span> <span class="nv">Chars</span><span class="o">.</span><span class="nv">UnknownSymbol</span><span class="p">;</span>
     <span class="nv">EndIf</span><span class="p">;</span>
 
     <span class="nv">AmbiguityFound</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>
     <span class="nv">ListSymbols</span> <span class="o">=</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nv">GetSymbol</span><span class="p">()</span><span class="o">.</span><span class="nv">Children</span><span class="o">.</span><span class="nv">Find</span><span class="p">(</span><span class="s1">&quot;name&quot;</span><span class="p">);</span>
-    <span class="nv">For</span> <span class="k">Each</span> <span class="nv">Symbol</span> <span class="nv">in</span> <span class="nv">ListSymbols</span> <span class="nv">Do</span>                                       <span class="c c-Singleline">// +1, loop, no nesting</span>
-        <span class="nv">If</span> <span class="nv">Symbol</span><span class="o">.</span><span class="nv">HasType</span><span class="p">(</span><span class="nv">Symbols</span><span class="o">.</span><span class="nv">Strage</span><span class="p">)</span>                                   <span class="c c-Singleline">// +2, condition nested in loop, nesting 1</span>
-            <span class="k">AND</span> <span class="nv">NOT</span> <span class="nv">Symbols</span><span class="o">.</span><span class="k">Export</span><span class="p">()</span> <span class="k">Then</span>                                   <span class="c c-Singleline">// +1, logival operation, nesting not taken into account</span>
+    <span class="nv">For</span> <span class="k">Each</span> <span class="nv">Symbol</span> <span class="nv">in</span> <span class="nv">ListSymbols</span> <span class="k">Do</span>
+<span class="c c-Singleline">// +1, loop, no nesting</span>
+        <span class="nv">If</span> <span class="nv">Symbol</span><span class="o">.</span><span class="nv">HasType</span><span class="p">(</span><span class="nv">Symbols</span><span class="o">.</span><span class="nv">Strage</span><span class="p">)</span>                                         <span class="c c-Singleline">// +2, condition nested in loop, nesting 1</span>
+            <span class="k">AND</span> <span class="nv">NOT</span> <span class="nv">Symbols</span><span class="o">.</span><span class="k">Export</span><span class="p">()</span> <span class="k">Then</span>                                            <span class="c c-Singleline">// +1, logival operation, nesting not taken into account</span>
 
             <span class="nv">If</span> <span class="nv">CanOverride</span><span class="p">(</span><span class="nv">Symbol</span><span class="p">)</span> <span class="k">Then</span>                                     <span class="c c-Singleline">// +3, nested condition, nesting 2</span>
                 <span class="nv">Overrideability</span> <span class="o">=</span> <span class="nv">CheckOverrideability</span><span class="p">(</span><span class="nv">Symbol</span><span class="p">,</span> <span class="nv">ClassType</span><span class="p">);</span>
-                <span class="nv">If</span> <span class="nv">Overrideability</span> <span class="o">=</span> <span class="kc">Undefined</span> <span class="k">Then</span>                         <span class="c c-Singleline">// +4, nested condition, nesting 3</span>
-                    <span class="nv">If</span> <span class="nv">NOT</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                              <span class="c c-Singleline">// +5, nested condition, nesting 4</span>
+                <span class="nv">If</span> <span class="nv">Overrideability</span> <span class="o">=</span> <span class="kc">Undefined</span> <span class="k">Then</span>                           <span class="c c-Singleline">// +4, nested condition, nesting 3</span>
+                    <span class="nv">If</span> <span class="nv">NOT</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                 <span class="c c-Singleline">// +5, nested condition, nesting 4</span>
                         <span class="nv">AmbiguityFound</span> <span class="o">=</span> <span class="kc">True</span><span class="p">;</span>
                     <span class="nv">EndIf</span><span class="p">;</span>
-                <span class="nv">ElseIf</span> <span class="nv">Overrideability</span> <span class="k">Then</span>                                 <span class="c c-Singleline">// +1, alternative condition branch, nesting not taken into account</span>
+                <span class="nv">ElseIf</span> <span class="nv">Overrideability</span> <span class="k">Then</span>                                     <span class="c c-Singleline">// +1, alternative condition branch, nesting not taken into account</span>
                     <span class="k">Return</span> <span class="nv">Symbol</span><span class="p">;</span>
                 <span class="nv">EndIf</span><span class="p">;</span>
-            <span class="k">Else</span>                                                            <span class="c c-Singleline">// +1, default branch, nesting not taken into account</span>
+            <span class="k">Else</span>                                                                      <span class="c c-Singleline">// +1, default branch, nesting not taken into account</span>
                 <span class="nv">Continue</span><span class="p">;</span>
             <span class="nv">EndIf</span><span class="p">;</span>
         <span class="nv">EndIf</span><span class="p">;</span>
     <span class="k">EndDo</span><span class="p">;</span>
 
-    <span class="nv">If</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                                  <span class="c c-Singleline">// +1, no nesting</span>
+    <span class="nv">If</span> <span class="nv">AmbiguityFound</span> <span class="k">Then</span>                                                   <span class="c c-Singleline">// +1, no nesting</span>
         <span class="k">Return</span> <span class="nv">Symbols</span><span class="o">.</span><span class="nv">UnknownSymbol</span><span class="p">;</span>
     <span class="nv">EndIf</span><span class="p">;</span>
 
@@ -646,8 +647,8 @@ The most effective way to reduce cognitive complexity is to decompose the code, 
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="s2">&quot;CognitiveComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
-    <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">15</span>
+    <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>
 </code></pre></div>
                 

@@ -375,17 +375,17 @@
 <thead>
 <tr>
 <th align="center">Тип</th>
-<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Поддерживаются<br>языки</th>
 <th align="center">Важность</th>
-<th align="center">Включена<br/>по умолчанию</th>
-<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Включена<br>по умолчанию</th>
+<th align="center">Время на<br>исправление (мин)</th>
 <th align="center">Тэги</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="center"><code>Дефект кода</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>BSL</code><br><code>OS</code></td>
 <td align="center"><code>Информационный</code></td>
 <td align="center"><code>Да</code></td>
 <td align="center"><code>1</code></td>
@@ -405,10 +405,10 @@
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>checkSpaceToRightOfUnary</code></td>
-<td align="center"><code>Булево</code></td>
-<td align="left"><code>Проверять наличие пробела справа от унарных знаков (+ -)</code></td>
-<td align="center"><code>false</code></td>
+<td align="center"><code>listForCheckLeft</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="left"><code>Список символов для проверки слева (разделенные пробелом). Например: ) =</code></td>
+<td align="center">``````</td>
 </tr>
 <tr>
 <td align="center"><code>listForCheckRight</code></td>
@@ -417,22 +417,22 @@
 <td align="center"><code>, ;</code></td>
 </tr>
 <tr>
-<td align="center"><code>listForCheckLeft</code></td>
+<td align="center"><code>listForCheckLeftAndRight</code></td>
 <td align="center"><code>Строка</code></td>
-<td align="left"><code>Список символов для проверки слева (разделенные пробелом). Например: ) =</code></td>
-<td align="center">``````</td>
+<td align="left"><code>Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % &lt; &gt;</code></td>
+<td align="center"><code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></td>
+</tr>
+<tr>
+<td align="center"><code>checkSpaceToRightOfUnary</code></td>
+<td align="center"><code>Булево</code></td>
+<td align="left"><code>Проверять наличие пробела справа от унарных знаков (+ -)</code></td>
+<td align="center"><code>false</code></td>
 </tr>
 <tr>
 <td align="center"><code>allowMultipleCommas</code></td>
 <td align="center"><code>Булево</code></td>
 <td align="left"><code>Разрешать несколько запятых подряд</code></td>
 <td align="center"><code>false</code></td>
-</tr>
-<tr>
-<td align="center"><code>listForCheckLeftAndRight</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left"><code>Список символов для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % &lt; &gt;</code></td>
-<td align="center"><code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></td>
 </tr>
 </tbody>
 </table>
@@ -499,11 +499,11 @@
 
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="s2">&quot;MissingSpace&quot;</span><span class="err">:</span> <span class="p">{</span>
-    <span class="nt">&quot;checkSpaceToRightOfUnary&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
     <span class="nt">&quot;listForCheckLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;allowMultipleCommas&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span>
+    <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;checkSpaceToRightOfUnary&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nt">&quot;allowMultipleCommas&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>
                 

@@ -371,11 +371,6 @@
 <p>Тогда метод установки значений параметров будет выглядеть:</p>
 <div class="codehilite"><pre><span></span><code> <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="p">)</span> <span class="p">{</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="n">configuration</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
-
     <span class="c1">// для установки &quot;простых свойств&quot;, включая &quot;commentAsCode&quot;</span>
     <span class="kd">super</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
 

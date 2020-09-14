@@ -355,17 +355,17 @@
 <thead>
 <tr>
 <th align="center">Тип</th>
-<th align="center">Поддерживаются<br/>языки</th>
+<th align="center">Поддерживаются<br>языки</th>
 <th align="center">Важность</th>
-<th align="center">Включена<br/>по умолчанию</th>
-<th align="center">Время на<br/>исправление (мин)</th>
+<th align="center">Включена<br>по умолчанию</th>
+<th align="center">Время на<br>исправление (мин)</th>
 <th align="center">Тэги</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="center"><code>Дефект кода</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>BSL</code><br><code>OS</code></td>
 <td align="center"><code>Информационный</code></td>
 <td align="center"><code>Да</code></td>
 <td align="center"><code>1</code></td>
@@ -385,16 +385,16 @@
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>userWordsToIgnore</code></td>
-<td align="center"><code>Строка</code></td>
-<td align="left"><code>Пользовательский словарь исключений (через запятую, без пробелов)</code></td>
-<td align="center">``````</td>
-</tr>
-<tr>
 <td align="center"><code>minWordLength</code></td>
 <td align="center"><code>Целое</code></td>
 <td align="left"><code>Минимальная длина проверяемых слов</code></td>
 <td align="center"><code>3</code></td>
+</tr>
+<tr>
+<td align="center"><code>userWordsToIgnore</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="left"><code>Пользовательский словарь исключений (через запятую, без пробелов)</code></td>
+<td align="center">``````</td>
 </tr>
 </tbody>
 </table>
@@ -402,14 +402,14 @@
 
 <h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Проверка орфографических ошибок осуществляется с помощью LanguageTool. Проверяемые строки разбиваются по camelCase 
+Проверка орфографических ошибок осуществляется с помощью <a href="https://languagetool.org/ru/">LanguageTool</a>. Проверяемые строки разбиваются по camelCase 
 и проверяются на соответствие во встроенном словаре.</p>
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
 <li>Полезная информация: <a href="http://gramota.ru/">Русский язык для всех</a></li>
-<li><a href="https://languagetool.org/ru/">Источник</a></li>
+<li><a href="https://languagetool.org/ru/">Страница LanguageTool</a></li>
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
@@ -422,8 +422,8 @@
 
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="s2">&quot;Typo&quot;</span><span class="err">:</span> <span class="p">{</span>
-    <span class="nt">&quot;userWordsToIgnore&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;minWordLength&quot;</span><span class="p">:</span> <span class="mi">3</span>
+    <span class="nt">&quot;minWordLength&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="nt">&quot;userWordsToIgnore&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
                 

@@ -397,13 +397,10 @@
 После определения цели, необходимо придумать уникальный ключ диагностики, под которым она будет добавлена в общий список. Для создаваемой диагностики возьмем имя <code>SemicolonPresence</code>.</p>
 <h3 id="_5">Класс реализации диагностики<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <p>В соответствии с правилами, каталоге <code>src/main/java</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> создадим файл <code>SemicolonPresenceDiagnostic.java</code> класса диагностики.<br />
-В файле создаем одноименный класс, унаследованный от класса <code>AbstractVisitorDiagnostic</code>. Обратите внимание, что для каждого класса диагностики необходимо создать конструктор. В результате имеем следующее</p>
+В файле создаем одноименный класс, унаследованный от класса <code>AbstractVisitorDiagnostic</code>. В результате имеем следующее</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
-  <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
-  <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 
@@ -421,9 +418,6 @@
   <span class="p">}</span>
 <span class="p">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
-  <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
-  <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 
@@ -445,7 +439,7 @@
 
 
 <h3 id="_7">Фикстуры для теста<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<p>Для тестирования добавим в проект файл, содержщий примеры как ошибочного, так и корректного кода. Файл <code>SemicolonPresenceDiagnostic.bsl</code> с фикстурами разместим в каталоге <code>src/test/resources</code> в пакете <code>diagnostics</code>.<br />
+<p>Для тестирования добавим в проект файл, содержащий примеры как ошибочного, так и корректного кода. Файл <code>SemicolonPresenceDiagnostic.bsl</code> с фикстурами разместим в каталоге <code>src/test/resources</code> в пакете <code>diagnostics</code>.<br />
 В качестве данных для тестирвоания, внесем в файл следующий код</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
 <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">Тогда</span>
@@ -518,10 +512,6 @@
   <span class="p">}</span>
 <span class="p">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">SemicolonPresenceDiagnostic</span> <span class="kd">extends</span> <span class="n">AbstractVisitorDiagnostic</span> <span class="p">{</span>
-    <span class="kd">public</span> <span class="nf">SemicolonPresenceDiagnostic</span><span class="p">(</span><span class="n">DiagnosticInfo</span> <span class="n">info</span><span class="p">)</span> <span class="p">{</span>
-      <span class="kd">super</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
-    <span class="p">}</span>
-
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="n">ParseTree</span> <span class="nf">visitStatement</span><span class="p">(</span><span class="n">BSLParser</span><span class="p">.</span><span class="na">StatementContext</span> <span class="n">ctx</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// выбранный визитер</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">ctx</span><span class="p">.</span><span class="na">SEMICOLON</span><span class="p">()</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>                                <span class="c1">// получение дочернего узла SEMICOLON</span>
@@ -531,7 +521,6 @@
         <span class="c1">// обязательно должен вызываться super-метод.</span>
         <span class="k">return</span> <span class="kd">super</span><span class="p">.</span><span class="na">visitStatement</span><span class="p">(</span><span class="n">ctx</span><span class="p">);</span>
     <span class="p">}</span>
-
 <span class="p">}</span>
 </code></pre></div>
 

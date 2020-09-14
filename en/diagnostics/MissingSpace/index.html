@@ -377,15 +377,15 @@
 <th align="center">Type</th>
 <th align="center">Scope</th>
 <th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
+<th align="center">Activated<br>by default</th>
+<th align="center">Minutes<br>to fix</th>
 <th align="center">Tags</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="center"><code>Code smell</code></td>
-<td align="center"><code>BSL</code><br/><code>OS</code></td>
+<td align="center"><code>BSL</code><br><code>OS</code></td>
 <td align="center"><code>Info</code></td>
 <td align="center"><code>Yes</code></td>
 <td align="center"><code>1</code></td>
@@ -405,10 +405,10 @@
 </thead>
 <tbody>
 <tr>
-<td align="center"><code>checkSpaceToRightOfUnary</code></td>
-<td align="center"><code>Boolean</code></td>
-<td align="left"><code>Check for space to the right of unary signs (+ -)</code></td>
-<td align="center"><code>false</code></td>
+<td align="center"><code>listForCheckLeft</code></td>
+<td align="center"><code>String</code></td>
+<td align="left"><code>List of symbols to check for the space to the left of (separated by space)</code></td>
+<td align="center">``````</td>
 </tr>
 <tr>
 <td align="center"><code>listForCheckRight</code></td>
@@ -417,22 +417,22 @@
 <td align="center"><code>, ;</code></td>
 </tr>
 <tr>
-<td align="center"><code>listForCheckLeft</code></td>
+<td align="center"><code>listForCheckLeftAndRight</code></td>
 <td align="center"><code>String</code></td>
-<td align="left"><code>List of symbols to check for the space to the left of (separated by space)</code></td>
-<td align="center">``````</td>
+<td align="left"><code>List of symbols to check for the space from both sides of (separated by space)</code></td>
+<td align="center"><code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></td>
+</tr>
+<tr>
+<td align="center"><code>checkSpaceToRightOfUnary</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left"><code>Check for space to the right of unary signs (+ -)</code></td>
+<td align="center"><code>false</code></td>
 </tr>
 <tr>
 <td align="center"><code>allowMultipleCommas</code></td>
 <td align="center"><code>Boolean</code></td>
 <td align="left"><code>Allow several commas in a row</code></td>
 <td align="center"><code>false</code></td>
-</tr>
-<tr>
-<td align="center"><code>listForCheckLeftAndRight</code></td>
-<td align="center"><code>String</code></td>
-<td align="left"><code>List of symbols to check for the space from both sides of (separated by space)</code></td>
-<td align="center"><code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code></td>
 </tr>
 </tbody>
 </table>
@@ -452,9 +452,9 @@
 
 <p>Correct</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Sum</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="nv">Param2</span><span class="p">)</span>
-    <span class="nv">If</span> <span class="nv">Param1</span> <span class="o">=</span> <span class="nv">Param2</span> <span class="k">Then</span>
-        <span class="nv">Sum</span> <span class="o">=</span> <span class="nv">Price</span> <span class="o">*</span> <span class="nv">Quantity</span><span class="p">;</span>
-    <span class="nv">EndIf</span><span class="p">;</span>
+     <span class="nv">If</span> <span class="nv">Param1</span> <span class="o">=</span> <span class="nv">Param2</span> <span class="k">Then</span>
+         <span class="nv">Sum</span> <span class="o">=</span> <span class="nv">Price</span> <span class="o">*</span> <span class="nv">Quantity</span><span class="p">;</span>
+     <span class="nv">EndIf</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
 
@@ -498,11 +498,11 @@
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="s2">&quot;MissingSpace&quot;</span><span class="err">:</span> <span class="p">{</span>
-    <span class="nt">&quot;checkSpaceToRightOfUnary&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
     <span class="nt">&quot;listForCheckLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;allowMultipleCommas&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
-    <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span>
+    <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;checkSpaceToRightOfUnary&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nt">&quot;allowMultipleCommas&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>
                 

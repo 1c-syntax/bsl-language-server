@@ -357,8 +357,8 @@
 <th align="center">Type</th>
 <th align="center">Scope</th>
 <th align="center">Severity</th>
-<th align="center">Activated<br/>by default</th>
-<th align="center">Minutes<br/>to fix</th>
+<th align="center">Activated<br>by default</th>
+<th align="center">Minutes<br>to fix</th>
 <th align="center">Tags</th>
 </tr>
 </thead>
@@ -369,21 +369,72 @@
 <td align="center"><code>Major</code></td>
 <td align="center"><code>Yes</code></td>
 <td align="center"><code>5</code></td>
-<td align="center"><code>standard</code><br/><code>unpredictable</code><br/><code>design</code></td>
+<td align="center"><code>standard</code><br><code>unpredictable</code><br><code>design</code></td>
 </tr>
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>When developing common modules, you should choose one of four code execution contexts:</p>
+<table>
+<thead>
+<tr>
+<th>Common module type</th>
+<th>Naming example</th>
+<th>Server call</th>
+<th>Server</th>
+<th>External connection</th>
+<th>Client (Ordinary application)</th>
+<th>Client (Managed application)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server-side</td>
+<td>Common (or CommonServer)</td>
+<td> </td>
+<td>+</td>
+<td>+</td>
+<td>+</td>
+<td> </td>
+</tr>
+<tr>
+<td>Server-side to call from client</td>
+<td>CommonServerCall</td>
+<td>+</td>
+<td>+</td>
+<td> </td>
+<td> </td>
+<td> </td>
+</tr>
+<tr>
+<td>Client-side</td>
+<td>CommonClient (or CommonGlobal)</td>
+<td> </td>
+<td> </td>
+<td> </td>
+<td>+</td>
+<td>+</td>
+</tr>
+<tr>
+<td>Client-server</td>
+<td>CommonClientServer</td>
+<td> </td>
+<td>+</td>
+<td>+</td>
+<td>+</td>
+<td>+</td>
+</tr>
+</tbody>
+</table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:469:hdoc:1.2">Standard: Rules for creating common modules (RU)</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 
