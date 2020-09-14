@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,6 +31,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,9 @@ import java.util.Optional;
 @ToString(exclude = {"children", "parent"})
 public class MethodSymbol implements Symbol {
   String name;
+
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Method;
 
   Range range;
   Range subNameRange;
@@ -68,9 +74,19 @@ public class MethodSymbol implements Symbol {
   @Builder.Default
   List<ParameterDefinition> parameters = new ArrayList<>();
 
+  @Builder.Default
+  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
+  @Builder.Default
+  List<Annotation> annotations = new ArrayList<>();
+
   public Optional<RegionSymbol> getRegion() {
     return getParent()
       .filter(symbol -> symbol instanceof RegionSymbol)
       .map(symbol -> (RegionSymbol) symbol);
+  }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitMethod(this);
   }
 }

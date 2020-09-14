@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -44,10 +43,6 @@ import java.util.stream.Collectors;
 public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
-
-  public IdenticalExpressionsDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {

@@ -31,6 +31,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,8 @@ import java.util.Optional;
 @ToString(exclude = {"children", "parent"})
 public class VariableSymbol implements Symbol {
   String name;
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Variable;
   Range range;
   Range variableNameRange;
 
@@ -57,4 +60,9 @@ public class VariableSymbol implements Symbol {
   VariableKind kind;
   boolean export;
   Optional<VariableDescription> description;
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitVariable(this);
+  }
 }

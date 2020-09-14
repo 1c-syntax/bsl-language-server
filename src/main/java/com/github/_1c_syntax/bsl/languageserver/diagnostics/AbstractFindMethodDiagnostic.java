@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
@@ -47,16 +46,16 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Конструктор по умолчанию
-   * @param info служебная информация о диагностике
+   *
    * @param pattern регулярное выражение для проверки
    */
-  AbstractFindMethodDiagnostic(DiagnosticInfo info, Pattern pattern) {
-    super(info);
+  AbstractFindMethodDiagnostic(Pattern pattern) {
     methodPattern = pattern;
   }
 
   /**
    * Проверка контекста глобального метода
+   *
    * @param ctx контекст глобального метода
    * @return {@code true} если имя метода соответствует регулярному выражению
    */
@@ -66,6 +65,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Проверка контекста обычного метода
+   *
    * @param ctx контекст метода
    * @return {@code true} если имя метода соответствует регулярному выражению
    */
@@ -75,6 +75,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
 
   /**
    * Получает сообщение диагностики для пользователя
+   *
    * @param ctx контекст узла
    * @return В случае если передан контекст метода, параметризованное сообщение,
    * первым параметром которого <b>всегда</b> будет имя метода.
@@ -96,6 +97,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    * Обработчик узла глобального метода. Добавляет информацию о сработавшей диагностике
    * в случае если проверка метода {@link AbstractFindMethodDiagnostic#checkGlobalMethodCall(BSLParser.GlobalMethodCallContext)}
    * возвращает {@code true}
+   *
    * @param ctx контекст глобального метода
    * @return результат посещения ноды по умолчанию.
    */
@@ -113,6 +115,7 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    * Обработчик узла обычного метода. Добавляет информацию о сработавшей диагностике
    * в случае если проверка метода {@link AbstractFindMethodDiagnostic#checkMethodCall(BSLParser.MethodCallContext)}
    * возвращает {@code true}
+   *
    * @param ctx контекст метода
    * @return результат посещения ноды по умолчанию.
    */

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -56,10 +55,6 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   )
   private int maxLineLength = MAX_LINE_LENGTH;
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
-
-  public LineLengthDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   protected void check() {

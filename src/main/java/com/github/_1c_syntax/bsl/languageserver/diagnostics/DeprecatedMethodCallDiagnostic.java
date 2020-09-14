@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -56,10 +55,6 @@ import java.util.Set;
 public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES =
     EnumSet.of(ModuleType.ManagerModule, ModuleType.CommonModule);
-
-  public DeprecatedMethodCallDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {

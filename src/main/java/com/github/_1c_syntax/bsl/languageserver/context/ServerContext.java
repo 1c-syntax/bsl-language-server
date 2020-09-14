@@ -25,10 +25,14 @@ import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.TextDocumentItem;
+import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
 import java.io.File;
@@ -41,27 +45,23 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
-public class ServerContext {
+@Component
+@RequiredArgsConstructor
+public abstract class ServerContext {
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
+  @Setter
   private Path configurationRoot;
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, DocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
-
-  public ServerContext() {
-    this(null);
-  }
-
-  public ServerContext(@CheckForNull Path configurationRoot) {
-    this.configurationRoot = configurationRoot;
-  }
 
   public void populateContext() {
     if (configurationRoot == null) {
@@ -151,13 +151,12 @@ public class ServerContext {
     configurationMetadata.clear();
   }
 
-  public void setConfigurationRoot(@CheckForNull Path configurationRoot) {
-    this.configurationRoot = configurationRoot;
-  }
-
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
+
+  @Lookup
+  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content);
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file) {
@@ -168,19 +167,21 @@ public class ServerContext {
   private DocumentContext createDocumentContext(URI uri, String content) {
     URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = new DocumentContext(absoluteURI, content, this);
+    DocumentContext documentContext = lookupDocumentContext(absoluteURI, content);
+
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);
 
     return documentContext;
   }
 
+  @SneakyThrows
   private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
       return Configuration.create();
     }
-
-    return Configuration.create(configurationRoot);
+    ForkJoinPool customThreadPool = new ForkJoinPool();
+    return customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
@@ -188,7 +189,7 @@ public class ServerContext {
     var mdoByUri = modulesByObject.get(uri);
 
     if (mdoByUri != null) {
-      var mdoRef = mdoByUri.getMdoRef();
+      var mdoRef = mdoByUri.getMdoReference().getMdoRef();
       mdoRefs.put(uri, mdoRef);
       var documentsGroup = documentsByMDORef.get(mdoRef);
       if (documentsGroup == null) {

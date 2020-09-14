@@ -143,6 +143,9 @@
                 "ExecuteExternalCodeInCommonModule": {
                     "$ref": "parameters-schema.json#/definitions/ExecuteExternalCodeInCommonModule"
                 },
+                "ExportVariables": {
+                    "$ref": "parameters-schema.json#/definitions/ExportVariables"
+                },
                 "ExtraCommas": {
                     "$ref": "parameters-schema.json#/definitions/ExtraCommas"
                 },
@@ -179,14 +182,23 @@
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
-                "IsInRoleMethodDiagnostic": {
-                    "$ref": "parameters-schema.json#/definitions/IsInRoleMethodDiagnostic"
+                "IsInRoleMethod": {
+                    "$ref": "parameters-schema.json#/definitions/IsInRoleMethod"
+                },
+                "JoinWithSubQuery": {
+                    "$ref": "parameters-schema.json#/definitions/JoinWithSubQuery"
+                },
+                "JoinWithVirtualTable": {
+                    "$ref": "parameters-schema.json#/definitions/JoinWithVirtualTable"
                 },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
+                },
+                "MetadataObjectNameLength": {
+                    "$ref": "parameters-schema.json#/definitions/MetadataObjectNameLength"
                 },
                 "MethodSize": {
                     "$ref": "parameters-schema.json#/definitions/MethodSize"
@@ -272,6 +284,9 @@
                 "SpaceAtStartComment": {
                     "$ref": "parameters-schema.json#/definitions/SpaceAtStartComment"
                 },
+                "StyleElementConstructors": {
+                    "$ref": "parameters-schema.json#/definitions/StyleElementConstructors"
+                },
                 "TempFilesDir": {
                     "$ref": "parameters-schema.json#/definitions/TempFilesDir"
                 },
@@ -295,6 +310,9 @@
                 },
                 "UnaryPlusInConcatenation": {
                     "$ref": "parameters-schema.json#/definitions/UnaryPlusInConcatenation"
+                },
+                "UnionAll": {
+                    "$ref": "parameters-schema.json#/definitions/UnionAll"
                 },
                 "UnknownPreprocessorSymbol": {
                     "$ref": "parameters-schema.json#/definitions/UnknownPreprocessorSymbol"

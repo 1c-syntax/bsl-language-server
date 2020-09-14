@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -54,10 +53,6 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern PUBLIC = CaseInsensitivePattern.compile(
     String.format("^(%s|%s)$", Keywords.PUBLIC_REGION_RU, Keywords.PUBLIC_REGION_EN));
-
-  public CachedPublicDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   protected void check() {

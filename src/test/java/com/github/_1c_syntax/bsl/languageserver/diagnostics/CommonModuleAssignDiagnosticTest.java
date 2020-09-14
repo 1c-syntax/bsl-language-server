@@ -22,13 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModuleAssignDiagnostic> {
   CommonModuleAssignDiagnosticTest() {
     super(CommonModuleAssignDiagnostic.class);
@@ -51,15 +53,15 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
   void test() {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    ServerContext serverContext = new ServerContext(path);
-    Configuration configurationMetadata = serverContext.getConfiguration();
+    initServerContext(path);
+    Configuration configurationMetadata = context.getConfiguration();
 
 
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-    DocumentContext documentContext = new DocumentContext(
+    DocumentContext documentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      serverContext
+      context
     );
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);

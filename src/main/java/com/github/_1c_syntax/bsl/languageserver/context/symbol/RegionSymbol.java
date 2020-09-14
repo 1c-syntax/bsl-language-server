@@ -30,6 +30,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,8 @@ import java.util.stream.Collectors;
 @ToString(exclude = {"children", "parent"})
 public class RegionSymbol implements Symbol {
   String name;
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Namespace;
   Range range;
   Range startRange;
   Range endRange;
@@ -61,5 +64,10 @@ public class RegionSymbol implements Symbol {
       .filter(MethodSymbol.class::isInstance)
       .map(symbol -> (MethodSymbol) symbol)
       .collect(Collectors.toList());
+  }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitRegion(this);
   }
 }

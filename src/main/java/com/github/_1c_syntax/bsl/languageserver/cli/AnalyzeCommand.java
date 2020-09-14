@@ -25,17 +25,18 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
@@ -84,11 +85,13 @@ import static picocli.CommandLine.Option;
   description = "Run analysis and get diagnostic info",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
+@Component
+@RequiredArgsConstructor
 public class AnalyzeCommand implements Callable<Integer> {
 
   private static class ReportersKeys extends ArrayList<String> {
-    ReportersKeys() {
-      super(ReportersAggregator.reporterMap().keySet());
+    ReportersKeys(ReportersAggregator aggregator) {
+      super(aggregator.reporterKeys());
     }
   }
 
@@ -131,15 +134,22 @@ public class AnalyzeCommand implements Callable<Integer> {
     paramLabel = "<keys>",
     completionCandidates = ReportersKeys.class,
     description = "Reporter key (${COMPLETION-CANDIDATES})")
-  private String[] reportersOptions;
+  private String[] reportersOptions = {};
 
   @Option(
     names = {"-q", "--silent"},
     description = "Silent mode")
   private boolean silentMode;
 
-  private DiagnosticProvider diagnosticProvider;
-  private ServerContext context;
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
+
+  private final ReportersAggregator aggregator;
+  private final LanguageServerConfiguration configuration;
+  private final ServerContext context;
 
   public Integer call() {
 
@@ -156,12 +166,10 @@ public class AnalyzeCommand implements Callable<Integer> {
     }
 
     File configurationFile = new File(configurationOption);
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
 
     Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context = new ServerContext(configurationPath);
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
+    context.setConfigurationRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
     
@@ -185,10 +193,12 @@ public class AnalyzeCommand implements Callable<Integer> {
 
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
     Path outputDir = Absolute.path(outputDirOption);
-    var reporters = Optional.ofNullable(reportersOptions).orElse(new String[0]);
-    ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
-    aggregator.report(analysisInfo);
+    aggregator.report(analysisInfo, outputDir);
     return 0;
+  }
+
+  public String[] getReportersOptions() {
+    return reportersOptions.clone();
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
@@ -202,14 +212,18 @@ public class AnalyzeCommand implements Callable<Integer> {
     DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
-    List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
+    String mdoRef = "";
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
+    }
 
-    FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics);
+    FileInfo fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearSecondaryData();
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;
   }

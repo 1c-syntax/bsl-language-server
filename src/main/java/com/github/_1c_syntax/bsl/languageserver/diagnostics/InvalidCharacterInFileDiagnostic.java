@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -37,6 +36,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -72,11 +72,11 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
   private static final Pattern ILLEGAL_SPACE_PATTERN = Pattern.compile(SPACE_REGEX,
     Pattern.UNICODE_CASE);
 
-  private final String diagnosticMessageDash;
-  private final String diagnosticMessageSpace;
+  private String diagnosticMessageDash;
+  private String diagnosticMessageSpace;
 
-  public InvalidCharacterInFileDiagnostic(DiagnosticInfo info) {
-    super(info);
+  @PostConstruct
+  public void init() {
     diagnosticMessageDash = info.getResourceString("diagnosticMessageDash");
     diagnosticMessageSpace = info.getResourceString("diagnosticMessageSpace");
   }

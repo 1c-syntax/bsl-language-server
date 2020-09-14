@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.codeactions.QuickFixSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -35,6 +35,8 @@ import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -44,6 +46,7 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -74,14 +77,19 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
-public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
+@Component
+@RequiredArgsConstructor
+public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware, ProtocolExtension {
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -89,22 +97,13 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final CodeActionProvider codeActionProvider;
   private final CodeLensProvider codeLensProvider;
   private final DocumentLinkProvider documentLinkProvider;
+  private final DocumentSymbolProvider documentSymbolProvider;
+  private final FoldingRangeProvider foldingRangeProvider;
+  private final FormatProvider formatProvider;
+  private final HoverProvider hoverProvider;
 
   @CheckForNull
   private LanguageClient client;
-
-  public BSLTextDocumentService(LanguageServerConfiguration configuration, ServerContext context) {
-    this.configuration = configuration;
-    this.context = context;
-
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    QuickFixSupplier quickFixSupplier = new QuickFixSupplier(diagnosticSupplier);
-
-    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
-    codeActionProvider = new CodeActionProvider(this.diagnosticProvider, quickFixSupplier);
-    codeLensProvider = new CodeLensProvider(this.configuration);
-    documentLinkProvider = new DocumentLinkProvider(this.configuration, this.diagnosticProvider);
-  }
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -124,7 +123,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = HoverProvider.getHover(params, documentContext);
+    Optional<Hover> hover = hoverProvider.getHover(params, documentContext);
     return CompletableFuture.completedFuture(hover.orElse(null));
   }
 
@@ -159,7 +158,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> DocumentSymbolProvider.getDocumentSymbols(documentContext));
+    return CompletableFuture.supplyAsync(() -> documentSymbolProvider.getDocumentSymbols(documentContext));
   }
 
   @Override
@@ -194,7 +193,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = FormatProvider.getFormatting(params, documentContext);
+    List<TextEdit> edits = formatProvider.getFormatting(params, documentContext);
     return CompletableFuture.completedFuture(edits);
   }
 
@@ -205,7 +204,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    List<TextEdit> edits = FormatProvider.getRangeFormatting(params, documentContext);
+    List<TextEdit> edits = formatProvider.getRangeFormatting(params, documentContext);
     return CompletableFuture.completedFuture(edits);
   }
 
@@ -221,7 +220,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return CompletableFuture.completedFuture(null);
     }
 
-    return CompletableFuture.supplyAsync(() -> FoldingRangeProvider.getFoldingRange(documentContext));
+    return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
 
   @Override
@@ -246,7 +245,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
     documentContext.rebuild(params.getContentChanges().get(0).getText());
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
@@ -262,7 +260,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     }
 
     documentContext.clearSecondaryData();
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     if (client != null) {
       diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
@@ -296,8 +293,27 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     return CompletableFuture.supplyAsync(() -> documentLinkProvider.getDocumentLinks(documentContext));
   }
 
+  @Override
+  public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> {
+      var diagnostics = documentContext.getDiagnostics();
+
+      var range = params.getRange();
+      if (range != null) {
+        diagnostics = diagnostics.stream()
+          .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
+          .collect(Collectors.toList());
+      }
+      return diagnostics;
+    });
+  }
+
   public void reset() {
-    diagnosticProvider.clearAllComputedDiagnostics();
     context.clear();
   }
 

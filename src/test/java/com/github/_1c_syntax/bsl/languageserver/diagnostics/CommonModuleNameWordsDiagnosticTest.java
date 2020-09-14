@@ -22,13 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -41,6 +42,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class CommonModuleNameWordsDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameWordsDiagnostic> {
 
   private CommonModule module;
@@ -86,7 +88,7 @@ class CommonModuleNameWordsDiagnosticTest extends AbstractDiagnosticTest<CommonM
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
     //then
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
   }
 
@@ -120,12 +122,12 @@ class CommonModuleNameWordsDiagnosticTest extends AbstractDiagnosticTest<CommonM
     Path path = Absolute.path(PATH_TO_METADATA);
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
-    ServerContext serverContext = new ServerContext(path);
-    var configuration = serverContext.getConfiguration();
-    documentContext = spy(new DocumentContext(
+    initServerContext(path);
+    var configuration = context.getConfiguration();
+    documentContext = spy(TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      serverContext
+      context
     ));
 
 

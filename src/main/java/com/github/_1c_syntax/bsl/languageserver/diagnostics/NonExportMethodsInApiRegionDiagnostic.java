@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -47,10 +46,6 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
   private static final Pattern REGION_NAME = CaseInsensitivePattern.compile(
     "^(?:ПрограммныйИнтерфейс|СлужебныйПрограммныйИнтерфейс|Public|Internal)$"
   );
-
-  public NonExportMethodsInApiRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {

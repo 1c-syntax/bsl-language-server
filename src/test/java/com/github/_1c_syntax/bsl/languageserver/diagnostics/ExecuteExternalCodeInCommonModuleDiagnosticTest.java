@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
@@ -118,13 +118,13 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
     var path = Absolute.path(PATH_TO_METADATA);
     var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
-    var serverContext = new ServerContext(path);
-    var configuration = spy(serverContext.getConfiguration());
+    initServerContext(path);
+    var configuration = spy(context.getConfiguration());
 
-    documentContext = spy(new DocumentContext(
+    documentContext = spy(TestUtils.getDocumentContext(
       testFile.toUri(),
       getText(),
-      serverContext
+      context
     ));
 
     module = spy((CommonModule) configuration.getModulesByObject().get(documentContext.getUri()));

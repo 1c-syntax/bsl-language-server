@@ -1,14 +1,14 @@
 # Limit number of optional parameters in method (NumberOfOptionalParams)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL`<br/>`OS` | `Minor` | `Yes` | `30` | `standard`<br/>`brainoverload` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `30` | `standard`<br>`brainoverload` 
 
 ## Parameters 
 
-| Name | Type | Description | Default value |
-| :-: | :-: | :-- | :-: |
-| `maxOptionalParamsCount` | `Integer` | ```Max number of optional parameters``` | ```3``` |
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `maxOptionalParamsCount` | `Integer` | ```Max number of optional parameters``` | ```3``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -27,8 +27,7 @@ Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
 EndProcedure
 ```
 
-Correct:
- Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
+Correct: Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
 ```bsl
 // Create an item in the catalog "Goods"
@@ -39,7 +38,7 @@ EndProcedure
 
 ## Sources
 
-- [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
+- [](https://its.1c.ru/db/v8std#content:640:hdoc)[Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
 
 ## Snippets
 

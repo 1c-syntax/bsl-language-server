@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -55,10 +54,6 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
   private static final Pattern patternTypePlatform = CaseInsensitivePattern.compile(
     "Linux_x86|Windows|MacOS"
   );
-
-  public UsingObjectNotAvailableUnixDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   /**
    * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся

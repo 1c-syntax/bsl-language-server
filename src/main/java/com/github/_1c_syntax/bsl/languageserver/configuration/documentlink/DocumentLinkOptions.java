@@ -23,10 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -37,11 +35,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DocumentLinkOptions {
-  @Getter(AccessLevel.NONE)
   private boolean useDevSite;
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
-
-  public boolean useDevSite() {
-    return useDevSite;
-  }
 }

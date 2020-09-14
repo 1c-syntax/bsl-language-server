@@ -19,4 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
+@ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
+
+import javax.annotation.ParametersAreNonnullByDefault;

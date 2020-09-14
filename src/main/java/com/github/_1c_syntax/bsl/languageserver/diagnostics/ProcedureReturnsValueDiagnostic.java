@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -41,10 +40,6 @@ import java.util.Collection;
   }
 )
 public class ProcedureReturnsValueDiagnostic extends AbstractVisitorDiagnostic {
-
-  public ProcedureReturnsValueDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -51,10 +50,6 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
   private final Pattern pattern = CaseInsensitivePattern.compile(
     "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)"
   );
-
-  public UsingFindElementByStringDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {

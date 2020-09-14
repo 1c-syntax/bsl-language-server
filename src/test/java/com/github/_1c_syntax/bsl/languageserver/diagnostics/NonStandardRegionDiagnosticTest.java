@@ -22,11 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +39,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
   private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();
@@ -53,7 +55,9 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     pathByModuleType.put(ModuleType.FormModule, "Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl");
     pathByModuleType.put(ModuleType.CommonModule, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
     pathByModuleType.put(ModuleType.RecordSetModule, "InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl");
+    pathByModuleType.put(ModuleType.HTTPServiceModule, "HTTPServices/HTTPСервис1/Ext/Module.bsl");
   }
+
 
   @Test
   void testUnknown() {
@@ -213,15 +217,28 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     ;
   }
 
+  @Test
+  void testHTTPServiceModule() throws IOException {
+
+    List<Diagnostic> diagnostics = getDiagnostics(getFixtureDocumentContextByModuleType(ModuleType.HTTPServiceModule));
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(0, 1, 29)
+      .hasRange(4, 1, 38)
+    ;
+  }
+
   private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
     Path tempFile = Paths.get(CONFIGURATION_PATH.toString(),
       pathByModuleType.getOrDefault(moduleType, "Module.bsl")
     );
 
-    return new DocumentContext(
+    initServerContext(CONFIGURATION_PATH.toRealPath());
+    return TestUtils.getDocumentContext(
       tempFile.toRealPath().toUri(),
       FileUtils.readFileToString(tempFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(CONFIGURATION_PATH.toRealPath())
+      context
     );
   }
 }

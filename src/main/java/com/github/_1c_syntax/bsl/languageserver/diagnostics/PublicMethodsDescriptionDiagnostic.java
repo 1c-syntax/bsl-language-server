@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -59,10 +58,6 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
     defaultValue = "" + DEFAULT_CHECK_ALL_REGION
   )
   private boolean checkAllRegion = DEFAULT_CHECK_ALL_REGION;
-
-  public PublicMethodsDescriptionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {

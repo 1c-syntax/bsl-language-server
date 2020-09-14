@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.cli;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +44,14 @@ import java.util.jar.Manifest;
   description = "Print version",
   usageHelpAutoWidth = true,
   footer = "@|green Copyright(c) 2018-2020|@")
+@Component
 public class VersionCommand implements Callable<Integer> {
+
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
 
   public Integer call() {
     final InputStream mfStream = Thread.currentThread()

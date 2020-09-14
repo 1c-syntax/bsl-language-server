@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -31,6 +31,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +43,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<TimeoutsInExternalResourcesDiagnostic> {
   private static final File CONFIGURATION_FILE_PATH = Paths.get("./src/test/resources/metadata/Configuration.xml").toFile();
   private Path tempDir;
@@ -92,10 +94,11 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
     // when
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic.bsl").toAbsolutePath();
-    DocumentContext newDocumentContext = new DocumentContext(
+    initServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath());
+    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath())
+      context
     );
 
     List<Diagnostic> diagnostics = getDiagnostics(newDocumentContext);
@@ -104,7 +107,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
     assertThat(newDocumentContext.getServerContext().getConfiguration().getCompatibilityMode()).isNotNull();
     assertThat(CompatibilityMode.compareTo(
       newDocumentContext.getServerContext().getConfiguration().getCompatibilityMode(),
-      DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_10.getCompatibilityMode())).isEqualTo(0);
+      DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_10.getCompatibilityMode())).isZero();
 
     assertThat(diagnostics).hasSize(9);
 
@@ -135,10 +138,11 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
       StandardCharsets.UTF_8);
 
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic836.bsl").toAbsolutePath();
-    DocumentContext newDocumentContext = new DocumentContext(
+    initServerContext(tempDir.toAbsolutePath());
+    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(tempDir.toAbsolutePath())
+      context
     );
 
     List<Diagnostic> diagnostics = getDiagnostics(newDocumentContext);
@@ -147,7 +151,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
     assertThat(newDocumentContext.getServerContext().getConfiguration().getCompatibilityMode()).isNotNull();
     assertThat(CompatibilityMode.compareTo(
       newDocumentContext.getServerContext().getConfiguration().getCompatibilityMode(),
-      DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6.getCompatibilityMode())).isEqualTo(0);
+      DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_6.getCompatibilityMode())).isZero();
 
     assertThat(diagnostics).hasSize(9);
 
@@ -178,10 +182,11 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
       StandardCharsets.UTF_8);
 
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic837.bsl").toAbsolutePath();
-    DocumentContext newDocumentContext = new DocumentContext(
+    initServerContext(tempDir.toAbsolutePath());
+    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
-      new ServerContext(tempDir.toAbsolutePath())
+      context
     );
 
     List<Diagnostic> diagnostics = getDiagnostics(newDocumentContext);
@@ -190,7 +195,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
     assertThat(newDocumentContext.getServerContext().getConfiguration().getCompatibilityMode()).isNotNull();
     assertThat(CompatibilityMode.compareTo(
       newDocumentContext.getServerContext().getConfiguration().getCompatibilityMode(),
-      DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_7.getCompatibilityMode())).isEqualTo(0);
+      DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_7.getCompatibilityMode())).isZero();
 
     assertThat(diagnostics).hasSize(9);
 

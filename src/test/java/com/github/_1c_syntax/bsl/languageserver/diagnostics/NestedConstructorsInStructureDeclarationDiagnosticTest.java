@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,12 @@ class NestedConstructorsInStructureDeclarationDiagnosticTest
     super(NestedConstructorsInStructureDeclarationDiagnostic.class);
   }
 
-  private final String relatedMessage = diagnosticInstance.getInfo().getResourceString("nestedConstructorRelatedMessage");
+  private String relatedMessage;
+
+  @PostConstruct
+  void before() {
+    relatedMessage = diagnosticInstance.getInfo().getResourceString("nestedConstructorRelatedMessage");
+  }
 
   @Test
   void test() {

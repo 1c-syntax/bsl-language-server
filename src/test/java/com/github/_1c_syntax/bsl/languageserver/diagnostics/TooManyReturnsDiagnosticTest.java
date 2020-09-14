@@ -54,7 +54,7 @@ class TooManyReturnsDiagnosticTest extends AbstractDiagnosticTest<TooManyReturns
     diagnosticInstance.configure(configuration);
 
     List<Diagnostic> diagnostics = getDiagnostics();
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
 
     configuration.put("maxReturnsCount", 2);
     diagnosticInstance.configure(configuration);

@@ -190,7 +190,7 @@ public class DiagnosticStorage {
   public void addDiagnostic(
     Range range,
     String diagnosticMessage,
-    List<DiagnosticRelatedInformation> relatedInformation
+    @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
     diagnosticList.add(createDiagnostic(
       diagnostic,
@@ -204,8 +204,7 @@ public class DiagnosticStorage {
     BSLDiagnostic bslDiagnostic,
     Range range,
     String diagnosticMessage,
-    @Nullable
-      List<DiagnosticRelatedInformation> relatedInformation
+    @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
     Diagnostic diagnostic = new Diagnostic(
       range,

@@ -41,4 +41,8 @@ public enum DiagnosticTag {
   DiagnosticTag(String descriptionRu) {
     this.description = descriptionRu;
   }
+
+  public String getDescription() {
+    return description;
+  }
 }

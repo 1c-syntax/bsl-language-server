@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.Absolute;
@@ -50,8 +50,8 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
     var documentContext = getDocumentContextWithUseFlag(UseMode.DONT_USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(28);
     assertThat(diagnostics)
+      .hasSize(28)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(2, 12, 3, 57))
         && diagnostic.getMessage().matches(".*(синхронного|synchronous).*Вопрос.*ПоказатьВопрос.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 4, 21, 84))
@@ -115,23 +115,23 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
 
     DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    assertThat(diagnostics).hasSize(0);
+    assertThat(diagnostics).isEmpty();
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
     var path = Absolute.path(PATH_TO_METADATA);
     var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
 
-    var serverContext = spy(new ServerContext(path));
+    initServerContext(path);
+    var serverContext = spy(context);
     var configuration = spy(serverContext.getConfiguration());
     when(configuration.getSynchronousExtensionAndAddInCallUseMode()).thenReturn(useMode);
     when(serverContext.getConfiguration()).thenReturn(configuration);
 
-    return new DocumentContext(
-      testFile.toUri(),
-      getText(),
-      serverContext
-    );
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+
+    return documentContext;
   }
 
 }

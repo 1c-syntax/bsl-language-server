@@ -4,7 +4,7 @@ import re
 import ntpath
 import json
 
-pattern = r"bsl.+\.jar"
+pattern = r"bsl.+\-exec.jar"
 thisPath = os.getcwd()
 dirName = thisPath + "/build/libs"  
 
@@ -29,7 +29,7 @@ def get_bslls_jar(dir):
     names = os.listdir(dir)
     for name in names:
         fullname = os.path.join(dir, name)
-        if os.path.isfile(fullname) and re.search(pattern, fullname) and fullname.find('sources.jar') == -1 and fullname.find('javadoc.jar') == -1:
+        if os.path.isfile(fullname) and re.search(pattern, fullname):
             return ntpath.basename(fullname)
     return None
 

@@ -21,14 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
-import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<DeprecatedMethodCallDiagnostic> {
   DeprecatedMethodCallDiagnosticTest() {
     super(DeprecatedMethodCallDiagnostic.class);
@@ -38,7 +40,7 @@ class DeprecatedMethodCallDiagnosticTest extends AbstractDiagnosticTest<Deprecat
   void test() {
 
     // given
-    initServerContext(PATH_TO_METADATA);
+    initServerContext(TestUtils.PATH_TO_METADATA);
 
     // when
     List<Diagnostic> diagnostics = getDiagnostics();

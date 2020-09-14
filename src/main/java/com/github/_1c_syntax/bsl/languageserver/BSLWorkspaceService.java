@@ -22,28 +22,30 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@Component
+@RequiredArgsConstructor
 public class BSLWorkspaceService implements WorkspaceService {
 
   private final LanguageServerConfiguration configuration;
-
-  public BSLWorkspaceService(LanguageServerConfiguration configuration) {
-    this.configuration = configuration;
-  }
+  private final SymbolProvider symbolProvider;
 
   @Override
   public CompletableFuture<List<? extends SymbolInformation>> symbol(WorkspaceSymbolParams params) {
-    return null;
+    return CompletableFuture.supplyAsync(() -> symbolProvider.getSymbols(params));
   }
 
   @Override

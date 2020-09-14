@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -52,10 +51,6 @@ import java.util.stream.IntStream;
 public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
 
   public static final int EOF = -1;
-
-  public ParseErrorDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public void visitErrorNode(ErrorNode node) {

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
@@ -35,27 +36,46 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+@SpringBootTest
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
-  protected final T diagnosticInstance;
-  @Nullable
+  @Autowired
+  private DiagnosticConfiguration diagnosticConfiguration;
+  @Autowired
   protected ServerContext context;
+  @Autowired
+  protected LanguageServerConfiguration configuration;
 
-  @SuppressWarnings("unchecked")
+  private final Class<T> diagnosticClass;
+  protected T diagnosticInstance;
+
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    diagnosticInstance = (T) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
+    this.diagnosticClass = diagnosticClass;
+  }
+
+  @PostConstruct
+  public void init() {
+    diagnosticInstance = diagnosticConfiguration.diagnostic(diagnosticClass);
+    context.clear();
+    configuration.reset();
   }
 
   protected void initServerContext(String path) {
     var configurationRoot = Absolute.path(path);
-    context = new ServerContext(configurationRoot);
+    initServerContext(configurationRoot);
+  }
+
+  protected void initServerContext(Path configurationRoot) {
+    context.setConfigurationRoot(configurationRoot);
     context.populateContext();
   }
 

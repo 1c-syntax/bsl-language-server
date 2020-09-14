@@ -22,7 +22,6 @@
 
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -50,10 +49,6 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY
   )
   private int maxIfConditionComplexity = MAX_IF_CONDITION_COMPLEXITY;
-
-  public IfConditionComplexityDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {

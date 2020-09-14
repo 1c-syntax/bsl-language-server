@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -33,8 +32,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   protected Pattern pattern;
 
-  public AbstractCommonModuleNameDiagnostic(DiagnosticInfo info, String regexp) {
-    super(info);
+  public AbstractCommonModuleNameDiagnostic(String regexp) {
     pattern = CaseInsensitivePattern.compile(regexp);
   }
 
@@ -78,20 +76,21 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return commonModule.isServerCall()
       && commonModule.isServer()
       && !commonModule.isExternalConnection()
-      && !isClientApplication(commonModule);
+      && !commonModule.isClientOrdinaryApplication()
+      && !commonModule.isClientManagedApplication();
   }
 
   protected static boolean isServer(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
-//      && commonModule.isClientOrdinaryApplication()
+      && commonModule.isClientOrdinaryApplication()
       && !commonModule.isClientManagedApplication();
   }
 
   private static boolean isClientApplication(CommonModule commonModule) {
     return commonModule.isClientOrdinaryApplication()
-      || commonModule.isClientManagedApplication();
+      && commonModule.isClientManagedApplication();
   }
 
 }

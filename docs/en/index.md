@@ -40,18 +40,7 @@ Perfomance measurement - [SSL 3.1](bench/index.html)
 jar-files run through `java -jar path/to/file.jar`.
 
 ```sh
-java -jar bsl-language-server.jar --help
-
-BSL language server
-Usage: bsl-language-server [-h] [-c=<path>] [COMMAND [ARGS]]
-  -c, --configuration=<path>
-               Path to language server configuration file
-  -h, --help   Show this help message and exit
-Commands:
-  analyze, -a, --analyze  Run analysis and get diagnostic info
-  format, -f, --format    Format files in source directory
-  version, -v, --version  Print version
-  lsp, --lsp              LSP server mode (default)
+java -jar bsl-language-server.jar --help  BSL language server Usage: bsl-language-server [-h] [-c=<path>] [COMMAND [ARGS]]   -c, --configuration=<path>                Path to language server configuration file   -h, --help   Show this help message and exit Commands:   analyze, -a, --analyze  Run analysis and get diagnostic info   format, -f, --format    Format files in source directory   version, -v, --version  Print version   lsp, --lsp              LSP server mode (default)
 ```
 
 Starting BSL Language Server in standard mode will run the Language Server communicating via [LSP]([language server protocol](https://microsoft.github.io/language-server-protocol/)). stdin and stdout are used for communication.
@@ -89,11 +78,7 @@ java -Xmx4g -jar bsl-language-server.jar ... other parameters
 To run in formatter mode use parameter `--format` (short `-f`).
 
 ```sh
-Usage: bsl-language-server format [-hq] [-s=<path>]
-Format files in source directory
-  -h, --help            Show this help message and exit
-  -q, --silent          Silent mode
-  -s, --srcDir=<path>   Source directory
+Usage: bsl-language-server format [-hq] [-s=<path>] Format files in source directory   -h, --help            Show this help message and exit   -q, --silent          Silent mode   -s, --srcDir=<path>   Source directory
 ```
 
 To set source code folder for formatting use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.

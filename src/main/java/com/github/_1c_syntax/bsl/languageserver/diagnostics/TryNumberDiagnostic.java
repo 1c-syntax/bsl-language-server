@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -50,10 +49,6 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
   );
   private static final Predicate<GlobalMethodCallContext> MATCH_METHOD_CALL_CAST_TO_NUMBER
     = e -> NUMBER_PATTERN.matcher(e.methodName().getText()).matches();
-
-  public TryNumberDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitTryCodeBlock(BSLParser.TryCodeBlockContext ctx) {

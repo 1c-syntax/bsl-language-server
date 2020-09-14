@@ -24,9 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
 import com.github._1c_syntax.mdclasses.metadata.additional.MDOType;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.mdclasses.utils.Common;
+import com.github._1c_syntax.mdclasses.utils.MDOUtils;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -51,7 +52,7 @@ public class MdoRefBuilder {
   public String getMdoRef(
     DocumentContext documentContext,
     @Nullable
-    TerminalNode identifier,
+      TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
   ) {
 
@@ -64,7 +65,7 @@ public class MdoRefBuilder {
         Optional.ofNullable(identifier)
           .map(ParseTree::getText)
           .flatMap(MDOType::fromValue)
-          .filter(mdoType -> Common.getModuleTypesForMdoTypes()
+          .filter(mdoType -> MDOUtils.getModuleTypesForMdoTypes()
             .getOrDefault(mdoType, Collections.emptySet())
             .contains(ModuleType.ManagerModule))
           .map(mdoType -> getMdoRef(mdoType, getMdoName(modifiers)))
@@ -78,7 +79,8 @@ public class MdoRefBuilder {
     return documentContext.getServerContext()
       .getConfiguration()
       .getCommonModule(commonModuleName)
-      .map(CommonModule::getMdoRef);
+      .map(CommonModule::getMdoReference)
+      .map(MDOReference::getMdoRef);
   }
 
   private String getMdoRef(MDOType mdoType, String identifier) {

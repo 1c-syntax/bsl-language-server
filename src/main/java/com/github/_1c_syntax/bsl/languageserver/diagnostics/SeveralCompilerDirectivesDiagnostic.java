@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -30,8 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
-
-import java.util.Optional;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -44,10 +41,6 @@ import java.util.Optional;
 )
 public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnostic {
 
-  public SeveralCompilerDirectivesDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {
     if (Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
@@ -58,11 +51,12 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
-    if (methodSymbol.isPresent()
-      && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
-      diagnosticStorage.addDiagnostic(methodSymbol.get().getSubNameRange());
-    }
+    documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
+      if (methodSymbol.getCompilerDirectiveKind().isPresent()
+        && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+        diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
+      }
+    });
 
     return ctx;
   }

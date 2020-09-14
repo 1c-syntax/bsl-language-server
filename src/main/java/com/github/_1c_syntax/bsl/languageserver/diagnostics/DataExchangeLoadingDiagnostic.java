@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -72,10 +71,6 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + FIND_FIRST
   )
   private boolean findFirst = FIND_FIRST;
-
-  public DataExchangeLoadingDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {

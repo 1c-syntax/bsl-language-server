@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -41,11 +40,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 )
 public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
-
-  public CommonModuleAssignDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
 
@@ -63,5 +57,4 @@ public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
 
     return ctx;
   }
-
 }

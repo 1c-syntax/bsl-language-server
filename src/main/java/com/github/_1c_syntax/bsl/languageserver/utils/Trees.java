@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @UtilityClass
 public final class Trees {
@@ -54,7 +55,7 @@ public final class Trees {
     BSLParser.ANNOTATION_UKNOWN,
     BSLParser.LINE_COMMENT,
     BSLParser.WHITE_SPACE,
-    BSLParser.RULE_annotationParams
+    BSLParser.AMPERSAND
   );
 
   /**
@@ -173,6 +174,28 @@ public final class Trees {
   /**
    * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
    * @param tokenIndex - индекс текущего токена в переданном списке токенов
+   * @param tokenType  - тип искомого токена (см. {@link com.github._1c_syntax.bsl.parser.BSLParser}
+   * @return предыдущий токен, если он был найден
+   */
+  public Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex, int tokenType) {
+    while (true) {
+      if (tokenIndex == 0) {
+        return Optional.empty();
+      }
+      Token token = tokens.get(tokenIndex);
+      if (token.getChannel() != Token.DEFAULT_CHANNEL
+        || token.getType() != tokenType) {
+        tokenIndex = tokenIndex - 1;
+        continue;
+      }
+
+      return Optional.of(token);
+    }
+  }
+
+  /**
+   * @param tokens     - полный список токенов (см. {@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getTokens()}
+   * @param tokenIndex - индекс текущего токена в переданном списке токенов
    * @return предыдущий токен, если он был найден
    */
   public static Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex) {
@@ -244,7 +267,7 @@ public final class Trees {
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
    *
-   * @param tnc       - нода, для которой ищем родителя
+   * @param tnc     - нода, для которой ищем родителя
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
@@ -265,14 +288,30 @@ public final class Trees {
    * Получает детей с нужными типами
    */
   public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
+    return getChildrenStream(t, ruleIndex)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * Получает первого ребенка с одним из нужных типов
+   *
+   * @param t         - нода, для которой ищем ребенка
+   * @param ruleIndex - arrays of BSLParser.RULE_*
+   * @return child - если первый ребенок не найден, вернет Optional
+   */
+  public static Optional<BSLParserRuleContext> getFirstChild(Tree t, Integer... ruleIndex) {
+    return getChildrenStream(t, ruleIndex)
+      .findFirst();
+  }
+
+  private static Stream<BSLParserRuleContext> getChildrenStream(Tree t, Integer[] ruleIndex) {
     List<Integer> indexes = Arrays.asList(ruleIndex);
     return IntStream.range(0, t.getChildCount())
       .mapToObj(t::getChild)
       .filter((Tree child) ->
         child instanceof BSLParserRuleContext
           && indexes.contains(((BSLParserRuleContext) child).getRuleIndex()))
-      .map(child -> (BSLParserRuleContext) child)
-      .collect(Collectors.toList());
+      .map(child -> (BSLParserRuleContext) child);
   }
 
   /**
@@ -395,7 +434,6 @@ public final class Trees {
       && (previousToken.getTokenIndex() == 0
       || (previousToken.getLine() + 1) != currentToken.getLine());
   }
-
 
   private static boolean treeContainsErrors(ParseTree tnc, boolean recursive) {
     if (!(tnc instanceof BSLParserRuleContext)) {

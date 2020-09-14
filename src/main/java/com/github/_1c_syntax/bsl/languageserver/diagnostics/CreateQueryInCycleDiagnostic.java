@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -74,10 +73,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
   private VariableScope currentScope;
-
-  public CreateQueryInCycleDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
     String result;
@@ -227,12 +222,12 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx){
+  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
       .map(e -> e.children)
       .stream()
       .flatMap(Collection::stream)
-      .forEach( t -> t.accept(this));
+      .forEach(t -> t.accept(this));
   }
 
   @Override
@@ -276,9 +271,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       Optional.ofNullable(ctx.expression())
-        .ifPresent( e -> e.accept(this));
+        .ifPresent(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
@@ -297,9 +292,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    if(alreadyInCycle) {
+    if (alreadyInCycle) {
       ctx.expression()
-        .forEach( e-> e.accept(this));
+        .forEach(e -> e.accept(this));
     }
     visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -58,10 +57,6 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = "" + DEFAULT_COMMENT_AS_CODE
   )
   private boolean commentAsCode = DEFAULT_COMMENT_AS_CODE;
-
-  public EmptyCodeBlockDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {

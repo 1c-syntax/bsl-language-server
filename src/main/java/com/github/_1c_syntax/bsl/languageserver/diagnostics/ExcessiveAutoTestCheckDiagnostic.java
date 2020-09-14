@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -55,10 +54,6 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
     "(\\.Свойство\\(\"АвтоТест\"\\)|=\"АвтоТест\"|\\.Property\\(\"AutoTest\"\\)|=\"AutoTest\")$"
   );
 
-  public ExcessiveAutoTestCheckDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
 
@@ -70,11 +65,11 @@ public class ExcessiveAutoTestCheckDiagnostic extends AbstractVisitorDiagnostic 
     return super.visitIfBranch(ctx);
   }
 
-  private boolean expressionMatchesPattern(BSLParser.ExpressionContext expression) {
+  private static boolean expressionMatchesPattern(BSLParser.ExpressionContext expression) {
     return ERROR_EXPRESSION.matcher(expression.getText()).find();
   }
 
-  private boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
+  private static boolean codeBlockWithOnlyReturn(BSLParser.CodeBlockContext codeBlock) {
     List<? extends BSLParser.StatementContext> statements = codeBlock.statement();
 
     if (statements.size() == 1) {

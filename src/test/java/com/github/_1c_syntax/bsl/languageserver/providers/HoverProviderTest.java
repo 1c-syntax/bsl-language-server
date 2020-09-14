@@ -27,12 +27,18 @@ import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class HoverProviderTest {
+
+  @Autowired
+  private HoverProvider hoverProvider;
 
   @Test
   void getEmptyHover() {
@@ -40,9 +46,9 @@ class HoverProviderTest {
     params.setPosition(new Position(0, 0));
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
-    Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
+    Optional<Hover> optionalHover = hoverProvider.getHover(params, documentContext);
 
-    assertThat(optionalHover.isPresent()).isFalse();
+    assertThat(optionalHover).isNotPresent();
   }
 
   @Test
@@ -52,9 +58,9 @@ class HoverProviderTest {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
 
-    Optional<Hover> optionalHover = HoverProvider.getHover(params, documentContext);
+    Optional<Hover> optionalHover = hoverProvider.getHover(params, documentContext);
 
-    assertThat(optionalHover.isPresent()).isTrue();
+    assertThat(optionalHover).isPresent();
 
     Hover hover = optionalHover.get();
 

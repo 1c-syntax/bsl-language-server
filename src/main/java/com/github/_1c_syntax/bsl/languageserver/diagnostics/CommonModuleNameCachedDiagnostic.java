@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -47,10 +46,10 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ReturnValueReuse;
 )
 public class CommonModuleNameCachedDiagnostic extends AbstractCommonModuleNameDiagnostic {
 
-  private static final String REGEXP = "повнорноеиспользование|повтисп|сached";
+  private static final String REGEXP = "повторноеиспользование|повтисп|cached";
 
-  public CommonModuleNameCachedDiagnostic(DiagnosticInfo info) {
-    super(info, REGEXP);
+  public CommonModuleNameCachedDiagnostic() {
+    super(REGEXP);
   }
 
   @Override

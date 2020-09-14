@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -62,8 +61,8 @@ public class CommonModuleNameWordsDiagnostic extends AbstractCommonModuleNameDia
   )
   private String words = DEFAULT_WORDS;
 
-  public CommonModuleNameWordsDiagnostic(DiagnosticInfo info) {
-    super(info, DEFAULT_WORDS);
+  public CommonModuleNameWordsDiagnostic() {
+    super(DEFAULT_WORDS);
   }
 
   @Override

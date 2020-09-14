@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -74,15 +73,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   )
   private Pattern searchWords = getPatternSearch(FIND_WORD_DEFAULT);
 
-  public UsingHardcodeSecretInformationDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     String searchWordsProperty = (String) configuration.getOrDefault("searchWords", FIND_WORD_DEFAULT);
     searchWords = getPatternSearch(searchWordsProperty);
   }
