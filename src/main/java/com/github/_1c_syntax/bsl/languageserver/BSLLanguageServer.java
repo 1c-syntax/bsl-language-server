@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
@@ -33,7 +34,6 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
-import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -50,7 +50,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BSLLanguageServer implements LanguageServer {
+public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
@@ -114,14 +114,15 @@ public class BSLLanguageServer implements LanguageServer {
   }
 
   /**
+   * {@inheritDoc}
+   * <p>
    * См. {@link BSLTextDocumentService#diagnostics(DiagnosticParams)}
-   * @param params Параметры запроса.
-   * @return Список диагностик.
    */
-  @JsonRequest(
-    value = "textDocument/x-diagnostics",
-    useSegment = false
-  )
+//  @JsonRequest(
+//    value = "textDocument/x-diagnostics",
+//    useSegment = false
+//  )
+  @Override
   public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
     return textDocumentService.diagnostics(params);
   }
