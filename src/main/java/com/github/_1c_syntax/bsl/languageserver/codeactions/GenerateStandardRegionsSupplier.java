@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -37,6 +38,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -117,9 +119,20 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     ScriptVariant regionsLanguage;
     Configuration configuration = documentContext.getServerContext().getConfiguration();
     if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      regionsLanguage = ScriptVariant.RUSSIAN;
+      regionsLanguage = getScriptVariantFromConfigLanguage();
     } else {
       regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
+    }
+    return regionsLanguage;
+  }
+
+  @NotNull
+  private ScriptVariant getScriptVariantFromConfigLanguage() {
+    ScriptVariant regionsLanguage;
+    if (languageServerConfiguration.getLanguage() == Language.EN) {
+      regionsLanguage = ScriptVariant.ENGLISH;
+    } else {
+      regionsLanguage = ScriptVariant.RUSSIAN;
     }
     return regionsLanguage;
   }
