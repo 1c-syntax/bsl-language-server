@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1600087399325,
+  "lastUpdate": 1600097271682,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5270,6 +5270,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.1571449673969503",
             "extra": "mean: 76.86172978083293 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "e86c0ecd02275c49d494cfd84b57c2ad56c3751d",
+          "message": "Вынос описания расширений протокола в отдельный интерфейс",
+          "timestamp": "2020-09-14T18:19:54+03:00",
+          "tree_id": "f28fe8d60e0a1d3e30a52792f41d442cdfd13493",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e86c0ecd02275c49d494cfd84b57c2ad56c3751d"
+        },
+        "date": 1600097267226,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.14434631665547,
+            "unit": "sec",
+            "range": "stddev: 1.6398475953347071",
+            "extra": "mean: 75.14434631665547 sec\nrounds: 3"
           }
         ]
       }
