@@ -38,9 +38,10 @@ class UnionAllDiagnosticTest extends AbstractDiagnosticTest<UnionAllDiagnostic> 
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .hasRange(21, 5, 21, 15);
+      .hasRange(21, 5, 21, 15)
+      .hasRange(56, 5, 56, 15);
 
   }
 }

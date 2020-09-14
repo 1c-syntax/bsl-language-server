@@ -42,6 +42,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
+  private static final Pattern QUERIES_STARTING_QUOTE = CaseInsensitivePattern.compile("^\\s*\"");
 
   private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
 
@@ -65,11 +66,10 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     }
 
     int startLine = 0;
-    var text = "";
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
       startLine = ctx.getTokens().get(0).getLine();
-      startEmptyLines = "\n".repeat(startLine);
+      startEmptyLines = "\n".repeat(startLine - 1);
     }
 
     boolean isQuery = false;
@@ -85,9 +85,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     }
 
     if (isQuery) {
-      text = startEmptyLines + strings.toString();
-      // в токенайзер передадим строку без кавычек
-      queries.add(new SDBLTokenizer(text.substring(1, text.length() - 1)));
+      queries.add(new SDBLTokenizer(startEmptyLines + removeExtremeQuotes(strings.toString())));
     }
 
     return ctx;
@@ -109,5 +107,15 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       return "\n".repeat(token.getLine() - startLine - 1);
     }
     return "";
+  }
+
+  private static String removeExtremeQuotes(String text) {
+    if (QUERIES_STARTING_QUOTE.matcher(text).find()) {
+      // Кавычка может быть не первым символом строки
+      var quoteIndex = text.indexOf("\"");
+      return text.substring(0, quoteIndex) + " " + text.substring(quoteIndex + 1, text.length() - 1);
+    }
+
+    return text;
   }
 }
