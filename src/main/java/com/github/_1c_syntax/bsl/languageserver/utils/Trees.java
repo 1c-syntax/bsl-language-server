@@ -55,7 +55,7 @@ public final class Trees {
     BSLParser.ANNOTATION_UKNOWN,
     BSLParser.LINE_COMMENT,
     BSLParser.WHITE_SPACE,
-    BSLParser.RULE_annotationParams
+    BSLParser.AMPERSAND
   );
 
   /**
