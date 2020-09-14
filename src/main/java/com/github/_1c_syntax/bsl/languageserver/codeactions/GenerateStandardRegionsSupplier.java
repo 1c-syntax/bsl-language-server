@@ -21,17 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
+import com.github._1c_syntax.mdclasses.metadata.Configuration;
+import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -48,6 +55,12 @@ import java.util.stream.Collectors;
 @Component
 public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
 
+  private final LanguageServerConfiguration languageServerConfiguration;
+
+  public GenerateStandardRegionsSupplier(LanguageServerConfiguration languageServerConfiguration) {
+    this.languageServerConfiguration = languageServerConfiguration;
+  }
+
   /**
    * При необходимости создает {@code CodeAction} для генерации отсутствующих
    * стандартных областей 1С
@@ -62,13 +75,14 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
 
     ModuleType moduleType = documentContext.getModuleType();
     FileType fileType = documentContext.getFileType();
-    ScriptVariant configurationLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
+
+    ScriptVariant regionsLanguage = getRegionsLanguage(documentContext, fileType);
     Set<String> neededStandardRegions;
 
     if (fileType == FileType.BSL) {
-      neededStandardRegions = Regions.getStandardRegionsNamesByModuleType(moduleType, configurationLanguage);
+      neededStandardRegions = Regions.getStandardRegionsNamesByModuleType(moduleType, regionsLanguage);
     } else {
-      neededStandardRegions = Regions.getOneScriptStandardRegions(configurationLanguage);
+      neededStandardRegions = Regions.getOneScriptStandardRegions(regionsLanguage);
     }
 
     Set<String> documentRegionsNames = documentContext.getSymbolTree().getModuleLevelRegions().stream()
@@ -81,12 +95,12 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     }
 
     String regionFormat =
-      configurationLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
+      regionsLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
 
     String result = neededStandardRegions.stream()
       .map(s -> String.format(regionFormat, s))
       .collect(Collectors.joining("\n"));
-    TextEdit textEdit = new TextEdit(params.getRange(), result);
+    TextEdit textEdit = new TextEdit(calculateFixRange(params.getRange()), result);
 
     WorkspaceEdit edit = new WorkspaceEdit();
     Map<String, List<TextEdit>> changes = Map.of(documentContext.getUri().toString(),
@@ -98,5 +112,49 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
     return List.of(codeAction);
+  }
+
+  private ScriptVariant getRegionsLanguage(DocumentContext documentContext, FileType fileType) {
+
+    ScriptVariant regionsLanguage;
+    Configuration configuration = documentContext.getServerContext().getConfiguration();
+    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
+      regionsLanguage = getScriptVariantFromConfigLanguage();
+    } else {
+      regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
+    }
+    return regionsLanguage;
+  }
+
+  @NotNull
+  private ScriptVariant getScriptVariantFromConfigLanguage() {
+    ScriptVariant regionsLanguage;
+    if (languageServerConfiguration.getLanguage() == Language.EN) {
+      regionsLanguage = ScriptVariant.ENGLISH;
+    } else {
+      regionsLanguage = ScriptVariant.RUSSIAN;
+    }
+    return regionsLanguage;
+  }
+
+  private Range calculateFixRange(Range range) {
+
+    Position start = range.getStart();
+    if (start == null) {
+      start = new Position(0, 0);
+    } else {
+      start.setCharacter(0);
+    }
+
+    Position end = range.getEnd();
+    if (end == null) {
+      end = new Position(0, 0);
+    } else {
+      end.setCharacter(0);
+    }
+
+    range.setStart(start);
+    range.setEnd(end);
+    return range;
   }
 }

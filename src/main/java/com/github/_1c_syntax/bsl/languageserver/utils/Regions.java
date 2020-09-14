@@ -28,6 +28,7 @@ import lombok.experimental.UtilityClass;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -142,15 +143,17 @@ public class Regions {
    */
   public static Set<String> getOneScriptStandardRegions(ScriptVariant configurationLanguage) {
 
-    Set<String> regionsName = new HashSet<>();
+    Set<String> regionsName = new LinkedHashSet<>();
 
     if (configurationLanguage == ScriptVariant.ENGLISH) {
+      regionsName.add(Keywords.VARIABLES_REGION_EN);
       regionsName.add(Keywords.PUBLIC_REGION_EN);
       regionsName.add(Keywords.INTERNAL_REGION_EN);
       regionsName.add(Keywords.PRIVATE_REGION_EN);
       return regionsName;
     }
 
+    regionsName.add(Keywords.VARIABLES_REGION_RU);
     regionsName.add(Keywords.PUBLIC_REGION_RU);
     regionsName.add(Keywords.INTERNAL_REGION_RU);
     regionsName.add(Keywords.PRIVATE_REGION_RU);
@@ -170,7 +173,7 @@ public class Regions {
   }
 
   private static Set<String> getStandardRegionNames(ModuleType moduleType, ScriptVariant language) {
-    Set<String> regionsName = new HashSet<>();
+    Set<String> regionsName = new LinkedHashSet<>();
     switch (moduleType) {
       case FormModule:
         addFormModuleRegionsNames(regionsName, language);
