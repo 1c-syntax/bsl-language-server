@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Comput
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
@@ -88,7 +89,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware {
+public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware, ProtocolExtension {
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -292,15 +293,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     return CompletableFuture.supplyAsync(() -> documentLinkProvider.getDocumentLinks(documentContext));
   }
 
-  /**
-   * Обработка нестандартного запроса <code>textDocument/x-diagnostics</code>.
-   * Позволяет получить список диагностик документа.
-   * <br>
-   * См. {@link BSLLanguageServer#diagnostics(DiagnosticParams)}
-   *
-   * @param params Параметры запроса.
-   * @return Список диагностик.
-   */
+  @Override
   public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
