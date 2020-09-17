@@ -24,12 +24,14 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.boot.Banner;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.DefaultResourceLoader;
 
@@ -40,16 +42,27 @@ import java.util.Map;
 @ComponentScan("com.github._1c_syntax.bsl.languageserver")
 public class BSLLSBinding {
 
-  @Getter(lazy = true)
-  private static final ApplicationContext applicationContext = createContext();
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  private static final SpringApplication application = createApplication();
+  @Getter(lazy = true, value = AccessLevel.PRIVATE)
+  private static final ConfigurableApplicationContext context = createContext();
 
   public BSLLSBinding() {
     // public constructor is needed for spring initialization
   }
 
+  public static ConfigurableApplicationContext getApplicationContext() {
+    var context = getContext();
+    if (!context.isActive()) {
+      context = createContext();
+    }
+
+    return context;
+  }
+
   @SuppressWarnings("unchecked")
   public static Collection<DiagnosticInfo> getDiagnosticInfos() {
-    return (Collection<DiagnosticInfo>) getApplicationContext().getBean("diagnosticInfos", Collection.class);
+    return getApplicationContext().getBean("diagnosticInfos", Collection.class);
   }
 
   public static LanguageServerConfiguration getLanguageServerConfiguration() {
@@ -60,7 +73,7 @@ public class BSLLSBinding {
     return getApplicationContext().getBean(ServerContext.class);
   }
 
-  private static ApplicationContext createContext() {
+  private static SpringApplication createApplication() {
     return new SpringApplicationBuilder(BSLLSBinding.class)
       .bannerMode(Banner.Mode.OFF)
       .web(WebApplicationType.NONE)
@@ -71,7 +84,10 @@ public class BSLLSBinding {
         "app.command.line.runner.enabled", "false",
         "app.scheduling.enabled", "false"
       ))
-      .build()
-      .run();
+      .build();
+  }
+
+  private static ConfigurableApplicationContext createContext() {
+    return getApplication().run();
   }
 }
