@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1600247411766,
+  "lastUpdate": 1600338800788,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5456,6 +5456,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.555405008166865",
             "extra": "mean: 76.04997444152832 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9e8896550930dd703a6ad587cfe90a20e00105ae",
+          "message": "Merge pull request #1362 from 1c-syntax/fix/generic-reporter\n\nFix #1361 Вернул расчет type на основании мапы",
+          "timestamp": "2020-09-17T13:25:08+03:00",
+          "tree_id": "2c31354e998cb032fc7ab0c7a9b1fde2794a7532",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9e8896550930dd703a6ad587cfe90a20e00105ae"
+        },
+        "date": 1600338797595,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.74171177546184,
+            "unit": "sec",
+            "range": "stddev: 0.25373047260647985",
+            "extra": "mean: 74.74171177546184 sec\nrounds: 3"
           }
         ]
       }
