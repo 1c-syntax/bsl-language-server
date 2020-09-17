@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.Getter;
@@ -41,6 +42,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GenericIssueReport {
+
+  private static final Map<DiagnosticType, RuleType> diagnosticTypeRuleTypeMap = Map.of(
+    DiagnosticType.ERROR, RuleType.BUG,
+    DiagnosticType.CODE_SMELL, RuleType.CODE_SMELL,
+    DiagnosticType.SECURITY_HOTSPOT, RuleType.SECURITY_HOTSPOT,
+    DiagnosticType.VULNERABILITY, RuleType.VULNERABILITY
+  );
 
   @Getter
   @JsonProperty("issues")
@@ -72,7 +80,7 @@ public class GenericIssueReport {
     String engineId;
     String ruleId;
     String severity;
-    String type;
+    RuleType type;
     Location primaryLocation;
     int effortMinutes;
     List<Location> secondaryLocations;
@@ -81,7 +89,7 @@ public class GenericIssueReport {
       @JsonProperty("engineId") String engineId,
       @JsonProperty("ruleId") String ruleId,
       @JsonProperty("severity") String severity,
-      @JsonProperty("type") String type,
+      @JsonProperty("type") RuleType type,
       @JsonProperty("primaryLocation") Location primaryLocation,
       @JsonProperty("effortMinutes") int effortMinutes,
       @JsonProperty("secondaryLocations") List<Location> secondaryLocations
@@ -99,7 +107,7 @@ public class GenericIssueReport {
       engineId = diagnostic.getSource();
       ruleId = diagnosticInfo.getCode().getStringValue();
       severity = diagnosticInfo.getSeverity().name();
-      type = diagnosticInfo.getType().name();
+      type = diagnosticTypeRuleTypeMap.get(diagnosticInfo.getType());
       primaryLocation = new Location(fileName, diagnostic);
       effortMinutes = diagnosticInfo.getMinutesToFix();
 
@@ -176,4 +184,10 @@ public class GenericIssueReport {
 
   }
 
+  enum RuleType {
+    BUG,
+    CODE_SMELL,
+    SECURITY_HOTSPOT,
+    VULNERABILITY
+  }
 }
