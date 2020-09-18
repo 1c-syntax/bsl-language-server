@@ -22,11 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 class BSLLSBindingTest {
 
   @Test
@@ -36,5 +34,36 @@ class BSLLSBindingTest {
 
     // then
     assertThat(serverContext).isNotNull();
+  }
+
+  @Test
+  void testGetDiagnosticInfos() {
+    // when
+    var diagnosticInfos = BSLLSBinding.getDiagnosticInfos();
+
+    // then
+    assertThat(diagnosticInfos).isNotNull();
+  }
+
+  @Test
+  void testGetLanguageServerConfiguration() {
+    // when
+    var languageServerConfiguration = BSLLSBinding.getLanguageServerConfiguration();
+
+    // then
+    assertThat(languageServerConfiguration).isNotNull();
+  }
+
+  @Test
+  void testReactivateContext() {
+    // given
+    var applicationContext = BSLLSBinding.getApplicationContext();
+    applicationContext.close();
+
+    // when
+    applicationContext = BSLLSBinding.getApplicationContext();
+
+    // then
+    assertThat(applicationContext.isActive()).isTrue();
   }
 }
