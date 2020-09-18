@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1600338800788,
+  "lastUpdate": 1600450884596,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5487,6 +5487,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.25373047260647985",
             "extra": "mean: 74.74171177546184 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f8146b6148b1ef354648e6dab22804f9413b197d",
+          "message": "Merge pull request #1363 from 1c-syntax/feature/closable-spring-context\n\nВозможность закрыть и переиспользовать спринговый контекст",
+          "timestamp": "2020-09-18T20:33:48+03:00",
+          "tree_id": "7d83365799eda3d8c0680bb0e6689e077bc3a811",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f8146b6148b1ef354648e6dab22804f9413b197d"
+        },
+        "date": 1600450880278,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.4310831228892,
+            "unit": "sec",
+            "range": "stddev: 0.46103601254109183",
+            "extra": "mean: 75.4310831228892 sec\nrounds: 3"
           }
         ]
       }
