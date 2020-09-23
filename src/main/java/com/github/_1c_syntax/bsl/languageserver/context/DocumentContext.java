@@ -49,6 +49,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.net.URI;
 import java.util.Collections;
@@ -169,6 +170,7 @@ public class DocumentContext {
     return sb.toString();
   }
 
+  @Cacheable(value = "metrics", key = "getTarget().getUri().toString()")
   public MetricStorage getMetrics() {
     return metrics.getOrCompute();
   }
@@ -181,10 +183,12 @@ public class DocumentContext {
     return fileType;
   }
 
+  @Cacheable(value = "cognitiveComplexityData", key = "getTarget().getUri().toString()")
   public ComplexityData getCognitiveComplexityData() {
     return cognitiveComplexityData.getOrCompute();
   }
 
+  @Cacheable(value = "cyclomaticComplexityData", key = "getTarget().getUri().toString()")
   public ComplexityData getCyclomaticComplexityData() {
     return cyclomaticComplexityData.getOrCompute();
   }

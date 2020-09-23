@@ -19,26 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context;
+package com.github._1c_syntax.bsl.languageserver.cache;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.ehcache.event.CacheEvent;
+import org.ehcache.event.CacheEventListener;
 
-import java.io.Serializable;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class MetricStorage implements Serializable {
-  private int procedures;
-  private int functions;
-  private int lines;
-  private int ncloc;
-  private int comments;
-  private int statements;
-  private int[] nclocData;
-  private int[] covlocData;
-  private int cognitiveComplexity;
-  private int cyclomaticComplexity;
+@Slf4j
+public class CacheEventLogger implements CacheEventListener<Object, Object> {
+  @Override
+  public void onEvent(CacheEvent<?, ?> cacheEvent) {
+    LOGGER.info("Key: {} | EventType: {} | Old value: {} | New value: {}",
+      cacheEvent.getKey(), cacheEvent.getType(), cacheEvent.getOldValue(),
+      cacheEvent.getNewValue());
+  }
 }

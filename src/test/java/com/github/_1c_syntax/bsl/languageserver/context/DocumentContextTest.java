@@ -215,6 +215,25 @@ class DocumentContextTest {
   }
 
   @Test
+  void testCacheMetrics() throws IOException {
+
+    DocumentContext documentContext =
+      getDocumentContext("./src/test/resources/context/DocumentContextCommentsTest.bsl");
+
+    assertThat(documentContext.getMetrics().getComments()).isEqualTo(8);
+
+    String fileContent = FileUtils.readFileToString(
+      new File("./src/test/resources/context/DocumentContextLocForCoverTest.bsl"),
+      StandardCharsets.UTF_8
+    );
+
+    documentContext.rebuild(fileContent);
+
+    assertThat(documentContext.getMetrics().getComments()).isEqualTo(8);
+
+  }
+
+  @Test
   void testContentList() {
     // given
     DocumentContext documentContext = getDocumentContext();

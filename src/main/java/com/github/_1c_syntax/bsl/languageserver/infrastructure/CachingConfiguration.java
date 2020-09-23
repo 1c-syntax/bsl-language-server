@@ -19,26 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context;
+package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Configuration;
 
-import java.io.Serializable;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class MetricStorage implements Serializable {
-  private int procedures;
-  private int functions;
-  private int lines;
-  private int ncloc;
-  private int comments;
-  private int statements;
-  private int[] nclocData;
-  private int[] covlocData;
-  private int cognitiveComplexity;
-  private int cyclomaticComplexity;
-}
+/**
+ * Spring-конфигурация для управления включением/отключением кэширования.
+ * <p>
+ * См. {@link Configuration}
+ */
+@Configuration
+@EnableCaching
+@ConditionalOnProperty(prefix = "app.caching", name="enabled", havingValue="true", matchIfMissing = true)
+public class CachingConfiguration {}

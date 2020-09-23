@@ -53,7 +53,12 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-cache")
     api("info.picocli:picocli-spring-boot-starter:4.5.1")
+
+    // cache
+    api("javax.cache:cache-api")
+    api("org.ehcache:ehcache")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
