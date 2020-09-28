@@ -101,15 +101,15 @@ Usage: bsl-language-server format [-hq] [-s=<path>]
 Format files in source directory
   -h, --help            Show this help message and exit
   -q, --silent          Silent mode
-  -s, --srcDir=<path>   Source directory
+  -s, --src=<path>      Source directory or file
 ```
 
-Для указания каталога расположения форматируемых исходников используется параметр `--srcDir` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников.
+Для указания каталога расположения форматируемых исходников (или файла) используется параметр `--src` (сокращенно `-s`), за которым следует путь (относительный или абсолютный) к каталогу исходников (или файлу). 
 
 Пример строки запуска форматирования:
 
 ```sh
-java -jar bsl-language-server.jar --format --srcDir ./src/cf
+java -jar bsl-language-server.jar --format --src ./src/cf
 ```
 
 ## Благодарности

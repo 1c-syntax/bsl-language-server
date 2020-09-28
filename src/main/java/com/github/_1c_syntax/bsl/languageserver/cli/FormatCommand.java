@@ -41,6 +41,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -52,9 +53,11 @@ import static picocli.CommandLine.Option;
  * Ключ команды:
  *  -f, (--format)
  * Параметры:
- *  -s, (--srcDir) &lt;arg&gt; -  Путь к каталогу исходных файлов.
+ *  -s, (--src)                -  Путь к каталогу исходных файлов.
  *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
  *                                то анализ выполняется в текущем каталоге запуска.
+ *                                Можно указать каталог, в котором будут найдены файлы для форматирования, либо один
+ *                                файл для форматирования
  *  -q, (--silent)             -  Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
  * Выводимая информация:
  *  Выполняет форматирование исходного кода в файлах каталога. Для форматирования используются правила и настройки
@@ -81,8 +84,8 @@ public class FormatCommand implements Callable<Integer> {
   private boolean usageHelpRequested;
 
   @Option(
-    names = {"-s", "--srcDir"},
-    description = "Source directory",
+    names = {"-s", "--srcDir", "--src"}, // TODO delete old key --srcDir
+    description = "Source directory or file",
     paramLabel = "<path>",
     defaultValue = "")
   private String srcDirOption;
@@ -107,7 +110,13 @@ public class FormatCommand implements Callable<Integer> {
       return 1;
     }
 
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    Collection<File> files;
+
+    if(srcDir.toFile().isDirectory()) {
+      files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    } else {
+      files = Collections.singletonList(srcDir.toFile());
+    }
 
     if (silentMode) {
       files.parallelStream().forEach(this::formatFile);

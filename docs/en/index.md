@@ -81,12 +81,12 @@ To run in formatter mode use parameter `--format` (short `-f`).
 Usage: bsl-language-server format [-hq] [-s=<path>] Format files in source directory   -h, --help            Show this help message and exit   -q, --silent          Silent mode   -s, --srcDir=<path>   Source directory
 ```
 
-To set source code folder for formatting use parameter `--srcDir` (short `-s`) followed by the path (relative or absolute) to the source code folder.
+To set source code folder (or source file) for formatting use parameter `--src` (short `-s`) followed by the path (relative or absolute) to the source code folder (or file).
 
 Command line example to run formatting:
 
 ```sh
-java -jar bsl-language-server.jar --format --srcDir ./src/cf
+java -jar bsl-language-server.jar --format --src ./src/cf
 ```
 
 <a id="configuration"></a>
