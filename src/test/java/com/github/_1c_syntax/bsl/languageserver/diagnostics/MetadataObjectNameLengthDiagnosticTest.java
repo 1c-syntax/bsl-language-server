@@ -62,7 +62,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     configuration.put("maxMetadataObjectNameLength", 10);
     diagnosticInstance.configure(configuration);
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", " ");
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", "A");
 
     // when
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
@@ -115,7 +115,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   })
   void test(String modulePath) {
 
-    getDocumentContextFromFile(modulePath, " ");
+    getDocumentContextFromFile(modulePath, "A");
 
     // given
     when(module.getName()).thenReturn(LONG_NAME);
@@ -132,7 +132,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   @Test
   void testNegative() {
 
-    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", " ");
+    getDocumentContextFromFile("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", "A");
 
     // given
     when(module.getName()).thenReturn("Short");
@@ -156,9 +156,10 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   static Stream<Arguments> contentProvider() {
     return Stream.of(
       Arguments.of("", 0),
-      Arguments.of("\n", 1),
-      Arguments.of("//", 1),
-      Arguments.of(" ", 1)
+      Arguments.of("\n", 0),
+      Arguments.of("//", 0),
+      Arguments.of(" ", 0),
+      Arguments.of("FF", 1)
     );
   }
 }
