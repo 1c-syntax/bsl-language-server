@@ -269,6 +269,9 @@
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
+                "RefOveruse": {
+                    "$ref": "parameters-schema.json#/definitions/RefOveruse"
+                },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
                 },
