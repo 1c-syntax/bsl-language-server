@@ -56,7 +56,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    Optional<Range> range = Ranges.getFirstRange(documentContext.getTokens());
+    Optional<Range> range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
     if (range.isEmpty()) {
       return;
     }

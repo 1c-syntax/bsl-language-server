@@ -100,7 +100,7 @@ public final class Ranges {
     return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
   }
 
-  public static Optional<Range> getFirstRange(Collection<Token> tokens) {
+  public static Optional<Range> getFirstSignificantTokenRange(Collection<Token> tokens) {
     return tokens.stream()
       .filter(token -> token.getType() != Token.EOF)
       .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
