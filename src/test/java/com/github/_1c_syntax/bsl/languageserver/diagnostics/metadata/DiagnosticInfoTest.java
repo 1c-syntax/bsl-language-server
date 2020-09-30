@@ -23,9 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedAttributes8312Diagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalMethodDiagnostic;
 import org.assertj.core.api.Assertions;
+import org.eclipse.lsp4j.DiagnosticTag;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +62,7 @@ class DiagnosticInfoTest {
     Assertions.assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(5);
     Assertions.assertThat(diagnosticInfo.isActivatedByDefault()).isTrue();
     Assertions.assertThat(diagnosticInfo.getTags().size()).isPositive();
+    Assertions.assertThat(diagnosticInfo.getLSPTags()).isEmpty();
 
     Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isPositive();
 
@@ -79,6 +83,20 @@ class DiagnosticInfoTest {
     assertThat(maybeFakeParameter).isEmpty();
   }
 
+  @Test
+  void testLSPTags() {
+    // given
+    var diagnosticInfo = new DiagnosticInfo(UnusedLocalMethodDiagnostic.class, configuration);
+
+    // then
+    assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Unnecessary);
+
+    // given
+    diagnosticInfo = new DiagnosticInfo(DeprecatedAttributes8312Diagnostic.class, configuration);
+
+    // then
+    assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Deprecated);
+  }
   @Test
   void testParameterSuper() {
 

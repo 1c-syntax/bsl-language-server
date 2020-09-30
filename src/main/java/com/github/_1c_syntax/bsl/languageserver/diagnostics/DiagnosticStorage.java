@@ -214,6 +214,7 @@ public class DiagnosticStorage {
     );
 
     diagnostic.setCode(bslDiagnostic.getInfo().getCode());
+    diagnostic.setTags(bslDiagnostic.getInfo().getLSPTags());
 
     if (relatedInformation != null) {
       diagnostic.setRelatedInformation(relatedInformation);
