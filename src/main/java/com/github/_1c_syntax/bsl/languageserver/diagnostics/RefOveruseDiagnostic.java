@@ -26,11 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -47,31 +52,72 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final String REF_REGEX = "Ссылка|Reference";
   private static final Pattern PATTERN = CaseInsensitivePattern.compile(REF_REGEX);
-  private static final int MAX_COUNT = 3;
 
   @Override
-  public ParseTree visitColumn(SDBLParser.ColumnContext ctx) {
-
-    if (ctx.children == null) {
-      return super.visitColumn(ctx);
+  public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
+    var dataSource = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
+    var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
+    if (dataSource.isEmpty() || columnsCollection.isEmpty()) {
+      return super.visitQuery(ctx);
     }
 
-    long identifiersCount = ctx.children.stream()
-      .filter(parseTree -> parseTree instanceof SDBLParser.IdentifierContext)
-      .count();
+    String tableName = getTableNameOrAlias(dataSource);
+    columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableName));
+    return super.visitQuery(ctx);
 
-    if (identifiersCount >= MAX_COUNT) {
-      performCheck(ctx);
-    }
-    return super.visitColumn(ctx);
   }
 
-  private void performCheck(SDBLParser.ColumnContext ctx) {
-    var lastChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 1));
+  private void checkColumnNode(SDBLParser.ColumnContext ctx, String tableName) {
 
-    if (lastChild instanceof SDBLParser.IdentifierContext
-      && PATTERN.matcher(lastChild.getText()).matches()) {
+    if (ctx.children == null) {
+      return;
+    }
+
+    var lastChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 1));
+    var penultimateChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 3));
+
+    if (lastChild != penultimateChild
+      && lastChild instanceof SDBLParser.IdentifierContext
+      && penultimateChild instanceof SDBLParser.IdentifierContext) {
+
+      performCheck(ctx, (SDBLParser.IdentifierContext) lastChild,
+        (SDBLParser.IdentifierContext) penultimateChild, tableName);
+    }
+
+  }
+
+  private void performCheck(SDBLParser.ColumnContext ctx, SDBLParser.IdentifierContext lastChild,
+                            SDBLParser.IdentifierContext penultimateChild, String tableName) {
+
+    if (!penultimateChild.getText().equals(tableName) &&
+      PATTERN.matcher(lastChild.getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
   }
+
+  private String getTableNameOrAlias(Collection<ParseTree> dataSourceCollection) {
+
+    String alias = dataSourceCollection.stream()
+      .map(dataSource -> Trees.getFirstChild(dataSource, SDBLParser.RULE_alias))
+      .filter(Optional::isPresent)
+      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .map(BSLParserRuleContext::getText)
+      .collect(Collectors.joining());
+
+    if (!alias.isBlank()) {
+      return alias;
+    }
+
+    return dataSourceCollection.stream()
+      .map(dataSource -> Trees.getFirstChild(dataSource, SDBLParser.RULE_table))
+      .filter(Optional::isPresent)
+      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .map(BSLParserRuleContext::getText)
+      .collect(Collectors.joining());
+  }
+
 }
