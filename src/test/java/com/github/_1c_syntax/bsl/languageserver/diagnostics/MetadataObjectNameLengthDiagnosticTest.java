@@ -157,9 +157,13 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
     return Stream.of(
       Arguments.of("", 0),
       Arguments.of("\n", 0),
-      Arguments.of("//", 0),
+      Arguments.of("//", 1),
       Arguments.of(" ", 0),
-      Arguments.of("FF", 1)
+      Arguments.of("FF", 1),
+      Arguments.of("\nA", 1),
+      Arguments.of("#\n", 1),
+      Arguments.of("\n#", 1),
+      Arguments.of("&", 1)
     );
   }
 }
