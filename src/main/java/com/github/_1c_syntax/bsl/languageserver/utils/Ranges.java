@@ -28,7 +28,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 public final class Ranges {
@@ -100,9 +100,9 @@ public final class Ranges {
     return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
   }
 
-  public static Optional<Range> getFirstRange(List<Token> tokens) {
+  public static Optional<Range> getFirstRange(Collection<Token> tokens) {
     return tokens.stream()
-      .filter(token -> token.getType() != BSLLexer.EOF)
+      .filter(token -> token.getType() != Token.EOF)
       .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
       .map(Ranges::create)
       .filter(range -> (!range.getStart().equals(range.getEnd())))
