@@ -76,6 +76,9 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
+      if (token.getText().matches("\"\\s*\"")) {
+        continue;
+      }
       var partString = getString(startLine, token);
       if (!isQuery) {
         isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
