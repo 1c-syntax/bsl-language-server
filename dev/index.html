@@ -520,13 +520,13 @@ Run analysis and get diagnostic info
 Format files in <span class="nb">source</span> directory
   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
   -q, --silent          Silent mode
-  -s, --srcDir<span class="o">=</span>&lt;path&gt;   Source directory
+  -s, --src<span class="o">=</span>&lt;path&gt;      Source directory or file
 </code></pre></div>
 
 
-<p>Для указания каталога расположения форматируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников.</p>
+<p>Для указания каталога расположения форматируемых исходников (или файла) используется параметр <code>--src</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников (или файлу).</p>
 <p>Пример строки запуска форматирования:</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --srcDir ./src/cf
+<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
 </code></pre></div>
 
 
