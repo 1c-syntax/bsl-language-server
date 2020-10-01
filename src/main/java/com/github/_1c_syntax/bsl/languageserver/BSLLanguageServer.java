@@ -33,6 +33,7 @@ import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -55,8 +56,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final LanguageServerConfiguration configuration;
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
-  private boolean shutdownWasCalled;
   private final ServerContext context;
+  private final ServerInfo serverInfo;
+  private boolean shutdownWasCalled;
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -75,7 +77,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
     capabilities.setWorkspaceSymbolProvider(Boolean.TRUE);
 
-    InitializeResult result = new InitializeResult(capabilities);
+    InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
     return CompletableFuture.completedFuture(result);
   }
@@ -118,10 +120,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * <p>
    * См. {@link BSLTextDocumentService#diagnostics(DiagnosticParams)}
    */
-//  @JsonRequest(
-//    value = "textDocument/x-diagnostics",
-//    useSegment = false
-//  )
   @Override
   public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
     return textDocumentService.diagnostics(params);

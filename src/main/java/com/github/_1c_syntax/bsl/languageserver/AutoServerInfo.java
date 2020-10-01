@@ -19,45 +19,42 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.cli;
+package com.github._1c_syntax.bsl.languageserver;
 
-import lombok.RequiredArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.ServerInfo;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Callable;
+import java.io.Serializable;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 /**
- * Выводит версию приложения
- * Ключ команды:
- *  -v, (--version)
+ * Информация о сервере. Автоматически заполняется на основании данных о версии и имени приложения.
  */
 @Slf4j
-@Command(
-  name = "version",
-  aliases = {"-v", "--version"},
-  description = "Print version",
-  usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2020|@")
+@EqualsAndHashCode(exclude = "applicationName", callSuper = true)
 @Component
-@RequiredArgsConstructor
-public class VersionCommand implements Callable<Integer> {
+public class AutoServerInfo extends org.eclipse.lsp4j.ServerInfo implements Serializable {
 
-  @Option(names = "--spring.config.location", hidden = true)
-  private String springConfigLocation;
+  private static final String MANIFEST_VERSION = readVersion();
 
-  @Option(names = "--debug", hidden = true)
-  private boolean debug;
+  @SuppressWarnings("FieldMayBeFinal")
+  @Value("${spring.application.name:Dummy Language Server}")
+  // Field is transient to exclude it from GSON serialization in jsonrpc.
+  private transient String applicationName = "";
 
-  private final ServerInfo serverInfo;
+  @PostConstruct
+  private void init() {
+    setName(applicationName);
+    setVersion(MANIFEST_VERSION);
+  }
 
-  public Integer call() {
+  private static String readVersion() {
     final InputStream mfStream = Thread.currentThread()
       .getContextClassLoader()
       .getResourceAsStream("META-INF/MANIFEST.MF");
@@ -67,19 +64,10 @@ public class VersionCommand implements Callable<Integer> {
       manifest.read(mfStream);
     } catch (IOException e) {
       LOGGER.error("Can't read manifest", e);
-      return 1;
+      return "";
     }
 
-    String version = serverInfo.getVersion();
-    if (version.isEmpty()) {
-      return 1;
-    }
-
-    System.out.printf(
-      "version: %s%n",
-      version
-    );
-
-    return 0;
+    return manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
   }
+
 }
