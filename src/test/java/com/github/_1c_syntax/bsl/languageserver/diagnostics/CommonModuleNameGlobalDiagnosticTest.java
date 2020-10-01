@@ -71,7 +71,7 @@ class CommonModuleNameGlobalDiagnosticTest extends AbstractDiagnosticTest<Common
     //then
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(5, 0, 1);
+      .hasRange(1, 0, 13);
 
   }
 
