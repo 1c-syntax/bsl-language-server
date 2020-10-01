@@ -135,7 +135,27 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testFormat() {
     // given
-    String[] args = "--format --srcDir ./src/test/resources/cli".split(" ");
+    String[] args = "--format --src ./src/test/resources/cli".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testFormatOneFile() {
+    // given
+    String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt".split(" ");
 
     // when
     try {
@@ -155,7 +175,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(0)
   void testFormatSilent() {
     // given
-    String[] args = "--format --srcDir ./src/test/resources/cli --silent".split(" ");
+    String[] args = "--format --src ./src/test/resources/cli --silent".split(" ");
 
     // when
     try {
@@ -174,7 +194,7 @@ class BSLLSPLauncherTest {
   @ExpectSystemExitWithStatus(1)
   void testFormatError() {
     // given
-    String[] args = "--format --srcDir fake-dir".split(" ");
+    String[] args = "--format --src fake-dir".split(" ");
 
     // when
     try {

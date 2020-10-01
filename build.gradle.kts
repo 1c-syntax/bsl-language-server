@@ -195,6 +195,7 @@ license {
     exclude("**/*.json")
     exclude("**/*.bsl")
     exclude("**/*.os")
+    exclude("**/*.txt")
 }
 
 sonarqube {
