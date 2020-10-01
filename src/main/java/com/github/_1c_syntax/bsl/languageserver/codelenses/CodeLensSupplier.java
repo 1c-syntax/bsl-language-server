@@ -19,27 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeLens;
-import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-@RequiredArgsConstructor
-public final class CodeLensProvider {
-  private final List<CodeLensSupplier> codeLensSuppliers;
-
-  public List<CodeLens> getCodeLens(DocumentContext documentContext) {
-    return codeLensSuppliers.stream()
-      .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-  }
+public interface CodeLensSupplier {
+  List<CodeLens> getCodeLenses(DocumentContext documentContext);
 }
