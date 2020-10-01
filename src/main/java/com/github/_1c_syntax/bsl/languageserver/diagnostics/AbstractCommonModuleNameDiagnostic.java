@@ -21,10 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.eclipse.lsp4j.Range;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +41,8 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   @Override
   protected void check() {
-    if (documentContext.getTokensFromDefaultChannel().isEmpty()) {
+    Optional<Range> range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
+    if (range.isEmpty()) {
       return;
     }
 
@@ -49,7 +53,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       .map(MDObjectBase::getName)
       .map(pattern::matcher)
       .filter(this::matchCheck)
-      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(documentContext.getTokensFromDefaultChannel().get(0)));
+      .ifPresent(commonModule -> diagnosticStorage.addDiagnostic(range.get()));
   }
 
   protected abstract boolean flagsCheck(CommonModule commonModule);
