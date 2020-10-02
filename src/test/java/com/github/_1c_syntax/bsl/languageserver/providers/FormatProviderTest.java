@@ -54,7 +54,7 @@ class FormatProviderTest {
   void testRangeFormat() throws IOException {
     // given
     int startLine = 4;
-    int endLine = 24;
+    int endLine = 25;
 
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
@@ -112,6 +112,31 @@ class FormatProviderTest {
 
     TextEdit textEdit = textEdits.get(0);
     assertThat(textEdit.getNewText()).isEqualTo(formattedFileContent);
+
+  }
+
+  @Test
+  void testFormatUnaryMinus(){
+
+     // given
+    DocumentFormattingParams params = new DocumentFormattingParams();
+    params.setTextDocument(getTextDocumentIdentifier());
+    params.setOptions(new FormattingOptions(4, true));
+
+    String fileContent = "Возврат-1=-2";
+    DocumentContext documentContext = TestUtils.getDocumentContext(
+      URI.create(params.getTextDocument().getUri()),
+      fileContent
+    );
+
+    // when
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+
+    // then
+    assertThat(textEdits).hasSize(1);
+
+    TextEdit textEdit = textEdits.get(0);
+    assertThat(textEdits.get(0).getNewText()).isEqualTo("Возврат -1 = -2");
 
   }
 

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -162,6 +163,7 @@ public final class FormatProvider {
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
+    boolean previousIsUnary = false;
 
     for (Token token : filteredTokens) {
       int tokenType = token.getType();
@@ -222,7 +224,7 @@ public final class FormatProvider {
         String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append("\n");
         newTextBuilder.append(currentIndentation);
-      } else if (needAddSpace(tokenType, previousTokenType)) {
+      } else if (!previousIsUnary && needAddSpace(tokenType, previousTokenType)) {
         newTextBuilder.append(' ');
       } else {
         // no-op
@@ -256,6 +258,7 @@ public final class FormatProvider {
       }
 
       lastLine = token.getLine();
+      previousIsUnary = isUnary(tokenType, previousTokenType);
       previousTokenType = tokenType;
     }
 
@@ -327,6 +330,32 @@ public final class FormatProvider {
         return false;
       default:
         return true;
+    }
+  }
+
+  private static boolean isUnary(int type, int previousTokenType) {
+    if (type != BSLLexer.MINUS) {
+      return false;
+    }
+    switch (previousTokenType) {
+      case BSLLexer.PLUS:
+      case BSLLexer.MINUS:
+      case BSLLexer.MUL:
+      case BSLLexer.QUOTIENT:
+      case BSLLexer.ASSIGN:
+      case BSLLexer.MODULO:
+      case BSLLexer.LESS:
+      case Lexer.MORE:
+      case BSLLexer.LBRACK:
+      case BSLLexer.LPAREN:
+      case BSLLexer.RETURN_KEYWORD:
+      case BSLLexer.NOT_EQUAL:
+      case BSLLexer.COMMA:
+      case BSLLexer.LESS_OR_EQUAL:
+      case BSLLexer.GREATER_OR_EQUAL:
+        return true;
+      default:
+        return false;
     }
   }
 
