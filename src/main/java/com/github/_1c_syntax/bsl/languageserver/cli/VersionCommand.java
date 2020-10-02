@@ -28,10 +28,7 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Callable;
-import java.util.jar.Manifest;
 
 /**
  * Выводит версию приложения
@@ -58,18 +55,6 @@ public class VersionCommand implements Callable<Integer> {
   private final ServerInfo serverInfo;
 
   public Integer call() {
-    final InputStream mfStream = Thread.currentThread()
-      .getContextClassLoader()
-      .getResourceAsStream("META-INF/MANIFEST.MF");
-
-    Manifest manifest = new Manifest();
-    try {
-      manifest.read(mfStream);
-    } catch (IOException e) {
-      LOGGER.error("Can't read manifest", e);
-      return 1;
-    }
-
     String version = serverInfo.getVersion();
     if (version.isEmpty()) {
       return 1;
