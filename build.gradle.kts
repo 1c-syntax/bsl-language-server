@@ -196,6 +196,9 @@ license {
     exclude("**/*.bsl")
     exclude("**/*.os")
     exclude("**/*.txt")
+    exclude("**/*.java.orig")
+    exclude("**/*.impl")
+    exclude("**/*.mockito.plugins.MockMaker")
 }
 
 sonarqube {

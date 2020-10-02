@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -198,6 +199,16 @@ public class DiagnosticStorage {
       diagnosticMessage,
       relatedInformation
     ));
+  }
+
+  public void addDiagnostic(ParseTree tree) {
+    if(tree instanceof BSLParserRuleContext) {
+      addDiagnostic((BSLParserRuleContext) tree);
+    } else if (tree instanceof TerminalNode) {
+      addDiagnostic((TerminalNode) tree);
+    } else {
+      throw new IllegalArgumentException("Unsupported parameter type " + tree);
+    }
   }
 
   private static Diagnostic createDiagnostic(
