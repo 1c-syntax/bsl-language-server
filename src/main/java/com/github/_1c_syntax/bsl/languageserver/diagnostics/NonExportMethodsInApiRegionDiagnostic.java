@@ -23,12 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
@@ -43,14 +43,9 @@ import java.util.regex.Pattern;
 )
 public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern REGION_NAME = Pattern.compile(
-    "^(?:ПрограммныйИнтерфейс|СлужебныйПрограмныйИнтерфейс|Public|Internal)$",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern REGION_NAME = CaseInsensitivePattern.compile(
+    "^(?:ПрограммныйИнтерфейс|СлужебныйПрограммныйИнтерфейс|Public|Internal)$"
   );
-
-  public NonExportMethodsInApiRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
@@ -61,11 +56,11 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
       }
 
       methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
-          if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
-            String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
-            diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
-          }
-        });
+        if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
+          String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
+          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);
+        }
+      });
     });
 
     return ctx;

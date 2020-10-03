@@ -23,30 +23,27 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import lombok.Getter;
+import lombok.Setter;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
 
 public abstract class AbstractDiagnostic implements BSLDiagnostic {
 
-  protected final DiagnosticInfo info;
-  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-
-  public AbstractDiagnostic(DiagnosticInfo info) {
-    this.info = info;
-  }
-
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
-  }
+  @Getter
+  @Setter
+  protected DiagnosticInfo info;
+  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  protected DocumentContext documentContext;
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+    this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
-    check(documentContext);
+    check();
     return diagnosticStorage.getDiagnostics();
   }
 
-  protected abstract void check(DocumentContext documentContext);
+  protected abstract void check();
 }

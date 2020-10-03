@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
@@ -53,32 +53,25 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
   public static final String REGEX_DELETION_FILE = "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile";
 
-  private static final Pattern searchGetTempFileName = Pattern.compile(
-    "^(ПолучитьИмяВременногоФайла|GetTempFileName)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern searchGetTempFileName = CaseInsensitivePattern.compile(
+    "^(ПолучитьИмяВременногоФайла|GetTempFileName)"
+  );
 
   @DiagnosticParameter(
     type = String.class,
     defaultValue = REGEX_DELETION_FILE
   )
-  private Pattern searchDeleteFileMethod = Pattern.compile(
-    "^(" + REGEX_DELETION_FILE + ")",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  public MissingTemporaryFileDeletionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private Pattern searchDeleteFileMethod = CaseInsensitivePattern.compile(
+    "^(" + REGEX_DELETION_FILE + ")"
+  );
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
     String searchDeleteFileMethodProperty =
       (String) configuration.getOrDefault("searchDeleteFileMethod", REGEX_DELETION_FILE);
-    searchDeleteFileMethod = Pattern.compile(
-      "^(" + searchDeleteFileMethodProperty + ")",
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+    searchDeleteFileMethod = CaseInsensitivePattern.compile(
+      "^(" + searchDeleteFileMethodProperty + ")"
+    );
   }
 
   /**
@@ -133,7 +126,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       BSLParser.GlobalMethodCallContext localGlobalMethodCall = localCallStatementContext.globalMethodCall();
       // получаем full call method и полное имя вызова
-      String fullCallMethod = "";
+      String fullCallMethod;
       BSLParser.DoCallContext doCallContext;
       if (localGlobalMethodCall == null) {
         fullCallMethod = getFullCallMethod(localCallStatementContext);

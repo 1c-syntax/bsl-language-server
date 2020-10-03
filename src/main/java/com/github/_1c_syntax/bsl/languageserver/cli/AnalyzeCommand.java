@@ -25,72 +25,180 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.DiagnosticSupplier;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.reporter.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.stereotype.Component;
+import picocli.CommandLine.Command;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-public class AnalyzeCommand implements Command {
+import static picocli.CommandLine.Option;
 
-  private CommandLine cmd;
-  private DiagnosticProvider diagnosticProvider;
-  private ServerContext context;
+/**
+ * Выполнение анализа
+ * Ключ команды:
+ *  -a, (--analyze)
+ * Параметры:
+ *  -s, (--srcDir) &lt;arg&gt; -        Путь к каталогу исходных файлов.
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то анализ выполняется в текущем каталоге запуска.
+ *  -o, (--outputDir) &lt;arg&gt; -     Путь к каталогу размещения отчетов - результатов анализа.
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то файлы отчета будут сохранены в текущем каталоге запуска.
+ *  -w, (--workspaceDir) &lt;arg&gt; -  Путь к каталогу проекта, относительно которого располагаются исходные файлы.
+ *                                Возможно указывать как в абсолютном, так и в относительном виде. Если параметр опущен,
+ *                                то пути к исходным файлам будут указываться относительно текущего каталога запуска.
+ *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то будут использованы настройки по умолчанию.
+ *  -r, (--reporter) &lt;arg&gt; -      Ключи "Репортеров", т.е. форматов отчетов, котрые необходимо сгенерировать после
+ *                                выполнения анализа. Может быть указано более одного ключа. Если параметр опущен,
+ *                                то вывод результата будет призведен в консоль.
+ *  -q, (--silent)              -       Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
+ * Выводимая информация:
+ *  Выполняет анализ каталога исходных файлов и генерацию файлов отчета. Для каждого указанного ключа "Репортера"
+ *  создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
+ **/
+@Slf4j
+@Command(
+  name = "analyze",
+  aliases = {"-a", "--analyze"},
+  description = "Run analysis and get diagnostic info",
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@")
+@Component
+@RequiredArgsConstructor
+public class AnalyzeCommand implements Callable<Integer> {
 
-  public AnalyzeCommand(CommandLine cmd) {
-    this.cmd = cmd;
+  private static class ReportersKeys extends ArrayList<String> {
+    ReportersKeys(ReportersAggregator aggregator) {
+      super(aggregator.reporterKeys());
+    }
   }
 
-  @Override
-  public int execute() {
-    String srcDirOption = cmd.getOptionValue("srcDir", "");
-    String outputDirOption = cmd.getOptionValue("outputDir", "");
-    String configurationOption = cmd.getOptionValue("configuration", "");
+  @Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  private boolean usageHelpRequested;
 
-    Path srcDir = Absolute.path(srcDirOption);
-    File configurationFile = new File(configurationOption);
+  @Option(
+    names = {"-w", "--workspaceDir"},
+    description = "Workspace directory",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String workspaceDirOption;
 
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+  @Option(
+    names = {"-s", "--srcDir"},
+    description = "Source directory",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String srcDirOption;
 
-    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context = new ServerContext(configurationPath);
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(configuration);
-    diagnosticProvider = new DiagnosticProvider(diagnosticSupplier);
+  @Option(
+    names = {"-o", "--outputDir"},
+    description = "Output report directory",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String outputDirOption;
 
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+  @Option(
+    names = {"-c", "--configuration"},
+    description = "Path to language server configuration file",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String configurationOption;
 
-    List<FileInfo> fileInfos;
-    try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
-      fileInfos = files.parallelStream()
-        .map((File file) -> {
-          pb.step();
-          return getFileInfoFromFile(srcDir, file);
-        })
-        .collect(Collectors.toList());
+  @Option(
+    names = {"-r", "--reporter"},
+    paramLabel = "<keys>",
+    completionCandidates = ReportersKeys.class,
+    description = "Reporter key (${COMPLETION-CANDIDATES})")
+  private String[] reportersOptions = {};
+
+  @Option(
+    names = {"-q", "--silent"},
+    description = "Silent mode")
+  private boolean silentMode;
+
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
+
+  private final ReportersAggregator aggregator;
+  private final LanguageServerConfiguration configuration;
+  private final ServerContext context;
+
+  public Integer call() {
+
+    Path workspaceDir = Absolute.path(workspaceDirOption);
+    if (!workspaceDir.toFile().exists()) {
+      LOGGER.error("Workspace dir `{}` is not exists", workspaceDir.toString());
+      return 1;
     }
 
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDirOption);
+    Path srcDir = Absolute.path(srcDirOption);
+    if (!srcDir.toFile().exists()) {
+      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      return 1;
+    }
+
+    File configurationFile = new File(configurationOption);
+    configuration.update(configurationFile);
+
+    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+    context.setConfigurationRoot(configurationPath);
+
+    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    
+    context.populateContext(files);
+
+    List<FileInfo> fileInfos;
+    if (silentMode) {
+      fileInfos = files.parallelStream()
+        .map((File file) -> getFileInfoFromFile(workspaceDir, file))
+        .collect(Collectors.toList());
+    } else {
+      try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
+        fileInfos = files.parallelStream()
+          .map((File file) -> {
+            pb.step();
+            return getFileInfoFromFile(workspaceDir, file);
+          })
+          .collect(Collectors.toList());
+      }
+    }
+
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
     Path outputDir = Absolute.path(outputDirOption);
-    String[] reporters = Optional.ofNullable(cmd.getOptionValues("reporter")).orElse(new String[0]);
-    ReportersAggregator aggregator = new ReportersAggregator(outputDir, reporters);
-    aggregator.report(analysisInfo);
+    aggregator.report(analysisInfo, outputDir);
     return 0;
+  }
+
+  public String[] getReportersOptions() {
+    return reportersOptions.clone();
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file) {
@@ -104,16 +212,19 @@ public class AnalyzeCommand implements Command {
     DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
-    List<Diagnostic> diagnostics = diagnosticProvider.computeDiagnostics(documentContext);
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics();
     MetricStorage metrics = documentContext.getMetrics();
+    String mdoRef = "";
+    Optional<MDObjectBase> mdObjectBase = documentContext.getMdObject();
+    if (mdObjectBase.isPresent()) {
+      mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
+    }
 
-    FileInfo fileInfo = new FileInfo(filePath, diagnostics, metrics);
+    FileInfo fileInfo = new FileInfo(filePath, mdoRef, diagnostics, metrics);
 
     // clean up AST after diagnostic computing to free up RAM.
     documentContext.clearSecondaryData();
-    diagnosticProvider.clearComputedDiagnostics(documentContext);
 
     return fileInfo;
   }
-
 }

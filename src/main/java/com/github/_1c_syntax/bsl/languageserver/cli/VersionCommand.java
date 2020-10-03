@@ -21,34 +21,50 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.ServerInfo;
+import org.springframework.stereotype.Component;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
+import java.util.concurrent.Callable;
 
+/**
+ * Выводит версию приложения
+ * Ключ команды:
+ *  -v, (--version)
+ */
 @Slf4j
-public class VersionCommand implements Command {
+@Command(
+  name = "version",
+  aliases = {"-v", "--version"},
+  description = "Print version",
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@")
+@Component
+@RequiredArgsConstructor
+public class VersionCommand implements Callable<Integer> {
 
-  @Override
-  public int execute() {
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
 
-    final InputStream mfStream = Thread.currentThread()
-      .getContextClassLoader()
-      .getResourceAsStream("META-INF/MANIFEST.MF");
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
 
-    Manifest manifest = new Manifest();
-    try {
-      manifest.read(mfStream);
-    } catch (IOException e) {
-      LOGGER.error("Can't read manifest", e);
+  private final ServerInfo serverInfo;
+
+  public Integer call() {
+    String version = serverInfo.getVersion();
+    if (version.isEmpty()) {
+      return 1;
     }
 
-    System.out.print(String.format(
+    System.out.printf(
       "version: %s%n",
-      manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION)
-    ));
+      version
+    );
+
     return 0;
   }
 }

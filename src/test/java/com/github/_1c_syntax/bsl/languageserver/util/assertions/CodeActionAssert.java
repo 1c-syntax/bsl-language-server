@@ -35,6 +35,8 @@ import org.eclipse.lsp4j.TextEdit;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.Integer.max;
+
 public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeAction> {
 
   private DocumentContext documentContext;
@@ -88,7 +90,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
       startLine = end.getLine();
       startChar = end.getCharacter();
       endLine = contentList.length - 1;
-      endChar = contentList[endLine].length() - 1;
+      endChar = max(contentList[endLine].length() - 1, 0);
 
       Range endRange = Ranges.create(startLine, startChar, endLine, endChar);
       final String endText = documentContext.getText(endRange);
@@ -102,7 +104,8 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     final List<Diagnostic> diagnostics = bslDiagnostic.getDiagnostics(documentContext);
 
     // check if expected diagnostic is not present in new diagnostic list
-    Assertions.assertThat(diagnostics).doesNotContain(diagnostic);
+    Assertions.assertThat(diagnostics).doesNotContain(diagnostic)
+    ;
 
     // returning to original state
     documentContext.rebuild(cachedContent);

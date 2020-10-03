@@ -28,6 +28,6 @@ import org.eclipse.lsp4j.Range;
 @Value
 @AllArgsConstructor
 public class ComplexitySecondaryLocation {
-  private final Range range;
-  private final String message;
+  Range range;
+  String message;
 }

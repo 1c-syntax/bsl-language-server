@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,12 +45,12 @@ import java.util.stream.Collectors;
 )
 public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern MESSAGE_PATTERN = Pattern.compile(
-    "ОтменитьТранзакцию|RollbackTransaction",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
+    "ОтменитьТранзакцию|RollbackTransaction"
+  );
 
-  public WrongUseOfRollbackTransactionMethodDiagnostic(DiagnosticInfo info) {
-    super(info, MESSAGE_PATTERN);
+  public WrongUseOfRollbackTransactionMethodDiagnostic() {
+    super(MESSAGE_PATTERN);
   }
 
   @Override

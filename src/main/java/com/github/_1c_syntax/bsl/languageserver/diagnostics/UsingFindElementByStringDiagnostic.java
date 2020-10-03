@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Matcher;
@@ -47,13 +47,9 @@ import java.util.regex.Pattern;
 
 public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern pattern = Pattern.compile(
-    "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  public UsingFindElementByStringDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private final Pattern pattern = CaseInsensitivePattern.compile(
+    "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode)"
+  );
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
@@ -66,7 +62,7 @@ public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnosti
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));
       }
     }
-    return ctx;
+    return super.visitMethodCall(ctx);
   }
 
 }

@@ -15,12 +15,10 @@ theme:
     primary: 'white'
     accent: 'indigo'
 extra:
-  search:
-    language: 'en, ru'
   social:
-    - type: 'github'
+    - icon: fontawesome/brands/github
       link: 'https://github.com/1c-syntax'
-    - type: 'telegram'
+    - icon: fontawesome/brands/telegram
       link: 'https://t.me/bsl_language_server'
 extra_css:
   - 'assets/stylesheets/extra.css'
@@ -29,6 +27,12 @@ markdown_extensions:
   - codehilite
   - toc:
       permalink: Link
+
+plugins:
+  - search:
+      lang:
+        - en
+        - ru
 
 site_url: 'https://1c-syntax.github.io/bsl-language-server'
 repo_name: '1c-syntax/bsl-language-server'

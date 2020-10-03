@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -31,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -53,19 +53,16 @@ import java.util.regex.Pattern;
   }
 )
 
-public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagnostic {
+public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements QuickFixProvider {
 
   private static final String DEFAULT_COMMENTS_ANNOTATION = "//@,//(c),//©";
-  private static final Pattern goodCommentPattern = Pattern.compile(
-    "(?://\\s.*)|(?://[/]*\\s*)$",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern goodCommentPattern = CaseInsensitivePattern.compile(
+    "(?://\\s.*)|(?://[/]*\\s*)$"
   );
   private static final int COMMENT_LENGTH = 2;
 
   private static final float COMMENTED_CODE_THRESHOLD = 0.9F;
-  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  private CodeRecognizer codeRecognizer;
-  private DiagnosticInfo info;
+  private final CodeRecognizer codeRecognizer;
 
   @DiagnosticParameter(
     type = String.class,
@@ -73,8 +70,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
   )
   private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
 
-  public SpaceAtStartCommentDiagnostic(DiagnosticInfo info) {
-    this.info = info;
+  public SpaceAtStartCommentDiagnostic() {
     this.codeRecognizer = new CodeRecognizer(COMMENTED_CODE_THRESHOLD, new BSLFootprint());
   }
 
@@ -85,27 +81,18 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
       stringJoiner.add(commentsAnnotationPatternString);
     }
 
-    return Pattern.compile(
-      stringJoiner.toString(),
-      Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-    );
+    return CaseInsensitivePattern.compile(stringJoiner.toString());
   }
 
   @Override
   public void configure(Map<String, Object> configuration) {
-    if (configuration == null) {
-      return;
-    }
-
     String commentsAnnotationString =
       (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION);
     this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));
   }
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    diagnosticStorage.clearDiagnostics();
-
+  public void check() {
     documentContext.getComments()
       .parallelStream()
       .filter((Token t) ->
@@ -113,15 +100,7 @@ public class SpaceAtStartCommentDiagnostic implements QuickFixProvider, BSLDiagn
           && !commentsAnnotation.matcher(t.getText()).matches()
           && !codeRecognizer.meetsCondition(t.getText()))
       .sequential()
-      .forEach((Token t) ->
-        diagnosticStorage.addDiagnostic(t));
-
-    return diagnosticStorage.getDiagnostics();
-  }
-
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
+      .forEach(diagnosticStorage::addDiagnostic);
   }
 
   @Override

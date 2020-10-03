@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -31,6 +30,7 @@ import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +39,12 @@ import java.util.stream.Collectors;
 
 @Value
 @Builder(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode(exclude = {"children", "parent", "nodes"})
-@ToString(exclude = {"children", "parent", "nodes"})
+@EqualsAndHashCode(exclude = {"children", "parent"})
+@ToString(exclude = {"children", "parent"})
 public class RegionSymbol implements Symbol {
   String name;
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Namespace;
   Range range;
   Range startRange;
   Range endRange;
@@ -57,20 +59,15 @@ public class RegionSymbol implements Symbol {
   @Builder.Default
   List<Symbol> children = new ArrayList<>();
 
-  @NonFinal
-  @Builder.Default
-  // TODO подумать, как избавиться от этого
-  List<BSLParserRuleContext> nodes = new ArrayList<>();
-
-  @Override
-  public void clearParseTreeData() {
-    nodes = null;
-  }
-
   public List<MethodSymbol> getMethods() {
     return children.stream()
       .filter(MethodSymbol.class::isInstance)
       .map(symbol -> (MethodSymbol) symbol)
       .collect(Collectors.toList());
+  }
+
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitRegion(this);
   }
 }

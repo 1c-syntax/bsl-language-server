@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -29,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -45,18 +45,14 @@ import java.util.regex.Pattern;
 )
 public class UsingExternalCodeToolsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern externalCodeToolsName = Pattern.compile(
+  private static final Pattern externalCodeToolsName = CaseInsensitivePattern.compile(
     "^(ВнешниеОбработки|ExternalDataProcessors|ВнешниеОтчеты|ExternalReports|" +
-      "РасширенияКонфигурации|ConfigurationExtensions)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "РасширенияКонфигурации|ConfigurationExtensions)"
+  );
 
-  private static final Pattern externalCodeToolsMethodsName = Pattern.compile(
-    "^(Создать|Create|Подключить|Connect)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  public UsingExternalCodeToolsDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private static final Pattern externalCodeToolsMethodsName = CaseInsensitivePattern.compile(
+    "^(Создать|Create|Подключить|Connect)"
+  );
 
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {

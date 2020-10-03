@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -29,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
@@ -44,15 +44,14 @@ import java.util.stream.Stream;
 )
 public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern END_TRANSACTION_PATTERN = Pattern.compile(
-    "ЗафиксироватьТранзакцию|CommitTransaction",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern END_TRANSACTION_PATTERN = CaseInsensitivePattern.compile(
+    "ЗафиксироватьТранзакцию|CommitTransaction"
+  );
 
   private BSLParserRuleContext nodeEndTransaction;
   private BSLParser.StatementContext nodeEndFile;
 
-  public CommitTransactionOutsideTryCatchDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public CommitTransactionOutsideTryCatchDiagnostic() {
     nodeEndTransaction = null;
     nodeEndFile = null;
   }

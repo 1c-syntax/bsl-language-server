@@ -25,9 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
+import org.antlr.v4.runtime.Lexer;
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,18 +41,20 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class DocumentContextTest {
 
   @Test
   void testRebuild() throws IOException {
 
     DocumentContext documentContext = getDocumentContext("./src/test/resources/context/DocumentContextRebuildFirstTest.bsl");
-    assertThat(documentContext.getTokens()).hasSize(38);
+    assertThat(documentContext.getTokens()).hasSize(39);
 
     File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
     String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     documentContext.rebuild(fileContent);
-    assertThat(documentContext.getTokens()).hasSize(15);
+    assertThat(documentContext.getTokens()).hasSize(16);
   }
 
   @Test
@@ -69,7 +75,38 @@ class DocumentContextTest {
 
     DocumentContext documentContext = getDocumentContext();
 
-    assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(2);
+    assertThat(documentContext.getSymbolTree().getMethods().size()).isEqualTo(3);
+
+  }
+
+  @Test
+  void testMethodParametersComputesCorrectly() {
+    DocumentContext documentContext = getDocumentContext();
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .filteredOn(methodSymbol -> methodSymbol.getName().equals("ФункцияСПараметрами"))
+      .flatExtracting(MethodSymbol::getParameters)
+      .hasSize(4)
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам1")
+          && !parameterDefinition.isByValue()
+          && !parameterDefinition.isOptional()
+      )
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам2")
+          && parameterDefinition.isByValue()
+          && !parameterDefinition.isOptional()
+      )
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам3")
+          && !parameterDefinition.isByValue()
+          && parameterDefinition.isOptional()
+      )
+      .anyMatch(parameterDefinition ->
+        parameterDefinition.getName().equals("Парам4")
+          && parameterDefinition.isByValue()
+          && parameterDefinition.isOptional()
+      )
+    ;
 
   }
 
@@ -177,5 +214,27 @@ class DocumentContextTest {
 
   }
 
+  @Test
+  void testContentList() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
 
+    // when
+    String[] contentList = documentContext.getContentList();
+
+    // then
+    assertThat(contentList).hasSize(40);
+  }
+
+  @Test
+  void testEOF() {
+    // given
+    DocumentContext documentContext = getDocumentContext();
+    // when
+    List<Token> tokens = documentContext.getTokens();
+    Token lastToken = tokens.get(tokens.size() - 1);
+    // then
+    assertThat(lastToken.getType()).isEqualTo(Lexer.EOF);
+    assertThat(lastToken.getChannel()).isEqualTo(Lexer.HIDDEN);
+  }
 }

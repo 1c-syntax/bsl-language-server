@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 class DiagnosticIgnoranceComputerTest {
 
   @Test

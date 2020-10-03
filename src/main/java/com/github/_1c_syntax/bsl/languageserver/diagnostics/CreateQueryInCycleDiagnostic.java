@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -29,12 +28,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,22 +53,12 @@ import java.util.stream.Collectors;
   }
 )
 public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern EXECUTE_CALL_PATTERN = Pattern.compile(
-    "Выполнить|Execute",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern QUERY_BUILDER_PATTERN = Pattern.compile(
-    "ПостроительЗапроса|QueryBuilder",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern REPORT_BUILDER_PATTERN = Pattern.compile(
-    "ПостроительОтчета|ReportBuilder",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  private static final Pattern QUERY_PATTERN = Pattern.compile(
-    "Запрос|Query",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
+  private static final Pattern EXECUTE_CALL_PATTERN = CaseInsensitivePattern.compile("Выполнить|Execute");
+  private static final Pattern QUERY_BUILDER_PATTERN =
+    CaseInsensitivePattern.compile("ПостроительЗапроса|QueryBuilder");
+  private static final Pattern REPORT_BUILDER_PATTERN =
+    CaseInsensitivePattern.compile("ПостроительОтчета|ReportBuilder");
+  private static final Pattern QUERY_PATTERN = CaseInsensitivePattern.compile("Запрос|Query");
 
   private static final String BOOLEAN_TYPE = "Boolean";
   private static final String DATE_TYPE = "Datetime";
@@ -82,10 +73,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
   private VariableScope currentScope;
-
-  public CreateQueryInCycleDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
     String result;
@@ -235,6 +222,14 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
+  private void visitDescendantCodeBlock(BSLParser.CodeBlockContext ctx) {
+    Optional.ofNullable(ctx)
+      .map(e -> e.children)
+      .stream()
+      .flatMap(Collection::stream)
+      .forEach(t -> t.accept(this));
+  }
+
   @Override
   public ParseTree visitAccessCall(BSLParser.AccessCallContext ctx) {
     if (!EXECUTE_CALL_PATTERN.matcher(ctx.methodCall().methodName().getText()).matches()) {
@@ -274,10 +269,15 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    ParseTree result = super.visitForEachStatement(ctx);
+    if (alreadyInCycle) {
+      Optional.ofNullable(ctx.expression())
+        .ifPresent(e -> e.accept(this));
+    }
+    visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
-    return result;
+    return ctx;
   }
 
   @Override
@@ -290,10 +290,15 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
+    boolean alreadyInCycle = currentScope.codeFlowInCycle();
     currentScope.flowMode.push(CodeFlowType.CYCLE);
-    ParseTree result = super.visitForStatement(ctx);
+    if (alreadyInCycle) {
+      ctx.expression()
+        .forEach(e -> e.accept(this));
+    }
+    visitDescendantCodeBlock(ctx.codeBlock());
     currentScope.flowMode.pop();
-    return result;
+    return ctx;
   }
 
   public enum CodeFlowType {
@@ -302,8 +307,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   @ToString
   public static class VariableDefinition {
-    private String variableName;
-    private Set<String> types = new HashSet<>();
+    private final String variableName;
+    private final Set<String> types = new HashSet<>();
     private ParseTree firstDeclaration;
 
     VariableDefinition(String variableName) {
@@ -324,7 +329,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static class Scope {
     private final String name;
 
-    private HashMap<String, VariableDefinition> variables = new HashMap<>();
+    private final HashMap<String, VariableDefinition> variables = new HashMap<>();
 
     public Scope(String name) {
       this.name = name;
@@ -350,7 +355,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static class VariableScope extends ArrayDeque<Scope> {
-    private Deque<CodeFlowType> flowMode = new ArrayDeque<>();
+    private final Deque<CodeFlowType> flowMode = new ArrayDeque<>();
 
     public boolean codeFlowInCycle() {
       final CodeFlowType flowType = flowMode.peek();

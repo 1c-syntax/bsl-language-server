@@ -40,13 +40,13 @@ class NestedFunctionInParametersDiagnosticTest extends AbstractDiagnosticTest<Ne
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
-      .hasRange(1,22, 30)
-      .hasRange(3,11, 19)
-      .hasRange(3,20, 49)
-      .hasRange(8,4, 12)
-      .hasRange(13,35, 42)
-      .hasRange(17,22, 31)
-      .hasRange(36,14, 19)
+      .hasRange(1, 22, 30)
+      .hasRange(3, 11, 19)
+      .hasRange(3, 20, 49)
+      .hasRange(8, 4, 12)
+      .hasRange(13, 35, 42)
+      .hasRange(17, 22, 31)
+      .hasRange(36, 14, 19)
     ;
 
   }

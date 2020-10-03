@@ -21,13 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.HashMap;
@@ -39,25 +41,24 @@ import java.util.regex.Pattern;
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.BSL,
   minutesToFix = 15,
-  activatedByDefault = false,
   tags = {
     DiagnosticTag.STANDARD
-  }
+  },
+  compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3
 )
 public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private Pattern modalityMethods = Pattern.compile(
+  private final Pattern modalityMethods = CaseInsensitivePattern.compile(
     "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
       "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
       "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
       "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|" +
-      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)"
+  );
 
-  private HashMap<String, String> pairMethods = new HashMap<>();
+  private final HashMap<String, String> pairMethods = new HashMap<>();
 
-  public UsingModalWindowsDiagnostic(DiagnosticInfo info) {
-    super(info);
+  public UsingModalWindowsDiagnostic() {
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
     pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
@@ -82,6 +83,18 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
     pairMethods.put("INSTALLCRYPTOEXTENSION", "BeginInstallCryptoExtension");
     pairMethods.put("ПОМЕСТИТЬФАЙЛ", "НачатьПомещениеФайла");
     pairMethods.put("PUTFILE", "BeginPutFile");
+  }
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    var configuration = documentContext.getServerContext().getConfiguration();
+    // если использование модальных окон разрешено (без предупреждение), то
+    // ничего не диагностируется
+    if (configuration.getModalityUseMode() == UseMode.USE) {
+      return ctx;
+    }
+
+    return super.visitFile(ctx);
   }
 
   @Override

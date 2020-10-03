@@ -39,8 +39,8 @@ import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvi
 
 public class DiagnosticStorage {
 
-  private BSLDiagnostic diagnostic;
-  private Queue<Diagnostic> diagnosticList = new ConcurrentLinkedQueue<>();
+  private final BSLDiagnostic diagnostic;
+  private final Queue<Diagnostic> diagnosticList = new ConcurrentLinkedQueue<>();
 
   DiagnosticStorage(BSLDiagnostic diagnostic) {
     this.diagnostic = diagnostic;
@@ -190,7 +190,7 @@ public class DiagnosticStorage {
   public void addDiagnostic(
     Range range,
     String diagnosticMessage,
-    List<DiagnosticRelatedInformation> relatedInformation
+    @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
     diagnosticList.add(createDiagnostic(
       diagnostic,
@@ -204,8 +204,7 @@ public class DiagnosticStorage {
     BSLDiagnostic bslDiagnostic,
     Range range,
     String diagnosticMessage,
-    @Nullable
-      List<DiagnosticRelatedInformation> relatedInformation
+    @Nullable List<DiagnosticRelatedInformation> relatedInformation
   ) {
     Diagnostic diagnostic = new Diagnostic(
       range,
@@ -215,6 +214,7 @@ public class DiagnosticStorage {
     );
 
     diagnostic.setCode(bslDiagnostic.getInfo().getCode());
+    diagnostic.setTags(bslDiagnostic.getInfo().getLSPTags());
 
     if (relatedInformation != null) {
       diagnostic.setRelatedInformation(relatedInformation);

@@ -23,50 +23,48 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
+@Component
+@RequiredArgsConstructor
+public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   private final LanguageServerConfiguration configuration;
-  private BSLTextDocumentService textDocumentService;
-  private BSLWorkspaceService workspaceService;
+  private final BSLTextDocumentService textDocumentService;
+  private final BSLWorkspaceService workspaceService;
+  private final ServerContext context;
+  private final ServerInfo serverInfo;
   private boolean shutdownWasCalled;
-  private ServerContext context;
-
-  public BSLLanguageServer(LanguageServerConfiguration configuration) {
-    this.configuration = configuration;
-
-    context = new ServerContext();
-    workspaceService = new BSLWorkspaceService(configuration);
-    textDocumentService = new BSLTextDocumentService(configuration, context);
-  }
-
-  public BSLLanguageServer() {
-    this(LanguageServerConfiguration.create());
-  }
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     setConfigurationRoot(params);
+    CompletableFuture.runAsync(context::populateContext);
 
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
@@ -76,8 +74,10 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     capabilities.setDocumentSymbolProvider(Boolean.TRUE);
     capabilities.setCodeActionProvider(Boolean.TRUE);
     capabilities.setCodeLensProvider(new CodeLensOptions());
+    capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
+    capabilities.setWorkspaceSymbolProvider(Boolean.TRUE);
 
-    InitializeResult result = new InitializeResult(capabilities);
+    InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
     return CompletableFuture.completedFuture(result);
   }
@@ -115,6 +115,16 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     System.exit(status);
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * См. {@link BSLTextDocumentService#diagnostics(DiagnosticParams)}
+   */
+  @Override
+  public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
+    return textDocumentService.diagnostics(params);
+  }
+
   @Override
   public TextDocumentService getTextDocumentService() {
     return textDocumentService;
@@ -125,8 +135,4 @@ public class BSLLanguageServer implements LanguageServer, LanguageClientAware {
     return workspaceService;
   }
 
-  @Override
-  public void connect(LanguageClient client) {
-    textDocumentService.connect(client);
-  }
 }

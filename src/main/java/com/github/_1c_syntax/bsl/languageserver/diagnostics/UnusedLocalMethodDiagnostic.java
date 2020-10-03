@@ -21,20 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -48,31 +52,40 @@ import java.util.stream.Collectors;
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
-    DiagnosticTag.SUSPICIOUS
+    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.UNUSED
   }
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern ATTACHABLE_PATTERN = Pattern.compile(
-    "(подключаемый_.*|attachable_.*)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern ATTACHABLE_PATTERN = CaseInsensitivePattern.compile(
+    "(подключаемый_.*|attachable_.*)"
   );
 
-  private static final Pattern HANDLER_PATTERN = Pattern.compile(
-    "(ПриСозданииОбъекта|OnObjectCreate)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
+    "(ПриСозданииОбъекта|OnObjectCreate)"
   );
 
-  public UnusedLocalMethodDiagnostic(DiagnosticInfo info) {
-    super(info);
+  private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
+    AnnotationKind.AFTER,
+    AnnotationKind.AROUND,
+    AnnotationKind.BEFORE,
+    AnnotationKind.CHANGEANDVALIDATE
+  );
+
+  private static boolean isAttachable(MethodSymbol methodSymbol) {
+    return ATTACHABLE_PATTERN.matcher(methodSymbol.getName()).matches();
   }
 
-  private static boolean isAttachable(BSLParser.SubNameContext subNameContext) {
-    return ATTACHABLE_PATTERN.matcher(subNameContext.getText()).matches();
+  private static boolean isHandler(MethodSymbol methodSymbol) {
+    return HANDLER_PATTERN.matcher(methodSymbol.getName()).matches();
   }
 
-  private static boolean isHandler(BSLParser.SubNameContext subNameContext) {
-    return HANDLER_PATTERN.matcher(subNameContext.getText()).matches();
+  private static boolean isOverride(MethodSymbol method) {
+    return method.getAnnotations()
+      .stream()
+      .map(Annotation::getKind)
+      .anyMatch(EXTENSION_ANNOTATIONS::contains);
   }
 
   @Override
@@ -84,14 +97,14 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
         ((BSLParser.GlobalMethodCallContext) parseTree).methodName().getText().toLowerCase(Locale.ENGLISH))
       .collect(Collectors.toList());
 
-    Trees.findAllRuleNodes(ctx, BSLParser.RULE_subName)
+    documentContext.getSymbolTree().getMethods()
       .stream()
-      .map(parseTree -> ((BSLParser.SubNameContext) parseTree))
-      .filter(subNameContext -> Trees.findAllTokenNodes(subNameContext.getParent(), BSLLexer.EXPORT_KEYWORD).isEmpty())
-      .filter(subNameContext -> !isAttachable(subNameContext))
-      .filter(subNameContext -> !isHandler(subNameContext))
-      .filter(subNameContext -> !collect.contains(subNameContext.getText().toLowerCase(Locale.ENGLISH)))
-      .forEach(node -> diagnosticStorage.addDiagnostic(node, info.getMessage(node.getText())));
+      .filter(method -> !method.isExport())
+      .filter(method -> !isOverride(method))
+      .filter(method -> !isAttachable(method))
+      .filter(method -> !isHandler(method))
+      .filter(method -> !collect.contains(method.getName().toLowerCase(Locale.ENGLISH)))
+      .forEach(method -> diagnosticStorage.addDiagnostic(method.getSubNameRange(), info.getMessage(method.getName())));
 
     return ctx;
   }

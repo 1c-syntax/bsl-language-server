@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -30,19 +30,13 @@ import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@RequiredArgsConstructor
 public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 
-  protected final DiagnosticProvider diagnosticProvider;
   protected final QuickFixSupplier quickFixSupplier;
-
-  public AbstractQuickFixSupplier(DiagnosticProvider diagnosticProvider, QuickFixSupplier quickFixSupplier) {
-    this.diagnosticProvider = diagnosticProvider;
-    this.quickFixSupplier = quickFixSupplier;
-  }
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
@@ -56,7 +50,7 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
-    Set<Diagnostic> computedDiagnostics = diagnosticProvider.getComputedDiagnostics(documentContext);
+    List<Diagnostic> computedDiagnostics = documentContext.getComputedDiagnostics();
 
     Stream<Diagnostic> diagnosticStream = incomingDiagnostics.stream()
       .filter(computedDiagnostics::contains);

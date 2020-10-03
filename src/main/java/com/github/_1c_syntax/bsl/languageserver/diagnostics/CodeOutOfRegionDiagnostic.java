@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -56,11 +55,7 @@ import java.util.stream.Collectors;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
 )
 public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
-  private List<Range> regionsRanges = new ArrayList<>();
-
-  public CodeOutOfRegionDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private final List<Range> regionsRanges = new ArrayList<>();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -71,7 +66,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
 
       List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);
-      if(!relatedInformation.isEmpty()) {
+      if (!relatedInformation.isEmpty()) {
         diagnosticStorage.addDiagnostic(
           relatedInformation.get(0).getLocation().getRange(),
           relatedInformation);

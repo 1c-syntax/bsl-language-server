@@ -21,17 +21,47 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.AutoServerInfo;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
+@SpringBootTest
+@DirtiesContext
 class VersionCommandTest {
 
-  @Test
-  void testExecute() {
-    Command command = new VersionCommand();
-    int result = command.execute();
+  @MockBean
+  private AutoServerInfo autoServerInfo;
 
-    assertThat(result).isEqualTo(0);
+  @Autowired
+  private VersionCommand command;
+
+  @Test
+  void testFailedCall() {
+    // given
+    when(autoServerInfo.getVersion()).thenReturn("");
+
+    // when
+    var call = command.call();
+
+    // then
+    assertThat(call).isEqualTo(1);
+  }
+
+  @Test
+  void testSuccessfulCall() {
+    // given
+    when(autoServerInfo.getVersion()).thenReturn("0.0.0");
+
+    // when
+    var call = command.call();
+
+    // then
+    assertThat(call).isZero();
   }
 }

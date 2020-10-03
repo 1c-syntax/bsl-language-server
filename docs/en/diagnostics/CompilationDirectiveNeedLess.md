@@ -1,8 +1,8 @@
 # Needless compilation directive (CompilationDirectiveNeedLess)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Major` | `Yes` | `1` | `clumsy`<br/>`standard`<br/>`unpredictable` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Major` | `Yes` | `1` | `clumsy`<br>`standard`<br>`unpredictable` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -21,7 +21,7 @@ In server or client common modules, the execution context is obvious, so there i
 
 ## Sources
 
-- Source: [The use of compilation directives and preprocessor instructions(RUS)](https://its.1c.ru/db/v8std#content:453:hdoc)
+- Source: [The use of compilation directives and preprocessor instructions(RUS)](https://its.1c.ru/db/v8std#content:439:hdoc)
 
 ## Snippets
 

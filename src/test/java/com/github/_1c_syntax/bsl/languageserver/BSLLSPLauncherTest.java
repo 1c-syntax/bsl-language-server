@@ -25,51 +25,39 @@ import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class BSLLSPLauncherTest {
 
-  private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-  private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
-  private final PrintStream originalOut = System.out;
-  private final PrintStream originalErr = System.err;
+  private ByteArrayOutputStream outContent;
+  private ByteArrayOutputStream errContent;
 
   @BeforeEach
   void setUpStreams() {
+    outContent = new ByteArrayOutputStream();
+    errContent = new ByteArrayOutputStream();
     System.setOut(new PrintStream(outContent));
     System.setErr(new PrintStream(errContent));
   }
 
   @AfterEach
   void restoreStreams() {
-    System.setOut(originalOut);
-    System.setErr(originalErr);
+    System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+    System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
   }
 
   @Test
-  @ExpectSystemExitWithStatus(0)
-  void testHelp() {
-    // given
-    String[] args = new String[]{"--help"};
-
-
-    // when
-    try {
-      BSLLSPLauncher.main(args);
-    } catch (RuntimeException ignored) {
-      // catch prevented system.exit call
-    }
-
-    // then
-    assertThat(outContent.toString()).containsIgnoringCase("usage: ");
-  }
-
-  @Test
-  @ExpectSystemExitWithStatus(1)
+  @ExpectSystemExitWithStatus(2)
   void testParseError() {
     // given
     String[] args = new String[]{"--error"};
@@ -82,14 +70,14 @@ class BSLLSPLauncherTest {
     }
 
     // then
-    assertThat(errContent.toString()).containsIgnoringCase("Unrecognized option: --error");
+    assertThat(errContent.toString()).containsIgnoringCase("Unknown option: '--error'");
   }
 
   @Test
   @ExpectSystemExitWithStatus(0)
   void testAnalyze() {
     // given
-    String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/cli"};
+    String[] args = "--analyze --srcDir ./src/test/resources/cli".split(" ");
 
     // when
     try {
@@ -101,15 +89,53 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
-    // TODO:
     // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testAnalyzeSilent() {
+    // given
+    String[] args = "--analyze --srcDir ./src/test/resources/cli --silent".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(1)
+  void testAnalyzeError() {
+    // given
+    String[] args = "--analyze --srcDir fake-dir".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).contains("is not exists");
+    assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
   @ExpectSystemExitWithStatus(0)
   void testFormat() {
     // given
-    String[] args = new String[]{"--format", "--srcDir", "./src/test/resources/cli"};
+    String[] args = "--format --src ./src/test/resources/cli".split(" ");
 
     // when
     try {
@@ -121,8 +147,85 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
-    // TODO:
     // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testFormatOneFile() {
+    // given
+    String[] args = "--format --src ./src/test/resources/cli/test.bsl.txt".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    // assertThat(errContent.toString()).contains("100%");
+    assertThat(errContent.toString()).doesNotContain("ERROR");
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testFormatSilent() {
+    // given
+    String[] args = "--format --src ./src/test/resources/cli --silent".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(1)
+  void testFormatError() {
+    // given
+    String[] args = "--format --src fake-dir".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).contains("is not exists");
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  @ExpectSystemExitWithStatus(0)
+  void testVersion() {
+    // given
+    String[] args = {"-v"};
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).startsWith("version:");
+    assertThat(errContent.toString()).isEmpty();
   }
 
   @Test
@@ -136,6 +239,39 @@ class BSLLSPLauncherTest {
     // then
     // main-method should runs without exceptions
     assertThat(outContent.toString()).isEmpty();
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  void testWithoutCommandWithConfig() {
+    // проверим, что перешли в команду lsp
+
+    // given
+    String[] args = "-c .".split(" ");
+
+    // when
+    try {
+      BSLLSPLauncher.main(args);
+    } catch (RuntimeException ignored) {
+      // catch prevented system.exit call
+    }
+
+    // then
+    assertThat(outContent.toString()).contains("LanguageServerStartCommand");
+    assertThat(errContent.toString()).isEmpty();
+  }
+
+  @Test
+  void testWithoutParametersErrorCfg() {
+    // given
+    String[] args = new String[]{"-c", "src/test/resources/cli/error-trace.json"};
+
+    // when
+    BSLLSPLauncher.main(args);
+
+    // then
+    // main-method should runs without exceptions
+    assertThat(outContent.toString()).contains("Trace log setting must lead to file, not directory");
     assertThat(errContent.toString()).isEmpty();
   }
 }

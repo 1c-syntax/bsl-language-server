@@ -25,48 +25,109 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
-public class FormatCommand implements Command {
+import static picocli.CommandLine.Command;
+import static picocli.CommandLine.Option;
 
-  private CommandLine cmd;
-  private ServerContext serverContext;
+/**
+ * Форматирование кода в исходниках
+ * Ключ команды:
+ *  -f, (--format)
+ * Параметры:
+ *  -s, (--src)                -  Путь к каталогу исходных файлов.
+ *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ *                                то анализ выполняется в текущем каталоге запуска.
+ *                                Можно указать каталог, в котором будут найдены файлы для форматирования, либо один
+ *                                файл для форматирования
+ *  -q, (--silent)             -  Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
+ * Выводимая информация:
+ *  Выполняет форматирование исходного кода в файлах каталога. Для форматирования используются правила и настройки
+ *  "форматтера" FormatProvider, т.е. пользователь никак не может овлиять на результат.
+ */
+@Slf4j
+@Command(
+  name = "format",
+  aliases = {"-f", "--format"},
+  description = "Format files in source directory",
+  usageHelpAutoWidth = true,
+  footer = "@|green Copyright(c) 2018-2020|@")
+@Component
+@RequiredArgsConstructor
+public class FormatCommand implements Callable<Integer> {
 
-  public FormatCommand(CommandLine cmd) {
-    this.cmd = cmd;
-    this.serverContext = new ServerContext();
-  }
+  private final ServerContext serverContext;
+  private final FormatProvider formatProvider;
 
-  @Override
-  public int execute() {
+  @Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  private boolean usageHelpRequested;
+
+  @Option(
+    names = {"-s", "--srcDir", "--src"}, // TODO delete old key --srcDir
+    description = "Source directory or file",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String srcDirOption;
+
+  @Option(
+    names = {"-q", "--silent"},
+    description = "Silent mode")
+  private boolean silentMode;
+
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
+
+  public Integer call() {
     serverContext.clear();
 
-    String srcDirOption = cmd.getOptionValue("srcDir", "");
-
     Path srcDir = Absolute.path(srcDirOption);
+    if (!srcDir.toFile().exists()) {
+      LOGGER.error("Source dir `{}` is not exists", srcDir.toString());
+      return 1;
+    }
 
-    Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    Collection<File> files;
 
-    try (ProgressBar pb = new ProgressBar("Formatting files...", files.size(), ProgressBarStyle.ASCII)) {
-      files.parallelStream()
-        .forEach((File file) -> {
-          pb.step();
-          formatFile(file);
-        });
+    if(srcDir.toFile().isDirectory()) {
+      files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
+    } else {
+      files = Collections.singletonList(srcDir.toFile());
+    }
+
+    if (silentMode) {
+      files.parallelStream().forEach(this::formatFile);
+    } else {
+      try (ProgressBar pb = new ProgressBar("Formatting files...", files.size(), ProgressBarStyle.ASCII)) {
+        files.parallelStream()
+          .forEach((File file) -> {
+            pb.step();
+            formatFile(file);
+          });
+      }
     }
 
     return 0;
@@ -84,7 +145,7 @@ public class FormatCommand implements Command {
     options.setInsertSpaces(false);
 
     params.setOptions(options);
-    final List<TextEdit> formatting = FormatProvider.getFormatting(params, documentContext);
+    final List<TextEdit> formatting = formatProvider.getFormatting(params, documentContext);
 
     serverContext.removeDocument(uri);
 

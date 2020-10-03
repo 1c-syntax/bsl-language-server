@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -38,14 +37,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
   }
 )
 public class CodeBlockBeforeSubDiagnostic extends AbstractVisitorDiagnostic {
-  public CodeBlockBeforeSubDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
     // todo надо править парсер ибо данный узел есть даже когда его нет. ниже попытка обойти это
-    if(!ctx.getTokens().isEmpty()) {
+    if (!ctx.getTokens().isEmpty()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
     return ctx;

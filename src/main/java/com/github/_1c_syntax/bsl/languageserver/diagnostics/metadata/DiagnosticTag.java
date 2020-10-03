@@ -33,6 +33,7 @@ public enum DiagnosticTag {
   SUSPICIOUS("Подозрительный код"),
   UNPREDICTABLE("Непредсказуемо работающий код"),
   DEPRECATED("Устаревшая функциональность"),
+  UNUSED("Неиспользуемый код"),
   ERROR("Ошибочная конструкция"),
   LOCALIZE("Проблемы локализации");
 
@@ -40,5 +41,9 @@ public enum DiagnosticTag {
 
   DiagnosticTag(String descriptionRu) {
     this.description = descriptionRu;
+  }
+
+  public String getDescription() {
+    return description;
   }
 }

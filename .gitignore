@@ -61,9 +61,14 @@ gen/
 
 .idea/sonarlint-state.xml
 .idea/sonarlint.xml
+.idea/checkstyle-idea.xml
 *.bak
 *.orig
 
 # mkdocs
 temp/
 public/
+
+# jpackage
+bsl-language-server/
+bsl-language-server_*.zip

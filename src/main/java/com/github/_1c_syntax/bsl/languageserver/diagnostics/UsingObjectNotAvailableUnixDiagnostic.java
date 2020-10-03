@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -29,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -47,17 +47,13 @@ import java.util.regex.Pattern;
 )
 public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern patternNewExpression = Pattern.compile(
-    "^(COMОбъект|COMObject|Почта|Mail)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern patternNewExpression = CaseInsensitivePattern.compile(
+    "^(COMОбъект|COMObject|Почта|Mail)"
+  );
 
-  private static final Pattern patternTypePlatform = Pattern.compile(
-    "Linux_x86|Windows|MacOS",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
-  public UsingObjectNotAvailableUnixDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private static final Pattern patternTypePlatform = CaseInsensitivePattern.compile(
+    "Linux_x86|Windows|MacOS"
+  );
 
   /**
    * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся

@@ -39,9 +39,11 @@ class UseLessForEachDiagnosticTest extends AbstractDiagnosticTest<UseLessForEach
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
-      .hasRange(0, 12, 0, 20);
+      .hasRange(2, 12, 2, 20)
+      .hasRange(39, 16, 26)
+    ;
 
   }
 }

@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -31,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -55,28 +55,22 @@ import java.util.regex.Pattern;
 )
 public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
 
-  private static final Pattern paramPattern = Pattern.compile(
-    "\"(УправляемаяФорма|ManagedForm)\"",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern paramPattern = CaseInsensitivePattern.compile(
+    "\"(УправляемаяФорма|ManagedForm)\""
   );
 
-  private static final Pattern methodPattern = Pattern.compile(
-    "(Тип|Type)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern methodPattern = CaseInsensitivePattern.compile(
+    "(Тип|Type)"
   );
-
-  public DeprecatedTypeManagedFormDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx ) {
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     Optional.of(ctx)
       .filter(it -> methodPattern.matcher(it.methodName().getText()).matches())
       .map(BSLParser.GlobalMethodCallContext::doCall)
       .map(BSLParser.DoCallContext::callParamList)
       .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
-      .ifPresent(callParamList -> diagnosticStorage.addDiagnostic(callParamList));
+      .ifPresent(diagnosticStorage::addDiagnostic);
 
     return super.visitGlobalMethodCall(ctx);
   }

@@ -21,10 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,14 +41,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration.DEFAULT_DIAGNOSTIC_LANGUAGE;
+import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class LanguageServerConfigurationTest {
 
   private static final String PATH_TO_CONFIGURATION_FILE = "./src/test/resources/.bsl-language-server.json";
   private static final String PATH_TO_EMPTY_CONFIGURATION_FILE = "./src/test/resources/.empty-bsl-language-server.json";
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_PARTIAL_CONFIGURATION_FILE
+    = "./src/test/resources/.partial-bsl-language-server.json";
+
+  @Autowired
+  private LanguageServerConfiguration configuration;
 
   @BeforeEach
   void startUp() throws IOException {
@@ -54,12 +68,9 @@ class LanguageServerConfigurationTest {
 
   @Test
   void createDefault() {
-    // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
-
     // then
-    assertThat(configuration.getDiagnosticLanguage()).isEqualTo(DiagnosticLanguage.RU);
-    assertThat(configuration.getDiagnostics()).isEmpty();
+    assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
+    assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
   }
 
   @Test
@@ -69,28 +80,31 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
 
     // then
-    DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    Language language = configuration.getLanguage();
+    Map<String, Either<Boolean, Map<String, Object>>> parameters = diagnosticsOptions.getParameters();
 
-    assertThat(diagnosticLanguage).isEqualTo(DiagnosticLanguage.EN);
-    assertThat(diagnostics).hasSize(2);
+    assertThat(language).isEqualTo(Language.EN);
+    assertThat(parameters).hasSize(2);
 
-    Either<Boolean, Map<String, Object>> lineLength = diagnostics.get("LineLength");
+    Either<Boolean, Map<String, Object>> lineLength = parameters.get("LineLength");
     assertThat(lineLength.isRight()).isTrue();
     assertThat(lineLength.getRight()).isInstanceOfAny(Map.class);
     assertThat(lineLength.getRight())
       .extracting(stringObjectMap -> stringObjectMap.get("maxLineLength"))
       .isEqualTo(140);
 
-    Either<Boolean, Map<String, Object>> methodSize = diagnostics.get("MethodSize");
+    Either<Boolean, Map<String, Object>> methodSize = parameters.get("MethodSize");
     assertThat(methodSize.isLeft()).isTrue();
-    assertThat(methodSize.getLeft()).isEqualTo(false);
+    assertThat(methodSize.getLeft()).isFalse();
 
     Path configurationRoot = configuration.getConfigurationRoot();
-    assertThat(configurationRoot).isNotEqualTo(null);
+    assertThat(configurationRoot).isNotNull();
+
+    assertThat(configuration.getDocumentLinkOptions().isUseDevSite()).isTrue();
 
   }
 
@@ -101,30 +115,51 @@ class LanguageServerConfigurationTest {
     File configurationFile = new File(PATH_TO_EMPTY_CONFIGURATION_FILE);
 
     // when
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
 
     // then
-    DiagnosticLanguage diagnosticLanguage = configuration.getDiagnosticLanguage();
-    Map<String, Either<Boolean, Map<String, Object>>> diagnostics = configuration.getDiagnostics();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    Language language = configuration.getLanguage();
+    Map<String, Either<Boolean, Map<String, Object>>> parameters = diagnosticsOptions.getParameters();
 
-    assertThat(diagnosticLanguage).isEqualTo(DEFAULT_DIAGNOSTIC_LANGUAGE);
-    assertThat(diagnostics).isEmpty();
+    assertThat(language).isEqualTo(DEFAULT_LANGUAGE);
+    assertThat(parameters).isEmpty();
 
   }
 
   @Test
   void test_GetCustomConfigurationRoot() {
 
-    LanguageServerConfiguration configuration = LanguageServerConfiguration.create();
     Path path = Paths.get(PATH_TO_METADATA);
     Path configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
     File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
-    configuration = LanguageServerConfiguration.create(configurationFile);
+    configuration.update(configurationFile);
     configurationRoot = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, path);
     assertThat(configurationRoot).isEqualTo(Absolute.path(path));
 
+  }
+
+  @Test
+  void testPartialInitialization() {
+    // given
+    File configurationFile = new File(PATH_TO_PARTIAL_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
+
+    // when
+    CodeLensOptions codeLensOptions = configuration.getCodeLensOptions();
+    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+
+    // then
+    assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
+    assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
+
+    assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
+
+    assertThat(diagnosticsOptions.getMode()).isEqualTo(Mode.ON);
+    assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);
+    assertThat(diagnosticsOptions.getParameters()).isEmpty();
   }
 
 }

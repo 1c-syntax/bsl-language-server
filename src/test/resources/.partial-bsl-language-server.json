@@ -1,0 +1,9 @@
+{
+  "$schema": "https://1c-syntax.github.io/bsl-language-server/dev/configuration/schema.json",
+  "codeLens": {
+    "showCyclomaticComplexity": false
+  },
+  "diagnostics": {
+    "mode": "on"
+  }
+}

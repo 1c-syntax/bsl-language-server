@@ -25,33 +25,39 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComple
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CyclomaticComplexityComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.QueryComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.SymbolTreeComputer;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.bsl.parser.Tokenizer;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
+import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
-import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -60,31 +66,39 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext {
 
   private final URI uri;
-  private final FileType fileType;
   private String content;
-  private ServerContext context;
-  private Tokenizer tokenizer;
+  private final ServerContext context;
+  private final DiagnosticComputer diagnosticComputer;
 
-  private ReentrantLock computeLock = new ReentrantLock();
+  private final FileType fileType;
+  private BSLTokenizer tokenizer;
 
-  private Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
-  private Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
-  private Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
+  private final ReentrantLock computeLock = new ReentrantLock();
+  private final ReentrantLock diagnosticsLock = new ReentrantLock();
+
+  private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
+  private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
+  private final Lazy<Map<SupportConfiguration, SupportVariant>> supportVariants
     = new Lazy<>(this::computeSupportVariants, computeLock);
-  private Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
-  private Lazy<ComplexityData> cognitiveComplexityData
+  private final Lazy<SymbolTree> symbolTree = new Lazy<>(this::computeSymbolTree, computeLock);
+  private final Lazy<ComplexityData> cognitiveComplexityData
     = new Lazy<>(this::computeCognitiveComplexity, computeLock);
-  private Lazy<ComplexityData> cyclomaticComplexityData
+  private final Lazy<ComplexityData> cyclomaticComplexityData
     = new Lazy<>(this::computeCyclomaticComplexity, computeLock);
-  private Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
+  private final Lazy<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceData
     = new Lazy<>(this::computeDiagnosticIgnorance, computeLock);
-  private Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private final Lazy<MetricStorage> metrics = new Lazy<>(this::computeMetrics, computeLock);
+  private final Lazy<List<Diagnostic>> diagnostics = new Lazy<>(this::computeDiagnostics, diagnosticsLock);
 
-  public DocumentContext(URI uri, String content, ServerContext context) {
-    this.uri = Absolute.uri(uri);
+  private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
+
+  public DocumentContext(URI uri, String content, ServerContext context, DiagnosticComputer diagnosticComputer) {
+    this.uri = uri;
     this.content = content;
     this.context = context;
-    this.tokenizer = new Tokenizer(content);
+    this.diagnosticComputer = diagnosticComputer;
+
+    this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
   }
 
@@ -187,32 +201,48 @@ public class DocumentContext {
     return supportVariants.getOrCompute();
   }
 
+  public Optional<MDObjectBase> getMdObject() {
+    return Optional.ofNullable(getServerContext().getConfiguration().getModulesByObject().get(getUri()));
+  }
+
+  public List<SDBLTokenizer> getQueries() {
+    return queries.getOrCompute();
+  }
+
+  public List<Diagnostic> getDiagnostics() {
+    return diagnostics.getOrCompute();
+  }
+
+  public List<Diagnostic> getComputedDiagnostics() {
+    return Optional
+      .ofNullable(diagnostics.get())
+      .orElseGet(Collections::emptyList);
+  }
+
   public void rebuild(String content) {
     computeLock.lock();
-    clear();
+    clearSecondaryData();
+    symbolTree.clear();
     this.content = content;
-    tokenizer = new Tokenizer(content);
+    tokenizer = new BSLTokenizer(content);
     computeLock.unlock();
   }
 
   public void clearSecondaryData() {
+    computeLock.lock();
+    diagnosticsLock.lock();
     content = null;
     contentList.clear();
     tokenizer = null;
 
-    if (symbolTree.isPresent()) {
-      getSymbolTree().getChildrenFlat().forEach(Symbol::clearParseTreeData);
-    }
     cognitiveComplexityData.clear();
     cyclomaticComplexityData.clear();
     metrics.clear();
     diagnosticIgnoranceData.clear();
-  }
-
-  private void clear() {
-    clearSecondaryData();
-
-    symbolTree.clear();
+    diagnostics.clear();
+    queries.clear();
+    diagnosticsLock.unlock();
+    computeLock.unlock();
   }
 
   private static FileType computeFileType(URI uri) {
@@ -234,7 +264,7 @@ public class DocumentContext {
   }
 
   private String[] computeContentList() {
-    return getContent().split("\n");
+    return getContent().split("\n", -1);
   }
 
   private SymbolTree computeSymbolTree() {
@@ -267,17 +297,11 @@ public class DocumentContext {
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());
 
-    int ncloc = (int) getTokensFromDefaultChannel().stream()
-      .map(Token::getLine)
-      .distinct()
-      .count();
-
-    metricsTemp.setNcloc(ncloc);
-
     int[] nclocData = getTokensFromDefaultChannel().stream()
       .mapToInt(Token::getLine)
       .distinct().toArray();
     metricsTemp.setNclocData(nclocData);
+    metricsTemp.setNcloc(nclocData.length);
 
     metricsTemp.setCovlocData(computeCovlocData());
 
@@ -290,13 +314,11 @@ public class DocumentContext {
     }
     metricsTemp.setLines(lines);
 
-    int comments;
-    final List<Token> commentsUnboxed = getComments();
-    if (commentsUnboxed.isEmpty()) {
-      comments = 0;
-    } else {
-      comments = (int) commentsUnboxed.stream().map(Token::getLine).distinct().count();
-    }
+    int comments = (int) getComments()
+      .stream()
+      .map(Token::getLine)
+      .distinct()
+      .count();
     metricsTemp.setComments(comments);
 
     int statements = Trees.findAllRuleNodes(getAst(), BSLParser.RULE_statement).size();
@@ -311,7 +333,7 @@ public class DocumentContext {
   private int[] computeCovlocData() {
 
     return Trees.getDescendants(getAst()).stream()
-      .filter(node -> !(node instanceof TerminalNodeImpl))
+      .filter(Predicate.not(TerminalNodeImpl.class::isInstance))
       .filter(DocumentContext::mustCovered)
       .mapToInt(node -> ((BSLParserRuleContext) node).getStart().getLine())
       .distinct().toArray();
@@ -329,4 +351,11 @@ public class DocumentContext {
     return diagnosticIgnoranceComputer.compute();
   }
 
+  private List<Diagnostic> computeDiagnostics() {
+    return diagnosticComputer.compute(this);
+  }
+
+  private List<SDBLTokenizer> computeQueries() {
+    return (new QueryComputer(this)).compute();
+  }
 }

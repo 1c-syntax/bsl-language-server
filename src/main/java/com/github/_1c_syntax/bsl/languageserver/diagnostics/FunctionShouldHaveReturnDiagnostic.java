@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -44,20 +43,15 @@ import java.util.Collection;
 )
 public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnostic {
 
-  public FunctionShouldHaveReturnDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    if (ctx.ENDFUNCTION_KEYWORD() == null
-      || Trees.treeContainsErrors(ctx)) {
+    if (ctx.ENDFUNCTION_KEYWORD() == null) {
       return ctx;
     }
 
     Collection<ParseTree> tokens = Trees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
-    if (tokens.isEmpty()) {
+    if (tokens.isEmpty() && !Trees.treeContainsErrors(ctx)) {
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
       diagnosticStorage.addDiagnostic(subName);
     }

@@ -43,9 +43,10 @@ public enum DiagnosticCompatibilityMode {
   COMPATIBILITY_MODE_8_3_13(3, 13),
   COMPATIBILITY_MODE_8_3_14(3, 14),
   COMPATIBILITY_MODE_8_3_15(3, 15),
-  COMPATIBILITY_MODE_8_3_16(3, 16);
+  COMPATIBILITY_MODE_8_3_16(3, 16),
+  COMPATIBILITY_MODE_8_3_17(3, 17);
 
-  private CompatibilityMode compatibilityMode;
+  private final CompatibilityMode compatibilityMode;
 
   DiagnosticCompatibilityMode(int minor, int version) {
     this.compatibilityMode = new CompatibilityMode(minor, version);

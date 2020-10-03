@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -54,14 +53,10 @@ import java.util.stream.Collectors;
 public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
   // кэш диапазонов зарегистрированных ошибок
-  private List<Range> errorRanges = new ArrayList<>();
+  private final List<Range> errorRanges = new ArrayList<>();
 
   // диапазоны препроцессорных скобок
-  private List<Range> preprocessorRanges = new ArrayList<>();
-
-  public UnreachableCodeDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
+  private final List<Range> preprocessorRanges = new ArrayList<>();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -174,7 +169,10 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       .stream()
       .filter(node ->
         node.getStart().getType() != BSLLexer.SEMICOLON
-          && !Trees.nodeContains(node, BSLParser.RULE_regionStart, BSLParser.RULE_regionEnd))
+          && !Trees.nodeContains(node,
+          BSLParser.RULE_regionStart,
+          BSLParser.RULE_regionEnd,
+          BSLParser.RULE_preproc_endif))
       .collect(Collectors.toList());
 
     // если в блоке кода есть еще стейты кроме текущего

@@ -21,11 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+
+import java.util.Collection;
+import java.util.Optional;
 
 public final class Ranges {
 
@@ -35,6 +39,18 @@ public final class Ranges {
 
   public static Range create(int startLine, int startChar, int endLine, int endChar) {
     return new Range(new Position(startLine, startChar), new Position(endLine, endChar));
+  }
+
+  /**
+   * Создание Range для линии
+   *
+   * @param lineNo    - номер строки
+   * @param startChar - номер первого символа
+   * @param endChar   - номер последнего символа
+   * @return - полученный Range
+   */
+  public static Range create(int lineNo, int startChar, int endChar) {
+    return new Range(new Position(lineNo, startChar), new Position(lineNo, endChar));
   }
 
   public static Range create(ParserRuleContext ruleContext) {
@@ -82,5 +98,14 @@ public final class Ranges {
 
   public static boolean containsPosition(Range range, Position position) {
     return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
+  }
+
+  public static Optional<Range> getFirstSignificantTokenRange(Collection<Token> tokens) {
+    return tokens.stream()
+      .filter(token -> token.getType() != Token.EOF)
+      .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
+      .map(Ranges::create)
+      .filter(range -> (!range.getStart().equals(range.getEnd())))
+      .findFirst();
   }
 }

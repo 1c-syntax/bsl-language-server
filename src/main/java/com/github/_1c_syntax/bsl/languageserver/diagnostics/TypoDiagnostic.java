@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -101,10 +100,6 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   )
   private String userWordsToIgnore = DEFAULT_USER_WORDS_TO_IGNORE;
 
-  public TypoDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
     super.configure(configuration);
@@ -154,7 +149,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   @Override
-  protected void check(DocumentContext documentContext) {
+  protected void check() {
 
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, List<Token>> tokensMap = new HashMap<>();

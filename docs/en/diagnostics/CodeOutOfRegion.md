@@ -1,8 +1,8 @@
 # Code out of region (CodeOutOfRegion)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -16,15 +16,43 @@ The code of module should be structured and divided into regions.
 
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+```bsl
+#Region <RegionName>
+```
+
+The standard describes only 10 region names, the names of nested regions are not checked.
+
+Correct:
+
+```bsl
+#Region Private
+#Region Print
+// Methods code
+#EndRegion
+#Region Other
+// Methods code
+#EndRegion
+#EndRegion
+```
+
+Name matching table (full in [source code](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255)):
+
+RU | EN
+--- | ---
+ПрограммныйИнтерфейс | Public
+СлужебныйПрограммныйИнтерфейс | Internal
+СлужебныеПроцедурыИФункции | Private
+ОбработчикиСобытий | EventHandlers
+ОбработчикиСобытийФормы | FormEventHandlers
+ОбработчикиСобытийЭлементовШапкиФормы | FormHeaderItemsEventHandlers
+ОбработчикиКомандФормы | FormCommandsEventHandlers
+ОписаниеПеременных | Variables
+Инициализация | Initialize
+ОбработчикиСобытийЭлементовТаблицыФормы | FormTableItemsEventHandlers
+
 ## Sources
 
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-
-<!-- Примеры источников
-
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 - Reference [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 

@@ -26,15 +26,19 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.springframework.boot.test.context.TestComponent;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
+@TestComponent
 public class TestUtils {
 
   public static final URI FAKE_DOCUMENT_URI = Absolute.uri("file:///fake-uri.bsl");
+  public static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   @SneakyThrows
   public static DocumentContext getDocumentContextFromFile(String filePath) {
@@ -48,10 +52,23 @@ public class TestUtils {
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent) {
-    return new DocumentContext(uri, fileContent, new ServerContext());
+    return getDocumentContext(uri, fileContent, TestApplicationContext.getBean(ServerContext.class));
   }
 
   public static DocumentContext getDocumentContext(String fileContent) {
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent);
+  }
+
+  public static DocumentContext getDocumentContext(String fileContent, @Nullable ServerContext context) {
+    ServerContext passedContext = context;
+    if (passedContext == null) {
+      passedContext = TestApplicationContext.getBean(ServerContext.class);
+    }
+
+    return getDocumentContext(FAKE_DOCUMENT_URI, fileContent, passedContext);
+  }
+
+  public static DocumentContext getDocumentContext(URI uri, String fileContent, ServerContext context) {
+    return context.addDocument(uri, fileContent);
   }
 }

@@ -21,25 +21,44 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.Getter;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MethodDescription {
 
   private static final int COMMENT_LENGTH = 2;
+  private static final Pattern DEPRECATED_PATTERN
+    = CaseInsensitivePattern.compile("(?:\\s*)(?:Устарела|Deprecated)\\.(.*)");
+
   private final int startLine;
   private final int endLine;
   @Getter
   private final String description;
+
+  @Getter
+  private final String deprecationInfo;
+  @Getter
+  private final boolean deprecated;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
       .map(Token::getText)
       .map(MethodDescription::uncomment)
       .collect(Collectors.joining("\n"));
+    Matcher matcher = DEPRECATED_PATTERN.matcher(description);
+    if (matcher.find()) {
+      deprecationInfo = matcher.group(1);
+      deprecated = true;
+    } else {
+      deprecationInfo = "";
+      deprecated = false;
+    }
 
     if (comments.isEmpty()) {
       startLine = 0;

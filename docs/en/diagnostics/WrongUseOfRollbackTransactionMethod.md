@@ -1,8 +1,8 @@
 # Not recommended using of RollbackTransaction method (WrongUseOfRollbackTransactionMethod)
 
-| Type | Scope | Severity | Activated<br/>by default | Minutes<br/>to fix | Tags |
-| :-: | :-: | :-: | :-: | :-: | :-: |
-| `Error` | `BSL` | `Critical` | `Yes` | `1` | `standard` |
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL` | `Critical` | `Yes` | `1` | `standard` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -27,11 +27,7 @@ EndTry;
 ```
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информаця: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 Source: [Transactions: rules of use:](https://support.1ci.com/hc/en-us/articles/360011121239-Transactions-rules-of-use)
 
 ## Snippets

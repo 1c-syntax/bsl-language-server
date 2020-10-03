@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -32,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -53,15 +53,16 @@ import java.util.stream.Collectors;
 )
 public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern PATTERN_TIMEOUT = Pattern.compile("^.(Таймаут|Timeout)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final Pattern PATTERN_NEW_EXPRESSION = Pattern.compile(
-    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final Pattern PATTERN_NEW_EXPRESSION_WITH_MAIL = Pattern.compile(
+  private static final Pattern PATTERN_TIMEOUT = CaseInsensitivePattern.compile(
+    "^\\.(Таймаут|Timeout)"
+  );
+  private static final Pattern PATTERN_NEW_EXPRESSION = CaseInsensitivePattern.compile(
+    "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy)"
+  );
+  private static final Pattern PATTERN_NEW_EXPRESSION_WITH_MAIL = CaseInsensitivePattern.compile(
     "^(FTPСоединение|FTPConnection|HTTPСоединение|HTTPConnection|WSОпределения|WSDefinitions|WSПрокси|WSProxy" +
-      "|ИнтернетПочтовыйПрофиль|InternetMailProfile)",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      "|ИнтернетПочтовыйПрофиль|InternetMailProfile)"
+  );
 
   private static final boolean ANALYZING_MAIL = true;
 
@@ -74,10 +75,6 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
     defaultValue = "" + ANALYZING_MAIL
   )
   private boolean analyzeInternetMailProfileZeroTimeout = ANALYZING_MAIL;
-
-  public TimeoutsInExternalResourcesDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   private Pattern getPatternNewExpression() {
     if (analyzeInternetMailProfileZeroTimeout) {

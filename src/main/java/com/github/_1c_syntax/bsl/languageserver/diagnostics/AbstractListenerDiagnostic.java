@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
+import lombok.Getter;
+import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.eclipse.lsp4j.Diagnostic;
 
@@ -31,13 +33,11 @@ import java.util.List;
 
 public abstract class AbstractListenerDiagnostic extends BSLParserBaseListener implements BSLDiagnostic {
 
-  protected final DiagnosticInfo info;
-  protected DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
+  @Getter
+  @Setter
+  protected DiagnosticInfo info;
+  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
   protected DocumentContext documentContext;
-
-  public AbstractListenerDiagnostic(DiagnosticInfo info) {
-    this.info = info;
-  }
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -48,8 +48,4 @@ public abstract class AbstractListenerDiagnostic extends BSLParserBaseListener i
     return diagnosticStorage.getDiagnostics();
   }
 
-  @Override
-  public DiagnosticInfo getInfo() {
-    return info;
-  }
 }

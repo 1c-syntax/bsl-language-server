@@ -8,14 +8,24 @@ on:
     paths:
     - 'docs/**'
     - 'src/main/resources/com/github/_1c_syntax/bsl/languageserver/configuration/**'
+    - 'src/main/java/**'
     - 'mkdocs.yml'
     - 'mkdocs.en.yml'
+    - '.github/workflows/gh-pages.yml'
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+
+    - name: Setup JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 14
+
+    - name: Build javadoc
+      run: ./gradlew --no-daemon javadoc
 
     - name: Set up Python
       uses: actions/setup-python@v1
@@ -26,12 +36,13 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install mkdocs mkdocs-material pygments-bsl
+        pip install mkdocs mkdocs-material==5.0.0 pygments-bsl
     
     - name: Dowload latest GitHub Pages
       run: |
         wget https://github.com/${{ github.repository }}/archive/gh-pages.zip || true
         unzip gh-pages.zip || true
+        mkdir tmp-bench
     
     - name: Save latest Develop
       if: github.ref == 'refs/heads/master'
@@ -47,6 +58,16 @@ jobs:
         cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public || true
         rm -rf public/dev || true
         mkdir public/dev
+
+    - name: Backup benchmark (master)
+      if: github.ref == 'refs/heads/master'
+      run: |
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/bench/. tmp-bench || true
+
+    - name: Backup benchmark (develop)
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/bench/. tmp-bench || true
             
     - name: Patch Develop
       if: github.ref == 'refs/heads/develop'
@@ -66,7 +87,17 @@ jobs:
         rm -rf temp/docs/en
         cd temp
         mkdocs build
-    
+
+    - name: Copy benchmark
+      run: |
+        cp -R tmp-bench/. temp/site/bench
+        rm -rf tmp-bench
+
+    - name: Copy javadoc
+      run: |
+        cp -R build/docs/javadoc temp/site/javadoc
+        echo "" > temp/site/.nojekyll
+ 
     - name: Public Russian Master
       if: github.ref == 'refs/heads/master'
       run: |

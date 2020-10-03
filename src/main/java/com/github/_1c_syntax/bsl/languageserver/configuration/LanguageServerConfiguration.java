@@ -22,20 +22,30 @@
 package com.github._1c_syntax.bsl.languageserver.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.context.annotation.Role;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -43,11 +53,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,78 +61,82 @@ import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
+/**
+ * Корневой класс конфигурации BSL Language Server.
+ * <p>
+ * В обычном режиме работы провайдеры и прочие классы могут расчитывать на единственность объекта конфигурации
+ * и безопасно сохранять ссылку на конфигурацию или ее части.
+ */
 @Data
+@Component
+@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
+@NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class LanguageServerConfiguration {
+public class LanguageServerConfiguration implements ApplicationEventPublisherAware {
 
-  public static final DiagnosticLanguage DEFAULT_DIAGNOSTIC_LANGUAGE = DiagnosticLanguage.RU;
-  private static final boolean DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS = Boolean.TRUE;
-  private static final boolean DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS = Boolean.TRUE;
-  private static final ComputeDiagnosticsTrigger DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER
-    = ComputeDiagnosticsTrigger.ONSAVE;
-  private static final ComputeDiagnosticsSkipSupport DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT
-    = ComputeDiagnosticsSkipSupport.NEVER;
+  private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
-  private static final Pattern searchConfiguration = Pattern.compile("Configuration.(xml|mdo)$");
+  private Language language = Language.DEFAULT_LANGUAGE;
 
-  private DiagnosticLanguage diagnosticLanguage;
-  private boolean showCognitiveComplexityCodeLens;
-  private boolean showCyclomaticComplexityCodeLens;
-  private ComputeDiagnosticsTrigger computeDiagnosticsTrigger;
-  private ComputeDiagnosticsSkipSupport computeDiagnosticsSkipSupport;
+  @JsonProperty("diagnostics")
+  @Setter(value = AccessLevel.NONE)
+  private DiagnosticsOptions diagnosticsOptions = new DiagnosticsOptions();
+
+  @JsonProperty("codeLens")
+  @Setter(value = AccessLevel.NONE)
+  private CodeLensOptions codeLensOptions = new CodeLensOptions();
+
+  @JsonProperty("documentLink")
+  @Setter(value = AccessLevel.NONE)
+  private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
+
   @Nullable
   private File traceLog;
-  @JsonDeserialize(using = LanguageServerConfiguration.DiagnosticsDeserializer.class)
-  private Map<String, Either<Boolean, Map<String, Object>>> diagnostics;
+
   @Nullable
   private Path configurationRoot;
 
-  private LanguageServerConfiguration() {
-    this(DEFAULT_DIAGNOSTIC_LANGUAGE);
-  }
+  @JsonIgnore
+  @Setter(value = AccessLevel.NONE)
+  private File configurationFile = new File(".bsl-language-server.json");
 
-  private LanguageServerConfiguration(DiagnosticLanguage diagnosticLanguage) {
-    this(
-      diagnosticLanguage,
-      DEFAULT_SHOW_COGNITIVE_COMPLEXITY_CODE_LENS,
-      DEFAULT_SHOW_CYCLOMATIC_COMPLEXITY_CODE_LENS,
-      DEFAULT_COMPUTE_DIAGNOSTICS_TRIGGER,
-      DEFAULT_COMPUTE_DIAGNOSTICS_SUPPORT_VARIANT,
-      null,
-      new HashMap<>(),
-      null
-    );
-  }
+  @JsonIgnore
+  @Getter(value = AccessLevel.NONE)
+  private ApplicationEventPublisher applicationEventPublisher;
 
-  public static LanguageServerConfiguration create(File configurationFile) {
-    LanguageServerConfiguration configuration = null;
-    if (configurationFile.exists()) {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
-
-      try {
-        configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
-      } catch (IOException e) {
-        LOGGER.error("Can't deserialize configuration file", e);
-      }
+  public void update(File configurationFile) {
+    if (!configurationFile.exists()) {
+      return;
     }
 
-    if (configuration == null) {
-      configuration = create();
+    LanguageServerConfiguration configuration;
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
+
+    try {
+      configuration = mapper.readValue(configurationFile, LanguageServerConfiguration.class);
+    } catch (IOException e) {
+      LOGGER.error("Can't deserialize configuration file", e);
+      return;
     }
-    return configuration;
+
+    this.configurationFile = configurationFile;
+    notifyConfigurationFileChanged();
+
+    copyPropertiesFrom(configuration);
+    notifyConfigurationChanged();
   }
 
-  public static LanguageServerConfiguration create() {
-    return new LanguageServerConfiguration();
-  }
 
-  public static LanguageServerConfiguration create(DiagnosticLanguage diagnosticLanguage) {
-    return new LanguageServerConfiguration(diagnosticLanguage);
+  public void reset() {
+    copyPropertiesFrom(new LanguageServerConfiguration());
+    notifyConfigurationFileChanged();
+    notifyConfigurationChanged();
   }
-
+  
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;
@@ -179,52 +189,20 @@ public final class LanguageServerConfiguration {
     return configurationFile;
   }
 
-  static class DiagnosticsDeserializer extends JsonDeserializer<Map<String, Either<Boolean, Map<String, Object>>>> {
-
-    @Override
-    public Map<String, Either<Boolean, Map<String, Object>>> deserialize(
-      JsonParser p,
-      DeserializationContext context
-    ) throws IOException {
-
-      JsonNode diagnostics = p.getCodec().readTree(p);
-
-      if (diagnostics == null) {
-        return Collections.emptyMap();
-      }
-
-      ObjectMapper mapper = new ObjectMapper();
-      Map<String, Either<Boolean, Map<String, Object>>> diagnosticsMap = new HashMap<>();
-
-      Iterator<Map.Entry<String, JsonNode>> diagnosticsNodes = diagnostics.fields();
-      diagnosticsNodes.forEachRemaining((Map.Entry<String, JsonNode> entry) -> {
-        JsonNode diagnosticConfig = entry.getValue();
-        if (diagnosticConfig.isBoolean()) {
-          diagnosticsMap.put(entry.getKey(), Either.forLeft(diagnosticConfig.asBoolean()));
-        } else {
-          Map<String, Object> diagnosticConfiguration = getDiagnosticConfiguration(mapper, entry.getValue());
-          diagnosticsMap.put(entry.getKey(), Either.forRight(diagnosticConfiguration));
-        }
-      });
-
-      return diagnosticsMap;
-    }
-
-    private static Map<String, Object> getDiagnosticConfiguration(
-      ObjectMapper mapper,
-      JsonNode diagnosticConfig
-    ) {
-      Map<String, Object> diagnosticConfiguration;
-      try {
-        JavaType type = mapper.getTypeFactory().constructType(new TypeReference<Map<String, Object>>() {});
-        diagnosticConfiguration = mapper.readValue(mapper.treeAsTokens(diagnosticConfig), type);
-      } catch (IOException e) {
-        LOGGER.error("Can't deserialize diagnostic configuration", e);
-        return null;
-      }
-      return diagnosticConfiguration;
-    }
-
+  @SneakyThrows
+  private void copyPropertiesFrom(LanguageServerConfiguration configuration) {
+    // todo: refactor
+    PropertyUtils.copyProperties(this, configuration);
+    PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
+    PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
   }
 
+  private void notifyConfigurationFileChanged() {
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChangeEvent(this.configurationFile));
+  }
+
+  private void notifyConfigurationChanged() {
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangeEvent(this));
+  }
 }

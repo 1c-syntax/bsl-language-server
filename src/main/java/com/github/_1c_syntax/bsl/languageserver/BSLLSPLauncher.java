@@ -22,127 +22,131 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.Command;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.HelpCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
-import com.github._1c_syntax.bsl.languageserver.cli.ParseExceptionCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.ExitCodeGenerator;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import picocli.CommandLine;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.ParameterException;
 
-public class BSLLSPLauncher {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Callable;
 
-  public static final String APP_NAME = "BSL language server";
+import static picocli.CommandLine.Command;
 
-  private static Options options = createOptions();
+@Command(
+  name = "bsl-language-server",
+  subcommands = {
+    AnalyzeCommand.class,
+    FormatCommand.class,
+    VersionCommand.class,
+    LanguageServerStartCommand.class
+  },
+  usageHelpAutoWidth = true,
+  synopsisSubcommandLabel = "[COMMAND [ARGS]]",
+  footer = "@|green Copyright(c) 2018-2020|@",
+  header = "@|green BSL language server|@")
+@SpringBootApplication
+@Component
+@ConditionalOnProperty(
+  prefix = "app.command.line.runner",
+  value = "enabled",
+  havingValue = "true",
+  matchIfMissing = true)
+@RequiredArgsConstructor
+public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, ExitCodeGenerator {
+
+  private static final String DEFAULT_COMMAND = "lsp";
+
+  @Option(
+    names = {"-h", "--help"},
+    usageHelp = true,
+    description = "Show this help message and exit")
+  private boolean usageHelpRequested;
+
+  @Option(
+    names = {"-c", "--configuration"},
+    description = "Path to language server configuration file",
+    paramLabel = "<path>",
+    defaultValue = "")
+  private String configurationOption;
+
+  @Option(names = "--spring.config.location", hidden = true)
+  private String springConfigLocation;
+
+  @Option(names = "--debug", hidden = true)
+  private boolean debug;
+
+  private final CommandLine.IFactory picocliFactory;
+
+  private int exitCode;
 
   public static void main(String[] args) {
-    CommandLineParser parser = new DefaultParser();
+    var applicationContext = SpringApplication.run(BSLLSPLauncher.class, args);
+    var launcher = applicationContext.getBean(BSLLSPLauncher.class);
+    if (launcher.getExitCode() >= 0) {
+      System.exit(
+        SpringApplication.exit(applicationContext)
+      );
+    }
+  }
 
-    Command command;
-    try {
-      CommandLine cmd = parser.parse(options, args);
+  @Override
+  public void run(String[] args) {
+    var cmd = new CommandLine(this, picocliFactory);
 
-      if (cmd.hasOption("help")) {
-        command = new HelpCommand(options);
-      } else if (cmd.hasOption("version")) {
-        command = new VersionCommand();
-      } else if (cmd.hasOption("analyze")) {
-        command = new AnalyzeCommand(cmd);
-      } else if (cmd.hasOption("format")) {
-        command = new FormatCommand(cmd);
-      } else {
-        command = new LanguageServerStartCommand(cmd);
+    // проверка использования дефолтной команды
+    // если строка параметров пуста, то это точно вызов команды по умолчанию
+    if (args.length == 0) {
+      args = addDefaultCommand(args);
+    } else {
+      // выполнение проверки строки запуска в попытке, т.к. парсер при нахождении
+      // неизвестных параметров выдает ошибку
+      try {
+        var parseResult = cmd.parseArgs(args);
+        // если переданы параметры без команды и это не справка
+        // то считаем, что параметры для команды по умолчанию
+        if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+          args = addDefaultCommand(args);
+        }
+      } catch (ParameterException ex) {
+        // если поймали ошибку, а имя команды не передано, подставим команду и посмотрим,
+        // вдруг заработает
+        if (!ex.getCommandLine().getParseResult().hasSubcommand()) {
+          args = addDefaultCommand(args);
+        }
       }
-
-    } catch (ParseException e) {
-      command = new ParseExceptionCommand(options, e);
     }
 
-    int result = command.execute();
-    if (result >= 0) {
-      System.exit(result);
-    }
+    exitCode = cmd.execute(args);
+
   }
 
-  @VisibleForTesting
-  public static Options createOptions() {
-    Options createdOptions = new Options();
-
-    Option configurationOption = new Option(
-      "c",
-      "configuration",
-      true,
-      "Path to language server configuration file"
-    );
-    configurationOption.setRequired(false);
-
-    Option help = new Option(
-      "h",
-      "help",
-      false,
-      "Show help."
-    );
-
-    Option analyze = new Option(
-      "a",
-      "analyze",
-      false,
-      "Run analysis and get diagnostic info"
-    );
-
-    Option format = new Option(
-      "f",
-      "format",
-      false,
-      "Format files in source directory"
-    );
-
-    Option srcDir = new Option(
-      "s",
-      "srcDir",
-      true,
-      "Source directory"
-    );
-
-    Option reporter = new Option(
-      "r",
-      "reporter",
-      true,
-      "Reporter key"
-    );
-
-    Option outputDir = new Option(
-      "o",
-      "outputDir",
-      true,
-      "Output report directory"
-    );
-
-    Option version = new Option(
-      "v",
-      "version",
-      false,
-      "Show version."
-    );
-
-    createdOptions.addOption(analyze);
-    createdOptions.addOption(format);
-    createdOptions.addOption(srcDir);
-    createdOptions.addOption(outputDir);
-    createdOptions.addOption(reporter);
-
-    createdOptions.addOption(configurationOption);
-    createdOptions.addOption(help);
-    createdOptions.addOption(version);
-
-    return createdOptions;
+  @NotNull
+  private static String[] addDefaultCommand(String[] args) {
+    List<String> tmpList = new ArrayList<>(Arrays.asList(args));
+    tmpList.add(0, DEFAULT_COMMAND);
+    args = tmpList.toArray(new String[0]);
+    return args;
   }
 
+  @Override
+  public int getExitCode() {
+    return exitCode;
+  }
+
+  public Integer call() {
+    // заглушка, командой как таковой не пользуемся
+    return 0;
+  }
 }

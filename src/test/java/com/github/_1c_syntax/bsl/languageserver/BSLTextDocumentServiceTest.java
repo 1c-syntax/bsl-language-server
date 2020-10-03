@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -40,6 +40,8 @@ import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,11 +54,11 @@ import java.util.concurrent.ExecutionException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+@SpringBootTest
 class BSLTextDocumentServiceTest {
 
-  private BSLTextDocumentService textDocumentService = new BSLTextDocumentService(
-    LanguageServerConfiguration.create(),
-    new ServerContext());
+  @Autowired
+  private BSLTextDocumentService textDocumentService;
 
   @Test
   void completion() throws ExecutionException, InterruptedException {
@@ -70,7 +72,10 @@ class BSLTextDocumentServiceTest {
     Either<List<CompletionItem>, CompletionList> listCompletionListEither = completion.get();
     List<CompletionItem> completionItems = listCompletionListEither.getLeft();
 
-    assertThat(completionItems).allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()));
+    assertThat(completionItems)
+      .isNotEmpty()
+      .allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()))
+    ;
   }
 
   @Test
@@ -231,13 +236,49 @@ class BSLTextDocumentServiceTest {
   }
 
   @Test
-  void connect() {
-    textDocumentService.connect(null);
+  void reset() {
+    textDocumentService.reset();
   }
 
   @Test
-  void reset() {
-    textDocumentService.reset();
+  void testDiagnosticsUnknownFile() throws ExecutionException, InterruptedException {
+    // when
+    var params = new DiagnosticParams(getTextDocumentIdentifier());
+    var diagnostics = textDocumentService.diagnostics(params).get();
+
+    // then
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testDiagnosticsKnownFile() throws ExecutionException, InterruptedException, IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when
+    var params = new DiagnosticParams(getTextDocumentIdentifier());
+    var diagnostics = textDocumentService.diagnostics(params).get();
+
+    // then
+    assertThat(diagnostics).isNotEmpty();
+  }
+
+  @Test
+  void testDiagnosticsKnownFileFilteredRange() throws ExecutionException, InterruptedException, IOException {
+    // given
+    var textDocumentItem = getTextDocumentItem();
+    var didOpenParams = new DidOpenTextDocumentParams(textDocumentItem);
+    textDocumentService.didOpen(didOpenParams);
+
+    // when
+    var params = new DiagnosticParams(getTextDocumentIdentifier());
+    params.setRange(Ranges.create(1, 0, 2, 0));
+    var diagnostics = textDocumentService.diagnostics(params).get();
+
+    // then
+    assertThat(diagnostics).hasSize(1);
   }
 
   private File getTestFile() {

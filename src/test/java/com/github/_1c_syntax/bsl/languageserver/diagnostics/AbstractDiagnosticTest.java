@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -33,19 +36,47 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+@SpringBootTest
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
-  protected final T diagnosticInstance;
+  @Autowired
+  private DiagnosticConfiguration diagnosticConfiguration;
+  @Autowired
+  protected ServerContext context;
+  @Autowired
+  protected LanguageServerConfiguration configuration;
 
-  @SuppressWarnings("unchecked")
+  private final Class<T> diagnosticClass;
+  protected T diagnosticInstance;
+
   AbstractDiagnosticTest(Class<T> diagnosticClass) {
-    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
-    diagnosticInstance = (T) diagnosticSupplier.getDiagnosticInstance(diagnosticClass);
+    this.diagnosticClass = diagnosticClass;
+  }
+
+  @PostConstruct
+  public void init() {
+    diagnosticInstance = diagnosticConfiguration.diagnostic(diagnosticClass);
+    context.clear();
+    configuration.reset();
+  }
+
+  protected void initServerContext(String path) {
+    var configurationRoot = Absolute.path(path);
+    initServerContext(configurationRoot);
+  }
+
+  protected void initServerContext(Path configurationRoot) {
+    context.setConfigurationRoot(configurationRoot);
+    context.populateContext();
   }
 
   protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
@@ -63,7 +94,10 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic) {
-    DocumentContext documentContext = getDocumentContext();
+    return getQuickFixes(diagnostic, getDocumentContext());
+  }
+
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, DocumentContext documentContext) {
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
   }
 
@@ -101,14 +135,23 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   @SneakyThrows
   protected DocumentContext getDocumentContext(String SimpleFileName) {
+    String textDocumentContent = getText(SimpleFileName);
+
+    return TestUtils.getDocumentContext(textDocumentContent, context);
+  }
+
+  protected String getText() {
+    return getText(diagnosticInstance.getClass().getSimpleName());
+  }
+
+  @SneakyThrows
+  protected String getText(String SimpleFileName) {
     String filePath = "diagnostics/" + SimpleFileName + ".bsl";
-    String textDocumentContent = IOUtils.resourceToString(
+    return IOUtils.resourceToString(
       filePath,
       StandardCharsets.UTF_8,
       this.getClass().getClassLoader()
     );
-
-    return TestUtils.getDocumentContext(textDocumentContent);
   }
 
 }

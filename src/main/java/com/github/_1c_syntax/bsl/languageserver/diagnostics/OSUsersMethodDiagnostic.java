@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
 
@@ -43,13 +43,12 @@ import java.util.regex.Pattern;
 )
 public class OSUsersMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern messagePattern = Pattern.compile(
-    "ПользователиОС|OSUsers",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+  private static final Pattern messagePattern = CaseInsensitivePattern.compile(
+    "ПользователиОС|OSUsers"
   );
 
-  public OSUsersMethodDiagnostic(DiagnosticInfo info) {
-    super(info, messagePattern);
+  public OSUsersMethodDiagnostic() {
+    super(messagePattern);
   }
 
   @Override

@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -29,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.function.Predicate;
@@ -44,14 +44,11 @@ import java.util.regex.Pattern;
 )
 public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern NUMBER_PATTERN = Pattern.compile("число|number",
-    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+  private static final Pattern NUMBER_PATTERN = CaseInsensitivePattern.compile(
+    "число|number"
+  );
   private static final Predicate<GlobalMethodCallContext> MATCH_METHOD_CALL_CAST_TO_NUMBER
     = e -> NUMBER_PATTERN.matcher(e.methodName().getText()).matches();
-
-  public TryNumberDiagnostic(DiagnosticInfo info) {
-    super(info);
-  }
 
   @Override
   public ParseTree visitTryCodeBlock(BSLParser.TryCodeBlockContext ctx) {

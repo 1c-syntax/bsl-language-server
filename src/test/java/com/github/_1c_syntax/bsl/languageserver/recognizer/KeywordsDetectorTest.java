@@ -22,10 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class KeywordsDetectorTest {
+@SpringBootTest
+class KeywordsDetectorTest {
 
   @Test
   void runTest() {
@@ -33,7 +35,7 @@ public class KeywordsDetectorTest {
     String testedText = "Если НЕПродолжатьВыполнение() Тогда Возврат; КонецЕсли;";
 
     assertThat(detector.detect(testedText)).isEqualTo(0.75);
-    assertThat(detector.detect("или")).isEqualTo(0);
+    assertThat(detector.detect("или")).isZero();
     assertThat(detector.detect("ИЛИ")).isEqualTo(0.5);
   }
 }

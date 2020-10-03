@@ -25,11 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,12 +38,11 @@ import java.util.stream.Collectors;
 public class SymbolTree {
   List<Symbol> children;
 
-  public List<Symbol> getChildrenFlat() {
-    return children.stream()
-      .map(this::getSelfAndChildrenRecursive)
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-  }
+  @Getter(lazy = true)
+  List<Symbol> childrenFlat = createChildrenFlat();
+
+  @Getter(lazy = true)
+  List<MethodSymbol> methods = createMethods();
 
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
@@ -61,10 +60,6 @@ public class SymbolTree {
 
   public List<RegionSymbol> getRegionsFlat() {
     return getChildrenFlat(RegionSymbol.class);
-  }
-
-  public List<MethodSymbol> getMethods() {
-    return getChildrenFlat(MethodSymbol.class);
   }
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
@@ -88,17 +83,45 @@ public class SymbolTree {
       .findAny();
   }
 
+  public List<VariableSymbol> getVariables() {
+    return getChildrenFlat(VariableSymbol.class);
+  }
 
-  private List<Symbol> getSelfAndChildrenRecursive(Symbol symbol) {
-    var list = new ArrayList<Symbol>();
-    list.add(symbol);
+  public Optional<VariableSymbol> getVariableSymbol(BSLParserRuleContext ctx) {
 
-    symbol.getChildren().stream()
-      .map(this::getSelfAndChildrenRecursive)
-      .flatMap(Collection::stream)
-      .collect(Collectors.toCollection(() -> list));
+    BSLParserRuleContext varNameNode;
 
-    return list;
+    if (Trees.nodeContainsErrors(ctx)) {
+      varNameNode = ctx;
+    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext) {
+      varNameNode = ((BSLParser.ModuleVarDeclarationContext) ctx).var_name();
+    } else if (ctx instanceof BSLParser.SubVarDeclarationContext) {
+      varNameNode = ((BSLParser.SubVarDeclarationContext) ctx).var_name();
+    } else {
+      varNameNode = ctx;
+    }
+
+    Range variableNameRange = Ranges.create(varNameNode);
+
+    return getVariables().stream()
+      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange))
+      .findAny();
+  }
+
+  private List<Symbol> createChildrenFlat() {
+    List<Symbol> symbols = new ArrayList<>();
+    getChildren().forEach(child -> flatten(child, symbols));
+
+    return symbols;
+  }
+
+  private List<MethodSymbol> createMethods() {
+    return getChildrenFlat(MethodSymbol.class);
+  }
+
+  private static void flatten(Symbol symbol, List<Symbol> symbols) {
+    symbols.add(symbol);
+    symbol.getChildren().forEach(child -> flatten(child, symbols));
   }
 
 }
