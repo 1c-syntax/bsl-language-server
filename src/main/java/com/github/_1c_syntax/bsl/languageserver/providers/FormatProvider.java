@@ -223,7 +223,7 @@ public final class FormatProvider {
         String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append("\n");
         newTextBuilder.append(currentIndentation);
-      } else if (!previousIsUnary && needAddSpace(tokenType, previousTokenType)) {
+      } else if (needAddSpace(tokenType, previousTokenType, previousIsUnary)) {
         newTextBuilder.append(' ');
       } else {
         // no-op
@@ -285,7 +285,12 @@ public final class FormatProvider {
       .collect(Collectors.toList());
   }
 
-  private static boolean needAddSpace(int type, int previousTokenType) {
+  private static boolean needAddSpace(int type, int previousTokenType, boolean previousIsUnary) {
+
+    if (previousIsUnary) {
+      return false;
+    }
+
     switch (previousTokenType) {
       case BSLLexer.DOT:
       case BSLLexer.HASH:
