@@ -103,11 +103,12 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     }
 
     isOneLineRange = params.getRange().getStart().getLine() == params.getRange().getEnd().getLine();
+    var selectedLineNumber = params.getRange().getEnd().getLine() + 1;
 
     lastTokenSelectedInLine = documentContext
       .getTokens()
       .stream()
-      .filter(token -> token.getLine() == params.getRange().getEnd().getLine() + 1)
+      .filter(token -> token.getLine() == selectedLineNumber)
       .max(Comparator.comparingInt(Token::getCharPositionInLine));
   }
 
