@@ -116,14 +116,14 @@ class FormatProviderTest {
   }
 
   @Test
-  void testFormatUnaryMinus(){
+  void testFormatUnaryMinus() {
 
-     // given
+    // given
     DocumentFormattingParams params = new DocumentFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
     params.setOptions(new FormattingOptions(4, true));
 
-    String fileContent = "Возврат-1=-2";
+    String fileContent = "Возврат-1>-2";
     DocumentContext documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
@@ -136,7 +136,7 @@ class FormatProviderTest {
     assertThat(textEdits).hasSize(1);
 
     TextEdit textEdit = textEdits.get(0);
-    assertThat(textEdits.get(0).getNewText()).isEqualTo("Возврат -1 = -2");
+    assertThat(textEdits.get(0).getNewText()).isEqualTo("Возврат -1 > -2");
 
   }
 

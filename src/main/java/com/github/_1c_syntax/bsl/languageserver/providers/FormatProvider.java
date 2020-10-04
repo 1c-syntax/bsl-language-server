@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -345,7 +344,7 @@ public final class FormatProvider {
       case BSLLexer.ASSIGN:
       case BSLLexer.MODULO:
       case BSLLexer.LESS:
-      case Lexer.MORE:
+      case BSLLexer.GREATER:
       case BSLLexer.LBRACK:
       case BSLLexer.LPAREN:
       case BSLLexer.RETURN_KEYWORD:
