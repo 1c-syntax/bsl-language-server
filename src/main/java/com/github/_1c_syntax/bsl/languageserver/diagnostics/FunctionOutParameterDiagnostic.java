@@ -31,10 +31,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.springframework.util.LinkedCaseInsensitiveMap;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -66,13 +67,16 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    LinkedCaseInsensitiveMap<BSLParserRuleContext> lvalues = Trees
+    Map<String, BSLParserRuleContext> lvalues = Trees
       .findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
       .stream()
       .collect(
-        Collectors.toMap(ParseTree::getText, node -> (BSLParserRuleContext) node,
-          (name, node) -> name,
-          LinkedCaseInsensitiveMap::new));
+        Collectors.toMap(
+          ParseTree::getText,
+          node -> (BSLParserRuleContext) node,
+          (existing, replacement) -> existing,
+          CaseInsensitiveMap::new)
+      );
 
     parameters.
       stream()
