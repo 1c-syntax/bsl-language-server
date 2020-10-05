@@ -1,17 +1,17 @@
-# Outbound function parameter (FunctionOutboundParameter)
+# Исходящий параметр функции (FunctionOutParameter)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
  :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Major` | `No` | `10` | `design` 
+ `Дефект кода` | `BSL`<br>`OS` | `Важный` | `Нет` | `10` | `design` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-## Examples
+## Примеры
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-## Sources
+## Источники
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
 
@@ -19,18 +19,18 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-## Snippets
+## Сниппеты
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+### Экранирование кода
 
 ```bsl
-// BSLLS:FunctionOutboundParameter-off
-// BSLLS:FunctionOutboundParameter-on
+// BSLLS:FunctionOutParameter-off
+// BSLLS:FunctionOutParameter-on
 ```
 
-### Parameter for config
+### Параметр конфигурационного файла
 
 ```json
-"FunctionOutboundParameter": false
+"FunctionOutParameter": false
 ```

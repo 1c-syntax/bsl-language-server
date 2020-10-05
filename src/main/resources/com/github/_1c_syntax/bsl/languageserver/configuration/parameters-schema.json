@@ -512,7 +512,7 @@
             "title": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "$id": "#/definitions/FunctionNameStartsWithGet"
         },
-        "FunctionOutboundParameter": {
+        "FunctionOutParameter": {
             "description": "Outbound function parameter",
             "default": false,
             "type": [
@@ -520,7 +520,7 @@
                 "object"
             ],
             "title": "Outbound function parameter",
-            "$id": "#/definitions/FunctionOutboundParameter"
+            "$id": "#/definitions/FunctionOutParameter"
         },
         "FunctionReturnsSamePrimitive": {
             "description": "The function always returns the same primitive value",

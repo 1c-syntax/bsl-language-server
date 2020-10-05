@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class FunctionOutboundParameterDiagnosticTest extends AbstractDiagnosticTest<FunctionOutboundParameterDiagnostic> {
-  FunctionOutboundParameterDiagnosticTest() {
-    super(FunctionOutboundParameterDiagnostic.class);
+class FunctionOutParameterDiagnosticTest extends AbstractDiagnosticTest<FunctionOutParameterDiagnostic> {
+  FunctionOutParameterDiagnosticTest() {
+    super(FunctionOutParameterDiagnostic.class);
   }
 
   @Test

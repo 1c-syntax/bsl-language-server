@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
   }
 
 )
-public class FunctionOutboundParameterDiagnostic extends AbstractVisitorDiagnostic {
+public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {

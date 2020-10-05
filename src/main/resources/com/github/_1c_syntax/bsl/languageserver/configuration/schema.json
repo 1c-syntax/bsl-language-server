@@ -155,8 +155,8 @@
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
-                "FunctionOutboundParameter": {
-                    "$ref": "parameters-schema.json#/definitions/FunctionOutboundParameter"
+                "FunctionOutParameter": {
+                    "$ref": "parameters-schema.json#/definitions/FunctionOutParameter"
                 },
                 "FunctionReturnsSamePrimitive": {
                     "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
