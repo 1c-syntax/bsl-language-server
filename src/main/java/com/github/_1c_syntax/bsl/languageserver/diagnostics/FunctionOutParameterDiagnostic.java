@@ -53,7 +53,9 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    List<ParameterDefinition> parameters = documentContext.getSymbolTree().getMethodSymbol((BSLParserRuleContext) ctx.getParent())
+    List<ParameterDefinition> parameters = documentContext
+      .getSymbolTree()
+      .getMethodSymbol((BSLParserRuleContext) ctx.getParent())
       .stream()
       .map(MethodSymbol::getParameters)
       .flatMap(Collection::stream)
@@ -64,7 +66,8 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    LinkedCaseInsensitiveMap<BSLParserRuleContext> lvalues = Trees.findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
+    LinkedCaseInsensitiveMap<BSLParserRuleContext> lvalues = Trees
+      .findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
       .stream()
       .collect(
         Collectors.toMap(ParseTree::getText, node -> (BSLParserRuleContext) node,
