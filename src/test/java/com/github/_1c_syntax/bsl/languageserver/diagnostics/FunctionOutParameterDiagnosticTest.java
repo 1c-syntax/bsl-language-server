@@ -34,7 +34,7 @@ class FunctionOutParameterDiagnosticTest extends AbstractDiagnosticTest<Function
   }
 
   @Test
-  void test() {
+  void testSimple() {
 
     List<Diagnostic> diagnostics = getDiagnostics();
 

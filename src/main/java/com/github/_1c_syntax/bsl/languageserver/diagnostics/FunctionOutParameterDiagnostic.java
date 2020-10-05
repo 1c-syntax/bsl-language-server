@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -30,9 +31,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.springframework.util.LinkedCaseInsensitiveMap;
 
 import java.util.Collection;
-import java.util.TreeMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -50,20 +53,31 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
 
-    TreeMap<String, BSLParserRuleContext> lvalues = Trees.findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
-      .stream()
-      .collect(
-        Collectors.toMap(ParseTree::getText, node -> (BSLParserRuleContext) node, (name, node) -> name, TreeMap::new));
-
-    documentContext.getSymbolTree().getMethodSymbol((BSLParserRuleContext) ctx.getParent())
+    List<ParameterDefinition> parameters = documentContext.getSymbolTree().getMethodSymbol((BSLParserRuleContext) ctx.getParent())
       .stream()
       .map(MethodSymbol::getParameters)
       .flatMap(Collection::stream)
       .filter(param -> !param.isByValue())
+      .collect(Collectors.toList());
+
+    if (parameters.isEmpty()) {
+      return ctx;
+    }
+
+    LinkedCaseInsensitiveMap<BSLParserRuleContext> lvalues = Trees.findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
+      .stream()
+      .collect(
+        Collectors.toMap(ParseTree::getText, node -> (BSLParserRuleContext) node,
+          (name, node) -> name,
+          LinkedCaseInsensitiveMap::new));
+
+    parameters.
+      stream()
       .filter(param -> lvalues.containsKey(param.getName()))
       .map(param -> lvalues.get(param.getName()))
+      .filter(Objects::nonNull)
       .forEach(diagnosticStorage::addDiagnostic);
 
-    return super.visitFunction(ctx);
+    return ctx;
   }
 }
