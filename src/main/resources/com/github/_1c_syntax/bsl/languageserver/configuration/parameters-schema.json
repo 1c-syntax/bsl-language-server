@@ -513,13 +513,13 @@
             "$id": "#/definitions/FunctionNameStartsWithGet"
         },
         "FunctionOutParameter": {
-            "description": "Outbound function parameter",
+            "description": "Out function parameter",
             "default": false,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Outbound function parameter",
+            "title": "Out function parameter",
             "$id": "#/definitions/FunctionOutParameter"
         },
         "FunctionReturnsSamePrimitive": {

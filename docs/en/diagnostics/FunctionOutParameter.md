@@ -1,4 +1,4 @@
-# Outbound function parameter (FunctionOutParameter)
+# Out function parameter (FunctionOutParameter)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
