@@ -67,6 +67,19 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
   private static final String UNARY = "+ - * / = % < > ( [ , Возврат Return <> <= >=";
 
+  /**
+   * Ключевые слова, требующие пробел слева и справа
+   */
+  private static final List<Integer> KEYWORDS_WITH_LEFT_RIGHT_SPACE = computeKeywordsWithLeftRightSpace();
+  /**
+   * Ключевые слова, требующие пробел слева
+   */
+  private static final List<Integer> KEYWORDS_WITH_LEFT_SPACE = computeKeywordsWithLeftSpace();
+  /**
+   * Ключевые слова, требующие пробел справа
+   */
+  private static final List<Integer> KEYWORDS_WITH_RIGHT_SPACE = computeKeywordsWithRightSpace();
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
@@ -128,19 +141,21 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
       String tokenText = token.getText();
 
       // проверяем слева
-      if (setL.contains(tokenText) && (noSpaceLeft = noSpaceLeft(tokens, token))) {
+      if ((setL.contains(tokenText) || KEYWORDS_WITH_LEFT_SPACE.contains(token.getType()))
+        && (noSpaceLeft = noSpaceLeft(tokens, token))) {
         leftComputed = true;
         addDiagnostic(token, mainMessage, indexWordLeftMsg);
       }
 
       // проверяем справа
-      if (setR.contains(tokenText) && (noSpaceRight = noSpaceRight(tokens, token))) {
+      if ((setR.contains(tokenText) || KEYWORDS_WITH_RIGHT_SPACE.contains(token.getType()))
+        && (noSpaceRight = noSpaceRight(tokens, token))) {
         rightComputed = true;
         addDiagnostic(token, mainMessage, indexWordRightMsg);
       }
 
       // проверяем слева и справа
-      if (setLR.contains(tokenText)) {
+      if (setLR.contains(tokenText) || KEYWORDS_WITH_LEFT_RIGHT_SPACE.contains(token.getType())) {
         if (!leftComputed) {
           noSpaceLeft = noSpaceLeft(tokens, token);
         }
@@ -275,4 +290,33 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   private static String getErrorMessage(String formatString, String errorMessage, String tokenText) {
     return String.format(formatString, errorMessage, tokenText).intern();
   }
+
+  private static List<Integer> computeKeywordsWithLeftRightSpace() {
+    List<Integer> leftRight = new ArrayList<>();
+    leftRight.add(BSLParser.TO_KEYWORD);
+    leftRight.add(BSLParser.IN_KEYWORD);
+    leftRight.add(BSLParser.OR_KEYWORD);
+    leftRight.add(BSLParser.AND_KEYWORD);
+    return leftRight;
+  }
+
+  private static List<Integer> computeKeywordsWithLeftSpace() {
+    List<Integer> left = new ArrayList<>();
+    left.add(BSLParser.EXPORT_KEYWORD);
+    left.add(BSLParser.THEN_KEYWORD);
+    left.add(BSLParser.DO_KEYWORD);
+    return left;
+  }
+
+  private static List<Integer> computeKeywordsWithRightSpace() {
+    List<Integer> right = new ArrayList<>();
+    right.add(BSLParser.IF_KEYWORD);
+    right.add(BSLParser.ELSIF_KEYWORD);
+    right.add(BSLParser.WHILE_KEYWORD);
+    right.add(BSLParser.FOR_KEYWORD);
+    right.add(BSLParser.NOT_KEYWORD);
+    right.add(BSLParser.EACH_KEYWORD);
+    return right;
+  }
+
 }
