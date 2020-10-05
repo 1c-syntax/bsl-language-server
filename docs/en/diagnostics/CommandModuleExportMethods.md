@@ -1,4 +1,4 @@
-# Export procedures and functions in command and general command modules (CommandModuleExportMethods)
+# Export methods in command and general command modules (CommandModuleExportMethods)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -6,8 +6,8 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-You should not place export procedures and functions in command and General command modules. You can't access these modules
-from code external to them, so export procedures and functions in these modules do not make sense.
+You should not place export methods in command and General command modules. You can't access these modules
+from code external to them, so export methods in these modules do not make sense.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
