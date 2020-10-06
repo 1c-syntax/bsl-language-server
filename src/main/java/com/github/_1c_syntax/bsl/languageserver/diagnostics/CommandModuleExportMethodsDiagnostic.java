@@ -47,7 +47,7 @@ public class CommandModuleExportMethodsDiagnostic extends AbstractSymbolTreeDiag
   @Override
   public void visitMethod(MethodSymbol method) {
     if (method.isExport()) {
-      diagnosticStorage.addDiagnostic(method.getRange());
+      diagnosticStorage.addDiagnostic(method.getSubNameRange());
     }
   }
 

@@ -43,8 +43,8 @@ class CommandModuleExportMethodsDiagnosticTest extends AbstractDiagnosticTest<Co
     assertThat(diagnostics).hasSize(2);
 
     Assertions.assertThat(diagnostics, true)
-      .hasRange(0, 0, 1, 14)
-      .hasRange(6, 0, 7, 12);
+      .hasRange(0, 10, 0, 15)
+      .hasRange(6, 8, 6, 13);
 
   }
 }
