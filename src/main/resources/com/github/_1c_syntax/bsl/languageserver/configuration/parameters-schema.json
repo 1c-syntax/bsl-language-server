@@ -1406,6 +1406,14 @@
                 "object"
             ],
             "title": "Using modal windows",
+            "properties": {
+                "forceModalityMode": {
+                    "description": "Ignore configurations modality mode",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore configurations modality mode"
+                }
+            },
             "$id": "#/definitions/UsingModalWindows"
         },
         "UsingObjectNotAvailableUnix": {

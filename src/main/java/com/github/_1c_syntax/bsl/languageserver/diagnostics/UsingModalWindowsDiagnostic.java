@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -58,6 +59,12 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
   private final HashMap<String, String> pairMethods = new HashMap<>();
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "false"
+  )
+  private Boolean forceModalityMode = false;
+
   public UsingModalWindowsDiagnostic() {
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
     pairMethods.put("DOQUERYBOX", "ShowQueryBox");
@@ -90,7 +97,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
     var configuration = documentContext.getServerContext().getConfiguration();
     // если использование модальных окон разрешено (без предупреждение), то
     // ничего не диагностируется
-    if (configuration.getModalityUseMode() == UseMode.USE) {
+    if (!forceModalityMode && configuration.getModalityUseMode() == UseMode.USE) {
       return ctx;
     }
 
