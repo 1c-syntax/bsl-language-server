@@ -58,11 +58,11 @@ class DocumentLinkProviderTest {
     // then
     assertThat(documentLinks)
       .isNotEmpty()
-      .hasSize(7)
+      .hasSize(6)
       .allMatch(documentLink -> documentLink.getTarget()
         .startsWith(SITE_URL))
       .filteredOn(documentLink -> !documentLink.getTarget().endsWith(DIAGNOSTIC_CODE))
-      .hasSize(3);
+      .hasSize(2);
   }
 
   @Test
@@ -80,11 +80,11 @@ class DocumentLinkProviderTest {
     // then
     assertThat(documentLinks)
       .isNotEmpty()
-      .hasSize(7)
+      .hasSize(6)
       .allMatch(documentLink -> documentLink.getTarget()
         .startsWith(SITE_EN_URL))
       .filteredOn(documentLink -> !documentLink.getTarget().endsWith(DIAGNOSTIC_CODE))
-      .hasSize(3);
+      .hasSize(2);
   }
 
   @Test
