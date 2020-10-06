@@ -95,7 +95,8 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var configuration = documentContext.getServerContext().getConfiguration();
-    // если использование модальных окон разрешено (без предупреждение), то
+    // если использование модальных окон разрешено (без предупреждение) 
+    // и не установлен флаг игнорирования использования модальных окон, то
     // ничего не диагностируется
     if (!forceModalityMode && configuration.getModalityUseMode() == UseMode.USE) {
       return ctx;
