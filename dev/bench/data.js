@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602083441912,
+  "lastUpdate": 1602082986012,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5859,37 +5859,6 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8358134003360367",
             "extra": "mean: 75.58862018585205 sec\nrounds: 3"
-          }
-        ]
-      },
-      {
-        "commit": {
-          "author": {
-            "email": "nixel2007@gmail.com",
-            "name": "Nikita Gryzlov",
-            "username": "nixel2007"
-          },
-          "committer": {
-            "email": "noreply@github.com",
-            "name": "GitHub",
-            "username": "web-flow"
-          },
-          "distinct": true,
-          "id": "7648ba270d97b7ab023b95a985f00f34134d7d9b",
-          "message": "Merge pull request #1391 from 1c-syntax/feature/TypoFix\n\nДобавил возможность указывать исключения с пробелами",
-          "timestamp": "2020-10-07T17:53:04+03:00",
-          "tree_id": "52b7ab62e1eb88504670002b0e2afa11ecd44eec",
-          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7648ba270d97b7ab023b95a985f00f34134d7d9b"
-        },
-        "date": 1602083439352,
-        "tool": "pytest",
-        "benches": [
-          {
-            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
-            "value": 75.71341896057129,
-            "unit": "sec",
-            "range": "stddev: 2.779321102786612",
-            "extra": "mean: 75.71341896057129 sec\nrounds: 3"
           }
         ]
       }

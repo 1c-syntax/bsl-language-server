@@ -283,6 +283,13 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    Parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#description" class="md-nav__link">
     Description
   </a>
@@ -386,6 +393,25 @@
 </tr>
 </tbody>
 </table>
+<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">Link</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th align="center">Type</th>
+<th align="left">Description</th>
+<th align="center">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>forceModalityMode</code></td>
+<td align="center"><code>Boolean</code></td>
+<td align="left"><code>Ignore configurations modality mode</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Modal windows and pop-ups are considered bad taste. Users are accustomed to working "in one window." When developing configurations designed to work in the web client, it is forbidden to use modal windows and dialogs. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard.</p>
@@ -471,7 +497,9 @@
 </code></pre></div>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;UsingModalWindows&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;UsingModalWindows&quot;</span><span class="err">:</span> <span class="p">{</span>
+    <span class="nt">&quot;forceModalityMode&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<span class="p">}</span>
 </code></pre></div>
                 
               
