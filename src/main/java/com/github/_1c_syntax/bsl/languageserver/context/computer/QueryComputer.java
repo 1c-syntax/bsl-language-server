@@ -78,6 +78,10 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var strings = new StringJoiner("");
     for (Token token : ctx.getTokens()) {
 
+      if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
+        strings.add("\n");
+      }
+
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
         String newString = (getString(startLine, token));
         partString = newString.substring(partString.length());
@@ -91,15 +95,12 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
       strings.add(partString);
 
-      if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
-        strings.add("\n");
-      }
       startLine = token.getLine();
       prevTokenLine = token.getLine();
     }
 
     if (isQuery) {
-      queries.add(new SDBLTokenizer(startEmptyLines + strings.toString()));
+      queries.add(new SDBLTokenizer(startEmptyLines + removeDoubleQuotes(strings.toString())));
     }
 
     return ctx;
@@ -122,6 +123,11 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     }
     return "";
   }
+
+  private static String removeDoubleQuotes(String text) {
+    return text.replace("\"\"", "\"");
+  }
+
 
   private static String removeQuotes(String text) {
 
