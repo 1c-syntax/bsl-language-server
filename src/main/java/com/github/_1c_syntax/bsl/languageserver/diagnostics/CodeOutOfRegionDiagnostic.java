@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -59,10 +60,16 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+
+    // Для неизвестных модулей не будем требовать нахождения кода в области
+    if (documentContext.getModuleType() == ModuleType.UNKNOWN) {
+      return ctx;
+    }
+
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
     regionsRanges.clear();
 
-    // если областей нет, то и смысла дальше анализировть тоже нет
+    // если областей нет, то и смысла дальше анализировать тоже нет
     if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
 
       List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);
