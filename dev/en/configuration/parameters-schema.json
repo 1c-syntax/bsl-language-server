@@ -761,19 +761,19 @@
             "$id": "#/definitions/MissingCodeTryCatchEx"
         },
         "MissingSpace": {
-            "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
+            "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
+            "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
             "properties": {
                 "listForCheckLeftAndRight": {
-                    "description": "List of symbols to check for the space from both sides of (separated by space)",
+                    "description": "List to check for the space from both sides of (separated by space)",
                     "default": "+ - * / = % < > <> <= >=",
                     "type": "string",
-                    "title": "List of symbols to check for the space from both sides of (separated by space)"
+                    "title": "List to check for the space from both sides of (separated by space)"
                 },
                 "allowMultipleCommas": {
                     "description": "Allow several commas in a row",
@@ -788,16 +788,16 @@
                     "title": "Check for space to the right of unary signs (+ -)"
                 },
                 "listForCheckLeft": {
-                    "description": "List of symbols to check for the space to the left of (separated by space)",
+                    "description": "List to check for the space to the left of (separated by space)",
                     "default": "",
                     "type": "string",
-                    "title": "List of symbols to check for the space to the left of (separated by space)"
+                    "title": "List to check for the space to the left of (separated by space)"
                 },
                 "listForCheckRight": {
-                    "description": "List of symbols to check for the space to the right of (separated by space)",
+                    "description": "List to check for the space to the right of (separated by space)",
                     "default": ", ;",
                     "type": "string",
-                    "title": "List of symbols to check for the space to the right of (separated by space)"
+                    "title": "List to check for the space to the right of (separated by space)"
                 }
             },
             "$id": "#/definitions/MissingSpace"
