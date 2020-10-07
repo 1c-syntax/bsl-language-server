@@ -63,7 +63,7 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
     type = Boolean.class,
     defaultValue = "false"
   )
-  private Boolean forceModalityMode = false;
+  private boolean forceModalityMode;
 
   public UsingModalWindowsDiagnostic() {
     pairMethods.put("ВОПРОС", "ПоказатьВопрос");
