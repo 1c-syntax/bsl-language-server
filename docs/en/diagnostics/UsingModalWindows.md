@@ -4,6 +4,12 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard` 
 
+## Parameters 
+
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `forceModalityMode` | `Boolean` | ```Ignore configurations modality mode``` | ```false``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -58,5 +64,7 @@ ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a do
 ### Parameter for config
 
 ```json
-"UsingModalWindows": false
+"UsingModalWindows": {
+    "forceModalityMode": false
+}
 ```
