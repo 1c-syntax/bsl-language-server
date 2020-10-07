@@ -91,7 +91,24 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(43, 19, 20)
       .hasRange(43, 14, 15)
 
-      .hasSize(29)
+      // кейворды
+      .hasRange(48, 17, 24)
+      .hasRange(50, 0, 3)
+      .hasRange(50, 11, 13)
+      .hasRange(50, 16, 20)
+      .hasRange(53, 4, 11)
+      .hasRange(53, 17, 19)
+      .hasRange(53, 30, 34)
+      .hasRange(56, 0, 4)
+      .hasRange(56, 12, 15)
+      .hasRange(56, 21, 22)
+      .hasRange(56, 30, 35)
+      .hasRange(57, 0, 9)
+      .hasRange(57, 17, 20)
+      .hasRange(57, 21, 23)
+      .hasRange(57, 30, 35)
+
+      .hasSize(44)
     ;
   }
 
@@ -150,8 +167,10 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(43, 25, 43, 26)
       .hasRange(43, 32, 43, 33)
       .hasRange(45, 8, 45, 9)
-      .hasRange(45, 22, 45, 23);
-    assertThat(diagnostics).hasSize(18);
+      .hasRange(45, 22, 45, 23)
+      .hasRange(48, 15, 16)
+
+      .hasSize(55);
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("listForCheckLeft", "");
@@ -165,8 +184,24 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     assertThat(diagnostics, true)
       .hasRange(8, 12, 8, 13)
       .hasRange(27, 10, 27, 11)
-      .hasRange(41, 46, 41, 47);
-    assertThat(diagnostics).hasSize(3);
+      .hasRange(41, 46, 41, 47)
+      // кейворды
+      .hasRange(48, 17, 24)
+      .hasRange(50, 0, 3)
+      .hasRange(50, 11, 13)
+      .hasRange(50, 16, 20)
+      .hasRange(53, 4, 11)
+      .hasRange(53, 17, 19)
+      .hasRange(53, 30, 34)
+      .hasRange(56, 0, 4)
+      .hasRange(56, 12, 15)
+      .hasRange(56, 21, 22)
+      .hasRange(56, 30, 35)
+      .hasRange(57, 0, 9)
+      .hasRange(57, 17, 20)
+      .hasRange(57, 21, 23)
+      .hasRange(57, 30, 35)
+      .hasSize(18);
 
 
     configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -181,7 +216,23 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
       .hasRange(4, 9, 4, 10)
       .hasRange(17, 18, 17, 19)
       .hasRange(31, 9, 31, 10)
-      .hasRange(31, 28, 31, 29);
-    assertThat(diagnostics).hasSize(4);
+      .hasRange(31, 28, 31, 29)
+      // кейворды
+      .hasRange(48, 17, 24)
+      .hasRange(50, 0, 3)
+      .hasRange(50, 11, 13)
+      .hasRange(50, 16, 20)
+      .hasRange(53, 4, 11)
+      .hasRange(53, 17, 19)
+      .hasRange(53, 30, 34)
+      .hasRange(56, 0, 4)
+      .hasRange(56, 12, 15)
+      .hasRange(56, 21, 22)
+      .hasRange(56, 30, 35)
+      .hasRange(57, 0, 9)
+      .hasRange(57, 17, 20)
+      .hasRange(57, 21, 23)
+      .hasRange(57, 30, 35)
+      .hasSize(19);
   }
 }
