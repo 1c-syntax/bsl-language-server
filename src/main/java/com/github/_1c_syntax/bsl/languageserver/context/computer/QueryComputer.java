@@ -125,7 +125,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   }
 
   private static String removeDoubleQuotes(String text) {
-    return text.replace("\"\"", "\"");
+    return text.replace("\"\"", "\" ");
   }
 
 
