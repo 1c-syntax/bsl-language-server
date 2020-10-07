@@ -387,7 +387,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services.
 For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
@@ -405,22 +404,19 @@ For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
 <li><code>MacOs</code></li>
 </ul>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">Component</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">COMObject</span><span class="p">(</span><span class="s1">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">Component</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">COMObject</span><span class="p">(</span><span class="s1">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
 </code></pre></div>
-
 
 <p>or</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
 </code></pre></div>
 
-
 <p>Instead of this you can use <code>StartApplication()</code>.</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">SystemInformation</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">SystemInformation</span><span class="p">();</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">SystemInformation</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">SystemInformation</span><span class="p">();</span>
 <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">SystemInformation</span><span class="o">.</span><span class="nv">PlatformType</span> <span class="o">=</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86</span> <span class="nv">OR</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86_64</span> <span class="k">Then</span>
     <span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
@@ -429,15 +425,13 @@ For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingObjectNotAvailableUnix-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingObjectNotAvailableUnix-off</span>
 <span class="c c-Singleline">// BSLLS:UsingObjectNotAvailableUnix-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UsingObjectNotAvailableUnix&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;UsingObjectNotAvailableUnix&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

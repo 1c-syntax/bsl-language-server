@@ -367,12 +367,11 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Execution query in cycle</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bad</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
+<div class="Bsl codehilite"><pre><span></span><code><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
 <span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
 <span class="k">Для</span> <span class="nv">индекс</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="nv">СписокДокументов</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">()</span> <span class="k">Цикл</span>
     <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
@@ -396,9 +395,8 @@
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
 
-
 <p>Good</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
+<div class="Bsl codehilite"><pre><span></span><code><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
 <span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
 
 <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
@@ -421,18 +419,15 @@
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
 
-
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CreateQueryInCycle-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CreateQueryInCycle-off</span>
 <span class="c c-Singleline">// BSLLS:CreateQueryInCycle-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;CreateQueryInCycle&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;CreateQueryInCycle&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -400,13 +400,12 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Nested operators "If", "For", "ForEach", "While" and "Try" are key ingredients for so called "spaghetti-code".</p>
 <p>Such code is hard for reading, refactoring and support.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c c-Singleline">// Acceptable - level = 1</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c c-Singleline">// Acceptable - level = 1</span>
   <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
   <span class="nv">If</span> <span class="nv">SomethingElse</span> <span class="k">Then</span>             <span class="c c-Singleline">// Acceptable - level = 2</span>
     <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
@@ -423,22 +422,19 @@
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
 
-
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://rules.sonarsource.com/java/RSPEC-134">RSPEC-134</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedStatements-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedStatements-off</span>
 <span class="c c-Singleline">// BSLLS:NestedStatements-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;NestedStatements&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;NestedStatements&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxAllowedLevel&quot;</span><span class="p">:</span> <span class="mi">4</span>
 <span class="p">}</span>
 </code></pre></div>

@@ -400,13 +400,12 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>При создании объекта типа Структура не рекомендуется передавать в конструктор более 3-х значений свойств.
 Вместо этого рекомендуется использовать метод Вставить или присваивать значения свойствам явным образом</p>
 <h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
    <span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных,</span>
    <span class="s">|НеРедактироватьСхемуКомпоновкиДанных,</span>
    <span class="s">|НеНастраиватьУсловноеОформление,</span>
@@ -429,9 +428,8 @@
    <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">));</span>
 </code></pre></div>
 
-
 <p>Правильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
 
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеРедактироватьСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
@@ -446,22 +444,19 @@
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;Заголовок&quot;</span><span class="p">,</span> <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">);</span>
 </code></pre></div>
 
-
 <h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:693:hdoc">Стандарт: Использование объектов типа Структура</a></li>
 </ul>
 <h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-off</span>
 <span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-on</span>
 </code></pre></div>
 
-
 <h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxValuesCount&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>

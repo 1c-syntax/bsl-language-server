@@ -374,24 +374,21 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>It is incorrect to use exceptions to cast a value to a type. For such operations, it is necessary to use the capabilities of the TypeDescription object.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Try</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="k">Try</span>
  <span class="nv">NumberDaysAllowance</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">(</span><span class="nv">Value</span><span class="p">);</span>
 <span class="k">Raise</span>
  <span class="nv">NumberDaysAllowance</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span> <span class="c c-Singleline">// default value</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
 
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">TypeDescription</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">TypeDescription</span><span class="p">(</span><span class="s1">&quot;Number&quot;</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">TypeDescription</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">TypeDescription</span><span class="p">(</span><span class="s1">&quot;Number&quot;</span><span class="p">);</span>
 <span class="nv">NumberDaysAllowance</span> <span class="o">=</span> <span class="nv">TypeDescription</span><span class="o">.</span><span class="nv">CastValue</span><span class="p">(</span><span class="nv">Value</span><span class="p">);</span>
 </code></pre></div>
-
 
 <h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">Link</a></h2>
 <ul>
@@ -399,15 +396,13 @@
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TryNumber-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TryNumber-off</span>
 <span class="c c-Singleline">// BSLLS:TryNumber-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;TryNumber&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;TryNumber&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -400,20 +400,18 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>After you finished working with temporary file or folder, you need to delete it yourself.
 You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nv">Write</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 <span class="c c-Singleline">// Not delete temporary file</span>
 </code></pre></div>
 
-
 <p>Сorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">TempFileName</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nv">Write</span><span class="p">(</span><span class="nv">TempFileName</span><span class="p">);</span>
 
 <span class="c c-Singleline">// Work with file</span>
@@ -427,22 +425,19 @@ You should not rely on automatic deletion of files and folders before platform s
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
 
-
 <h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:542:hdoc">FileSystem access from application code</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-off</span>
 <span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;MissingTemporaryFileDeletion&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;MissingTemporaryFileDeletion&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchDeleteFileMethod&quot;</span><span class="p">:</span> <span class="s2">&quot;УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

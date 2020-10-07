@@ -367,39 +367,32 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>It is forbidden to use the search methods for elements "FindByName" or "FindByCode".</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">Position</span> <span class="o">=</span> <span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nv">FindByName</span><span class="p">(</span><span class="s1">&quot;Senior Accountant&quot;</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">Position</span> <span class="o">=</span> <span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nv">FindByName</span><span class="p">(</span><span class="s1">&quot;Senior Accountant&quot;</span><span class="p">);</span>
 </code></pre></div>
-
 
 <p>or</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Position</span> <span class="o">=</span> <span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="s1">&quot;00-0000001&quot;</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">Position</span> <span class="o">=</span> <span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Positions</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="s1">&quot;00-0000001&quot;</span><span class="p">);</span>
 </code></pre></div>
-
 
 <p>Acceptable use:</p>
-<div class="codehilite"><pre><span></span><code><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Currencies</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="nv">CurrentData</span><span class="o">.</span><span class="nv">CurrencyCodeDigital</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">Currencies</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="nv">CurrentData</span><span class="o">.</span><span class="nv">CurrencyCodeDigital</span><span class="p">);</span>
 </code></pre></div>
 
-
-<div class="codehilite"><pre><span></span><code><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">BankClassifier</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="nv">BankDetails</span><span class="o">.</span><span class="nv">BIK</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nb">Catalogs</span><span class="o">.</span><span class="nv">BankClassifier</span><span class="o">.</span><span class="nv">FindByCode</span><span class="p">(</span><span class="nv">BankDetails</span><span class="o">.</span><span class="nv">BIK</span><span class="p">);</span>
 </code></pre></div>
-
 
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingFindElementByString-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingFindElementByString-off</span>
 <span class="c c-Singleline">// BSLLS:UsingFindElementByString-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UsingFindElementByString&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;UsingFindElementByString&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -393,12 +393,11 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Сложное выражение (содержащее более 3 логических конструкции) необходимо вынести в отдельный метод или переменную.</p>
 <h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Плохо:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;АнализСубконто&quot;</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;АнализСубконто&quot;</span>
     <span class="k">ИЛИ</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;АнализСчета&quot;</span>
     <span class="k">ИЛИ</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;ОборотноСальдоваяВедомость&quot;</span>
     <span class="k">ИЛИ</span> <span class="nv">ИдентификаторОбъекта</span> <span class="o">=</span> <span class="s1">&quot;ОборотноСальдоваяВедомостьПоСчету&quot;</span>
@@ -419,9 +418,8 @@
 <span class="k">КонецЕсли</span><span class="p">;</span> 
 </code></pre></div>
 
-
 <p>Хорошо:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">ОткрыватьОбъектПриИдентификаторе</span><span class="p">(</span><span class="nv">ИдентификаторОбъекта</span><span class="p">)</span> <span class="k">Тогда</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">ОткрыватьОбъектПриИдентификаторе</span><span class="p">(</span><span class="nv">ИдентификаторОбъекта</span><span class="p">)</span> <span class="k">Тогда</span>
 
     <span class="nv">ПараметрыРасшифровки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;ОткрытьОбъект&quot;</span><span class="p">,</span> <span class="kc">Ложь</span><span class="p">);</span>
 
@@ -448,18 +446,15 @@
 <span class="k">КонецФункции</span>
 </code></pre></div>
 
-
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:IfConditionComplexity-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IfConditionComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;IfConditionComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxIfConditionComplexity&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>

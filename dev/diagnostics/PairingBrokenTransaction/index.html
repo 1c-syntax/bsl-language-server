@@ -374,12 +374,11 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Начало транзакции и ее фиксация (отмена) должны происходить в контексте одного метода.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p><em>Правильно</em></p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ЗаписатьДанныеВИБ</span><span class="p">()</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ЗаписатьДанныеВИБ</span><span class="p">()</span>
 
     <span class="nb">НачатьТранзакцию</span><span class="p">();</span>
 
@@ -395,9 +394,8 @@
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 
-
 <p><em>Неправильно</em></p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ЗаписатьДанныеВИБ</span><span class="p">()</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ЗаписатьДанныеВИБ</span><span class="p">()</span>
 
     <span class="nb">НачатьТранзакцию</span><span class="p">();</span>
     <span class="nv">ЗаписатьДокумент</span><span class="p">();</span>
@@ -418,22 +416,19 @@
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 
-
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:783:hdoc">Транзакции: правила использования</a></li>
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:PairingBrokenTransaction-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:PairingBrokenTransaction-off</span>
 <span class="c c-Singleline">// BSLLS:PairingBrokenTransaction-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;PairingBrokenTransaction&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;PairingBrokenTransaction&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

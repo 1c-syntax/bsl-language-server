@@ -400,12 +400,11 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
    <span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных,</span>
    <span class="s">|НеРедактироватьСхемуКомпоновкиДанных,</span>
    <span class="s">|НеНастраиватьУсловноеОформление,</span>
@@ -428,9 +427,8 @@
    <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">));</span>
 </code></pre></div>
 
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
 
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеРедактироватьСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
@@ -445,22 +443,19 @@
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;Заголовок&quot;</span><span class="p">,</span> <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">);</span>
 </code></pre></div>
 
-
 <h2 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">Link</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:693:hdoc">Standard: Using objects of type Structure</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-off</span>
 <span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxValuesCount&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>

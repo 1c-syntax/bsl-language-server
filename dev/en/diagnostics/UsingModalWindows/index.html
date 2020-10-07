@@ -387,7 +387,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Modal windows and pop-ups are considered bad taste. Users are accustomed to working "in one window." When developing configurations designed to work in the web client, it is forbidden to use modal windows and dialogs. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard.</p>
 <h3 id="diagnostic-restrictions">Diagnostic restrictions<a class="headerlink" href="#diagnostic-restrictions" title="Permanent link">Link</a></h3>
@@ -452,13 +451,12 @@
 </tbody>
 </table>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Example &quot;Incorrect&quot;</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// Example &quot;Incorrect&quot;</span>
 <span class="nv">warning</span><span class="p">(</span><span class="nb">NStr</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 
 <span class="c c-Singleline">// Example &quot;Correct&quot;</span>
 <span class="nv">ShowWarning</span><span class="p">(,</span> <span class="nb">NStr</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 </code></pre></div>
-
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
@@ -467,15 +465,13 @@
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingModalWindows-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingModalWindows-off</span>
 <span class="c c-Singleline">// BSLLS:UsingModalWindows-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UsingModalWindows&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;UsingModalWindows&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

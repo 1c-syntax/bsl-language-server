@@ -374,10 +374,9 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Для проверки прав доступа в коде следует использовать метод ПравоДоступа.</p>
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+<p>Для проверки прав доступа в коде следует использовать метод ПравоДоступа.</p>
 <p>В тех случаях, где роль не дает никаких прав на объекты метаданных, а служит только для определения того или иного дополнительного права, 
 следует использовать метод РольДоступна. </p>
 <p>При использовании в конфигурации Библиотеки стандартных подсистем (БСП) следует 
@@ -391,22 +390,18 @@
 <span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;ПросмотрОтчетаПопулярныеСтраны&quot;</span><span class="o">)</span> <span class="err">Тогда</span>
 </code></pre></div>
 
-
 <div class="codehilite"><pre><span></span><code><span class="err">Правильно</span><span class="o">:</span>
 <span class="err">Если</span> <span class="err">ПравоДоступа</span><span class="o">(</span><span class="s2">&quot;Редактирование&quot;</span><span class="o">,</span> <span class="err">Метаданные</span><span class="o">.</span><span class="err">Справочники</span><span class="o">.</span><span class="err">СтраныМира</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
 <span class="err">Если</span> <span class="err">ПравоДоступа</span><span class="o">(</span><span class="s2">&quot;Просмотр&quot;</span><span class="o">,</span> <span class="err">Метаданные</span><span class="o">.</span><span class="err">Отчеты</span><span class="o">.</span><span class="err">ПопулярныеСтраны</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 
-
 <div class="codehilite"><pre><span></span><code><span class="err">Неправильно</span><span class="o">:</span>
 <span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;Казначей&quot;</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
 </code></pre></div>
 
-
 <div class="codehilite"><pre><span></span><code><span class="err">Правильно</span><span class="o">:</span>
 <span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;Казначей&quot;</span><span class="o">)</span> <span class="err">ИЛИ</span> <span class="err">ПривилегированныйРежим</span><span class="o">()</span> <span class="err">Тогда</span> <span class="o">...</span>
 </code></pre></div>
-
 
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -416,15 +411,13 @@
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
 <span class="c c-Singleline">// BSLLS:IsInRoleMethod-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IsInRoleMethod&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;IsInRoleMethod&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

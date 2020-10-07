@@ -367,19 +367,16 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>Do not include a comma at the end of a method call without specifying a parameter. It is difficult to understand and does not carry important information.<br />
 Not required parameters under the principle of Occam's Razor "Do not multiply entities without need", since the "hanging" comma is not very informative.</p>
 <p>Bad:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Result</span> <span class="o">=</span> <span class="nv">Action</span> <span class="p">(</span><span class="nv">P1</span><span class="p">,</span> <span class="nv">P2</span> <span class="p">,,);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">Result</span> <span class="o">=</span> <span class="nv">Action</span> <span class="p">(</span><span class="nv">P1</span><span class="p">,</span> <span class="nv">P2</span> <span class="p">,,);</span>
 </code></pre></div>
-
 
 <p>Good:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Result</span> <span class="o">=</span> <span class="nv">Action</span> <span class="p">(</span><span class="nv">P1</span><span class="p">,</span> <span class="nv">P2</span><span class="p">);</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="nv">Result</span> <span class="o">=</span> <span class="nv">Action</span> <span class="p">(</span><span class="nv">P1</span><span class="p">,</span> <span class="nv">P2</span><span class="p">);</span>
 </code></pre></div>
-
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
@@ -387,15 +384,13 @@ Not required parameters under the principle of Occam's Razor "Do not multiply en
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExtraCommas-off</span>
+<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExtraCommas-off</span>
 <span class="c c-Singleline">// BSLLS:ExtraCommas-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;ExtraCommas&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;ExtraCommas&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               
