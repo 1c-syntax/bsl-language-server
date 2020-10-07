@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602082530853,
+  "lastUpdate": 1602082986012,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5828,6 +5828,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.044315813830048",
             "extra": "mean: 77.85649538040161 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f7f68359176d66dd489caf0e06073cdcdaeab36f",
+          "message": "Merge pull request #1392 from 1c-syntax/feature/modMissingSpace",
+          "timestamp": "2020-10-07T17:52:14+03:00",
+          "tree_id": "becb97e1b80e295754ae0498ebfa890c9ee06f99",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f7f68359176d66dd489caf0e06073cdcdaeab36f"
+        },
+        "date": 1602082982378,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.58862018585205,
+            "unit": "sec",
+            "range": "stddev: 0.8358134003360367",
+            "extra": "mean: 75.58862018585205 sec\nrounds: 3"
           }
         ]
       }
