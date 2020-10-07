@@ -43,6 +43,7 @@ class QueryComputerTest {
     var queries = documentContext.getQueries();
 
     //then
-    assertThat(queries).hasSize(6);
+    assertThat(queries).hasSize(9);
+    assertThat(queries.get(6).getTokens().get(2).getLine()).isEqualTo(30);
   }
 }

@@ -42,7 +42,6 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
-  private static final Pattern QUERIES_STARTING_QUOTE = CaseInsensitivePattern.compile("^\\s*\"");
 
   private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
 
@@ -74,18 +73,33 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     boolean isQuery = false;
 
-    var strings = new StringJoiner("\n");
+    int prevTokenLine = -1;
+    String partString = "";
+    var strings = new StringJoiner("");
     for (Token token : ctx.getTokens()) {
-      var partString = getString(startLine, token);
+
+      if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
+        String newString = (getString(startLine, token));
+        partString = newString.substring(partString.length());
+      } else {
+        partString = (getString(startLine, token));
+      }
+
       if (!isQuery) {
         isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
       }
+
       strings.add(partString);
+
+      if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
+        strings.add("\n");
+      }
       startLine = token.getLine();
+      prevTokenLine = token.getLine();
     }
 
     if (isQuery) {
-      queries.add(new SDBLTokenizer(startEmptyLines + removeExtremeQuotes(strings.toString())));
+      queries.add(new SDBLTokenizer(startEmptyLines + strings.toString()));
     }
 
     return ctx;
@@ -95,9 +109,9 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private static String getString(int startLine, Token token) {
     var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
-      string += " " + token.getText().substring(1);
+      string += " " + removeQuotes(token.getText().substring(1));
     } else {
-      string += token.getText();
+      string += removeQuotes(token.getText());
     }
     return string;
   }
@@ -109,13 +123,22 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     return "";
   }
 
-  private static String removeExtremeQuotes(String text) {
-    if (QUERIES_STARTING_QUOTE.matcher(text).find()) {
-      // Кавычка может быть не первым символом строки
-      var quoteIndex = text.indexOf("\"");
-      return text.substring(0, quoteIndex) + " " + text.substring(quoteIndex + 1, text.length() - 1);
+  private static String removeQuotes(String text) {
+
+    int indexStart = 0;
+    String startChar = "";
+    if (text.startsWith("\"")) {
+      indexStart = 1;
+      startChar = " ";
     }
 
-    return text;
+    int indexEnd = text.length();
+    String endChar = "";
+    if (text.length() > 1 && text.endsWith("\"")) {
+      indexEnd--;
+      endChar = " ";
+    }
+
+    return startChar + text.substring(indexStart, indexEnd) + endChar;
   }
 }
