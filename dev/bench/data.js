@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602083904500,
+  "lastUpdate": 1602084806915,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5890,6 +5890,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1954875516569",
             "extra": "mean: 77.26136763890584 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9ae210fdd65406efc3d8a420f7926ddc0c327e14",
+          "message": "Merge pull request #1394 from sfaqer/feature/forceModalityMode",
+          "timestamp": "2020-10-07T18:06:20+03:00",
+          "tree_id": "6bd7bc65d514d75312dc1ac1e09a0e8b8c99f8db",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9ae210fdd65406efc3d8a420f7926ddc0c327e14"
+        },
+        "date": 1602084804436,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.14998547236125,
+            "unit": "sec",
+            "range": "stddev: 0.9238870217307138",
+            "extra": "mean: 76.14998547236125 sec\nrounds: 3"
           }
         ]
       }
