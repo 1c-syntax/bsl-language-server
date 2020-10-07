@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **117**
+Total: **118**
 
 * Error: **36**
-* Code smell: **74**
+* Code smell: **75**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -23,6 +23,7 @@ Total: **117**
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Method definitions must be placed before the module body operators | Yes | Blocker | Error | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Code out of region | Yes | Info | Code smell | `standard` 
  [CognitiveComplexity](CognitiveComplexity.md) | Cognitive complexity | Yes | Critical | Code smell | `brainoverload` 
+ [CommandModuleExportMethods](CommandModuleExportMethods.md) | Export procedures and functions in command and general command modules | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [CommentedCode](CommentedCode.md) | Commented out code | Yes | Minor | Code smell | `standard`<br>`badpractice` 
  [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` 
  [CommonModuleAssign](CommonModuleAssign.md) | CommonModuleAssign | Yes | Blocker | Error | `error` 

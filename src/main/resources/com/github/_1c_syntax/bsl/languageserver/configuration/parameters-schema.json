@@ -78,6 +78,16 @@
             },
             "$id": "#/definitions/CognitiveComplexity"
         },
+        "CommandModuleExportMethods": {
+            "description": "Export procedures and functions in command and general command modules",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Export procedures and functions in command and general command modules",
+            "$id": "#/definitions/CommandModuleExportMethods"
+        },
         "CommentedCode": {
             "description": "Commented out code",
             "default": true,

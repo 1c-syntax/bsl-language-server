@@ -41,6 +41,9 @@
                 "CognitiveComplexity": {
                     "$ref": "parameters-schema.json#/definitions/CognitiveComplexity"
                 },
+                "CommandModuleExportMethods": {
+                    "$ref": "parameters-schema.json#/definitions/CommandModuleExportMethods"
+                },
                 "CommentedCode": {
                     "$ref": "parameters-schema.json#/definitions/CommentedCode"
                 },
