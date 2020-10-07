@@ -77,14 +77,13 @@ class DisableDiagnosticTriggeringSupplierTest {
     List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
-      .hasSize(11)
+      .hasSize(10)
       .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable NumberOfValuesInStructureConstructor in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable ExportVariables in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable IfElseDuplicatedCondition in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CanonicalSpellingKeywords in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CodeOutOfRegion in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable FunctionShouldHaveReturn in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable IfElseIfEndsWithElse in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
