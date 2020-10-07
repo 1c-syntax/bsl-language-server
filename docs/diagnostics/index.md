@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **118**
+Общее количество: **119**
 
-* Дефект кода: **75**
+* Дефект кода: **76**
 * Уязвимость: **3**
 * Ошибка: **36**
 * Потенциальная уязвимость: **4**
@@ -23,7 +23,7 @@
  [CodeBlockBeforeSub](CodeBlockBeforeSub.md) | Определения методов должны размещаться перед операторами тела модуля | Да | Блокирующий | Ошибка | `error` 
  [CodeOutOfRegion](CodeOutOfRegion.md) | Код расположен вне области | Да | Информационный | Дефект кода | `standard` 
  [CognitiveComplexity](CognitiveComplexity.md) | Когнитивная сложность | Да | Критичный | Дефект кода | `brainoverload` 
- [CommandModuleExportMethods](CommandModuleExportMethods.md) | Экспортные процедуры и функции в модулях команд и общих команд | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
+ [CommandModuleExportMethods](CommandModuleExportMethods.md) | Экспортные методы в модулях команд и общих команд | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
  [CommentedCode](CommentedCode.md) | Закомментированный фрагмент кода | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
  [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` 
  [CommonModuleAssign](CommonModuleAssign.md) | Присвоение общему модулю | Да | Блокирующий | Ошибка | `error` 

@@ -9,7 +9,7 @@
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
  `minWordLength` | `Integer` | ```Minimum length for checked words``` | ```3``` 
- `userWordsToIgnore` | `String` | ```Dictionary for excluding words (comma separated, without spaces)``` | `````` 
+ `userWordsToIgnore` | `String` | ```Dictionary for excluding words (comma separated)``` | `````` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
