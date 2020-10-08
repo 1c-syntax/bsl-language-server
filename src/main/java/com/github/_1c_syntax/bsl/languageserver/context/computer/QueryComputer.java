@@ -45,6 +45,9 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
 
+  private static final Pattern QUOTE_LINE_PATTERN = CaseInsensitivePattern.compile(
+    "(?:\"{12}|\"{10}|\"{8}|\"{6}|\"{4}|\"{2})");
+
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
   }
@@ -99,7 +102,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     }
 
     // последнюю часть
-    if (!partString.isBlank()) {
+    if (!partString.isEmpty()) {
       strings.add(partString);
     }
 
@@ -143,20 +146,33 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   }
 
   private static String removeDoubleQuotes(String text) {
-    var leftQuote = " \"";
-    var rightQuote = "\" ";
     var leftQuoteFound = false;
-    var quotePosition = text.indexOf("\"\"");
-    var textLength = text.length();
+    var matcher = QUOTE_LINE_PATTERN.matcher(text);
     var newText = text;
-    while (quotePosition > 0) {
-      newText = newText.substring(0, quotePosition) + (leftQuoteFound ? rightQuote : leftQuote);
-      if (quotePosition + 2 < textLength) {
-        newText += text.substring(quotePosition + 2);
+    var textLength = text.length();
+    var strings = new StringJoiner("");
+    while (matcher.find()) {
+      var quotesLineLength = matcher.group(0).length();
+      var emptyString = (" ".repeat(quotesLineLength / 2)).intern();
+      strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
+        + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
+
+      if (matcher.end() + 1 < textLength) {
+        newText = newText.substring(matcher.end() + 1);
+        textLength = newText.length();
+      } else {
+        newText = "";
+        break;
       }
-      quotePosition = newText.indexOf("\"\"");
+
+      matcher = QUOTE_LINE_PATTERN.matcher(newText);
       leftQuoteFound = !leftQuoteFound;
     }
-    return newText;
+
+    if (!newText.isEmpty()) {
+      strings.add(newText);
+    }
+
+    return strings.toString();
   }
 }
