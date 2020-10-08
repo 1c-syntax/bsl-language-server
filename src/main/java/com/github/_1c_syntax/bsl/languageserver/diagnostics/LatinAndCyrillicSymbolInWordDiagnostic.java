@@ -54,17 +54,18 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
   /**
    * Список слов-исключений через `,`
    */
-  private static final String DEFAULT_EXCLUDE_WORDS = "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси";
+  private static final String DEFAULT_EXCLUDE_WORDS = "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, " +
+    "ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси";
 
   /**
-   * Паттерн для поиска кириллических символов в с имени
+   * Паттерн для поиска кириллических символов в имени
    */
-  private static final Pattern RU_LANG_PATTERN = CaseInsensitivePattern.compile("[a-z]");
+  private static final Pattern RU_LANG_PATTERN = CaseInsensitivePattern.compile("[а-яё]");
 
   /**
-   * Паттерн для поиска латинских символов в с имени
+   * Паттерн для поиска латинских символов в имени
    */
-  private static final Pattern EN_LANG_PATTERN = CaseInsensitivePattern.compile("[а-яё]");
+  private static final Pattern EN_LANG_PATTERN = CaseInsensitivePattern.compile("[a-z]");
 
   @DiagnosticParameter(
     type = String.class,
