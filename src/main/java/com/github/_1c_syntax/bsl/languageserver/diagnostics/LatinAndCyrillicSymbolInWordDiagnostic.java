@@ -54,7 +54,7 @@ public class LatinAndCyrillicSymbolInWordDiagnostic extends AbstractDiagnostic {
   /**
    * Список слов-исключений через `,`
    */
-  private static final String DEFAULT_EXCLUDE_WORDS = "ЧтениеXML, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP";
+  private static final String DEFAULT_EXCLUDE_WORDS = "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси";
 
   /**
    * Паттерн для поиска кириллических символов в с имени
