@@ -40,13 +40,28 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private final DocumentContext documentContext;
   private final List<SDBLTokenizer> queries = new ArrayList<>();
 
+  /**
+   * Ключевые слова для поиска потенциально запросныйх строк
+   */
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
     "select|выбрать|drop|уничтожить");
 
+  /**
+   * Минимальная строка для анализа
+   */
   private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
 
+  /**
+   * Поиск сдвоенных кавычек
+   */
   private static final Pattern QUOTE_LINE_PATTERN = CaseInsensitivePattern.compile(
     "(?:\"{12}|\"{10}|\"{8}|\"{6}|\"{4}|\"{2})");
+
+  /**
+   * Поиск первой кавычки в строке
+   */
+  private static final Pattern FIRST_QUOTE_PATTERN = CaseInsensitivePattern.compile(
+    "^\\s*(\")");
 
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -76,16 +91,20 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     boolean isQuery = false;
 
+    // конкатенация строк в одну
     int prevTokenLine = -1;
     String partString = "";
     var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
 
+      // бывает несколько токенов строки в одной строе файла
+      // добавляем часть строки только в случае находления ее на другой строке файла
       if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
         strings.add(partString);
         partString = "";
       }
 
+      // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
         String newString = getString(startLine, token);
         partString = newString.substring(partString.length());
@@ -93,6 +112,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
         partString = getString(startLine, token);
       }
 
+      // проверяем подстроку на вероятность запроса
       if (!isQuery) {
         isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
       }
@@ -101,13 +121,13 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       prevTokenLine = token.getLine();
     }
 
-    // последнюю часть
+    // последнюю часть тоже необходимо добавить к общему тексту
     if (!partString.isEmpty()) {
       strings.add(partString);
     }
 
     if (isQuery) {
-      queries.add(new SDBLTokenizer(startEmptyLines + removeDoubleQuotes(strings.toString())));
+      queries.add(new SDBLTokenizer(startEmptyLines + trimQuotes(removeDoubleQuotes(strings.toString()))));
     }
 
     return ctx;
@@ -124,18 +144,27 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     return string;
   }
 
-  private static String trimLastQuote(String subString) {
-    var quoteCount = subString.length() - subString.replace("\"", "").length();
+  private static String trimLastQuote(String text) {
+    var quoteCount = text.length() - text.replace("\"", "").length();
     if (quoteCount % 2 == 1) {
       String newString;
-      var quotePosition = subString.lastIndexOf("\"");
-      newString = subString.substring(0, quotePosition) + " ";
-      if (quotePosition + 1 < subString.length()) {
-        newString += subString.substring(quotePosition + 1);
+      var quotePosition = text.lastIndexOf("\"");
+      newString = text.substring(0, quotePosition) + " ";
+      if (quotePosition + 1 < text.length()) {
+        newString += text.substring(quotePosition + 1);
       }
       return newString;
     }
-    return subString;
+    return text;
+  }
+
+  private static String trimQuotes(String text) {
+    var matcher = FIRST_QUOTE_PATTERN.matcher(text);
+    if(matcher.find()) {
+      var newText = text.substring(0, matcher.start(1)) + " " + text.substring(matcher.end(1));
+      return newText.substring(0, newText.length() - 1);
+    }
+    return text;
   }
 
   private static String addEmptyLines(int startLine, Token token) {
@@ -157,8 +186,8 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
       strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
         + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
 
-      if (matcher.end() + 1 < textLength) {
-        newText = newText.substring(matcher.end() + 1);
+      if (matcher.end() < textLength) {
+        newText = newText.substring(matcher.end());
         textLength = newText.length();
       } else {
         newText = "";
