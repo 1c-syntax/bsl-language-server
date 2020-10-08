@@ -114,20 +114,20 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private static String getString(int startLine, Token token) {
     var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
-      string += " " + stripLastQuote(token.getText().substring(1));
+      string += " " + trimLastQuote(token.getText().substring(1));
     } else {
-      string += stripLastQuote(token.getText());
+      string += trimLastQuote(token.getText());
     }
     return string;
   }
 
-  private static String stripLastQuote(String subString) {
+  private static String trimLastQuote(String subString) {
     var quoteCount = subString.length() - subString.replace("\"", "").length();
-    if(quoteCount % 2 == 1) {
+    if (quoteCount % 2 == 1) {
       String newString;
       var quotePosition = subString.lastIndexOf("\"");
       newString = subString.substring(0, quotePosition) + " ";
-      if(quotePosition + 1 < subString.length()) {
+      if (quotePosition + 1 < subString.length()) {
         newString += subString.substring(quotePosition + 1);
       }
       return newString;
@@ -149,34 +149,14 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var quotePosition = text.indexOf("\"\"");
     var textLength = text.length();
     var newText = text;
-    while(quotePosition > 0) {
+    while (quotePosition > 0) {
       newText = newText.substring(0, quotePosition) + (leftQuoteFound ? rightQuote : leftQuote);
-      if(quotePosition + 2 < textLength) {
+      if (quotePosition + 2 < textLength) {
         newText += text.substring(quotePosition + 2);
       }
       quotePosition = newText.indexOf("\"\"");
       leftQuoteFound = !leftQuoteFound;
     }
     return newText;
-  }
-
-
-  private static String removeQuotes(String text) {
-
-    int indexStart = 0;
-    String startChar = "";
-    if (text.startsWith("\"")) {
-      indexStart = 1;
-      startChar = " ";
-    }
-
-    int indexEnd = text.length();
-    String endChar = "";
-    if (text.length() > 1 && text.endsWith("\"")) {
-      indexEnd--;
-      endChar = " ";
-    }
-
-    return startChar + text.substring(indexStart, indexEnd) + endChar;
   }
 }
