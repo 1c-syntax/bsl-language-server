@@ -75,28 +75,32 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     int prevTokenLine = -1;
     String partString = "";
-    var strings = new StringJoiner("");
+    var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
 
       if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
-        strings.add("\n");
+        strings.add(partString);
+        partString = "";
       }
 
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
-        String newString = (getString(startLine, token));
+        String newString = getString(startLine, token);
         partString = newString.substring(partString.length());
       } else {
-        partString = (getString(startLine, token));
+        partString = getString(startLine, token);
       }
 
       if (!isQuery) {
         isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
       }
 
-      strings.add(partString);
-
       startLine = token.getLine();
       prevTokenLine = token.getLine();
+    }
+
+    // последнюю часть
+    if (!partString.isBlank()) {
+      strings.add(partString);
     }
 
     if (isQuery) {
@@ -110,11 +114,25 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private static String getString(int startLine, Token token) {
     var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
-      string += " " + removeQuotes(token.getText().substring(1));
+      string += " " + stripLastQuote(token.getText().substring(1));
     } else {
-      string += removeQuotes(token.getText());
+      string += stripLastQuote(token.getText());
     }
     return string;
+  }
+
+  private static String stripLastQuote(String subString) {
+    var quoteCount = subString.length() - subString.replace("\"", "").length();
+    if(quoteCount % 2 == 1) {
+      String newString;
+      var quotePosition = subString.lastIndexOf("\"");
+      newString = subString.substring(0, quotePosition) + " ";
+      if(quotePosition + 1 < subString.length()) {
+        newString += subString.substring(quotePosition + 1);
+      }
+      return newString;
+    }
+    return subString;
   }
 
   private static String addEmptyLines(int startLine, Token token) {
@@ -125,7 +143,21 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   }
 
   private static String removeDoubleQuotes(String text) {
-    return text.replace("\"\"", "\" ");
+    var leftQuote = " \"";
+    var rightQuote = "\" ";
+    var leftQuoteFound = false;
+    var quotePosition = text.indexOf("\"\"");
+    var textLength = text.length();
+    var newText = text;
+    while(quotePosition > 0) {
+      newText = newText.substring(0, quotePosition) + (leftQuoteFound ? rightQuote : leftQuote);
+      if(quotePosition + 2 < textLength) {
+        newText += text.substring(quotePosition + 2);
+      }
+      quotePosition = newText.indexOf("\"\"");
+      leftQuoteFound = !leftQuoteFound;
+    }
+    return newText;
   }
 
 
