@@ -41,10 +41,10 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private final List<SDBLTokenizer> queries = new ArrayList<>();
 
   /**
-   * Ключевые слова для поиска потенциально запросныйх строк
+   * Ключевые слова для поиска потенциально запросных строк
    */
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
-    "select|выбрать|drop|уничтожить");
+    "(?:select|выбрать|drop|уничтожить)(?:\\s|$)");
 
   /**
    * Минимальная строка для анализа
@@ -127,7 +127,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     }
 
     if (isQuery) {
-      queries.add(new SDBLTokenizer(startEmptyLines + trimQuotes(removeDoubleQuotes(strings.toString()))));
+      queries.add(new SDBLTokenizer(startEmptyLines + removeDoubleQuotes(strings.toString())));
     }
 
     return ctx;
@@ -139,7 +139,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     if (token.getText().startsWith("|")) {
       string += " " + trimLastQuote(token.getText().substring(1));
     } else {
-      string += trimLastQuote(token.getText());
+      string += trimQuotes(token.getText());
     }
     return string;
   }
@@ -160,10 +160,11 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static String trimQuotes(String text) {
     var matcher = FIRST_QUOTE_PATTERN.matcher(text);
-    if(matcher.find()) {
+    if (matcher.find()) {
       var newText = text.substring(0, matcher.start(1)) + " " + text.substring(matcher.end(1));
-      return newText.substring(0, newText.length() - 1);
+      return trimLastQuote(newText);
     }
+
     return text;
   }
 
