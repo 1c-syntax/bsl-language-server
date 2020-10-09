@@ -44,7 +44,10 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
    * Ключевые слова для поиска потенциально запросных строк
    */
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
-    "(?:select|выбрать|drop|уничтожить)(?:\\s|$)");
+    "(?:[\\s\";]|^)(?:select|выбрать|drop|уничтожить)(?:\\s|$)");
+
+  private static final Pattern NON_QUERIES_START = CaseInsensitivePattern.compile(
+    "(?:^\\s*(?:(?:\\|)|(?:\"\")))");
 
   /**
    * Минимальная строка для анализа
@@ -114,7 +117,8 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
       // проверяем подстроку на вероятность запроса
       if (!isQuery) {
-        isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
+        isQuery = QUERIES_ROOT_KEY.matcher(partString).find()
+          && !NON_QUERIES_START.matcher(partString).find();
       }
 
       startLine = token.getLine();
