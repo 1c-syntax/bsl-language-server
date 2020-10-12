@@ -32,10 +32,10 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -55,19 +55,22 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
-    var dataSource = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
+    var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
     var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
-    if (dataSource.isEmpty() || columnsCollection.isEmpty()) {
+    if (dataSourceCollection.isEmpty() || columnsCollection.isEmpty()) {
       return super.visitQuery(ctx);
     }
 
-    String tableName = getTableNameOrAlias(dataSource);
-    columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableName));
+    Set<String> tableNames = new HashSet<>();
+    for (var dataSource : dataSourceCollection) {
+      tableNames.add(getTableNameOrAlias(dataSource));
+    }
+    columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
     return super.visitQuery(ctx);
 
   }
 
-  private void checkColumnNode(SDBLParser.ColumnContext ctx, String tableName) {
+  private void checkColumnNode(SDBLParser.ColumnContext ctx, Set<String> tableNames) {
 
     if (ctx.children == null) {
       return;
@@ -81,43 +84,43 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       && penultimateChild instanceof SDBLParser.IdentifierContext) {
 
       performCheck(ctx, (SDBLParser.IdentifierContext) lastChild,
-        (SDBLParser.IdentifierContext) penultimateChild, tableName);
+        (SDBLParser.IdentifierContext) penultimateChild, tableNames);
     }
 
   }
 
   private void performCheck(SDBLParser.ColumnContext ctx, SDBLParser.IdentifierContext lastChild,
-                            SDBLParser.IdentifierContext penultimateChild, String tableName) {
+                            SDBLParser.IdentifierContext penultimateChild, Set<String> tableNames) {
 
-    if (!penultimateChild.getText().equals(tableName) &&
+    if (!tableNames.contains(penultimateChild.getText()) &&
       PATTERN.matcher(lastChild.getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
   }
 
-  private String getTableNameOrAlias(Collection<ParseTree> dataSourceCollection) {
+  private String getTableNameOrAlias(ParseTree dataSource) {
 
-    String alias = dataSourceCollection.stream()
-      .map(dataSource -> Trees.getFirstChild(dataSource, SDBLParser.RULE_alias))
+    String alias = Optional.of(dataSource)
+      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_alias))
       .filter(Optional::isPresent)
       .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
       .filter(Optional::isPresent)
       .map(Optional::get)
       .map(BSLParserRuleContext::getText)
-      .collect(Collectors.joining());
+      .orElse("");
 
     if (!alias.isBlank()) {
       return alias;
     }
 
-    return dataSourceCollection.stream()
-      .map(dataSource -> Trees.getFirstChild(dataSource, SDBLParser.RULE_table))
+    return Optional.of(dataSource)
+      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_table))
       .filter(Optional::isPresent)
       .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
       .filter(Optional::isPresent)
       .map(Optional::get)
       .map(BSLParserRuleContext::getText)
-      .collect(Collectors.joining());
+      .orElse("");
   }
 
 }
