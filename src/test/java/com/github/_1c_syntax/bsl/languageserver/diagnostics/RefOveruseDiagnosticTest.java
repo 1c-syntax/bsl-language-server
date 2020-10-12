@@ -38,14 +38,16 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(8);
     assertThat(diagnostics, true)
       .hasRange(3, 28, 3, 45)
       .hasRange(13, 8, 13, 34)
       .hasRange(14, 8, 14, 38)
       .hasRange(25, 8, 25, 21)
       .hasRange(37, 8, 37, 29)
-      .hasRange(38, 8, 38, 35);
+      .hasRange(38, 8, 38, 35)
+      .hasRange(56, 37, 56, 43)
+      .hasRange(57, 42, 57, 48);
 
   }
 }

@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -51,14 +52,21 @@ import java.util.regex.Pattern;
 public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   private static final String REF_REGEX = "Ссылка|Reference";
-  private static final Pattern PATTERN = CaseInsensitivePattern.compile(REF_REGEX);
+  private static final Pattern REF_PATTERN = CaseInsensitivePattern.compile(REF_REGEX);
+  private static final int BAD_CHILD_COUNT = 3;
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
     var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
     var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
-    if (dataSourceCollection.isEmpty() || columnsCollection.isEmpty()) {
-      return super.visitQuery(ctx);
+
+    if (columnsCollection.isEmpty()) {
+      return ctx;
+    }
+
+    if (dataSourceCollection.isEmpty()) {
+      performSimpleCheck(columnsCollection);
+      return ctx;
     }
 
     Set<String> tableNames = new HashSet<>();
@@ -66,8 +74,16 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       tableNames.add(getTableNameOrAlias(dataSource));
     }
     columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
-    return super.visitQuery(ctx);
+    return ctx;
 
+  }
+
+  private void performSimpleCheck(Collection<ParseTree> columnsCollection) {
+    columnsCollection.stream()
+      .filter(columnNode -> columnNode.getChildCount() > BAD_CHILD_COUNT)
+      .map(column -> column.getChild(column.getChildCount() - 1))
+      .filter(lastChild -> REF_PATTERN.matcher(lastChild.getText()).matches())
+      .forEach(node -> diagnosticStorage.addDiagnostic((BSLParserRuleContext) node));
   }
 
   private void checkColumnNode(SDBLParser.ColumnContext ctx, Set<String> tableNames) {
@@ -93,7 +109,7 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
                             SDBLParser.IdentifierContext penultimateChild, Set<String> tableNames) {
 
     if (!tableNames.contains(penultimateChild.getText()) &&
-      PATTERN.matcher(lastChild.getText()).matches()) {
+      REF_PATTERN.matcher(lastChild.getText()).matches()) {
       diagnosticStorage.addDiagnostic(ctx);
     }
   }

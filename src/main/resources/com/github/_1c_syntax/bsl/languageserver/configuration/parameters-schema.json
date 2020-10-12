@@ -79,13 +79,13 @@
             "$id": "#/definitions/CognitiveComplexity"
         },
         "CommandModuleExportMethods": {
-            "description": "Export procedures and functions in command and general command modules",
+            "description": "Export methods in command and general command modules",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Export procedures and functions in command and general command modules",
+            "title": "Export methods in command and general command modules",
             "$id": "#/definitions/CommandModuleExportMethods"
         },
         "CommentedCode": {
@@ -1240,10 +1240,10 @@
             "title": "Typo",
             "properties": {
                 "userWordsToIgnore": {
-                    "description": "Dictionary for excluding words (comma separated, without spaces)",
+                    "description": "Dictionary for excluding words (comma separated)",
                     "default": "",
                     "type": "string",
-                    "title": "Dictionary for excluding words (comma separated, without spaces)"
+                    "title": "Dictionary for excluding words (comma separated)"
                 },
                 "minWordLength": {
                     "description": "Minimum length for checked words",
