@@ -1076,6 +1076,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "RefOveruse": {
+            "description": "Overuse \"Reference\" in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Overuse \"Reference\" in a query",
+            "$id": "#/definitions/RefOveruse"
+        },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
             "default": true,
