@@ -53,6 +53,8 @@ import org.eclipse.lsp4j.RenameCapabilities;
 import org.eclipse.lsp4j.RenameOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.SelectionRangeRegistrationOptions;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
@@ -87,6 +89,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+  private final SemanticTokensLegend legend;
 
   private boolean shutdownWasCalled;
 
@@ -94,7 +97,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 
     clientCapabilitiesHolder.setCapabilities(params.getCapabilities());
-    
+
     setConfigurationRoot(params);
 
     var factory = new NamedForkJoinWorkerThreadFactory("populate-context-");
@@ -123,6 +126,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setRenameProvider(getRenameProvider(params));
     capabilities.setInlayHintProvider(getInlayHintProvider());
     capabilities.setExecuteCommandProvider(getExecuteCommandProvider());
+
+    var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
+    semanticTokensProvider.setFull(Boolean.TRUE);
+    semanticTokensProvider.setRange(Boolean.FALSE);
+    capabilities.setSemanticTokensProvider(semanticTokensProvider);
 
     var result = new InitializeResult(capabilities, serverInfo);
 

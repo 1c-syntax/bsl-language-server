@@ -43,6 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.providers.InlayHintProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.RenameProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SelectionRangeProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -86,6 +87,8 @@ import org.eclipse.lsp4j.PrepareRenameResult;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SelectionRange;
 import org.eclipse.lsp4j.SelectionRangeParams;
 import org.eclipse.lsp4j.SymbolInformation;
@@ -125,6 +128,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ColorProvider colorProvider;
   private final RenameProvider renameProvider;
   private final InlayHintProvider inlayHintProvider;
+  private final SemanticTokensProvider semanticTokensProvider;
 
   private final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("text-document-service-"));
 
@@ -287,6 +291,18 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       executorService
     );
   }
+
+  @Override
+  public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    return CompletableFuture.supplyAsync(() -> semanticTokensProvider.getSemanticTokensFull(documentContext, params));
+  }
+
+
 
   @Override
   public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
