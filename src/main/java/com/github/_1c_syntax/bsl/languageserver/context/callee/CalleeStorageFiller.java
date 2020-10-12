@@ -25,13 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -90,15 +90,14 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
 
   @Override
   public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-
+    var moduleType = documentContext.getModuleType();
     var methodName = ctx.methodName().getStart();
     var methodNameText = methodName.getText();
 
     documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.isDeprecated()
-        && methodSymbol.getName().equalsIgnoreCase(methodNameText))
+      .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
-      .ifPresent(methodSymbol -> addMethodCall(methodSymbol));
+      .ifPresent(methodSymbol -> addMethodCall(moduleType, methodSymbol, Ranges.create(methodName)));
 
     return super.visitGlobalMethodCall(ctx);
   }
@@ -107,7 +106,6 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
     var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
     String methodNameText = methodName.getText();
 
-//    OUTER:
     for (Map.Entry<ModuleType, DocumentContext> entry : documentContexts.entrySet()) {
       ModuleType moduleType = entry.getKey();
       if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
@@ -117,7 +115,7 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
       SymbolTree symbolTree = value.getSymbolTree();
       for (MethodSymbol symbol : symbolTree.getMethods()) {
         if (symbol.getName().equalsIgnoreCase(methodNameText)) {
-          addMethodCall(moduleType, symbol);
+          addMethodCall(moduleType, symbol, Ranges.create(methodName));
           break;
         }
       }
@@ -125,23 +123,7 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
   }
 
   private void addMethodCall(ModuleType moduleType, MethodSymbol methodSymbol, Range range) {
-    String mdoRef = methodSymbol.getMdoRef();
-    String methodName = methodSymbol.getName();
-
-    Location location = new Location(documentContext.getUri().toString(), range);
-
-      // List<Location> ?
-
-    storage.callees.put(mdoRef, moduleType, methodName, location);
-//
-//
-////    var methodNameText = methodName.getText();
-//
-//    var deprecationInfo = methodSymbol.getDescription()
-//      .map(MethodDescription::getDeprecationInfo)
-//      .orElse("");
-
-    diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodName, deprecationInfo));
+    storage.addMethodCall(documentContext.getUri(), moduleType, methodSymbol, range);
   }
 
   private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {

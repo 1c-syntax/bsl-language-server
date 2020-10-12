@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorageFiller;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -43,7 +44,8 @@ public class DocumentContextConfiguration {
   public DocumentContext documentContext(URI uri, String content) {
     var serverContext = applicationContext.getBean(ServerContext.class);
     var diagnosticComputer = applicationContext.getBean(DiagnosticComputer.class);
-    return new DocumentContext(uri, content, serverContext, diagnosticComputer);
+    var calleeStorageFiller = applicationContext.getBean(CalleeStorageFiller.class);
+    return new DocumentContext(uri, content, serverContext, diagnosticComputer, calleeStorageFiller);
   }
 
 }

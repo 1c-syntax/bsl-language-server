@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorageFiller;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
@@ -69,6 +70,7 @@ public class DocumentContext {
   private String content;
   private final ServerContext context;
   private final DiagnosticComputer diagnosticComputer;
+  private final CalleeStorageFiller calleeStorageFiller;
 
   private final FileType fileType;
   private BSLTokenizer tokenizer;
@@ -92,11 +94,18 @@ public class DocumentContext {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  public DocumentContext(URI uri, String content, ServerContext context, DiagnosticComputer diagnosticComputer) {
+  public DocumentContext(
+    URI uri,
+    String content,
+    ServerContext context,
+    DiagnosticComputer diagnosticComputer,
+    CalleeStorageFiller calleeStorageFiller
+  ) {
     this.uri = uri;
     this.content = content;
     this.context = context;
     this.diagnosticComputer = diagnosticComputer;
+    this.calleeStorageFiller = calleeStorageFiller;
 
     this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
@@ -357,5 +366,9 @@ public class DocumentContext {
 
   private List<SDBLTokenizer> computeQueries() {
     return (new QueryComputer(this)).compute();
+  }
+
+  public void computeCallees() {
+    calleeStorageFiller.fill(this);
   }
 }

@@ -21,10 +21,58 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.callee;
 
-import org.apache.commons.collections4.map.MultiKeyMap;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import lombok.Synchronized;
+import org.apache.commons.collections4.MultiMapUtils;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.keyvalue.MultiKey;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 @Component
 public class CalleeStorage {
-  MultiKeyMap<String, String> callees = new MultiKeyMap<>();
+
+  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> callees = new HashMap<>();
+
+  public List<Location> getCallees(String mdoRef, ModuleType moduleType, Symbol symbol) {
+    var key = getKey(mdoRef, moduleType);
+    var methodName = symbol.getName().toLowerCase(Locale.ENGLISH);
+
+    var locations = callees.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(methodName);
+
+    return new ArrayList<>(locations);
+  }
+
+  @Synchronized("callees")
+  public void clearCallees(String mdoRef, ModuleType moduleType) {
+    var key = getKey(mdoRef, moduleType);
+    callees.remove(key);
+  }
+
+  @Synchronized("callees")
+  public void addMethodCall(URI uri, ModuleType moduleType, MethodSymbol methodSymbol, Range range) {
+    String mdoRef = methodSymbol.getMdoRef();
+    String methodName = methodSymbol.getName().toLowerCase(Locale.ENGLISH);
+
+    Location location = new Location(uri.toString(), range);
+
+    MultiKey<String> key = getKey(mdoRef, moduleType);
+
+    callees.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodName, location);
+  }
+
+  private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {
+    return new MultiKey<>(mdoRef, moduleType.getFileName());
+  }
 }

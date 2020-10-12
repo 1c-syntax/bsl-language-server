@@ -86,6 +86,7 @@ public abstract class ServerContext {
       if (documentContext == null) {
         documentContext = createDocumentContext(file);
         documentContext.getSymbolTree();
+        documentContext.computeCallees();
         documentContext.clearSecondaryData();
       }
     });
