@@ -33,6 +33,7 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,8 @@ public class MethodSymbol implements Symbol {
 
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Method;
+
+  URI uri;
 
   Range range;
   Range subNameRange;

@@ -27,6 +27,7 @@ import lombok.Setter;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +37,8 @@ public interface Symbol {
   String getName();
 
   SymbolKind getSymbolKind();
+
+  URI getUri();
 
   Range getRange();
 
@@ -61,6 +64,8 @@ public interface Symbol {
       private final String name = "empty";
       @Getter
       private final SymbolKind symbolKind = SymbolKind.Null;
+      @Getter
+      private final URI uri = URI.create("");
       @Getter
       private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter

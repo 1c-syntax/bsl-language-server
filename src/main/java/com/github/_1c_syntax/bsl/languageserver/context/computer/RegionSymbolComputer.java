@@ -68,6 +68,7 @@ public final class RegionSymbolComputer
 
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
       .name(ctx.regionName().getText())
+      .uri(documentContext.getUri())
       .regionNameRange(Ranges.create(ctx.regionName()))
       .startRange(Ranges.create(ctx));
 

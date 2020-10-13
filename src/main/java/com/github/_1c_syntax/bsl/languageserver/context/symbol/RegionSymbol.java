@@ -32,6 +32,7 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +46,7 @@ public class RegionSymbol implements Symbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
+  URI uri;
   Range range;
   Range startRange;
   Range endRange;
