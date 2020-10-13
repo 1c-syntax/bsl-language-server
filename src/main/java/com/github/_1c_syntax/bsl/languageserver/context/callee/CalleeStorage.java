@@ -21,46 +21,104 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.callee;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class CalleeStorage {
 
-  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> callees = new HashMap<>();
+  private final ServerContext serverContext;
 
-  public List<Location> getCallees(String mdoRef, ModuleType moduleType, Symbol symbol) {
+  /**
+   * Хранит информацию о том, какие methodName (ключ MultiValuedMap) каких mdoRef каких moduleType (ключ MultiKey)
+   * были вызваны из списка Location (URI + Range).
+   */
+  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> calleesOf = new HashMap<>();
+
+  /**
+   * Хранит информацию о том, какие methodName с mdoRef с moduleType (ключ MultiKey) в каких URI были вызваны
+   * и в каких Range, расположены вызовы
+   */
+  private final Map<URI, MultiValuedMap<MultiKey<String>, Range>> calleesFrom = new HashMap<>();
+
+  /**
+   * Хранит информацию о том, в каких Range каких URI были вызваны
+   * какие methodName каких mdoRef с каким moduleType (ключ MultiKey)
+   */
+  private final Map<URI, Map<Range, MultiKey<String>>> calleesRanges = new HashMap<>();
+
+  public List<Location> getCalleesOf(String mdoRef, ModuleType moduleType, Symbol symbol) {
     var key = getKey(mdoRef, moduleType);
     var methodName = symbol.getName().toLowerCase(Locale.ENGLISH);
 
-    var locations = callees.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(methodName);
+    var locations = calleesOf.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(methodName);
 
     return new ArrayList<>(locations);
   }
 
-  @Synchronized("callees")
-  public void clearCallees(String mdoRef, ModuleType moduleType) {
-    var key = getKey(mdoRef, moduleType);
-    callees.remove(key);
+  public Optional<MethodSymbol> getCalledMethodSymbol(URI uri, Position position) {
+    return calleesRanges.get(uri).entrySet().stream()
+      .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
+      .findAny()
+      .map(Map.Entry::getValue)
+      .flatMap(this::getMethodSymbol);
   }
 
-  @Synchronized("callees")
+  public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri) {
+    Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
+
+    calleesFrom.get(uri).asMap().forEach((multikey, value) ->
+      getMethodSymbol(multikey).ifPresent(methodSymbol ->
+        methodSymbols.put(methodSymbol, value)
+      )
+    );
+
+    return methodSymbols;
+  }
+
+  @Synchronized
+  public void clearCallees(URI uri) {
+    String stringUri = uri.toString();
+
+    calleesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
+      var key = new MultiKey<>(multikey.getKey(0), multikey.getKey(1));
+      Collection<Location> locations = calleesOf.get(key).values();
+      locations.stream()
+        .filter(location -> location.getUri().equals(stringUri))
+        .forEach(locations::remove);
+    });
+
+    calleesFrom.remove(uri);
+    calleesRanges.remove(uri);
+  }
+
+  @Synchronized
   public void addMethodCall(URI uri, ModuleType moduleType, MethodSymbol methodSymbol, Range range) {
     String mdoRef = methodSymbol.getMdoRef();
     String methodName = methodSymbol.getName().toLowerCase(Locale.ENGLISH);
@@ -68,11 +126,35 @@ public class CalleeStorage {
     Location location = new Location(uri.toString(), range);
 
     MultiKey<String> key = getKey(mdoRef, moduleType);
+    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, methodName);
 
-    callees.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodName, location);
+    calleesOf.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodName, location);
+    calleesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
+    calleesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
+  }
+
+  private Optional<MethodSymbol> getMethodSymbol(MultiKey<String> multikey) {
+    String mdoRef = multikey.getKey(0);
+    ModuleType moduleType = getModuleType(multikey.getKey(1));
+    String methodName = multikey.getKey(2);
+
+    return serverContext.getDocument(mdoRef, moduleType)
+      .map(DocumentContext::getSymbolTree)
+      .flatMap(symbolTree -> symbolTree.getMethodSymbol(methodName));
   }
 
   private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {
     return new MultiKey<>(mdoRef, moduleType.getFileName());
+  }
+
+  private static MultiKey<String> getRangesKey(String mdoRef, ModuleType moduleType, String methodName) {
+    return new MultiKey<>(mdoRef, moduleType.getFileName(), methodName);
+  }
+
+  private static ModuleType getModuleType(String filename) {
+    return Arrays.stream(ModuleType.values())
+      .filter(type -> type.getFileName().equals(filename))
+      .findFirst()
+      .get();
   }
 }

@@ -234,6 +234,8 @@ public class DocumentContext {
     symbolTree.clear();
     this.content = content;
     tokenizer = new BSLTokenizer(content);
+    // TODO: здесь ли?
+    computeCallees();
     computeLock.unlock();
   }
 
@@ -369,6 +371,8 @@ public class DocumentContext {
   }
 
   public void computeCallees() {
+    computeLock.lock();
     calleeStorageFiller.fill(this);
+    computeLock.unlock();
   }
 }

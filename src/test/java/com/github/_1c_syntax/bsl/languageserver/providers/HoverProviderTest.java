@@ -46,7 +46,7 @@ class HoverProviderTest {
     params.setPosition(new Position(0, 0));
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
-    Optional<Hover> optionalHover = hoverProvider.getHover(params, documentContext);
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
 
     assertThat(optionalHover).isNotPresent();
   }
@@ -58,7 +58,7 @@ class HoverProviderTest {
 
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
 
-    Optional<Hover> optionalHover = hoverProvider.getHover(params, documentContext);
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
 
     assertThat(optionalHover).isPresent();
 

@@ -22,70 +22,45 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.parser.BSLParser.SubNameContext;
-import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public final class HoverProvider {
 
-  public Optional<Hover> getHover(HoverParams params, DocumentContext documentContext) {
+  private final CalleeStorage calleeStorage;
 
-    SubNameFinder finder = new SubNameFinder(params.getPosition());
-    finder.visit(documentContext.getAst());
+  public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
+    Position position = params.getPosition();
 
-    Token subName = finder.getSubName();
-    if (subName == null) {
-      return Optional.empty();
-    }
+    return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
+      .map((MethodSymbol methodSymbol) -> {
+        var hover = new Hover();
 
-    Hover hover = new Hover();
-    MarkupContent content = new MarkupContent();
-    content.setValue(subName.getText());
-    hover.setContents(content);
-    hover.setRange(
-      new Range(
-        new Position(subName.getLine() - 1, subName.getCharPositionInLine()),
-        new Position(subName.getLine() - 1, subName.getCharPositionInLine() + subName.getText().length())
-      )
-    );
+        String description = methodSymbol.getDescription()
+          .map(MethodDescription::getDescription)
+          .orElse("");
 
-    return Optional.of(hover);
+        MarkupContent content = new MarkupContent();
+        content.setValue(description);
+        content.setKind(MarkupKind.MARKDOWN);
 
+        hover.setContents(content);
+        hover.setRange(methodSymbol.getSubNameRange());
+
+        return hover;
+      });
   }
 
-  private static final class SubNameFinder extends BSLParserBaseVisitor<ParseTree> {
-
-    private Token subName;
-    private final Position position;
-
-    private SubNameFinder(Position position) {
-      this.position = position;
-    }
-
-    @Override
-    public ParseTree visitSubName(SubNameContext ctx) {
-
-      Token token = ctx.start;
-      if (token.getLine() == position.getLine() + 1
-        && token.getCharPositionInLine() <= position.getCharacter()
-        && position.getCharacter() <= token.getCharPositionInLine() + token.getText().length()) {
-        subName = token;
-      }
-      return ctx;
-    }
-
-    Token getSubName() {
-      return subName;
-    }
-  }
 }

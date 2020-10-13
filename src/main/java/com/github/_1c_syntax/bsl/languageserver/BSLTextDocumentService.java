@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
@@ -81,7 +82,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -100,6 +100,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
   private final ReferencesProvider referencesProvider;
+  private final DefinitionProvider definitionProvider;
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -119,8 +120,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = hoverProvider.getHover(params, documentContext);
-    return CompletableFuture.completedFuture(hover.orElse(null));
+    return CompletableFuture.supplyAsync(() ->
+      hoverProvider.getHover(documentContext, params).orElse(null)
+    );
   }
 
   @Override
@@ -132,7 +134,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
     DefinitionParams params
   ) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
+    }
+
+    return CompletableFuture.supplyAsync(() ->
+      Either.forLeft(definitionProvider.getDefinition(documentContext, params))
+    );
   }
 
   @Override

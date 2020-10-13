@@ -58,6 +58,8 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
 
   public void fill(DocumentContext documentContext) {
     this.documentContext = documentContext;
+    // TODO: DEAD LOCK
+//    storage.clearCallees(documentContext.getUri());
     visitFile(documentContext.getAst());
   }
 

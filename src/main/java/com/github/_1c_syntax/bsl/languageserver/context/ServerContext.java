@@ -85,8 +85,6 @@ public abstract class ServerContext {
       DocumentContext documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file);
-        documentContext.getSymbolTree();
-        documentContext.computeCallees();
         documentContext.clearSecondaryData();
       }
     });
@@ -169,6 +167,8 @@ public abstract class ServerContext {
     URI absoluteURI = Absolute.uri(uri);
 
     DocumentContext documentContext = lookupDocumentContext(absoluteURI, content);
+    documentContext.getSymbolTree();
+    documentContext.computeCallees();
 
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);

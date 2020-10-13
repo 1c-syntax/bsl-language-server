@@ -23,10 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -34,23 +34,17 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ReferencesProvider {
+public class DefinitionProvider {
 
   private final CalleeStorage calleeStorage;
 
-  public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
+  // TODO: migrate to List<LocationLink>
+  public List<Location> getDefinition(DocumentContext documentContext, DefinitionParams params) {
+    Position position = params.getPosition();
 
-    var position = params.getPosition();
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> Ranges.containsPosition(methodSymbol.getRange(), position))
-      .findAny()
-      .map(methodSymbol ->
-        calleeStorage.getCalleesOf(
-          methodSymbol.getMdoRef(),
-          documentContext.getModuleType(),
-          methodSymbol
-        )
-      )
-      .orElseGet(Collections::emptyList);
+    return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
+      .map(methodSymbol -> new Location(methodSymbol.getUri().toString(), methodSymbol.getSubNameRange()))
+      .map(List::of)
+      .orElse(Collections.emptyList());
   }
 }
