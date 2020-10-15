@@ -363,7 +363,7 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <p>The analyzer found a code fragment that most probably has a logic error. There is an operator (, &lt;=, &gt;=, =, &lt;&gt;, AND, OR, -, /) in the program text to the left and to the right of which there are identical subexpressions.</p>
 <p>Consider an example:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">AND</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">AND</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
     <span class="c c-Singleline">// TODO</span>
 
@@ -373,7 +373,7 @@
 <p>In this case, the <code>AND</code> operator is surrounded by identical subexpressions <code>Summ &lt;&gt; 0</code> and it allows us to
 detect an error made through inattention. The correct code that will not look suspicious to the analyzer looks in the
 following way:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">AND</span> <span class="nv">SummNDS</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">AND</span> <span class="nv">SummNDS</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
     <span class="c c-Singleline">// TODO</span>
 
@@ -381,7 +381,7 @@ following way:</p>
 </code></pre></div>
 
 <p>or</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Summ</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Then</span>
 
     <span class="c c-Singleline">// TODO</span>
 
@@ -391,12 +391,12 @@ following way:</p>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IdenticalExpressions-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IdenticalExpressions-off</span>
 <span class="c c-Singleline">// BSLLS:IdenticalExpressions-on</span>
 </code></pre></div>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;IdenticalExpressions&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IdenticalExpressions&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

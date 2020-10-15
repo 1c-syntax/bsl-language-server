@@ -387,7 +387,7 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Пример потенциально опасного запроса, использующего соединение с вложенным запросом:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="o">*</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="o">*</span>
 <span class="k">ИЗ</span> <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span>
 <span class="nv">ЛЕВОЕ</span> <span class="nv">СОЕДИНЕНИЕ</span> <span class="p">(</span>
    <span class="nv">ВЫБРАТЬ</span> <span class="nv">Измерение1</span> <span class="k">ИЗ</span> <span class="nv">РегистрСведений</span><span class="o">.</span><span class="nv">Лимиты</span>
@@ -411,12 +411,12 @@
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:JoinWithSubQuery-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:JoinWithSubQuery-off</span>
 <span class="c c-Singleline">// BSLLS:JoinWithSubQuery-on</span>
 </code></pre></div>
 
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;JoinWithSubQuery&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;JoinWithSubQuery&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

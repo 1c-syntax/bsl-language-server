@@ -464,7 +464,7 @@
 <p><a id="cli"></a></p>
 <h2 id="_2">Запуск из командной строки<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Запуск jar-файлов осуществляется через <code>java -jar path/to/file.jar</code>.</p>
-<div class="sh codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --help
+<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --help
 
 BSL language server
 Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>
@@ -483,7 +483,7 @@ Commands:
 <p><a id="analyze"></a></p>
 <h2 id="_3">Запуск в режиме анализатора<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме анализа используется параметр <code>--analyze</code> (сокращенно <code>-a</code>). </p>
-<div class="sh codehilite"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
                                    <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>...
 Run analysis and get diagnostic info
   -c, --configuration<span class="o">=</span>&lt;path&gt;
@@ -500,19 +500,19 @@ Run analysis and get diagnostic info
 <p>Для указания каталога расположения анализируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
 Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр <code>--reporter</code> (сокращенно <code>-r</code>), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе <strong>Репортеры</strong>.</p>
 <p>Пример строки запуска анализа:</p>
-<div class="sh codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
+<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 </code></pre></div>
 
 <blockquote>
 <p>При анализе больших исходников рекомендуется дополнительно указывать параметр -Xmx, отвечающий за предел оперативной памяти для java процесса. Размер выделяемой памяти зависит от размера анализируемой кодовой базы.</p>
 </blockquote>
-<div class="sh codehilite"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+<div class="codehilite"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 </code></pre></div>
 
 <p><a id="format"></a></p>
 <h2 id="_4">Запуск в режиме форматтера<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме форматтера используется параметр <code>--format</code> (сокращенно <code>-f</code>).</p>
-<div class="sh codehilite"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
 Format files in <span class="nb">source</span> directory
   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
   -q, --silent          Silent mode
@@ -521,7 +521,7 @@ Format files in <span class="nb">source</span> directory
 
 <p>Для указания каталога расположения форматируемых исходников (или файла) используется параметр <code>--src</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников (или файлу).</p>
 <p>Пример строки запуска форматирования:</p>
-<div class="sh codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
+<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
 </code></pre></div>
 
 <p><a id="configuration"></a></p>
@@ -536,8 +536,8 @@ Format files in <span class="nb">source</span> directory
 <p>Создатель инновационных и интеллектуальных инструментов для профилирования приложений <code>Java</code> и <code>.NET</code> <a href="https://www.yourkit.com">YourKit, LLC</a> любезно предоставил нам лицензии на продукт <code>YourKit Java Profiler</code>.</p>
 <p>С помощью <code>YourKit Java Profiler</code> мы мониторим и улучшаем производительность проекта.</p>
 <hr />
-<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a>  </p>
-<p>Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, <a href="https://www.jetbrains.com">JetBrains</a> поддержал наш проект, предоставив лицензии на свои продукты, в том числе на <code>IntelliJ IDEA Ultimate</code>.</p>
+<p><a href="https://www.jetbrains.com?from=bsl-language-server"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a>  </p>
+<p>Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, <a href="https://www.jetbrains.com?from=bsl-language-server">JetBrains</a> поддержал наш проект, предоставив лицензии на свои продукты, в том числе на <code>IntelliJ IDEA Ultimate</code>.</p>
 <p><code>IntelliJ IDEA Ultimate</code> один из лучших инструментов в своем классе.</p>
                 
               

@@ -409,11 +409,11 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Bad:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>      <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>         <span class="nv">RandomAlgorithm</span><span class="p">();</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     //     // ...      EndProcedure</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>      <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">Cancel</span> <span class="k">Then</span>         <span class="nv">RandomAlgorithm</span><span class="p">();</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     //     // ...      EndProcedure</span>
 </code></pre></div>
 
 <p>Good:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>     <span class="nv">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>          <span class="k">Return</span><span class="p">;</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     // ... EndProcedure</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeWrite</span><span class="p">(</span><span class="nv">Cancel</span><span class="p">)</span>     <span class="nv">If</span> <span class="nv">DataExchange</span><span class="o">.</span><span class="nv">Load</span> <span class="k">Then</span>          <span class="k">Return</span><span class="p">;</span>     <span class="nv">EndIf</span><span class="p">;</span>      <span class="c c-Singleline">// code handler     // ... EndProcedure</span>
 </code></pre></div>
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
@@ -428,12 +428,12 @@
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DataExchangeLoading-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DataExchangeLoading-off</span>
 <span class="c c-Singleline">// BSLLS:DataExchangeLoading-on</span>
 </code></pre></div>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;DataExchangeLoading&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;DataExchangeLoading&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;findFirst&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>

@@ -441,7 +441,7 @@
 <p>To improve code readability to the left and right of operators <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code> there must be spaces. Also, the space should be to the right of <code>,</code> и <code>;</code></p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Incorrect</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Sum</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span><span class="nv">Param2</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Sum</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span><span class="nv">Param2</span><span class="p">)</span>
     <span class="nv">If</span> <span class="nv">Param1</span><span class="o">=</span><span class="nv">Param2</span> <span class="k">Then</span>
         <span class="nv">Sum</span><span class="o">=</span><span class="nv">Price</span><span class="o">*</span><span class="nv">Quantity</span><span class="p">;</span>
     <span class="nv">EndIf</span><span class="p">;</span>
@@ -449,7 +449,7 @@
 </code></pre></div>
 
 <p>Correct</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Sum</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="nv">Param2</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Sum</span><span class="p">(</span><span class="nv">Param1</span><span class="p">,</span> <span class="nv">Param2</span><span class="p">)</span>
      <span class="nv">If</span> <span class="nv">Param1</span> <span class="o">=</span> <span class="nv">Param2</span> <span class="k">Then</span>
          <span class="nv">Sum</span> <span class="o">=</span> <span class="nv">Price</span> <span class="o">*</span> <span class="nv">Quantity</span><span class="p">;</span>
      <span class="nv">EndIf</span><span class="p">;</span>
@@ -459,36 +459,36 @@
 <h3 id="using-checkspacetorightofunary-parameter">Using <code>checkSpaceToRightOfUnary</code> parameter<a class="headerlink" href="#using-checkspacetorightofunary-parameter" title="Permanent link">Link</a></h3>
 <p>The parameter makes sense only in case the unary operator is listed in one of three base parameters.</p>
 <p>If set to <code>false</code></p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c c-Singleline">// Correct</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c c-Singleline">// Correct</span>
 <span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 
 <p>If set to <code>true</code></p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c c-Singleline">// Incorrect</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">B</span><span class="p">;</span>     <span class="c c-Singleline">// Incorrect</span>
 <span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">B</span><span class="p">;</span>    <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 
 <h3 id="using-allowmultiplecommas-parameter">Using <code>allowMultipleCommas</code> parameter<a class="headerlink" href="#using-allowmultiplecommas-parameter" title="Permanent link">Link</a></h3>
 <p>The parameter has sense only if <code>,</code> is listed in one of three base parameters</p>
 <p>If set to <code>false</code></p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Incorrect</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Incorrect</span>
 <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 
 <p>If set to <code>true</code></p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Correct</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Correct</span>
 <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingSpace-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingSpace-off</span>
 <span class="c c-Singleline">// BSLLS:MissingSpace-on</span>
 </code></pre></div>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;MissingSpace&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;MissingSpace&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;listForCheckLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
     <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span><span class="p">,</span>

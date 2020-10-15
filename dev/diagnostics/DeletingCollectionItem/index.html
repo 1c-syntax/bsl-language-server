@@ -371,13 +371,13 @@
 <p>Не следует непосредственно удалять элементы коллекции при ее обходе через синтаксическую конструкцию
 <strong>Для каждого ... Из ... Цикл</strong>. Т.к. при удалении элемента сдвигается индекс следующего элемента.</p>
 <p>Например:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
    <span class="nv">Коллекция</span><span class="o">.</span><span class="nv">Удалить</span><span class="p">(</span><span class="nv">Элемент</span><span class="p">)</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
 
 <p>Как вариант удаляйте элементы с конца:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">ТекущийИндекс</span> <span class="o">=</span> <span class="nv">Числа</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">();</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">ТекущийИндекс</span> <span class="o">=</span> <span class="nv">Числа</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">();</span>
 <span class="k">Пока</span> <span class="nv">ТекущийИндекс</span> <span class="o">&gt;=</span> <span class="m">0</span> <span class="k">Цикл</span>
     <span class="k">Если</span> <span class="nv">Числа</span><span class="p">[</span><span class="nv">ТекущийИндекс</span><span class="p">]</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Тогда</span>
         <span class="nv">Числа</span><span class="o">.</span><span class="nv">Удалить</span><span class="p">(</span><span class="nv">ТекущийИндекс</span><span class="p">);</span>
@@ -393,12 +393,12 @@
 <h2 id="_3">Сниппеты<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="_4">Экранирование кода<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeletingCollectionItem-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeletingCollectionItem-off</span>
 <span class="c c-Singleline">// BSLLS:DeletingCollectionItem-on</span>
 </code></pre></div>
 
 <h3 id="_5">Параметр конфигурационного файла<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;DeletingCollectionItem&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;DeletingCollectionItem&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

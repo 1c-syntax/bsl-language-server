@@ -353,7 +353,7 @@
 Например <code>private static final String DEFAULT_COMMENTS_ANNOTATION = "//@";</code>.</p>
 <p>Необходимо добавить приватное поле, в котором будет хранится значение параметра. Поле необходимо аннотировать <code>@DiagnosticParameter</code> и указать тип параметра, значение по умолчанию (значение всегда строкового типа), а также описание параметра.<br />
 Например</p>
-<div class="java codehilite"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
+<div class="codehilite"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
     <span class="n">type</span> <span class="o">=</span> <span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">,</span>
     <span class="n">defaultValue</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span>
   <span class="p">)</span>
@@ -368,7 +368,7 @@
 <li><code>excludeMethods</code> - методы, которые не надо проверять, типа ArrayList</li>
 </ul>
 <p>Тогда метод установки значений параметров будет выглядеть:</p>
-<div class="java codehilite"><pre><span></span><code> <span class="nd">@Override</span>
+<div class="codehilite"><pre><span></span><code> <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// для установки &quot;простых свойств&quot;, включая &quot;commentAsCode&quot;</span>
     <span class="kd">super</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
@@ -385,7 +385,7 @@
 Тест добавляется во все тот же класс теста диагностики <em>(отдельный метод для каждой комбинации вариантов настроек диагностики)</em>. В начале теста необходимо выполнить установку значения параметра диагностики, последующие действия аналогичны общим правилам написания тестов.<br />
 Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по-умолчанию, используя метод <code>getDefaultConfiguration()</code> из метаданных текущей диагностики <code>diagnosticInstance.getInfo()</code>. Затем выполнить изменение значения параметра, путем добавления в коллекцию конфигурации, а затем переконфигурировать текущую диагностику, обратившись к методу <code>configure</code>.<br />
 Пример</p>
-<div class="java codehilite"><pre><span></span><code><span class="c1">// получение текущей конфигурации диагностики</span>
+<div class="codehilite"><pre><span></span><code><span class="c1">// получение текущей конфигурации диагностики</span>
 <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultConfiguration</span><span class="p">();</span>
 
 <span class="c1">// установка нового значения</span>
@@ -399,7 +399,7 @@
 <p>Для корректной работы необходимо в ресурсных файлах диагностики добавить для каждого языка описание параметра.<br />
 Ресурсы диагностики расположены в файлах <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_en.properties</code> и <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_ru.properties</code>.<br />
 В каждом файле необходимо добавить новую строку с именем параметра и его описанием</p>
-<div class="ini codehilite"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)</span>
+<div class="codehilite"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)</span>
 </code></pre></div>
 
 <h3 id="_6">Доработка документации<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>

@@ -400,7 +400,7 @@
 Кроме того, при доработках конфигурации на внедрении число этих проверок может увеличиться.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="_3">Неправильно<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
   <span class="o">...</span>
   <span class="nv">Отказ</span> <span class="o">=</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">();</span>
   <span class="o">...</span>
@@ -408,7 +408,7 @@
 </code></pre></div>
 
 <h3 id="_4">Правильно<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ОбработкаПроверкиЗаполнения</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">,</span> <span class="nv">ПроверяемыеРеквизиты</span><span class="p">)</span>
   <span class="o">...</span>
   <span class="k">Если</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">()</span> <span class="k">Тогда</span>
    <span class="nv">Отказ</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">;</span>
@@ -418,7 +418,7 @@
 </code></pre></div>
 
 <p>или</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">Отказ</span> <span class="o">=</span> <span class="nv">Отказ</span> <span class="k">Или</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">();</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Отказ</span> <span class="o">=</span> <span class="nv">Отказ</span> <span class="k">Или</span> <span class="nv">ЕстьОшибкиЗаполнения</span><span class="p">();</span>
 </code></pre></div>
 
 <h2 id="_5">Источники<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
@@ -428,12 +428,12 @@
 <h2 id="_6">Сниппеты<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="_7">Экранирование кода<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingCancelParameter-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingCancelParameter-off</span>
 <span class="c c-Singleline">// BSLLS:UsingCancelParameter-on</span>
 </code></pre></div>
 
 <h3 id="_8">Параметр конфигурационного файла<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;UsingCancelParameter&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UsingCancelParameter&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

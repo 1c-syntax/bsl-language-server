@@ -397,7 +397,7 @@
 <p>Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bad:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr1&quot;</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr1&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr2&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr3&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr4&quot;</span>
@@ -413,7 +413,7 @@
 </code></pre></div>
 
 <p>Good:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span> <span class="k">Then</span>
    <span class="nv">doSomeWork</span><span class="p">();</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 
@@ -435,12 +435,12 @@
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:IfConditionComplexity-on</span>
 </code></pre></div>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;IfConditionComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IfConditionComplexity&quot;</span><span class="err">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxIfConditionComplexity&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>

@@ -370,7 +370,7 @@
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Если в тексте программы имеется оператор (&lt;, &gt;, &lt;=, &gt;=, =, &lt;&gt;, И, ИЛИ, -, /), слева и справа от которого расположены одинаковые подвыражения фрагмент кода, который, скорее всего, содержит логическую ошибку.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<div class="bsl codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
 
     <span class="c c-Singleline">// Тут код</span>
 
@@ -379,7 +379,7 @@
 
 <p>Здесь оператор <code>И</code> окружен одинаковыми выражениями <code>Сумма &lt;&gt; 0</code>,
 что наталкивает на мысли об ошибке по невнимательности при копировании. Правильное выражение будет выглядеть так:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">СуммаНДС</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">СуммаНДС</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
 
     <span class="c c-Singleline">// Тут код</span>
 
@@ -387,7 +387,7 @@
 </code></pre></div>
 
 <p>ИЛИ</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
 
     <span class="c c-Singleline">// Тут код</span>
 
@@ -397,12 +397,12 @@
 <h2 id="_3">Сниппеты<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="_4">Экранирование кода<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IdenticalExpressions-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IdenticalExpressions-off</span>
 <span class="c c-Singleline">// BSLLS:IdenticalExpressions-on</span>
 </code></pre></div>
 
 <h3 id="_5">Параметр конфигурационного файла<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;IdenticalExpressions&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;IdenticalExpressions&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

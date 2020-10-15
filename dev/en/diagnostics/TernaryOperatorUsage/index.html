@@ -371,11 +371,11 @@
 <p>Instead of the ternary operator, use the "If-else" construct.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bad:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">Result</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">X</span><span class="o">%</span><span class="m">15</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">X</span><span class="o">%</span><span class="m">5</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">X</span><span class="o">%</span><span class="m">3</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="nv">x</span><span class="p">,</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">),</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">),</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">);</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Result</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">X</span><span class="o">%</span><span class="m">15</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">X</span><span class="o">%</span><span class="m">5</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span><span class="nv">X</span><span class="o">%</span><span class="m">3</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="nv">x</span><span class="p">,</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">),</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">),</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">);</span>
 </code></pre></div>
 
 <p>Good:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">x</span><span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">x</span><span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
     <span class="nv">Result</span> <span class="o">=</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">;</span>
 <span class="nv">ElseIf</span><span class="p">,</span> <span class="nv">if</span> <span class="nv">x</span><span class="o">%</span> <span class="m">3</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
     <span class="nv">Result</span> <span class="o">=</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">;</span>
@@ -387,13 +387,13 @@
 </code></pre></div>
 
 <p>Bad:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="o">?</span><span class="p">(</span><span class="nv">P</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nv">PageEmp_emptype</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="o">?</span><span class="p">(</span><span class="nv">P</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nv">PageEmp_emptype</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
       <span class="nb">Status</span> <span class="o">=</span> <span class="s1">&quot;Done&quot;</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
 
 <p>Good:</p>
-<div class="bsl codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">PageEmp_emptype</span> <span class="o">=</span> <span class="kc">Null</span> <span class="nv">OR</span> <span class="nv">PageEmp_emptype</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">PageEmp_emptype</span> <span class="o">=</span> <span class="kc">Null</span> <span class="nv">OR</span> <span class="nv">PageEmp_emptype</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Then</span>
       <span class="nb">Status</span> <span class="o">=</span> <span class="s1">&quot;Done&quot;</span><span class="p">;</span>
 <span class="nv">End</span> <span class="nv">If</span><span class="p">;</span>
 </code></pre></div>
@@ -401,12 +401,12 @@
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
-<div class="bsl codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TernaryOperatorUsage-off</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TernaryOperatorUsage-off</span>
 <span class="c c-Singleline">// BSLLS:TernaryOperatorUsage-on</span>
 </code></pre></div>
 
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="json codehilite"><pre><span></span><code><span class="s2">&quot;TernaryOperatorUsage&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="s2">&quot;TernaryOperatorUsage&quot;</span><span class="err">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               
