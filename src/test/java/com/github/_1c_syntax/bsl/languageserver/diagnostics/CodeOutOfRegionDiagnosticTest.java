@@ -31,7 +31,6 @@ import java.util.List;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegionDiagnostic> {
   CodeOutOfRegionDiagnosticTest() {
