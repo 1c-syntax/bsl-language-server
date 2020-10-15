@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -33,6 +35,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -52,7 +55,9 @@ class DisableDiagnosticTriggeringSupplierTest {
   public DisableDiagnosticTriggeringSupplierTest() {
 
     List<CodeActionSupplier> codeActionSuppliers = new ArrayList<>();
-    codeActionSuppliers.add(new DisableDiagnosticTriggeringSupplier());
+    var configuration = new LanguageServerConfiguration();
+    configuration.setLanguage(Language.EN);
+    codeActionSuppliers.add(new DisableDiagnosticTriggeringSupplier(configuration));
     codeActionProvider = new CodeActionProvider(codeActionSuppliers);
 
   }

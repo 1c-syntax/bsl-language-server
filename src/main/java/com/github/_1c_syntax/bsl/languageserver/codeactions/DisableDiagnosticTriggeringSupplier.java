@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.mdclasses.metadata.additional.ScriptVariant;
+import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -49,12 +51,16 @@ import java.util.stream.Collectors;
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
+  private final Language language;
   private List<CodeAction> result;
   private CodeActionParams params;
   private DocumentContext documentContext;
   private Optional<Token> lastTokenSelectedInLine;
   private boolean isOneLineRange;
-  private boolean isEnglish;
+
+  public DisableDiagnosticTriggeringSupplier(LanguageServerConfiguration languageServerConfiguration) {
+    this.language = languageServerConfiguration.getLanguage();
+  }
 
   /**
    * При необходимости создает {@code CodeAction} для создания служебного комментария отключающего срабатывание
@@ -91,10 +97,6 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     this.result = new ArrayList<>();
     this.params = params;
     this.documentContext = documentContext;
-    this.isEnglish = documentContext
-      .getServerContext()
-      .getConfiguration()
-      .getScriptVariant() == ScriptVariant.ENGLISH;
 
     lastTokenSelectedInLine = Optional.empty();
 
@@ -124,13 +126,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .map(Diagnostic::getCode)
         .map(Either::getLeft)
         .distinct()
-        .map(name -> {
-          String codeActionTitle = String.format(
-            isEnglish ? "Disable %s in line" : "Отключить %s в строке",
-            name
-          );
-          return createCodeAction(codeActionTitle, createInLineTextEdits(":" + name));
-        })
+        .map(name -> createCodeAction(getMessage("line", name), createInLineTextEdits(":" + name)))
         .collect(Collectors.toList())
     );
   }
@@ -147,13 +143,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .map(Diagnostic::getCode)
         .map(Either::getLeft)
         .distinct()
-        .map(name -> {
-          String codeActionTitle = String.format(
-            isEnglish ? "Disable %s in range" : "Отключить %s в выделеном диапазоне",
-            name
-          );
-          return createCodeAction(codeActionTitle, createInRegionTextEdits(":" + name));
-        })
+        .map(name -> createCodeAction(getMessage("range", name), createInRegionTextEdits(":" + name)))
         .collect(Collectors.toList())
     );
   }
@@ -166,13 +156,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .map(Diagnostic::getCode)
         .map(Either::getLeft)
         .distinct()
-        .map(name -> {
-          String codeActionTitle = String.format(
-            isEnglish ? "Disable %s in file" : "Отключить %s в файле",
-            name
-          );
-          return createCodeAction(codeActionTitle, createInFileTextEdits(":" + name));
-        })
+        .map(name -> createCodeAction(getMessage("file", name), createInFileTextEdits(":" + name)))
         .collect(Collectors.toList())
     );
   }
@@ -182,10 +166,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       return;
     }
 
-    String codeActionTitle = isEnglish
-      ? "Disable all diagnostic in line"
-      : "Отключить все диагностики в строке";
-    result.add(createCodeAction(codeActionTitle, createInLineTextEdits(ALL_DIAGNOSTIC_NAME)));
+    result.add(createCodeAction(getMessage("lineAll"), createInLineTextEdits(ALL_DIAGNOSTIC_NAME)));
   }
 
   private void actionDisableAllDiagnosticInRegion() {
@@ -193,15 +174,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       return;
     }
 
-    String codeActionTitle = isEnglish
-      ? "Disable all diagnostic in range"
-      : "Отключить все диагностики в выделеном диапазоне";
-    result.add(createCodeAction(codeActionTitle, createInRegionTextEdits(ALL_DIAGNOSTIC_NAME)));
+    result.add(createCodeAction(getMessage("rangeAll"), createInRegionTextEdits(ALL_DIAGNOSTIC_NAME)));
   }
 
   private void actionDisableAllDiagnosticInFile() {
-    String codeActionTitle = isEnglish ? "Disable all diagnostic in file" : "Отключить все диагностики в файле";
-    result.add(createCodeAction(codeActionTitle, createInFileTextEdits(ALL_DIAGNOSTIC_NAME)));
+    result.add(createCodeAction(getMessage("fileAll"), createInFileTextEdits(ALL_DIAGNOSTIC_NAME)));
   }
 
   private List<TextEdit> createInLineTextEdits(String diagnosticName) {
@@ -260,6 +237,14 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
     return codeAction;
+  }
+
+  private String getMessage(String key) {
+    return Resources.getResourceString(language, this.getClass(), key);
+  }
+
+  private String getMessage(String key, Object... args) {
+    return Resources.getResourceString(language, this.getClass(), key, args);
   }
 
 }
