@@ -149,9 +149,9 @@ java -jar bsl-language-server.jar --format --src ./src/cf
 
 ---
 
-[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com)  
+[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com?from=bsl-language-server)  
 
-Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
+Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com?from=bsl-language-server) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
 
 `IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.
 

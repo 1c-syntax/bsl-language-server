@@ -113,8 +113,8 @@ With `YourKit Java Profiler` we profile and improve project performance.
 
 ---
 
-[](https://www.jetbrains.com)![JetBrains](assets/images/jetbrains-variant-4.png)
+[](https://www.jetbrains.com?from=bsl-language-server)![JetBrains](assets/images/jetbrains-variant-4.png)
 
-[JetBrains](https://www.jetbrains.com) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
+[JetBrains](https://www.jetbrains.com?from=bsl-language-server) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
 
 `IntelliJ IDEA Ultimate` is one of the best tools in its class.
