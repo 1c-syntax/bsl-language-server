@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -107,7 +108,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
   private List<Diagnostic> getDiagnostics(String fileName, ModuleType moduleType) {
     var documentContext = spy(TestUtils.getDocumentContext(getText(fileName)));
-    when(documentContext.getModuleType()).thenReturn(moduleType);
+    doReturn(moduleType).when(documentContext).getModuleType();
     return getDiagnostics(documentContext);
   }
 }
