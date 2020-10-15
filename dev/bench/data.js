@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602505265356,
+  "lastUpdate": 1602758726679,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -5983,6 +5983,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.05228744458463",
             "extra": "mean: 78.2008466720581 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ebee3f469d2a1a5f2a9dc6cfff89c0caa0dd0db5",
+          "message": "Merge pull request #1373 from EightM/feature/issue_1371",
+          "timestamp": "2020-10-15T13:37:27+03:00",
+          "tree_id": "c235aa25d862a32d735c87bcfa89c3f225210656",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ebee3f469d2a1a5f2a9dc6cfff89c0caa0dd0db5"
+        },
+        "date": 1602758722410,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.94191551208496,
+            "unit": "sec",
+            "range": "stddev: 2.2373019427377256",
+            "extra": "mean: 78.94191551208496 sec\nrounds: 3"
           }
         ]
       }
