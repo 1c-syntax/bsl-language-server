@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602858192644,
+  "lastUpdate": 1602864578648,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6045,6 +6045,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1670437034191563",
             "extra": "mean: 76.15395593643188 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b49815faed27176b0eb7f7f9c224e04f480d3fdb",
+          "message": "Merge pull request #1402 from 1c-syntax/feature/diagnostic-provider-langclient-aware\n\nFix #1399 LanguageClientAware DiagnosticProvider",
+          "timestamp": "2020-10-16T18:56:37+03:00",
+          "tree_id": "798e7ab65b4c8f6227d126c355cbe4a17bf59690",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/b49815faed27176b0eb7f7f9c224e04f480d3fdb"
+        },
+        "date": 1602864575082,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.69087409973145,
+            "unit": "sec",
+            "range": "stddev: 2.9803611755055286",
+            "extra": "mean: 78.69087409973145 sec\nrounds: 3"
           }
         ]
       }
