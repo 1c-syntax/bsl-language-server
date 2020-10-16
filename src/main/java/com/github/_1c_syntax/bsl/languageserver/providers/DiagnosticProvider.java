@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.CheckForNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 @Component
@@ -45,20 +46,20 @@ public final class DiagnosticProvider implements LanguageClientAware {
   private LanguageClient client;
 
   public void computeAndPublishDiagnostics(DocumentContext documentContext) {
-    publishDiagnostics(documentContext, documentContext.getDiagnostics());
+    publishDiagnostics(documentContext, documentContext::getDiagnostics);
   }
 
   public void publishEmptyDiagnosticList(DocumentContext documentContext) {
-    publishDiagnostics(documentContext, Collections.emptyList());
+    publishDiagnostics(documentContext, Collections::emptyList);
   }
 
-  private void publishDiagnostics(DocumentContext documentContext, List<Diagnostic> diagnostics) {
+  private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {
     if (client == null) {
       return;
     }
 
     client.publishDiagnostics(
-      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics)
+      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics.get())
     );
   }
 
