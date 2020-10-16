@@ -74,12 +74,9 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -89,7 +86,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware, ProtocolExtension {
+public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -101,9 +98,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final FoldingRangeProvider foldingRangeProvider;
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
-
-  @CheckForNull
-  private LanguageClient client;
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -261,9 +255,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
     documentContext.clearSecondaryData();
 
-    if (client != null) {
-      diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
-    }
+    diagnosticProvider.publishEmptyDiagnosticList(documentContext);
   }
 
   @Override
@@ -276,11 +268,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
-  }
-
-  @Override
-  public void connect(LanguageClient client) {
-    this.client = client;
   }
 
   @Override
@@ -318,10 +305,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   private void validate(DocumentContext documentContext) {
-    if (client == null) {
-      return;
-    }
-    diagnosticProvider.computeAndPublishDiagnostics(client, documentContext);
+    diagnosticProvider.computeAndPublishDiagnostics(documentContext);
   }
 
 }
