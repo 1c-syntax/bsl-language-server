@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602864578648,
+  "lastUpdate": 1602865057117,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6076,6 +6076,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.9803611755055286",
             "extra": "mean: 78.69087409973145 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "cff69e11a061dd3b17b88b82978bb8ffc79425b0",
+          "message": "Merge branch 'feature/diagnostic-provider-langclient-aware' into develop",
+          "timestamp": "2020-10-16T18:59:12+03:00",
+          "tree_id": "dcc0f24370cfa5e3cf7cb621c0639cf51292f617",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cff69e11a061dd3b17b88b82978bb8ffc79425b0"
+        },
+        "date": 1602865054577,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 77.34608173370361,
+            "unit": "sec",
+            "range": "stddev: 1.5154601338401845",
+            "extra": "mean: 77.34608173370361 sec\nrounds: 3"
           }
         ]
       }
