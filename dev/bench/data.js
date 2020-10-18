@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1602865057117,
+  "lastUpdate": 1603018287927,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6107,6 +6107,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.5154601338401845",
             "extra": "mean: 77.34608173370361 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c06fd13acf9677575934ab29e7888b175c2c1dc5",
+          "message": "Merge pull request #1379 from 1c-syntax/feature/codelens-refactor\n\nРефакторинг CodeLensProvider",
+          "timestamp": "2020-10-18T13:43:48+03:00",
+          "tree_id": "e98602c22f4153ad047db431bc7d1cf31e24845d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c06fd13acf9677575934ab29e7888b175c2c1dc5"
+        },
+        "date": 1603018284124,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.71920498212178,
+            "unit": "sec",
+            "range": "stddev: 3.548622151912855",
+            "extra": "mean: 76.71920498212178 sec\nrounds: 3"
           }
         ]
       }
