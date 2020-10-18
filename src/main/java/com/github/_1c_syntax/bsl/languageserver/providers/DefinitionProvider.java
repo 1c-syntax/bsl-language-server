@@ -23,10 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.DefinitionParams;
-import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -38,13 +41,25 @@ public class DefinitionProvider {
 
   private final CalleeStorage calleeStorage;
 
-  // TODO: migrate to List<LocationLink>
-  public List<Location> getDefinition(DocumentContext documentContext, DefinitionParams params) {
+  public List<LocationLink> getDefinition(DocumentContext documentContext, DefinitionParams params) {
     Position position = params.getPosition();
-//    LocationLink
 
     return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-      .map(methodSymbol -> new Location(methodSymbol.getKey().getUri().toString(), methodSymbol.getKey().getSubNameRange()))
+      .map((Pair<MethodSymbol, Range> entry) -> {
+        MethodSymbol methodSymbol = entry.getKey();
+
+        String targetUri = methodSymbol.getUri().toString();
+        Range targetRange = methodSymbol.getRange();
+        Range targetSelectionRange = methodSymbol.getSubNameRange();
+        Range originSelectionRange = entry.getValue();
+
+        return new LocationLink(
+          targetUri,
+          targetRange,
+          targetSelectionRange,
+          originSelectionRange
+        );
+      })
       .map(List::of)
       .orElse(Collections.emptyList());
   }

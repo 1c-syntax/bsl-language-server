@@ -140,7 +140,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
 
     return CompletableFuture.supplyAsync(() ->
-      Either.forLeft(definitionProvider.getDefinition(documentContext, params))
+      Either.forRight(definitionProvider.getDefinition(documentContext, params))
     );
   }
 
