@@ -83,7 +83,7 @@ public class CalleeStorage {
   }
 
   public Optional<MethodSymbol> getCalledMethodSymbol(URI uri, Position position) {
-    return calleesRanges.get(uri).entrySet().stream()
+    return calleesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
       .map(Map.Entry::getValue)
@@ -93,7 +93,7 @@ public class CalleeStorage {
   public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri) {
     Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
 
-    calleesFrom.get(uri).asMap().forEach((multikey, value) ->
+    calleesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
       getMethodSymbol(multikey).ifPresent(methodSymbol ->
         methodSymbols.put(methodSymbol, value)
       )
