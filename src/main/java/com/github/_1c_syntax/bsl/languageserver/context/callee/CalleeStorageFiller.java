@@ -49,8 +49,11 @@ import java.util.Set;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
-  private static final Set<ModuleType> DEFAULT_MODULE_TYPES =
-    EnumSet.of(ModuleType.ManagerModule, ModuleType.CommonModule);
+  private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
+    ModuleType.ManagerModule,
+    ModuleType.CommonModule,
+    ModuleType.UNKNOWN
+  );
 
   private final CalleeStorage storage;
 
@@ -66,6 +69,11 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
 
   @Override
   public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+
+    if (ctx.globalMethodCall() != null) {
+      // see visitGlobalMethodCall
+      return super.visitCallStatement(ctx);
+    }
 
     String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
     if (mdoRef.isEmpty()) {
@@ -130,13 +138,22 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
 
   private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
     var modifiers = ctx.modifier();
-    var methodName = getMethodName(ctx.accessCall());
+    Optional<Token> methodName;
+    if (ctx.globalMethodCall() != null) {
+      methodName = getMethodName(ctx.globalMethodCall());
+    } else {
+      methodName = getMethodName(ctx.accessCall());
+    }
 
     if (modifiers.isEmpty()) {
       return methodName;
     } else {
       return getMethodName(modifiers).or(() -> methodName);
     }
+  }
+
+  private static Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
+    return Optional.of(ctx.methodName().getStart());
   }
 
   private static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {

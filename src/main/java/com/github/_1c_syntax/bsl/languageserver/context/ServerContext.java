@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -167,11 +168,12 @@ public abstract class ServerContext {
     URI absoluteURI = Absolute.uri(uri);
 
     DocumentContext documentContext = lookupDocumentContext(absoluteURI, content);
-    documentContext.getSymbolTree();
-    documentContext.computeCallees();
 
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);
+
+    documentContext.getSymbolTree();
+    documentContext.computeCallees();
 
     return documentContext;
   }
@@ -186,21 +188,13 @@ public abstract class ServerContext {
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    var modulesByObject = getConfiguration().getModulesByObject();
-    var mdoByUri = modulesByObject.get(uri);
+    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
 
-    if (mdoByUri != null) {
-      var mdoRef = mdoByUri.getMdoReference().getMdoRef();
-      mdoRefs.put(uri, mdoRef);
-      var documentsGroup = documentsByMDORef.get(mdoRef);
-      if (documentsGroup == null) {
-        Map<ModuleType, DocumentContext> newDocumentsGroup = new EnumMap<>(ModuleType.class);
-        newDocumentsGroup.put(documentContext.getModuleType(), documentContext);
-        documentsByMDORef.put(mdoRef, newDocumentsGroup);
-      } else {
-        documentsGroup.put(documentContext.getModuleType(), documentContext);
-      }
-    }
+    mdoRefs.put(uri, mdoRef);
+    documentsByMDORef.computeIfAbsent(
+      mdoRef,
+      k -> new EnumMap<>(ModuleType.class)
+    ).put(documentContext.getModuleType(), documentContext);
   }
 
   private void removeDocumentMdoRefByUri(URI uri) {
