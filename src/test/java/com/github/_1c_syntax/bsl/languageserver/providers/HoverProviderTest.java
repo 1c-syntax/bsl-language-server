@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,22 +53,36 @@ class HoverProviderTest {
   }
 
   @Test
-  void getHoverOverSubName() {
-    HoverParams params = new HoverParams();
-    params.setPosition(new Position(0, 20));
+  @Disabled
+  void testLocalMethods() {
+    // todo
+    //  hover.contents[0].should.has.a.key("_value").which.is.equal("Метод текущего модуля");
+    //  hover.contents[2].should.has.a.key("_value").which.is.equal("```bsl\nПроцедура НеЭкспортнаяПроцедура()\n```\n");
+  }
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
+  @Test
+  @Disabled
+  void testMethodsFromManagerModule() {
+    // todo
+    //    hover.contents[0].should.has.a.key("_value").which.startWith("Метод из")
+    //      .and.endWith("Document/Ext/ManagerModule.bsl");
+    //    hover.contents[2].should.has.a.key("_value").which.is
+    //      .equal("```bsl\nПроцедура ПроцедураМодуляМенеджера()\n```\n");
+  }
 
-    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+  @Test
+  @Disabled
+  void testMethodsFromCommonModule() {
+    // todo
+  }
 
-    assertThat(optionalHover).isPresent();
-
-    Hover hover = optionalHover.get();
-
-    assertThat(hover.getContents().getRight().getValue()).isEqualTo("ИмяПроцедуры");
-    assertThat(hover.getRange().getStart()).isEqualTo(new Position(0, 10));
-    assertThat(hover.getRange().getEnd()).isEqualTo(new Position(0, 22));
-
+  @Test
+  @Disabled
+  void testMethodsFromGlobalContext() {
+    // todo
+    //    hover.contents[0].should.has.a.key("_value").which.startWith("Метод глобального контекста");
+    //    hover.contents[2].should.has.a.key("_value").which.startWith("```bsl\nПроцедура Сообщить(");
+    //    hover.contents[3].should.has.a.key("_value").which.startWith("***ТекстСообщения***");
   }
 
 }
