@@ -54,11 +54,8 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentFormattingParams;
-import org.eclipse.lsp4j.DocumentHighlight;
-import org.eclipse.lsp4j.DocumentHighlightParams;
 import org.eclipse.lsp4j.DocumentLink;
 import org.eclipse.lsp4j.DocumentLinkParams;
-import org.eclipse.lsp4j.DocumentOnTypeFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
@@ -69,12 +66,8 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.ReferenceParams;
-import org.eclipse.lsp4j.RenameParams;
-import org.eclipse.lsp4j.SignatureHelp;
-import org.eclipse.lsp4j.SignatureHelpParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
@@ -110,11 +103,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  public CompletableFuture<CompletionItem> resolveCompletionItem(CompletionItem unresolved) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
@@ -123,11 +111,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     return CompletableFuture.supplyAsync(() ->
       hoverProvider.getHover(documentContext, params).orElse(null)
     );
-  }
-
-  @Override
-  public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -152,11 +135,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
 
     return CompletableFuture.supplyAsync(() -> referencesProvider.getReferences(documentContext, params));
-  }
-
-  @Override
-  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -192,11 +170,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  public CompletableFuture<CodeLens> resolveCodeLens(CodeLens unresolved) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
@@ -219,11 +192,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
@@ -232,12 +200,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
-
-  @Override
-  public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-    throw new UnsupportedOperationException();
-  }
-
+  
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
