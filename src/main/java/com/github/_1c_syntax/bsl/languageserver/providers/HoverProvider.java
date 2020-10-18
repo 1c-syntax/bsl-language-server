@@ -26,11 +26,13 @@ import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -45,8 +47,11 @@ public final class HoverProvider {
     Position position = params.getPosition();
 
     return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-      .map((MethodSymbol methodSymbol) -> {
+      .map((Pair<MethodSymbol, Range> pair) -> {
         var hover = new Hover();
+
+        Range range = pair.getValue();
+        MethodSymbol methodSymbol = pair.getKey();
 
         String description = methodSymbol.getDescription()
           .map(MethodDescription::getDescription)
@@ -57,7 +62,7 @@ public final class HoverProvider {
         content.setKind(MarkupKind.MARKDOWN);
 
         hover.setContents(content);
-        hover.setRange(methodSymbol.getSubNameRange());
+        hover.setRange(range);
 
         return hover;
       });

@@ -33,6 +33,7 @@ import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -82,12 +83,13 @@ public class CalleeStorage {
     return new ArrayList<>(locations);
   }
 
-  public Optional<MethodSymbol> getCalledMethodSymbol(URI uri, Position position) {
+  public Optional<Pair<MethodSymbol, Range>> getCalledMethodSymbol(URI uri, Position position) {
     return calleesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
-      .map(Map.Entry::getValue)
-      .flatMap(this::getMethodSymbol);
+      .flatMap(entry -> getMethodSymbol(entry.getValue())
+        .map(methodSymbol -> Pair.of(methodSymbol, entry.getKey()))
+      );
   }
 
   public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri) {

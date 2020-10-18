@@ -41,9 +41,10 @@ public class DefinitionProvider {
   // TODO: migrate to List<LocationLink>
   public List<Location> getDefinition(DocumentContext documentContext, DefinitionParams params) {
     Position position = params.getPosition();
+//    LocationLink
 
     return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-      .map(methodSymbol -> new Location(methodSymbol.getUri().toString(), methodSymbol.getSubNameRange()))
+      .map(methodSymbol -> new Location(methodSymbol.getKey().getUri().toString(), methodSymbol.getKey().getSubNameRange()))
       .map(List::of)
       .orElse(Collections.emptyList());
   }
