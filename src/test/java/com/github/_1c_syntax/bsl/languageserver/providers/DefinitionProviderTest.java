@@ -46,6 +46,12 @@ class DefinitionProviderTest {
 
   @Test
   @Disabled
+  void testCantGoToPrivateMethodsFromCommonModule() {
+    // todo
+  }
+
+  @Test
+  @Disabled
   void testDefinitionOfLocalMethod() {
     // todo
   }
