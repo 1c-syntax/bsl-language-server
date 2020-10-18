@@ -31,9 +31,6 @@ import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.Hover;
-import org.eclipse.lsp4j.HoverParams;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -52,7 +49,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
 
 @SpringBootTest
 class BSLTextDocumentServiceTest {
@@ -76,125 +72,6 @@ class BSLTextDocumentServiceTest {
       .isNotEmpty()
       .allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()))
     ;
-  }
-
-  @Test
-  void resolveCompletionItem() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.resolveCompletionItem(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void hoverEmpty() throws IOException, ExecutionException, InterruptedException {
-    // given
-    doOpen();
-
-    HoverParams params = new HoverParams();
-    params.setTextDocument(getTextDocumentIdentifier());
-    params.setPosition(new Position(0, 0));
-
-    // when
-    CompletableFuture<Hover> hover = textDocumentService.hover(params);
-
-    // then
-    Hover hoverValue = hover.get();
-    assertThat(hoverValue).isNull();
-  }
-
-  @Test
-  void hoverSubName() throws IOException, ExecutionException, InterruptedException {
-    // given
-    doOpen();
-
-    HoverParams params = new HoverParams();
-    params.setTextDocument(getTextDocumentIdentifier());
-    params.setPosition(new Position(0, 20));
-
-    // when
-    CompletableFuture<Hover> hover = textDocumentService.hover(params);
-
-    // then
-    Hover hoverValue = hover.get();
-    assertThat(hoverValue.getContents().getRight().getValue()).isEqualTo("ИмяПроцедуры");
-    assertThat(hoverValue.getRange().getStart()).isEqualTo(new Position(0, 10));
-    assertThat(hoverValue.getRange().getEnd()).isEqualTo(new Position(0, 22));
-  }
-
-  @Test
-  void signatureHelp() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.signatureHelp(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void definition() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.definition(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void references() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.references(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void documentHighlight() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.documentHighlight(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void documentSymbol() {
-    // todo
-    // Throwable thrown = catchThrowable(() -> textDocumentService.documentSymbol(null));
-    // assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void codeAction() {
-    // todo:
-//    Throwable thrown = catchThrowable(() -> textDocumentService.codeAction(null));
-//    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void codeLens() {
-    // TODO:
-    //Throwable thrown = catchThrowable(() -> textDocumentService.codeLens(null));
-    //assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void resolveCodeLens() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.resolveCodeLens(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void formatting() {
-    // TODO:
-//    Throwable thrown = catchThrowable(() -> textDocumentService.formatting(null));
-//    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void rangeFormatting() {
-    // TODO:
-//    Throwable thrown = catchThrowable(() -> textDocumentService.rangeFormatting(null));
-//    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void onTypeFormatting() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.onTypeFormatting(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void rename() {
-    Throwable thrown = catchThrowable(() -> textDocumentService.rename(null));
-    assertThat(thrown).isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
