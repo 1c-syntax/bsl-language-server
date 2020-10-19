@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import org.antlr.v4.runtime.Token;
@@ -34,7 +34,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +50,7 @@ import java.util.stream.Collectors;
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
-  private final Language language;
+  private final LanguageServerConfiguration languageServerConfiguration;
   private List<CodeAction> result;
   private CodeActionParams params;
   private DocumentContext documentContext;
@@ -59,7 +58,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   private boolean isOneLineRange;
 
   public DisableDiagnosticTriggeringSupplier(LanguageServerConfiguration languageServerConfiguration) {
-    this.language = languageServerConfiguration.getLanguage();
+    this.languageServerConfiguration = languageServerConfiguration;
   }
 
   /**
@@ -124,7 +123,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .getDiagnostics()
         .stream()
         .map(Diagnostic::getCode)
-        .map(Either::getLeft)
+        .map(DiagnosticCode::getStringValue)
         .distinct()
         .map(name -> createCodeAction(getMessage("line", name), createInLineTextEdits(":" + name)))
         .collect(Collectors.toList())
@@ -141,7 +140,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .getDiagnostics()
         .stream()
         .map(Diagnostic::getCode)
-        .map(Either::getLeft)
+        .map(DiagnosticCode::getStringValue)
         .distinct()
         .map(name -> createCodeAction(getMessage("range", name), createInRegionTextEdits(":" + name)))
         .collect(Collectors.toList())
@@ -154,7 +153,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
         .getDiagnostics()
         .stream()
         .map(Diagnostic::getCode)
-        .map(Either::getLeft)
+        .map(DiagnosticCode::getStringValue)
         .distinct()
         .map(name -> createCodeAction(getMessage("file", name), createInFileTextEdits(":" + name)))
         .collect(Collectors.toList())
@@ -240,11 +239,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   }
 
   private String getMessage(String key) {
-    return Resources.getResourceString(language, this.getClass(), key);
+    return Resources.getResourceString(languageServerConfiguration.getLanguage(), this.getClass(), key);
   }
 
   private String getMessage(String key, Object... args) {
-    return Resources.getResourceString(language, this.getClass(), key, args);
+    return Resources.getResourceString(languageServerConfiguration.getLanguage(), this.getClass(), key, args);
   }
 
 }
