@@ -43,6 +43,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -119,15 +120,21 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     }
 
     result.addAll(
-      params.getContext()
-        .getDiagnostics()
-        .stream()
-        .map(Diagnostic::getCode)
-        .map(DiagnosticCode::getStringValue)
-        .distinct()
-        .map(name -> createCodeAction(getMessage("line", name), createInLineTextEdits(":" + name)))
-        .collect(Collectors.toList())
+      actionDisableDiagnostic(
+        name -> createCodeAction(getMessage("line", name), createInLineTextEdits(":" + name))
+      )
     );
+  }
+
+  private List<CodeAction> actionDisableDiagnostic(Function <String, CodeAction> func) {
+    return params.getContext()
+      .getDiagnostics()
+      .stream()
+      .map(Diagnostic::getCode)
+      .map(DiagnosticCode::getStringValue)
+      .distinct()
+      .map(func)
+      .collect(Collectors.toList());
   }
 
   private void actionDisableDiagnosticInRegion() {
@@ -136,27 +143,17 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     }
 
     result.addAll(
-      params.getContext()
-        .getDiagnostics()
-        .stream()
-        .map(Diagnostic::getCode)
-        .map(DiagnosticCode::getStringValue)
-        .distinct()
-        .map(name -> createCodeAction(getMessage("range", name), createInRegionTextEdits(":" + name)))
-        .collect(Collectors.toList())
+      actionDisableDiagnostic(
+        name -> createCodeAction(getMessage("range", name), createInRegionTextEdits(":" + name))
+      )
     );
   }
 
   private void actionDisableDiagnosticInFile() {
     result.addAll(
-      params.getContext()
-        .getDiagnostics()
-        .stream()
-        .map(Diagnostic::getCode)
-        .map(DiagnosticCode::getStringValue)
-        .distinct()
-        .map(name -> createCodeAction(getMessage("file", name), createInFileTextEdits(":" + name)))
-        .collect(Collectors.toList())
+      actionDisableDiagnostic(
+        name -> createCodeAction(getMessage("file", name), createInFileTextEdits(":" + name))
+      )
     );
   }
 
