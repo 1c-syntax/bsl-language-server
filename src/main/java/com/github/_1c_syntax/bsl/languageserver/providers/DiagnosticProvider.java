@@ -27,28 +27,45 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.CheckForNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public final class DiagnosticProvider {
+public final class DiagnosticProvider implements LanguageClientAware {
 
   public static final String SOURCE = "bsl-language-server";
 
-  public void computeAndPublishDiagnostics(LanguageClient client, DocumentContext documentContext) {
-    List<Diagnostic> diagnostics = documentContext.getDiagnostics();
+  @CheckForNull
+  private LanguageClient client;
 
-    client.publishDiagnostics(new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics));
+  public void computeAndPublishDiagnostics(DocumentContext documentContext) {
+    publishDiagnostics(documentContext, documentContext::getDiagnostics);
   }
 
-  public void publishEmptyDiagnosticList(LanguageClient client, DocumentContext documentContext) {
+  public void publishEmptyDiagnosticList(DocumentContext documentContext) {
+    publishDiagnostics(documentContext, Collections::emptyList);
+  }
+
+  private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {
+    if (client == null) {
+      return;
+    }
+
     client.publishDiagnostics(
-      new PublishDiagnosticsParams(documentContext.getUri().toString(), Collections.emptyList())
+      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics.get())
     );
+  }
+
+  @Override
+  public void connect(LanguageClient client) {
+    this.client = client;
   }
 
 }

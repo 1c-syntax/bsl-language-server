@@ -73,7 +73,6 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
-  private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\n");
 
   private static final Integer[] rulesToFind = new Integer[]{
     BSLParser.RULE_string,
@@ -107,15 +106,15 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   }
 
   private String getWordsToIgnore() {
-    String exceptions = NEWLINE_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
+    String exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
-      exceptions = exceptions + "," + NEWLINE_PATTERN.matcher(userWordsToIgnore).replaceAll("");
+      exceptions = exceptions + "," + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
     }
 
     return exceptions.intern();
   }
 
-  private JLanguageToolPoolEntry acquireLanguageTool(String lang) {
+  JLanguageToolPoolEntry acquireLanguageTool(String lang) {
     return getLanguageToolPoolMap().get(lang).checkOut();
   }
 

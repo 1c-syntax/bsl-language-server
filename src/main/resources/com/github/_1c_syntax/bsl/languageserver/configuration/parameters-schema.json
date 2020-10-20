@@ -78,6 +78,16 @@
             },
             "$id": "#/definitions/CognitiveComplexity"
         },
+        "CommandModuleExportMethods": {
+            "description": "Export methods in command and general command modules",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Export methods in command and general command modules",
+            "$id": "#/definitions/CommandModuleExportMethods"
+        },
         "CommentedCode": {
             "description": "Commented out code",
             "default": true,
@@ -512,6 +522,16 @@
             "title": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "$id": "#/definitions/FunctionNameStartsWithGet"
         },
+        "FunctionOutParameter": {
+            "description": "Out function parameter",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Out function parameter",
+            "$id": "#/definitions/FunctionOutParameter"
+        },
         "FunctionReturnsSamePrimitive": {
             "description": "The function always returns the same primitive value",
             "default": true,
@@ -769,19 +789,19 @@
             "$id": "#/definitions/MissingCodeTryCatchEx"
         },
         "MissingSpace": {
-            "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
+            "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, and also to the right of , and ;",
+            "title": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
             "properties": {
                 "listForCheckLeftAndRight": {
-                    "description": "List of symbols to check for the space from both sides of (separated by space)",
+                    "description": "List to check for the space from both sides of (separated by space)",
                     "default": "+ - * / = % < > <> <= >=",
                     "type": "string",
-                    "title": "List of symbols to check for the space from both sides of (separated by space)"
+                    "title": "List to check for the space from both sides of (separated by space)"
                 },
                 "allowMultipleCommas": {
                     "description": "Allow several commas in a row",
@@ -796,16 +816,16 @@
                     "title": "Check for space to the right of unary signs (+ -)"
                 },
                 "listForCheckLeft": {
-                    "description": "List of symbols to check for the space to the left of (separated by space)",
+                    "description": "List to check for the space to the left of (separated by space)",
                     "default": "",
                     "type": "string",
-                    "title": "List of symbols to check for the space to the left of (separated by space)"
+                    "title": "List to check for the space to the left of (separated by space)"
                 },
                 "listForCheckRight": {
-                    "description": "List of symbols to check for the space to the right of (separated by space)",
+                    "description": "List to check for the space to the right of (separated by space)",
                     "default": ", ;",
                     "type": "string",
-                    "title": "List of symbols to check for the space to the right of (separated by space)"
+                    "title": "List to check for the space to the right of (separated by space)"
                 }
             },
             "$id": "#/definitions/MissingSpace"
@@ -1074,6 +1094,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "RefOveruse": {
+            "description": "Overuse \"Reference\" in a query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Overuse \"Reference\" in a query",
+            "$id": "#/definitions/RefOveruse"
+        },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
             "default": true,
@@ -1228,10 +1258,10 @@
             "title": "Typo",
             "properties": {
                 "userWordsToIgnore": {
-                    "description": "Dictionary for excluding words (comma separated, without spaces)",
+                    "description": "Dictionary for excluding words (comma separated)",
                     "default": "",
                     "type": "string",
-                    "title": "Dictionary for excluding words (comma separated, without spaces)"
+                    "title": "Dictionary for excluding words (comma separated)"
                 },
                 "minWordLength": {
                     "description": "Minimum length for checked words",
@@ -1424,6 +1454,14 @@
                 "object"
             ],
             "title": "Using modal windows",
+            "properties": {
+                "forceModalityMode": {
+                    "description": "Ignore configurations modality mode",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Ignore configurations modality mode"
+                }
+            },
             "$id": "#/definitions/UsingModalWindows"
         },
         "UsingObjectNotAvailableUnix": {

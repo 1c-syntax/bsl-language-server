@@ -16,7 +16,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.31.0"
     id("io.freefair.javadoc-links") version "5.2.1"
     id("org.springframework.boot") version "2.3.3.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.0"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.1"
 }
 
 apply(plugin = "io.spring.dependency-management")
@@ -79,6 +79,7 @@ dependencies {
     implementation("commons-io", "commons-io", "2.8.0")
     implementation("org.apache.commons", "commons-lang3", "3.11")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
+    implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
     implementation("me.tongfei", "progressbar", "0.8.1")

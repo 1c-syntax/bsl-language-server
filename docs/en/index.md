@@ -1,6 +1,15 @@
 # BSL Language Server
 
-[](https://github.com/1c-syntax/bsl-language-server/actions)![Actions Status](https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg)
+[![Actions Status](https://github.com/1c-syntax/bsl-language-server/workflows/Java%20CI/badge.svg)](https://github.com/1c-syntax/bsl-language-server/actions)
+[![Download](https://img.shields.io/github/release/1c-syntax/bsl-language-server.svg?label=download&style=flat)](https://github.com/1c-syntax/bsl-language-server/releases/latest)
+[![JitPack](https://jitpack.io/v/1c-syntax/bsl-language-server.svg)](https://jitpack.io/#1c-syntax/bsl-language-server)
+[![GitHub Releases](https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/latest/total?style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases)
+[![GitHub All Releases](https://img.shields.io/github/downloads/1c-syntax/bsl-language-server/total?style=flat-square)](https://github.com/1c-syntax/bsl-language-server/releases)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=alert_status)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=1c-syntax_bsl-language-server&metric=coverage)](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server)
+[![Benchmark](bench/benchmark.svg)](../bench/index.html)
+[![telegram](https://img.shields.io/badge/telegram-chat-green.svg)](https://t.me/bsl_language_server)
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) implementation for 1C (BSL) - 1C:Enterprise 8 and [OneScript](http://oscript.io) languages.
 
@@ -105,16 +114,16 @@ Thanks to companies supporting open source projects, and especially to those who
 
 ---
 
-[](https://www.yourkit.com)![YourKit](https://www.yourkit.com/images/yklogo.png)
+[![YourKit](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com)  
 
-{a0 href="https://www.yourkit.com"}YourKit, LLC{/a0} is the creator of innovative and intelligent tools for profiling `Java` and `.NET` applications. YourKit has offered an open source license [YourKit Java Profiler](https://www.yourkit.com) for `BSL Language Server` to improve its performance.
+[YourKit, LLC](https://www.yourkit.com) is the creator of innovative and intelligent tools for profiling `Java` and `.NET` applications. YourKit has offered an open source license [YourKit Java Profiler](https://www.yourkit.com) for `BSL Language Server` to improve its performance.
 
 With `YourKit Java Profiler` we profile and improve project performance.
 
 ---
 
-[](https://www.jetbrains.com)![JetBrains](assets/images/jetbrains-variant-4.png)
+[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com?from=bsl-language-server)  
 
-[JetBrains](https://www.jetbrains.com) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
+[JetBrains](https://www.jetbrains.com?from=bsl-language-server) is the creator of professional software for development. JetBrains has offered an open source license for his products, including `IntelliJ IDEA Ultimate`.
 
 `IntelliJ IDEA Ultimate` is one of the best tools in its class.

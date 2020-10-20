@@ -21,12 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegionDiagnostic> {
   CodeOutOfRegionDiagnosticTest() {
@@ -35,8 +39,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
 
   @Test
   void test() {
-
-    List<Diagnostic> diagnostics = getDiagnostics();
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnostic", ModuleType.ObjectModule);
 
     assertThat(diagnostics).hasSize(7);
     assertThat(diagnostics, true)
@@ -49,21 +52,17 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
       .hasRange(57, 0, 7)
       .hasRange(59, 0, 69, 9)
     ;
-
   }
 
   @Test
   void emptyTest() {
-
-    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmpty");
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmpty", ModuleType.ObjectModule);
     assertThat(diagnostics).isEmpty();
-
   }
 
   @Test
   void testNoRegions() {
-
-    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticNoRegions");
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticNoRegions", ModuleType.ObjectModule);
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
@@ -73,38 +72,42 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
       .isNotNull()
       .isNotEmpty();
     assertThat(diagnostics.get(0).getRelatedInformation().size()).isEqualTo(4);
+  }
 
+  @Test
+  void testNoRegionsUnknown() {
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticNoRegions", ModuleType.UNKNOWN);
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test
   void testCodeBlock() {
-
-    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticCodeBlock");
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticCodeBlock", ModuleType.ObjectModule);
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 0, 0, 23);
-
   }
 
 
   @Test
   void testEmptyFile() {
-
-    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmptyFile");
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticEmptyFile", ModuleType.ObjectModule);
     assertThat(diagnostics).isEmpty();
-
   }
 
   @Test
   void testExecute() {
-
-    List<Diagnostic> diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticExecute");
+    var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticExecute", ModuleType.ObjectModule);
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(1, 10, 1, 19);
-
   }
 
+  private List<Diagnostic> getDiagnostics(String fileName, ModuleType moduleType) {
+    var documentContext = spy(TestUtils.getDocumentContext(getText(fileName)));
+    doReturn(moduleType).when(documentContext).getModuleType();
+    return getDiagnostics(documentContext);
+  }
 }

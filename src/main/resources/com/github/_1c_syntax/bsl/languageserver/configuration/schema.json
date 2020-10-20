@@ -41,6 +41,9 @@
                 "CognitiveComplexity": {
                     "$ref": "parameters-schema.json#/definitions/CognitiveComplexity"
                 },
+                "CommandModuleExportMethods": {
+                    "$ref": "parameters-schema.json#/definitions/CommandModuleExportMethods"
+                },
                 "CommentedCode": {
                     "$ref": "parameters-schema.json#/definitions/CommentedCode"
                 },
@@ -154,6 +157,9 @@
                 },
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
+                },
+                "FunctionOutParameter": {
+                    "$ref": "parameters-schema.json#/definitions/FunctionOutParameter"
                 },
                 "FunctionReturnsSamePrimitive": {
                     "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
@@ -271,6 +277,9 @@
                 },
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
+                },
+                "RefOveruse": {
+                    "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"

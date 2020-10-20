@@ -32,6 +32,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -53,6 +54,33 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
 
     var documentContext = getDocumentContextWithUseFlag(UseMode.DONT_USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    assertDiagnosticList(diagnostics);
+
+  }
+
+  @Test
+  void testUse() {
+
+    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testUseWithForce() {
+
+    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("forceModalityMode", true);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+    assertDiagnosticList(diagnostics);
+
+  }
+
+  private void assertDiagnosticList(List<Diagnostic> diagnostics) {
 
     assertThat(diagnostics).hasSize(12)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(2, 12, 3, 57))
@@ -79,14 +107,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
         && diagnostic.getMessage().matches(".*(модального|modal).*УстановитьРасширениеРаботыСКриптографией.*НачатьУстановкуРасширенияРаботыСКриптографией.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(186, 4, 186, 88))
         && diagnostic.getMessage().matches(".*(модального|modal).*ПоместитьФайл.*НачатьПомещениеФайла.*"));
-  }
 
-  @Test
-  void testUse() {
-
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
-    assertThat(diagnostics).isEmpty();
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
