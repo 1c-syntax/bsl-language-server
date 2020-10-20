@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1603018287927,
+  "lastUpdate": 1603195629973,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6138,6 +6138,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.548622151912855",
             "extra": "mean: 76.71920498212178 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "abda52b23c451a6ca9d42b5bd0624e9f82c1bb50",
+          "message": "Merge pull request #1383 from 1c-syntax/feature/latinAndCyrilicSymbolInWord",
+          "timestamp": "2020-10-20T14:51:29+03:00",
+          "tree_id": "bacdb6c7a025c8a809faa382d685049e848ee84c",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/abda52b23c451a6ca9d42b5bd0624e9f82c1bb50"
+        },
+        "date": 1603195626068,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.65115062395732,
+            "unit": "sec",
+            "range": "stddev: 1.4170320880785814",
+            "extra": "mean: 78.65115062395732 sec\nrounds: 3"
           }
         ]
       }
