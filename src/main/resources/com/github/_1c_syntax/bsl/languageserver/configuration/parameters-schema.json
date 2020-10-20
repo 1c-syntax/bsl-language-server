@@ -674,6 +674,24 @@
             "title": "Join with virtual table",
             "$id": "#/definitions/JoinWithVirtualTable"
         },
+        "LatinAndCyrillicSymbolInWord": {
+            "description": "Mixing Latin and Cyrillic characters in one identifier",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Mixing Latin and Cyrillic characters in one identifier",
+            "properties": {
+                "excludeWords": {
+                    "description": "A list of exclusion words, specified as a comma-separated string",
+                    "default": "\u0427\u0442\u0435\u043d\u0438\u0435XML, Com\u041e\u0431\u044a\u0435\u043a\u0442, \u0424\u0430\u0431\u0440\u0438\u043a\u0430XDTO, \u041e\u0431\u044a\u0435\u043a\u0442XDTO, \u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435FTP",
+                    "type": "string",
+                    "title": "A list of exclusion words, specified as a comma-separated string"
+                }
+            },
+            "$id": "#/definitions/LatinAndCyrillicSymbolInWord"
+        },
         "LineLength": {
             "description": "Line Length limit",
             "default": true,

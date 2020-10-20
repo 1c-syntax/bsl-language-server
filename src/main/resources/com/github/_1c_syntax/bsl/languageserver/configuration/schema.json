@@ -197,6 +197,9 @@
                 "JoinWithVirtualTable": {
                     "$ref": "parameters-schema.json#/definitions/JoinWithVirtualTable"
                 },
+                "LatinAndCyrillicSymbolInWord": {
+                    "$ref": "parameters-schema.json#/definitions/LatinAndCyrillicSymbolInWord"
+                },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
