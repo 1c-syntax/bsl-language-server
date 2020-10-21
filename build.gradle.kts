@@ -15,13 +15,14 @@ plugins {
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.31.0"
     id("io.freefair.javadoc-links") version "5.2.1"
-    id("org.springframework.boot") version "2.3.3.RELEASE"
+    id("org.springframework.boot") version "2.3.4.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.1"
 }
 
 apply(plugin = "io.spring.dependency-management")
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven(url = "https://jitpack.io")
 }
@@ -69,6 +70,8 @@ dependencies {
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
     api("com.github.1c-syntax", "mdclasses", "0.6.1")
+    // ls-core
+    api("com.github.1c-syntax", "ls-core-lib", "feature-first_step-c57a90d-DIRTY")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", "5.0.2")
@@ -128,7 +131,7 @@ tasks.withType<JavaCompile> {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher"
+        attributes["Main-Class"] = "com.github._1c_syntax.ls_core.LSLauncher"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     enabled = true
@@ -136,6 +139,7 @@ tasks.jar {
 
 tasks.bootJar {
     manifest {
+        attributes["Start-Class"] = "com.github._1c_syntax.ls_core.LSLauncher"
         attributes["Implementation-Version"] = archiveVersion.get()
     }
     archiveClassifier.set("exec")
