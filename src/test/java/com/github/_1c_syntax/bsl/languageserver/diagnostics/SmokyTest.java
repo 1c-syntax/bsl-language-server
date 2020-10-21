@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.LSLauncher;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -64,7 +64,7 @@ class SmokyTest {
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
 
     // when
-    BSLLSPLauncher.main(args);
+    LSLauncher.main(args);
 
     // then
     assertThat(true).isTrue();
