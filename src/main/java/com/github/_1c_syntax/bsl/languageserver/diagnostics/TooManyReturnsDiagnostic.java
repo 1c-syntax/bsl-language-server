@@ -28,6 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.RelatedInformation;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -65,7 +70,7 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
 
   private String getRelatedMessage(BSLParser.ReturnStatementContext context) {
     if (context.getChildCount() > 1) {
-      return leftSubStr(documentContext.getText(BSLRanges.create(context)));
+      return leftSubStr(documentContext.getText(Ranges.create(context)));
     } else {
       return "+1";
     }
@@ -75,14 +80,14 @@ public class TooManyReturnsDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
     optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
-      Collection<ParseTree> statements = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
+      Collection<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
 
       if (statements.size() > maxReturnsCount) {
         List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
         statements.stream()
           .map(context -> RelatedInformation.create(
             documentContext.getUri(),
-            BSLRanges.create((BSLParser.ReturnStatementContext) context),
+            Ranges.create((BSLParser.ReturnStatementContext) context),
             getRelatedMessage((BSLParser.ReturnStatementContext) context)
           )).collect(Collectors.toCollection(() -> relatedInformation));
 

@@ -23,30 +23,20 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind.ParametersDeserializer;
-import com.github._1c_syntax.ls_core.configuration.diagnostics.ComputeTrigger;
-import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
+import com.github._1c_syntax.ls_core.configuration.diagnostics.CoreDiagnosticsOptions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.BSLDiagnosticProvider}
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BSLDiagnosticsOptions {
-  private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
+public class BSLDiagnosticsOptions extends CoreDiagnosticsOptions {
   private SkipSupport skipSupport = SkipSupport.NEVER;
-  private Mode mode = Mode.ON;
-
-  @JsonDeserialize(using = ParametersDeserializer.class)
-  private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
 }

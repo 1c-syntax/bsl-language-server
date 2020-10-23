@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -52,7 +54,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
 
-    Collection<ParseTree> params = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_param);
+    Collection<ParseTree> params = Trees.findAllRuleNodes(ctx, BSLParser.RULE_param);
 
     boolean inParams = params.stream()
       .map(node -> ((BSLParser.ParamContext) node).IDENTIFIER())
@@ -64,7 +66,7 @@ public class UsingCancelParameterDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_assignment).stream()
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_assignment).stream()
       .filter(
         node -> cancelPattern.matcher(((BSLParser.AssignmentContext) node).lValue()
           .getText())

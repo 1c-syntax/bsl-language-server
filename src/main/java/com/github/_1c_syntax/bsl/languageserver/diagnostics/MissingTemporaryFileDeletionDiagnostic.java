@@ -24,8 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
@@ -99,7 +101,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
 
       int filterLine = ctx.getStart().getLine();
       BSLParser.CodeBlockContext codeBlockContext = (BSLParser.CodeBlockContext)
-        BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
+        Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_codeBlock);
 
       if (codeBlockContext != null
         && !foundDeleteFile(codeBlockContext, variableName, filterLine)) {
@@ -113,7 +115,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   private boolean foundDeleteFile(BSLParser.CodeBlockContext codeBlockContext, String variableName, int filterLine) {
     boolean result = false;
 
-    Collection<ParseTree> listCallStatements = BSLTrees
+    Collection<ParseTree> listCallStatements = Trees
       .findAllRuleNodes(codeBlockContext, BSLParser.RULE_callStatement)
       .stream()
       .filter(node -> ((BSLParser.CallStatementContext) node).getStart().getLine() > filterLine)
@@ -180,7 +182,7 @@ public class MissingTemporaryFileDeletionDiagnostic extends AbstractVisitorDiagn
   private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
 
     BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment == null) {
       return null;

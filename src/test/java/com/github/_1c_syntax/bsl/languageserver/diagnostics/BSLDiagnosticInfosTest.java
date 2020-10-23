@@ -22,9 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
+import com.github._1c_syntax.ls_core.configuration.Language;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,10 +41,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-class DiagnosticInfosTest {
+class BSLDiagnosticInfosTest {
 
   @Autowired
-  private Map<String, DiagnosticInfo> diagnosticInfos;
+  private Map<String, BSLDiagnosticInfo> diagnosticInfos;
 
   @Autowired
   private BSLLanguageServerConfiguration configuration;
@@ -52,7 +53,7 @@ class DiagnosticInfosTest {
   void testAllDiagnosticsHaveMetadataAnnotation() {
     // when
     List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticInfos.values().stream()
-      .map(DiagnosticInfo::getDiagnosticClass).collect(Collectors.toList());
+      .map(BSLDiagnosticInfo::getDiagnosticClass).collect(Collectors.toList());
 
     // then
     assertThat(diagnosticClasses)
@@ -110,7 +111,7 @@ class DiagnosticInfosTest {
       boolean allParametersHaveDescription;
 
       try {
-        var info = new DiagnosticInfo(diagnosticInfo.getDiagnosticClass(), config);
+        var info = new BSLDiagnosticInfo(diagnosticInfo.getDiagnosticClass(), config);
         allParametersHaveDescription = info.getParameters().stream()
           .map(DiagnosticParameterInfo::getDescription)
           .noneMatch(String::isEmpty);

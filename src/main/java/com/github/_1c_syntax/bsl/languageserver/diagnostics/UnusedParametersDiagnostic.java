@@ -24,8 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -60,19 +62,19 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    List<String> paramsNames = BSLTrees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
+    List<String> paramsNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
       .map(node -> ((BSLParser.ParamContext) node).IDENTIFIER().getText().toLowerCase(Locale.getDefault()))
       .collect(Collectors.toList());
 
-    BSLTrees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER)
+    Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER)
       .stream()
       .filter(Objects::nonNull)
       .forEach(node ->
         paramsNames.remove((node.getText().toLowerCase(Locale.getDefault())))
       );
 
-    BSLTrees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
+    Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_param)
       .stream()
       .map(param -> ((BSLParser.ParamContext) param).IDENTIFIER())
       .filter(param -> paramsNames.contains(param.getText().toLowerCase(Locale.getDefault())))
@@ -85,7 +87,7 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
   private static boolean itsHandler(BSLParser.SubCodeBlockContext ctx) {
 
-    Optional<ParseTree> subNames = BSLTrees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
+    Optional<ParseTree> subNames = Trees.findAllRuleNodes(ctx.getParent(), BSLParser.RULE_subName).stream().findFirst();
 
     String subName = "";
     if (subNames.isPresent()) {

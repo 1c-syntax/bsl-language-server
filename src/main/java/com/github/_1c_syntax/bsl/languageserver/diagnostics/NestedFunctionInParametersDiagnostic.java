@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -82,7 +85,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
     // если есть параметры и вызов не в одной строке, то найдем вызовы методов
     return !ctxDoCall.callParamList().isEmpty()
       && ctx.getStart().getLine() != ctx.getStop().getLine()
-      && BSLTrees.nodeContains(ctx, ctxDoCall, BSLParser.RULE_doCall);
+      && Trees.nodeContains(ctx, ctxDoCall, BSLParser.RULE_doCall);
   }
 
   private void checkMethodCall(BSLParserRuleContext ctx,

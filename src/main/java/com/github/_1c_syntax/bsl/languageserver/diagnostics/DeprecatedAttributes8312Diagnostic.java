@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -291,9 +293,9 @@ public class DeprecatedAttributes8312Diagnostic extends AbstractVisitorDiagnosti
     Matcher deprecatedAttributesMatcher = deprecatedAttributesPattern.matcher(ctx.getText().substring(1));
 
     if (deprecatedAttributesMatcher.matches()) {
-      var complexCtx = BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_complexIdentifier);
+      var complexCtx = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_complexIdentifier);
       if (complexCtx == null) {
-        complexCtx = BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_lValue);
+        complexCtx = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_lValue);
         if (complexCtx == null) {
           return;
         }

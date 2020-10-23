@@ -121,7 +121,7 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
     initServerContext(path);
     var configuration = spy(context.getConfiguration());
 
-    documentContext = spy(TestUtils.getDocumentContext(
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(
       testFile.toUri(),
       getText(),
       context

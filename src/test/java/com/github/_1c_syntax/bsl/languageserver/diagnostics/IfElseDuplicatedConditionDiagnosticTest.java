@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
@@ -45,41 +45,41 @@ class IfElseDuplicatedConditionDiagnosticTest extends AbstractDiagnosticTest<IfE
     assertThat(diagnostics).hasSize(4);
 
     List<Range> relatedInformation = new ArrayList<>();
-    relatedInformation.add(BSLRanges.create(3, 10, 3, 15));
-    relatedInformation.add(BSLRanges.create(5, 10, 5, 15));
-    relatedInformation.add(BSLRanges.create(9, 10, 9, 21));
+    relatedInformation.add(Ranges.create(3, 10, 3, 15));
+    relatedInformation.add(Ranges.create(5, 10, 5, 15));
+    relatedInformation.add(Ranges.create(9, 10, 9, 21));
 
     checkDiagnosticContent(
       diagnostics.get(0),
-      BSLRanges.create(3, 10, 3, 15),
+      Ranges.create(3, 10, 3, 15),
       relatedInformation);
 
     relatedInformation.clear();
-    relatedInformation.add(BSLRanges.create(17, 10, 17, 15));
-    relatedInformation.add(BSLRanges.create(27, 10, 27, 15));
+    relatedInformation.add(Ranges.create(17, 10, 17, 15));
+    relatedInformation.add(Ranges.create(27, 10, 27, 15));
 
     checkDiagnosticContent(
       diagnostics.get(1),
-      BSLRanges.create(17, 10, 17, 15),
+      Ranges.create(17, 10, 17, 15),
       relatedInformation);
 
     relatedInformation.clear();
-    relatedInformation.add(BSLRanges.create(20, 13, 20, 18));
-    relatedInformation.add(BSLRanges.create(22, 13, 22, 18));
+    relatedInformation.add(Ranges.create(20, 13, 20, 18));
+    relatedInformation.add(Ranges.create(22, 13, 22, 18));
 
     checkDiagnosticContent(
       diagnostics.get(2),
-      BSLRanges.create(20, 13, 20, 18),
+      Ranges.create(20, 13, 20, 18),
       relatedInformation);
 
     relatedInformation.clear();
-    relatedInformation.add(BSLRanges.create(41, 5, 41, 17));
-    relatedInformation.add(BSLRanges.create(43, 10, 43, 22));
-    relatedInformation.add(BSLRanges.create(45, 10, 45, 22));
+    relatedInformation.add(Ranges.create(41, 5, 41, 17));
+    relatedInformation.add(Ranges.create(43, 10, 43, 22));
+    relatedInformation.add(Ranges.create(45, 10, 45, 22));
 
     checkDiagnosticContent(
       diagnostics.get(3),
-      BSLRanges.create(41, 5, 41, 17),
+      Ranges.create(41, 5, 41, 17),
       relatedInformation);
 
   }

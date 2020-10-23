@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -42,30 +42,30 @@ class PairingBrokenTransactionDiagnosticTest extends AbstractDiagnosticTest<Pair
 
     assertThat(diagnostics)
       .hasSize(21)
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(27, 4, 27, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(40, 4, 40, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(44, 4, 44, 22)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(52, 4, 52, 22)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(53, 4, 53, 22)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(56, 4, 56, 22)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(83, 4, 83, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(87, 4, 87, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(88, 4, 88, 24)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(101, 4, 101, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(93, 8, 93, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(95, 8, 95, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(97, 8, 97, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(113, 4, 113, 29)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(106, 8, 106, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(110, 8, 110, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(108, 8, 108, 26)))
-      .anyMatch(diagnostic -> diagnostic.getRange().equals(BSLRanges.create(31, 4, 31, 22))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(27, 4, 27, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(40, 4, 40, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(44, 4, 44, 22)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(52, 4, 52, 22)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(53, 4, 53, 22)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(56, 4, 56, 22)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(83, 4, 83, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(87, 4, 87, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(88, 4, 88, 24)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(101, 4, 101, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(93, 8, 93, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(95, 8, 95, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(97, 8, 97, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(113, 4, 113, 29)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(106, 8, 106, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(110, 8, 110, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(108, 8, 108, 26)))
+      .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
         && diagnostic.getMessage().matches(".*CommitTransaction.*"))
-      .anyMatch(diagnostic -> (diagnostic.getRange().equals(BSLRanges.create(31, 4, 31, 22))
+      .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(31, 4, 31, 22))
         && diagnostic.getMessage().matches(".*RollbackTransaction.*")))
-      .anyMatch(diagnostic -> (diagnostic.getRange().equals(BSLRanges.create(45, 4, 45, 22))
+      .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(45, 4, 45, 22))
         && diagnostic.getMessage().matches(".*ЗафиксироватьТранзакцию.*")))
-      .anyMatch(diagnostic -> (diagnostic.getRange().equals(BSLRanges.create(45, 4, 45, 22))
+      .anyMatch(diagnostic -> (diagnostic.getRange().equals(Ranges.create(45, 4, 45, 22))
         && diagnostic.getMessage().matches(".*ОтменитьТранзакцию.*")));
   }
 }

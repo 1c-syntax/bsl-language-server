@@ -29,6 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.NewExpressionContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.RelatedInformation;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -83,19 +88,19 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
     relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
-      BSLRanges.create(ctx),
+      Ranges.create(ctx),
       relatedMessage
     ));
     structureDoCallContext.callParamList().callParam().stream()
       .filter(tree -> tree.start.getType() == BSLParser.NEW_KEYWORD)
-      .map(tree -> BSLTrees.findAllRuleNodes(tree, BSLParser.RULE_newExpression))
+      .map(tree -> Trees.findAllRuleNodes(tree, BSLParser.RULE_newExpression))
       .filter(tree -> !tree.isEmpty())
       .map(tree -> (ParseTree) tree.toArray()[0])
       .map(tree -> (NewExpressionContext) tree)
       .filter(NestedConstructorsInStructureDeclarationDiagnostic::hasParams)
       .map(newContext -> RelatedInformation.create(
         documentContext.getUri(),
-        BSLRanges.create(newContext),
+        Ranges.create(newContext),
         relatedMessage
       ))
       .collect(Collectors.toCollection(() -> relatedInformation));

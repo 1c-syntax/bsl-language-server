@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.util.assertions;
 
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.assertj.core.api.AbstractAssert;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
@@ -43,7 +44,7 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
     isNotNull();
 
     // check condition
-    Range expectedRange = BSLRanges.create(startLine, startChar, endLine, endChar);
+    Range expectedRange = Ranges.create(startLine, startChar, endLine, endChar);
     Range actualRange = actual.getRange();
     if (!Objects.equals(actualRange, expectedRange)) {
       failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());

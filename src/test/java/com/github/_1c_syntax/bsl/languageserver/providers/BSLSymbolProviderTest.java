@@ -50,7 +50,7 @@ class BSLSymbolProviderTest {
   @BeforeEach
   void before() {
     var configurationRoot = Absolute.path(PATH_TO_METADATA);
-    context.setConfigurationRoot(configurationRoot);
+    context.setProjectRoot(configurationRoot);
     context.populateContext();
   }
 

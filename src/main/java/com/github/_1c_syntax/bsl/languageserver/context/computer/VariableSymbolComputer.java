@@ -30,6 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -78,8 +81,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   ) {
     return VariableSymbol.builder()
       .name(varName.getText())
-      .range(BSLRanges.create(ctx))
-      .variableNameRange(BSLRanges.create(varName))
+      .range(Ranges.create(ctx))
+      .variableNameRange(Ranges.create(varName))
       .export(export)
       .kind(kind)
       .description(createDescription(ctx))
@@ -91,7 +94,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     List<Token> comments = new ArrayList<>();
 
     // поиск комментариев начинается от первого токена - VAR
-    var varToken = BSLTrees.getPreviousTokenFromDefaultChannel(tokens,
+    var varToken = Trees.getPreviousTokenFromDefaultChannel(tokens,
       ctx.getStart().getTokenIndex(), BSLParser.VAR_KEYWORD);
     varToken.ifPresent(value -> comments.addAll(BSLTrees.getComments(tokens, value)));
 
@@ -107,7 +110,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     var trailingDescription = trailingComments
       .map(trailingComment -> VariableDescription.builder()
         .description(trailingComment.getText())
-        .range(BSLRanges.create(trailingComment))
+        .range(Ranges.create(trailingComment))
         .build()
       );
 
@@ -130,7 +133,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     Token firstElement = tokens.get(0);
     Token lastElement = tokens.get(tokens.size() - 1);
 
-    return BSLRanges.create(firstElement, lastElement);
+    return Ranges.create(firstElement, lastElement);
   }
 
 }

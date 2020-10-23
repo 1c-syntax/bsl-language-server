@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -56,7 +57,7 @@ class BSLServerContextTest {
   void testConfigurationMetadata() {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
+    serverContext.setProjectRoot(path);
     Configuration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
@@ -79,10 +80,10 @@ class BSLServerContextTest {
   void testMdoRefs() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
+    serverContext.setProjectRoot(path);
     var mdoRefCommonModule = "CommonModule.ПервыйОбщийМодуль";
 
-    BSLDocumentContext documentContext = addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
+    var documentContext = (BSLDocumentContext) addDocumentContext(serverContext, PATH_TO_MODULE_FILE);
     assertThat(serverContext.getDocument(mdoRefCommonModule, documentContext.getModuleType()))
       .isPresent()
       .get()
@@ -111,7 +112,7 @@ class BSLServerContextTest {
   void testErrorConfigurationMetadata() {
     Path path = Absolute.path(Paths.get(PATH_TO_METADATA, "test"));
 
-    serverContext.setConfigurationRoot(path);
+    serverContext.setProjectRoot(path);
     Configuration configurationMetadata = serverContext.getConfiguration();
 
     assertThat(configurationMetadata).isNotNull();
@@ -122,7 +123,7 @@ class BSLServerContextTest {
   void testPopulateContext() {
     // given
     Path path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
+    serverContext.setProjectRoot(path);
 
     assertThat(serverContext.getDocuments()).isEmpty();
 
@@ -133,7 +134,7 @@ class BSLServerContextTest {
     assertThat(serverContext.getDocuments()).hasSizeGreaterThan(0);
   }
 
-  private BSLDocumentContext addDocumentContext(BSLServerContext serverContext, String path) throws IOException {
+  private DocumentContext addDocumentContext(BSLServerContext serverContext, String path) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
     return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));

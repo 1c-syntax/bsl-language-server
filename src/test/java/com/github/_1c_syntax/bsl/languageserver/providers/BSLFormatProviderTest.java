@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.DocumentRangeFormattingParams;
@@ -58,7 +59,7 @@ class BSLFormatProviderTest {
 
     DocumentRangeFormattingParams params = new DocumentRangeFormattingParams();
     params.setTextDocument(getTextDocumentIdentifier());
-    params.setRange(BSLRanges.create(startLine, 0, endLine, 0));
+    params.setRange(Ranges.create(startLine, 0, endLine, 0));
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
@@ -74,7 +75,7 @@ class BSLFormatProviderTest {
 
     formattedFileContent = joiner.toString();
 
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
@@ -99,7 +100,7 @@ class BSLFormatProviderTest {
     String fileContent = FileUtils.readFileToString(getTestFile(), StandardCharsets.UTF_8);
     String formattedFileContent = FileUtils.readFileToString(getFormattedTestFile(), StandardCharsets.UTF_8);
 
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
@@ -124,13 +125,13 @@ class BSLFormatProviderTest {
     params.setOptions(new FormattingOptions(4, true));
 
     String fileContent = "Возврат-1>-2";
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
+    var documentContext = TestUtils.getDocumentContext(
       URI.create(params.getTextDocument().getUri()),
       fileContent
     );
 
     // when
-    List<TextEdit> textEdits = formatProvider.getFormatting(params, documentContext);
+    List<TextEdit> textEdits = formatProvider.getFormatting(params, (BSLDocumentContext) documentContext);
 
     // then
     assertThat(textEdits).hasSize(1);

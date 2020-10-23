@@ -22,7 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,14 +35,14 @@ import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class DiagnosticIgnoranceComputerTest {
+class BSLDiagnosticIgnoranceComputerTest {
 
   @Test
   void testDiagnosticIgnorance() {
 
     // given
-    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
-    final BSLDocumentContext documentContext = getDocumentContextFromFile(filePath);
+    String filePath = "./src/test/resources/context/computer/BSLDiagnosticIgnoranceComputerTest.bsl";
+    final BSLDocumentContext documentContext = (BSLDocumentContext) getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 
@@ -59,9 +60,9 @@ class DiagnosticIgnoranceComputerTest {
     notIgnoredDiagnostics.add(createDiagnostic("SemicolonPresence", 29));
 
     // when
-    Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer =
-      new DiagnosticIgnoranceComputer(documentContext);
-    DiagnosticIgnoranceComputer.Data data = diagnosticIgnoranceComputer.compute();
+    Computer<BSLDiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer =
+      new BSLDiagnosticIgnoranceComputer(documentContext);
+    BSLDiagnosticIgnoranceComputer.Data data = diagnosticIgnoranceComputer.compute();
 
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
@@ -71,7 +72,7 @@ class DiagnosticIgnoranceComputerTest {
   private static Diagnostic createDiagnostic(String code, int line) {
     Diagnostic diagnostic = new Diagnostic();
     diagnostic.setCode(code);
-    diagnostic.setRange(BSLRanges.create(line - 1, 0, line - 1, 0));
+    diagnostic.setRange(Ranges.create(line - 1, 0, line - 1, 0));
 
     return diagnostic;
   }

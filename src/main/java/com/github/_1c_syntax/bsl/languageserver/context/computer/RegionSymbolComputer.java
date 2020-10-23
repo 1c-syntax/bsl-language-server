@@ -26,6 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
@@ -68,8 +70,8 @@ public final class RegionSymbolComputer
 
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
       .name(ctx.regionName().getText())
-      .regionNameRange(BSLRanges.create(ctx.regionName()))
-      .startRange(BSLRanges.create(ctx));
+      .regionNameRange(Ranges.create(ctx.regionName()))
+      .startRange(Ranges.create(ctx));
 
     regionStack.push(Pair.of(builder, ctx));
     return super.visitRegionStart(ctx);
@@ -87,10 +89,10 @@ public final class RegionSymbolComputer
     RegionSymbol.RegionSymbolBuilder builder = pair.getLeft();
     BSLParser.RegionStartContext regionStartContext = pair.getRight();
 
-    Range range = BSLRanges.create(regionStartContext, ctx);
+    Range range = Ranges.create(regionStartContext, ctx);
     builder
       .range(range)
-      .endRange(BSLRanges.create(ctx))
+      .endRange(Ranges.create(ctx))
     ;
 
     RegionSymbol region = builder.build();

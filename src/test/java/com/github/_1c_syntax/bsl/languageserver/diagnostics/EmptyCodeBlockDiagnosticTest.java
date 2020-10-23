@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +57,7 @@ class EmptyCodeBlockDiagnosticTest extends AbstractDiagnosticTest<EmptyCodeBlock
     List<Diagnostic> diagnostics = getDiagnostics("EmptyCodeBlockDiagnosticFileCodeBlock");
 
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(BSLRanges.create(4, 4, 4, 16));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(4, 4, 4, 16));
   }
 
   @Test

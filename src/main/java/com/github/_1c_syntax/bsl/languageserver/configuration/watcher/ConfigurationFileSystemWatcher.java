@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.ls_core.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 import lombok.RequiredArgsConstructor;

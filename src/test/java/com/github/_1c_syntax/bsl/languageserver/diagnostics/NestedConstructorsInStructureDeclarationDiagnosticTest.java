@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
@@ -54,87 +54,87 @@ class NestedConstructorsInStructureDeclarationDiagnosticTest
     assertThat(diagnostics).hasSize(8);
 
     List<Range> relatedInformation = new ArrayList<>();
-    relatedInformation.add(BSLRanges.create(10, 16, 12, 36));
-    relatedInformation.add(BSLRanges.create(11, 33, 11, 69));
+    relatedInformation.add(Ranges.create(10, 16, 12, 36));
+    relatedInformation.add(Ranges.create(11, 33, 11, 69));
 
     checkDiagnosticContent(
       diagnostics.get(0),
-      BSLRanges.create(10, 16, 12, 36),
+      Ranges.create(10, 16, 12, 36),
       relatedInformation);
 
     relatedInformation.clear();
 
-    relatedInformation.add(BSLRanges.create(14, 16, 23, 62));
-    relatedInformation.add(BSLRanges.create(19, 32, 19, 93));
-    relatedInformation.add(BSLRanges.create(20, 32, 20, 82));
-    relatedInformation.add(BSLRanges.create(22, 32, 22, 91));
+    relatedInformation.add(Ranges.create(14, 16, 23, 62));
+    relatedInformation.add(Ranges.create(19, 32, 19, 93));
+    relatedInformation.add(Ranges.create(20, 32, 20, 82));
+    relatedInformation.add(Ranges.create(22, 32, 22, 91));
 
     checkDiagnosticContent(
       diagnostics.get(1),
-      BSLRanges.create(14, 16, 23, 62),
+      Ranges.create(14, 16, 23, 62),
       relatedInformation);
 
     relatedInformation.clear();
 
-    relatedInformation.add(BSLRanges.create(25, 16, 27, 96));
-    relatedInformation.add(BSLRanges.create(26, 32, 27, 95));
+    relatedInformation.add(Ranges.create(25, 16, 27, 96));
+    relatedInformation.add(Ranges.create(26, 32, 27, 95));
 
     checkDiagnosticContent(
       diagnostics.get(2),
-      BSLRanges.create(25, 16, 27, 96),
+      Ranges.create(25, 16, 27, 96),
       relatedInformation);
 
     relatedInformation.clear();
 
-    relatedInformation.add(BSLRanges.create(26, 32, 27, 95));
-    relatedInformation.add(BSLRanges.create(27, 48, 27, 94));
+    relatedInformation.add(Ranges.create(26, 32, 27, 95));
+    relatedInformation.add(Ranges.create(27, 48, 27, 94));
 
     checkDiagnosticContent(
       diagnostics.get(3),
-      BSLRanges.create(26, 32, 27, 95),
+      Ranges.create(26, 32, 27, 95),
       relatedInformation);
 
     relatedInformation.clear();
 
     relatedInformation = new ArrayList<>();
-    relatedInformation.add(BSLRanges.create(38, 13, 40, 31));
-    relatedInformation.add(BSLRanges.create(39, 28, 39, 55));
+    relatedInformation.add(Ranges.create(38, 13, 40, 31));
+    relatedInformation.add(Ranges.create(39, 28, 39, 55));
 
     checkDiagnosticContent(
       diagnostics.get(4),
-      BSLRanges.create(38, 13, 40, 31),
+      Ranges.create(38, 13, 40, 31),
       relatedInformation);
 
     relatedInformation.clear();
 
-    relatedInformation.add(BSLRanges.create(42, 13, 51, 50));
-    relatedInformation.add(BSLRanges.create(47, 28, 47, 63));
-    relatedInformation.add(BSLRanges.create(48, 28, 48, 58));
-    relatedInformation.add(BSLRanges.create(50, 28, 50, 62));
+    relatedInformation.add(Ranges.create(42, 13, 51, 50));
+    relatedInformation.add(Ranges.create(47, 28, 47, 63));
+    relatedInformation.add(Ranges.create(48, 28, 48, 58));
+    relatedInformation.add(Ranges.create(50, 28, 50, 62));
 
     checkDiagnosticContent(
       diagnostics.get(5),
-      BSLRanges.create(42, 13, 51, 50),
+      Ranges.create(42, 13, 51, 50),
       relatedInformation);
 
     relatedInformation.clear();
 
-    relatedInformation.add(BSLRanges.create(53, 13, 55, 79));
-    relatedInformation.add(BSLRanges.create(54, 28, 55, 78));
+    relatedInformation.add(Ranges.create(53, 13, 55, 79));
+    relatedInformation.add(Ranges.create(54, 28, 55, 78));
 
     checkDiagnosticContent(
       diagnostics.get(6),
-      BSLRanges.create(53, 13, 55, 79),
+      Ranges.create(53, 13, 55, 79),
       relatedInformation);
 
     relatedInformation.clear();
 
-    relatedInformation.add(BSLRanges.create(54, 28, 55, 78));
-    relatedInformation.add(BSLRanges.create(55, 44, 55, 77));
+    relatedInformation.add(Ranges.create(54, 28, 55, 78));
+    relatedInformation.add(Ranges.create(55, 44, 55, 77));
 
     checkDiagnosticContent(
       diagnostics.get(7),
-      BSLRanges.create(54, 28, 55, 78),
+      Ranges.create(54, 28, 55, 78),
       relatedInformation);
 
   }

@@ -29,6 +29,9 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.ComplexIdentifierContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.LValueContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -64,7 +67,7 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitForEachStatement(ctx);
     }
 
-    boolean hasUsage = BSLTrees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
+    boolean hasUsage = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
       .stream()
       .filter(node -> iteratorIdName.equalsIgnoreCase(node.getText()))
       .anyMatch(parentClassMatchTo(ComplexIdentifierContext.class)

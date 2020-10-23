@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -53,9 +56,9 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
 
     if (ctx.getChildCount() == 1
       && ctx.SEMICOLON() != null
-      && !BSLTrees.treeContainsErrors(
-      BSLTrees.getPreviousNode(
-        BSLTrees.getRootParent(ctx),
+      && !Trees.treeContainsErrors(
+      Trees.getPreviousNode(
+        Trees.getRootParent(ctx),
         ctx,
         BSLParser.RULE_statement))) {
       diagnosticStorage.addDiagnostic(ctx);

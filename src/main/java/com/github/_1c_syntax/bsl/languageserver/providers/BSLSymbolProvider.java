@@ -64,6 +64,7 @@ public class BSLSymbolProvider {
     }
 
     return context.getDocuments().values().stream()
+      .map(documentContext -> (BSLDocumentContext) documentContext)
       .flatMap(BSLSymbolProvider::getSymbolPairs)
       .filter(symbolPair -> queryString.isEmpty() || pattern.matcher(symbolPair.getValue().getName()).find())
       .map(BSLSymbolProvider::createSymbolInformation)

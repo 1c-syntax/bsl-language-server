@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
+import com.github._1c_syntax.ls_core.configuration.Language;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ConfigurationSource;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -116,11 +117,11 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
   private ScriptVariant getRegionsLanguage(BSLDocumentContext documentContext, FileType fileType) {
 
     ScriptVariant regionsLanguage;
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
+    Configuration configuration = documentContext.getMDConfiguration();
     if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
       regionsLanguage = getScriptVariantFromConfigLanguage();
     } else {
-      regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
+      regionsLanguage = documentContext.getMDConfiguration().getScriptVariant();
     }
     return regionsLanguage;
   }

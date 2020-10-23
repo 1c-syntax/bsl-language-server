@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -68,14 +69,14 @@ class TSLintReporterTest {
 
     // given
     Diagnostic diagnostic = new Diagnostic(
-      BSLRanges.create(0, 1, 2, 3),
+      Ranges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
       "test"
     );
 
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext("");
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContext("");
     String sourceDir = ".";
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);

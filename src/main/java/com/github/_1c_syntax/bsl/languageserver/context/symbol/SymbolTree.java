@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
@@ -64,7 +66,7 @@ public class SymbolTree {
 
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
     BSLParserRuleContext subNameNode;
-    if (BSLTrees.nodeContainsErrors(ctx)) {
+    if (Trees.nodeContainsErrors(ctx)) {
       subNameNode = ctx;
     } else if (ctx instanceof BSLParser.SubContext) {
       if (((BSLParser.SubContext) ctx).function() == null) {
@@ -76,7 +78,7 @@ public class SymbolTree {
       subNameNode = ctx;
     }
 
-    Range subNameRange = BSLRanges.create(subNameNode);
+    Range subNameRange = Ranges.create(subNameNode);
 
     return getMethods().stream()
       .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange))
@@ -91,7 +93,7 @@ public class SymbolTree {
 
     BSLParserRuleContext varNameNode;
 
-    if (BSLTrees.nodeContainsErrors(ctx)) {
+    if (Trees.nodeContainsErrors(ctx)) {
       varNameNode = ctx;
     } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext) {
       varNameNode = ((BSLParser.ModuleVarDeclarationContext) ctx).var_name();
@@ -101,7 +103,7 @@ public class SymbolTree {
       varNameNode = ctx;
     }
 
-    Range variableNameRange = BSLRanges.create(varNameNode);
+    Range variableNameRange = Ranges.create(varNameNode);
 
     return getVariables().stream()
       .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange))

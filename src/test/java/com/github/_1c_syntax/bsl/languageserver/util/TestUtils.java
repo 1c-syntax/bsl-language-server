@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
-import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -41,7 +41,7 @@ public class TestUtils {
   public static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   @SneakyThrows
-  public static BSLDocumentContext getDocumentContextFromFile(String filePath) {
+  public static DocumentContext getDocumentContextFromFile(String filePath) {
 
     String fileContent = FileUtils.readFileToString(
       new File(filePath),
@@ -51,15 +51,15 @@ public class TestUtils {
     return getDocumentContext(Path.of(filePath).toUri(), fileContent);
   }
 
-  public static BSLDocumentContext getDocumentContext(URI uri, String fileContent) {
+  public static DocumentContext getDocumentContext(URI uri, String fileContent) {
     return getDocumentContext(uri, fileContent, TestApplicationContext.getBean(BSLServerContext.class));
   }
 
-  public static BSLDocumentContext getDocumentContext(String fileContent) {
+  public static DocumentContext getDocumentContext(String fileContent) {
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent);
   }
 
-  public static BSLDocumentContext getDocumentContext(String fileContent, @Nullable BSLServerContext context) {
+  public static DocumentContext getDocumentContext(String fileContent, @Nullable BSLServerContext context) {
     BSLServerContext passedContext = context;
     if (passedContext == null) {
       passedContext = TestApplicationContext.getBean(BSLServerContext.class);
@@ -68,7 +68,7 @@ public class TestUtils {
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent, passedContext);
   }
 
-  public static BSLDocumentContext getDocumentContext(URI uri, String fileContent, BSLServerContext context) {
+  public static DocumentContext getDocumentContext(URI uri, String fileContent, BSLServerContext context) {
     return context.addDocument(uri, fileContent);
   }
 }

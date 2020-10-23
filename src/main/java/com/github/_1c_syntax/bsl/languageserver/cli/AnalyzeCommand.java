@@ -169,7 +169,7 @@ public class AnalyzeCommand implements CLICommand {
     configuration.update(configurationFile);
 
     Path configurationPath = BSLLanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context.setConfigurationRoot(configurationPath);
+    context.setProjectRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
     
@@ -209,7 +209,7 @@ public class AnalyzeCommand implements CLICommand {
       throw new RuntimeException(e);
     }
 
-    BSLDocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
+    var documentContext = (BSLDocumentContext) context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();

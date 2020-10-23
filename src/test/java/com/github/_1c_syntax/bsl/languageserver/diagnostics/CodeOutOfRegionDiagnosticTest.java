@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
@@ -106,7 +107,7 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
   }
 
   private List<Diagnostic> getDiagnostics(String fileName, ModuleType moduleType) {
-    var documentContext = spy(TestUtils.getDocumentContext(getText(fileName)));
+    var documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(getText(fileName)));
     doReturn(moduleType).when(documentContext).getModuleType();
     return getDiagnostics(documentContext);
   }

@@ -76,7 +76,7 @@ public final class DiagnosticParameterInfo {
     return value;
   }
 
-  static List<DiagnosticParameterInfo> createDiagnosticParameters(DiagnosticInfo diagnosticInfo) {
+  static List<DiagnosticParameterInfo> createDiagnosticParameters(BSLDiagnosticInfo diagnosticInfo) {
     var parameterInfos = getParameterByClass(diagnosticInfo.getDiagnosticClass(), diagnosticInfo);
 
     var superClass = diagnosticInfo.getDiagnosticClass().getSuperclass();
@@ -87,7 +87,7 @@ public final class DiagnosticParameterInfo {
     return parameterInfos;
   }
 
-  private static List<DiagnosticParameterInfo> getParameterByClass(Class<?> clazz, DiagnosticInfo diagnosticInfo) {
+  private static List<DiagnosticParameterInfo> getParameterByClass(Class<?> clazz, BSLDiagnosticInfo diagnosticInfo) {
     return Arrays.stream(clazz.getDeclaredFields())
       .filter(field -> field.isAnnotationPresent(DiagnosticParameter.class))
       .map(field -> new DiagnosticParameterInfo(field, diagnosticInfo.getResourceString(field.getName())))

@@ -30,6 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -120,7 +123,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-    BSLTrees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
+    Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
       .filter(token -> PATTERN.matcher(token.getText()).matches())
       .forEach(token -> diagnosticStorage.addDiagnostic((TerminalNode) token));
 

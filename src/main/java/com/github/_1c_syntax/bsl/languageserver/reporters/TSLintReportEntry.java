@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import lombok.Getter;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;

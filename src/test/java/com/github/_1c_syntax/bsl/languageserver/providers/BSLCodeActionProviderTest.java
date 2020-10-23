@@ -24,8 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CanonicalSpellingKeywordsDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -60,11 +61,11 @@ class BSLCodeActionProviderTest {
 
     // given
     String filePath = "./src/test/resources/providers/codeAction.bsl";
-    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
 
     List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
       .filter(diagnostic -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
+        BSLDiagnosticInfo diagnosticInfo = new BSLDiagnosticInfo(
           CanonicalSpellingKeywordsDiagnostic.class,
           configuration
         );
@@ -101,7 +102,7 @@ class BSLCodeActionProviderTest {
   void testEmptyDiagnosticList() {
     // given
     String filePath = "./src/test/resources/providers/codeAction.bsl";
-    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
 
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());

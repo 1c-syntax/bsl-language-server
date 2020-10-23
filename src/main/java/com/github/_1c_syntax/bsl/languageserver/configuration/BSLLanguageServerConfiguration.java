@@ -29,7 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.BSLDiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
+import com.github._1c_syntax.ls_core.configuration.LSPFeature;
 import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.ls_core.configuration.watcher.LanguageServerConfigurationChangeEvent;
 import com.github._1c_syntax.ls_core.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
@@ -54,8 +56,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -65,7 +69,7 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 /**
  * Корневой класс конфигурации BSL Language Server.
  * <p>
- * В обычном режиме работы провайдеры и прочие классы могут расчитывать на единственность объекта конфигурации
+ * В обычном режиме работы провайдеры и прочие классы могут рассчитывать на единственность объекта конфигурации
  * и безопасно сохранять ссылку на конфигурацию или ее части.
  */
 @Data
@@ -75,7 +79,7 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BSLLanguageServerConfiguration implements ApplicationEventPublisherAware {
+public class BSLLanguageServerConfiguration implements LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
@@ -107,6 +111,13 @@ public class BSLLanguageServerConfiguration implements ApplicationEventPublisher
   @Getter(value = AccessLevel.NONE)
   private ApplicationEventPublisher applicationEventPublisher;
 
+  /**
+   * Доступные фичи language server
+   */
+  @JsonIgnore
+  private Set<LSPFeature> lspFeatures;
+
+  @Override
   public void update(File configurationFile) {
     if (!configurationFile.exists()) {
       return;
@@ -114,7 +125,7 @@ public class BSLLanguageServerConfiguration implements ApplicationEventPublisher
 
     BSLLanguageServerConfiguration configuration;
 
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new ObjectMapper();
     mapper.enable(ACCEPT_CASE_INSENSITIVE_ENUMS);
 
     try {
@@ -131,13 +142,29 @@ public class BSLLanguageServerConfiguration implements ApplicationEventPublisher
     notifyConfigurationChanged();
   }
 
-
+  @Override
   public void reset() {
     copyPropertiesFrom(new BSLLanguageServerConfiguration());
     notifyConfigurationFileChanged();
     notifyConfigurationChanged();
   }
-  
+
+  @Override
+  public void addLSPFeature(LSPFeature lspFeature) {
+    if (lspFeatures == null) {
+      lspFeatures = new HashSet<>();
+    }
+    lspFeatures.add(lspFeature);
+  }
+
+  @Override
+  public boolean isLSPFeature(LSPFeature lspFeature) {
+    if (lspFeatures == null) {
+      return false;
+    }
+    return lspFeatures.contains(lspFeature);
+  }
+
   public static Path getCustomConfigurationRoot(BSLLanguageServerConfiguration configuration, Path srcDir) {
 
     Path rootPath = null;

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.Assertions;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -45,9 +46,9 @@ class NestedStatementsDiagnosticTest extends AbstractDiagnosticTest<NestedStatem
 
     // then
     assertThat(diagnostics).hasSize(2);
-    assertThat(diagnostics.get(0).getRange()).isEqualTo(BSLRanges.create(35, 8, 35, 12));
+    assertThat(diagnostics.get(0).getRange()).isEqualTo(Ranges.create(35, 8, 35, 12));
     assertThat(diagnostics.get(0).getRelatedInformation().size()).isEqualTo(5);
-    assertThat(diagnostics.get(1).getRange()).isEqualTo(BSLRanges.create(50, 6, 50, 10));
+    assertThat(diagnostics.get(1).getRange()).isEqualTo(Ranges.create(50, 6, 50, 10));
     assertThat(diagnostics.get(1).getRelatedInformation().size()).isEqualTo(7);
 
   }

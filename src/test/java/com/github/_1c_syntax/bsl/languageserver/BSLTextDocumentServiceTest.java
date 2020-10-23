@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.CoreTextDocumentService;
+import com.github._1c_syntax.ls_core.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -58,7 +60,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 class BSLTextDocumentServiceTest {
 
   @Autowired
-  private BSLTextDocumentService textDocumentService;
+  private CoreTextDocumentService textDocumentService;
 
   @Test
   void completion() throws ExecutionException, InterruptedException {
@@ -274,7 +276,7 @@ class BSLTextDocumentServiceTest {
 
     // when
     var params = new DiagnosticParams(getTextDocumentIdentifier());
-    params.setRange(BSLRanges.create(1, 0, 2, 0));
+    params.setRange(Ranges.create(1, 0, 2, 0));
     var diagnostics = textDocumentService.diagnostics(params).get();
 
     // then

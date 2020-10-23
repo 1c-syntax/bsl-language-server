@@ -24,8 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.regex.Pattern;
@@ -39,7 +41,6 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.STANDARD
   }
-
 )
 public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindMethodDiagnostic {
 
@@ -54,13 +55,13 @@ public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindM
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    var parentNode = BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_exceptCodeBlock);
+    var parentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_exceptCodeBlock);
 
     if (parentNode == null) {
       return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
     }
 
-    var methodsList = BSLTrees.findAllRuleNodes(parentNode, BSLParser.RULE_globalMethodCall).stream()
+    var methodsList = Trees.findAllRuleNodes(parentNode, BSLParser.RULE_globalMethodCall).stream()
       .map(BSLParser.GlobalMethodCallContext.class::cast)
       .map(e -> e.methodName().getText())
       .collect(Collectors.toList());

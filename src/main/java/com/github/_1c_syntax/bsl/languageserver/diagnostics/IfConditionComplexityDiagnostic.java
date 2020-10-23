@@ -25,8 +25,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
@@ -46,7 +48,7 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
     type = Integer.class,
     defaultValue = "" + MAX_IF_CONDITION_COMPLEXITY
   )
-  private int maxIfConditionComplexity = MAX_IF_CONDITION_COMPLEXITY;
+  private final int maxIfConditionComplexity = MAX_IF_CONDITION_COMPLEXITY;
 
   @Override
   public ParseTree visitIfBranch(BSLParser.IfBranchContext ctx) {
@@ -61,7 +63,7 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void checkExpressionAndRaise(BSLParser.ExpressionContext expression) {
-    if (BSLTrees.findAllRuleNodes(expression, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity) {
+    if (Trees.findAllRuleNodes(expression, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity) {
       diagnosticStorage.addDiagnostic(expression);
     }
   }

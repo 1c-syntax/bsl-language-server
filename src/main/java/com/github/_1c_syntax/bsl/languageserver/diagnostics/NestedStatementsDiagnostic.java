@@ -28,6 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.RelatedInformation;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -136,7 +140,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     relatedInformation.add(
       RelatedInformation.create(
         documentContext.getUri(),
-        BSLRanges.create(ctx.getStart()),
+        Ranges.create(ctx.getStart()),
         relatedMessage
       )
     );
@@ -146,7 +150,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
       .map(expressionContext ->
         RelatedInformation.create(
           documentContext.getUri(),
-          BSLRanges.create(((BSLParserRuleContext) expressionContext).getStart()),
+          Ranges.create(((BSLParserRuleContext) expressionContext).getStart()),
           relatedMessage
         )
       )

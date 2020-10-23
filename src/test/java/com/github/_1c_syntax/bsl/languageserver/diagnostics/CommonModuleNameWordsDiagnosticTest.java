@@ -124,7 +124,7 @@ class CommonModuleNameWordsDiagnosticTest extends AbstractDiagnosticTest<CommonM
 
     initServerContext(path);
     var configuration = context.getConfiguration();
-    documentContext = spy(TestUtils.getDocumentContext(
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

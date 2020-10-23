@@ -47,7 +47,7 @@ class BSLCodeLensProviderTest {
 
     // given
     String filePath = "./src/test/resources/providers/codeLens.bsl";
-    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
 
     // when
     List<CodeLens> codeLenses = codeLensProvider.getCodeLens(documentContext);

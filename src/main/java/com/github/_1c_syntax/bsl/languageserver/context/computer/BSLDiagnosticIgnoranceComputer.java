@@ -22,31 +22,25 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
-import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
-import org.eclipse.lsp4j.Diagnostic;
 
 import javax.annotation.CheckForNull;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
-
-  private static final DiagnosticCode ALL_DIAGNOSTICS_KEY = new DiagnosticCode("all");
+public class BSLDiagnosticIgnoranceComputer implements DiagnosticIgnoranceComputer {
 
   private static final Pattern IGNORE_ALL_ON = CaseInsensitivePattern.compile(
     "BSLLS-(?:вкл|on)"
@@ -69,7 +63,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
   private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
 
-  public DiagnosticIgnoranceComputer(BSLDocumentContext documentContext) {
+  public BSLDiagnosticIgnoranceComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 
@@ -185,33 +179,9 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     if (matcher.groupCount() != 0) {
       key = new DiagnosticCode(matcher.group(1));
     } else {
-      key = ALL_DIAGNOSTICS_KEY;
+      key = DiagnosticIgnoranceComputer.getAllDiagnosticKey();
     }
     return key;
-  }
-
-  @AllArgsConstructor
-  public static class Data {
-    private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance;
-
-    public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
-      if (diagnosticIgnorance.isEmpty()) {
-        return false;
-      }
-
-      int line = diagnostic.getRange().getStart().getLine();
-
-      Predicate<Map.Entry<DiagnosticCode, List<Range<Integer>>>> ignoreAll =
-        entry -> entry.getKey().equals(ALL_DIAGNOSTICS_KEY);
-      Predicate<Map.Entry<DiagnosticCode, List<Range<Integer>>>> ignoreConcreteDiagnostic =
-        entry -> entry.getKey().equals(diagnostic.getCode());
-
-      return diagnosticIgnorance.entrySet().stream()
-        .filter(ignoreAll.or(ignoreConcreteDiagnostic))
-        .map(Map.Entry::getValue)
-        .flatMap(Collection::stream)
-        .anyMatch(range -> range.contains(line));
-    }
   }
 
 }

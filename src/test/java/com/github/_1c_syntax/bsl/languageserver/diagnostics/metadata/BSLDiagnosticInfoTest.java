@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedAttributes
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalMethodDiagnostic;
+import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.DiagnosticTag;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -38,7 +41,7 @@ import java.util.Optional;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 @SpringBootTest
-class DiagnosticInfoTest {
+class BSLDiagnosticInfoTest {
 
   @Autowired
   private BSLLanguageServerConfiguration configuration;
@@ -46,7 +49,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameter() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
+    BSLDiagnosticInfo diagnosticInfo = new BSLDiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -85,13 +88,13 @@ class DiagnosticInfoTest {
   @Test
   void testLSPTags() {
     // given
-    var diagnosticInfo = new DiagnosticInfo(UnusedLocalMethodDiagnostic.class, configuration);
+    var diagnosticInfo = new BSLDiagnosticInfo(UnusedLocalMethodDiagnostic.class, configuration);
 
     // then
     assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Unnecessary);
 
     // given
-    diagnosticInfo = new DiagnosticInfo(DeprecatedAttributes8312Diagnostic.class, configuration);
+    diagnosticInfo = new BSLDiagnosticInfo(DeprecatedAttributes8312Diagnostic.class, configuration);
 
     // then
     assertThat(diagnosticInfo.getLSPTags()).contains(DiagnosticTag.Deprecated);
@@ -99,7 +102,7 @@ class DiagnosticInfoTest {
   @Test
   void testParameterSuper() {
 
-    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration);
+    BSLDiagnosticInfo diagnosticInfo = new BSLDiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration);
 
     Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
@@ -141,7 +144,7 @@ class DiagnosticInfoTest {
     configuration.setLanguage(Language.EN);
 
     // when
-    DiagnosticInfo diagnosticEnInfo = new DiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
+    BSLDiagnosticInfo diagnosticEnInfo = new BSLDiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
 
     // then
     assertThat(diagnosticEnInfo.getParameters().get(0).getDescription())

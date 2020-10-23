@@ -44,7 +44,7 @@ class BSLDiagnosticProviderTest {
     // TODO: это тест на новый getDiagnostics, а не на DiagnosticProvider
 
     final BSLDocumentContext documentContext
-      = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
+      = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/providers/diagnosticProvider.bsl");
 
     // when
     final List<Diagnostic> diagnostics = documentContext.getDiagnostics();

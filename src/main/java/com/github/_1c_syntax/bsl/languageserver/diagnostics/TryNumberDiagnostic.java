@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -51,7 +54,7 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitTryCodeBlock(BSLParser.TryCodeBlockContext ctx) {
 
-    BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
+    Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
       .filter(GlobalMethodCallContext.class::isInstance)
       .map(GlobalMethodCallContext.class::cast)

@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -91,7 +91,7 @@ public final class BSLFormatProvider {
 
     return getTextEdits(
       tokens,
-      BSLRanges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
+      Ranges.create(firstToken, lastToken), firstToken.getCharPositionInLine(), params.getOptions()
     );
   }
 

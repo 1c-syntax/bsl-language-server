@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -120,12 +123,12 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
 
     return Optional.ofNullable(ifBranch.codeBlock())
-      .map(codeBlockContext -> BSLTrees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
+      .map(codeBlockContext -> Trees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
       .map(list -> !list.isEmpty())
       .orElse(false);
   }
 
   private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
-    return BSLTrees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
+    return Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 }

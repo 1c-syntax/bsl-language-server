@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.context.computer.DiagnosticComputer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
@@ -36,11 +37,12 @@ import java.util.stream.Stream;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public abstract class BSLDiagnosticComputer {
+public abstract class BSLDiagnosticComputer implements DiagnosticComputer {
 
-  public List<Diagnostic> compute(BSLDocumentContext documentContext) {
+  @Override
+  public List<Diagnostic> compute(DocumentContext documentContext) {
 
-    DiagnosticIgnoranceComputer.Data diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
+    var diagnosticIgnorance = documentContext.getDiagnosticIgnorance();
 
     return diagnostics(documentContext).parallelStream()
       .flatMap((BSLDiagnostic diagnostic) -> {
@@ -50,7 +52,7 @@ public abstract class BSLDiagnosticComputer {
           String message = String.format(
             "Diagnostic computation error.%nFile: %s%nDiagnostic: %s",
             documentContext.getUri(),
-            diagnostic.getInfo().getCode()
+            diagnostic.getInfo().getDiagnosticCode()
           );
           LOGGER.error(message, e);
 
@@ -60,9 +62,8 @@ public abstract class BSLDiagnosticComputer {
       .filter((Diagnostic diagnostic) ->
         !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
       .collect(Collectors.toList());
-
   }
 
   @Lookup("diagnostics")
-  protected abstract List<BSLDiagnostic> diagnostics(BSLDocumentContext documentContext);
+  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
 }

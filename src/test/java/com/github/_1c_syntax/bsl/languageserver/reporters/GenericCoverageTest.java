@@ -67,7 +67,7 @@ class GenericCoverageTest {
     String filePath = "./src/test/resources/context/DocumentContextLocForCoverTest.bsl";
 
     // when
-    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>());
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -70,7 +71,7 @@ class JUnitReporterTest {
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
     diagnostics.add(new Diagnostic(
-      BSLRanges.create(0, 1, 2, 3),
+      Ranges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
@@ -78,7 +79,7 @@ class JUnitReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      BSLRanges.create(0, 1, 2, 4),
+      Ranges.create(0, 1, 2, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
@@ -86,14 +87,14 @@ class JUnitReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      BSLRanges.create(3, 1, 4, 4),
+      Ranges.create(3, 1, 4, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
       "test3"
     ));
 
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(
       Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       ""
     );

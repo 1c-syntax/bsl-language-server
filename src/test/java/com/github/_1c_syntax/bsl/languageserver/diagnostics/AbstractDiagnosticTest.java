@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -75,21 +76,21 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected void initServerContext(Path configurationRoot) {
-    context.setConfigurationRoot(configurationRoot);
+    context.setProjectRoot(configurationRoot);
     context.populateContext();
   }
 
-  protected List<Diagnostic> getDiagnostics(BSLDocumentContext documentContext) {
+  protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     return diagnosticInstance.getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics() {
-    BSLDocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics(String simpleFileName) {
-    BSLDocumentContext documentContext = getDocumentContext(simpleFileName);
+    var documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
@@ -97,23 +98,23 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     return getQuickFixes(diagnostic, getDocumentContext());
   }
 
-  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, BSLDocumentContext documentContext) {
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, DocumentContext documentContext) {
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
-    BSLDocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
   protected List<CodeAction> getQuickFixes(Range range) {
-    BSLDocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);
   }
 
-  private List<CodeAction> getQuickFixes(BSLDocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
+  private List<CodeAction> getQuickFixes(DocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
     TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
@@ -125,16 +126,16 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     params.setRange(range);
     params.setContext(codeActionContext);
 
-    return ((QuickFixProvider) this.diagnosticInstance).getQuickFixes(diagnostics, params, documentContext);
+    return ((QuickFixProvider) this.diagnosticInstance).getQuickFixes(diagnostics, params, (BSLDocumentContext) documentContext);
 
   }
 
-  protected BSLDocumentContext getDocumentContext() {
+  protected DocumentContext getDocumentContext() {
     return getDocumentContext(diagnosticInstance.getClass().getSimpleName());
   }
 
   @SneakyThrows
-  protected BSLDocumentContext getDocumentContext(String SimpleFileName) {
+  protected DocumentContext getDocumentContext(String SimpleFileName) {
     String textDocumentContent = getText(SimpleFileName);
 
     return TestUtils.getDocumentContext(textDocumentContent, context);

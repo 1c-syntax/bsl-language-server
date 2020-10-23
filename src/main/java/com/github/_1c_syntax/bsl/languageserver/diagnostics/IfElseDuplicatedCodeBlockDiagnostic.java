@@ -23,9 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.RelatedInformation;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
@@ -108,7 +111,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
     relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
-      BSLRanges.create(currentCodeBlock),
+      Ranges.create(currentCodeBlock),
       relatedMessage
     ));
 
@@ -116,7 +119,7 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       .map(codeBlockContext ->
         RelatedInformation.create(
           documentContext.getUri(),
-          BSLRanges.create(codeBlockContext),
+          Ranges.create(codeBlockContext),
           relatedMessage
         )
       )

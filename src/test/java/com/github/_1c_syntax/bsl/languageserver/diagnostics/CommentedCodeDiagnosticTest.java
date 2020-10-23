@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -77,7 +78,7 @@ class CommentedCodeDiagnosticTest extends AbstractDiagnosticTest<CommentedCodeDi
       .hasSize(1);
 
     final CodeAction fix = quickFixes.get(0);
-    assertThat(fix).of(diagnosticInstance).in(getDocumentContext()).fixes(diagnostics.get(0));
+    assertThat(fix).of(diagnosticInstance).in((BSLDocumentContext) getDocumentContext()).fixes(diagnostics.get(0));
 
   }
 }

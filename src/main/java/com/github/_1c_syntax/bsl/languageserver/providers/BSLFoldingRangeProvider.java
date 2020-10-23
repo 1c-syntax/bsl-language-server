@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -112,7 +113,7 @@ public final class BSLFoldingRangeProvider {
 
     @Override
     public ParseTree visitFile(BSLParser.FileContext ctx) {
-      ParseTree[] uses = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_use).toArray(new ParseTree[0]);
+      ParseTree[] uses = Trees.findAllRuleNodes(ctx, BSLParser.RULE_use).toArray(new ParseTree[0]);
 
       if (uses.length <= 1) {
         return ctx;

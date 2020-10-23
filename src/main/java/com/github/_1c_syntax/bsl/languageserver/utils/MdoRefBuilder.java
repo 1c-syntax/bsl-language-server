@@ -76,8 +76,7 @@ public class MdoRefBuilder {
   }
 
   private Optional<String> getCommonModuleMdoRef(BSLDocumentContext documentContext, String commonModuleName) {
-    return documentContext.getServerContext()
-      .getConfiguration()
+    return documentContext.getMDConfiguration()
       .getCommonModule(commonModuleName)
       .map(CommonModule::getMdoReference)
       .map(MDOReference::getMdoRef);

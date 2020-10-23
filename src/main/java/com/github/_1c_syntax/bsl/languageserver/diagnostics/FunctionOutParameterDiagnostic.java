@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
@@ -65,8 +67,7 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    Map<String, BSLParserRuleContext> lvalues = BSLTrees
-      .findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
+    Map<String, BSLParserRuleContext> lvalues = Trees.findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
       .stream()
       .collect(
         Collectors.toMap(

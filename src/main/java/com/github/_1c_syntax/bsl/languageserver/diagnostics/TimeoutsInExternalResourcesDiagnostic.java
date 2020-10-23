@@ -26,8 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -187,7 +189,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
       BSLParser.AcceptorContext acceptor = lValue.acceptor();
       if (acceptor != null) {
 
-        List<ParseTree> allRuleNodes = new ArrayList<>(BSLTrees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
+        List<ParseTree> allRuleNodes = new ArrayList<>(Trees.findAllRuleNodes(acceptor, BSLParser.RULE_accessProperty));
         if (!allRuleNodes.isEmpty()) {
 
           BSLParser.AccessPropertyContext accessProperty = (BSLParser.AccessPropertyContext) allRuleNodes.get(0);
@@ -202,17 +204,17 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
 
   @Override
   public ParseTree visitCodeBlock(BSLParser.CodeBlockContext ctx) {
-    Collection<ParseTree> list = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression);
+    Collection<ParseTree> list = Trees.findAllRuleNodes(ctx, BSLParser.RULE_newExpression);
     list.forEach((ParseTree e) -> {
       AtomicBoolean isContact = new AtomicBoolean(true);
       BSLParser.NewExpressionContext newExpression = (BSLParser.NewExpressionContext) e;
       if (isSpecificTypeName(newExpression)) {
         if (checkTimeoutIntoParamList(newExpression, isContact)) {
           BSLParser.StatementContext statementContext = (BSLParser.StatementContext)
-            BSLTrees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
+            Trees.getAncestorByRuleIndex((ParserRuleContext) e, BSLParser.RULE_statement);
           String variableName = getVariableName(statementContext);
           int filterLine = newExpression.getStart().getLine();
-          Collection<ParseTree> listNextStatements = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+          Collection<ParseTree> listNextStatements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
             .stream()
             .filter(node -> ((BSLParser.StatementContext) node).getStart().getLine() > filterLine)
             .collect(Collectors.toList());
@@ -229,8 +231,7 @@ public class TimeoutsInExternalResourcesDiagnostic extends AbstractVisitorDiagno
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     CompatibilityMode diagnosticCompatibility = documentContext
-      .getServerContext()
-      .getConfiguration()
+      .getMDConfiguration()
       .getCompatibilityMode();
 
     if (diagnosticCompatibility != null

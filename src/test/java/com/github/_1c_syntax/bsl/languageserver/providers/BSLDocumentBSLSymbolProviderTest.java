@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
@@ -45,7 +46,7 @@ class BSLDocumentBSLSymbolProviderTest {
   @Test
   void testDocumentSymbol() {
 
-    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/providers/documentSymbol.bsl");
 
     List<Either<SymbolInformation, DocumentSymbol>> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
 
@@ -56,9 +57,9 @@ class BSLDocumentBSLSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Variable))
       .hasSize(3)
       .extracting(Either::getRight)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(0, 6, 0, 7)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(2, 6, 2, 7)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(2, 9, 2, 10)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(0, 6, 0, 7)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 6, 2, 7)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(2, 9, 2, 10)))
     ;
 
     // methods
@@ -66,12 +67,12 @@ class BSLDocumentBSLSymbolProviderTest {
       .filteredOn(documentSymbol -> documentSymbol.getRight().getKind().equals(SymbolKind.Method))
       .hasSize(4)
       .extracting(Either::getRight)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(4, 0, 5, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(7, 0, 8, 12)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(10, 0, 13, 14)))
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(47, 0, 48, 12)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(4, 0, 5, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(47, 0, 48, 12)))
       .filteredOn(DocumentSymbol::getDeprecated)
-      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(BSLRanges.create(47, 0, 48, 12)))
+      .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(47, 0, 48, 12)))
     ;
 
     // sub vars
@@ -81,9 +82,9 @@ class BSLDocumentBSLSymbolProviderTest {
       .flatExtracting(DocumentSymbol::getChildren)
       .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable)
       .hasSize(3)
-      .anyMatch(subVar -> subVar.getRange().equals(BSLRanges.create(11, 10, 11, 11)))
-      .anyMatch(subVar -> subVar.getRange().equals(BSLRanges.create(12, 10, 12, 11)))
-      .anyMatch(subVar -> subVar.getRange().equals(BSLRanges.create(12, 12, 12, 13)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(11, 10, 11, 11)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 10, 12, 11)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(12, 12, 12, 13)))
     ;
 
     // regions
@@ -99,8 +100,8 @@ class BSLDocumentBSLSymbolProviderTest {
 
       .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
       .hasSize(2)
-      .anyMatch(subVar -> subVar.getRange().equals(BSLRanges.create(17, 0, 19, 14)))
-      .anyMatch(subVar -> subVar.getRange().equals(BSLRanges.create(36, 0, 42, 14)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(17, 0, 19, 14)))
+      .anyMatch(subVar -> subVar.getRange().equals(Ranges.create(36, 0, 42, 14)))
     ;
 
     DocumentSymbol externalRegion = documentSymbols.stream()

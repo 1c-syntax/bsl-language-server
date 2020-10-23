@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.lsp4j.Range;
@@ -62,7 +63,7 @@ public interface Symbol {
       @Getter
       private final SymbolKind symbolKind = SymbolKind.Null;
       @Getter
-      private final Range range = BSLRanges.create(-1, 0, -1, 0);
+      private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter
       @Setter
       private Optional<Symbol> parent = Optional.empty();

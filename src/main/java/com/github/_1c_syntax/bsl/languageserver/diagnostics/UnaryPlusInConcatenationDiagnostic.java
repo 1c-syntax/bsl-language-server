@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -58,7 +61,7 @@ public class UnaryPlusInConcatenationDiagnostic extends AbstractVisitorDiagnosti
       return super.visitMember(ctx);
     }
 
-    Optional<Token> previousToken = BSLTrees.getPreviousTokenFromDefaultChannel(documentContext.getTokens(), tokenIndex);
+    Optional<Token> previousToken = Trees.getPreviousTokenFromDefaultChannel(documentContext.getTokens(), tokenIndex);
     previousToken
       .filter(token -> "+".equals(token.getText()))
       .ifPresent(token -> diagnosticStorage.addDiagnostic(unaryModifier.getStart()));

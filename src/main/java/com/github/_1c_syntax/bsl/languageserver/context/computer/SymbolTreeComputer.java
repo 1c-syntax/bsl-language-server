@@ -27,7 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -67,7 +68,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private static Symbol placeSymbol(List<Symbol> topLevelSymbols, Symbol currentParent, Symbol symbol) {
 
-    if (BSLRanges.containsRange(currentParent.getRange(), symbol.getRange())) {
+    if (Ranges.containsRange(currentParent.getRange(), symbol.getRange())) {
       currentParent.getChildren().add(symbol);
       symbol.setParent(Optional.of(currentParent));
 

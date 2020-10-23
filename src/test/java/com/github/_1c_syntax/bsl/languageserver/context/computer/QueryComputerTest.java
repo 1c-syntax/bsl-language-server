@@ -37,7 +37,7 @@ class QueryComputerTest {
   void compute() {
     // given
     BSLDocumentContext documentContext
-      = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/QueryComputerTest.bsl");
+      = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/QueryComputerTest.bsl");
 
     // when
     var queries = documentContext.getQueries();

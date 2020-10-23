@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.boot.Banner;
@@ -61,7 +61,7 @@ public class BSLLSBinding {
   }
 
   @SuppressWarnings("unchecked")
-  public static Collection<DiagnosticInfo> getDiagnosticInfos() {
+  public static Collection<BSLDiagnosticInfo> getDiagnosticInfos() {
     return getApplicationContext().getBean("diagnosticInfos", Collection.class);
   }
 

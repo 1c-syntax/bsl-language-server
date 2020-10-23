@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.MethodCallContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -66,7 +69,7 @@ public class DeletingCollectionItemDiagnostic extends AbstractVisitorDiagnostic 
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
 
     String collectionExpression = ctx.expression().getText();
-    BSLTrees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
+    Trees.findAllRuleNodes(ctx.codeBlock(), BSLParser.RULE_methodCall)
       .stream()
       .filter(MethodCallContext.class::isInstance)
       .map(MethodCallContext.class::cast)

@@ -26,8 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.RelatedInformation;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -87,7 +91,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
       }
     }
 
-    var tree = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
+    var tree = Trees.findAllRuleNodes(ctx, BSLParser.RULE_returnStatement);
     if (tree.size() > 1) {
       var expressions = tree.stream()
         .map(BSLParser.ReturnStatementContext.class::cast)
@@ -96,7 +100,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
         .collect(Collectors.toList());
 
       expressions.stream()
-        .map(expression -> BSLTrees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier))
+        .map(expression -> Trees.findAllRuleNodes(expression, BSLParser.RULE_complexIdentifier))
         .filter(Collection::isEmpty)
         .findAny()
         .ifPresent(
@@ -119,7 +123,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
         .map(BSLParser.ReturnStatementContext.class::cast)
         .map(statement -> RelatedInformation.create(
           documentContext.getUri(),
-          BSLRanges.create(statement.getStart()),
+          Ranges.create(statement.getStart()),
           info.getResourceString(KEY_MESSAGE)))
         .collect(Collectors.toList());
       diagnosticStorage.addDiagnostic(getSubNameRange(ctx), relatedInformation);
@@ -128,18 +132,18 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   }
 
   private String getExpressionText(BSLParser.ExpressionContext expression) {
-    if (caseSensitiveForString && BSLTrees.nodeContains(expression, BSLParser.RULE_string)) {
+    if (caseSensitiveForString && Trees.nodeContains(expression, BSLParser.RULE_string)) {
       return expression.getText();
     }
     return expression.getText().toUpperCase(Locale.ENGLISH);
   }
 
   private Range getSubNameRange(ParserRuleContext ctx) {
-    return Optional.ofNullable(BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub))
+    return Optional.ofNullable(Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub))
       .map(BSLParser.SubContext.class::cast)
       .flatMap(context -> documentContext.getSymbolTree().getMethodSymbol(context))
       .map(MethodSymbol::getSubNameRange)
-      .orElse(BSLRanges.create(ctx.getStart()));
+      .orElse(Ranges.create(ctx.getStart()));
   }
 
 }

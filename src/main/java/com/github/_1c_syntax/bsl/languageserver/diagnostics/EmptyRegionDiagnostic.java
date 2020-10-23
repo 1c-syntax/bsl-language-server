@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -73,7 +76,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       BSLParser.RegionStartContext currentRegion = regions.pop();
       if (currentUsageLevel < currentRegionLevel) {
         diagnosticStorage.addDiagnostic(
-          BSLRanges.create(currentRegion.getParent(), ctx),
+          Ranges.create(currentRegion.getParent(), ctx),
           info.getMessage(currentRegion.regionName().getText())
         );
       } else if (currentRegionLevel == currentUsageLevel) {

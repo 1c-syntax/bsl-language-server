@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.BSLDiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +42,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.configuration.Language.DEFAULT_LANGUAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -121,7 +122,7 @@ class BSLLanguageServerConfigurationTest {
     Language language = configuration.getLanguage();
     Map<String, Either<Boolean, Map<String, Object>>> parameters = diagnosticsOptions.getParameters();
 
-    assertThat(language).isEqualTo(DEFAULT_LANGUAGE);
+    assertThat(language).isEqualTo(Language.DEFAULT_LANGUAGE);
     assertThat(parameters).isEmpty();
 
   }
@@ -154,7 +155,7 @@ class BSLLanguageServerConfigurationTest {
     assertThat(codeLensOptions.isShowCognitiveComplexity()).isTrue();
     assertThat(codeLensOptions.isShowCyclomaticComplexity()).isFalse();
 
-    assertThat(configuration.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
+    assertThat(configuration.getLanguage()).isEqualTo(Language.DEFAULT_LANGUAGE);
 
     assertThat(diagnosticsOptions.getMode()).isEqualTo(Mode.ON);
     assertThat(diagnosticsOptions.getSkipSupport()).isEqualTo(SkipSupport.NEVER);

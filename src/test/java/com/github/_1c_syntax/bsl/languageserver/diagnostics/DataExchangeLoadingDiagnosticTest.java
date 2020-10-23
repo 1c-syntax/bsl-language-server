@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -50,14 +50,14 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
     assertThat(diagnostics)
       .hasSize(3)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        BSLRanges.create(7, 10, 7, 22)))
+        Ranges.create(7, 10, 7, 22)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        BSLRanges.create(19, 10, 19, 17)))
+        Ranges.create(19, 10, 19, 17)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        BSLRanges.create(70, 10, 70, 22)))
+        Ranges.create(70, 10, 70, 22)))
     //fix me "Если НЕ обменданными"
 //      .anyMatch(diagnostic -> diagnostic.getRange().equals(
-//        BSLRanges.create(57, 10, 57, 22)));
+//        Ranges.create(57, 10, 57, 22)));
     ;
 
     // Проверяем с включенным параметром findFirst
@@ -71,10 +71,10 @@ class DataExchangeLoadingDiagnosticTest extends AbstractDiagnosticTest<DataExcha
     assertThat(diagnostics)
       .hasSize(4)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        BSLRanges.create(7, 10, 7, 22)))
+        Ranges.create(7, 10, 7, 22)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        BSLRanges.create(19, 10, 19, 17)))
+        Ranges.create(19, 10, 19, 17)))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(
-        BSLRanges.create(33, 10, 33, 22)));
+        Ranges.create(33, 10, 33, 22)));
   }
 }

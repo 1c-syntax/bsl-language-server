@@ -26,6 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -60,11 +63,11 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
 
     if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
-      Range rangeTry = BSLRanges.create(ctx.getParent());
+      Range rangeTry = Ranges.create(ctx.getParent());
       if (comments.anyMatch(token ->
-        BSLRanges.containsRange(
+        Ranges.containsRange(
           rangeTry,
-          BSLRanges.create(token)))) {
+          Ranges.create(token)))) {
         return super.visitExceptCodeBlock(ctx);
       }
     }

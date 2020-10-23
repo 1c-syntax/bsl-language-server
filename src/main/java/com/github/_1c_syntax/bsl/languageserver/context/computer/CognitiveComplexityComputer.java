@@ -28,6 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -291,7 +294,7 @@ public class CognitiveComplexityComputer
 
     List<Token> result = new ArrayList<>();
 
-    final List<Tree> children = BSLTrees.getChildren(ctx);
+    final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
       if (!(tree instanceof BSLParserRuleContext)) {
         continue;
@@ -381,7 +384,7 @@ public class CognitiveComplexityComputer
     } else {
       message = String.format("+%d", increment);
     }
-    var secondaryLocation = new ComplexitySecondaryLocation(BSLRanges.create(token), message.intern());
+    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), message.intern());
     List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

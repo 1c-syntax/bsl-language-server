@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.configuration.Language;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -171,7 +172,7 @@ class BSLDocumentLinkProviderTest {
   @NotNull
   private BSLDocumentContext getDocumentContext() {
     var filePath = "./src/test/resources/providers/documentLinkProvider.bsl";
-    var documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
     documentContext.getDiagnostics();
     return documentContext;
   }

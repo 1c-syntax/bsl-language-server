@@ -23,6 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Resources;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -40,7 +44,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class DiagnosticInfo {
+public class BSLDiagnosticInfo {
 
   private static final Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
@@ -53,7 +57,7 @@ public class DiagnosticInfo {
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
-  public DiagnosticInfo(
+  public BSLDiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
     BSLLanguageServerConfiguration configuration
   ) {

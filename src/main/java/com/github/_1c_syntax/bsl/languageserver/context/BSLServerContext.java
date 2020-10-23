@@ -21,24 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.ls_core.context.CoreServerContext;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import com.github._1c_syntax.utils.Lazy;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.TextDocumentItem;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Lookup;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.io.File;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -51,40 +48,69 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public abstract class BSLServerContext {
-  private final Map<URI, BSLDocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
+@Primary
+public class BSLServerContext extends CoreServerContext {
+  /**
+   * Расширения анализируемых файлов
+   */
+  private static final String[] FILE_EXTENSIONS = new String[]{"bsl", "os"};
+
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
-  @CheckForNull
-  @Setter
-  private Path configurationRoot;
+
   private final Map<URI, String> mdoRefs = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, Map<ModuleType, BSLDocumentContext>> documentsByMDORef
     = Collections.synchronizedMap(new HashMap<>());
   private final ReadWriteLock contextLock = new ReentrantReadWriteLock();
 
-  public void populateContext() {
-    if (configurationRoot == null) {
-      LOGGER.info("Can't populate server context. Configuration root is not defined.");
-      return;
-    }
-    LOGGER.debug("Finding files to populate context...");
-    Collection<File> files = FileUtils.listFiles(
-      configurationRoot.toFile(),
-      new String[]{"bsl", "os"},
-      true
-    );
-    populateContext(files);
+  @Autowired
+  public BSLServerContext() {
+    super();
   }
 
+  @Override
+  public String[] sourceExtensions() {
+    return FILE_EXTENSIONS;
+  }
+
+  @Override
+  public void clear() {
+    super.clear();
+    documentsByMDORef.clear();
+    mdoRefs.clear();
+    configurationMetadata.clear();
+  }
+
+  @Override
+  public void removeDocument(URI uri) {
+    var absoluteURI = Absolute.uri(uri);
+    removeDocumentMdoRefByUri(absoluteURI);
+    super.removeDocument(absoluteURI);
+  }
+
+  @Override
+  protected DocumentContext createDocumentContext(URI uri, String content) {
+    var absoluteURI = Absolute.uri(uri);
+    var documentContext = super.createDocumentContext(absoluteURI, content);
+    addMdoRefByUri(absoluteURI, (BSLDocumentContext) documentContext);
+    return documentContext;
+  }
+
+  @Override
+  @Lookup
+  protected DocumentContext lookupDocumentContext(URI absoluteURI, String content) {
+    // так и должно быть, магия spring boot
+    return null;
+  }
+
+  @Override
   public void populateContext(Collection<File> uris) {
     LOGGER.debug("Populating context...");
     contextLock.writeLock().lock();
 
     uris.parallelStream().forEach((File file) -> {
-      BSLDocumentContext documentContext = getDocument(file.toURI());
+      var documentContext = (BSLDocumentContext) getDocument(file.toURI());
       if (documentContext == null) {
-        documentContext = createDocumentContext(file);
+        documentContext = (BSLDocumentContext) createDocumentContext(file);
         documentContext.getSymbolTree();
         documentContext.clearSecondaryData();
       }
@@ -92,15 +118,6 @@ public abstract class BSLServerContext {
 
     contextLock.writeLock().unlock();
     LOGGER.debug("Context populated.");
-  }
-
-  public Map<URI, BSLDocumentContext> getDocuments() {
-    return Collections.unmodifiableMap(documents);
-  }
-
-  @CheckForNull
-  public BSLDocumentContext getDocument(String uri) {
-    return getDocument(URI.create(uri));
   }
 
   public Optional<BSLDocumentContext> getDocument(String mdoRef, ModuleType moduleType) {
@@ -111,77 +128,21 @@ public abstract class BSLServerContext {
     return Optional.empty();
   }
 
-  @CheckForNull
-  public BSLDocumentContext getDocument(URI uri) {
-    return documents.get(Absolute.uri(uri));
-  }
-
   public Map<ModuleType, BSLDocumentContext> getDocuments(String mdoRef) {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
-  }
-
-  public BSLDocumentContext addDocument(URI uri, String content) {
-    contextLock.readLock().lock();
-
-    BSLDocumentContext documentContext = getDocument(uri);
-    if (documentContext == null) {
-      documentContext = createDocumentContext(uri, content);
-    } else {
-      documentContext.rebuild(content);
-    }
-
-    contextLock.readLock().unlock();
-    return documentContext;
-  }
-
-  public BSLDocumentContext addDocument(TextDocumentItem textDocumentItem) {
-    return addDocument(URI.create(textDocumentItem.getUri()), textDocumentItem.getText());
-  }
-
-  public void removeDocument(URI uri) {
-    URI absoluteURI = Absolute.uri(uri);
-    removeDocumentMdoRefByUri(absoluteURI);
-    documents.remove(absoluteURI);
-  }
-
-  public void clear() {
-    documents.clear();
-    documentsByMDORef.clear();
-    mdoRefs.clear();
-    configurationMetadata.clear();
   }
 
   public Configuration getConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
-  @Lookup
-  protected abstract BSLDocumentContext lookupDocumentContext(URI absoluteURI, String content);
-
-  @SneakyThrows
-  private BSLDocumentContext createDocumentContext(File file) {
-    String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return createDocumentContext(file.toURI(), content);
-  }
-
-  private BSLDocumentContext createDocumentContext(URI uri, String content) {
-    URI absoluteURI = Absolute.uri(uri);
-
-    BSLDocumentContext documentContext = lookupDocumentContext(absoluteURI, content);
-
-    documents.put(absoluteURI, documentContext);
-    addMdoRefByUri(absoluteURI, documentContext);
-
-    return documentContext;
-  }
-
   @SneakyThrows
   private Configuration computeConfigurationMetadata() {
-    if (configurationRoot == null) {
+    if (getProjectRoot() == null) {
       return Configuration.create();
     }
-    ForkJoinPool customThreadPool = new ForkJoinPool();
-    return customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+    var customThreadPool = new ForkJoinPool();
+    return customThreadPool.submit(() -> Configuration.create(getProjectRoot())).get();
   }
 
   private void addMdoRefByUri(URI uri, BSLDocumentContext documentContext) {
@@ -206,8 +167,9 @@ public abstract class BSLServerContext {
     var mdoRef = mdoRefs.get(uri);
     if (mdoRef != null) {
       var documentsGroup = documentsByMDORef.get(mdoRef);
-      if (documentsGroup != null) {
-        documentsGroup.remove(documents.get(uri).getModuleType());
+      var documentContext = (BSLDocumentContext) getDocument(uri);
+      if (documentsGroup != null && documentContext != null) {
+        documentsGroup.remove(documentContext.getModuleType());
         if (documentsGroup.isEmpty()) {
           documentsByMDORef.remove(mdoRef);
         }

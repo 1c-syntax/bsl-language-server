@@ -52,7 +52,7 @@ class EmptyRegionDiagnosticTest extends AbstractDiagnosticTest<EmptyRegionDiagno
   @Test
   void testQuickFix() {
 
-    final BSLDocumentContext documentContext = getDocumentContext();
+    var documentContext = (BSLDocumentContext) getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic externalRegionDiagnostic = diagnostics.get(2);
     final Diagnostic internalRegionDiagnostic = diagnostics.get(1);

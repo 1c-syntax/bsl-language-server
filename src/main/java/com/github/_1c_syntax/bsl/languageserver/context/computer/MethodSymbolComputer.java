@@ -34,6 +34,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
 import org.antlr.v4.runtime.Token;
@@ -198,8 +200,8 @@ public final class MethodSymbolComputer
 
     return MethodSymbol.builder()
       .name(subName.getText())
-      .range(BSLRanges.create(startNode, stopNode))
-      .subNameRange(BSLRanges.create(subName))
+      .range(Ranges.create(startNode, stopNode))
+      .subNameRange(Ranges.create(subName))
       .function(function)
       .export(export)
       .description(description)

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Range;
@@ -44,32 +44,32 @@ class IfElseDuplicatedCodeBlockDiagnosticTest extends AbstractDiagnosticTest<IfE
 
     checkDiagnosticContent(
       diagnostics.get(0),
-      BSLRanges.create(9, 1, 10, 9),
-      BSLRanges.create(12, 1, 13, 9)
+      Ranges.create(9, 1, 10, 9),
+      Ranges.create(12, 1, 13, 9)
     );
 
     checkDiagnosticContent(
       diagnostics.get(1),
-      BSLRanges.create(26, 1, 27, 9),
-      BSLRanges.create(29, 1, 30, 9)
+      Ranges.create(26, 1, 27, 9),
+      Ranges.create(29, 1, 30, 9)
     );
 
     checkDiagnosticContent(
       diagnostics.get(2),
-      BSLRanges.create(39, 1, 47, 11),
-      BSLRanges.create(52, 1, 60, 11)
+      Ranges.create(39, 1, 47, 11),
+      Ranges.create(52, 1, 60, 11)
     );
 
     checkDiagnosticContent(
       diagnostics.get(3),
-      BSLRanges.create(40, 2, 41, 10),
-      BSLRanges.create(43, 2, 44, 10)
+      Ranges.create(40, 2, 41, 10),
+      Ranges.create(43, 2, 44, 10)
     );
 
     checkDiagnosticContent(
       diagnostics.get(4),
-      BSLRanges.create(53, 2, 54, 10),
-      BSLRanges.create(56, 2, 57, 10)
+      Ranges.create(53, 2, 54, 10),
+      Ranges.create(56, 2, 57, 10)
     );
 
   }

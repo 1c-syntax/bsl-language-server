@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
 import java.util.Set;
@@ -73,7 +75,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     }
 
     BSLParser.MemberContext currentRootMember =
-      (BSLParser.MemberContext) BSLTrees.getRootParent(ctx, BSLParser.RULE_member);
+      (BSLParser.MemberContext) Trees.getRootParent(ctx, BSLParser.RULE_member);
     if (currentRootMember == null) {
       return false;
     }
@@ -85,9 +87,9 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
       return true;
     }
 
-    BSLParserRuleContext rootExpressionNode = (BSLParserRuleContext) currentRootMember.getParent();
+    var rootExpressionNode = (BSLParserRuleContext) currentRootMember.getParent();
 
-    BSLParserRuleContext rootIfNode = BSLTrees.getRootParent(rootExpressionNode, ROOT_LIST);
+    var rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
     if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
       return false;
     }
@@ -104,19 +106,19 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     int indexOfCurrentMemberNode = rootExpressionNode.children.indexOf(currentRootMember);
     if (indexOfCurrentMemberNode > 0) {
       var prev = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode - 1);
-      if (BSLTrees.nodeContains(prev, BSLParser.RULE_compareOperation)) {
+      if (Trees.nodeContains(prev, BSLParser.RULE_compareOperation)) {
         return false;
       }
-      haveNeighboorBoolOperation = BSLTrees.nodeContains(prev, BSLParser.RULE_boolOperation);
+      haveNeighboorBoolOperation = Trees.nodeContains(prev, BSLParser.RULE_boolOperation);
     }
     if (indexOfCurrentMemberNode < rootExpressionNode.getChildCount() - 1) {
 
       var next = (BSLParserRuleContext) rootExpressionNode.children.get(indexOfCurrentMemberNode + 1);
-      if (BSLTrees.nodeContains(next, BSLParser.RULE_compareOperation)) {
+      if (Trees.nodeContains(next, BSLParser.RULE_compareOperation)) {
         return false;
       }
       if (!haveNeighboorBoolOperation) {
-        haveNeighboorBoolOperation = BSLTrees.nodeContains(next, BSLParser.RULE_boolOperation);
+        haveNeighboorBoolOperation = Trees.nodeContains(next, BSLParser.RULE_boolOperation);
       }
     }
     return haveNeighboorBoolOperation;

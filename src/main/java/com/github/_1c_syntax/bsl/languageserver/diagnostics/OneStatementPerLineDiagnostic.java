@@ -27,6 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.RelatedInformation;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
@@ -64,7 +68,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
       .filter(context -> !context.equals(self))
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
-        BSLRanges.create(context),
+        Ranges.create(context),
         "+1"
       )).collect(Collectors.toCollection(() -> relatedInformation));
     return relatedInformation;
@@ -120,7 +124,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       Range range = diagnostic.getRange();
-      Range startLineRange = BSLRanges.create(
+      Range startLineRange = Ranges.create(
         range.getStart().getLine(),
         0,
         range.getStart().getLine(),

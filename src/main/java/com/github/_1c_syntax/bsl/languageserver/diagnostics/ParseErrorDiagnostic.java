@@ -28,6 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.IntervalSet;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -66,7 +69,7 @@ public class ParseErrorDiagnostic extends AbstractListenerDiagnostic {
     BSLParser.FileContext ast = this.documentContext.getAst();
     String initialExpectedString = info.getResourceString("expectedTokens") + " ";
 
-    BSLTrees.getDescendants(ast).stream()
+    Trees.getDescendants(ast).stream()
       .filter(parseTree -> !(parseTree instanceof TerminalNodeImpl))
       .map(parseTree -> (BSLParserRuleContext) parseTree)
       .filter(node -> node.exception != null)

@@ -58,7 +58,7 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
 
 
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

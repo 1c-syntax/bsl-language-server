@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.ls_core.configuration.Language;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

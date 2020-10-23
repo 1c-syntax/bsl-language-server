@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CommentedCodeDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

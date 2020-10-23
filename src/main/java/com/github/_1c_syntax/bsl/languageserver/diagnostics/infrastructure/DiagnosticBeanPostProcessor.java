@@ -23,7 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -36,7 +37,7 @@ import java.util.Map;
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
   private final BSLLanguageServerConfiguration configuration;
-  private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
+  private final Map<Class<? extends BSLDiagnostic>, BSLDiagnosticInfo> diagnosticInfos;
 
   @Override
   public Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -44,10 +45,10 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
       return bean;
     }
 
-    BSLDiagnostic diagnostic = (BSLDiagnostic) bean;
+    var diagnostic = (BSLDiagnostic) bean;
 
     var info = diagnosticInfos.get(diagnostic.getClass());
-    diagnostic.setInfo(info);
+    diagnostic.setInfo((DiagnosticInfo) info);
 
     return diagnostic;
   }
@@ -62,7 +63,7 @@ public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
     BSLDiagnostic diagnostic = (BSLDiagnostic) bean;
 
     Either<Boolean, Map<String, Object>> diagnosticConfiguration =
-      configuration.getDiagnosticsOptions().getParameters().get(diagnostic.getInfo().getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getParameters().get(diagnostic.getInfo().getDiagnosticCode().getStringValue());
 
     if (diagnosticConfiguration != null && diagnosticConfiguration.isRight()) {
       diagnostic.configure(diagnosticConfiguration.getRight());

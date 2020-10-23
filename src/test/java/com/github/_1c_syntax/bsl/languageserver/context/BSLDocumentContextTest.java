@@ -165,7 +165,7 @@ class BSLDocumentContextTest {
     String fileContent = "";
 
     // when
-    var documentContext = TestUtils.getDocumentContext(uri, fileContent);
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(uri, fileContent);
 
     // then
     assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
@@ -178,7 +178,7 @@ class BSLDocumentContextTest {
     String fileContent = "";
 
     // when
-    var documentContext = TestUtils.getDocumentContext(uri, fileContent);
+    var documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(uri, fileContent);
 
     // then
     assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
@@ -191,7 +191,7 @@ class BSLDocumentContextTest {
   }
 
   private BSLDocumentContext getDocumentContext(String filePath) {
-    return TestUtils.getDocumentContextFromFile(filePath);
+    return (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
   }
 
   @Test

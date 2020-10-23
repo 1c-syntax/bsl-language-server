@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
@@ -118,7 +119,7 @@ class MissingSpaceDiagnosticTest extends AbstractDiagnosticTest<MissingSpaceDiag
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
       diagnostics.get(23),
-      BSLRanges.create(10, 8, 10, 8)
+      Ranges.create(10, 8, 10, 8)
     );
 
     assertThat(quickFixes)

@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -196,7 +198,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
     Matcher matcher = searchWords.matcher(getClearString(accessText));
     if (matcher.find()) {
-      ParserRuleContext assignment = BSLTrees.getAncestorByRuleIndex(
+      ParserRuleContext assignment = Trees.getAncestorByRuleIndex(
         (ParserRuleContext) ctx.getRuleContext(),
         BSLParser.RULE_assignment
       );
@@ -223,7 +225,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
-    ParserRuleContext assignment = BSLTrees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
+    ParserRuleContext assignment = Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), type);
     if (assignment != null) {
       diagnosticStorage.addDiagnostic((BSLParserRuleContext) assignment, info.getMessage());
     }

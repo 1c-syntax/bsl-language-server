@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +52,7 @@ public class DiagnosticInfosConfiguration {
   @SuppressWarnings("unchecked")
   @Bean("diagnosticInfosByCode")
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  public Map<String, DiagnosticInfo> diagnosticInfosByCode() {
+  public Map<String, BSLDiagnosticInfo> diagnosticInfosByCode() {
     var beanNames = applicationContext.getBeanNamesForAnnotation(DiagnosticMetadata.class);
 
     return Arrays.stream(beanNames)
@@ -66,26 +66,26 @@ public class DiagnosticInfosConfiguration {
 
   @Bean("diagnosticInfosByDiagnosticClass")
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  public Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfosByDiagnosticClass() {
+  public Map<Class<? extends BSLDiagnostic>, BSLDiagnosticInfo> diagnosticInfosByDiagnosticClass() {
     return diagnosticInfosByCode().values().stream()
-      .collect(Collectors.toMap(DiagnosticInfo::getDiagnosticClass, Function.identity()));
+      .collect(Collectors.toMap(BSLDiagnosticInfo::getDiagnosticClass, Function.identity()));
   }
 
   @Bean("diagnosticInfos")
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-  public Collection<DiagnosticInfo> diagnosticInfos() {
+  public Collection<BSLDiagnosticInfo> diagnosticInfos() {
     return diagnosticInfosByCode().values();
   }
 
   @Bean
   @Scope("prototype")
-  public DiagnosticInfo diagnosticInfo(@Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass) {
+  public BSLDiagnosticInfo diagnosticInfo(@Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass) {
     return diagnosticInfosByDiagnosticClass().get(diagnosticClass);
   }
 
-  private DiagnosticInfo createDiagnosticInfo(
+  private BSLDiagnosticInfo createDiagnosticInfo(
     @Autowired(required = false) Class<? extends BSLDiagnostic> diagnosticClass
   ) {
-    return new DiagnosticInfo(diagnosticClass, configuration);
+    return new BSLDiagnosticInfo(diagnosticClass, configuration);
   }
 }

@@ -24,10 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
@@ -55,8 +58,8 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
-    var dataSourceCollection = BSLTrees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
-    var columnsCollection = BSLTrees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
+    var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
+    var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
 
     if (columnsCollection.isEmpty()) {
       return ctx;
@@ -115,12 +118,12 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   private String getTableNameOrAlias(ParseTree dataSource) {
 
     String alias = Optional.of(dataSource)
-      .map(dataSrc -> BSLTrees.getFirstChild(dataSrc, SDBLParser.RULE_alias))
+      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_alias))
       .filter(Optional::isPresent)
-      .map(optionalAlias -> BSLTrees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
+      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
       .filter(Optional::isPresent)
       .map(Optional::get)
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .orElse("");
 
     if (!alias.isBlank()) {
@@ -128,12 +131,12 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     }
 
     return Optional.of(dataSource)
-      .map(dataSrc -> BSLTrees.getFirstChild(dataSrc, SDBLParser.RULE_table))
+      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_table))
       .filter(Optional::isPresent)
-      .map(optionalAlias -> BSLTrees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
+      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
       .filter(Optional::isPresent)
       .map(Optional::get)
-      .map(BSLParserRuleContext::getText)
+      .map(ParserRuleContext::getText)
       .orElse("");
   }
 

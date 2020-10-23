@@ -259,7 +259,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   private void checkQuickFixes(String module, boolean haveFix) {
-    final BSLDocumentContext documentContext = TestUtils.getDocumentContext(module);
+    final BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(module);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
     diagnostics.forEach(diagnostic -> checkFix(documentContext, diagnostic, haveFix));
@@ -304,7 +304,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   private List<Diagnostic> getDiagnosticsForText(String textDocumentContent) {
-    BSLDocumentContext documentContext = TestUtils.getDocumentContext(textDocumentContent);
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContext(textDocumentContent);
     return getDiagnostics(documentContext);
   }
 }

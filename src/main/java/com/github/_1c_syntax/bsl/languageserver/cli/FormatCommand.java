@@ -138,7 +138,7 @@ public class FormatCommand implements CLICommand {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final URI uri = file.toURI();
 
-    BSLDocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
+    var documentContext = (BSLDocumentContext) serverContext.addDocument(uri, textDocumentContent);
 
     DocumentFormattingParams params = new DocumentFormattingParams();
     FormattingOptions options = new FormattingOptions();

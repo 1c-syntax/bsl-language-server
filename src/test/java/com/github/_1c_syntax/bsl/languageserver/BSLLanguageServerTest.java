@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
+import com.github._1c_syntax.ls_core.CoreLanguageServer;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class BSLLanguageServerTest {
 
   @Autowired
-  private BSLLanguageServer server;
+  private CoreLanguageServer server;
 
   @Test
   void initialize() {

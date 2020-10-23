@@ -30,6 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPo
 import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -123,7 +126,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private String getTokenizedStringFromTokens(BSLDocumentContext documentContext, Map<String, List<Token>> tokensMap) {
     StringBuilder text = new StringBuilder();
 
-    BSLTrees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
+    Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
       .map(ruleContext -> (BSLParserRuleContext) ruleContext)
       .flatMap(ruleContext -> ruleContext.getTokens().stream())
       .filter(token -> tokenTypes.contains(token.getType()))

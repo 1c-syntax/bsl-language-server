@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -61,13 +62,13 @@ class DiagnosticsTest {
 
   @BeforeEach
   void createDocumentContext() {
-    documentContext = TestUtils.getDocumentContext("");
+    documentContext = (BSLDocumentContext) TestUtils.getDocumentContext("");
   }
 
   @Test
   void testCompatibilityMode() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(""));
     var serverContext = spy(context);
     var bslConfiguration = spy(serverContext.getConfiguration());
 
@@ -93,7 +94,7 @@ class DiagnosticsTest {
   @Test
   void testModuleType() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(""));
 
     // when-then pairs
     when(documentContext.getModuleType()).thenReturn(ModuleType.CommandModule);
@@ -116,7 +117,7 @@ class DiagnosticsTest {
   @Test
   void testAllScope() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(""));
 
     // when-then pairs
     when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
@@ -139,7 +140,7 @@ class DiagnosticsTest {
   void testSkipSupport() {
 
     // given
-    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext("А = 0"));
     var supportConfiguration = mock(SupportConfiguration.class);
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER

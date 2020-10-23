@@ -149,7 +149,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
 
     initServerContext(PATH_TO_METADATA);
     var testFile = new File(PATH_TO_METADATA, modulePath).getAbsoluteFile();
-    documentContext = spy(TestUtils.getDocumentContext(testFile.toURI(), content, context));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(testFile.toURI(), content, context));
     module = spy(Objects.requireNonNull(context).getConfiguration().getModulesByObject().get(documentContext.getUri()));
   }
 
