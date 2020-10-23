@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -97,7 +98,7 @@ public final class MultilingualStringAnalyser {
 
   private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
     BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment != null) {
       BSLParser.LValueContext lValue = assignment.lValue();
@@ -178,7 +179,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
-    return BSLTrees.findAllRuleNodes(codeBlock, BSLParser.RULE_globalMethodCall)
+    return Trees.findAllRuleNodes(codeBlock, BSLParser.RULE_globalMethodCall)
       .stream()
       .filter(node ->
         ((BSLParser.GlobalMethodCallContext) node).getStart().getLine() > globalMethodCallContext.getStart().getLine())
@@ -191,10 +192,9 @@ public final class MultilingualStringAnalyser {
   }
 
   private BSLParser.CodeBlockContext getCodeBlock() {
-    return (BSLParser.CodeBlockContext) BSLTrees.getAncestorByRuleIndex(
+    return (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(
       globalMethodCallContext,
       BSLParser.RULE_codeBlock
     );
   }
-
 }

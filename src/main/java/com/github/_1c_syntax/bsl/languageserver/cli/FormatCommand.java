@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.providers.BSLFormatProvider;
+import com.github._1c_syntax.ls_core.cli.CLICommand;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -43,7 +44,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import static picocli.CommandLine.Command;
 import static picocli.CommandLine.Option;
@@ -72,7 +72,7 @@ import static picocli.CommandLine.Option;
   footer = "@|green Copyright(c) 2018-2020|@")
 @Component
 @RequiredArgsConstructor
-public class FormatCommand implements Callable<Integer> {
+public class FormatCommand implements CLICommand {
 
   private final BSLServerContext serverContext;
   private final BSLFormatProvider formatProvider;
