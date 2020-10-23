@@ -28,7 +28,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.BSLDocumentLinkProvider}
  */
 @Data
 @AllArgsConstructor(onConstructor = @__({@JsonCreator(mode = JsonCreator.Mode.DISABLED)}))

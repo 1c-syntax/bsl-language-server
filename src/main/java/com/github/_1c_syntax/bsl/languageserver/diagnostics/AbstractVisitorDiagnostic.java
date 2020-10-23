@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.Getter;
@@ -36,11 +36,11 @@ public abstract class AbstractVisitorDiagnostic extends BSLParserBaseVisitor<Par
   @Getter
   @Setter
   protected DiagnosticInfo info;
-  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  protected DocumentContext documentContext;
+  protected final BSLDiagnosticStorage diagnosticStorage = new BSLDiagnosticStorage(this);
+  protected BSLDocumentContext documentContext;
 
   @Override
-  public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  public List<Diagnostic> getDiagnostics(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
     diagnosticStorage.clearDiagnostics();
     this.visitFile(documentContext.getAst());

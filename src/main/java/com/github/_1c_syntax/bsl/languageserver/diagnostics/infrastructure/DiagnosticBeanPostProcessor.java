@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ import java.util.Map;
 @Component
 public class DiagnosticBeanPostProcessor implements BeanPostProcessor {
 
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
   private final Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> diagnosticInfos;
 
   @Override

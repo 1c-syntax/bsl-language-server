@@ -21,9 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
@@ -55,9 +54,9 @@ import java.util.stream.Collectors;
 @Component
 public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
 
-  private final LanguageServerConfiguration languageServerConfiguration;
+  private final BSLLanguageServerConfiguration languageServerConfiguration;
 
-  public GenerateStandardRegionsSupplier(LanguageServerConfiguration languageServerConfiguration) {
+  public GenerateStandardRegionsSupplier(BSLLanguageServerConfiguration languageServerConfiguration) {
     this.languageServerConfiguration = languageServerConfiguration;
   }
 
@@ -71,7 +70,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
    * пустой {@code List} если генерация областей не требуется
    */
   @Override
-  public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
+  public List<CodeAction> getCodeActions(CodeActionParams params, BSLDocumentContext documentContext) {
 
     ModuleType moduleType = documentContext.getModuleType();
     FileType fileType = documentContext.getFileType();
@@ -114,7 +113,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     return List.of(codeAction);
   }
 
-  private ScriptVariant getRegionsLanguage(DocumentContext documentContext, FileType fileType) {
+  private ScriptVariant getRegionsLanguage(BSLDocumentContext documentContext, FileType fileType) {
 
     ScriptVariant regionsLanguage;
     Configuration configuration = documentContext.getServerContext().getConfiguration();

@@ -21,14 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
+import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -67,7 +64,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
       .filter(context -> !context.equals(self))
       .map(context -> RelatedInformation.create(
         documentContext.getUri(),
-        Ranges.create(context),
+        BSLRanges.create(context),
         "+1"
       )).collect(Collectors.toCollection(() -> relatedInformation));
     return relatedInformation;
@@ -117,13 +114,13 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   ) {
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       Range range = diagnostic.getRange();
-      Range startLineRange = Ranges.create(
+      Range startLineRange = BSLRanges.create(
         range.getStart().getLine(),
         0,
         range.getStart().getLine(),
@@ -141,7 +138,7 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
       textEdits.add(textEdit);
     });
 
-    return CodeActionProvider.createCodeActions(
+    return BSLCodeActionProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

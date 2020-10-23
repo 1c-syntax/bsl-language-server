@@ -24,10 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -122,12 +120,12 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
   private static boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
 
     return Optional.ofNullable(ifBranch.codeBlock())
-      .map(codeBlockContext -> Trees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
+      .map(codeBlockContext -> BSLTrees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
       .map(list -> !list.isEmpty())
       .orElse(false);
   }
 
   private static ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
-    return Trees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
+    return BSLTrees.getAncestorByRuleIndex((ParserRuleContext) ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 }

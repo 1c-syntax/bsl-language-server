@@ -23,10 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.CallStatementContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.ComplexIdentifierContext;
@@ -66,7 +64,7 @@ public class UseLessForEachDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitForEachStatement(ctx);
     }
 
-    boolean hasUsage = Trees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
+    boolean hasUsage = BSLTrees.findAllTokenNodes(ctx.codeBlock(), BSLParser.IDENTIFIER)
       .stream()
       .filter(node -> iteratorIdName.equalsIgnoreCase(node.getText()))
       .anyMatch(parentClassMatchTo(ComplexIdentifierContext.class)

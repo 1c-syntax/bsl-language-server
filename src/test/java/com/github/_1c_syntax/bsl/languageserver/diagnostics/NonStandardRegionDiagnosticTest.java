@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.apache.commons.io.FileUtils;
@@ -229,7 +229,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     ;
   }
 
-  private DocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
+  private BSLDocumentContext getFixtureDocumentContextByModuleType(ModuleType moduleType) throws IOException {
     Path tempFile = Paths.get(CONFIGURATION_PATH.toString(),
       pathByModuleType.getOrDefault(moduleType, "Module.bsl")
     );

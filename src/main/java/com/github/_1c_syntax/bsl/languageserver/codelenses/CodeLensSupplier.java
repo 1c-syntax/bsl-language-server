@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import org.eclipse.lsp4j.CodeLens;
 
 import java.util.List;
 
 public interface CodeLensSupplier {
-  List<CodeLens> getCodeLenses(DocumentContext documentContext);
+  List<CodeLens> getCodeLenses(BSLDocumentContext documentContext);
 }

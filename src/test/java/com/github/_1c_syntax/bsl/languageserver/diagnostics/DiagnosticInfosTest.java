@@ -21,8 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
@@ -47,7 +46,7 @@ class DiagnosticInfosTest {
   private Map<String, DiagnosticInfo> diagnosticInfos;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private BSLLanguageServerConfiguration configuration;
 
   @Test
   void testAllDiagnosticsHaveMetadataAnnotation() {

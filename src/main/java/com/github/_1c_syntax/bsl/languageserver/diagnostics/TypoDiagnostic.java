@@ -21,15 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPool;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPoolEntry;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.AccessLevel;
@@ -122,10 +120,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     getLanguageToolPoolMap().get(lang).checkIn(languageToolPoolEntry);
   }
 
-  private String getTokenizedStringFromTokens(DocumentContext documentContext, Map<String, List<Token>> tokensMap) {
+  private String getTokenizedStringFromTokens(BSLDocumentContext documentContext, Map<String, List<Token>> tokensMap) {
     StringBuilder text = new StringBuilder();
 
-    Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
+    BSLTrees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
       .map(ruleContext -> (BSLParserRuleContext) ruleContext)
       .flatMap(ruleContext -> ruleContext.getTokens().stream())
       .filter(token -> tokenTypes.contains(token.getType()))

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class DiagnosticInfosConfiguration {
 
   private final ApplicationContext applicationContext;
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
 
   @SuppressWarnings("unchecked")
   @Bean("diagnosticInfosByCode")

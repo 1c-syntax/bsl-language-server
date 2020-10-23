@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util.assertions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.CodeAction;
@@ -39,7 +39,7 @@ import static java.lang.Integer.max;
 
 public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeAction> {
 
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
   private BSLDiagnostic bslDiagnostic;
 
   public CodeActionAssert(CodeAction actual) {
@@ -55,7 +55,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     return this;
   }
 
-  public CodeActionAssert in(DocumentContext documentContext) {
+  public CodeActionAssert in(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
     return this;
   }
@@ -83,7 +83,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
       if (start.getCharacter() > 0) {
         endChar = start.getCharacter() - 1;
       }
-      Range startRange = Ranges.create(startLine, startChar, endLine, endChar);
+      Range startRange = BSLRanges.create(startLine, startChar, endLine, endChar);
       final String startText = documentContext.getText(startRange);
 
       final Position end = range.getEnd();
@@ -92,7 +92,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
       endLine = contentList.length - 1;
       endChar = max(contentList[endLine].length() - 1, 0);
 
-      Range endRange = Ranges.create(startLine, startChar, endLine, endChar);
+      Range endRange = BSLRanges.create(startLine, startChar, endLine, endChar);
       final String endText = documentContext.getText(endRange);
 
       // TODO: does not work for several textedits changing content length (missed semicolon ie.)

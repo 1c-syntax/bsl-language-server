@@ -22,12 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -82,7 +82,7 @@ class GenericReporterTest {
     var firstInfo = iterator.next().getValue();
     var secondInfo = iterator.next().getValue();
     diagnostics.add(new Diagnostic(
-      Ranges.create(0, 1, 2, 3),
+      BSLRanges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
@@ -90,7 +90,7 @@ class GenericReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      Ranges.create(0, 1, 2, 4),
+      BSLRanges.create(0, 1, 2, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
@@ -98,15 +98,15 @@ class GenericReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      Ranges.create(3, 1, 4, 4),
+      BSLRanges.create(3, 1, 4, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
       secondInfo.getCode().getStringValue()
     ));
 
-    DocumentContext documentContext = TestUtils.getDocumentContext("");
-    Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
+    BSLDocumentContext documentContext = TestUtils.getDocumentContext("");
+    Location location = new Location("file:///fake-uri2.bsl", BSLRanges.create(0, 2, 2, 3));
     diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
     String sourceDir = ".";

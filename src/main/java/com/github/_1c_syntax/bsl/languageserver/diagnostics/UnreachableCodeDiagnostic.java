@@ -22,11 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -64,7 +62,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     preprocessorRanges.clear();
 
     // получим все блоки препроцессора в файле
-    List<ParseTree> preprocessors = new ArrayList<>(Trees.findAllRuleNodes(ctx, BSLParser.RULE_preprocessor));
+    List<ParseTree> preprocessors = new ArrayList<>(BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_preprocessor));
 
     if (preprocessors.isEmpty()) {
       return super.visitFile(ctx);
@@ -102,7 +100,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     if (!nodes.isEmpty()) {
       BSLParser.PreprocessorContext previous = (BSLParser.PreprocessorContext) nodes.pop();
       preprocessorRanges.add(
-        Ranges.create(
+        BSLRanges.create(
           previous.getStop().getLine(),
           previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
           node.getStart().getLine(),
@@ -145,7 +143,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     // если это вложенный в ранее обработанный блок, то исключим из проверки
     Position pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     for (Range range : errorRanges) {
-      if (Ranges.containsPosition(range, pos)) {
+      if (BSLRanges.containsPosition(range, pos)) {
         return;
       }
     }
@@ -165,11 +163,11 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    List<BSLParserRuleContext> statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
+    List<BSLParserRuleContext> statements = BSLTrees.getChildren(ppNodeParent, BSLParser.RULE_statement)
       .stream()
       .filter(node ->
         node.getStart().getType() != BSLLexer.SEMICOLON
-          && !Trees.nodeContains(node,
+          && !BSLTrees.nodeContains(node,
           BSLParser.RULE_regionStart,
           BSLParser.RULE_regionEnd,
           BSLParser.RULE_preproc_endif))
@@ -184,7 +182,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
 
       // если последний стейт не текущий, значит он будет недостижим
       if (!ppNode.equals(endCurrentBlockNode)) {
-        Range newRange = Ranges.create(
+        Range newRange = BSLRanges.create(
           statements.get(statements.indexOf(ppNode) - 1).getStart(),
           endCurrentBlockNode.getStop());
         diagnosticStorage.addDiagnostic(newRange);
@@ -199,7 +197,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
     for (Range range : preprocessorRanges) {
-      if (Ranges.containsPosition(range, pos)) {
+      if (BSLRanges.containsPosition(range, pos)) {
         preprocRange = range;
       }
     }
@@ -214,7 +212,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
         Position posStatement = new Position(
           statement.getStart().getLine(),
           statement.getStart().getCharPositionInLine());
-        if (Ranges.containsPosition(preprocRange, posStatement)) {
+        if (BSLRanges.containsPosition(preprocRange, posStatement)) {
           endCurrentBlockNode = statement;
           break;
         }

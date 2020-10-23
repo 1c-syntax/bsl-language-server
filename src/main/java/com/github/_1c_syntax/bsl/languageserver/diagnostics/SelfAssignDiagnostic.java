@@ -22,10 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -60,7 +58,7 @@ public class SelfAssignDiagnostic extends AbstractVisitorDiagnostic {
 
   private static int getDescendantsCount(ParserRuleContext tree) {
 
-    return ((int) Trees.getDescendants(tree).stream()
+    return ((int) BSLTrees.getDescendants(tree).stream()
       .filter(node -> (node instanceof TerminalNode)).count());
 
   }

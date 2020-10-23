@@ -21,9 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -48,7 +47,7 @@ public class DiagnosticInfo {
   private static final Map<DiagnosticTag, org.eclipse.lsp4j.DiagnosticTag> diagnosticTagMap = createDiagnosticTagMap();
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
 
   private final DiagnosticCode diagnosticCode;
   private final DiagnosticMetadata diagnosticMetadata;
@@ -56,7 +55,7 @@ public class DiagnosticInfo {
 
   public DiagnosticInfo(
     Class<? extends BSLDiagnostic> diagnosticClass,
-    LanguageServerConfiguration configuration
+    BSLLanguageServerConfiguration configuration
   ) {
     this.diagnosticClass = diagnosticClass;
     this.configuration = configuration;

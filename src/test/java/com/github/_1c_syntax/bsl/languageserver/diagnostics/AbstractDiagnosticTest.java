@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
@@ -51,9 +51,9 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   @Autowired
   private DiagnosticConfiguration diagnosticConfiguration;
   @Autowired
-  protected ServerContext context;
+  protected BSLServerContext context;
   @Autowired
-  protected LanguageServerConfiguration configuration;
+  protected BSLLanguageServerConfiguration configuration;
 
   private final Class<T> diagnosticClass;
   protected T diagnosticInstance;
@@ -79,17 +79,17 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     context.populateContext();
   }
 
-  protected List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
+  protected List<Diagnostic> getDiagnostics(BSLDocumentContext documentContext) {
     return diagnosticInstance.getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics() {
-    DocumentContext documentContext = getDocumentContext();
+    BSLDocumentContext documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics(String simpleFileName) {
-    DocumentContext documentContext = getDocumentContext(simpleFileName);
+    BSLDocumentContext documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
@@ -97,23 +97,23 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     return getQuickFixes(diagnostic, getDocumentContext());
   }
 
-  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, DocumentContext documentContext) {
+  protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, BSLDocumentContext documentContext) {
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), diagnostic.getRange());
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    BSLDocumentContext documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
   protected List<CodeAction> getQuickFixes(Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    BSLDocumentContext documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);
   }
 
-  private List<CodeAction> getQuickFixes(DocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
+  private List<CodeAction> getQuickFixes(BSLDocumentContext documentContext, List<Diagnostic> diagnostics, Range range) {
     TextDocumentIdentifier textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
 
     CodeActionContext codeActionContext = new CodeActionContext();
@@ -129,12 +129,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   }
 
-  protected DocumentContext getDocumentContext() {
+  protected BSLDocumentContext getDocumentContext() {
     return getDocumentContext(diagnosticInstance.getClass().getSimpleName());
   }
 
   @SneakyThrows
-  protected DocumentContext getDocumentContext(String SimpleFileName) {
+  protected BSLDocumentContext getDocumentContext(String SimpleFileName) {
     String textDocumentContent = getText(SimpleFileName);
 
     return TestUtils.getDocumentContext(textDocumentContent, context);

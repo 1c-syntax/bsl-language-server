@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -148,8 +148,8 @@ public class AnalyzeCommand implements Callable<Integer> {
   private boolean debug;
 
   private final ReportersAggregator aggregator;
-  private final LanguageServerConfiguration configuration;
-  private final ServerContext context;
+  private final BSLLanguageServerConfiguration configuration;
+  private final BSLServerContext context;
 
   public Integer call() {
 
@@ -168,7 +168,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     File configurationFile = new File(configurationOption);
     configuration.update(configurationFile);
 
-    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+    Path configurationPath = BSLLanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
     context.setConfigurationRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
@@ -209,7 +209,7 @@ public class AnalyzeCommand implements Callable<Integer> {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
+    BSLDocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();

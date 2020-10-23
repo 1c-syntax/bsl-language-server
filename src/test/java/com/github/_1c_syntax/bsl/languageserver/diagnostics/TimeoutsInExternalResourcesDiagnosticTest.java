@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
@@ -95,7 +95,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
     // when
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic.bsl").toAbsolutePath();
     initServerContext(Paths.get("./src/test/resources/metadata").toAbsolutePath());
-    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context
@@ -139,7 +139,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic836.bsl").toAbsolutePath();
     initServerContext(tempDir.toAbsolutePath());
-    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context
@@ -183,7 +183,7 @@ class TimeoutsInExternalResourcesDiagnosticTest extends AbstractDiagnosticTest<T
 
     Path testFile = Paths.get("./src/test/resources/diagnostics/TimeoutsInExternalResourcesDiagnostic837.bsl").toAbsolutePath();
     initServerContext(tempDir.toAbsolutePath());
-    DocumentContext newDocumentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext newDocumentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

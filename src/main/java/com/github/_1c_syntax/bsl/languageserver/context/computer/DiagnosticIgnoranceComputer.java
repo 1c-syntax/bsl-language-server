@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
@@ -63,12 +64,12 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     "BSLLS:(\\w+)-(?:выкл|off)"
   );
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
 
   private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
   private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
 
-  public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
+  public DiagnosticIgnoranceComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 

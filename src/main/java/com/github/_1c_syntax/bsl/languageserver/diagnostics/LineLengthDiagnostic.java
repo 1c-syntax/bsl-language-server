@@ -23,10 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 
@@ -74,7 +72,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
       Integer maxCharPosition = value.stream().max(Integer::compareTo).orElse(0);
       if (maxCharPosition > maxLineLength) {
         diagnosticStorage.addDiagnostic(
-          Ranges.create(key, 0, key, maxCharPosition),
+          BSLRanges.create(key, 0, key, maxCharPosition),
           info.getMessage(maxCharPosition, maxLineLength)
         );
       }

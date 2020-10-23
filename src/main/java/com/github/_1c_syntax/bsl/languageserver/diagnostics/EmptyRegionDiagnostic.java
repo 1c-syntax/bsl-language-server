@@ -21,13 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
@@ -75,7 +73,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       BSLParser.RegionStartContext currentRegion = regions.pop();
       if (currentUsageLevel < currentRegionLevel) {
         diagnosticStorage.addDiagnostic(
-          Ranges.create(currentRegion.getParent(), ctx),
+          BSLRanges.create(currentRegion.getParent(), ctx),
           info.getMessage(currentRegion.regionName().getText())
         );
       } else if (currentRegionLevel == currentUsageLevel) {
@@ -89,7 +87,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   ) {
     List<TextEdit> textEdits = new ArrayList<>(diagnostics.size());
     diagnostics
@@ -106,7 +104,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       })
       .ifPresent(lastRange -> textEdits.add(new TextEdit(lastRange, "")));
 
-    return CodeActionProvider.createCodeActions(
+    return BSLCodeActionProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

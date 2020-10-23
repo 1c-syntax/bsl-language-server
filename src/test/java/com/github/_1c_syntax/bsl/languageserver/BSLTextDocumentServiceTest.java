@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
@@ -274,7 +274,7 @@ class BSLTextDocumentServiceTest {
 
     // when
     var params = new DiagnosticParams(getTextDocumentIdentifier());
-    params.setRange(Ranges.create(1, 0, 2, 0));
+    params.setRange(BSLRanges.create(1, 0, 2, 0));
     var diagnostics = textDocumentService.diagnostics(params).get();
 
     // then

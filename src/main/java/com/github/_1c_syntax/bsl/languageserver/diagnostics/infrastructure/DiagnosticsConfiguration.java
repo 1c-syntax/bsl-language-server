@@ -21,11 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.BSLDiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
@@ -53,16 +52,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public abstract class DiagnosticsConfiguration {
 
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
   private final DiagnosticConfiguration diagnosticConfiguration;
 
   @Bean
   @Scope("prototype")
-  public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
+  public List<BSLDiagnostic> diagnostics(BSLDocumentContext documentContext) {
 
     Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
 
-    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    BSLDiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {
       FileType fileType = documentContext.getFileType();
@@ -89,8 +88,8 @@ public abstract class DiagnosticsConfiguration {
   protected abstract Collection<DiagnosticInfo> diagnosticInfos();
 
   private static boolean needToComputeDiagnostics(
-    DocumentContext documentContext,
-    DiagnosticsOptions diagnosticsOptions
+    BSLDocumentContext documentContext,
+    BSLDiagnosticsOptions diagnosticsOptions
   ) {
     var configuredMode = diagnosticsOptions.getMode();
 
@@ -120,7 +119,7 @@ public abstract class DiagnosticsConfiguration {
     return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
   }
 
-  private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
+  private boolean isEnabled(DiagnosticInfo diagnosticInfo, BSLDiagnosticsOptions diagnosticsOptions) {
 
     var mode = diagnosticsOptions.getMode();
     if (mode == Mode.OFF) {

@@ -26,12 +26,9 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -118,12 +115,12 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
     List<DiagnosticRelatedInformation> relatedInformation,
     Integer... ruleIndex
   ) {
-    Trees.getChildren(ctx, ruleIndex).stream()
+    BSLTrees.getChildren(ctx, ruleIndex).stream()
       .filter(node -> !node.getTokens().isEmpty())
       .map(node ->
         RelatedInformation.create(
           documentContext.getUri(),
-          Ranges.create(node),
+          BSLRanges.create(node),
           "+1"
         )
       )
@@ -132,14 +129,14 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {
-    Trees.getChildren(ctx).stream()
+    BSLTrees.getChildren(ctx).stream()
       .filter(node -> !(node instanceof BSLParser.PreprocessorContext)
         && !(node instanceof TerminalNode))
       .findFirst()
       .ifPresent((Tree node) -> {
-          Range ctxRange = Ranges.create((BSLParserRuleContext) node);
+          Range ctxRange = BSLRanges.create((BSLParserRuleContext) node);
           if (regionsRanges.stream().noneMatch(regionRange ->
-            Ranges.containsRange(regionRange, ctxRange))) {
+            BSLRanges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic(ctx);
           }
         }
@@ -170,15 +167,15 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void addDiagnosticForFileCodeBlock(BSLParserRuleContext ctx) {
-    Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
+    BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_statement)
       .stream()
       .filter(node -> node.getParent().getParent() == ctx)
       .forEach((ParseTree child) -> {
         if (child.getChildCount() > 1
           || !(child.getChild(0) instanceof BSLParser.PreprocessorContext)) {
-          Range ctxRange = Ranges.create((BSLParser.StatementContext) child);
+          Range ctxRange = BSLRanges.create((BSLParser.StatementContext) child);
           if (regionsRanges.stream().noneMatch(regionRange ->
-            Ranges.containsRange(regionRange, ctxRange))) {
+            BSLRanges.containsRange(regionRange, ctxRange))) {
             diagnosticStorage.addDiagnostic((BSLParser.StatementContext) child);
           }
         }

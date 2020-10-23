@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
@@ -45,7 +45,7 @@ class ExecuteExternalCodeInCommonModuleDiagnosticTest extends AbstractDiagnostic
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
 
   private CommonModule module;
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
 
   @Test
   void testIsServer() {

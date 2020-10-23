@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
@@ -259,7 +259,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   private void checkQuickFixes(String module, boolean haveFix) {
-    final DocumentContext documentContext = TestUtils.getDocumentContext(module);
+    final BSLDocumentContext documentContext = TestUtils.getDocumentContext(module);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
     diagnostics.forEach(diagnostic -> checkFix(documentContext, diagnostic, haveFix));
@@ -284,7 +284,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
     checkQuickFixes(module, true);
   }
 
-  private void checkFix(DocumentContext documentContext, Diagnostic diagnostic, boolean haveFix) {
+  private void checkFix(BSLDocumentContext documentContext, Diagnostic diagnostic, boolean haveFix) {
     List<CodeAction> quickFixes = getQuickFixes(diagnostic, documentContext);
 
     assertThat(quickFixes).hasSize(1);
@@ -304,7 +304,7 @@ class ConsecutiveEmptyLinesDiagnosticTest extends AbstractDiagnosticTest<Consecu
   }
 
   private List<Diagnostic> getDiagnosticsForText(String textDocumentContent) {
-    DocumentContext documentContext = TestUtils.getDocumentContext(textDocumentContent);
+    BSLDocumentContext documentContext = TestUtils.getDocumentContext(textDocumentContent);
     return getDiagnostics(documentContext);
   }
 }

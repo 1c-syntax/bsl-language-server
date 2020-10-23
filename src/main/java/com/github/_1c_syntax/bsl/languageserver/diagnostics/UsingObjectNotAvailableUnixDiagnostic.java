@@ -23,10 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -77,7 +75,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
   }
 
   private static boolean isFindIfBranchWithLinuxCondition(ParserRuleContext element) {
-    ParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
+    ParserRuleContext ancestor = BSLTrees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
     if (ancestor == null) {
       return false;
     }

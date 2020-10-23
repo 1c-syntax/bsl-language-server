@@ -23,10 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
@@ -56,13 +54,13 @@ public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindM
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
-    var parentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_exceptCodeBlock);
+    var parentNode = BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_exceptCodeBlock);
 
     if (parentNode == null) {
       return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
     }
 
-    var methodsList = Trees.findAllRuleNodes(parentNode, BSLParser.RULE_globalMethodCall).stream()
+    var methodsList = BSLTrees.findAllRuleNodes(parentNode, BSLParser.RULE_globalMethodCall).stream()
       .map(BSLParser.GlobalMethodCallContext.class::cast)
       .map(e -> e.methodName().getText())
       .collect(Collectors.toList());

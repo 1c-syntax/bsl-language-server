@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.ls_core.LSLauncher;
@@ -51,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SmokyTest {
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private BSLLanguageServerConfiguration configuration;
 
   @Autowired
   private Collection<DiagnosticInfo> diagnosticInfos;

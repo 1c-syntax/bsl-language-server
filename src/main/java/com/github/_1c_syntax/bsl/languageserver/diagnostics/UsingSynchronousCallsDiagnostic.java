@@ -24,10 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -139,9 +137,9 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
     if (MODALITY_METHODS.matcher(methodName).matches()) {
-      BSLParser.SubContext rootParent = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
+      BSLParser.SubContext rootParent = (BSLParser.SubContext) BSLTrees.getRootParent(ctx, BSLParser.RULE_sub);
       if (rootParent == null
-        || Trees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
+        || BSLTrees.findAllRuleNodes(rootParent, BSLParser.RULE_compilerDirectiveSymbol)
         .stream()
         .filter(node ->
           SERVER_COMPILER_PATTERN.matcher(node.getText()).matches()).count() <= 0) {

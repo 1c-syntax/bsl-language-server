@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.computer.BSLDiagnosticComputer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -40,10 +40,10 @@ public class DocumentContextConfiguration {
 
   @Bean
   @Scope("prototype")
-  public DocumentContext documentContext(URI uri, String content) {
-    var serverContext = applicationContext.getBean(ServerContext.class);
-    var diagnosticComputer = applicationContext.getBean(DiagnosticComputer.class);
-    return new DocumentContext(uri, content, serverContext, diagnosticComputer);
+  public BSLDocumentContext documentContext(URI uri, String content) {
+    var serverContext = applicationContext.getBean(BSLServerContext.class);
+    var diagnosticComputer = applicationContext.getBean(BSLDiagnosticComputer.class);
+    return new BSLDocumentContext(uri, content, serverContext, diagnosticComputer);
   }
 
 }

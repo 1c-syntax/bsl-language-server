@@ -23,10 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -43,7 +41,7 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitModuleVar(BSLParser.ModuleVarContext ctx) {
-    if (Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+    if (BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
       diagnosticStorage.addDiagnostic(ctx.moduleVarsList());
     }
     return ctx;
@@ -53,7 +51,7 @@ public class SeveralCompilerDirectivesDiagnostic extends AbstractVisitorDiagnost
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     documentContext.getSymbolTree().getMethodSymbol(ctx).ifPresent((MethodSymbol methodSymbol) -> {
       if (methodSymbol.getCompilerDirectiveKind().isPresent()
-        && Trees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
+        && BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_compilerDirective).size() > 1) {
         diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
       }
     });

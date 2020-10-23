@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.reporters.data;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
@@ -45,7 +45,7 @@ public class FileInfo {
   List<Diagnostic> diagnostics;
   MetricStorage metrics;
 
-  public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
+  public FileInfo(String sourceDir, BSLDocumentContext documentContext, List<Diagnostic> diagnostics) {
     URI uri = documentContext.getUri();
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);

@@ -23,13 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.NewExpressionContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -86,19 +83,19 @@ public class NestedConstructorsInStructureDeclarationDiagnostic extends Abstract
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
     relatedInformation.add(RelatedInformation.create(
       documentContext.getUri(),
-      Ranges.create(ctx),
+      BSLRanges.create(ctx),
       relatedMessage
     ));
     structureDoCallContext.callParamList().callParam().stream()
       .filter(tree -> tree.start.getType() == BSLParser.NEW_KEYWORD)
-      .map(tree -> Trees.findAllRuleNodes(tree, BSLParser.RULE_newExpression))
+      .map(tree -> BSLTrees.findAllRuleNodes(tree, BSLParser.RULE_newExpression))
       .filter(tree -> !tree.isEmpty())
       .map(tree -> (ParseTree) tree.toArray()[0])
       .map(tree -> (NewExpressionContext) tree)
       .filter(NestedConstructorsInStructureDeclarationDiagnostic::hasParams)
       .map(newContext -> RelatedInformation.create(
         documentContext.getUri(),
-        Ranges.create(newContext),
+        BSLRanges.create(newContext),
         relatedMessage
       ))
       .collect(Collectors.toCollection(() -> relatedInformation));

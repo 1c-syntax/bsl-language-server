@@ -21,15 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -108,8 +106,8 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitGlobalMethodCall(ctx);
   }
 
-  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, DocumentContext documentContext) {
-    return Optional.ofNullable(Trees.getRootParent(ctx, BSLParser.RULE_sub))
+  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, BSLDocumentContext documentContext) {
+    return Optional.ofNullable(BSLTrees.getRootParent(ctx, BSLParser.RULE_sub))
       .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol(sub))
       .map(MethodSymbol::isDeprecated)
       .orElse(false);
@@ -122,7 +120,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     documentContexts.entrySet().stream()
       .filter(entry -> DEFAULT_MODULE_TYPES.contains(entry.getKey()))
       .map(Map.Entry::getValue)
-      .map(DocumentContext::getSymbolTree)
+      .map(BSLDocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethods().stream())
       .filter(methodSymbol -> methodSymbol.isDeprecated()
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))

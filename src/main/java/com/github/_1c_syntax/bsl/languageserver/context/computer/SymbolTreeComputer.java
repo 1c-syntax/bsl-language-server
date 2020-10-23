@@ -21,13 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,9 +36,9 @@ import java.util.Optional;
 
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
 
-  public SymbolTreeComputer(DocumentContext documentContext) {
+  public SymbolTreeComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 
@@ -67,7 +67,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private static Symbol placeSymbol(List<Symbol> topLevelSymbols, Symbol currentParent, Symbol symbol) {
 
-    if (Ranges.containsRange(currentParent.getRange(), symbol.getRange())) {
+    if (BSLRanges.containsRange(currentParent.getRange(), symbol.getRange())) {
       currentParent.getChildren().add(symbol);
       symbol.setParent(Optional.of(currentParent));
 

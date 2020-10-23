@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeLens;
@@ -38,10 +38,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CognitiveComplexityCodeLensSupplier implements CodeLensSupplier {
 
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
 
   @Override
-  public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
+  public List<CodeLens> getCodeLenses(BSLDocumentContext documentContext) {
 
     if (!configuration.getCodeLensOptions().isShowCognitiveComplexity()) {
       return Collections.emptyList();

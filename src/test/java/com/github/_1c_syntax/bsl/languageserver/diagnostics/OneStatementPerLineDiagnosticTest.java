@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Diagnostic;
@@ -68,7 +68,7 @@ class OneStatementPerLineDiagnosticTest extends AbstractDiagnosticTest<OneStatem
     List<Diagnostic> diagnostics = getDiagnostics();
     List<CodeAction> quickFixes = getQuickFixes(
       diagnostics.get(0),
-      Ranges.create(12, 5, 12, 9)
+      BSLRanges.create(12, 5, 12, 9)
     );
 
     assertThat(quickFixes)

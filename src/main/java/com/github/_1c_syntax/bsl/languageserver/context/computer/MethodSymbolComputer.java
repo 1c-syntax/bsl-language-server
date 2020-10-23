@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -29,8 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -57,10 +57,10 @@ public final class MethodSymbolComputer
     BSLParser.ANNOTATION_ATSERVERNOCONTEXT_SYMBOL,
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
   private final List<MethodSymbol> methods = new ArrayList<>();
 
-  public MethodSymbolComputer(DocumentContext documentContext) {
+  public MethodSymbolComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 
@@ -198,8 +198,8 @@ public final class MethodSymbolComputer
 
     return MethodSymbol.builder()
       .name(subName.getText())
-      .range(Ranges.create(startNode, stopNode))
-      .subNameRange(Ranges.create(subName))
+      .range(BSLRanges.create(startNode, stopNode))
+      .subNameRange(BSLRanges.create(subName))
       .function(function)
       .export(export)
       .description(description)
@@ -212,7 +212,7 @@ public final class MethodSymbolComputer
   }
 
   private Optional<MethodDescription> createDescription(Token token) {
-    List<Token> comments = Trees.getComments(documentContext.getTokens(), token);
+    List<Token> comments = BSLTrees.getComments(documentContext.getTokens(), token);
     if (comments.isEmpty()) {
       return Optional.empty();
     }

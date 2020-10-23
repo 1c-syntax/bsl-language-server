@@ -23,11 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -74,18 +72,18 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
     if (commentAsCode) {
       Stream<Token> comments = documentContext.getComments().stream();
-      Range rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
+      Range rangeCodeBlock = BSLRanges.create(ctx.getStop(), ctx.getStart());
       if (comments.anyMatch(token ->
-        Ranges.containsRange(
+        BSLRanges.containsRange(
           rangeCodeBlock,
-          Ranges.create(token)))) {
+          BSLRanges.create(token)))) {
         return super.visitCodeBlock(ctx);
       }
     }
 
     int lineOfStop = ctx.getStop().getLine();
 
-    List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
+    List<Tree> list = BSLTrees.getChildren(ctx.getParent()).stream()
       .filter(node -> node instanceof TerminalNode)
       .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)
       .collect(Collectors.toList());

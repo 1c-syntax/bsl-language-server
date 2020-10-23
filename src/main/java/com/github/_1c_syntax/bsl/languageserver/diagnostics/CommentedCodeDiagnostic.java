@@ -21,15 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -205,7 +203,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
 
   @Override
   public List<CodeAction> getQuickFixes(
-    List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
+    List<Diagnostic> diagnostics, CodeActionParams params, BSLDocumentContext documentContext
   ) {
 
     List<TextEdit> textEdits = diagnostics.stream()
@@ -213,7 +211,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
       .map(range -> new TextEdit(range, ""))
       .collect(Collectors.toList());
 
-    return CodeActionProvider.createCodeActions(
+    return BSLCodeActionProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

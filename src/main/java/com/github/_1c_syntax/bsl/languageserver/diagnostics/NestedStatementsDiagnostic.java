@@ -24,11 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -139,7 +136,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     relatedInformation.add(
       RelatedInformation.create(
         documentContext.getUri(),
-        Ranges.create(ctx.getStart()),
+        BSLRanges.create(ctx.getStart()),
         relatedMessage
       )
     );
@@ -149,7 +146,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
       .map(expressionContext ->
         RelatedInformation.create(
           documentContext.getUri(),
-          Ranges.create(((BSLParserRuleContext) expressionContext).getStart()),
+          BSLRanges.create(((BSLParserRuleContext) expressionContext).getStart()),
           relatedMessage
         )
       )

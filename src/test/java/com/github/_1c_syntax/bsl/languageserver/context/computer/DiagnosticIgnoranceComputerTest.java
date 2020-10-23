@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,7 +41,7 @@ class DiagnosticIgnoranceComputerTest {
 
     // given
     String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
-    final DocumentContext documentContext = getDocumentContextFromFile(filePath);
+    final BSLDocumentContext documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
 
@@ -71,7 +71,7 @@ class DiagnosticIgnoranceComputerTest {
   private static Diagnostic createDiagnostic(String code, int line) {
     Diagnostic diagnostic = new Diagnostic();
     diagnostic.setCode(code);
-    diagnostic.setRange(Ranges.create(line - 1, 0, line - 1, 0));
+    diagnostic.setRange(BSLRanges.create(line - 1, 0, line - 1, 0));
 
     return diagnostic;
   }

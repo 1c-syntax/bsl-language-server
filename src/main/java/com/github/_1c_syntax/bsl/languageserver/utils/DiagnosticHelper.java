@@ -89,43 +89,4 @@ public final class DiagnosticHelper {
     return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText())
       || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
   }
-
-  public static void configureDiagnostic(BSLDiagnostic diagnostic, Map<String, Object> configuration) {
-    if (configuration == null || configuration.isEmpty()) {
-      return;
-    }
-
-    Set<Class<?>> types = new HashSet<>();
-    types.add(Integer.class);
-    types.add(Boolean.class);
-    types.add(Float.class);
-    types.add(String.class);
-
-    diagnostic.getInfo().getParameters().stream()
-      .filter(diagnosticParameterInfo -> configuration.containsKey(diagnosticParameterInfo.getName())
-        && types.contains(diagnosticParameterInfo.getType()))
-      .forEach((DiagnosticParameterInfo diagnosticParameterInfo) -> {
-        try {
-          var field = diagnostic.getClass().getDeclaredField(diagnosticParameterInfo.getName());
-          if (field.trySetAccessible()) {
-            field.set(diagnostic, configuration.get(field.getName()));
-          }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-          LOGGER.error("Can't set param.", e);
-        }
-      });
-  }
-
-  public static void configureDiagnostic(BSLDiagnostic diagnostic,
-                                         Map<String, Object> configuration,
-                                         String... filter) {
-    Map<String, Object> newConfiguration = new HashMap<>();
-    for (String name : filter) {
-      if (configuration.containsKey(name)) {
-        newConfiguration.put(name, configuration.get(name));
-      }
-    }
-
-    configureDiagnostic(diagnostic, newConfiguration);
-  }
 }

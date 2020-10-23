@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import lombok.SneakyThrows;
@@ -49,7 +49,7 @@ class MetadataObjectNameLengthDiagnosticTest extends AbstractDiagnosticTest<Meta
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
 
   private MDObjectBase module;
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
 
   MetadataObjectNameLengthDiagnosticTest() {
     super(MetadataObjectNameLengthDiagnostic.class);

@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
+import com.github._1c_syntax.bsl.languageserver.providers.BSLFormatProvider;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -74,8 +74,8 @@ import static picocli.CommandLine.Option;
 @RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
 
-  private final ServerContext serverContext;
-  private final FormatProvider formatProvider;
+  private final BSLServerContext serverContext;
+  private final BSLFormatProvider formatProvider;
 
   @Option(
     names = {"-h", "--help"},
@@ -138,7 +138,7 @@ public class FormatCommand implements Callable<Integer> {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final URI uri = file.toURI();
 
-    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
+    BSLDocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
 
     DocumentFormattingParams params = new DocumentFormattingParams();
     FormattingOptions options = new FormattingOptions();

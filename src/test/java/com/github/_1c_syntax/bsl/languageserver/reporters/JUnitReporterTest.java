@@ -23,11 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -70,7 +70,7 @@ class JUnitReporterTest {
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
     diagnostics.add(new Diagnostic(
-      Ranges.create(0, 1, 2, 3),
+      BSLRanges.create(0, 1, 2, 3),
       "message",
       DiagnosticSeverity.Error,
       "test-source",
@@ -78,7 +78,7 @@ class JUnitReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      Ranges.create(0, 1, 2, 4),
+      BSLRanges.create(0, 1, 2, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
@@ -86,14 +86,14 @@ class JUnitReporterTest {
     ));
 
     diagnostics.add(new Diagnostic(
-      Ranges.create(3, 1, 4, 4),
+      BSLRanges.create(3, 1, 4, 4),
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
       "test3"
     ));
 
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
       Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       ""
     );

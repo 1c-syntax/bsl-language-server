@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -65,12 +65,12 @@ public class BSLLSBinding {
     return getApplicationContext().getBean("diagnosticInfos", Collection.class);
   }
 
-  public static LanguageServerConfiguration getLanguageServerConfiguration() {
-    return getApplicationContext().getBean(LanguageServerConfiguration.class);
+  public static BSLLanguageServerConfiguration getLanguageServerConfiguration() {
+    return getApplicationContext().getBean(BSLLanguageServerConfiguration.class);
   }
 
-  public static ServerContext getServerContext() {
-    return getApplicationContext().getBean(ServerContext.class);
+  public static BSLServerContext getServerContext() {
+    return getApplicationContext().getBean(BSLServerContext.class);
   }
 
   private static SpringApplication createApplication() {

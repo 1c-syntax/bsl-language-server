@@ -22,10 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -117,7 +115,7 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
   @Override
   public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
     // Находим последний стейт в модуле и запоминаем его
-    Stream<ParseTree> statements = Trees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream();
+    Stream<ParseTree> statements = BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_statement).stream();
     nodeEndFile = (BSLParser.StatementContext) statements.reduce((a, b) -> b).orElse(null);
     return super.visitFileCodeBlock(ctx);
   }

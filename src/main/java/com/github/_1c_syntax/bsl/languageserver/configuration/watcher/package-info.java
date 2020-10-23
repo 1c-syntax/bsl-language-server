@@ -22,7 +22,7 @@
 
 /**
  * В пакете содержатся классы, относящиеся к отслеживанию факта изменения (удаление, создание, редактирование) файла
- * конфигурации ({@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}).
+ * конфигурации ({@link com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration}).
  */
 @ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;

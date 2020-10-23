@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -39,12 +39,12 @@ public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<RegionSymbol>> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
   private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack =
     new ArrayDeque<>();
   private final List<RegionSymbol> regions = new ArrayList<>();
 
-  public RegionSymbolComputer(DocumentContext documentContext) {
+  public RegionSymbolComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 
@@ -68,8 +68,8 @@ public final class RegionSymbolComputer
 
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
       .name(ctx.regionName().getText())
-      .regionNameRange(Ranges.create(ctx.regionName()))
-      .startRange(Ranges.create(ctx));
+      .regionNameRange(BSLRanges.create(ctx.regionName()))
+      .startRange(BSLRanges.create(ctx));
 
     regionStack.push(Pair.of(builder, ctx));
     return super.visitRegionStart(ctx);
@@ -87,10 +87,10 @@ public final class RegionSymbolComputer
     RegionSymbol.RegionSymbolBuilder builder = pair.getLeft();
     BSLParser.RegionStartContext regionStartContext = pair.getRight();
 
-    Range range = Ranges.create(regionStartContext, ctx);
+    Range range = BSLRanges.create(regionStartContext, ctx);
     builder
       .range(range)
-      .endRange(Ranges.create(ctx))
+      .endRange(BSLRanges.create(ctx))
     ;
 
     RegionSymbol region = builder.build();

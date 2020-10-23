@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -53,20 +53,20 @@ class MethodSymbolComputerTest {
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
   @Autowired
-  private ServerContext serverContext;
+  private BSLServerContext serverContext;
 
   @Test
   void testMethodSymbolComputer() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     assertThat(methods.size()).isEqualTo(23);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription()).isNotPresent();
-    assertThat(methods.get(0).getRange()).isEqualTo(Ranges.create(1, 0, 3, 14));
-    assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(1, 10, 1, 14));
+    assertThat(methods.get(0).getRange()).isEqualTo(BSLRanges.create(1, 0, 3, 14));
+    assertThat(methods.get(0).getSubNameRange()).isEqualTo(BSLRanges.create(1, 10, 1, 14));
 
     assertThat(methods.get(1).getDescription()).isNotEmpty();
     assertThat(methods.get(1).getRegion().orElse(null).getName()).isEqualTo("ИмяОбласти");
@@ -151,7 +151,7 @@ class MethodSymbolComputerTest {
   @Test
   void testAnnotation() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     // CUSTOM
@@ -201,7 +201,7 @@ class MethodSymbolComputerTest {
   @Test
   void testParameters() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     List<ParameterDefinition> parameters = methods.get(2).getParameters();
@@ -226,7 +226,7 @@ class MethodSymbolComputerTest {
 
   @Test
   void testDeprecated() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     MethodSymbol methodSymbol = methods.get(2);
@@ -257,11 +257,11 @@ class MethodSymbolComputerTest {
   @Test
   void testParseError() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTestParseError.bsl");
+    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTestParseError.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     assertThat(methods.get(0).getName()).isEqualTo("Выполнить");
-    assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(0, 10, 0, 19));
+    assertThat(methods.get(0).getSubNameRange()).isEqualTo(BSLRanges.create(0, 10, 0, 19));
 
   }
 
@@ -273,7 +273,7 @@ class MethodSymbolComputerTest {
   }
 
   private void checkModule(
-    ServerContext serverContext,
+    BSLServerContext serverContext,
     String path,
     String mdoRef,
     int methodsCount

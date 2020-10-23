@@ -21,15 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -122,7 +120,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
 
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-    Trees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
+    BSLTrees.findAllTokenNodes(ctx, BSLParser.IDENTIFIER).stream()
       .filter(token -> PATTERN.matcher(token.getText()).matches())
       .forEach(token -> diagnosticStorage.addDiagnostic((TerminalNode) token));
 
@@ -133,7 +131,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   ) {
 
     List<TextEdit> newTextEdits = new ArrayList<>();
@@ -142,7 +140,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
       newTextEdits.add(getQuickFixText(diagnostic, documentContext));
     }
 
-    return CodeActionProvider.createCodeActions(
+    return BSLCodeActionProvider.createCodeActions(
       newTextEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
@@ -160,7 +158,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     return super.visitLValue(ctx);
   }
 
-  private static TextEdit getQuickFixText(Diagnostic diagnostic, DocumentContext documentContext) {
+  private static TextEdit getQuickFixText(Diagnostic diagnostic, BSLDocumentContext documentContext) {
     Range range = diagnostic.getRange();
     String currentText = documentContext.getText(range);
 

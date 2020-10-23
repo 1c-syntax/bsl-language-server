@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -48,7 +48,7 @@ public class CognitiveComplexityComputer
   extends BSLParserBaseListener
   implements Computer<ComplexityData> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
@@ -62,7 +62,7 @@ public class CognitiveComplexityComputer
   private int nestedLevel;
   private final Set<BSLParserRuleContext> ignoredContexts;
 
-  public CognitiveComplexityComputer(DocumentContext documentContext) {
+  public CognitiveComplexityComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;
@@ -291,7 +291,7 @@ public class CognitiveComplexityComputer
 
     List<Token> result = new ArrayList<>();
 
-    final List<Tree> children = Trees.getChildren(ctx);
+    final List<Tree> children = BSLTrees.getChildren(ctx);
     for (Tree tree : children) {
       if (!(tree instanceof BSLParserRuleContext)) {
         continue;
@@ -381,7 +381,7 @@ public class CognitiveComplexityComputer
     } else {
       message = String.format("+%d", increment);
     }
-    var secondaryLocation = new ComplexitySecondaryLocation(Ranges.create(token), message.intern());
+    var secondaryLocation = new ComplexitySecondaryLocation(BSLRanges.create(token), message.intern());
     List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {
       locations = methodsComplexitySecondaryLocations.computeIfAbsent(

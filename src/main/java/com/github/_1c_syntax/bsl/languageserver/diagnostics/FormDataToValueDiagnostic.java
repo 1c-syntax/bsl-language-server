@@ -25,10 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -57,7 +55,7 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
   @Override
   protected boolean checkGlobalMethodCall(GlobalMethodCallContext ctx) {
-    var parentNode = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
+    var parentNode = (BSLParser.SubContext) BSLTrees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
 
     if (parentNode == null) {
       return false;

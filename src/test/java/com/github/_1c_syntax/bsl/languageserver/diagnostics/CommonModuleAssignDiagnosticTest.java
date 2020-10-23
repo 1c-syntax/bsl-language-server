@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.utils.Absolute;
@@ -58,7 +58,7 @@ class CommonModuleAssignDiagnosticTest extends AbstractDiagnosticTest<CommonModu
 
 
     Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
-    DocumentContext documentContext = TestUtils.getDocumentContext(
+    BSLDocumentContext documentContext = TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

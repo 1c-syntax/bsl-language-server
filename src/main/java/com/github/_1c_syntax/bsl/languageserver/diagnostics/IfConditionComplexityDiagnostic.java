@@ -24,10 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -63,7 +61,7 @@ public class IfConditionComplexityDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void checkExpressionAndRaise(BSLParser.ExpressionContext expression) {
-    if (Trees.findAllRuleNodes(expression, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity) {
+    if (BSLTrees.findAllRuleNodes(expression, BSLParser.RULE_boolOperation).size() + 1 > maxIfConditionComplexity) {
       diagnosticStorage.addDiagnostic(expression);
     }
   }

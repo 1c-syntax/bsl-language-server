@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -44,7 +44,7 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
   protected Stream<CodeAction> processDiagnosticStream(
     Stream<Diagnostic> diagnosticStream,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   ) {
     return diagnosticStream
       .flatMap(diagnostic -> getCodeActionsByDiagnostic(diagnostic, params, documentContext).stream());
@@ -53,7 +53,7 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
   private List<CodeAction> getCodeActionsByDiagnostic(
     Diagnostic diagnostic,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   ) {
 
     Optional<Class<? extends QuickFixProvider>> quickFixClass =

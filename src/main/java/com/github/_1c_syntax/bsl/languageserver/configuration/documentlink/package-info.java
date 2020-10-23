@@ -21,6 +21,6 @@
  */
 
 /**
- * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider}
+ * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.BSLDocumentLinkProvider}
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.documentlink;

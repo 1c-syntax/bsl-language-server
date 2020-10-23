@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
@@ -47,14 +47,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GenerateStandardRegionsSupplierTest {
 
   @Autowired
-  private CodeActionProvider codeActionProvider;
+  private BSLCodeActionProvider codeActionProvider;
 
   @Test
   void testGetCodeActions() {
 
     // given
     String filePath = "./src/test/resources/suppliers/generateRegion.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    BSLDocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
     List<Diagnostic> diagnostics = new ArrayList<>();
 

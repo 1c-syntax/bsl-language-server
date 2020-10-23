@@ -22,10 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -53,7 +51,7 @@ public class TryNumberDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitTryCodeBlock(BSLParser.TryCodeBlockContext ctx) {
 
-    Trees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
+    BSLTrees.findAllRuleNodes(ctx, BSLParser.RULE_globalMethodCall)
       .stream()
       .filter(GlobalMethodCallContext.class::isInstance)
       .map(GlobalMethodCallContext.class::cast)

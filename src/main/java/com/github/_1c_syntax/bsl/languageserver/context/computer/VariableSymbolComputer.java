@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -40,10 +40,10 @@ import java.util.Optional;
 
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
   private final List<VariableSymbol> variables = new ArrayList<>();
 
-  public VariableSymbolComputer(DocumentContext documentContext) {
+  public VariableSymbolComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 
@@ -78,8 +78,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   ) {
     return VariableSymbol.builder()
       .name(varName.getText())
-      .range(Ranges.create(ctx))
-      .variableNameRange(Ranges.create(varName))
+      .range(BSLRanges.create(ctx))
+      .variableNameRange(BSLRanges.create(varName))
       .export(export)
       .kind(kind)
       .description(createDescription(ctx))
@@ -91,12 +91,12 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     List<Token> comments = new ArrayList<>();
 
     // поиск комментариев начинается от первого токена - VAR
-    var varToken = Trees.getPreviousTokenFromDefaultChannel(tokens,
+    var varToken = BSLTrees.getPreviousTokenFromDefaultChannel(tokens,
       ctx.getStart().getTokenIndex(), BSLParser.VAR_KEYWORD);
-    varToken.ifPresent(value -> comments.addAll(Trees.getComments(tokens, value)));
+    varToken.ifPresent(value -> comments.addAll(BSLTrees.getComments(tokens, value)));
 
     // висячий комментарий смотрим по токену переменной, он должен находится в этой же строке
-    Optional<Token> trailingComments = Trees.getTrailingComment(tokens, ctx.getStop());
+    Optional<Token> trailingComments = BSLTrees.getTrailingComment(tokens, ctx.getStop());
 
     if (comments.isEmpty() && trailingComments.isEmpty()) {
       return Optional.empty();
@@ -107,7 +107,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     var trailingDescription = trailingComments
       .map(trailingComment -> VariableDescription.builder()
         .description(trailingComment.getText())
-        .range(Ranges.create(trailingComment))
+        .range(BSLRanges.create(trailingComment))
         .build()
       );
 
@@ -130,7 +130,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     Token firstElement = tokens.get(0);
     Token lastElement = tokens.get(tokens.size() - 1);
 
-    return Ranges.create(firstElement, lastElement);
+    return BSLRanges.create(firstElement, lastElement);
   }
 
 }

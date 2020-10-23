@@ -22,10 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -50,8 +48,8 @@ public class FunctionShouldHaveReturnDiagnostic extends AbstractVisitorDiagnosti
       return ctx;
     }
 
-    Collection<ParseTree> tokens = Trees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
-    if (tokens.isEmpty() && !Trees.treeContainsErrors(ctx)) {
+    Collection<ParseTree> tokens = BSLTrees.findAllTokenNodes(ctx, BSLLexer.RETURN_KEYWORD);
+    if (tokens.isEmpty() && !BSLTrees.treeContainsErrors(ctx)) {
       BSLParser.SubNameContext subName = ctx.funcDeclaration().subName();
       diagnosticStorage.addDiagnostic(subName);
     }
