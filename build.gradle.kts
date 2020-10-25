@@ -6,10 +6,9 @@ import java.util.*
 
 plugins {
     `java-library`
-    maven
     `maven-publish`
     jacoco
-    id("com.github.hierynomus.license") version "0.15.0"
+    id("net.kyori.indra.license-header") version "1.0.2"
     id("org.sonarqube") version "3.0"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
@@ -189,8 +188,6 @@ license {
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
-    strictCheck = true
-    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")
