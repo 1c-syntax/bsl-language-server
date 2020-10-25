@@ -148,7 +148,7 @@ tasks.test {
     useJUnitPlatform()
 
     testLogging {
-        events("passed", "skipped", "failed")
+        events("passed", "skipped", "failed", "standard_error")
     }
 
     reports {
@@ -181,6 +181,10 @@ tasks.processResources {
     filesMatching("**/*.properties") {
         filter<EscapeUnicode>()
     }
+}
+
+jacoco {
+    toolVersion = "0.8.6"
 }
 
 license {
