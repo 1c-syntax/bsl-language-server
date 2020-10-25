@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1603195629973,
+  "lastUpdate": 1603626147975,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6169,6 +6169,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4170320880785814",
             "extra": "mean: 78.65115062395732 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "e0dd4e75930a5301e8dd00c0fbab88e4c77eef81",
+          "message": "Избавление от устаревших зависимостей\n\nmaven заменен на maven-publish, плагин лицензии заменен целиком",
+          "timestamp": "2020-10-25T14:33:47+03:00",
+          "tree_id": "7cb725495e3cde55063713bfeadc143ff985318a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e0dd4e75930a5301e8dd00c0fbab88e4c77eef81"
+        },
+        "date": 1603626142733,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.2264637152354,
+            "unit": "sec",
+            "range": "stddev: 0.5700475561997379",
+            "extra": "mean: 79.2264637152354 sec\nrounds: 3"
           }
         ]
       }
