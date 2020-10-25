@@ -111,9 +111,7 @@ public class CalleeStorage {
     calleesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
       var key = new MultiKey<>(multikey.getKey(0), multikey.getKey(1));
       Collection<Location> locations = calleesOf.get(key).values();
-      locations.stream()
-        .filter(location -> location.getUri().equals(stringUri))
-        .forEach(locations::remove);
+      locations.removeIf(location -> location.getUri().equals(stringUri));
     });
 
     calleesFrom.remove(uri);
