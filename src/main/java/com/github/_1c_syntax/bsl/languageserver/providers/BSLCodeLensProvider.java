@@ -23,8 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.providers.CodeLensProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeLens;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -33,12 +36,14 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class BSLCodeLensProvider {
+@Primary
+public final class BSLCodeLensProvider implements CodeLensProvider {
   private final List<CodeLensSupplier> codeLensSuppliers;
 
-  public List<CodeLens> getCodeLens(BSLDocumentContext documentContext) {
+  @Override
+  public List<CodeLens> getCodeLens(DocumentContext documentContext) {
     return codeLensSuppliers.stream()
-      .map(codeLensSupplier -> codeLensSupplier.getCodeLenses(documentContext))
+      .map(codeLensSupplier -> codeLensSupplier.getCodeLenses((BSLDocumentContext) documentContext))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }

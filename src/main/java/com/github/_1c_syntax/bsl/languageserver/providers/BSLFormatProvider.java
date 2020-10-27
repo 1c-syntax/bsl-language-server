@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.providers.FormatProvider;
 import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +33,7 @@ import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -43,7 +45,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public final class BSLFormatProvider {
+@Primary
+public final class BSLFormatProvider implements FormatProvider {
 
   private static final Set<Integer> incrementIndentTokens = new HashSet<>(Arrays.asList(
     BSLLexer.LPAREN,
@@ -81,7 +84,8 @@ public final class BSLFormatProvider {
     BSLLexer.STRING
   ));
 
-  public List<TextEdit> getFormatting(DocumentFormattingParams params, BSLDocumentContext documentContext) {
+  @Override
+  public List<TextEdit> getFormatting(DocumentFormattingParams params, DocumentContext documentContext) {
     List<Token> tokens = documentContext.getTokens();
     if (tokens.isEmpty()) {
       return Collections.emptyList();
@@ -95,10 +99,8 @@ public final class BSLFormatProvider {
     );
   }
 
-  public List<TextEdit> getRangeFormatting(
-    DocumentRangeFormattingParams params,
-    BSLDocumentContext documentContext
-  ) {
+  @Override
+  public List<TextEdit> getRangeFormatting(DocumentRangeFormattingParams params, DocumentContext documentContext) {
     Position start = params.getRange().getStart();
     Position end = params.getRange().getEnd();
     int startLine = start.getLine() + 1;

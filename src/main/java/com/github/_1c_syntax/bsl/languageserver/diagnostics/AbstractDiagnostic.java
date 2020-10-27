@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticInfo;
 import lombok.Getter;

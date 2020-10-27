@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerC
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.providers.DocumentLinkProvider;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ class BSLDocumentLinkProviderTest {
   private BSLLanguageServerConfiguration configuration;
 
   @Autowired
-  private BSLDocumentLinkProvider documentLinkProvider;
+  private DocumentLinkProvider documentLinkProvider;
 
   private static final String SITE_URL = "https://1c-syntax.github.io/bsl-language-server/";
   private static final String SITE_EN_URL = "https://1c-syntax.github.io/bsl-language-server/en/";

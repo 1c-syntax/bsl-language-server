@@ -30,7 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * Корневой класс для настройки {@link com.github._1c_syntax.bsl.languageserver.providers.BSLDiagnosticProvider}
+ * Корневой класс для настройки {@link com.github._1c_syntax.ls_core.providers.DiagnosticProvider}
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

@@ -26,20 +26,25 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.providers.DocumentSymbolProvider;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public final class BSLDocumentSymbolProvider {
+@Primary
+public final class BSLDocumentSymbolProvider implements DocumentSymbolProvider {
 
-  public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(BSLDocumentContext documentContext) {
-    return documentContext.getSymbolTree().getChildren().stream()
+  @Override
+  public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
+    return ((BSLDocumentContext) documentContext).getSymbolTree().getChildren().stream()
       .map(BSLDocumentSymbolProvider::toDocumentSymbol)
       .map(Either::<SymbolInformation, DocumentSymbol>forRight)
       .collect(Collectors.toList());

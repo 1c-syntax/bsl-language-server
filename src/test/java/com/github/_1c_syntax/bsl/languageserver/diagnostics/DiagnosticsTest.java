@@ -24,11 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
+import com.github._1c_syntax.ls_core.diagnostics.CoreDiagnostic;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -274,7 +275,7 @@ class DiagnosticsTest {
     configuration.getDiagnosticsOptions().setParameters(rules);
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .hasSizeGreaterThan(10)
-      .flatExtracting(BSLDiagnostic::getClass)
+      .flatExtracting(CoreDiagnostic::getClass)
       .doesNotContain(TypoDiagnostic.class)
       .doesNotContain(TooManyReturnsDiagnostic.class)
       .contains(TernaryOperatorUsageDiagnostic.class)

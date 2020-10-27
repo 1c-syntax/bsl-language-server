@@ -41,7 +41,7 @@ class BSLDiagnosticIgnoranceComputerTest {
   void testDiagnosticIgnorance() {
 
     // given
-    String filePath = "./src/test/resources/context/computer/BSLDiagnosticIgnoranceComputerTest.bsl";
+    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerTest.bsl";
     final BSLDocumentContext documentContext = (BSLDocumentContext) getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();

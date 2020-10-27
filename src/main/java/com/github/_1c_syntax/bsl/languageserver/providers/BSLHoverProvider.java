@@ -21,9 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.SubNameContext;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.providers.HoverProvider;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Hover;
@@ -31,14 +32,17 @@ import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
-public final class BSLHoverProvider {
+@Primary
+public final class BSLHoverProvider implements HoverProvider {
 
-  public Optional<Hover> getHover(HoverParams params, BSLDocumentContext documentContext) {
+  @Override
+  public Optional<Hover> getHover(HoverParams params, DocumentContext documentContext) {
 
     SubNameFinder finder = new SubNameFinder(params.getPosition());
     finder.visit(documentContext.getAst());

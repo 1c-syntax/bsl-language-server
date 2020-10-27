@@ -69,7 +69,7 @@ class BSLCodeActionProviderTest {
           CanonicalSpellingKeywordsDiagnostic.class,
           configuration
         );
-        DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
+        DiagnosticCode diagnosticCode = diagnosticInfo.getDiagnosticCode();
         return diagnostic.getCode().equals(diagnosticCode);
       })
       .collect(Collectors.toList());

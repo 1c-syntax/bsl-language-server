@@ -23,15 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.providers.FoldingRangeProvider;
 import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayDeque;
@@ -41,26 +43,29 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public final class BSLFoldingRangeProvider {
+@Primary
+public final class BSLFoldingRangeProvider implements FoldingRangeProvider {
 
-  public List<FoldingRange> getFoldingRange(BSLDocumentContext documentContext) {
+  @Override
+  public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
 
-    List<FoldingRange> foldingRanges = getCommentRanges(documentContext);
+    var bslDocumentContext = (BSLDocumentContext) documentContext;
+    var foldingRanges = getCommentRanges(bslDocumentContext);
 
-    CodeBlockRangeFinder codeBlockRangeFinder = new CodeBlockRangeFinder();
-    codeBlockRangeFinder.visitFile(documentContext.getAst());
-    List<FoldingRange> codeBlockRegionRanges = codeBlockRangeFinder.getRegionRanges();
+    var codeBlockRangeFinder = new CodeBlockRangeFinder();
+    codeBlockRangeFinder.visitFile(bslDocumentContext.getAst());
+    var codeBlockRegionRanges = codeBlockRangeFinder.getRegionRanges();
 
-    UseRangeFinder useRangeFinder = new UseRangeFinder();
-    useRangeFinder.visitFile(documentContext.getAst());
-    List<FoldingRange> useRegionRanges = useRangeFinder.getRegionRanges();
+    var useRangeFinder = new UseRangeFinder();
+    useRangeFinder.visitFile(bslDocumentContext.getAst());
+    var useRegionRanges = useRangeFinder.getRegionRanges();
 
-    RegionRangeFinder regionRangeFinder = new RegionRangeFinder(documentContext);
-    List<FoldingRange> regionRanges = regionRangeFinder.getRegionRanges();
+    var regionRangeFinder = new RegionRangeFinder(bslDocumentContext);
+    var regionRanges = regionRangeFinder.getRegionRanges();
 
-    PreprocIfRegionRangeFinder preprocIfRegionRangeFinder = new PreprocIfRegionRangeFinder();
-    preprocIfRegionRangeFinder.visitFile(documentContext.getAst());
-    List<FoldingRange> preprocRegionRanges = preprocIfRegionRangeFinder.getRegionRanges();
+    var preprocIfRegionRangeFinder = new PreprocIfRegionRangeFinder();
+    preprocIfRegionRangeFinder.visitFile(bslDocumentContext.getAst());
+    var preprocRegionRanges = preprocIfRegionRangeFinder.getRegionRanges();
 
     foldingRanges.addAll(codeBlockRegionRanges);
     foldingRanges.addAll(useRegionRanges);

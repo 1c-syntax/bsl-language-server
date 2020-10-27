@@ -26,11 +26,12 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.BSLDia
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
+import com.github._1c_syntax.ls_core.diagnostics.CoreDiagnostic;
+import com.github._1c_syntax.ls_core.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -58,7 +59,7 @@ public abstract class DiagnosticsConfiguration {
 
   @Bean
   @Scope("prototype")
-  public List<BSLDiagnostic> diagnostics(BSLDocumentContext documentContext) {
+  public List<CoreDiagnostic> diagnostics(BSLDocumentContext documentContext) {
 
     Collection<BSLDiagnosticInfo> diagnosticInfos = diagnosticInfos();
 
@@ -127,7 +128,7 @@ public abstract class DiagnosticsConfiguration {
     }
 
     Either<Boolean, Map<String, Object>> diagnosticParameters =
-      configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getDiagnosticCode().getStringValue());
 
     boolean activatedByDefault = diagnosticParameters == null && diagnosticInfo.isActivatedByDefault();
     boolean hasCustomConfiguration = diagnosticParameters != null && diagnosticParameters.isRight();

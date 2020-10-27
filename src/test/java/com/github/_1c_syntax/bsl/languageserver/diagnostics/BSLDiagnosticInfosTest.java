@@ -24,13 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticParameterInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.stream.Collectors;
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.when;
 class BSLDiagnosticInfosTest {
 
   @Autowired
-  private Map<String, BSLDiagnosticInfo> diagnosticInfos;
+  private Map<String, CoreDiagnosticInfo> diagnosticInfos;
 
   @Autowired
   private BSLLanguageServerConfiguration configuration;
@@ -52,7 +52,8 @@ class BSLDiagnosticInfosTest {
   @Test
   void testAllDiagnosticsHaveMetadataAnnotation() {
     // when
-    List<Class<? extends BSLDiagnostic>> diagnosticClasses = diagnosticInfos.values().stream()
+    var diagnosticClasses = diagnosticInfos.values().stream()
+      .map(coreDiagnosticInfo -> (BSLDiagnosticInfo) coreDiagnosticInfo)
       .map(BSLDiagnosticInfo::getDiagnosticClass).collect(Collectors.toList());
 
     // then
@@ -78,7 +79,7 @@ class BSLDiagnosticInfosTest {
   @Test
   void testAllDiagnosticsHaveDescriptionResource() {
     assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
-      -> assertThat(diagnosticInfo.getDescription()).isNotEmpty()))
+      -> assertThat(((BSLDiagnosticInfo) diagnosticInfo).getDescription()).isNotEmpty()))
       .doesNotThrowAnyException();
   }
 
@@ -86,8 +87,8 @@ class BSLDiagnosticInfosTest {
   void testAllDiagnosticsHaveTags() {
     assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo
       -> assertThat(
-      diagnosticInfo.getTags().size() > 0
-        && diagnosticInfo.getTags().size() <= 3)
+      ((BSLDiagnosticInfo) diagnosticInfo).getTags().size() > 0
+        && ((BSLDiagnosticInfo) diagnosticInfo).getTags().size() <= 3)
       .isTrue()))
       .doesNotThrowAnyException();
   }

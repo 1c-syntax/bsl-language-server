@@ -26,12 +26,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.providers.BSLCodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.providers.CodeActionProvider;
 import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -143,7 +142,7 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
       newTextEdits.add(getQuickFixText(diagnostic, documentContext));
     }
 
-    return BSLCodeActionProvider.createCodeActions(
+    return CodeActionProvider.createCodeActions(
       newTextEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

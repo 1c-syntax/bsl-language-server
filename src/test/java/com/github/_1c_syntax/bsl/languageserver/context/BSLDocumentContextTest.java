@@ -187,7 +187,7 @@ class BSLDocumentContextTest {
   @SneakyThrows
   public BSLDocumentContext getDocumentContext() {
 
-    return getDocumentContext("./src/test/resources/context/BSLDocumentContextTest.bsl");
+    return getDocumentContext("./src/test/resources/context/DocumentContextTest.bsl");
   }
 
   private BSLDocumentContext getDocumentContext(String filePath) {

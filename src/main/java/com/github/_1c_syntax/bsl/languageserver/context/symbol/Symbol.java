@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.ls_core.utils.Ranges;
 import lombok.Getter;
 import lombok.Setter;

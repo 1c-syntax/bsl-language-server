@@ -21,9 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.ls_core.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;

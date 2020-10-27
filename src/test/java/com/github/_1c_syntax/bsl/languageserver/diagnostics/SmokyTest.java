@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerC
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.ls_core.LSLauncher;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -54,7 +55,7 @@ class SmokyTest {
   private BSLLanguageServerConfiguration configuration;
 
   @Autowired
-  private Collection<BSLDiagnosticInfo> diagnosticInfos;
+  private Collection<CoreDiagnosticInfo> diagnosticInfos;
 
   @Test
   @ExpectSystemExitWithStatus(0)
@@ -104,7 +105,8 @@ class SmokyTest {
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
-      .map(BSLDiagnosticInfo::getCode)
+      .map(coreDiagnosticInfo -> (BSLDiagnosticInfo) coreDiagnosticInfo)
+      .map(BSLDiagnosticInfo::getDiagnosticCode)
       .collect(Collectors.toMap(
         diagnosticCode -> diagnosticCode.getStringValue(),
         diagnosticCode -> Either.forLeft(true),

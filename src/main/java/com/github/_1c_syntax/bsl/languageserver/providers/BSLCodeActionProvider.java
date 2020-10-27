@@ -23,67 +23,35 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.codeactions.CodeActionSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.providers.CodeActionProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public final class BSLCodeActionProvider {
+@Primary
+public final class BSLCodeActionProvider implements CodeActionProvider {
 
   private final List<CodeActionSupplier> codeActionSuppliers;
 
-  public static List<CodeAction> createCodeActions(
-    List<TextEdit> textEdits,
-    String title,
-    URI uri,
-    List<Diagnostic> diagnostics
-  ) {
-
-    if (diagnostics.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    WorkspaceEdit edit = new WorkspaceEdit();
-
-    Map<String, List<TextEdit>> changes = new HashMap<>();
-    changes.put(uri.toString(), textEdits);
-    edit.setChanges(changes);
-
-    if (diagnostics.size() > 1) {
-      title = "Fix all: " + title;
-    }
-
-    CodeAction codeAction = new CodeAction(title);
-    codeAction.setDiagnostics(diagnostics);
-    codeAction.setEdit(edit);
-    codeAction.setKind(CodeActionKind.QuickFix);
-
-    return Collections.singletonList(codeAction);
-
-  }
-
+  @Override
   public List<Either<Command, CodeAction>> getCodeActions(
     CodeActionParams params,
-    BSLDocumentContext documentContext
+    DocumentContext documentContext
   ) {
 
     return codeActionSuppliers.stream()
-      .flatMap(codeActionSupplier -> codeActionSupplier.getCodeActions(params, documentContext).stream())
+      .flatMap(codeActionSupplier -> codeActionSupplier
+        .getCodeActions(params, (BSLDocumentContext) documentContext).stream())
       .map(Either::<Command, CodeAction>forRight)
       .collect(Collectors.toList());
   }

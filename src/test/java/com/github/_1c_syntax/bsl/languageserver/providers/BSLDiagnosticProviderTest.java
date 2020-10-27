@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.providers.DiagnosticProvider;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 class BSLDiagnosticProviderTest {
 
   @Autowired
-  private BSLDiagnosticProvider diagnosticProvider;
+  private DiagnosticProvider diagnosticProvider;
 
   @Test
   void testComputeDiagnostics() {

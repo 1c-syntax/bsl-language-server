@@ -22,13 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.ls_core.providers.DocumentLinkProvider;
 import com.github._1c_syntax.ls_core.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLink;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -39,10 +41,12 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
-public class BSLDocumentLinkProvider {
+@Primary
+public class BSLDocumentLinkProvider implements DocumentLinkProvider {
   private final BSLLanguageServerConfiguration configuration;
 
-  public List<DocumentLink> getDocumentLinks(BSLDocumentContext documentContext) {
+  @Override
+  public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
 
     var linkOptions = configuration.getDocumentLinkOptions();
     var language = configuration.getLanguage();

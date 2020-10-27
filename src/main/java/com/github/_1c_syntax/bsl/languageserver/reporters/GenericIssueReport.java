@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
 import lombok.Getter;
@@ -60,14 +61,14 @@ public class GenericIssueReport {
     this.issues = new ArrayList<>(issues);
   }
 
-  public GenericIssueReport(AnalysisInfo analysisInfo, Map<String, BSLDiagnosticInfo> diagnosticInfos) {
+  public GenericIssueReport(AnalysisInfo analysisInfo, Map<String, CoreDiagnosticInfo> diagnosticInfos) {
     issues = new ArrayList<>();
     for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
       for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
         GenericIssueEntry entry = new GenericIssueEntry(
           fileInfo.getPath().toString(),
           diagnostic,
-          diagnosticInfos.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
+          (BSLDiagnosticInfo) diagnosticInfos.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
         );
         issues.add(entry);
       }
@@ -105,7 +106,7 @@ public class GenericIssueReport {
 
     public GenericIssueEntry(String fileName, Diagnostic diagnostic, BSLDiagnosticInfo diagnosticInfo) {
       engineId = diagnostic.getSource();
-      ruleId = diagnosticInfo.getCode().getStringValue();
+      ruleId = diagnosticInfo.getDiagnosticCode().getStringValue();
       severity = diagnosticInfo.getSeverity().name();
       type = diagnosticTypeRuleTypeMap.get(diagnosticInfo.getType());
       primaryLocation = new Location(fileName, diagnostic);

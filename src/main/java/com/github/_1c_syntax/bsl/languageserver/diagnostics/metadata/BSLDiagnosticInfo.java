@@ -21,71 +21,57 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
-import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.ls_core.utils.Resources;
+import com.github._1c_syntax.ls_core.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.ls_core.diagnostics.CoreDiagnostic;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class BSLDiagnosticInfo {
+public class BSLDiagnosticInfo extends CoreDiagnosticInfo {
 
-  private static final Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
-    = createSeverityToLSPSeverityMap();
   private static final Map<DiagnosticTag, org.eclipse.lsp4j.DiagnosticTag> diagnosticTagMap = createDiagnosticTagMap();
 
-  private final Class<? extends BSLDiagnostic> diagnosticClass;
-  private final BSLLanguageServerConfiguration configuration;
-
-  private final DiagnosticCode diagnosticCode;
-  private final DiagnosticMetadata diagnosticMetadata;
-  private final List<DiagnosticParameterInfo> diagnosticParameters;
-
   public BSLDiagnosticInfo(
-    Class<? extends BSLDiagnostic> diagnosticClass,
-    BSLLanguageServerConfiguration configuration
+    Class<? extends CoreDiagnostic> diagnosticClass,
+    LanguageServerConfiguration configuration
   ) {
-    this.diagnosticClass = diagnosticClass;
-    this.configuration = configuration;
+    super(diagnosticClass, configuration);
 
-    diagnosticCode = createDiagnosticCode();
-    diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
-    diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
+    // переинициализация параметров из-за изменения класса аннотации
+    setDiagnosticMetadata(diagnosticClass.getAnnotation(annotationClass()));
+    setDiagnosticParameters(DiagnosticParameterInfo.createDiagnosticParameters(this));
   }
 
-  public Class<? extends BSLDiagnostic> getDiagnosticClass() {
-    return diagnosticClass;
-  }
-
-  public DiagnosticCode getCode() {
-    return diagnosticCode;
-  }
-
-  public String getName() {
-    return getResourceString("diagnosticName");
+  /**
+   * Для переопределения класса аннотации-метаданных диагностики
+   *
+   * @return Класс аннотации
+   */
+  @Override
+  protected Class<? extends Annotation> annotationClass() {
+    return DiagnosticMetadata.class;
   }
 
   public String getDescription() {
-    String langCode = configuration.getLanguage().getLanguageCode();
+    String langCode = getConfiguration().getLanguage().getLanguageCode();
 
-    String resourceName = langCode + "/" + diagnosticCode.getStringValue() + ".md";
-    InputStream descriptionStream = diagnosticClass.getResourceAsStream(resourceName);
+    String resourceName = langCode + "/" + getDiagnosticCode().getStringValue() + ".md";
+    InputStream descriptionStream = getDiagnosticClass().getResourceAsStream(resourceName);
 
     if (descriptionStream == null) {
       LOGGER.error("Can't find resource {}", resourceName);
@@ -100,103 +86,38 @@ public class BSLDiagnosticInfo {
     }
   }
 
-  public String getMessage() {
-    return getResourceString("diagnosticMessage");
-  }
 
-  public String getMessage(Object... args) {
-    return String.format(getMessage(), args).intern();
-  }
-
-  public String getResourceString(String key) {
-    return Resources.getResourceString(configuration.getLanguage(), diagnosticClass, key);
-  }
-
-  public String getResourceString(String key, Object... args) {
-    return Resources.getResourceString(configuration.getLanguage(), diagnosticClass, key, args);
-  }
-
-  public DiagnosticType getType() {
-    return diagnosticMetadata.type();
-  }
-
-  public DiagnosticSeverity getSeverity() {
-    return diagnosticMetadata.severity();
-  }
-
-  public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
-    var type = getType();
-    if (type == DiagnosticType.CODE_SMELL) {
-      return severityToLSPSeverityMap.get(getSeverity());
-    } else if (type == DiagnosticType.SECURITY_HOTSPOT) {
-      return org.eclipse.lsp4j.DiagnosticSeverity.Warning;
-    } else {
-      return org.eclipse.lsp4j.DiagnosticSeverity.Error;
-    }
-  }
-
+  @SneakyThrows
   public DiagnosticCompatibilityMode getCompatibilityMode() {
-    return diagnosticMetadata.compatibilityMode();
+    return (DiagnosticCompatibilityMode) getDiagnosticMetadata().getClass().getDeclaredMethod("compatibilityMode")
+      .invoke(getDiagnosticMetadata());
   }
 
+  @SneakyThrows
   public DiagnosticScope getScope() {
-    return diagnosticMetadata.scope();
+    return (DiagnosticScope) getDiagnosticMetadata().getClass().getDeclaredMethod("scope")
+      .invoke(getDiagnosticMetadata());
   }
 
+  @SneakyThrows
   public ModuleType[] getModules() {
-    return diagnosticMetadata.modules();
+    return (ModuleType[]) getDiagnosticMetadata().getClass().getDeclaredMethod("modules")
+      .invoke(getDiagnosticMetadata());
   }
 
-  public int getMinutesToFix() {
-    return diagnosticMetadata.minutesToFix();
-  }
-
-  public boolean isActivatedByDefault() {
-    return diagnosticMetadata.activatedByDefault();
-  }
-
+  @SneakyThrows
   public List<DiagnosticTag> getTags() {
-    return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
+    return new ArrayList<>(
+      Arrays.asList((DiagnosticTag[]) getDiagnosticMetadata().getClass().getDeclaredMethod("tags")
+        .invoke(getDiagnosticMetadata())));
   }
 
+  @Override
   public List<org.eclipse.lsp4j.DiagnosticTag> getLSPTags() {
     return getTags().stream()
       .map(diagnosticTag -> diagnosticTagMap.getOrDefault(diagnosticTag, null))
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
-  }
-
-  public List<DiagnosticParameterInfo> getParameters() {
-    return new ArrayList<>(diagnosticParameters);
-  }
-
-  public Optional<DiagnosticParameterInfo> getParameter(String parameterName) {
-    return diagnosticParameters.stream().filter(param -> param.getName().equals(parameterName)).findAny();
-  }
-
-  public Map<String, Object> getDefaultConfiguration() {
-    return diagnosticParameters.stream()
-      .collect(Collectors.toMap(DiagnosticParameterInfo::getName, DiagnosticParameterInfo::getDefaultValue));
-  }
-
-  private DiagnosticCode createDiagnosticCode() {
-    String simpleName = diagnosticClass.getSimpleName();
-    if (simpleName.endsWith("Diagnostic")) {
-      simpleName = simpleName.substring(0, simpleName.length() - "Diagnostic".length());
-    }
-
-    return new DiagnosticCode(simpleName.intern());
-  }
-
-  private static Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> createSeverityToLSPSeverityMap() {
-    Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> map = new EnumMap<>(DiagnosticSeverity.class);
-    map.put(DiagnosticSeverity.INFO, org.eclipse.lsp4j.DiagnosticSeverity.Hint);
-    map.put(DiagnosticSeverity.MINOR, org.eclipse.lsp4j.DiagnosticSeverity.Information);
-    map.put(DiagnosticSeverity.MAJOR, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
-    map.put(DiagnosticSeverity.CRITICAL, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
-    map.put(DiagnosticSeverity.BLOCKER, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
-
-    return map;
   }
 
   private static Map<DiagnosticTag, org.eclipse.lsp4j.DiagnosticTag> createDiagnosticTagMap() {

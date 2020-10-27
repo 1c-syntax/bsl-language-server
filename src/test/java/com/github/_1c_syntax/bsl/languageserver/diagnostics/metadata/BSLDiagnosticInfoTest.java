@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagno
 import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalMethodDiagnostic;
 import com.github._1c_syntax.ls_core.configuration.Language;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
 import org.assertj.core.api.Assertions;
@@ -51,7 +52,7 @@ class BSLDiagnosticInfoTest {
 
     BSLDiagnosticInfo diagnosticInfo = new BSLDiagnosticInfo(EmptyCodeBlockDiagnostic.class, configuration);
 
-    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
+    Assertions.assertThat(diagnosticInfo.getDiagnosticCode()).isEqualTo(Either.forLeft("EmptyCodeBlock"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage("")).isNotEmpty();
@@ -104,7 +105,7 @@ class BSLDiagnosticInfoTest {
 
     BSLDiagnosticInfo diagnosticInfo = new BSLDiagnosticInfo(MultilingualStringHasAllDeclaredLanguagesDiagnostic.class, configuration);
 
-    Assertions.assertThat(diagnosticInfo.getCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
+    Assertions.assertThat(diagnosticInfo.getDiagnosticCode()).isEqualTo(Either.forLeft("MultilingualStringHasAllDeclaredLanguages"));
     Assertions.assertThat(diagnosticInfo.getName()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage()).isNotEmpty();
     Assertions.assertThat(diagnosticInfo.getMessage("")).isNotEmpty();
@@ -119,7 +120,6 @@ class BSLDiagnosticInfoTest {
 
     Assertions.assertThat(diagnosticInfo.getDefaultConfiguration().size()).isNotZero();
     Assertions.assertThat(diagnosticInfo.getParameters().size()).isEqualTo(1);
-
 
     DiagnosticParameterInfo parameter = diagnosticInfo.getParameters().get(0);
     assertThat(parameter.getDescription())
