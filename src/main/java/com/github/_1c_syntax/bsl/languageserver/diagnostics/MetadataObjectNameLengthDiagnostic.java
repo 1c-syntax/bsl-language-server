@@ -22,12 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import org.eclipse.lsp4j.Range;
 
@@ -56,7 +56,7 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractDiagnostic {
   @Override
   protected void check() {
 
-    Optional<Range> range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
+    Optional<Range> range = BSLRanges.getFirstSignificantTokenRange(documentContext.getTokens());
     if (range.isEmpty()) {
       return;
     }

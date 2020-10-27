@@ -23,7 +23,7 @@
  * В пакете содержатся классы для конфигурирования BSL Language Server.
  * <p>
  * Корневой пакет содержит корневой класс конфигурации
- * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}
+ * {@link com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration}
  * , настройки верхнего уровня и дополнительные пакеты для настроек в разрезе провайдеров
  * (диагностики, code lens, и т.д.)
  */

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
 class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameServerCallDiagnostic> {
 
   private CommonModule module;
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
 
   CommonModuleNameServerCallDiagnosticTest() {
     super(CommonModuleNameServerCallDiagnostic.class);
@@ -152,7 +152,7 @@ class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<Co
 
     initServerContext(path);
     var configuration = context.getConfiguration();
-    documentContext = spy(TestUtils.getDocumentContext(
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

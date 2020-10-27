@@ -21,9 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.parser.SDBLParserBaseVisitor;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticInfo;
 import lombok.Getter;
 import lombok.Setter;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -35,14 +36,14 @@ public abstract class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisito
   @Getter
   @Setter
   protected DiagnosticInfo info;
-  protected final DiagnosticStorage diagnosticStorage = new DiagnosticStorage(this);
-  protected DocumentContext documentContext;
+  protected final BSLDiagnosticStorage diagnosticStorage = new BSLDiagnosticStorage(this);
+  protected BSLDocumentContext documentContext;
 
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
-    this.documentContext = documentContext;
+    this.documentContext = (BSLDocumentContext) documentContext;
     diagnosticStorage.clearDiagnostics();
-    var queries = documentContext.getQueries();
+    var queries = this.documentContext.getQueries();
     if (!queries.isEmpty()) {
       queries.forEach(sdblTokenizer -> this.visitQueryPackage(sdblTokenizer.getAst()));
     }

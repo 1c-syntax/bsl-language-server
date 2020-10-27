@@ -233,7 +233,7 @@ _**<В разработке>**_
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLRanges;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

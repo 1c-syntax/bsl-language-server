@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 
 import java.util.List;
 
 public interface CodeActionSupplier {
-  List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext);
+  List<CodeAction> getCodeActions(CodeActionParams params, BSLDocumentContext documentContext);
 }

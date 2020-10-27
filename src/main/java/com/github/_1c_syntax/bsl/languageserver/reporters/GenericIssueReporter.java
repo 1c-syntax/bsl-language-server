@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GenericIssueReporter implements DiagnosticReporter {
 
-  private final Map<String, DiagnosticInfo> diagnosticInfos;
+  private final Map<String, CoreDiagnosticInfo> diagnosticInfos;
 
   @Override
   public String key() {

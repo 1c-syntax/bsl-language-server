@@ -21,13 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -45,7 +46,7 @@ public class CyclomaticComplexityComputer
   extends BSLParserBaseListener
   implements Computer<ComplexityData> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
@@ -57,7 +58,7 @@ public class CyclomaticComplexityComputer
   private MethodSymbol currentMethod;
   private int complexity;
 
-  public CyclomaticComplexityComputer(DocumentContext documentContext) {
+  public CyclomaticComplexityComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;

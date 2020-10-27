@@ -21,13 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
@@ -48,7 +49,7 @@ public class CognitiveComplexityComputer
   extends BSLParserBaseListener
   implements Computer<ComplexityData> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
@@ -62,7 +63,7 @@ public class CognitiveComplexityComputer
   private int nestedLevel;
   private final Set<BSLParserRuleContext> ignoredContexts;
 
-  public CognitiveComplexityComputer(DocumentContext documentContext) {
+  public CognitiveComplexityComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
     fileComplexity = 0;
     fileCodeBlockComplexity = 0;

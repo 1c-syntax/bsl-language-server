@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -33,7 +33,7 @@ public interface QuickFixProvider {
   List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   );
 
 }

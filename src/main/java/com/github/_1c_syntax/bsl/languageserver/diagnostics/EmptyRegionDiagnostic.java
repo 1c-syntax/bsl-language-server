@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.providers.CodeActionProvider;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -89,7 +89,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
   public List<CodeAction> getQuickFixes(
     List<Diagnostic> diagnostics,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   ) {
     List<TextEdit> textEdits = new ArrayList<>(diagnostics.size());
     diagnostics

@@ -23,13 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.annotation.Nullable;
@@ -124,7 +125,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private static void addAssignedNameVar(BSLParserRuleContext assignmentNode, Set<String> nameVars) {
+  private static void addAssignedNameVar(ParserRuleContext assignmentNode, Set<String> nameVars) {
     var childNode = Trees.getFirstChild(assignmentNode, BSLParser.RULE_lValue);
     childNode.ifPresent(node -> nameVars.add(node.getText()));
   }
@@ -132,7 +133,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
     var childNode = Trees.getFirstChild(ctx, BSLParser.RULE_lValue);
-    childNode.ifPresent((BSLParserRuleContext node) ->
+    childNode.ifPresent((ParserRuleContext node) ->
     {
       isInRoleVars.remove(node.getText());
       privilegedModeNameVars.remove(node.getText());
@@ -145,7 +146,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     return checkStatement(ctx, parentExpression);
   }
 
-  private boolean checkStatement(BSLParserRuleContext ctx, @Nullable BSLParserRuleContext parentExpression) {
+  private boolean checkStatement(BSLParserRuleContext ctx, @Nullable ParserRuleContext parentExpression) {
 
     if (parentExpression == null) {
       return false;

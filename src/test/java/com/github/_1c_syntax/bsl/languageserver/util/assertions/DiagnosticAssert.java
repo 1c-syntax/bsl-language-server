@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util.assertions;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.assertj.core.api.AbstractAssert;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;

@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test832() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 2));
+    BSLDocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 2));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 
@@ -49,7 +50,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test833() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 4));
+    BSLDocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 4));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 //    assertThat(diagnostics).hasSize(1);
@@ -61,7 +62,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
   @Test
   void test836() {
 
-    DocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 14));
+    BSLDocumentContext documentContext = setCompatibilityMode(new CompatibilityMode(3, 14));
 
 //    List<Diagnostic> diagnostics = getDiagnosticsFiltered(documentContext);
 //    assertThat(diagnostics).hasSize(1);
@@ -70,10 +71,10 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
 
   }
 
-  private DocumentContext setCompatibilityMode(CompatibilityMode version) {
+  private BSLDocumentContext setCompatibilityMode(CompatibilityMode version) {
 
-    var documentContext = spy(getDocumentContext());
-    var serverContext = spy(documentContext.getServerContext());
+    var documentContext = spy((BSLDocumentContext) getDocumentContext());
+    var serverContext = spy((BSLServerContext) documentContext.getServerContext());
     var configuration = spy(serverContext.getConfiguration());
 
     when(documentContext.getServerContext()).thenReturn(serverContext);
@@ -85,7 +86,7 @@ class ThisObjectAssignDiagnosticTest extends AbstractDiagnosticTest<ThisObjectAs
     return documentContext;
   }
 
-//  private List<Diagnostic> getDiagnosticsFiltered(DocumentContext documentContext) {
+//  private List<Diagnostic> getDiagnosticsFiltered(BSLDocumentContext documentContext) {
 ////    DiagnosticSupplier diagnosticSupplier = new DiagnosticSupplier(LanguageServerConfiguration.create());
 ////
 ////    return diagnosticSupplier

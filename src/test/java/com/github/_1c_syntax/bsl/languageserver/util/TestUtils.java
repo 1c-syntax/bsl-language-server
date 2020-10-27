@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -52,23 +52,23 @@ public class TestUtils {
   }
 
   public static DocumentContext getDocumentContext(URI uri, String fileContent) {
-    return getDocumentContext(uri, fileContent, TestApplicationContext.getBean(ServerContext.class));
+    return getDocumentContext(uri, fileContent, TestApplicationContext.getBean(BSLServerContext.class));
   }
 
   public static DocumentContext getDocumentContext(String fileContent) {
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent);
   }
 
-  public static DocumentContext getDocumentContext(String fileContent, @Nullable ServerContext context) {
-    ServerContext passedContext = context;
+  public static DocumentContext getDocumentContext(String fileContent, @Nullable BSLServerContext context) {
+    BSLServerContext passedContext = context;
     if (passedContext == null) {
-      passedContext = TestApplicationContext.getBean(ServerContext.class);
+      passedContext = TestApplicationContext.getBean(BSLServerContext.class);
     }
 
     return getDocumentContext(FAKE_DOCUMENT_URI, fileContent, passedContext);
   }
 
-  public static DocumentContext getDocumentContext(URI uri, String fileContent, ServerContext context) {
+  public static DocumentContext getDocumentContext(URI uri, String fileContent, BSLServerContext context) {
     return context.addDocument(uri, fileContent);
   }
 }

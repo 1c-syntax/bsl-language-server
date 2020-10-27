@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util.assertions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.CodeAction;
@@ -39,7 +39,7 @@ import static java.lang.Integer.max;
 
 public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeAction> {
 
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
   private BSLDiagnostic bslDiagnostic;
 
   public CodeActionAssert(CodeAction actual) {
@@ -55,7 +55,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     return this;
   }
 
-  public CodeActionAssert in(DocumentContext documentContext) {
+  public CodeActionAssert in(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
     return this;
   }

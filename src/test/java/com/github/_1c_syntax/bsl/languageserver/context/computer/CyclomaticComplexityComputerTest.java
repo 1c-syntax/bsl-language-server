@@ -21,9 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -38,8 +39,8 @@ class CyclomaticComplexityComputerTest {
   void compute() {
 
     // given
-    DocumentContext documentContext
-      = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CyclomaticComplexityComputerTest.bsl");
+    BSLDocumentContext documentContext
+      = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CyclomaticComplexityComputerTest.bsl");
 
     // when
     Computer<ComplexityData> cyclomaticComplexityComputer =

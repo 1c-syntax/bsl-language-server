@@ -21,11 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -51,9 +52,9 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   @Autowired
   private DiagnosticConfiguration diagnosticConfiguration;
   @Autowired
-  protected ServerContext context;
+  protected BSLServerContext context;
   @Autowired
-  protected LanguageServerConfiguration configuration;
+  protected BSLLanguageServerConfiguration configuration;
 
   private final Class<T> diagnosticClass;
   protected T diagnosticInstance;
@@ -75,7 +76,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected void initServerContext(Path configurationRoot) {
-    context.setConfigurationRoot(configurationRoot);
+    context.setProjectRoot(configurationRoot);
     context.populateContext();
   }
 
@@ -84,12 +85,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<Diagnostic> getDiagnostics() {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getDiagnostics(documentContext);
   }
 
   protected List<Diagnostic> getDiagnostics(String simpleFileName) {
-    DocumentContext documentContext = getDocumentContext(simpleFileName);
+    var documentContext = getDocumentContext(simpleFileName);
     return getDiagnostics(documentContext);
   }
 
@@ -102,12 +103,12 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
   }
 
   protected List<CodeAction> getQuickFixes(Diagnostic diagnostic, Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     return getQuickFixes(documentContext, Collections.singletonList(diagnostic), range);
   }
 
   protected List<CodeAction> getQuickFixes(Range range) {
-    DocumentContext documentContext = getDocumentContext();
+    var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = this.diagnosticInstance.getDiagnostics(documentContext);
 
     return getQuickFixes(documentContext, diagnostics, range);
@@ -125,7 +126,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
     params.setRange(range);
     params.setContext(codeActionContext);
 
-    return ((QuickFixProvider) this.diagnosticInstance).getQuickFixes(diagnostics, params, documentContext);
+    return ((QuickFixProvider) this.diagnosticInstance).getQuickFixes(diagnostics, params, (BSLDocumentContext) documentContext);
 
   }
 

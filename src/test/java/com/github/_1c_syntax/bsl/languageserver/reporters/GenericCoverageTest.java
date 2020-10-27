@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -67,7 +67,7 @@ class GenericCoverageTest {
     String filePath = "./src/test/resources/context/DocumentContextLocForCoverTest.bsl";
 
     // when
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile(filePath);
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, new ArrayList<>());
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 

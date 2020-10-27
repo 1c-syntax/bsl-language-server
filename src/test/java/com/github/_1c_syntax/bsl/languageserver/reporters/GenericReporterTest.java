@@ -22,12 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -59,7 +59,7 @@ class GenericReporterTest {
   private GenericIssueReporter reporter;
 
   @Autowired
-  private Map<String, DiagnosticInfo> diagnosticInfos;
+  private Map<String, CoreDiagnosticInfo> diagnosticInfos;
 
   private final File file = new File("./bsl-generic-json.json");
 
@@ -86,7 +86,7 @@ class GenericReporterTest {
       "message",
       DiagnosticSeverity.Error,
       "test-source",
-      firstInfo.getCode().getStringValue()
+      firstInfo.getDiagnosticCode().getStringValue()
     ));
 
     diagnostics.add(new Diagnostic(
@@ -94,7 +94,7 @@ class GenericReporterTest {
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
-      firstInfo.getCode().getStringValue()
+      firstInfo.getDiagnosticCode().getStringValue()
     ));
 
     diagnostics.add(new Diagnostic(
@@ -102,10 +102,10 @@ class GenericReporterTest {
       "message4",
       DiagnosticSeverity.Error,
       "test-source2",
-      secondInfo.getCode().getStringValue()
+      secondInfo.getDiagnosticCode().getStringValue()
     ));
 
-    DocumentContext documentContext = TestUtils.getDocumentContext("");
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContext("");
     Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
     diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
@@ -125,7 +125,7 @@ class GenericReporterTest {
     assertThat(report.getIssues().get(0).getPrimaryLocation()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations().size()).isEqualTo(1);
-    assertThat(report.getIssues().get(2).getRuleId()).isEqualTo(secondInfo.getCode().getStringValue());
+    assertThat(report.getIssues().get(2).getRuleId()).isEqualTo(secondInfo.getDiagnosticCode().getStringValue());
     assertThat(report.getIssues().get(1).getSeverity()).isEqualTo(firstInfo.getSeverity().name());
   }
 

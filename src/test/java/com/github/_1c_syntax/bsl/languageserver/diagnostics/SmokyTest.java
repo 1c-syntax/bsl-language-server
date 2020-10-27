@@ -22,10 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
-import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.LSLauncher;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.CoreDiagnosticInfo;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -51,10 +52,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SmokyTest {
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private BSLLanguageServerConfiguration configuration;
 
   @Autowired
-  private Collection<DiagnosticInfo> diagnosticInfos;
+  private Collection<CoreDiagnosticInfo> diagnosticInfos;
 
   @Test
   @ExpectSystemExitWithStatus(0)
@@ -64,7 +65,7 @@ class SmokyTest {
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
 
     // when
-    BSLLSPLauncher.main(args);
+    LSLauncher.main(args);
 
     // then
     assertThat(true).isTrue();
@@ -104,7 +105,8 @@ class SmokyTest {
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
-      .map(DiagnosticInfo::getCode)
+      .map(coreDiagnosticInfo -> (BSLDiagnosticInfo) coreDiagnosticInfo)
+      .map(BSLDiagnosticInfo::getDiagnosticCode)
       .collect(Collectors.toMap(
         diagnosticCode -> diagnosticCode.getStringValue(),
         diagnosticCode -> Either.forLeft(true),

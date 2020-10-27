@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -39,7 +39,7 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
   protected final QuickFixSupplier quickFixSupplier;
 
   @Override
-  public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
+  public List<CodeAction> getCodeActions(CodeActionParams params, BSLDocumentContext documentContext) {
     List<String> only = params.getContext().getOnly();
     if (only != null && !only.isEmpty() && !only.contains(CodeActionKind.QuickFix)) {
       return Collections.emptyList();
@@ -63,6 +63,6 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
   protected abstract Stream<CodeAction> processDiagnosticStream(
     Stream<Diagnostic> diagnosticStream,
     CodeActionParams params,
-    DocumentContext documentContext
+    BSLDocumentContext documentContext
   );
 }

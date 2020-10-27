@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ class DeprecatedTypeManagedFormDiagnosticTest extends AbstractDiagnosticTest<Dep
   void testQuickFix() {
 
 
-    final DocumentContext documentContext = getDocumentContext();
+    final BSLDocumentContext documentContext = (BSLDocumentContext) getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
     final Diagnostic ruDiagnostic = diagnostics.get(0);
 

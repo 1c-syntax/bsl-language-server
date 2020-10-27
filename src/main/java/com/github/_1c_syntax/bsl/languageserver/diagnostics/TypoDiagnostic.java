@@ -21,17 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPool;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPoolEntry;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticParameter;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -122,7 +122,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     getLanguageToolPoolMap().get(lang).checkIn(languageToolPoolEntry);
   }
 
-  private String getTokenizedStringFromTokens(DocumentContext documentContext, Map<String, List<Token>> tokensMap) {
+  private String getTokenizedStringFromTokens(BSLDocumentContext documentContext, Map<String, List<Token>> tokensMap) {
     StringBuilder text = new StringBuilder();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()

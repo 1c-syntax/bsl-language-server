@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.ls_core.configuration.Language;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ class ConfigurationFileSystemWatcherTest {
   private ConfigurationFileSystemWatcher watcher;
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private BSLLanguageServerConfiguration configuration;
 
   @Test
   void test() throws IOException {

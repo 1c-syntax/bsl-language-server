@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -37,21 +37,21 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
  * Обработчик событий изменения файла конфигурации.
  * <p>
  * Выполняет обновление/сброс инстанса
- * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+ * {@link com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration}.
  */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class ConfigurationFileChangeListener {
 
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
 
   /**
    * Обработчик изменения файла конфигурации. Актуализирует текущий активный инстанс конфигурации
-   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * {@link com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration}.
    *
    * @param configurationFile Изменившийся файл конфигурации, содержащий
-   * {@link com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration}.
+   * {@link com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration}.
    * @param eventKind Тип события, произошедшего с файлом.
    */
   public void onChange(File configurationFile, WatchEvent.Kind<?> eventKind) {

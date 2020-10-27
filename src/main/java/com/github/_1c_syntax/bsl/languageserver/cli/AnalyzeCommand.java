@@ -21,13 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.ls_core.cli.CLICommand;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Option;
@@ -87,7 +87,7 @@ import static picocli.CommandLine.Option;
   footer = "@|green Copyright(c) 2018-2020|@")
 @Component
 @RequiredArgsConstructor
-public class AnalyzeCommand implements Callable<Integer> {
+public class AnalyzeCommand implements CLICommand {
 
   private static class ReportersKeys extends ArrayList<String> {
     ReportersKeys(ReportersAggregator aggregator) {
@@ -148,8 +148,8 @@ public class AnalyzeCommand implements Callable<Integer> {
   private boolean debug;
 
   private final ReportersAggregator aggregator;
-  private final LanguageServerConfiguration configuration;
-  private final ServerContext context;
+  private final BSLLanguageServerConfiguration configuration;
+  private final BSLServerContext context;
 
   public Integer call() {
 
@@ -168,8 +168,8 @@ public class AnalyzeCommand implements Callable<Integer> {
     File configurationFile = new File(configurationOption);
     configuration.update(configurationFile);
 
-    Path configurationPath = LanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
-    context.setConfigurationRoot(configurationPath);
+    Path configurationPath = BSLLanguageServerConfiguration.getCustomConfigurationRoot(configuration, srcDir);
+    context.setProjectRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
     
@@ -209,7 +209,7 @@ public class AnalyzeCommand implements Callable<Integer> {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
+    var documentContext = (BSLDocumentContext) context.addDocument(file.toURI(), textDocumentContent);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();

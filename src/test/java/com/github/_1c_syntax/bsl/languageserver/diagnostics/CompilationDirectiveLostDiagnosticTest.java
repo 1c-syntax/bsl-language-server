@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +37,7 @@ class CompilationDirectiveLostDiagnosticTest extends AbstractDiagnosticTest<Comp
   @Test
   void testFormModule() {
 
-    DocumentContext documentContext = getDocumentContext();
+    BSLDocumentContext documentContext = (BSLDocumentContext) getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
     assertThat(diagnostics).hasSize(1);

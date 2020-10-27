@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
@@ -113,7 +113,7 @@ class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSy
   @Test
   void testUse() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
     assertThat(diagnostics).isEmpty();
   }

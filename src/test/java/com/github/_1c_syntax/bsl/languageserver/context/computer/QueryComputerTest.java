@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,8 +36,8 @@ class QueryComputerTest {
   @Test
   void compute() {
     // given
-    DocumentContext documentContext
-      = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/QueryComputerTest.bsl");
+    BSLDocumentContext documentContext
+      = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/QueryComputerTest.bsl");
 
     // when
     var queries = documentContext.getQueries();

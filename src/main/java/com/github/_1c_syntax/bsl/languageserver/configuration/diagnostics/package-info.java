@@ -20,6 +20,6 @@
  * License along with BSL Language Server.
  */
 /**
- * Пакет содержит настройки для работы {@link com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider}
+ * Пакет содержит настройки для работы {@link com.github._1c_syntax.ls_core.providers.DiagnosticProvider}
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;

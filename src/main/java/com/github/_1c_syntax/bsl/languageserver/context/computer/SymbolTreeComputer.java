@@ -21,13 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,9 +37,9 @@ import java.util.Optional;
 
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
 
-  public SymbolTreeComputer(DocumentContext documentContext) {
+  public SymbolTreeComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 

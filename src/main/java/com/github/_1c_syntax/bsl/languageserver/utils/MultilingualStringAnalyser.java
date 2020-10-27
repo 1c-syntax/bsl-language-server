@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -196,5 +197,4 @@ public final class MultilingualStringAnalyser {
       BSLParser.RULE_codeBlock
     );
   }
-
 }

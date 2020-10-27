@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
-import com.github._1c_syntax.bsl.languageserver.utils.AbstractObjectPool;
 import lombok.AllArgsConstructor;
 import org.languagetool.Language;
 

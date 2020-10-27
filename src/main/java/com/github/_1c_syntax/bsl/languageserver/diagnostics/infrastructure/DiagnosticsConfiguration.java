@@ -21,16 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.BSLDiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.BSLDiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
+import com.github._1c_syntax.ls_core.diagnostics.CoreDiagnostic;
+import com.github._1c_syntax.ls_core.diagnostics.infrastructure.DiagnosticConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -53,22 +54,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public abstract class DiagnosticsConfiguration {
 
-  private final LanguageServerConfiguration configuration;
+  private final BSLLanguageServerConfiguration configuration;
   private final DiagnosticConfiguration diagnosticConfiguration;
 
   @Bean
   @Scope("prototype")
-  public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
+  public List<CoreDiagnostic> diagnostics(BSLDocumentContext documentContext) {
 
-    Collection<DiagnosticInfo> diagnosticInfos = diagnosticInfos();
+    Collection<BSLDiagnosticInfo> diagnosticInfos = diagnosticInfos();
 
-    DiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
+    BSLDiagnosticsOptions diagnosticsOptions = configuration.getDiagnosticsOptions();
 
     if (needToComputeDiagnostics(documentContext, diagnosticsOptions)) {
       FileType fileType = documentContext.getFileType();
       CompatibilityMode compatibilityMode = documentContext
-        .getServerContext()
-        .getConfiguration()
+        .getMDConfiguration()
         .getCompatibilityMode();
       ModuleType moduleType = documentContext.getModuleType();
 
@@ -77,7 +77,7 @@ public abstract class DiagnosticsConfiguration {
         .filter(info -> inScope(info, fileType))
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
-        .map(DiagnosticInfo::getDiagnosticClass)
+        .map(BSLDiagnosticInfo::getDiagnosticClass)
         .map(diagnosticConfiguration::diagnostic)
         .collect(Collectors.toList());
     } else {
@@ -86,11 +86,11 @@ public abstract class DiagnosticsConfiguration {
   }
 
   @Lookup("diagnosticInfos")
-  protected abstract Collection<DiagnosticInfo> diagnosticInfos();
+  protected abstract Collection<BSLDiagnosticInfo> diagnosticInfos();
 
   private static boolean needToComputeDiagnostics(
-    DocumentContext documentContext,
-    DiagnosticsOptions diagnosticsOptions
+    BSLDocumentContext documentContext,
+    BSLDiagnosticsOptions diagnosticsOptions
   ) {
     var configuredMode = diagnosticsOptions.getMode();
 
@@ -120,7 +120,7 @@ public abstract class DiagnosticsConfiguration {
     return configuredSkipSupport != SkipSupport.WITH_SUPPORT;
   }
 
-  private boolean isEnabled(DiagnosticInfo diagnosticInfo, DiagnosticsOptions diagnosticsOptions) {
+  private boolean isEnabled(BSLDiagnosticInfo diagnosticInfo, BSLDiagnosticsOptions diagnosticsOptions) {
 
     var mode = diagnosticsOptions.getMode();
     if (mode == Mode.OFF) {
@@ -128,7 +128,7 @@ public abstract class DiagnosticsConfiguration {
     }
 
     Either<Boolean, Map<String, Object>> diagnosticParameters =
-      configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getCode().getStringValue());
+      configuration.getDiagnosticsOptions().getParameters().get(diagnosticInfo.getDiagnosticCode().getStringValue());
 
     boolean activatedByDefault = diagnosticParameters == null && diagnosticInfo.isActivatedByDefault();
     boolean hasCustomConfiguration = diagnosticParameters != null && diagnosticParameters.isRight();
@@ -153,7 +153,7 @@ public abstract class DiagnosticsConfiguration {
 
   }
 
-  private static boolean inScope(DiagnosticInfo diagnosticInfo, FileType fileType) {
+  private static boolean inScope(BSLDiagnosticInfo diagnosticInfo, FileType fileType) {
     DiagnosticScope scope = diagnosticInfo.getScope();
     DiagnosticScope fileScope;
     if (fileType == FileType.OS) {
@@ -164,7 +164,7 @@ public abstract class DiagnosticsConfiguration {
     return scope == DiagnosticScope.ALL || scope == fileScope;
   }
 
-  private static boolean correctModuleType(DiagnosticInfo diagnosticInfo, ModuleType moduletype, FileType fileType) {
+  private static boolean correctModuleType(BSLDiagnosticInfo diagnosticInfo, ModuleType moduletype, FileType fileType) {
 
     if (fileType == FileType.OS) {
       return true;
@@ -187,7 +187,7 @@ public abstract class DiagnosticsConfiguration {
   }
 
   private static boolean passedCompatibilityMode(
-    DiagnosticInfo diagnosticInfo,
+    BSLDiagnosticInfo diagnosticInfo,
     CompatibilityMode contextCompatibilityMode
   ) {
     DiagnosticCompatibilityMode compatibilityMode = diagnosticInfo.getCompatibilityMode();

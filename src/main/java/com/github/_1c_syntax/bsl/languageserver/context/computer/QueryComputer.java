@@ -21,10 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -37,7 +38,7 @@ import java.util.regex.Pattern;
 
 public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
   private final List<SDBLTokenizer> queries = new ArrayList<>();
 
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
@@ -46,7 +47,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
   private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
 
-  public QueryComputer(DocumentContext documentContext) {
+  public QueryComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
@@ -49,7 +49,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
   }
 
   private CommonModule module;
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
   private static final String PATH_TO_MODULE_FILE = "src/test/resources/metadata/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
@@ -173,7 +173,7 @@ class CommonModuleInvalidTypeDiagnosticTest extends AbstractDiagnosticTest<Commo
 
     initServerContext(path);
     var configuration = context.getConfiguration();
-    documentContext = spy(TestUtils.getDocumentContext(
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(
       testFile.toUri(),
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context

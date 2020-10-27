@@ -22,11 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.mdclasses.metadata.Configuration;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -50,7 +49,7 @@ public class CommonModuleAssignDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    Configuration configuration = documentContext.getServerContext().getConfiguration();
+    var configuration = documentContext.getMDConfiguration();
     if (configuration.getCommonModule(identifier.getText()).isPresent()) {
       diagnosticStorage.addDiagnostic(identifier, info.getMessage(identifier.getText()));
     }

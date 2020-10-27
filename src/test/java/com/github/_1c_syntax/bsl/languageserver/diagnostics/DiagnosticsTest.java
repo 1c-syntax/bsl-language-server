@@ -21,14 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.configuration.BSLLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.ls_core.configuration.diagnostics.Mode;
+import com.github._1c_syntax.ls_core.diagnostics.CoreDiagnostic;
 import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.CompatibilityMode;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -52,23 +53,23 @@ import static org.mockito.Mockito.spy;
 class DiagnosticsTest {
 
   @Autowired
-  private LanguageServerConfiguration configuration;
+  private BSLLanguageServerConfiguration configuration;
   @Autowired
-  protected ServerContext context;
+  protected BSLServerContext context;
   @Autowired
   protected DiagnosticsConfiguration diagnosticsConfiguration;
 
-  private DocumentContext documentContext;
+  private BSLDocumentContext documentContext;
 
   @BeforeEach
   void createDocumentContext() {
-    documentContext = TestUtils.getDocumentContext("");
+    documentContext = (BSLDocumentContext) TestUtils.getDocumentContext("");
   }
 
   @Test
   void testCompatibilityMode() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(""));
     var serverContext = spy(context);
     var bslConfiguration = spy(serverContext.getConfiguration());
 
@@ -94,7 +95,7 @@ class DiagnosticsTest {
   @Test
   void testModuleType() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(""));
 
     // when-then pairs
     doReturn(ModuleType.CommandModule).when(documentContext).getModuleType();
@@ -117,7 +118,7 @@ class DiagnosticsTest {
   @Test
   void testAllScope() {
     // given
-    documentContext = spy(TestUtils.getDocumentContext(""));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext(""));
 
     // when-then pairs
     doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
@@ -140,7 +141,7 @@ class DiagnosticsTest {
   void testSkipSupport() {
 
     // given
-    documentContext = spy(TestUtils.getDocumentContext("А = 0"));
+    documentContext = spy((BSLDocumentContext) TestUtils.getDocumentContext("А = 0"));
     var supportConfiguration = mock(SupportConfiguration.class);
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
@@ -274,7 +275,7 @@ class DiagnosticsTest {
     configuration.getDiagnosticsOptions().setParameters(rules);
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .hasSizeGreaterThan(10)
-      .flatExtracting(BSLDiagnostic::getClass)
+      .flatExtracting(CoreDiagnostic::getClass)
       .doesNotContain(TypoDiagnostic.class)
       .doesNotContain(TooManyReturnsDiagnostic.class)
       .contains(TernaryOperatorUsageDiagnostic.class)

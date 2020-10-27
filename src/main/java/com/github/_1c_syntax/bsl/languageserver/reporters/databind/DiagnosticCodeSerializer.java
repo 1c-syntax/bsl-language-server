@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.io.IOException;

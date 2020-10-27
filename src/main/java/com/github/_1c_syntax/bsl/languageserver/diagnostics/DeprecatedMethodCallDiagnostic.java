@@ -21,17 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -108,21 +109,22 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitGlobalMethodCall(ctx);
   }
 
-  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, DocumentContext documentContext) {
+  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, BSLDocumentContext documentContext) {
     return Optional.ofNullable(Trees.getRootParent(ctx, BSLParser.RULE_sub))
-      .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol(sub))
+      .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol((BSLParserRuleContext) sub))
       .map(MethodSymbol::isDeprecated)
       .orElse(false);
   }
 
   private void checkDeprecatedCall(String mdoRef, Token methodName) {
-    var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
-    String methodNameText = methodName.getText();
+    var documentContexts =
+      ((BSLServerContext) documentContext.getServerContext()).getDocuments(mdoRef);
+    var methodNameText = methodName.getText();
 
     documentContexts.entrySet().stream()
       .filter(entry -> DEFAULT_MODULE_TYPES.contains(entry.getKey()))
       .map(Map.Entry::getValue)
-      .map(DocumentContext::getSymbolTree)
+      .map(BSLDocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethods().stream())
       .filter(methodSymbol -> methodSymbol.isDeprecated()
         && methodSymbol.getName().equalsIgnoreCase(methodNameText))

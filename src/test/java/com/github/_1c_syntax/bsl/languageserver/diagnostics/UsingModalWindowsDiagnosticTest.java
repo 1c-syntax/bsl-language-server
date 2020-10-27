@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
+import com.github._1c_syntax.ls_core.context.DocumentContext;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
 
 class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalWindowsDiagnostic> {
   @SpyBean
-  private ServerContext context;
+  private BSLServerContext context;
 
   UsingModalWindowsDiagnosticTest() {
     super(UsingModalWindowsDiagnostic.class);
@@ -61,7 +61,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
   @Test
   void testUse() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
     assertThat(diagnostics).isEmpty();
   }
@@ -69,7 +69,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
   @Test
   void testUseWithForce() {
 
-    DocumentContext documentContext = getDocumentContextWithUseFlag(UseMode.USE);
+    var documentContext = getDocumentContextWithUseFlag(UseMode.USE);
 
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("forceModalityMode", true);

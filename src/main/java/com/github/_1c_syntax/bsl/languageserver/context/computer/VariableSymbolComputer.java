@@ -21,15 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLTrees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Range;
@@ -40,10 +42,10 @@ import java.util.Optional;
 
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
   private final List<VariableSymbol> variables = new ArrayList<>();
 
-  public VariableSymbolComputer(DocumentContext documentContext) {
+  public VariableSymbolComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 
@@ -93,10 +95,10 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     // поиск комментариев начинается от первого токена - VAR
     var varToken = Trees.getPreviousTokenFromDefaultChannel(tokens,
       ctx.getStart().getTokenIndex(), BSLParser.VAR_KEYWORD);
-    varToken.ifPresent(value -> comments.addAll(Trees.getComments(tokens, value)));
+    varToken.ifPresent(value -> comments.addAll(BSLTrees.getComments(tokens, value)));
 
     // висячий комментарий смотрим по токену переменной, он должен находится в этой же строке
-    Optional<Token> trailingComments = Trees.getTrailingComment(tokens, ctx.getStop());
+    Optional<Token> trailingComments = BSLTrees.getTrailingComment(tokens, ctx.getStop());
 
     if (comments.isEmpty() && trailingComments.isEmpty()) {
       return Optional.empty();

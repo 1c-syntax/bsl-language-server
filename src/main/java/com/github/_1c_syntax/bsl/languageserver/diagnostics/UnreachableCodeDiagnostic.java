@@ -22,14 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.ls_core.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.ls_core.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Trees;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -165,7 +166,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    List<BSLParserRuleContext> statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
+    var statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
       .stream()
       .filter(node ->
         node.getStart().getType() != BSLLexer.SEMICOLON
@@ -180,7 +181,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       Collections.reverse(statements);
 
       // найдем последний блок
-      BSLParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
+      var endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
 
       // если последний стейт не текущий, значит он будет недостижим
       if (!ppNode.equals(endCurrentBlockNode)) {
@@ -194,7 +195,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private BSLParserRuleContext getEndCurrentBlockNode(List<BSLParserRuleContext> statements, Position pos) {
+  private ParserRuleContext getEndCurrentBlockNode(List<ParserRuleContext> statements, Position pos) {
 
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
@@ -205,12 +206,12 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     // т.к. список реверснут, берем первый элемент
-    BSLParserRuleContext endCurrentBlockNode = statements.get(0);
+    var endCurrentBlockNode = statements.get(0);
 
     if (preprocRange != null) {
       // пройдем по всем стейтам (с конца идем) и ищем первый, находящийся в том же блоке
       // препроцессора, что и стейт прерывания
-      for (BSLParserRuleContext statement : statements) {
+      for (ParserRuleContext statement : statements) {
         Position posStatement = new Position(
           statement.getStart().getLine(),
           statement.getStart().getCharPositionInLine());

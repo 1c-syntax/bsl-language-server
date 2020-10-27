@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
@@ -41,16 +41,16 @@ import java.util.concurrent.atomic.AtomicReference;
 @UtilityClass
 public class MdoRefBuilder {
 
-  public String getMdoRef(DocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
+  public String getMdoRef(BSLDocumentContext documentContext, BSLParser.CallStatementContext callStatement) {
     return getMdoRef(documentContext, callStatement.IDENTIFIER(), callStatement.modifier());
   }
 
-  public String getMdoRef(DocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
+  public String getMdoRef(BSLDocumentContext documentContext, BSLParser.ComplexIdentifierContext complexIdentifier) {
     return getMdoRef(documentContext, complexIdentifier.IDENTIFIER(), complexIdentifier.modifier());
   }
 
   public String getMdoRef(
-    DocumentContext documentContext,
+    BSLDocumentContext documentContext,
     @Nullable
       TerminalNode identifier,
     List<? extends BSLParser.ModifierContext> modifiers
@@ -75,9 +75,8 @@ public class MdoRefBuilder {
     return mdoRef.get();
   }
 
-  private Optional<String> getCommonModuleMdoRef(DocumentContext documentContext, String commonModuleName) {
-    return documentContext.getServerContext()
-      .getConfiguration()
+  private Optional<String> getCommonModuleMdoRef(BSLDocumentContext documentContext, String commonModuleName) {
+    return documentContext.getMDConfiguration()
       .getCommonModule(commonModuleName)
       .map(CommonModule::getMdoReference)
       .map(MDOReference::getMdoRef);

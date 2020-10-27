@@ -21,14 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -53,12 +53,12 @@ class MethodSymbolComputerTest {
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
   @Autowired
-  private ServerContext serverContext;
+  private BSLServerContext serverContext;
 
   @Test
   void testMethodSymbolComputer() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     assertThat(methods.size()).isEqualTo(23);
@@ -151,7 +151,7 @@ class MethodSymbolComputerTest {
   @Test
   void testAnnotation() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     // CUSTOM
@@ -201,7 +201,7 @@ class MethodSymbolComputerTest {
   @Test
   void testParameters() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     List<ParameterDefinition> parameters = methods.get(2).getParameters();
@@ -226,7 +226,7 @@ class MethodSymbolComputerTest {
 
   @Test
   void testDeprecated() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
+    BSLDocumentContext documentContext = (BSLDocumentContext)  TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     MethodSymbol methodSymbol = methods.get(2);
@@ -248,7 +248,7 @@ class MethodSymbolComputerTest {
   void testMdoRef() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(path);
+    serverContext.setProjectRoot(path);
     checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 5);
     checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 1);
     checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1", 1);
@@ -257,7 +257,7 @@ class MethodSymbolComputerTest {
   @Test
   void testParseError() {
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTestParseError.bsl");
+    BSLDocumentContext documentContext = (BSLDocumentContext) TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTestParseError.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
     assertThat(methods.get(0).getName()).isEqualTo("Выполнить");
@@ -273,14 +273,14 @@ class MethodSymbolComputerTest {
   }
 
   private void checkModule(
-    ServerContext serverContext,
+    BSLServerContext serverContext,
     String path,
     String mdoRef,
     int methodsCount
   ) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+    var documentContext = (BSLDocumentContext) serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");

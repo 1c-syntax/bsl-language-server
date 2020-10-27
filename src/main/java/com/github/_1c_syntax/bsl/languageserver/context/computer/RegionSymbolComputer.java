@@ -21,11 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.BSLDocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
+import com.github._1c_syntax.ls_core.context.computer.Computer;
+import com.github._1c_syntax.ls_core.utils.Ranges;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Range;
@@ -39,12 +40,12 @@ public final class RegionSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<RegionSymbol>> {
 
-  private final DocumentContext documentContext;
+  private final BSLDocumentContext documentContext;
   private final Deque<Pair<RegionSymbol.RegionSymbolBuilder, BSLParser.RegionStartContext>> regionStack =
     new ArrayDeque<>();
   private final List<RegionSymbol> regions = new ArrayList<>();
 
-  public RegionSymbolComputer(DocumentContext documentContext) {
+  public RegionSymbolComputer(BSLDocumentContext documentContext) {
     this.documentContext = documentContext;
   }
 

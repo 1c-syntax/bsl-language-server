@@ -20,6 +20,6 @@
  * License along with BSL Language Server.
  */
 /**
- * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider}
+ * Пакет содержит настройки {@link com.github._1c_syntax.bsl.languageserver.providers.BSLCodeLensProvider}
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.codelens;
