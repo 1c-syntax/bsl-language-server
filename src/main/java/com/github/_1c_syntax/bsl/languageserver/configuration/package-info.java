@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-
 /**
  * В пакете содержатся классы для конфигурирования BSL Language Server.
  * <p>
