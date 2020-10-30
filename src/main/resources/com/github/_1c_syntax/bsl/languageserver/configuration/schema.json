@@ -203,6 +203,9 @@
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
+                "MagicDate": {
+                    "$ref": "parameters-schema.json#/definitions/MagicDate"
+                },
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
                 },

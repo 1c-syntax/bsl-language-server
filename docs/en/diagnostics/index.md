@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **121**
+Total: **122**
 
 * Error: **36**
-* Code smell: **78**
+* Code smell: **79**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -77,6 +77,7 @@ Total: **121**
  [JoinWithVirtualTable](JoinWithVirtualTable.md) | Join with virtual table | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [LatinAndCyrillicSymbolInWord](LatinAndCyrillicSymbolInWord.md) | Mixing Latin and Cyrillic characters in one identifier | Yes | Minor | Code smell | `brainoverload`<br>`suspicious` 
  [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br>`badpractice` 
+ [MagicDate](MagicDate.md) | Magic dates | Yes | Minor | Code smell | `badpractice` 
  [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` 
  [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` 
