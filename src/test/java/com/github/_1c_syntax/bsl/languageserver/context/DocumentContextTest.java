@@ -53,7 +53,7 @@ class DocumentContextTest {
 
     File file = new File("./src/test/resources/context/DocumentContextRebuildSecondTest.bsl");
     String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    documentContext.rebuild(fileContent);
+    documentContext.rebuild(fileContent, documentContext.getVersion() + 1);
     assertThat(documentContext.getTokens()).hasSize(16);
   }
 

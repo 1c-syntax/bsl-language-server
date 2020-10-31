@@ -59,7 +59,7 @@ public final class DiagnosticProvider implements LanguageClientAware {
     }
 
     client.publishDiagnostics(
-      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics.get())
+      new PublishDiagnosticsParams(documentContext.getUri().toString(), diagnostics.get(), documentContext.getVersion())
     );
   }
 

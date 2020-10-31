@@ -238,7 +238,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
-    documentContext.rebuild(params.getContentChanges().get(0).getText());
+    documentContext.rebuild(params.getContentChanges().get(0).getText(), params.getTextDocument().getVersion());
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
@@ -295,7 +295,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
           .collect(Collectors.toList());
       }
-      return new Diagnostics(diagnostics);
+      return new Diagnostics(diagnostics, documentContext.getVersion());
     });
   }
 

@@ -138,7 +138,7 @@ public class FormatCommand implements Callable<Integer> {
     String textDocumentContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     final URI uri = file.toURI();
 
-    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent);
+    DocumentContext documentContext = serverContext.addDocument(uri, textDocumentContent, 1);
 
     DocumentFormattingParams params = new DocumentFormattingParams();
     FormattingOptions options = new FormattingOptions();

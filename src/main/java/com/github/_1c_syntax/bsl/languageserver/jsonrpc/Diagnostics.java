@@ -21,15 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,27 +32,21 @@ import java.util.List;
  * <br>
  * См. {@link com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService#diagnostics(DiagnosticParams)}
  */
-@RequiredArgsConstructor
-@AllArgsConstructor
-@Getter
-@ToString
-@EqualsAndHashCode
+@Value
 public class Diagnostics {
 
   /**
    * Пустой ответ.
    */
-  public static final Diagnostics EMPTY = new Diagnostics(Collections.emptyList());
+  public static final Diagnostics EMPTY = new Diagnostics(Collections.emptyList(), 0);
 
   /**
    * Список рассчитанных диагностик документа.
    */
-  private final List<Diagnostic> diagnostics;
+  List<Diagnostic> diagnostics;
 
   /**
-   * Необязательная версия документа, для которого были рассчитаны диагностики.
+   * Версия документа, для которого были рассчитаны диагностики.
    */
-  @Nullable
-  @Setter
-  private Integer version;
+  Integer version;
 }

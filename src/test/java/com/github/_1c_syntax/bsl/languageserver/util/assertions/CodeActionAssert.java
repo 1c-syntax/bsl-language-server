@@ -97,7 +97,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
 
       // TODO: does not work for several textedits changing content length (missed semicolon ie.)
       String content = startText + newText + endText;
-      documentContext.rebuild(content);
+      documentContext.rebuild(content, documentContext.getVersion() + 1);
     });
 
     // get diagnostics from fixed document
@@ -108,7 +108,7 @@ public class CodeActionAssert extends AbstractAssert<CodeActionAssert, CodeActio
     ;
 
     // returning to original state
-    documentContext.rebuild(cachedContent);
+    documentContext.rebuild(cachedContent, documentContext.getVersion() + 1);
 
     return this;
   }
