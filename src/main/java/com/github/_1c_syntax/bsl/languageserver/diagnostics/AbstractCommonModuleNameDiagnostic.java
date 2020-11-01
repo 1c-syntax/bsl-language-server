@@ -38,7 +38,7 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
   protected Pattern pattern;
   private final LanguageServerConfiguration serverConfiguration;
 
-  public AbstractCommonModuleNameDiagnostic(LanguageServerConfiguration serverConfiguration, String regexp) {
+  protected AbstractCommonModuleNameDiagnostic(LanguageServerConfiguration serverConfiguration, String regexp) {
     this.serverConfiguration = serverConfiguration;
     this.pattern = CaseInsensitivePattern.compile(regexp);
   }
