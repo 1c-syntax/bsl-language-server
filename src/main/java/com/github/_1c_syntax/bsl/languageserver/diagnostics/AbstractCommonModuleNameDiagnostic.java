@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.mdo.CommonModule;
 import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
@@ -31,12 +32,15 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
 
   protected Pattern pattern;
+  private final LanguageServerConfiguration serverConfiguration;
 
-  public AbstractCommonModuleNameDiagnostic(String regexp) {
-    pattern = CaseInsensitivePattern.compile(regexp);
+  public AbstractCommonModuleNameDiagnostic(LanguageServerConfiguration serverConfiguration, String regexp) {
+    this.serverConfiguration = serverConfiguration;
+    this.pattern = CaseInsensitivePattern.compile(regexp);
   }
 
   @Override
@@ -62,21 +66,21 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
     return !matcher.find();
   }
 
-  protected static boolean isClientServer(CommonModule commonModule) {
+  protected boolean isClientServer(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
       && isClientApplication(commonModule);
   }
 
-  protected static boolean isClient(CommonModule commonModule) {
+  protected boolean isClient(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && !commonModule.isServer()
       && !commonModule.isExternalConnection()
       && isClientApplication(commonModule);
   }
 
-  protected static boolean isServerCall(CommonModule commonModule) {
+  protected boolean isServerCall(CommonModule commonModule) {
     return commonModule.isServerCall()
       && commonModule.isServer()
       && !commonModule.isExternalConnection()
@@ -84,17 +88,21 @@ abstract class AbstractCommonModuleNameDiagnostic extends AbstractDiagnostic {
       && !commonModule.isClientManagedApplication();
   }
 
-  protected static boolean isServer(CommonModule commonModule) {
+  protected boolean isServer(CommonModule commonModule) {
     return !commonModule.isServerCall()
       && commonModule.isServer()
       && commonModule.isExternalConnection()
-      && commonModule.isClientOrdinaryApplication()
+      && isClientOrdinaryAppIfNeed(commonModule)
       && !commonModule.isClientManagedApplication();
   }
 
-  private static boolean isClientApplication(CommonModule commonModule) {
-    return commonModule.isClientOrdinaryApplication()
+  private boolean isClientApplication(CommonModule commonModule) {
+    return isClientOrdinaryAppIfNeed(commonModule)
       && commonModule.isClientManagedApplication();
   }
 
+  private boolean isClientOrdinaryAppIfNeed(CommonModule commonModule) {
+    return commonModule.isClientOrdinaryApplication()
+      || !serverConfiguration.getDiagnosticsOptions().isOrdinaryAppSupport();
+  }
 }
