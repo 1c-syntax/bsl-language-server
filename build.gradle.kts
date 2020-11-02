@@ -216,8 +216,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.12"
-    sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
+    version = "1.18.16"
+    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
 }
 
 tasks {
