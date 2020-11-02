@@ -45,7 +45,6 @@ public class DiagnosticsOptions {
   private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
   private SkipSupport skipSupport = SkipSupport.NEVER;
   private Mode mode = Mode.ON;
-  @JsonProperty("ordinaryAppSupport")
   private boolean ordinaryAppSupport = true;
 
   @JsonDeserialize(using = ParametersDeserializer.class)
