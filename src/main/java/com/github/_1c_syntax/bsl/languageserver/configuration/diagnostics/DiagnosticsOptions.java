@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind.ParametersDeserializer;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,7 @@ public class DiagnosticsOptions {
   private ComputeTrigger computeTrigger = ComputeTrigger.ONSAVE;
   private SkipSupport skipSupport = SkipSupport.NEVER;
   private Mode mode = Mode.ON;
+  private boolean ordinaryAppSupport = true;
 
   @JsonDeserialize(using = ParametersDeserializer.class)
   private Map<String, Either<Boolean, Map<String, Object>>> parameters = new HashMap<>();
