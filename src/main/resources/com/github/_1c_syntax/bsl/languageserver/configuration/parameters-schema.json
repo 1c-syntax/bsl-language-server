@@ -1162,6 +1162,16 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "RedundantAccessToObject": {
+            "description": "Redundant access to an object",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Redundant access to an object",
+            "$id": "#/definitions/RedundantAccessToObject"
+        },
         "RefOveruse": {
             "description": "Overuse \"Reference\" in a query",
             "default": true,
