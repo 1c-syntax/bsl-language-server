@@ -33,6 +33,7 @@ import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
@@ -56,27 +57,27 @@ import static picocli.CommandLine.Option;
 /**
  * Выполнение анализа
  * Ключ команды:
- *  -a, (--analyze)
+ * -a, (--analyze)
  * Параметры:
- *  -s, (--srcDir) &lt;arg&gt; -        Путь к каталогу исходных файлов.
- *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- *                                то анализ выполняется в текущем каталоге запуска.
- *  -o, (--outputDir) &lt;arg&gt; -     Путь к каталогу размещения отчетов - результатов анализа.
- *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- *                                то файлы отчета будут сохранены в текущем каталоге запуска.
- *  -w, (--workspaceDir) &lt;arg&gt; -  Путь к каталогу проекта, относительно которого располагаются исходные файлы.
- *                                Возможно указывать как в абсолютном, так и в относительном виде. Если параметр опущен,
- *                                то пути к исходным файлам будут указываться относительно текущего каталога запуска.
- *  -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
- *                                Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- *                                то будут использованы настройки по умолчанию.
- *  -r, (--reporter) &lt;arg&gt; -      Ключи "Репортеров", т.е. форматов отчетов, котрые необходимо сгенерировать после
- *                                выполнения анализа. Может быть указано более одного ключа. Если параметр опущен,
- *                                то вывод результата будет призведен в консоль.
- *  -q, (--silent)              -       Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
+ * -s, (--srcDir) &lt;arg&gt; -        Путь к каталогу исходных файлов.
+ * Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ * то анализ выполняется в текущем каталоге запуска.
+ * -o, (--outputDir) &lt;arg&gt; -     Путь к каталогу размещения отчетов - результатов анализа.
+ * Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ * то файлы отчета будут сохранены в текущем каталоге запуска.
+ * -w, (--workspaceDir) &lt;arg&gt; -  Путь к каталогу проекта, относительно которого располагаются исходные файлы.
+ * Возможно указывать как в абсолютном, так и в относительном виде. Если параметр опущен,
+ * то пути к исходным файлам будут указываться относительно текущего каталога запуска.
+ * -c, (--configuration) &lt;arg&gt; - Путь к конфигурационному файлу BSL Language Server (.bsl-language-server.json).
+ * Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
+ * то будут использованы настройки по умолчанию.
+ * -r, (--reporter) &lt;arg&gt; -      Ключи "Репортеров", т.е. форматов отчетов, котрые необходимо сгенерировать после
+ * выполнения анализа. Может быть указано более одного ключа. Если параметр опущен,
+ * то вывод результата будет призведен в консоль.
+ * -q, (--silent)              -       Флаг для отключения вывода прогресс-бара и дополнительных сообщений в консоль
  * Выводимая информация:
- *  Выполняет анализ каталога исходных файлов и генерацию файлов отчета. Для каждого указанного ключа "Репортера"
- *  создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
+ * Выполняет анализ каталога исходных файлов и генерацию файлов отчета. Для каждого указанного ключа "Репортера"
+ * создается отдельный файл (каталог файлов). Реализованные "репортеры" находятся в пакете "reporter".
  **/
 @Slf4j
 @Command(
@@ -172,7 +173,7 @@ public class AnalyzeCommand implements Callable<Integer> {
     context.setConfigurationRoot(configurationPath);
 
     Collection<File> files = FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true);
-    
+
     context.populateContext(files);
 
     List<FileInfo> fileInfos;
@@ -181,7 +182,11 @@ public class AnalyzeCommand implements Callable<Integer> {
         .map((File file) -> getFileInfoFromFile(workspaceDir, file))
         .collect(Collectors.toList());
     } else {
-      try (ProgressBar pb = new ProgressBar("Analyzing files...", files.size(), ProgressBarStyle.ASCII)) {
+      try (ProgressBar pb = new ProgressBarBuilder()
+        .setTaskName("Analyzing files...")
+        .setInitialMax(files.size())
+        .setStyle(ProgressBarStyle.ASCII)
+        .build()) {
         fileInfos = files.parallelStream()
           .map((File file) -> {
             pb.step();
