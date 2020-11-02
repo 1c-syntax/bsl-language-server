@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1603657016224,
+  "lastUpdate": 1604299293488,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6262,6 +6262,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.035539285594822",
             "extra": "mean: 77.25407981872559 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0b5846c319b9755913d689f0df236a85a6b6d095",
+          "message": "Merge pull request #1333 from qtLex/feature/disable-checking",
+          "timestamp": "2020-11-02T09:33:59+03:00",
+          "tree_id": "8748d823bc243581961bcf1ade2d93be38a961de",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/0b5846c319b9755913d689f0df236a85a6b6d095"
+        },
+        "date": 1604299290991,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.85867460568745,
+            "unit": "sec",
+            "range": "stddev: 0.8980545738232016",
+            "extra": "mean: 75.85867460568745 sec\nrounds: 3"
           }
         ]
       }
