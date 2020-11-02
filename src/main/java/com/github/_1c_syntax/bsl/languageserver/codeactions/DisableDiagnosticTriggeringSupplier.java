@@ -37,6 +37,7 @@ import org.eclipse.lsp4j.WorkspaceEdit;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,7 +53,6 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
   private final LanguageServerConfiguration languageServerConfiguration;
-  private List<CodeAction> result;
   private CodeActionParams params;
   private DocumentContext documentContext;
   private Optional<Token> lastTokenSelectedInLine;
@@ -79,22 +79,22 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
 
     initParams(params, documentContext);
+    List<CodeAction> result = new ArrayList<>();
 
     if (!params.getContext().getDiagnostics().isEmpty()) {
-      actionDisableDiagnosticInLine();
-      actionDisableDiagnosticInRegion();
-      actionDisableDiagnosticInFile();
+      result.addAll(actionDisableDiagnosticInLine());
+      result.addAll(actionDisableDiagnosticInRegion());
+      result.addAll(actionDisableDiagnosticInFile());
     }
 
-    actionDisableAllDiagnosticInLine();
-    actionDisableAllDiagnosticInRegion();
-    actionDisableAllDiagnosticInFile();
+    actionDisableAllDiagnosticInLine().ifPresent(result::add);
+    actionDisableAllDiagnosticInRegion().ifPresent(result::add);
+    actionDisableAllDiagnosticInFile().ifPresent(result::add);
     return result;
 
   }
 
   private void initParams(CodeActionParams params, DocumentContext documentContext) {
-    this.result = new ArrayList<>();
     this.params = params;
     this.documentContext = documentContext;
 
@@ -114,15 +114,13 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       .max(Comparator.comparingInt(Token::getCharPositionInLine));
   }
 
-  private void actionDisableDiagnosticInLine() {
+  private List<CodeAction> actionDisableDiagnosticInLine() {
     if (lastTokenSelectedInLine.isEmpty() || !isOneLineRange) {
-      return;
+      return Collections.emptyList();
     }
 
-    result.addAll(
-      actionDisableDiagnostic(
-        name -> createCodeAction(getMessage("line", name), createInLineTextEdits(":" + name))
-      )
+    return actionDisableDiagnostic(
+      name -> createCodeAction(getMessage("line", name), createInLineTextEdits(":" + name))
     );
   }
 
@@ -137,44 +135,40 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       .collect(Collectors.toList());
   }
 
-  private void actionDisableDiagnosticInRegion() {
+  private List<CodeAction> actionDisableDiagnosticInRegion() {
     if (lastTokenSelectedInLine.isEmpty() || isOneLineRange) {
-      return;
+      return Collections.emptyList();
     }
 
-    result.addAll(
-      actionDisableDiagnostic(
-        name -> createCodeAction(getMessage("range", name), createInRegionTextEdits(":" + name))
-      )
+    return actionDisableDiagnostic(
+      name -> createCodeAction(getMessage("range", name), createInRegionTextEdits(":" + name))
     );
   }
 
-  private void actionDisableDiagnosticInFile() {
-    result.addAll(
-      actionDisableDiagnostic(
-        name -> createCodeAction(getMessage("file", name), createInFileTextEdits(":" + name))
-      )
+  private List<CodeAction> actionDisableDiagnosticInFile() {
+    return actionDisableDiagnostic(
+      name -> createCodeAction(getMessage("file", name), createInFileTextEdits(":" + name))
     );
   }
 
-  private void actionDisableAllDiagnosticInLine() {
+  private Optional<CodeAction> actionDisableAllDiagnosticInLine() {
     if (lastTokenSelectedInLine.isEmpty() || !isOneLineRange) {
-      return;
+      return Optional.empty();
     }
 
-    result.add(createCodeAction(getMessage("lineAll"), createInLineTextEdits(ALL_DIAGNOSTIC_NAME)));
+    return Optional.of(createCodeAction(getMessage("lineAll"), createInLineTextEdits(ALL_DIAGNOSTIC_NAME)));
   }
 
-  private void actionDisableAllDiagnosticInRegion() {
+  private Optional<CodeAction> actionDisableAllDiagnosticInRegion() {
     if (lastTokenSelectedInLine.isEmpty() || isOneLineRange) {
-      return;
+      return Optional.empty();
     }
 
-    result.add(createCodeAction(getMessage("rangeAll"), createInRegionTextEdits(ALL_DIAGNOSTIC_NAME)));
+    return Optional.of(createCodeAction(getMessage("rangeAll"), createInRegionTextEdits(ALL_DIAGNOSTIC_NAME)));
   }
 
-  private void actionDisableAllDiagnosticInFile() {
-    result.add(createCodeAction(getMessage("fileAll"), createInFileTextEdits(ALL_DIAGNOSTIC_NAME)));
+  private Optional<CodeAction> actionDisableAllDiagnosticInFile() {
+    return Optional.of(createCodeAction(getMessage("fileAll"), createInFileTextEdits(ALL_DIAGNOSTIC_NAME)));
   }
 
   private List<TextEdit> createInLineTextEdits(String diagnosticName) {
