@@ -32,8 +32,6 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Range;
 
-import java.util.Optional;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.INFO,
@@ -59,18 +57,20 @@ public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    Optional<Range> range = Ranges.getFirstSignificantTokenRange(documentContext.getTokens());
-    if (range.isEmpty()) {
-      return;
-    }
+    Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+      .ifPresent(this::checkProperties);
+
+  }
+
+  private void checkProperties(Range range) {
 
     Configuration configuration = documentContext.getServerContext().getConfiguration();
     if (configuration.isUseManagedFormInOrdinaryApplication()) {
-      diagnosticStorage.addDiagnostic(range.get(), info.getResourceString("ManagedFormInOrdinaryApp"));
+      diagnosticStorage.addDiagnostic(range, info.getResourceString("ManagedFormInOrdinaryApp"));
     }
 
     if (!configuration.isUseOrdinaryFormInManagedApplication()) {
-      diagnosticStorage.addDiagnostic(range.get(), info.getResourceString("OrdinaryFormInManagedApp"));
+      diagnosticStorage.addDiagnostic(range, info.getResourceString("OrdinaryFormInManagedApp"));
     }
 
   }
