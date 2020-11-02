@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1604299293488,
+  "lastUpdate": 1604304078614,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6293,6 +6293,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8980545738232016",
             "extra": "mean: 75.85867460568745 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "6ce8cd8d7e5e3cb042a7a28e5ed2b395efc6cc5b",
+          "message": "Fix delombok",
+          "timestamp": "2020-11-02T10:53:17+03:00",
+          "tree_id": "2832d0fa06f7bc5cb3de9d11c79441922acc91fd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6ce8cd8d7e5e3cb042a7a28e5ed2b395efc6cc5b"
+        },
+        "date": 1604304074792,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 75.8678982257843,
+            "unit": "sec",
+            "range": "stddev: 1.6023804931421444",
+            "extra": "mean: 75.8678982257843 sec\nrounds: 3"
           }
         ]
       }
