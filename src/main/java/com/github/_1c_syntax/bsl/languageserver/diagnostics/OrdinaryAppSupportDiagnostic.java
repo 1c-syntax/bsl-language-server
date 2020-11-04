@@ -34,7 +34,7 @@ import org.eclipse.lsp4j.Range;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
-  severity = DiagnosticSeverity.INFO,
+  severity = DiagnosticSeverity.MAJOR,
   modules = {
     ModuleType.SessionModule
   },
