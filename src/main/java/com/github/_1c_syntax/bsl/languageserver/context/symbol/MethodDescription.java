@@ -21,20 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import lombok.Getter;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class MethodDescription {
-
-  private static final int COMMENT_LENGTH = 2;
-  private static final Pattern DEPRECATED_PATTERN
-    = CaseInsensitivePattern.compile("(?:\\s*)(?:Устарела|Deprecated)\\.(.*)");
 
   private final int startLine;
   private final int endLine;
@@ -46,19 +48,40 @@ public class MethodDescription {
   @Getter
   private final boolean deprecated;
 
+  @Getter
+  private final String purposeDescription;
+  @Getter
+  private final List<String> examples;
+  @Getter
+  private final List<String> callOptions;
+  @Getter
+  private final List<ParameterDescription> parameters;
+  @Getter
+  private final List<TypeDescription> returnedValue;
+
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
       .map(Token::getText)
-      .map(MethodDescription::uncomment)
       .collect(Collectors.joining("\n"));
-    Matcher matcher = DEPRECATED_PATTERN.matcher(description);
-    if (matcher.find()) {
-      deprecationInfo = matcher.group(1);
-      deprecated = true;
+
+    var tokenizer = new BSLMethodDescriptionTokenizer(description);
+    var ast = tokenizer.getAst();
+    purposeDescription = computePurposeDescription(description, ast);
+    var deprecateNode = Trees.getFirstChild(ast, BSLMethodDescriptionParser.RULE_deprecate);
+    deprecated = deprecateNode.isPresent();
+
+    var deprecationNodes =
+      Trees.findAllRuleNodes(ast, BSLMethodDescriptionParser.RULE_deprecateDescription);
+    if (!deprecationNodes.isEmpty()) {
+      deprecationInfo = new ArrayList<>(deprecationNodes).get(0).getText().strip();
     } else {
       deprecationInfo = "";
-      deprecated = false;
     }
+
+    callOptions = computeExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
+    examples = computeExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);
+    parameters = DescriptionReader.readParameters(ast);
+    returnedValue = DescriptionReader.readReturnedValue(ast);
 
     if (comments.isEmpty()) {
       startLine = 0;
@@ -68,6 +91,18 @@ public class MethodDescription {
 
     this.startLine = comments.get(0).getLine();
     this.endLine = comments.get(comments.size() - 1).getLine();
+  }
+
+  private List<String> computeExamples(BSLMethodDescriptionParser.MethodDescriptionContext ast, int ruleIndex) {
+    var exampleStringNodes = Trees.findAllRuleNodes(ast, ruleIndex);
+    if (exampleStringNodes.isEmpty()) {
+      return Collections.emptyList();
+    } else {
+      return exampleStringNodes.stream()
+        .map(parseTree -> parseTree.getText().strip())
+        .filter(str -> !str.isEmpty())
+        .collect(Collectors.toList());
+    }
   }
 
   public boolean isEmpty() {
@@ -80,12 +115,14 @@ public class MethodDescription {
     return (firstLine >= startLine && lastLine <= endLine);
   }
 
-  private static String uncomment(String text) {
-    String result = text;
-    if (result.startsWith("//")) {
-      result = result.substring(COMMENT_LENGTH);
+  private static String computePurposeDescription(String description, BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx != null) {
+      return Trees.findAllRuleNodes(ctx, BSLMethodDescriptionParser.RULE_descriptionString)
+        .stream()
+        .map(ParseTree::getText)
+        .collect(Collectors.joining("\n"))
+        .strip();
     }
-    return result;
+    return description;
   }
-
 }
