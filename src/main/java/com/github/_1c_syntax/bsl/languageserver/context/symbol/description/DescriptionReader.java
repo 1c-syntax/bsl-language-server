@@ -201,7 +201,7 @@ public class DescriptionReader {
       current = new TempParameterData(ctx);
     } else if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_subParameterString) {
       current.addSubParam((BSLMethodDescriptionParser.SubParameterStringContext) ctx);
-    } else if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_typeWithDescription) {
+    } else { // BSLMethodDescriptionParser.RULE_typeWithDescription
       current.addType(ctx);
     }
     return current;
@@ -287,7 +287,7 @@ public class DescriptionReader {
 
     private void readAndAddType(BSLParserRuleContext ctx) {
       Trees.getFirstChild(ctx, BSLMethodDescriptionParser.RULE_parameterName)
-        .ifPresent(child -> {
+        .ifPresent((BSLParserRuleContext child) -> {
           name = child.getText();
           empty = false;
           addType(ctx);
@@ -336,7 +336,7 @@ public class DescriptionReader {
     private void addNewType(BSLParserRuleContext ctx) {
       last = null;
       Trees.getFirstChild(ctx, BSLMethodDescriptionParser.RULE_types).ifPresent(
-        typeString -> {
+        (BSLParserRuleContext typeString) -> {
           var newType = new TempParameterData(typeString.getText(), this);
           Trees.findAllRuleNodes(ctx, BSLMethodDescriptionParser.RULE_typeDescription)
             .stream().findFirst()
@@ -378,7 +378,7 @@ public class DescriptionReader {
 
     private ParameterDescription getParameterDescription() {
       var parameterTypes = children.stream()
-        .map(child -> {
+        .map((TempParameterData child) -> {
           List<ParameterDescription> subParameters = new ArrayList<>();
           if (!child.children.isEmpty()) {
             child.children.forEach(subParam -> subParameters.add(subParam.getParameterDescription()));
