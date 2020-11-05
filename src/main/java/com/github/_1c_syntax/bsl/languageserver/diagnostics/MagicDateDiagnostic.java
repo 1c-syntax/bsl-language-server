@@ -33,40 +33,27 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
-  minutesToFix = 1,
+  minutesToFix = 5,
   tags = {
-    DiagnosticTag.BADPRACTICE
+    DiagnosticTag.BADPRACTICE,
+    DiagnosticTag.BRAINOVERLOAD
   }
 
 )
 public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_DATES = "00010101,00010101000000,000101010000";
-
-  @DiagnosticParameter(
-    type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_DATES
-  )
-  private final List<String> authorizedDates = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
-
-  @Override
-  public void configure(Map<String, Object> configuration) {
-    String authorizedDatesString =
-      (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
-    for (String s : authorizedDatesString.split(",")) {
-      this.authorizedDates.add(s.trim());
-    }
-  }
 
   private static final Pattern methodPattern = CaseInsensitivePattern.compile(
     "Дата|Date"
@@ -75,6 +62,25 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   private static final Pattern paramPattern = CaseInsensitivePattern.compile(
     "\"\\d{8}.*"
   );
+
+  private static final Pattern nonNumberPattern = CaseInsensitivePattern.compile(
+    "\\D"
+  );
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + DEFAULT_AUTHORIZED_DATES
+  )
+  private Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    String authorizedDatesString =
+      (String) configuration.getOrDefault("authorizedDates", DEFAULT_AUTHORIZED_DATES);
+    Set<String> authD =
+      Arrays.stream(authorizedDatesString.split(",")).map(s -> s.trim()).collect(Collectors.toSet());
+    this.authorizedDates.addAll(authD);
+  }
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
@@ -116,14 +122,8 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean isExcluded(String sIn) {
-    String s = sIn.replaceAll("\\D","");
-    for (String elem : this.authorizedDates) {
-      if (s.compareTo(elem) == 0) {
-        return true;
-      }
-    }
-
-    return false;
+    String s = nonNumberPattern.matcher(sIn).replaceAll("");
+    return authorizedDates.contains(s);
   }
 
   private static boolean isAssignExpression(BSLParser.ExpressionContext expression) {
