@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Value;
 
 import java.util.List;
 
@@ -30,20 +30,18 @@ import java.util.List;
  * Описание параметра из комментария - описания метода
  */
 @AllArgsConstructor
+@Value
 public class ParameterDescription {
   /**
    * Имя параметра
    */
-  @Getter
-  private final String name;
+  String name;
   /**
    * Возможные типы параметра. Может быть пустым
    */
-  @Getter
-  private final List<TypeDescription> types;
+  List<TypeDescription> types;
   /**
    * Описание параметра. TODO а зачем, если все привязано к типам?
    */
-  @Getter
-  private final String description;
+  String description;
 }

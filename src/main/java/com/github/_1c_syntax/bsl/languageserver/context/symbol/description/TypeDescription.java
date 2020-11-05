@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Value;
 
 import java.util.List;
 
@@ -30,20 +30,18 @@ import java.util.List;
  * Описание типа параметра, прочитанного из описания метода
  */
 @AllArgsConstructor
+@Value
 public class TypeDescription {
   /**
    * Имя типа. На данный момент может быть строковый массив перечисления типов а также гиперссылка на метод
    */
-  @Getter
-  private final String name;
+  String name;
   /**
    * Описание типа. Может быть пустым
    */
-  @Getter
-  private final String description;
+  String description;
   /**
    * Параметры (ключи или поля) типа для сложных типов данных. Может быть пустым
    */
-  @Getter
-  private final List<ParameterDescription> parameters;
+  List<ParameterDescription> parameters;
 }

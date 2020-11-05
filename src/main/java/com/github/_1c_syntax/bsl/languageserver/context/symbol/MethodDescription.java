@@ -26,59 +26,60 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.description.Param
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
-import lombok.Getter;
+import lombok.Value;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Класс-описание метода (процедуры или функции)
+ */
+@Value
 public class MethodDescription {
 
-  private final int startLine;
-  private final int endLine;
+  /**
+   * Номер первой строки описания
+   */
+  int startLine;
+  /**
+   * Номер последней строки описания
+   */
+  int endLine;
   /**
    * Содержит полное описание метода (весь текст)
    */
-  @Getter
-  private final String description;
-
+  String description;
   /**
    * Содержит часть строки после ключевого слова, в которой должно быть
    * описание причины устаревания метода либо альтернативы
    */
-  @Getter
-  private final String deprecationInfo;
+  String deprecationInfo;
+
   /**
    * Признак устарения метода
    */
-  @Getter
-  private final boolean deprecated;
-
+  boolean deprecated;
   /**
    * Описание назначения метода
    */
-  @Getter
-  private final String purposeDescription;
+  String purposeDescription;
   /**
    * Примеры использования метода
    */
-  @Getter
-  private final List<String> examples;
+  List<String> examples;
   /**
    * Варианты вызова метода
    */
-  @Getter
-  private final List<String> callOptions;
+  List<String> callOptions;
   /**
    * Параметры метода с типами и описанием
    */
-  @Getter
-  private final List<ParameterDescription> parameters;
+  List<ParameterDescription> parameters;
   /**
    * Возвращаемые значения (типы)
    */
-  @Getter
-  private final List<TypeDescription> returnedValue;
+  List<TypeDescription> returnedValue;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
