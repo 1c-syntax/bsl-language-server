@@ -24,15 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import lombok.Getter;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,22 +36,47 @@ public class MethodDescription {
 
   private final int startLine;
   private final int endLine;
+  /**
+   * Содержит полное описание метода (весь текст)
+   */
   @Getter
   private final String description;
 
+  /**
+   * Содержит часть строки после ключевого слова, в которой должно быть
+   * описание причины устаревания метода либо альтернативы
+   */
   @Getter
   private final String deprecationInfo;
+  /**
+   * Признак устарения метода
+   */
   @Getter
   private final boolean deprecated;
 
+  /**
+   * Описание назначения метода
+   */
   @Getter
   private final String purposeDescription;
+  /**
+   * Примеры использования метода
+   */
   @Getter
   private final List<String> examples;
+  /**
+   * Варианты вызова метода
+   */
   @Getter
   private final List<String> callOptions;
+  /**
+   * Параметры метода с типами и описанием
+   */
   @Getter
   private final List<ParameterDescription> parameters;
+  /**
+   * Возвращаемые значения (типы)
+   */
   @Getter
   private final List<TypeDescription> returnedValue;
 
@@ -66,20 +87,12 @@ public class MethodDescription {
 
     var tokenizer = new BSLMethodDescriptionTokenizer(description);
     var ast = tokenizer.getAst();
-    purposeDescription = computePurposeDescription(description, ast);
-    var deprecateNode = Trees.getFirstChild(ast, BSLMethodDescriptionParser.RULE_deprecate);
-    deprecated = deprecateNode.isPresent();
 
-    var deprecationNodes =
-      Trees.findAllRuleNodes(ast, BSLMethodDescriptionParser.RULE_deprecateDescription);
-    if (!deprecationNodes.isEmpty()) {
-      deprecationInfo = new ArrayList<>(deprecationNodes).get(0).getText().strip();
-    } else {
-      deprecationInfo = "";
-    }
-
-    callOptions = computeExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
-    examples = computeExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);
+    purposeDescription = DescriptionReader.readPurposeDescription(ast);
+    deprecated = ast != null && ast.deprecate() != null;
+    deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
+    callOptions = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
+    examples = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);
     parameters = DescriptionReader.readParameters(ast);
     returnedValue = DescriptionReader.readReturnedValue(ast);
 
@@ -93,18 +106,6 @@ public class MethodDescription {
     this.endLine = comments.get(comments.size() - 1).getLine();
   }
 
-  private List<String> computeExamples(BSLMethodDescriptionParser.MethodDescriptionContext ast, int ruleIndex) {
-    var exampleStringNodes = Trees.findAllRuleNodes(ast, ruleIndex);
-    if (exampleStringNodes.isEmpty()) {
-      return Collections.emptyList();
-    } else {
-      return exampleStringNodes.stream()
-        .map(parseTree -> parseTree.getText().strip())
-        .filter(str -> !str.isEmpty())
-        .collect(Collectors.toList());
-    }
-  }
-
   public boolean isEmpty() {
     return description.isEmpty();
   }
@@ -115,14 +116,4 @@ public class MethodDescription {
     return (firstLine >= startLine && lastLine <= endLine);
   }
 
-  private static String computePurposeDescription(String description, BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    if (ctx != null) {
-      return Trees.findAllRuleNodes(ctx, BSLMethodDescriptionParser.RULE_descriptionString)
-        .stream()
-        .map(ParseTree::getText)
-        .collect(Collectors.joining("\n"))
-        .strip();
-    }
-    return description;
-  }
 }
