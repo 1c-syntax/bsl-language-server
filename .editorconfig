@@ -2,3 +2,5 @@
 trim_trailing_whitespace = false
 [src/test/resources/providers/format.bsl]
 trim_trailing_whitespace = false
+[src/test/resources/diagnostics/TabAlignmentDiagnostic.bsl]
+trim_trailing_whitespace = false
