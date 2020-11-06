@@ -1,14 +1,8 @@
-# Mixing Latin and Cyrillic characters in one identifier (LatinAndCyrillicSymbolInWord)
+# <Diagnostic name> (GlobalContextMethodCollision8312)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `5` | `brainoverload`<br>`suspicious` 
-
-## Parameters 
-
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `excludeWords` | `String` | ```A list of exclusion words, specified as a comma-separated string``` | ```ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси``` 
+ `Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `10` | `error`<br>`unpredictable` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -31,14 +25,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:LatinAndCyrillicSymbolInWord-off
-// BSLLS:LatinAndCyrillicSymbolInWord-on
+// BSLLS:GlobalContextMethodCollision8312-off
+// BSLLS:GlobalContextMethodCollision8312-on
 ```
 
 ### Parameter for config
 
 ```json
-"LatinAndCyrillicSymbolInWord": {
-    "excludeWords": "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси"
-}
+"GlobalContextMethodCollision8312": false
 ```

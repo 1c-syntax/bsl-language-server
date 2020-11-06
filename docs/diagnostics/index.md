@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **121**
+Общее количество: **122**
 
 * Дефект кода: **78**
 * Уязвимость: **3**
-* Ошибка: **36**
+* Ошибка: **37**
 * Потенциальная уязвимость: **4**
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -66,6 +66,7 @@
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | Функция всегда возвращает одно и то же примитивное значение | Да | Важный | Ошибка | `design`<br>`badpractice` 
  [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | Важный | Ошибка | `suspicious`<br>`unpredictable` 
  [GetFormMethod](GetFormMethod.md) | Использование метода ПолучитьФорму | Да | Важный | Ошибка | `error` 
+ [GlobalContextMethodCollision8312](GlobalContextMethodCollision8312.md) | Global context method names collision | Да | Блокирующий | Ошибка | `error`<br>`unpredictable` 
  [IdenticalExpressions](IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да | Важный | Ошибка | `suspicious` 
  [IfConditionComplexity](IfConditionComplexity.md) | Использование сложных выражений в условии оператора "Если" | Да | Незначительный | Дефект кода | `brainoverload` 
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` 
@@ -102,7 +103,7 @@
  [ParseError](ParseError.md) | Ошибка разбора исходного кода | Да | Критичный | Ошибка | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | Блокирующий | Ошибка | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | Все методы программного интерфейса должны иметь описание | Да | Информационный | Дефект кода | `standard`<br>`brainoverload`<br>`badpractice` 
- [RefOveruse](RefOveruse.md) | Избыточное использование «Ссылка» в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
+ [RefOveruse](RefOveruse.md) | Избыточное использование "Ссылка" в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 

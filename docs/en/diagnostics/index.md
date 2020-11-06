@@ -8,9 +8,9 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **121**
+Total: **122**
 
-* Error: **36**
+* Error: **37**
 * Code smell: **78**
 * Vulnerability: **3**
 * Security Hotspot: **4**
@@ -66,6 +66,7 @@ Total: **121**
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | The function always returns the same primitive value | Yes | Major | Error | `design`<br>`badpractice` 
  [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | The function should have return | Yes | Major | Error | `suspicious`<br>`unpredictable` 
  [GetFormMethod](GetFormMethod.md) | GetForm method call | Yes | Major | Error | `error` 
+ [GlobalContextMethodCollision8312](GlobalContextMethodCollision8312.md) | <Diagnostic name> | Yes | Blocker | Error | `error`<br>`unpredictable` 
  [IdenticalExpressions](IdenticalExpressions.md) | There are identical sub-expressions to the left and to the right of the "foo" operator | Yes | Major | Error | `suspicious` 
  [IfConditionComplexity](IfConditionComplexity.md) | Usage of complex expressions in the "If" condition | Yes | Minor | Code smell | `brainoverload` 
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` 
