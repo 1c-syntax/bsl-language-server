@@ -231,6 +231,16 @@ public class DocumentContext {
 
   public void rebuild(String content, int version) {
     computeLock.lock();
+
+    boolean versionMatches = version == this.version && version != 0;
+    boolean contentWasCleared = this.content == null;
+
+    if (versionMatches && !contentWasCleared) {
+      clearDependantData();
+      computeLock.unlock();
+      return;
+    }
+
     clearSecondaryData();
     symbolTree.clear();
     this.content = content;
@@ -241,17 +251,24 @@ public class DocumentContext {
 
   public void clearSecondaryData() {
     computeLock.lock();
-    diagnosticsLock.lock();
     content = null;
     contentList.clear();
     tokenizer = null;
-
     cognitiveComplexityData.clear();
     cyclomaticComplexityData.clear();
     metrics.clear();
     diagnosticIgnoranceData.clear();
-    diagnostics.clear();
     queries.clear();
+    clearDependantData();
+    computeLock.unlock();
+  }
+
+  private void clearDependantData() {
+    computeLock.lock();
+    diagnosticsLock.lock();
+
+    diagnostics.clear();
+
     diagnosticsLock.unlock();
     computeLock.unlock();
   }
