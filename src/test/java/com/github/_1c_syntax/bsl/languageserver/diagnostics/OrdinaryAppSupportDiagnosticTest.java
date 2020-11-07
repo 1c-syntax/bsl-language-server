@@ -21,26 +21,41 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAppSupportDiagnostic> {
   OrdinaryAppSupportDiagnosticTest() {
     super(OrdinaryAppSupportDiagnostic.class);
   }
 
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+
   @Test
-  void test() {
+  void testSimple() {
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var documentContext = spy(getDocumentContext());
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
 
-//    assertThat(diagnostics).hasSize(1);
-//    assertThat(diagnostics, true)
-//      .hasRange(6, 0, 6, 20);
-
+    assertThat(diagnostics)
+      .hasSize(2)
+      .allMatch(
+        diagnostic -> diagnostic.getRange().equals(Ranges.create(1, 0, 9)))
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Установите свойство \"Использовать обычные формы в управляемом режиме\" установить в Ложь"))
+      .anyMatch(diagnostic -> diagnostic.getMessage()
+        .equals("Установите свойство \"Использовать управляемые формы в обычном приложении\" в Истина"))
+    ;
   }
 }

@@ -65,12 +65,12 @@ public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
   private void checkProperties(Range range) {
 
     Configuration configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.isUseManagedFormInOrdinaryApplication()) {
-      diagnosticStorage.addDiagnostic(range, info.getResourceString("ManagedFormInOrdinaryApp"));
+    if (!configuration.isUseManagedFormInOrdinaryApplication()) {
+      diagnosticStorage.addDiagnostic(range, info.getResourceString("managedFormInOrdinaryApp"));
     }
 
-    if (!configuration.isUseOrdinaryFormInManagedApplication()) {
-      diagnosticStorage.addDiagnostic(range, info.getResourceString("OrdinaryFormInManagedApp"));
+    if (configuration.isUseOrdinaryFormInManagedApplication()) {
+      diagnosticStorage.addDiagnostic(range, info.getResourceString("ordinaryFormInManagedApp"));
     }
 
   }
