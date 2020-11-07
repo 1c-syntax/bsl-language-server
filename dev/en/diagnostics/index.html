@@ -356,9 +356,9 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#implemented-diagnostics" title="Permanent link">Link</a></h2>
-<p>Total: <strong>121</strong></p>
+<p>Total: <strong>122</strong></p>
 <ul>
-<li>Error: <strong>36</strong></li>
+<li>Error: <strong>37</strong></li>
 <li>Code smell: <strong>78</strong></li>
 <li>Vulnerability: <strong>3</strong></li>
 <li>Security Hotspot: <strong>4</strong></li>
@@ -768,6 +768,14 @@
 <td><code>error</code></td>
 </tr>
 <tr>
+<td><a href="GlobalContextMethodCollision8312/">GlobalContextMethodCollision8312</a></td>
+<td><Diagnostic name></td>
+<td align="center">Yes</td>
+<td>Blocker</td>
+<td>Error</td>
+<td><code>error</code><br><code>unpredictable</code></td>
+</tr>
+<tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>
 <td>There are identical sub-expressions to the left and to the right of the "foo" operator</td>
 <td align="center">Yes</td>
@@ -886,6 +894,14 @@
 <td>Major</td>
 <td>Error</td>
 <td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="MissingEventSubscriptionHandler/">MissingEventSubscriptionHandler</a></td>
+<td>Event subscription handler missing</td>
+<td align="center">Yes</td>
+<td>Blocker</td>
+<td>Error</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="MissingSpace/">MissingSpace</a></td>
