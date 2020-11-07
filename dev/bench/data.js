@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1604747106105,
+  "lastUpdate": 1604757022900,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6510,6 +6510,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4692462057785396",
             "extra": "mean: 76.19911742210388 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aaa46007086a5e2dc3279f88ada8903faeef1981",
+          "message": "Merge pull request #1422 from 1c-syntax/feature/GlobalContextMethodConflict8312\n\nНовая диагностика: конфликт имен глобального контекста",
+          "timestamp": "2020-11-07T16:42:39+03:00",
+          "tree_id": "ddba8a5b6e4e6d65464681a6cf4d2a7bb9e05b35",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/aaa46007086a5e2dc3279f88ada8903faeef1981"
+        },
+        "date": 1604757018874,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 77.93326385815938,
+            "unit": "sec",
+            "range": "stddev: 1.200395201838511",
+            "extra": "mean: 77.93326385815938 sec\nrounds: 3"
           }
         ]
       }
