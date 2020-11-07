@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
     DiagnosticTag.STANDARD,
     DiagnosticTag.BADPRACTICE
   }
-
 )
 public class MissingParameterDescriptionDiagnostic extends AbstractDiagnostic {
 

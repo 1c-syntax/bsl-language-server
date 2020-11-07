@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **125**
+Total: **126**
 
 * Error: **38**
-* Code smell: **80**
+* Code smell: **81**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -85,6 +85,7 @@ Total: **125**
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br>`badpractice` 
  [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Event subscription handler missing | Yes | Blocker | Error | `error` 
  [MissingParameterDescription](MissingParameterDescription.md) | Method parameters description are missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
+ [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Function returned values description is missing | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 

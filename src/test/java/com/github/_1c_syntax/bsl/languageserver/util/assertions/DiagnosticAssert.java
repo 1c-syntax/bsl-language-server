@@ -52,4 +52,33 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
     // return the current assertion for method chaining
     return this;
   }
+
+  /**
+   * Проверка на совпадение сообщения диагностики и диапазона текста, где она обнаружена
+   *
+   * @param message   Сообщение диагностики
+   * @param startLine Первая строка диапазона
+   * @param startChar Первый символ диапазона
+   * @param endLine   Последняя строка диапазона
+   * @param endChar   Последний символ диапазона
+   * @return Ссылка на объект для текучести
+   */
+  public DiagnosticAssert hasRangeAndMessage(String message, int startLine, int startChar, int endLine, int endChar) {
+    // check that actual TolkienCharacter we want to make assertions on is not null.
+    isNotNull();
+
+    // check condition
+    Range expectedRange = Ranges.create(startLine, startChar, endLine, endChar);
+    Range actualRange = actual.getRange();
+    if (!Objects.equals(actualRange, expectedRange)) {
+      failWithMessage("Expected diagnostic's range to be <%s> but was <%s>", expectedRange.toString(), actualRange.toString());
+    }
+
+    if (!Objects.equals(message, actual.getMessage())) {
+      failWithMessage("Expected diagnostic's message to be <%s> but was <%s>", message, actual.getMessage());
+    }
+
+    // return the current assertion for method chaining
+    return this;
+  }
 }

@@ -319,7 +319,8 @@ public class DescriptionReader {
 
       if (last != null && !last.children.isEmpty()) {
         last.addType(ctx);
-      } else if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_typeWithDescription) {
+      } else if (ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_typeWithDescription
+        || ctx.getRuleIndex() == BSLMethodDescriptionParser.RULE_returnsValueString) {
         addNewType(ctx);
       } else {
         Trees.getFirstChild(ctx, BSLMethodDescriptionParser.RULE_typeWithDescription)

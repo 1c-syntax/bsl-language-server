@@ -227,6 +227,9 @@
                 "MissingParameterDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingParameterDescription"
                 },
+                "MissingReturnedValueDescription": {
+                    "$ref": "parameters-schema.json#/definitions/MissingReturnedValueDescription"
+                },
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
                 },

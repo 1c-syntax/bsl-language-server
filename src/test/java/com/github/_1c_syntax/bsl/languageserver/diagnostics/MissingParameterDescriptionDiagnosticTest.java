@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -39,44 +38,32 @@ class MissingParameterDescriptionDiagnosticTest extends AbstractDiagnosticTest<M
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics)
-      .hasSize(12)
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(7, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо добавить описание всех параметров метода"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(14, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо удалить описания параметров \"Параметр1, Параметр2\", отсутствующих в сигнатуре метода"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(21, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо удалить описания параметров \"Параметр2\", отсутствующих в сигнатуре метода"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(28, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо удалить описания параметров \"Параметр1\", отсутствующих в сигнатуре метода"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(28, 27, 36))
-          && diagnostic.getMessage().equals("Необходимо добавить описание параметра \"Параметр3\""))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(35, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо исправить порядок описаний параметров"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(42, 27, 36))
-          && diagnostic.getMessage().equals("Необходимо добавить описание типа параметра \"Параметр2\""))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(50, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо удалить описания параметров \"Параметр2\", отсутствующих в сигнатуре метода"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(58, 16, 25))
-          && diagnostic.getMessage().equals("Необходимо добавить описание параметра \"Параметр1\""))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(58, 27, 36))
-          && diagnostic.getMessage().equals("Необходимо добавить описание параметра \"Параметр2\""))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(58, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо удалить описания параметров \"Параметр3, Параметр4\", отсутствующих в сигнатуре метода"))
-      .anyMatch(diagnostic ->
-        diagnostic.getRange().equals(Ranges.create(68, 8, 15))
-          && diagnostic.getMessage().equals("Необходимо удалить описания параметров \"Параметр2, Параметр3, Параметр5\", отсутствующих в сигнатуре метода"))
+    assertThat(diagnostics).hasSize(12);
+    assertThat(diagnostics, true)
+      .hasRangeAndMessage("Необходимо добавить описание всех параметров метода",
+        7, 8, 15)
+      .hasRangeAndMessage("Необходимо удалить описания параметров \"Параметр1, Параметр2\", отсутствующих в сигнатуре метода",
+        14, 8, 15)
+      .hasRangeAndMessage("Необходимо удалить описания параметров \"Параметр2\", отсутствующих в сигнатуре метода",
+        21, 8, 15)
+      .hasRangeAndMessage("Необходимо удалить описания параметров \"Параметр1\", отсутствующих в сигнатуре метода",
+        28, 8, 15)
+      .hasRangeAndMessage("Необходимо добавить описание параметра \"Параметр3\"",
+        28, 27, 36)
+      .hasRangeAndMessage("Необходимо исправить порядок описаний параметров",
+        35, 8, 15)
+      .hasRangeAndMessage("Необходимо добавить описание типа параметра \"Параметр2\"",
+        42, 27, 36)
+      .hasRangeAndMessage("Необходимо удалить описания параметров \"Параметр2\", отсутствующих в сигнатуре метода",
+        50, 8, 15)
+      .hasRangeAndMessage("Необходимо добавить описание параметра \"Параметр1\"",
+        58, 16, 25)
+      .hasRangeAndMessage("Необходимо добавить описание параметра \"Параметр2\"",
+        58, 27, 36)
+      .hasRangeAndMessage("Необходимо удалить описания параметров \"Параметр3, Параметр4\", отсутствующих в сигнатуре метода",
+        58, 8, 15)
+      .hasRangeAndMessage("Необходимо удалить описания параметров \"Параметр2, Параметр3, Параметр5\", отсутствующих в сигнатуре метода",
+        68, 8, 15)
     ;
   }
 }
