@@ -720,6 +720,24 @@
             },
             "$id": "#/definitions/LineLength"
         },
+        "MagicDate": {
+            "description": "Magic dates",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Magic dates",
+            "properties": {
+                "authorizedDates": {
+                    "description": "Allowed dates, comma separated. Example: 00010101,00010101000000,000101010000",
+                    "default": "00010101,00010101000000,000101010000",
+                    "type": "string",
+                    "title": "Allowed dates, comma separated. Example: 00010101,00010101000000,000101010000"
+                }
+            },
+            "$id": "#/definitions/MagicDate"
+        },
         "MagicNumber": {
             "description": "Magic numbers",
             "default": true,
@@ -797,6 +815,16 @@
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
+        },
+        "MissingEventSubscriptionHandler": {
+            "description": "Event subscription handler missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Event subscription handler missing",
+            "$id": "#/definitions/MissingEventSubscriptionHandler"
         },
         "MissingSpace": {
             "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",

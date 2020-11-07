@@ -206,6 +206,9 @@
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
+                "MagicDate": {
+                    "$ref": "parameters-schema.json#/definitions/MagicDate"
+                },
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
                 },
@@ -217,6 +220,9 @@
                 },
                 "MissingCodeTryCatchEx": {
                     "$ref": "parameters-schema.json#/definitions/MissingCodeTryCatchEx"
+                },
+                "MissingEventSubscriptionHandler": {
+                    "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
                 },
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
