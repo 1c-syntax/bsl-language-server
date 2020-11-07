@@ -8,7 +8,7 @@
 
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
- `excludeWords` | `String` | ```A list of exclusion words, specified as a comma-separated string``` | ```ЧтениеXML, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP``` 
+ `excludeWords` | `String` | ```A list of exclusion words, specified as a comma-separated string``` | ```ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -39,6 +39,6 @@
 
 ```json
 "LatinAndCyrillicSymbolInWord": {
-    "excludeWords": "ЧтениеXML, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP"
+    "excludeWords": "ЧтениеXML, ЧтениеJSON, ЗаписьXML, ЗаписьJSON, ComОбъект, ФабрикаXDTO, ОбъектXDTO, СоединениеFTP, HTTPСоединение, HTTPЗапрос, HTTPСервисОтвет, SMSСообщение, WSПрокси"
 }
 ```
