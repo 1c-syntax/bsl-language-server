@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1604757022900,
+  "lastUpdate": 1604757491296,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6541,6 +6541,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.200395201838511",
             "extra": "mean: 77.93326385815938 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e078485347281c5c77f8625020bf7553d5edbef3",
+          "message": "Merge pull request #1424 from 1c-syntax/feature/MissingEventSubscriptionHandler\n\nДобавлена диагностика отсутсвующего обработчика подписки на событие",
+          "timestamp": "2020-11-07T16:43:09+03:00",
+          "tree_id": "57a46bd5b95f944239859b7742e52e9c33494a39",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e078485347281c5c77f8625020bf7553d5edbef3"
+        },
+        "date": 1604757486532,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 77.22292160987854,
+            "unit": "sec",
+            "range": "stddev: 1.8743130011932922",
+            "extra": "mean: 77.22292160987854 sec\nrounds: 3"
           }
         ]
       }
