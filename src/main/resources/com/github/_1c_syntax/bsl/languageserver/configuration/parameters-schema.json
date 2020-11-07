@@ -576,6 +576,16 @@
             "title": "GetForm method call",
             "$id": "#/definitions/GetFormMethod"
         },
+        "GlobalContextMethodCollision8312": {
+            "description": "<Diagnostic name>",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "<Diagnostic name>",
+            "$id": "#/definitions/GlobalContextMethodCollision8312"
+        },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
             "default": true,

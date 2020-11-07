@@ -170,6 +170,9 @@
                 "GetFormMethod": {
                     "$ref": "parameters-schema.json#/definitions/GetFormMethod"
                 },
+                "GlobalContextMethodCollision8312": {
+                    "$ref": "parameters-schema.json#/definitions/GlobalContextMethodCollision8312"
+                },
                 "IdenticalExpressions": {
                     "$ref": "parameters-schema.json#/definitions/IdenticalExpressions"
                 },
