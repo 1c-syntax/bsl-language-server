@@ -224,6 +224,9 @@
                 "MissingEventSubscriptionHandler": {
                     "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
                 },
+                "MissingParameterDescription": {
+                    "$ref": "parameters-schema.json#/definitions/MissingParameterDescription"
+                },
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
                 },
