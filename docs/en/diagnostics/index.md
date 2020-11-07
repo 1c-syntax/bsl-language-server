@@ -10,8 +10,8 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 Total: **122**
 
-* Error: **36**
-* Code smell: **79**
+* Error: **37**
+* Code smell: **78**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -66,6 +66,7 @@ Total: **122**
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | The function always returns the same primitive value | Yes | Major | Error | `design`<br>`badpractice` 
  [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | The function should have return | Yes | Major | Error | `suspicious`<br>`unpredictable` 
  [GetFormMethod](GetFormMethod.md) | GetForm method call | Yes | Major | Error | `error` 
+ [GlobalContextMethodCollision8312](GlobalContextMethodCollision8312.md) | <Diagnostic name> | Yes | Blocker | Error | `error`<br>`unpredictable` 
  [IdenticalExpressions](IdenticalExpressions.md) | There are identical sub-expressions to the left and to the right of the "foo" operator | Yes | Major | Error | `suspicious` 
  [IfConditionComplexity](IfConditionComplexity.md) | Usage of complex expressions in the "If" condition | Yes | Minor | Code smell | `brainoverload` 
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` 
@@ -82,6 +83,7 @@ Total: **122**
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` 
  [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br>`badpractice` 
+ [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Event subscription handler missing | Yes | Blocker | Error | `error` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 

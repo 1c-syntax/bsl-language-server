@@ -58,7 +58,6 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
     pathByModuleType.put(ModuleType.HTTPServiceModule, "HTTPServices/HTTPСервис1/Ext/Module.bsl");
   }
 
-
   @Test
   void testUnknown() {
 
@@ -145,7 +144,7 @@ class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandard
       .hasRange(41, 1, 63)
       .hasRange(45, 1, 31)
       .hasRange(49, 1, 27)
-      .hasRange(77, 1, 18)
+      .hasRange(85, 1, 18)
     ;
   }
 

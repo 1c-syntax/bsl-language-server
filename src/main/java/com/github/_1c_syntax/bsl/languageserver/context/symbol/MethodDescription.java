@@ -21,44 +21,81 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import lombok.Getter;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
+import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
+import lombok.Value;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Класс-описание метода (процедуры или функции)
+ */
+@Value
 public class MethodDescription {
 
-  private static final int COMMENT_LENGTH = 2;
-  private static final Pattern DEPRECATED_PATTERN
-    = CaseInsensitivePattern.compile("(?:\\s*)(?:Устарела|Deprecated)\\.(.*)");
+  /**
+   * Номер первой строки описания
+   */
+  int startLine;
+  /**
+   * Номер последней строки описания
+   */
+  int endLine;
+  /**
+   * Содержит полное описание метода (весь текст)
+   */
+  String description;
+  /**
+   * Содержит часть строки после ключевого слова, в которой должно быть
+   * описание причины устаревания метода либо альтернативы
+   */
+  String deprecationInfo;
 
-  private final int startLine;
-  private final int endLine;
-  @Getter
-  private final String description;
-
-  @Getter
-  private final String deprecationInfo;
-  @Getter
-  private final boolean deprecated;
+  /**
+   * Признак устарения метода
+   */
+  boolean deprecated;
+  /**
+   * Описание назначения метода
+   */
+  String purposeDescription;
+  /**
+   * Примеры использования метода
+   */
+  List<String> examples;
+  /**
+   * Варианты вызова метода
+   */
+  List<String> callOptions;
+  /**
+   * Параметры метода с типами и описанием
+   */
+  List<ParameterDescription> parameters;
+  /**
+   * Возвращаемые значения (типы)
+   */
+  List<TypeDescription> returnedValue;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
       .map(Token::getText)
-      .map(MethodDescription::uncomment)
       .collect(Collectors.joining("\n"));
-    Matcher matcher = DEPRECATED_PATTERN.matcher(description);
-    if (matcher.find()) {
-      deprecationInfo = matcher.group(1);
-      deprecated = true;
-    } else {
-      deprecationInfo = "";
-      deprecated = false;
-    }
+
+    var tokenizer = new BSLMethodDescriptionTokenizer(description);
+    var ast = tokenizer.getAst();
+
+    purposeDescription = DescriptionReader.readPurposeDescription(ast);
+    deprecated = ast != null && ast.deprecate() != null;
+    deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
+    callOptions = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
+    examples = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);
+    parameters = DescriptionReader.readParameters(ast);
+    returnedValue = DescriptionReader.readReturnedValue(ast);
 
     if (comments.isEmpty()) {
       startLine = 0;
@@ -78,14 +115,6 @@ public class MethodDescription {
     int firstLine = first.getLine();
     int lastLine = last.getLine();
     return (firstLine >= startLine && lastLine <= endLine);
-  }
-
-  private static String uncomment(String text) {
-    String result = text;
-    if (result.startsWith("//")) {
-      result = result.substring(COMMENT_LENGTH);
-    }
-    return result;
   }
 
 }

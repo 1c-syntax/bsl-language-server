@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
@@ -121,7 +122,11 @@ public class FormatCommand implements Callable<Integer> {
     if (silentMode) {
       files.parallelStream().forEach(this::formatFile);
     } else {
-      try (ProgressBar pb = new ProgressBar("Formatting files...", files.size(), ProgressBarStyle.ASCII)) {
+      try (ProgressBar pb = new ProgressBarBuilder()
+        .setTaskName("Formatting files...")
+        .setInitialMax(files.size())
+        .setStyle(ProgressBarStyle.ASCII)
+        .build()) {
         files.parallelStream()
           .forEach((File file) -> {
             pb.step();

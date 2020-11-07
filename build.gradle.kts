@@ -12,9 +12,9 @@ plugins {
     id("org.sonarqube") version "3.0"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.31.0"
+    id("com.github.ben-manes.versions") version "0.33.0"
     id("io.freefair.javadoc-links") version "5.2.1"
-    id("org.springframework.boot") version "2.3.3.RELEASE"
+    id("org.springframework.boot") version "2.3.5.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.1"
 }
 
@@ -44,7 +44,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 
 val jacksonVersion = "2.11.2"
 val junitVersion = "5.6.1"
-val languageToolVersion = "5.0"
+val languageToolVersion = "5.1"
 
 dependencies {
 
@@ -52,13 +52,13 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.5.1")
+    api("info.picocli:picocli-spring-boot-starter:4.5.2")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.16.0") {
+    api("com.github.1c-syntax", "bsl-parser", "7dbb670a9e197bb74112094415092a778a349f1e") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -70,7 +70,7 @@ dependencies {
     api("com.github.1c-syntax", "mdclasses", "0.6.1")
 
     // JLanguageTool
-    implementation("org.languagetool", "languagetool-core", "5.0.2")
+    implementation("org.languagetool", "languagetool-core", languageToolVersion)
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
@@ -81,7 +81,7 @@ dependencies {
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.8.1")
+    implementation("me.tongfei", "progressbar", "0.9.0")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
@@ -94,6 +94,7 @@ dependencies {
     // COMPILE
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
+    annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
     // TEST
 
@@ -106,8 +107,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.17.2")
-    testImplementation("org.mockito", "mockito-core", "3.5.10")
+    testImplementation("org.assertj", "assertj-core", "3.18.0")
+    testImplementation("org.mockito", "mockito-core", "3.6.0")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
@@ -216,8 +217,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.12"
-    sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
+    version = "1.18.16"
+    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
 }
 
 tasks {
