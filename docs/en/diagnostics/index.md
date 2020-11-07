@@ -82,6 +82,7 @@ Total: **122**
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` 
  [MethodSize](MethodSize.md) | Method size | Yes | Major | Code smell | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Missing code in Raise block in "Try ... Raise ... EndTry" | Yes | Major | Error | `standard`<br>`badpractice` 
+ [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Event subscription handler missing | Yes | Blocker | Error | `error` 
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 

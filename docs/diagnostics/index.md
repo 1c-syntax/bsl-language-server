@@ -82,6 +82,7 @@
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` 
  [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br>`badpractice` 
+ [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Отсутствует обработчик подписки на событие | Да | Блокирующий | Ошибка | `error` 
  [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, от ключевых слов, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да | Важный | Ошибка | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | Все объявления переменных должны иметь описание | Да | Незначительный | Дефект кода | `standard` 

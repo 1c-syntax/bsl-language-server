@@ -218,6 +218,9 @@
                 "MissingCodeTryCatchEx": {
                     "$ref": "parameters-schema.json#/definitions/MissingCodeTryCatchEx"
                 },
+                "MissingEventSubscriptionHandler": {
+                    "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
+                },
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
                 },
