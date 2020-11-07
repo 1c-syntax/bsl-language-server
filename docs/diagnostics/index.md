@@ -8,9 +8,9 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **124**
+Общее количество: **125**
 
-* Дефект кода: **79**
+* Дефект кода: **80**
 * Уязвимость: **3**
 * Ошибка: **38**
 * Потенциальная уязвимость: **4**
@@ -101,6 +101,7 @@
  [OSUsersMethod](OSUsersMethod.md) | Использование метода ПользователиОС | Да | Критичный | Потенциальная уязвимость | `suspicious` 
  [OneStatementPerLine](OneStatementPerLine.md) | Одно выражение в одной строке | Да | Незначительный | Дефект кода | `standard`<br>`design` 
  [OrderOfParams](OrderOfParams.md) | Порядок параметров метода | Да | Важный | Дефект кода | `standard`<br>`design` 
+ [OrdinaryAppSupport](OrdinaryAppSupport.md) | Поддержка обычного приложения | Да | Важный | Дефект кода | `standard`<br>`unpredictable` 
  [PairingBrokenTransaction](PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да | Важный | Ошибка | `standard` 
  [ParseError](ParseError.md) | Ошибка разбора исходного кода | Да | Критичный | Ошибка | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | Блокирующий | Ошибка | `error` 

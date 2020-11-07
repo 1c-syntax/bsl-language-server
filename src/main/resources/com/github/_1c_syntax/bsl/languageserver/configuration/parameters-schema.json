@@ -1084,6 +1084,16 @@
             "title": "Order of Parameters in method",
             "$id": "#/definitions/OrderOfParams"
         },
+        "OrdinaryAppSupport": {
+            "description": "Ordinary application support",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Ordinary application support",
+            "$id": "#/definitions/OrdinaryAppSupport"
+        },
         "PairingBrokenTransaction": {
             "description": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
             "default": true,

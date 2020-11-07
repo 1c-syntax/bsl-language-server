@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **124**
+Total: **125**
 
 * Error: **38**
-* Code smell: **79**
+* Code smell: **80**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
@@ -101,6 +101,7 @@ Total: **124**
  [OSUsersMethod](OSUsersMethod.md) | Using method OSUsers | Yes | Critical | Security Hotspot | `suspicious` 
  [OneStatementPerLine](OneStatementPerLine.md) | One statement per line | Yes | Minor | Code smell | `standard`<br>`design` 
  [OrderOfParams](OrderOfParams.md) | Order of Parameters in method | Yes | Major | Code smell | `standard`<br>`design` 
+ [OrdinaryAppSupport](OrdinaryAppSupport.md) | Ordinary application support | Yes | Major | Code smell | `standard`<br>`unpredictable` 
  [PairingBrokenTransaction](PairingBrokenTransaction.md) | Violation of pairing using methods "BeginTransaction()" & "CommitTransaction()" / "RollbackTransaction()" | Yes | Major | Error | `standard` 
  [ParseError](ParseError.md) | Source code parse error | Yes | Critical | Error | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Procedure should not return Value | Yes | Blocker | Error | `error` 
