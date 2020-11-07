@@ -58,4 +58,17 @@ class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAp
         .equals("Установите свойство \"Использовать управляемые формы в обычном приложении\" в Истина"))
     ;
   }
+
+  @Test
+  void testDisable() {
+
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var documentContext = spy(getDocumentContext());
+    configuration.getDiagnosticsOptions().setOrdinaryAppSupport(false);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics)
+      .isEmpty();
+  }
 }
