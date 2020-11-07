@@ -10,7 +10,7 @@
 
 Общее количество: **122**
 
-* Дефект кода: **78**
+* Дефект кода: **79**
 * Уязвимость: **3**
 * Ошибка: **37**
 * Потенциальная уязвимость: **4**
@@ -78,6 +78,7 @@
  [JoinWithVirtualTable](JoinWithVirtualTable.md) | Соединение с виртуальными таблицами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
  [LatinAndCyrillicSymbolInWord](LatinAndCyrillicSymbolInWord.md) | Смешивание латинских и кириллических символов в одном идентификаторе | Да | Незначительный | Дефект кода | `brainoverload`<br>`suspicious` 
  [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
+ [MagicDate](MagicDate.md) | Магические даты | Да | Незначительный | Дефект кода | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` 
  [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` 
