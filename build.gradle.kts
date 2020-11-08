@@ -1,3 +1,4 @@
+import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
@@ -267,16 +268,19 @@ publishing {
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach { dependency ->
-                    if (dependency !is SelfResolvingDependency) {
-                        val dependencyNode = dependenciesNode.appendNode("dependency")
-                        dependencyNode.appendNode("groupId", dependency.group)
-                        dependencyNode.appendNode("artifactId", dependency.name)
-                        dependencyNode.appendNode("version", dependency.version)
-                        dependencyNode.appendNode("scope", "runtime")
-                    }
-                }
+                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode))
+                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode))
             }
         }
+    }
+}
+
+fun addDependency(dependenciesNode: Node) = { dependency: Dependency ->
+    if (dependency !is SelfResolvingDependency) {
+        val dependencyNode = dependenciesNode.appendNode("dependency")
+        dependencyNode.appendNode("groupId", dependency.group)
+        dependencyNode.appendNode("artifactId", dependency.name)
+        dependencyNode.appendNode("version", dependency.version)
+        dependencyNode.appendNode("scope", "runtime")
     }
 }
