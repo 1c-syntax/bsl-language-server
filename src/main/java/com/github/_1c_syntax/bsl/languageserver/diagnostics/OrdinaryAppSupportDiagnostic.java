@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -35,6 +36,7 @@ import org.eclipse.lsp4j.Range;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
+  scope = DiagnosticScope.BSL,
   modules = {
     ModuleType.SessionModule
   },
@@ -43,7 +45,6 @@ import org.eclipse.lsp4j.Range;
     DiagnosticTag.STANDARD,
     DiagnosticTag.UNPREDICTABLE
   }
-
 )
 @RequiredArgsConstructor
 public class OrdinaryAppSupportDiagnostic extends AbstractDiagnostic {
