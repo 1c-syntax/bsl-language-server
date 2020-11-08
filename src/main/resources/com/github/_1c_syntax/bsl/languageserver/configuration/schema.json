@@ -275,6 +275,9 @@
                 "OrderOfParams": {
                     "$ref": "parameters-schema.json#/definitions/OrderOfParams"
                 },
+                "OrdinaryAppSupport": {
+                    "$ref": "parameters-schema.json#/definitions/OrdinaryAppSupport"
+                },
                 "PairingBrokenTransaction": {
                     "$ref": "parameters-schema.json#/definitions/PairingBrokenTransaction"
                 },
