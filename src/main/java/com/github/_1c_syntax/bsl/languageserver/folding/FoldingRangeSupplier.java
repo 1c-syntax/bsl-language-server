@@ -19,29 +19,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
-import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.FoldingRange;
-import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-@RequiredArgsConstructor
-public final class FoldingRangeProvider {
-
-  private final List<FoldingRangeSupplier> foldingRangeSuppliers;
-
-  public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
-    return foldingRangeSuppliers.stream()
-      .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-  }
-
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
+ * данными о областях сворачивания.
+ */
+public interface FoldingRangeSupplier {
+  /**
+   * @param documentContext Контекст документа, для которого надо рассчитать области сворачивания
+   * @return Список областей сворачивания
+   */
+  List<FoldingRange> getFoldingRanges(DocumentContext documentContext);
 }

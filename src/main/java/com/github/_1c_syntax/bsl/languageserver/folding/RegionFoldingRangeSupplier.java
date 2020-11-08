@@ -19,29 +19,39 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
-import lombok.RequiredArgsConstructor;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Сапплаер областей сворачивания областей (<code>#Область ... #КонецОбласти</code>).
+ */
 @Component
-@RequiredArgsConstructor
-public final class FoldingRangeProvider {
+public class RegionFoldingRangeSupplier implements FoldingRangeSupplier {
 
-  private final List<FoldingRangeSupplier> foldingRangeSuppliers;
-
-  public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
-    return foldingRangeSuppliers.stream()
-      .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))
-      .flatMap(Collection::stream)
+  @Override
+  public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
+    return documentContext.getSymbolTree().getRegionsFlat().stream()
+      .map(RegionFoldingRangeSupplier::toFoldingRange)
       .collect(Collectors.toList());
+  }
+
+  private static FoldingRange toFoldingRange(RegionSymbol regionSymbol) {
+
+    FoldingRange foldingRange = new FoldingRange(
+      regionSymbol.getStartRange().getStart().getLine(),
+      regionSymbol.getEndRange().getEnd().getLine()
+    );
+    foldingRange.setKind(FoldingRangeKind.Region);
+
+    return foldingRange;
   }
 
 }

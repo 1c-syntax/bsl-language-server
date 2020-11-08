@@ -19,29 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+/**
+ * Пакет предназначен для реализации различных видов сворачивания ("folding"),
+ * используемых {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}.
+ */
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.folding;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.FoldingRange;
-import org.springframework.stereotype.Component;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-@Component
-@RequiredArgsConstructor
-public final class FoldingRangeProvider {
-
-  private final List<FoldingRangeSupplier> foldingRangeSuppliers;
-
-  public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
-    return foldingRangeSuppliers.stream()
-      .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))
-      .flatMap(Collection::stream)
-      .collect(Collectors.toList());
-  }
-
-}
+import javax.annotation.ParametersAreNonnullByDefault;
