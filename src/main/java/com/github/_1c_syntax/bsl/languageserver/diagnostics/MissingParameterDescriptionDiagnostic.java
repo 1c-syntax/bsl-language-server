@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
@@ -31,7 +32,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -45,42 +48,47 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class MissingParameterDescriptionDiagnostic extends AbstractDiagnostic {
+public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDiagnostic {
 
   /**
    * Анализируется только методы, имеющие описание
    * Для удобства кидается несколько разных замечаний
    */
   @Override
-  protected void check() {
-    documentContext.getSymbolTree().getMethods().stream()
-      .filter((MethodSymbol methodSymbol) -> methodSymbol.getDescription().isPresent()
-        && !methodSymbol.getDescription().get().getDescription().isEmpty())
-      .forEach((MethodSymbol methodSymbol) -> {
+  public void visitMethod(MethodSymbol methodSymbol) {
 
-        var parameters = methodSymbol.getParameters();
-        var parametersDescriptions = methodSymbol.getDescription().get().getParameters();
+    boolean hasDescription = methodSymbol.getDescription()
+      .map(methodDescription -> !methodDescription.isEmpty())
+      .orElse(false);
 
-        // параметров и описания нет, что в принципе не ошибка
-        if (parameters.isEmpty() && parametersDescriptions.isEmpty()) {
-          return;
-        }
+    if (!hasDescription) {
+      return;
+    }
 
-        // параметров нет, но есть их описания, что есть ошибка
-        if (parameters.isEmpty()) {
-          addDiagnostic(methodSymbol, parametersDescriptions);
-          return;
-        }
+    List<ParameterDefinition> parameters = methodSymbol.getParameters();
+    List<ParameterDescription> parametersDescriptions = methodSymbol.getDescription()
+      .map(MethodDescription::getParameters)
+      .orElse(Collections.emptyList());
 
-        if (parametersDescriptions.isEmpty()) {
-          // ошибка отсутствует описание всех параметров
-          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
-          return;
-        }
+    // параметров и описания нет, что в принципе не ошибка
+    if (parameters.isEmpty() && parametersDescriptions.isEmpty()) {
+      return;
+    }
 
-        // сопоставление параметров и описаний
-        checkParameterDescription(methodSymbol, parameters, parametersDescriptions);
-      });
+    // параметров нет, но есть их описания, что есть ошибка
+    if (parameters.isEmpty()) {
+      addDiagnostic(methodSymbol, parametersDescriptions);
+      return;
+    }
+
+    if (parametersDescriptions.isEmpty()) {
+      // ошибка отсутствует описание всех параметров
+      diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
+      return;
+    }
+
+    // сопоставление параметров и описаний
+    checkParameterDescription(methodSymbol, parameters, parametersDescriptions);
   }
 
   private void checkParameterDescription(MethodSymbol methodSymbol,
@@ -127,9 +135,9 @@ public class MissingParameterDescriptionDiagnostic extends AbstractDiagnostic {
 
     if (!hasMissingDescription.get()) {
       var paramDescriptionString = parametersDescriptions.stream()
-        .map(ParameterDescription::getName).collect(Collectors.joining(",")).toLowerCase();
+        .map(ParameterDescription::getName).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
       var paramString = parameters.stream()
-        .map(ParameterDefinition::getName).collect(Collectors.joining(",")).toLowerCase();
+        .map(ParameterDefinition::getName).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
       // если строки не равны, значит порядок описаний не совпадает
       if (!paramDescriptionString.equals(paramString)) {
         diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getResourceString("wrongOrder"));

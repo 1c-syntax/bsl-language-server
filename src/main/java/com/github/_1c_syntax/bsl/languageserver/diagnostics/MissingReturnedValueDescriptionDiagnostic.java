@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -28,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
@@ -40,46 +43,53 @@ import java.util.stream.Collectors;
   }
 
 )
-public class MissingReturnedValueDescriptionDiagnostic extends AbstractDiagnostic {
+public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTreeDiagnostic {
 
   /**
    * Анализируется только методы, имеющие описание
    * Для удобства кидается несколько разных замечаний
    */
   @Override
-  protected void check() {
-    documentContext.getSymbolTree().getMethods().stream()
-      .filter((MethodSymbol methodSymbol) -> methodSymbol.getDescription().isPresent()
-        && !methodSymbol.getDescription().get().getDescription().isEmpty())
-      .forEach((MethodSymbol methodSymbol) -> {
-        var returnedValueDescription = methodSymbol.getDescription().get().getReturnedValue();
+  public void visitMethod(MethodSymbol methodSymbol) {
 
-        // процедура и описания возвращаемого значения нет, все нормально
-        if (!methodSymbol.isFunction() && returnedValueDescription.isEmpty()) {
-          return;
-        }
+    boolean hasDescription = methodSymbol.getDescription()
+      .map(methodDescription -> !methodDescription.isEmpty())
+      .orElse(false);
 
-        // процедура не должна иметь описания
-        if (!methodSymbol.isFunction()) {
-          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getResourceString("isProcedure"));
-          return;
-        }
+    if (!hasDescription) {
+      return;
+    }
 
-        // функция без описания - ошибка
-        if (returnedValueDescription.isEmpty()) {
-          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getMessage());
-          return;
-        }
+    List<TypeDescription> returnedValueDescription = methodSymbol.getDescription()
+      .map(MethodDescription::getReturnedValue)
+      .orElse(Collections.emptyList());
 
-        // тип возвращаемого значения должен иметь описание
-        var typesWithoutDescription = returnedValueDescription.stream()
-          .filter((TypeDescription typeDescription) -> typeDescription.getDescription().isEmpty())
-          .map(TypeDescription::getName)
-          .collect(Collectors.joining(", "));
-        if (!typesWithoutDescription.isEmpty()) {
-          diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(),
-            info.getResourceString("typesWithoutDescription", typesWithoutDescription));
-        }
-      });
+    // процедура и описания возвращаемого значения нет, все нормально
+    if (!methodSymbol.isFunction() && returnedValueDescription.isEmpty()) {
+      return;
+    }
+
+    // процедура не должна иметь описания
+    if (!methodSymbol.isFunction()) {
+      diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getResourceString("isProcedure"));
+      return;
+    }
+
+    // функция без описания - ошибка
+    if (returnedValueDescription.isEmpty()) {
+      diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getMessage());
+      return;
+    }
+
+    // тип возвращаемого значения должен иметь описание
+    var typesWithoutDescription = returnedValueDescription.stream()
+      .filter((TypeDescription typeDescription) -> typeDescription.getDescription().isEmpty())
+      .map(TypeDescription::getName)
+      .collect(Collectors.joining(", "));
+    if (!typesWithoutDescription.isEmpty()) {
+      diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(),
+        info.getResourceString("typesWithoutDescription", typesWithoutDescription));
+    }
   }
+
 }
