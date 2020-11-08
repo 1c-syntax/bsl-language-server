@@ -251,6 +251,7 @@ tasks {
 }
 
 artifacts {
+    archives(tasks["jar"])
     archives(tasks["sourcesJar"])
     archives(tasks["bootJar"])
     archives(tasks["javadocJar"])
@@ -259,6 +260,7 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            artifact(tasks["jar"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["bootJar"])
             artifact(tasks["javadocJar"])
