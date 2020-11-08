@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -48,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Slf4j
 class SmokyTest {
 
   @Autowired
@@ -77,6 +79,7 @@ class SmokyTest {
     List<Diagnostic> diagnostics = new ArrayList<>();
     FileUtils.listFiles(Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
       .forEach(filePath -> {
+        LOGGER.info(filePath.toString());
         var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
         documentContext.getDiagnostics().stream()
           .filter(diagnostic ->

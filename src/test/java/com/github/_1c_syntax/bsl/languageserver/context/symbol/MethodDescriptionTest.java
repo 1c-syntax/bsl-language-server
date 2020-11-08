@@ -67,7 +67,7 @@ class MethodDescriptionTest {
     assertThat(method.getExamples()).isEmpty();
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
-    assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getReturnedValue()).hasSize(1);
   }
 
   @Test
@@ -80,7 +80,7 @@ class MethodDescriptionTest {
     assertThat(method.getExamples()).isEmpty();
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(3);
-    assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getReturnedValue()).hasSize(1);
   }
 
   @Test
