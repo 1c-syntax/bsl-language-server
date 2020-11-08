@@ -8,10 +8,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **126**
+Total: **127**
 
 * Error: **38**
-* Code smell: **81**
+* Code smell: **82**
 * Vulnerability: **3**
 * Security Hotspot: **4**
 
