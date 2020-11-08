@@ -43,7 +43,6 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-
     CodeBlockVisitor codeBlockVisitor = new CodeBlockVisitor();
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();

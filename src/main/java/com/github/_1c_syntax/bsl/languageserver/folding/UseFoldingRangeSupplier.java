@@ -40,7 +40,6 @@ public class UseFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-
     BSLParser.FileContext fileContext = documentContext.getAst();
     ParseTree[] uses = Trees.findAllRuleNodes(fileContext, BSLParser.RULE_use).toArray(new ParseTree[0]);
 
