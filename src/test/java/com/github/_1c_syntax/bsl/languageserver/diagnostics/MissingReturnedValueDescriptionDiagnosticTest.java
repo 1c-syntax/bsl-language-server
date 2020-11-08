@@ -40,15 +40,15 @@ class MissingReturnedValueDescriptionDiagnosticTest extends AbstractDiagnosticTe
 
     assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
-      .hasRangeAndMessage("Добавьте описание возвращаемого значения функции",
+      .hasMessageOnRange("Добавьте описание возвращаемого значения функции",
         4, 8, 15)
-      .hasRangeAndMessage("Добавьте описание возвращаемого значения функции",
+      .hasMessageOnRange("Добавьте описание возвращаемого значения функции",
         9, 8, 15)
-      .hasRangeAndMessage("Удалите описание возвращаемого значения для процедуры",
+      .hasMessageOnRange("Удалите описание возвращаемого значения для процедуры",
         21, 10, 17)
-      .hasRangeAndMessage("Необходимо добавить описание типов \"Строка\" возвращаемого значения",
+      .hasMessageOnRange("Необходимо добавить описание типов \"Строка\" возвращаемого значения",
         31, 8, 15)
-      .hasRangeAndMessage("Необходимо добавить описание типов \"Строка, булево\" возвращаемого значения",
+      .hasMessageOnRange("Необходимо добавить описание типов \"Строка, булево\" возвращаемого значения",
         39, 8, 15)
     ;
   }

@@ -63,7 +63,7 @@ public class DiagnosticAssert extends AbstractAssert<DiagnosticAssert, Diagnosti
    * @param endChar   Последний символ диапазона
    * @return Ссылка на объект для текучести
    */
-  public DiagnosticAssert hasRangeAndMessage(String message, int startLine, int startChar, int endLine, int endChar) {
+  public DiagnosticAssert hasMessageOnRange(String message, int startLine, int startChar, int endLine, int endChar) {
     // check that actual TolkienCharacter we want to make assertions on is not null.
     isNotNull();
 

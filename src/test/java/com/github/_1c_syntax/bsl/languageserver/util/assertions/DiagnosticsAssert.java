@@ -61,9 +61,9 @@ public class DiagnosticsAssert extends AbstractListAssert<DiagnosticsAssert, Lis
    * @param endChar   Последний символ диапазона
    * @return Ссылка на объект для текучести
    */
-  public DiagnosticsAssert hasRangeAndMessage(String message, int startLine, int startChar, int endLine, int endChar) {
+  public DiagnosticsAssert hasMessageOnRange(String message, int startLine, int startChar, int endLine, int endChar) {
     return anySatisfy(diagnostic ->
-      assertFactory.createAssert(diagnostic).hasRangeAndMessage(message, startLine, startChar, endLine, endChar)
+      assertFactory.createAssert(diagnostic).hasMessageOnRange(message, startLine, startChar, endLine, endChar)
     );
   }
 
@@ -76,9 +76,9 @@ public class DiagnosticsAssert extends AbstractListAssert<DiagnosticsAssert, Lis
    * @param endChar   Последний символ диапазона
    * @return Ссылка на объект для текучести
    */
-  public DiagnosticsAssert hasRangeAndMessage(String message, int lineNo, int startChar, int endChar) {
+  public DiagnosticsAssert hasMessageOnRange(String message, int lineNo, int startChar, int endChar) {
     return anySatisfy(diagnostic ->
-      assertFactory.createAssert(diagnostic).hasRangeAndMessage(message, lineNo, startChar, lineNo, endChar)
+      assertFactory.createAssert(diagnostic).hasMessageOnRange(message, lineNo, startChar, lineNo, endChar)
     );
   }
 
