@@ -1,3 +1,4 @@
+import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
@@ -251,6 +252,7 @@ tasks {
 }
 
 artifacts {
+    archives(tasks["jar"])
     archives(tasks["sourcesJar"])
     archives(tasks["bootJar"])
     archives(tasks["javadocJar"])
@@ -259,22 +261,26 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            artifact(tasks["jar"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["bootJar"])
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach { dependency ->
-                    if (dependency !is SelfResolvingDependency) {
-                        val dependencyNode = dependenciesNode.appendNode("dependency")
-                        dependencyNode.appendNode("groupId", dependency.group)
-                        dependencyNode.appendNode("artifactId", dependency.name)
-                        dependencyNode.appendNode("version", dependency.version)
-                        dependencyNode.appendNode("scope", "runtime")
-                    }
-                }
+                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
+                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
             }
         }
+    }
+}
+
+fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
+    if (dependency !is SelfResolvingDependency) {
+        val dependencyNode = dependenciesNode.appendNode("dependency")
+        dependencyNode.appendNode("groupId", dependency.group)
+        dependencyNode.appendNode("artifactId", dependency.name)
+        dependencyNode.appendNode("version", dependency.version)
+        dependencyNode.appendNode("scope", scope)
     }
 }
