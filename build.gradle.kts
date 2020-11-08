@@ -268,19 +268,19 @@ publishing {
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode))
-                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode))
+                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
+                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
             }
         }
     }
 }
 
-fun addDependency(dependenciesNode: Node) = { dependency: Dependency ->
+fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
     if (dependency !is SelfResolvingDependency) {
         val dependencyNode = dependenciesNode.appendNode("dependency")
         dependencyNode.appendNode("groupId", dependency.group)
         dependencyNode.appendNode("artifactId", dependency.name)
         dependencyNode.appendNode("version", dependency.version)
-        dependencyNode.appendNode("scope", "runtime")
+        dependencyNode.appendNode("scope", scope)
     }
 }
