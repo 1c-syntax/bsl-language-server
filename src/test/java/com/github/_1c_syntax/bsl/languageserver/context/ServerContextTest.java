@@ -136,7 +136,7 @@ class ServerContextTest {
   private DocumentContext addDocumentContext(ServerContext serverContext, String path) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+    return serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8), 0);
   }
 
 }

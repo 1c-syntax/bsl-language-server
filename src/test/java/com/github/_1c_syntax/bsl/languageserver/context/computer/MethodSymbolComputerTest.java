@@ -280,7 +280,7 @@ class MethodSymbolComputerTest {
   ) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+    var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8), 0);
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");

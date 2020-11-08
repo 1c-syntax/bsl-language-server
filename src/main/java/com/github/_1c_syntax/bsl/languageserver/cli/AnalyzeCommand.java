@@ -214,7 +214,7 @@ public class AnalyzeCommand implements Callable<Integer> {
       throw new RuntimeException(e);
     }
 
-    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent);
+    DocumentContext documentContext = context.addDocument(file.toURI(), textDocumentContent, 1);
 
     Path filePath = srcDir.relativize(Absolute.path(file));
     List<Diagnostic> diagnostics = documentContext.getDiagnostics();

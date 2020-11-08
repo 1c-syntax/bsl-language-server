@@ -21,20 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
+import lombok.Value;
+import org.eclipse.lsp4j.Diagnostic;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.Collections;
+import java.util.List;
 
-public interface ProtocolExtension {
+/**
+ * Ответ на запрос <code>textDocument/x-diagnostics</code>.
+ * <br>
+ * См. {@link com.github._1c_syntax.bsl.languageserver.BSLTextDocumentService#diagnostics(DiagnosticParams)}
+ */
+@Value
+public class Diagnostics {
 
   /**
-   * @param params Параметры запроса.
-   * @return Список рассчитанных диагностик.
+   * Пустой ответ.
    */
-  @JsonRequest(
-    value = "textDocument/x-diagnostics",
-    useSegment = false
-  )
-  CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params);
+  public static final Diagnostics EMPTY = new Diagnostics(Collections.emptyList(), 0);
 
+  /**
+   * Список рассчитанных диагностик документа.
+   */
+  List<Diagnostic> diagnostics;
+
+  /**
+   * Версия документа, для которого были рассчитаны диагностики.
+   */
+  Integer version;
 }

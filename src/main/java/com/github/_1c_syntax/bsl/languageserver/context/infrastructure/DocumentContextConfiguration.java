@@ -40,10 +40,10 @@ public class DocumentContextConfiguration {
 
   @Bean
   @Scope("prototype")
-  public DocumentContext documentContext(URI uri, String content) {
+  public DocumentContext documentContext(URI uri, String content, int version) {
     var serverContext = applicationContext.getBean(ServerContext.class);
     var diagnosticComputer = applicationContext.getBean(DiagnosticComputer.class);
-    return new DocumentContext(uri, content, serverContext, diagnosticComputer);
+    return new DocumentContext(uri, content, serverContext, version, diagnosticComputer);
   }
 
 }
