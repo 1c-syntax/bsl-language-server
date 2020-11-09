@@ -24,8 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.util;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.CodeActionAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticAssert;
 import com.github._1c_syntax.bsl.languageserver.util.assertions.DiagnosticsAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangeAssert;
+import com.github._1c_syntax.bsl.languageserver.util.assertions.FoldingRangesAssert;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.FoldingRange;
 
 import java.util.List;
 
@@ -39,7 +42,15 @@ public class Assertions extends org.assertj.core.api.Assertions {
     return new CodeActionAssert(actual);
   }
 
+  public static FoldingRangeAssert assertThat(FoldingRange actual) {
+    return new FoldingRangeAssert(actual);
+  }
+
   public static DiagnosticsAssert assertThat(List<Diagnostic> actual, Object ignored) {
     return new DiagnosticsAssert(actual);
+  }
+
+  public static FoldingRangesAssert assertThatFoldingRanges(List<FoldingRange> actual) {
+    return new FoldingRangesAssert(actual);
   }
 }

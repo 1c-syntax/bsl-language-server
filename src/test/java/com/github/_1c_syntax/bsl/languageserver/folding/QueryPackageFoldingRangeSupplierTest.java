@@ -23,13 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatFoldingRanges;
 
 @SpringBootTest
 class QueryPackageFoldingRangeSupplierTest {
@@ -46,15 +47,12 @@ class QueryPackageFoldingRangeSupplierTest {
     List<FoldingRange> foldingRanges = supplier.getFoldingRanges(documentContext);
 
     // then
-    assertThat(foldingRanges)
+    assertThatFoldingRanges(foldingRanges)
       .hasSize(3)
-      .anyMatch(foldingRange -> hasRange(foldingRange, 2, 5))
-      .anyMatch(foldingRange -> hasRange(foldingRange, 9, 10))
-      .anyMatch(foldingRange -> hasRange(foldingRange, 14, 17))
+      .hasKindAndRange(FoldingRangeKind.Comment, 2, 5)
+      .hasKindAndRange(FoldingRangeKind.Comment, 9, 10)
+      .hasKindAndRange(FoldingRangeKind.Comment, 14, 17)
       ;
   }
 
-  private boolean hasRange(FoldingRange foldingRange, int startLine, int endLine) {
-    return foldingRange.getStartLine() == startLine && foldingRange.getEndLine() == endLine;
-  }
 }
