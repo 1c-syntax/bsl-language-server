@@ -19,29 +19,43 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
-import lombok.RequiredArgsConstructor;
+import com.github._1c_syntax.bsl.parser.SDBLParser;
+import com.github._1c_syntax.bsl.parser.Tokenizer;
 import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Сапплаер областей сворачивания для пакетов запросов.
+ */
 @Component
-@RequiredArgsConstructor
-public final class FoldingRangeProvider {
+public class QueryPackageFoldingRangeSupplier implements FoldingRangeSupplier {
 
-  private final List<FoldingRangeSupplier> foldingRangeSuppliers;
-
-  public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
-    return foldingRangeSuppliers.stream()
-      .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))
+  @Override
+  public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
+    return documentContext.getQueries().stream()
+      .map(Tokenizer::getAst)
+      .map(SDBLParser.QueryPackageContext::queries)
       .flatMap(Collection::stream)
+      .map(QueryPackageFoldingRangeSupplier::toFoldingRange)
+      .filter(foldingRange -> foldingRange.getStartLine() != foldingRange.getEndLine())
       .collect(Collectors.toList());
+  }
+
+  private static FoldingRange toFoldingRange(SDBLParser.QueriesContext queriesContext) {
+    FoldingRange foldingRange = new FoldingRange(
+      queriesContext.getStart().getLine() - 1,
+      queriesContext.getStop().getLine() - 1
+    );
+    foldingRange.setKind(FoldingRangeKind.Region);
+    return foldingRange;
   }
 
 }

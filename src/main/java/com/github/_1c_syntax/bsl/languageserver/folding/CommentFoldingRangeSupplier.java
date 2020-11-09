@@ -19,25 +19,23 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.util;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeansException;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.antlr.v4.runtime.Token;
+import org.springframework.stereotype.Component;
 
-@SpringBootApplication
-public class TestApplicationContext implements ApplicationContextAware {
-  private static ApplicationContext CONTEXT;
+import java.util.List;
+
+/**
+ * Сапплаер областей сворачивания блоков комментариев.
+ */
+@Component
+public class CommentFoldingRangeSupplier extends AbstractCommentFoldingRangeSupplier {
 
   @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
-    CONTEXT = context;
-  }
-
-  public static <T> T getBean(Class<T> requiredType) {
-    return CONTEXT.getBean(requiredType);
+  protected List<Token> getComments(DocumentContext documentContext) {
+    return documentContext.getComments();
   }
 
 }

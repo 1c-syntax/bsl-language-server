@@ -19,25 +19,16 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.util;
+package com.github._1c_syntax.bsl.languageserver.util.assertions;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeansException;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.assertj.core.api.AssertFactory;
+import org.eclipse.lsp4j.FoldingRange;
 
-@SpringBootApplication
-public class TestApplicationContext implements ApplicationContextAware {
-  private static ApplicationContext CONTEXT;
+public class FoldingRangeAssertFactory implements AssertFactory<FoldingRange, FoldingRangeAssert> {
 
   @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
-    CONTEXT = context;
-  }
-
-  public static <T> T getBean(Class<T> requiredType) {
-    return CONTEXT.getBean(requiredType);
+  public FoldingRangeAssert createAssert(FoldingRange actual) {
+    return new FoldingRangeAssert(actual);
   }
 
 }

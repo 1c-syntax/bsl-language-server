@@ -19,25 +19,21 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.util;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeansException;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import org.eclipse.lsp4j.FoldingRange;
 
-@SpringBootApplication
-public class TestApplicationContext implements ApplicationContextAware {
-  private static ApplicationContext CONTEXT;
+import java.util.List;
 
-  @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
-    CONTEXT = context;
-  }
-
-  public static <T> T getBean(Class<T> requiredType) {
-    return CONTEXT.getBean(requiredType);
-  }
-
+/**
+ * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
+ * данными о областях сворачивания.
+ */
+public interface FoldingRangeSupplier {
+  /**
+   * @param documentContext Контекст документа, для которого надо рассчитать области сворачивания
+   * @return Список областей сворачивания
+   */
+  List<FoldingRange> getFoldingRanges(DocumentContext documentContext);
 }

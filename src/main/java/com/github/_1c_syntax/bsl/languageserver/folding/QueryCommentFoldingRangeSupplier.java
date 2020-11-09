@@ -19,28 +19,32 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.folding.FoldingRangeSupplier;
-import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.FoldingRange;
+import com.github._1c_syntax.bsl.parser.SDBLLexer;
+import com.github._1c_syntax.bsl.parser.Tokenizer;
+import org.antlr.v4.runtime.Token;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Сапплаер областей сворачивания блоков комментариев в тексте запроса.
+ */
 @Component
-@RequiredArgsConstructor
-public final class FoldingRangeProvider {
+public class QueryCommentFoldingRangeSupplier extends AbstractCommentFoldingRangeSupplier {
 
-  private final List<FoldingRangeSupplier> foldingRangeSuppliers;
-
-  public List<FoldingRange> getFoldingRange(DocumentContext documentContext) {
-    return foldingRangeSuppliers.stream()
-      .map(foldingRangeSupplier -> foldingRangeSupplier.getFoldingRanges(documentContext))
+  @Override
+  protected List<Token> getComments(DocumentContext documentContext) {
+    return documentContext.getQueries().stream()
+      .map(Tokenizer::getTokens)
       .flatMap(Collection::stream)
+      .filter(token -> token.getType() == SDBLLexer.LINE_COMMENT)
+      .sorted(Comparator.comparing(Token::getLine))
       .collect(Collectors.toList());
   }
 
