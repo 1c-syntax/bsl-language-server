@@ -23,51 +23,19 @@ package com.github._1c_syntax.bsl.languageserver.folding;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.FoldingRange;
-import org.eclipse.lsp4j.FoldingRangeKind;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Сапплаер областей сворачивания блоков комментариев.
  */
 @Component
-public class CommentFoldingRangeSupplier implements FoldingRangeSupplier {
+public class CommentFoldingRangeSupplier extends AbstractCommentFoldingRangeSupplier {
 
   @Override
-  public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    List<FoldingRange> foldingRanges = new ArrayList<>();
-
-    int lastRangeStart = -1;
-    int previousLine = -1;
-    List<Token> comments = documentContext.getComments();
-    for (Token token : comments) {
-      int tokenLine = token.getLine();
-
-      if (tokenLine != previousLine + 1) {
-        if (lastRangeStart != previousLine) {
-          FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
-          foldingRange.setKind(FoldingRangeKind.Comment);
-
-          foldingRanges.add(foldingRange);
-        }
-        // new range
-        lastRangeStart = tokenLine;
-      }
-
-      previousLine = tokenLine;
-    }
-
-    // add last range
-    if (lastRangeStart != previousLine) {
-      FoldingRange foldingRange = new FoldingRange(lastRangeStart - 1, previousLine - 1);
-      foldingRange.setKind(FoldingRangeKind.Comment);
-
-      foldingRanges.add(foldingRange);
-    }
-    return foldingRanges;
+  protected List<Token> getComments(DocumentContext documentContext) {
+    return documentContext.getComments();
   }
 
 }
