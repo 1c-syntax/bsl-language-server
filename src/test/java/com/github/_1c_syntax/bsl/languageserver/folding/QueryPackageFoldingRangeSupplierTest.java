@@ -49,9 +49,9 @@ class QueryPackageFoldingRangeSupplierTest {
     // then
     assertThatFoldingRanges(foldingRanges)
       .hasSize(3)
-      .hasKindAndRange(FoldingRangeKind.Comment, 2, 5)
-      .hasKindAndRange(FoldingRangeKind.Comment, 9, 10)
-      .hasKindAndRange(FoldingRangeKind.Comment, 14, 17)
+      .hasKindAndRange(FoldingRangeKind.Region, 2, 5)
+      .hasKindAndRange(FoldingRangeKind.Region, 9, 10)
+      .hasKindAndRange(FoldingRangeKind.Region, 14, 17)
       ;
   }
 
