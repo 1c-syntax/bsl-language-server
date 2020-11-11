@@ -115,6 +115,7 @@ public class Regions {
       case CommandModule:
       case SessionModule:
       case HTTPServiceModule:
+      case WEBServiceModule:
         standardRegions.add(EVENT_HANDLERS_REGION_NAME);
         break;
       case ExternalConnectionModule:
@@ -196,6 +197,7 @@ public class Regions {
       case CommandModule:
       case SessionModule:
       case HTTPServiceModule:
+      case WEBServiceModule:
         addCommandAndSessionModulesRegionsNames(regionsName, language);
         break;
       case ExternalConnectionModule:
