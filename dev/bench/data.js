@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1605086525034,
+  "lastUpdate": 1605104581335,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6789,6 +6789,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9342414539226471",
             "extra": "mean: 78.02042253812154 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "648dba96a1658002a94160c8efb44a0ca902a438",
+          "message": "Merge pull request #1440 from 1c-syntax/feature/fixCounterOrderInDiagnosticIndex\n\nСкорректирован порядок счетов в индексе диагностик для обоих языков",
+          "timestamp": "2020-11-11T17:14:59+03:00",
+          "tree_id": "8fa7725247169222a852ca54ad23a6be45a0467f",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/648dba96a1658002a94160c8efb44a0ca902a438"
+        },
+        "date": 1605104576961,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.21166904767354,
+            "unit": "sec",
+            "range": "stddev: 5.027225117376992",
+            "extra": "mean: 80.21166904767354 sec\nrounds: 3"
           }
         ]
       }
