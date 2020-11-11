@@ -10,10 +10,10 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 Total: **127**
 
-* Error: **38**
-* Code smell: **82**
-* Vulnerability: **3**
 * Security Hotspot: **4**
+Vulnerability: **3**
+Error: **38**
+Code smell: **82****
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
 | --- | --- | :-: | --- | --- | --- |
