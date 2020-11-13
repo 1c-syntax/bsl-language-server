@@ -32,9 +32,11 @@ import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.TextDocumentSyncOptions;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -66,7 +68,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     CompletableFuture.runAsync(context::populateContext);
 
     ServerCapabilities capabilities = new ServerCapabilities();
-    capabilities.setTextDocumentSync(TextDocumentSyncKind.Full);
+    capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
     capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
     capabilities.setDocumentFormattingProvider(Boolean.TRUE);
     capabilities.setFoldingRangeProvider(Boolean.TRUE);
@@ -134,4 +136,19 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return workspaceService;
   }
 
+  private static TextDocumentSyncOptions getTextDocumentSyncOptions() {
+    TextDocumentSyncOptions textDocumentSync = new TextDocumentSyncOptions();
+
+    textDocumentSync.setOpenClose(Boolean.TRUE);
+    textDocumentSync.setChange(TextDocumentSyncKind.Full);
+    textDocumentSync.setWillSave(Boolean.FALSE);
+    textDocumentSync.setWillSaveWaitUntil(Boolean.FALSE);
+
+    SaveOptions save = new SaveOptions();
+    save.setIncludeText(Boolean.FALSE);
+
+    textDocumentSync.setSave(save);
+
+    return textDocumentSync;
+  }
 }
