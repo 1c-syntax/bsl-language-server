@@ -36,6 +36,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -56,13 +57,18 @@ class CodeActionProviderTest {
   @Autowired
   private LanguageServerConfiguration configuration;
 
+  private DocumentContext documentContext;
+
+  @BeforeEach
+  void init() {
+    String filePath = "./src/test/resources/providers/codeAction.bsl";
+    documentContext = TestUtils.getDocumentContextFromFile(filePath);
+  }
+
   @Test
   void testGetCodeActions() {
 
     // given
-    String filePath = "./src/test/resources/providers/codeAction.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-
     DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
       CanonicalSpellingKeywordsDiagnostic.class,
       configuration
@@ -102,9 +108,6 @@ class CodeActionProviderTest {
   @Test
   void testEmptyDiagnosticList() {
     // given
-    String filePath = "./src/test/resources/providers/codeAction.bsl";
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
-
     CodeActionParams params = new CodeActionParams();
     TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
 
@@ -123,5 +126,41 @@ class CodeActionProviderTest {
     assertThat(codeActions)
       .filteredOn(codeAction -> codeAction.getRight().getKind().equals(CodeActionKind.QuickFix))
       .isEmpty();
+  }
+
+  @Test
+  void testOnly() {
+    // given
+    CodeActionParams params = new CodeActionParams();
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
+      CanonicalSpellingKeywordsDiagnostic.class,
+      configuration
+    );
+    DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
+
+    List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
+      .filter(diagnostic -> diagnostic.getCode().equals(diagnosticCode))
+      .collect(Collectors.toList());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+
+    codeActionContext.setOnly(List.of(CodeActionKind.Refactor));
+    codeActionContext.setDiagnostics(diagnostics);
+
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .extracting(Either::getRight)
+      .extracting(CodeAction::getKind)
+      .containsOnly(CodeActionKind.Refactor)
+    ;
   }
 }
