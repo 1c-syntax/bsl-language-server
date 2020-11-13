@@ -41,7 +41,6 @@ import java.util.stream.Collectors;
     DiagnosticTag.STANDARD,
     DiagnosticTag.BADPRACTICE
   }
-
 )
 public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTreeDiagnostic {
 
@@ -81,9 +80,10 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
       return;
     }
 
-    // тип возвращаемого значения должен иметь описание
+    // тип возвращаемого значения должен иметь описание или быть сложным
     var typesWithoutDescription = returnedValueDescription.stream()
-      .filter((TypeDescription typeDescription) -> typeDescription.getDescription().isEmpty())
+      .filter((TypeDescription typeDescription) ->
+        typeDescription.getDescription().isEmpty() && typeDescription.getParameters().isEmpty())
       .map(TypeDescription::getName)
       .collect(Collectors.joining(", "));
     if (!typesWithoutDescription.isEmpty()) {
@@ -91,5 +91,4 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
         info.getResourceString("typesWithoutDescription", typesWithoutDescription));
     }
   }
-
 }
