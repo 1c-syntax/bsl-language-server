@@ -1170,6 +1170,26 @@
                 "object"
             ],
             "title": "Redundant access to an object",
+            "properties": {
+                "checkRecordSetModule": {
+                    "description": "Check record set modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check record set modules"
+                },
+                "checkFormModule": {
+                    "description": "Check form modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check form modules"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check object modules"
+                }
+            },
             "$id": "#/definitions/RedundantAccessToObject"
         },
         "RefOveruse": {

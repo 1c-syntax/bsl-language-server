@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
@@ -87,7 +88,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   }
 
   @Test
-  void testCatalogs() {
+  void testCatalogsManagerModule() {
     var documentContext = createDocumentContextFromFile(
       "src/test/resources/metadata/Catalogs/Справочник1/Ext/ManagerModule.bsl"
     );
@@ -98,7 +99,57 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   }
 
   @Test
-  void testInformationRegisters() {
+  void testCatalogsObjectModule() {
+    var documentContext = createDocumentContextFromFile(
+      "src/test/resources/metadata/Catalogs/Справочник1/Ext/ObjectModule.bsl"
+    );
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(56, 0, 10);
+  }
+
+  @Test
+  void testCatalogsObjectModuleWithConfig() {
+    var documentContext = createDocumentContextFromFile(
+      "src/test/resources/metadata/Catalogs/Справочник1/Ext/ObjectModule.bsl"
+    );
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkObjectModule", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void testCatalogsFormModule() {
+    var documentContext = createDocumentContextFromFile(
+      "src/test/resources/metadata/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl"
+    );
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(64, 0, 10);
+  }
+
+  @Test
+  void testCatalogsFormModuleWithConfig() {
+    var documentContext = createDocumentContextFromFile(
+      "src/test/resources/metadata/Catalogs/Справочник1/Forms/ФормаЭлемента/Ext/Form/Module.bsl"
+    );
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkFormModule", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    assertThat(diagnostics).hasSize(0);
+  }
+
+  @Test
+  void testInformationRegistersManagerModule() {
     var documentContext = createDocumentContextFromFile(
       "src/test/resources/metadata/InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl"
     );
@@ -106,5 +157,30 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(18, 4, 18, 20);
+  }
+
+  @Test
+  void testInformationRegistersRecordSetModule() {
+    var documentContext = createDocumentContextFromFile(
+      "src/test/resources/metadata/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+    );
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(56, 0, 10);
+  }
+
+  @Test
+  void testInformationRegistersRecordSetModuleWithConfig() {
+    var documentContext = createDocumentContextFromFile(
+      "src/test/resources/metadata/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+    );
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkRecordSetModule", false);
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+    assertThat(diagnostics).hasSize(0);
   }
 }

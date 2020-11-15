@@ -4,6 +4,14 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`clumsy` 
 
+## Parameters 
+
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `checkObjectModule` | `Boolean` | ```Check object modules``` | ```true``` 
+ `checkFormModule` | `Boolean` | ```Check form modules``` | ```true``` 
+ `checkRecordSetModule` | `Boolean` | ```Check record set modules``` | ```true``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -32,5 +40,9 @@
 ### Parameter for config
 
 ```json
-"RedundantAccessToObject": false
+"RedundantAccessToObject": {
+    "checkObjectModule": true,
+    "checkFormModule": true,
+    "checkRecordSetModule": true
+}
 ```

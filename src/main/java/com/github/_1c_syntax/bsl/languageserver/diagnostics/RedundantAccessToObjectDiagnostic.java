@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -34,6 +35,7 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -58,15 +60,38 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
   private static final Pattern PATTERN = CaseInsensitivePattern.compile("^ЭтотОбъект|ThisObject");
   private static final Pattern PATTERN_WITH_DOT = CaseInsensitivePattern.compile("^(ЭтотОбъект|ThisObject)\\..*");
+
+  private static final boolean CHECK_OBJECT_MODULE = true;
+  private static final boolean CHECK_FORM_MODULE = true;
+  private static final boolean CHECK_RECORD_SET_MODULE = true;
+
   private boolean needCheckName = false;
   private boolean skipLValue = false;
   private Pattern namePattern;
   private Pattern namePatternWithDot;
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_OBJECT_MODULE
+  )
+  private boolean checkObjectModule = CHECK_OBJECT_MODULE;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_FORM_MODULE
+  )
+  private boolean checkFormModule = CHECK_FORM_MODULE;
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_RECORD_SET_MODULE
+  )
+  private boolean checkRecordSetModule = CHECK_RECORD_SET_MODULE;
+
   @Override
   public List<Diagnostic> getDiagnostics(DocumentContext documentContext) {
     var typeModule = documentContext.getModuleType();
-    if (typeModule != ModuleType.ObjectModule && typeModule != ModuleType.FormModule) {
+    if (typeModule == ModuleType.CommonModule || typeModule == ModuleType.ManagerModule) {
       documentContext.getMdObject().ifPresent(mdObjectBase -> {
         needCheckName = true;
         skipLValue = true;
@@ -75,6 +100,10 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
           String.format(getManagerModuleName(mdObjectBase.getType()), mdObjectBase.getName())
         );
       });
+    }
+
+    if (skipModule(typeModule)) {
+      return new ArrayList<>();
     }
     return super.getDiagnostics(documentContext);
   }
@@ -156,5 +185,11 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     } else {
       return "^%s\\..*";
     }
+  }
+
+  private boolean skipModule(ModuleType typeModule) {
+    return typeModule == ModuleType.ObjectModule && !checkObjectModule
+      || typeModule == ModuleType.RecordSetModule && !checkRecordSetModule
+      || typeModule == ModuleType.FormModule && !checkFormModule;
   }
 }
