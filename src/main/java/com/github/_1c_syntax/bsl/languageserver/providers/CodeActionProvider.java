@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -72,6 +73,9 @@ public final class CodeActionProvider {
     codeAction.setDiagnostics(diagnostics);
     codeAction.setEdit(edit);
     codeAction.setKind(CodeActionKind.QuickFix);
+    if (diagnostics.size() == 1) {
+      codeAction.setIsPreferred(Boolean.TRUE);
+    }
 
     return Collections.singletonList(codeAction);
 
@@ -82,8 +86,12 @@ public final class CodeActionProvider {
     DocumentContext documentContext
   ) {
 
+    List<String> only = Optional.ofNullable(params.getContext().getOnly())
+      .orElse(Collections.emptyList());
+
     return codeActionSuppliers.stream()
       .flatMap(codeActionSupplier -> codeActionSupplier.getCodeActions(params, documentContext).stream())
+      .filter(codeAction -> only.isEmpty() || only.contains(codeAction.getKind()))
       .map(Either::<Command, CodeAction>forRight)
       .collect(Collectors.toList());
   }
