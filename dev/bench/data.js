@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1605513207888,
+  "lastUpdate": 1605513677047,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -6913,6 +6913,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9577448496325367",
             "extra": "mean: 77.01002430915833 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dfa204cfa6d17ac248e18ff6b059545ce9d9876f",
+          "message": "Merge pull request #1449 from 1c-syntax/feature/fix1446\n\nИсправление fp MissingReturnedValueDescription на описании метода",
+          "timestamp": "2020-11-16T10:39:13+03:00",
+          "tree_id": "01372216c66e35d7cebfeffb84d8a7430be85bbb",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/dfa204cfa6d17ac248e18ff6b059545ce9d9876f"
+        },
+        "date": 1605513674370,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.23783310254414,
+            "unit": "sec",
+            "range": "stddev: 1.8489945051149186",
+            "extra": "mean: 79.23783310254414 sec\nrounds: 3"
           }
         ]
       }
