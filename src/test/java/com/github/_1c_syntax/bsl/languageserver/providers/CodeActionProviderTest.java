@@ -63,15 +63,16 @@ class CodeActionProviderTest {
     String filePath = "./src/test/resources/providers/codeAction.bsl";
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(filePath);
 
+    DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
+      CanonicalSpellingKeywordsDiagnostic.class,
+      configuration
+    );
+    DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
+
     List<Diagnostic> diagnostics = documentContext.getDiagnostics().stream()
-      .filter(diagnostic -> {
-        DiagnosticInfo diagnosticInfo = new DiagnosticInfo(
-          CanonicalSpellingKeywordsDiagnostic.class,
-          configuration
-        );
-        DiagnosticCode diagnosticCode = diagnosticInfo.getCode();
-        return diagnostic.getCode().equals(diagnosticCode);
-      })
+      .filter(diagnostic -> diagnostic.getCode().equals(diagnosticCode))
+      //  clean diagnostic tags array to emulate clear of tags property from the client
+      .peek(diagnostic -> diagnostic.setTags(null))
       .collect(Collectors.toList());
 
     CodeActionParams params = new CodeActionParams();
