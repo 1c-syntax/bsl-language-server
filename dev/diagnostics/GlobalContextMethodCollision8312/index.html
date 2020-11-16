@@ -377,6 +377,58 @@
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>Начиная с версии платформы <code>8.3.12</code>, реализованы новые методы глобального контекста, которые могут совпаcть по имени с существующими функциями в коде конфигурации прикладного решений.</p>
+<table>
+<thead>
+<tr>
+<th align="center">Метод</th>
+<th align="center">Английский вариант</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">ПроверитьБит</td>
+<td align="center">CheckBit</td>
+</tr>
+<tr>
+<td align="center">ПроверитьПоБитовойМаске</td>
+<td align="center">CheckByBitMask</td>
+</tr>
+<tr>
+<td align="center">УстановитьБит</td>
+<td align="center">SetBit</td>
+</tr>
+<tr>
+<td align="center">ПобитовоеИ</td>
+<td align="center">BitwiseAnd</td>
+</tr>
+<tr>
+<td align="center">ПобитовоеИли</td>
+<td align="center">BitwiseOr</td>
+</tr>
+<tr>
+<td align="center">ПобитовоеНе</td>
+<td align="center">BitwiseNot</td>
+</tr>
+<tr>
+<td align="center">ПобитовоеИНе</td>
+<td align="center">BitwiseAndNot</td>
+</tr>
+<tr>
+<td align="center">ПобитовоеИсключительноеИли</td>
+<td align="center">BitwiseXor</td>
+</tr>
+<tr>
+<td align="center">ПобитовыйСдвигВлево</td>
+<td align="center">BitwiseShiftLeft</td>
+</tr>
+<tr>
+<td align="center">ПобитовыйСдвигВправо</td>
+<td align="center">BitwiseShiftRight</td>
+</tr>
+</tbody>
+</table>
+<p>Необходимо существующие функции конфигурации прикладного решения необходимо либо переименовать, либо удалить, заменив обращение к ним на методы глобального контекста.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -388,6 +440,9 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li>Источник: <a href="https://its.1c.ru/db/metod8dev#content:5293:hdoc:pereimenovaniya_metodov_i_svojstv">Перевод конфигураций на платформу "1С:Предприятие 8.3" без режима совместимости с версией 8.2</a></li>
+</ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
