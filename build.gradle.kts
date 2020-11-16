@@ -16,7 +16,7 @@ plugins {
     id("com.github.ben-manes.versions") version "0.33.0"
     id("io.freefair.javadoc-links") version "5.2.1"
     id("org.springframework.boot") version "2.3.5.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.2"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
 }
 
 apply(plugin = "io.spring.dependency-management")
