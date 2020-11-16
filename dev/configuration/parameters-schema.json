@@ -1162,6 +1162,36 @@
             },
             "$id": "#/definitions/PublicMethodsDescription"
         },
+        "RedundantAccessToObject": {
+            "description": "Redundant access to an object",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Redundant access to an object",
+            "properties": {
+                "checkRecordSetModule": {
+                    "description": "Check record set modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check record set modules"
+                },
+                "checkFormModule": {
+                    "description": "Check form modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check form modules"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check object modules"
+                }
+            },
+            "$id": "#/definitions/RedundantAccessToObject"
+        },
         "RefOveruse": {
             "description": "Overuse \"Reference\" in a query",
             "default": true,

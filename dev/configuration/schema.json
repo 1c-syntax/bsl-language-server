@@ -296,6 +296,9 @@
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
                 },
+                "RedundantAccessToObject": {
+                    "$ref": "parameters-schema.json#/definitions/RedundantAccessToObject"
+                },
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
