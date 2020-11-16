@@ -73,6 +73,9 @@ public final class CodeActionProvider {
     codeAction.setDiagnostics(diagnostics);
     codeAction.setEdit(edit);
     codeAction.setKind(CodeActionKind.QuickFix);
+    if (diagnostics.size() == 1) {
+      codeAction.setIsPreferred(Boolean.TRUE);
+    }
 
     return Collections.singletonList(codeAction);
 

@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import javax.annotation.CheckForNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -102,6 +103,7 @@ class CodeActionProviderTest {
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(0)))
       .anyMatch(codeAction -> codeAction.getDiagnostics().contains(diagnostics.get(1)))
       .anyMatch(codeAction -> codeAction.getKind().equals(CodeActionKind.QuickFix))
+      .allMatch(codeAction -> (codeAction.getDiagnostics().size() == 1) == toBoolean(codeAction.getIsPreferred()))
     ;
   }
 
@@ -162,5 +164,12 @@ class CodeActionProviderTest {
       .extracting(CodeAction::getKind)
       .containsOnly(CodeActionKind.Refactor)
     ;
+  }
+
+  private static boolean toBoolean(@CheckForNull Boolean value) {
+    if (value == null) {
+      return false;
+    }
+    return value;
   }
 }
