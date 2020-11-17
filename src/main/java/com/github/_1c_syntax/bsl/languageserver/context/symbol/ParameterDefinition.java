@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import lombok.Builder;
 import lombok.Value;
+import org.eclipse.lsp4j.Range;
 
 /**
  * Класс хранит информацию о параметре метода.
@@ -34,4 +35,5 @@ public class ParameterDefinition {
   String name;
   boolean byValue;
   boolean optional;
+  Range range;
 }

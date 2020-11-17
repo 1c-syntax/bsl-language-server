@@ -74,7 +74,7 @@ class GenerateStandardRegionsSupplierTest {
     System.out.println(codeActions.get(0).getRight().getEdit().getChanges());
 
     assertThat(codeActions)
-      .hasSize(1)
+      .hasSize(2)
       .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Generate missing regions"));
   }

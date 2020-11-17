@@ -119,7 +119,7 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
     when(configuration.getModalityUseMode()).thenReturn(useMode);
     when(context.getConfiguration()).thenReturn(configuration);
 
-    return context.addDocument(testFile.toUri(), getText());
+    return context.addDocument(testFile.toUri(), getText(), 1);
   }
 
 }

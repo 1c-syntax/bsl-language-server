@@ -124,7 +124,7 @@ class BSLTextDocumentServiceTest {
     var diagnostics = textDocumentService.diagnostics(params).get();
 
     // then
-    assertThat(diagnostics).isEmpty();
+    assertThat(diagnostics.getDiagnostics()).isEmpty();
   }
 
   @Test
@@ -139,7 +139,7 @@ class BSLTextDocumentServiceTest {
     var diagnostics = textDocumentService.diagnostics(params).get();
 
     // then
-    assertThat(diagnostics).isNotEmpty();
+    assertThat(diagnostics.getDiagnostics()).isNotEmpty();
   }
 
   @Test
@@ -155,7 +155,7 @@ class BSLTextDocumentServiceTest {
     var diagnostics = textDocumentService.diagnostics(params).get();
 
     // then
-    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.getDiagnostics()).hasSize(1);
   }
 
   private File getTestFile() {

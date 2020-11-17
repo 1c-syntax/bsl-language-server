@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -47,8 +48,8 @@ public class CommonModuleNameClientServerDiagnostic extends AbstractCommonModule
 
   private static final String REGEXP = "клиентсервер|clientserver";
 
-  public CommonModuleNameClientServerDiagnostic() {
-    super(REGEXP);
+  public CommonModuleNameClientServerDiagnostic(LanguageServerConfiguration serverConfiguration) {
+    super(serverConfiguration, REGEXP);
   }
 
   @Override

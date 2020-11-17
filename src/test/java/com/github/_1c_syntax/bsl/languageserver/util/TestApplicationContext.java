@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -31,7 +32,7 @@ public class TestApplicationContext implements ApplicationContextAware {
   private static ApplicationContext CONTEXT;
 
   @Override
-  public void setApplicationContext(ApplicationContext context) throws BeansException {
+  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
     CONTEXT = context;
   }
 

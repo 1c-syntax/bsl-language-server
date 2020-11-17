@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,7 +38,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Value
-@Builder(access = AccessLevel.PUBLIC)
+@Builder(access = lombok.AccessLevel.PUBLIC)
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
 public class RegionSymbol implements Symbol {

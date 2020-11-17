@@ -576,6 +576,16 @@
             "title": "GetForm method call",
             "$id": "#/definitions/GetFormMethod"
         },
+        "GlobalContextMethodCollision8312": {
+            "description": "<Diagnostic name>",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "<Diagnostic name>",
+            "$id": "#/definitions/GlobalContextMethodCollision8312"
+        },
         "IdenticalExpressions": {
             "description": "There are identical sub-expressions to the left and to the right of the \"foo\" operator",
             "default": true,
@@ -674,6 +684,24 @@
             "title": "Join with virtual table",
             "$id": "#/definitions/JoinWithVirtualTable"
         },
+        "LatinAndCyrillicSymbolInWord": {
+            "description": "Mixing Latin and Cyrillic characters in one identifier",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Mixing Latin and Cyrillic characters in one identifier",
+            "properties": {
+                "excludeWords": {
+                    "description": "A list of exclusion words, specified as a comma-separated string",
+                    "default": "\u0427\u0442\u0435\u043d\u0438\u0435XML, \u0427\u0442\u0435\u043d\u0438\u0435JSON, \u0417\u0430\u043f\u0438\u0441\u044cXML, \u0417\u0430\u043f\u0438\u0441\u044cJSON, Com\u041e\u0431\u044a\u0435\u043a\u0442, \u0424\u0430\u0431\u0440\u0438\u043a\u0430XDTO, \u041e\u0431\u044a\u0435\u043a\u0442XDTO, \u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435FTP, HTTP\u0421\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435, HTTP\u0417\u0430\u043f\u0440\u043e\u0441, HTTP\u0421\u0435\u0440\u0432\u0438\u0441\u041e\u0442\u0432\u0435\u0442, SMS\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435, WS\u041f\u0440\u043e\u043a\u0441\u0438",
+                    "type": "string",
+                    "title": "A list of exclusion words, specified as a comma-separated string"
+                }
+            },
+            "$id": "#/definitions/LatinAndCyrillicSymbolInWord"
+        },
         "LineLength": {
             "description": "Line Length limit",
             "default": true,
@@ -691,6 +719,24 @@
                 }
             },
             "$id": "#/definitions/LineLength"
+        },
+        "MagicDate": {
+            "description": "Magic dates",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Magic dates",
+            "properties": {
+                "authorizedDates": {
+                    "description": "Allowed dates, comma separated. Example: 00010101,00010101000000,000101010000",
+                    "default": "00010101,00010101000000,000101010000",
+                    "type": "string",
+                    "title": "Allowed dates, comma separated. Example: 00010101,00010101000000,000101010000"
+                }
+            },
+            "$id": "#/definitions/MagicDate"
         },
         "MagicNumber": {
             "description": "Magic numbers",
@@ -769,6 +815,36 @@
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
+        },
+        "MissingEventSubscriptionHandler": {
+            "description": "Event subscription handler missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Event subscription handler missing",
+            "$id": "#/definitions/MissingEventSubscriptionHandler"
+        },
+        "MissingParameterDescription": {
+            "description": "Method parameters description are missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Method parameters description are missing",
+            "$id": "#/definitions/MissingParameterDescription"
+        },
+        "MissingReturnedValueDescription": {
+            "description": "Function returned values description is missing",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Function returned values description is missing",
+            "$id": "#/definitions/MissingReturnedValueDescription"
         },
         "MissingSpace": {
             "description": "Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ;",
@@ -1028,6 +1104,16 @@
             "title": "Order of Parameters in method",
             "$id": "#/definitions/OrderOfParams"
         },
+        "OrdinaryAppSupport": {
+            "description": "Ordinary application support",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Ordinary application support",
+            "$id": "#/definitions/OrdinaryAppSupport"
+        },
         "PairingBrokenTransaction": {
             "description": "Violation of pairing using methods \"BeginTransaction()\" & \"CommitTransaction()\" / \"RollbackTransaction()\"",
             "default": true,
@@ -1075,6 +1161,36 @@
                 }
             },
             "$id": "#/definitions/PublicMethodsDescription"
+        },
+        "RedundantAccessToObject": {
+            "description": "Redundant access to an object",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Redundant access to an object",
+            "properties": {
+                "checkRecordSetModule": {
+                    "description": "Check record set modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check record set modules"
+                },
+                "checkFormModule": {
+                    "description": "Check form modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check form modules"
+                },
+                "checkObjectModule": {
+                    "description": "Check object modules",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Check object modules"
+                }
+            },
+            "$id": "#/definitions/RedundantAccessToObject"
         },
         "RefOveruse": {
             "description": "Overuse \"Reference\" in a query",

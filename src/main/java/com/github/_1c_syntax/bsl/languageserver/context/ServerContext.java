@@ -85,7 +85,7 @@ public abstract class ServerContext {
     uris.parallelStream().forEach((File file) -> {
       DocumentContext documentContext = getDocument(file.toURI());
       if (documentContext == null) {
-        documentContext = createDocumentContext(file);
+        documentContext = createDocumentContext(file, 0);
         documentContext.clearSecondaryData();
       }
     });
@@ -120,14 +120,14 @@ public abstract class ServerContext {
     return documentsByMDORef.getOrDefault(mdoRef, Collections.emptyMap());
   }
 
-  public DocumentContext addDocument(URI uri, String content) {
+  public DocumentContext addDocument(URI uri, String content, int version) {
     contextLock.readLock().lock();
 
     DocumentContext documentContext = getDocument(uri);
     if (documentContext == null) {
-      documentContext = createDocumentContext(uri, content);
+      documentContext = createDocumentContext(uri, content, version);
     } else {
-      documentContext.rebuild(content);
+      documentContext.rebuild(content, version);
     }
 
     contextLock.readLock().unlock();
@@ -135,7 +135,11 @@ public abstract class ServerContext {
   }
 
   public DocumentContext addDocument(TextDocumentItem textDocumentItem) {
-    return addDocument(URI.create(textDocumentItem.getUri()), textDocumentItem.getText());
+    return addDocument(
+      URI.create(textDocumentItem.getUri()),
+      textDocumentItem.getText(),
+      textDocumentItem.getVersion()
+    );
   }
 
   public void removeDocument(URI uri) {
@@ -156,18 +160,18 @@ public abstract class ServerContext {
   }
 
   @Lookup
-  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content);
+  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content, int version);
 
   @SneakyThrows
-  private DocumentContext createDocumentContext(File file) {
+  private DocumentContext createDocumentContext(File file, int version) {
     String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-    return createDocumentContext(file.toURI(), content);
+    return createDocumentContext(file.toURI(), content, version);
   }
 
-  private DocumentContext createDocumentContext(URI uri, String content) {
+  private DocumentContext createDocumentContext(URI uri, String content, int version) {
     URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = lookupDocumentContext(absoluteURI, content);
+    DocumentContext documentContext = lookupDocumentContext(absoluteURI, content, version);
 
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Comput
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
@@ -48,7 +49,6 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -218,7 +218,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
 
-    documentContext.rebuild(params.getContentChanges().get(0).getText());
+    documentContext.rebuild(params.getContentChanges().get(0).getText(), params.getTextDocument().getVersion());
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
@@ -260,10 +260,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
+  public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
+      return CompletableFuture.completedFuture(Diagnostics.EMPTY);
     }
 
     return CompletableFuture.supplyAsync(() -> {
@@ -275,7 +275,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
           .collect(Collectors.toList());
       }
-      return diagnostics;
+      return new Diagnostics(diagnostics, documentContext.getVersion());
     });
   }
 

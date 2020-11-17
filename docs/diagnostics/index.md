@@ -8,12 +8,13 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **120**
+Общее количество: **128**
 
-* Дефект кода: **77**
-* Уязвимость: **3**
-* Ошибка: **36**
 * Потенциальная уязвимость: **4**
+* Уязвимость: **3**
+* Ошибка: **38**
+* Дефект кода: **83**
+
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
 | --- | --- | :-: | --- | --- | --- |
@@ -66,6 +67,7 @@
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | Функция всегда возвращает одно и то же примитивное значение | Да | Важный | Ошибка | `design`<br>`badpractice` 
  [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | Важный | Ошибка | `suspicious`<br>`unpredictable` 
  [GetFormMethod](GetFormMethod.md) | Использование метода ПолучитьФорму | Да | Важный | Ошибка | `error` 
+ [GlobalContextMethodCollision8312](GlobalContextMethodCollision8312.md) | Global context method names collision | Да | Блокирующий | Ошибка | `error`<br>`unpredictable` 
  [IdenticalExpressions](IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да | Важный | Ошибка | `suspicious` 
  [IfConditionComplexity](IfConditionComplexity.md) | Использование сложных выражений в условии оператора "Если" | Да | Незначительный | Дефект кода | `brainoverload` 
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` 
@@ -75,11 +77,16 @@
  [IsInRoleMethod](IsInRoleMethod.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Соединение с вложенными запросами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
  [JoinWithVirtualTable](JoinWithVirtualTable.md) | Соединение с виртуальными таблицами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
+ [LatinAndCyrillicSymbolInWord](LatinAndCyrillicSymbolInWord.md) | Смешивание латинских и кириллических символов в одном идентификаторе | Да | Незначительный | Дефект кода | `brainoverload`<br>`suspicious` 
  [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
+ [MagicDate](MagicDate.md) | Магические даты | Да | Незначительный | Дефект кода | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` 
  [MethodSize](MethodSize.md) | Ограничение на размер метода | Да | Важный | Дефект кода | `badpractice` 
  [MissingCodeTryCatchEx](MissingCodeTryCatchEx.md) | Конструкция "Попытка...Исключение...КонецПопытки" не содержит кода в исключении | Да | Важный | Ошибка | `standard`<br>`badpractice` 
+ [MissingEventSubscriptionHandler](MissingEventSubscriptionHandler.md) | Отсутствует обработчик подписки на событие | Да | Блокирующий | Ошибка | `error` 
+ [MissingParameterDescription](MissingParameterDescription.md) | Отсутствует описание параметров метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
+ [MissingReturnedValueDescription](MissingReturnedValueDescription.md) | Отсутствует описание возвращаемого значения функции | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, от ключевых слов, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да | Важный | Ошибка | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | Все объявления переменных должны иметь описание | Да | Незначительный | Дефект кода | `standard` 
@@ -97,11 +104,13 @@
  [OSUsersMethod](OSUsersMethod.md) | Использование метода ПользователиОС | Да | Критичный | Потенциальная уязвимость | `suspicious` 
  [OneStatementPerLine](OneStatementPerLine.md) | Одно выражение в одной строке | Да | Незначительный | Дефект кода | `standard`<br>`design` 
  [OrderOfParams](OrderOfParams.md) | Порядок параметров метода | Да | Важный | Дефект кода | `standard`<br>`design` 
+ [OrdinaryAppSupport](OrdinaryAppSupport.md) | Поддержка обычного приложения | Да | Важный | Дефект кода | `standard`<br>`unpredictable` 
  [PairingBrokenTransaction](PairingBrokenTransaction.md) | Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()" | Да | Важный | Ошибка | `standard` 
  [ParseError](ParseError.md) | Ошибка разбора исходного кода | Да | Критичный | Ошибка | `error` 
  [ProcedureReturnsValue](ProcedureReturnsValue.md) | Процедура не должна возвращать значение | Да | Блокирующий | Ошибка | `error` 
  [PublicMethodsDescription](PublicMethodsDescription.md) | Все методы программного интерфейса должны иметь описание | Да | Информационный | Дефект кода | `standard`<br>`brainoverload`<br>`badpractice` 
- [RefOveruse](RefOveruse.md) | Избыточное использование «Ссылка» в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
+ [RedundantAccessToObject](RedundantAccessToObject.md) | Избыточное обращение к объекту | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
+ [RefOveruse](RefOveruse.md) | Избыточное использование "Ссылка" в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 

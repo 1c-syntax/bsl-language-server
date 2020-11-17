@@ -51,6 +51,37 @@ public class DiagnosticsAssert extends AbstractListAssert<DiagnosticsAssert, Lis
 
   }
 
+  /**
+   * Ассерт для проверки совпадения диапазона и сообщения
+   *
+   * @param message   Сообщение диагностики
+   * @param startLine Первая строка диапазона
+   * @param startChar Первый символ диапазона
+   * @param endLine   Последняя строка диапазона
+   * @param endChar   Последний символ диапазона
+   * @return Ссылка на объект для текучести
+   */
+  public DiagnosticsAssert hasMessageOnRange(String message, int startLine, int startChar, int endLine, int endChar) {
+    return anySatisfy(diagnostic ->
+      assertFactory.createAssert(diagnostic).hasMessageOnRange(message, startLine, startChar, endLine, endChar)
+    );
+  }
+
+  /**
+   * Ассерт для проверки совпадения диапазона-строки и сообщения
+   *
+   * @param message   Сообщение диагностики
+   * @param lineNo    Номер строки диапазона
+   * @param startChar Первый символ диапазона
+   * @param endChar   Последний символ диапазона
+   * @return Ссылка на объект для текучести
+   */
+  public DiagnosticsAssert hasMessageOnRange(String message, int lineNo, int startChar, int endChar) {
+    return anySatisfy(diagnostic ->
+      assertFactory.createAssert(diagnostic).hasMessageOnRange(message, lineNo, startChar, lineNo, endChar)
+    );
+  }
+
   @Override
   protected DiagnosticAssert toAssert(Diagnostic value, String description) {
     return assertFactory.createAssert(value);

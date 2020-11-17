@@ -1,3 +1,4 @@
+import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
@@ -6,17 +7,16 @@ import java.util.*
 
 plugins {
     `java-library`
-    maven
     `maven-publish`
     jacoco
-    id("com.github.hierynomus.license") version "0.15.0"
+    id("net.kyori.indra.license-header") version "1.0.2"
     id("org.sonarqube") version "3.0"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.31.0"
+    id("com.github.ben-manes.versions") version "0.33.0"
     id("io.freefair.javadoc-links") version "5.2.1"
-    id("org.springframework.boot") version "2.3.3.RELEASE"
-    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.1"
+    id("org.springframework.boot") version "2.3.5.RELEASE"
+    id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
 }
 
 apply(plugin = "io.spring.dependency-management")
@@ -45,7 +45,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 
 val jacksonVersion = "2.11.2"
 val junitVersion = "5.6.1"
-val languageToolVersion = "5.0"
+val languageToolVersion = "5.1"
 
 dependencies {
 
@@ -53,13 +53,13 @@ dependencies {
 
     // spring
     api("org.springframework.boot:spring-boot-starter")
-    api("info.picocli:picocli-spring-boot-starter:4.5.1")
+    api("info.picocli:picocli-spring-boot-starter:4.5.2")
 
     // lsp4j core
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "0.16.0") {
+    api("com.github.1c-syntax", "bsl-parser", "4b60c5dd4e22b5f540c5669190906632b6cf30cc") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -68,10 +68,10 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
-    api("com.github.1c-syntax", "mdclasses", "0.6.1")
+    api("com.github.1c-syntax", "mdclasses", "1ad583d")
 
     // JLanguageTool
-    implementation("org.languagetool", "languagetool-core", "5.0.2")
+    implementation("org.languagetool", "languagetool-core", languageToolVersion)
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
 
@@ -82,7 +82,7 @@ dependencies {
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.8.1")
+    implementation("me.tongfei", "progressbar", "0.9.0")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
@@ -95,6 +95,7 @@ dependencies {
     // COMPILE
 
     compileOnly("org.projectlombok", "lombok", lombok.version)
+    annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
     // TEST
 
@@ -107,8 +108,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.17.2")
-    testImplementation("org.mockito", "mockito-core", "3.5.10")
+    testImplementation("org.assertj", "assertj-core", "3.18.0")
+    testImplementation("org.mockito", "mockito-core", "3.6.0")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
@@ -149,7 +150,7 @@ tasks.test {
     useJUnitPlatform()
 
     testLogging {
-        events("passed", "skipped", "failed")
+        events("passed", "skipped", "failed", "standard_error")
     }
 
     reports {
@@ -184,19 +185,24 @@ tasks.processResources {
     }
 }
 
+jacoco {
+    toolVersion = "0.8.6"
+}
+
 license {
     header = rootProject.file("license/HEADER.txt")
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
     ext["name"] = "Alexey Sosnoviy <labotamy@gmail.com>, Nikita Gryzlov <nixel2007@gmail.com>"
     ext["project"] = "BSL Language Server"
-    strictCheck = true
-    mapping("java", "SLASHSTAR_STYLE")
     exclude("**/*.properties")
     exclude("**/*.xml")
     exclude("**/*.json")
     exclude("**/*.bsl")
     exclude("**/*.os")
     exclude("**/*.txt")
+    exclude("**/*.java.orig")
+    exclude("**/*.impl")
+    exclude("**/*.mockito.plugins.MockMaker")
 }
 
 sonarqube {
@@ -212,8 +218,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.12"
-    sha256 = "49381508ecb02b3c173368436ef71b24c0d4418ad260e6cc98becbcf4b345406"
+    version = "1.18.16"
+    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
 }
 
 tasks {
@@ -246,6 +252,7 @@ tasks {
 }
 
 artifacts {
+    archives(tasks["jar"])
     archives(tasks["sourcesJar"])
     archives(tasks["bootJar"])
     archives(tasks["javadocJar"])
@@ -254,22 +261,26 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            artifact(tasks["jar"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["bootJar"])
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach { dependency ->
-                    if (dependency !is SelfResolvingDependency) {
-                        val dependencyNode = dependenciesNode.appendNode("dependency")
-                        dependencyNode.appendNode("groupId", dependency.group)
-                        dependencyNode.appendNode("artifactId", dependency.name)
-                        dependencyNode.appendNode("version", dependency.version)
-                        dependencyNode.appendNode("scope", "runtime")
-                    }
-                }
+                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
+                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
             }
         }
+    }
+}
+
+fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
+    if (dependency !is SelfResolvingDependency) {
+        val dependencyNode = dependenciesNode.appendNode("dependency")
+        dependencyNode.appendNode("groupId", dependency.group)
+        dependencyNode.appendNode("artifactId", dependency.name)
+        dependencyNode.appendNode("version", dependency.version)
+        dependencyNode.appendNode("scope", scope)
     }
 }

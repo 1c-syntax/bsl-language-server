@@ -39,6 +39,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.Range;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -228,6 +229,7 @@ public final class MethodSymbolComputer
           .name(getParameterName(param.IDENTIFIER()))
           .byValue(param.VAL_KEYWORD() != null)
           .optional(param.defaultValue() != null)
+          .range(getParameterRange(param))
           .build()
       ).collect(Collectors.toList());
   }
@@ -236,6 +238,13 @@ public final class MethodSymbolComputer
     return Optional.ofNullable(identifier)
       .map(ParseTree::getText)
       .orElse("<UNKNOWN_IDENTIFIER>");
+  }
+
+  private static Range getParameterRange(BSLParser.ParamContext param) {
+    if(param.IDENTIFIER() == null) {
+      return Ranges.create(param.start);
+    }
+    return Ranges.create(param.IDENTIFIER());
   }
 
   private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
