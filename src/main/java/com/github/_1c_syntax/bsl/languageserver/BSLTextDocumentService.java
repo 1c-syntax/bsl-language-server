@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
@@ -40,6 +41,12 @@ import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -94,6 +101,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final HoverProvider hoverProvider;
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
+  private final CallHierarchyProvider callHierarchyProvider;
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -200,7 +208,50 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
-  
+
+  @Override
+  @SuppressWarnings("UnstableApiUsage")
+  public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+    return CompletableFuture.supplyAsync(() -> {
+      List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
+      // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
+      if (callHierarchyItems.isEmpty()) {
+        return null;
+      }
+      return callHierarchyItems;
+    });
+  }
+
+  @Override
+  @SuppressWarnings("UnstableApiUsage")
+  public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
+    CallHierarchyIncomingCallsParams params
+  ) {
+    DocumentContext documentContext = context.getDocument(params.getItem().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> callHierarchyProvider.incomingCalls(documentContext, params));
+  }
+
+  @Override
+  @SuppressWarnings("UnstableApiUsage")
+  public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
+    CallHierarchyOutgoingCallsParams params
+  ) {
+    DocumentContext documentContext = context.getDocument(params.getItem().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> callHierarchyProvider.outgoingCalls(documentContext, params));
+  }
+
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());

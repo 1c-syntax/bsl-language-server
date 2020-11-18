@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -98,6 +99,25 @@ public class CalleeStorage {
     calleesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
       getMethodSymbol(multikey).ifPresent(methodSymbol ->
         methodSymbols.put(methodSymbol, value)
+      )
+    );
+
+    return methodSymbols;
+  }
+
+  public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri, Range range) {
+    Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
+
+    // todo: refactor this and getCalledMethodSymbolsFrom(URI)
+    calleesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
+      getMethodSymbol(multikey).ifPresent((MethodSymbol methodSymbol) -> {
+          var filteredRanges = value.stream()
+            .filter(calleesRange -> Ranges.containsRange(range, calleesRange))
+            .collect(Collectors.toList());
+          if (!filteredRanges.isEmpty()) {
+            methodSymbols.put(methodSymbol, filteredRanges);
+          }
+        }
       )
     );
 

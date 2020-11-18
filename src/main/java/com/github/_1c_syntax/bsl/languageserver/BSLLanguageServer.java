@@ -80,6 +80,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setReferencesProvider(Boolean.TRUE);
     capabilities.setDefinitionProvider(Boolean.TRUE);
     capabilities.setHoverProvider(Boolean.TRUE);
+    // todo: static registration options
+    capabilities.setCallHierarchyProvider(Boolean.TRUE);
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
