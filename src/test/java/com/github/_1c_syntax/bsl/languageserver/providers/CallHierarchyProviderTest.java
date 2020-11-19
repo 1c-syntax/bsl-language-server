@@ -51,6 +51,7 @@ class CallHierarchyProviderTest {
 
   private DocumentContext documentContext;
 
+  private final Position firstProcedureDeclarationPosition = new Position(0, 15);
   private final Position firstFunctionCallPosition = new Position(1, 15);
   private final Position secondFunctionCallPosition = new Position(2, 15);
 
@@ -126,6 +127,29 @@ class CallHierarchyProviderTest {
   }
 
   @Test
+  void testPrepareHierarchyOnDeclaration() {
+
+    // given
+    var textDocument = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CallHierarchyPrepareParams params = new CallHierarchyPrepareParams();
+    params.setTextDocument(textDocument);
+    params.setPosition(firstProcedureDeclarationPosition);
+
+    // when
+    List<CallHierarchyItem> items = provider.prepareCallHierarchy(documentContext, params);
+
+    // then
+    assertThat(items)
+      .hasSize(1)
+      .allMatch(callHierarchyItem -> callHierarchyItem.getName().equals("ПерваяПроцедура"))
+      .allMatch(callHierarchyItem -> callHierarchyItem.getKind().equals(SymbolKind.Method))
+      .allMatch(callHierarchyItem -> callHierarchyItem.getTags().isEmpty())
+    ;
+
+  }
+
+  @Test
   void testIncomingCallsLocalMethodCall() {
 
     // given
@@ -171,6 +195,34 @@ class CallHierarchyProviderTest {
       .flatExtracting(CallHierarchyOutgoingCall::getFromRanges)
       .hasSize(2)
     ;
+  }
+
+  @Test
+  void testOutgoingCallsOnMethodDeclaration() {
+
+    // given
+    var item = getCallHierarchyItem(firstProcedureDeclarationPosition);
+    var params = new CallHierarchyOutgoingCallsParams(item);
+
+    // when
+    List<CallHierarchyOutgoingCall> outgoingCalls = provider.outgoingCalls(documentContext, params);
+
+    // then
+    assertThat(outgoingCalls)
+      .hasSize(2);
+
+    assertThat(outgoingCalls)
+      .filteredOn(outgoingCall -> outgoingCall.getTo().getName().equals("ПерваяФункция"))
+      .flatExtracting(CallHierarchyOutgoingCall::getFromRanges)
+      .hasSize(2)
+    ;
+
+    assertThat(outgoingCalls)
+      .filteredOn(outgoingCall -> outgoingCall.getTo().getName().equals("ВтораяФункция"))
+      .flatExtracting(CallHierarchyOutgoingCall::getFromRanges)
+      .hasSize(1)
+    ;
+
   }
 
   private CallHierarchyItem getCallHierarchyItem(Position position) {

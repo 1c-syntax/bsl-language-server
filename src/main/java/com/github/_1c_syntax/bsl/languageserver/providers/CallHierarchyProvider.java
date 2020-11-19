@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
@@ -63,8 +64,15 @@ public class CallHierarchyProvider {
     CallHierarchyPrepareParams params
   ) {
     Position position = params.getPosition();
-    return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-      .map(Pair::getKey)
+
+    // TODO: SymbolResolver.getSymbol
+    return documentContext.getSymbolTree()
+      .getMethods().stream()
+      .filter(methodSymbol -> Ranges.containsPosition(methodSymbol.getSubNameRange(), position))
+      .findAny()
+      .or(() -> calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
+        .map(Pair::getKey)
+      )
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
       // в случае отсутствия ответа по протоколу надо возвращать null, а не пустой список
