@@ -139,16 +139,15 @@ public class CalleeStorage {
   }
 
   @Synchronized
-  public void addMethodCall(URI uri, ModuleType moduleType, MethodSymbol methodSymbol, Range range) {
-    String mdoRef = methodSymbol.getMdoRef();
-    String methodName = methodSymbol.getName().toLowerCase(Locale.ENGLISH);
+  public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String methodName, Range range) {
+    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH);
 
     Location location = new Location(uri.toString(), range);
 
     MultiKey<String> key = getKey(mdoRef, moduleType);
-    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, methodName);
+    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, methodNameCanonical);
 
-    calleesOf.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodName, location);
+    calleesOf.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodNameCanonical, location);
     calleesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
     calleesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
   }

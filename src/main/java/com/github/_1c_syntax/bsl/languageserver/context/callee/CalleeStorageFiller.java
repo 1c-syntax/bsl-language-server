@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context.callee;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -37,6 +36,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -112,27 +112,24 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
   }
 
   private void checkCall(String mdoRef, Token methodName) {
-    var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
-    String methodNameText = methodName.getText();
 
-    for (Map.Entry<ModuleType, DocumentContext> entry : documentContexts.entrySet()) {
-      ModuleType moduleType = entry.getKey();
+    String methodNameText = methodName.getText();
+    Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
+    for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
+      ModuleType moduleType = e.getKey();
       if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
         continue;
       }
-      DocumentContext value = entry.getValue();
-      SymbolTree symbolTree = value.getSymbolTree();
-      for (MethodSymbol symbol : symbolTree.getMethods()) {
-        if (symbol.getName().equalsIgnoreCase(methodNameText)) {
-          addMethodCall(moduleType, symbol, Ranges.create(methodName));
-          break;
-        }
-      }
+      addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
     }
   }
 
   private void addMethodCall(ModuleType moduleType, MethodSymbol methodSymbol, Range range) {
-    storage.addMethodCall(documentContext.getUri(), moduleType, methodSymbol, range);
+    addMethodCall(methodSymbol.getMdoRef(), moduleType, methodSymbol.getName(), range);
+  }
+
+  private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
+    storage.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
   }
 
   private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
