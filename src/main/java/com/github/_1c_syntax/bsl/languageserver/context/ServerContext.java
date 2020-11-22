@@ -46,6 +46,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -184,13 +185,17 @@ public abstract class ServerContext {
     return documentContext;
   }
 
-  @SneakyThrows
   private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
       return Configuration.create();
     }
     ForkJoinPool customThreadPool = new ForkJoinPool();
-    return customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+    try {
+      return customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+    } catch (InterruptedException | ExecutionException e) {
+      LOGGER.error("Can't parse configuration metadata", e);
+      return Configuration.create();
+    }
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
