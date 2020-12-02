@@ -2,7 +2,7 @@
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `5` | `standard`<br>`brainoverload`<br>`badpractice` 
+ `Code smell` | `BSL`<br>`OS` | `Minor` | `Yes` | `2` | `standard`<br>`brainoverload`<br>`badpractice` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
