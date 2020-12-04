@@ -97,12 +97,11 @@ public class CallHierarchyProvider {
           methodSymbol
         ).stream()
       )
-      .map((Location location) -> {
-        DocumentContext document = serverContext.getDocument(location.getUri());
-        return document.getSymbolTree().getMethodSymbol(location.getRange())
-          .map(CallHierarchyProvider::getCallHierarchyItem)
-          .map(callHierarchyItem -> Pair.of(callHierarchyItem, location.getRange()));
-      })
+      .map((Location location) -> Optional.ofNullable(serverContext.getDocument(location.getUri()))
+        .map(DocumentContext::getSymbolTree)
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(location.getRange())
+        .map(CallHierarchyProvider::getCallHierarchyItem)
+        .map(callHierarchyItem -> Pair.of(callHierarchyItem, location.getRange()))))
       .filter(Optional::isPresent)
       .map(Optional::get)
       .collect(groupingBy(Pair::getKey, mapping(Pair::getValue, toCollection(ArrayList::new))))
