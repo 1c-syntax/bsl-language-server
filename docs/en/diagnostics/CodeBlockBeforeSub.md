@@ -25,12 +25,12 @@ Based on the structure described above, the location of the program code before 
 Wrong
 
 ```bsl
-Метод();
-Сообщить("До описания метоов");
+SomeMethod();
+Message("Before methods definition");
 
-Процедура Метод()
-// Тело методов
-КонецПроцедуры
+Procedure SomeMethod()
+// Method body
+EndProcedure
 ```
 
 ## Sources
