@@ -1,10 +1,11 @@
-# Deprecated ManagedForm type (DeprecatedTypeManagedForm)
+# Using deprecated type "ManagedForm" (DeprecatedTypeManagedForm)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`deprecated` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`deprecated`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -20,6 +21,7 @@ Starting from the platform version 8.3.14, the "ManagedForm" type has been renam
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
