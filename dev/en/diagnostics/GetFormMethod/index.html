@@ -376,8 +376,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-<p>To open forms, use the OpenForm global context method (when using the 1C: Enterprise 8.2 platform version and earlier versions, also use OpenFormModal). 
-An alternative method, using the GetForm method, is not recommended.</p>
+
+<p>To open forms, use the OpenForm global context method (when using the 1C: Enterprise 8.2 platform version and earlier versions, also use OpenFormModal). An alternative method, using the GetForm method, is not recommended.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -388,7 +388,7 @@ An alternative method, using the GetForm method, is not recommended.</p>
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code><span class="k">Proc</span><span class="nv">edure</span> <span class="nv">Test2</span><span class="p">()</span>
-    <span class="nf">Form</span> <span class="o">=</span> <span class="nv">GetForm</span><span class="p">(</span><span class="s">&quot;Document.PlanOperation.Form&quot;</span><span class="p">)</span><span class="c1">; // here</span>
+    <span class="nf">Form</span> <span class="o">=</span> <span class="nv">GetForm</span><span class="p">(</span><span class="s">&quot;CommonForms.MyForm&quot;</span><span class="p">)</span><span class="c1">;</span>
 <span class="k">EndP</span><span class="nv">rocedure</span>
 </code></pre></div>
 

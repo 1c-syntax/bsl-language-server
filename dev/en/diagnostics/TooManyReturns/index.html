@@ -408,7 +408,21 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Bad method example</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example</span><span class="p">(</span><span class="nv">Condition</span><span class="p">)</span>     <span class="nv">If</span> <span class="nv">Condition</span> <span class="o">=</span> <span class="m">1</span> <span class="k">Then</span>         <span class="k">Return</span> <span class="s1">&quot;Check passed&quot;</span><span class="p">;</span>     <span class="nv">ElsIf</span> <span class="nv">Condition</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Then</span>         <span class="nv">ExecuteSomething</span><span class="p">();</span>         <span class="k">Return</span> <span class="s1">&quot;Check not passed&quot;</span><span class="p">;</span>     <span class="nv">ElsIf</span> <span class="nv">Condition</span> <span class="o">&gt;</span> <span class="m">7</span> <span class="k">Then</span>         <span class="k">Если</span> <span class="nv">Validate</span><span class="p">(</span><span class="nv">Contidtion</span><span class="p">)</span> <span class="k">Then</span>             <span class="k">Return</span> <span class="s1">&quot;Check passed&quot;</span><span class="p">;</span>         <span class="k">Else</span>             <span class="k">Return</span> <span class="s1">&quot;Check not passed&quot;</span><span class="p">;</span>         <span class="nv">EndIf</span><span class="p">;</span>     <span class="nv">EndIf</span><span class="p">;</span>     <span class="k">Return</span> <span class="s1">&quot;&quot;</span><span class="p">;</span> <span class="k">EndFunction</span>
+<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example</span><span class="p">(</span><span class="nv">Condition</span><span class="p">)</span>
+     <span class="nv">If</span> <span class="nv">Condition</span> <span class="o">=</span> <span class="m">1</span> <span class="k">Then</span>
+         <span class="k">Return</span> <span class="s1">&quot;Check passed&quot;</span><span class="p">;</span>
+     <span class="nv">ElsIf</span> <span class="nv">Condition</span> <span class="o">=</span> <span class="m">2</span> <span class="k">Then</span>
+         <span class="nv">ExecuteSomething</span><span class="p">();</span>
+         <span class="k">Return</span> <span class="s1">&quot;Check not passed&quot;</span><span class="p">;</span>
+     <span class="nv">ElsIf</span> <span class="nv">Condition</span> <span class="o">&gt;</span> <span class="m">7</span> <span class="k">Then</span>
+         <span class="k">Если</span> <span class="nv">Validate</span><span class="p">(</span><span class="nv">Contidtion</span><span class="p">)</span> <span class="k">Then</span>
+             <span class="k">Return</span> <span class="s1">&quot;Check passed&quot;</span><span class="p">;</span>
+         <span class="k">Else</span>
+             <span class="k">Return</span> <span class="s1">&quot;Check not passed&quot;</span><span class="p">;</span>
+         <span class="nv">EndIf</span><span class="p">;</span>
+     <span class="nv">EndIf</span><span class="p">;</span>
+     <span class="k">Return</span> <span class="s1">&quot;&quot;</span><span class="p">;</span>
+<span class="k">EndFunction</span>
 </code></pre></div>
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>

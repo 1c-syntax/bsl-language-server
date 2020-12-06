@@ -377,11 +377,28 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>The function must have no output parameters. All output must be in the return value. If you need to return multiple values, you should use such types as Structure, Array, etc.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Wrong:</span>
+<span class="nv">ServiceURL</span> <span class="o">=</span> <span class="s1">&quot;&quot;</span><span class="p">;</span>
+<span class="nb">UserName</span> <span class="o">=</span> <span class="s1">&quot;&quot;</span><span class="p">;</span>
+<span class="nv">UserPassword</span> <span class="o">=</span> <span class="s1">&quot;&quot;</span><span class="p">;</span>
+
+<span class="nv">FillConnectionParameters</span><span class="p">(</span><span class="nv">ServiceURL</span><span class="p">,</span> <span class="nb">UserName</span><span class="p">,</span> <span class="nv">UserPassword</span><span class="p">);</span>
+
+<span class="c c-Singleline">// Correctly:</span>
+<span class="nv">ConnectionParameters</span> <span class="o">=</span> <span class="nv">NewConnectionParameters</span><span class="p">();</span>
+<span class="c c-Singleline">// Returned value - Structure:</span>
+<span class="c c-Singleline">//     Service URL  - String</span>
+<span class="c c-Singleline">//     UserName     - String</span>
+<span class="c c-Singleline">//     UserPassword - String</span>
+</code></pre></div>
+
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
 <!-- Примеры источников
 
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)

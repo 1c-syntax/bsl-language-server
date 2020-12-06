@@ -471,8 +471,8 @@
 <h3 id="using-allowmultiplecommas-parameter">Using <code>allowMultipleCommas</code> parameter<a class="headerlink" href="#using-allowmultiplecommas-parameter" title="Permanent link">Link</a></h3>
 <p>The parameter has sense only if <code>,</code> is listed in one of three base parameters</p>
 <p>If set to <code>false</code></p>
-<div class="codehilite"><pre><span></span><code><span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Incorrect</span>
-<span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
+<div class="codehilite"><pre><span></span><code>    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,,,,</span> <span class="nv">Cancel</span><span class="p">);</span>        <span class="c c-Singleline">// Bad</span>
+    <span class="nv">CommonModuleClientServer</span><span class="o">.</span><span class="nv">MessageToUser</span><span class="p">(</span><span class="nv">MessageText</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Cancel</span><span class="p">);</span>     <span class="c c-Singleline">// Correct</span>
 </code></pre></div>
 
 <p>If set to <code>true</code></p>

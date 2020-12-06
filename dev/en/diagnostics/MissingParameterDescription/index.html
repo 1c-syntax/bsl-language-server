@@ -377,17 +377,30 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>The description of a method (procedure or function) should be formatted correctly to help programmers use the functionality correctly.</p>
+<p>If a method contains parameters, then in its description, in the block of the same name, descriptions for all parameters must be given in the same order as in the method signature.</p>
+<p>Diagnostic detects typical errors:</p>
+<ul>
+<li>Lack of description of all parameters</li>
+<li>Absence of a description of some of the parameters, indicating for which parameter the description was not found</li>
+<li>The presence in the description of parameters that are absent in the method signature (which could remain from refactoring)</li>
+<li>Poor parameter description: when the parameter name is present in the method description, but the parameter type and type description are not specified</li>
+</ul>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+
 <!-- Примеры источников
 
 * Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
+<ul>
+<li><a href="https://its.1c.ru/db/v8std#content:453:hdoc">Standart: Procedures and functions description</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>

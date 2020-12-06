@@ -383,12 +383,18 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Wrong:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() Then // some code EndIf;</span>
+<div class="codehilite"><pre><span></span><code><span class="k">If</span> <span class="n">SafeMode</span><span class="p">()</span> <span class="k">Then</span>
+     <span class="o">//</span> <span class="k">some</span> <span class="n">logic</span> <span class="k">in</span> <span class="n">safe</span> <span class="k">mode</span><span class="p">...</span>
+<span class="n">EndIf</span><span class="p">;</span>
+
+<span class="k">If</span> <span class="k">No</span> <span class="n">SafeMode</span><span class="p">()</span> <span class="k">Then</span>
+     <span class="o">//</span> <span class="k">some</span> <span class="n">logic</span> <span class="k">in</span> <span class="n">unsafe</span> <span class="k">mode</span><span class="p">...</span>
+<span class="n">EndIf</span><span class="p">;</span>
 </code></pre></div>
 
 <p>Correct:</p>
 <div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() &lt;&gt; False Then</span>
-<span class="err">// some code</span>
+<span class="err">   // some code</span>
 <span class="err">EndIf;</span>
 </code></pre></div>
 

@@ -375,8 +375,7 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<p><code>goto</code> is an unstructured control flow statement. It makes code less readable and maintainable.
- Structured control flow statements such as <code>if</code>, <code>for</code>, <code>while</code>, <code>continue</code> or <code>break</code> should be used instead.</p>
+<p><code>goto</code> is an unstructured control flow statement. It makes code less readable and maintainable. Structured control flow statements such as <code>if</code>, <code>for</code>, <code>while</code>, <code>continue</code> or <code>break</code> should be used instead.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bad</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">i</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
@@ -391,9 +390,9 @@
 </code></pre></div>
 
 <p>Good</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">For</span> <span class="nv">i</span> <span class="o">=</span> <span class="m">0</span> <span class="k">to</span> <span class="m">10</span> <span class="k">Do</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">For</span> <span class="nv">Counter</span> <span class="o">=</span> <span class="m">0</span> <span class="k">To</span> <span class="m">10</span> <span class="k">Do</span>
 
-    <span class="nb">Message</span><span class="p">(</span><span class="s1">&quot;i = &quot;</span> <span class="o">+</span> <span class="nv">i</span><span class="p">);</span>
+   <span class="nb">Message</span><span class="p">(</span><span class="nv">StrTemplate</span><span class="p">(</span><span class="s1">&quot;Counter = %1&quot;</span><span class="p">,</span> <span class="nv">Counter</span><span class="p">))</span>
 
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>

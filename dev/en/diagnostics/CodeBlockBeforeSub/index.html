@@ -388,7 +388,12 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Wrong</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Method</span><span class="p">();</span> <span class="nb">Message</span><span class="p">(</span><span class="s1">&quot;Before methods&quot;</span><span class="p">);</span>  <span class="nv">Procedure</span> <span class="nv">Method</span><span class="p">()</span> <span class="c c-Singleline">// Method body EndProcedure</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">SomeMethod</span><span class="p">();</span>
+<span class="nb">Message</span><span class="p">(</span><span class="s1">&quot;Before methods definition&quot;</span><span class="p">);</span>
+
+<span class="nv">Procedure</span> <span class="nv">SomeMethod</span><span class="p">()</span>
+<span class="c c-Singleline">// Method body</span>
+<span class="k">EndProcedure</span>
 </code></pre></div>
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>

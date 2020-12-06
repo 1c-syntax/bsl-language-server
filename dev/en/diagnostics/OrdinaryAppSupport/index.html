@@ -377,17 +377,24 @@
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
+<p>To maintain backward compatibility with various proprietary and third-party solutions, external processes and reports developed on previous versions of the 1C: Enterprise platform 8.0 and 8.1, the configuration should also support launching in regular application (thick client) and external connection modes for administrators (users with full rights).</p>
+<p>For this it is recommended:</p>
+<ul>
+<li>The configuration property "Use managed forms in a ordinary application" is set to True.</li>
+<li>Set the property "Use ordinary forms in managed mode" to False.</li>
+<li>adhere to the general scheme for setting the attributes of common modules, and conduct the development itself in the Designer in edit mode for both launch modes - managed and ordinary applications (Service menu - Options - General tab).</li>
+</ul>
+<p>When developing in EDT, properties are set through the Designer.</p>
+<p>The refusal to support the launch of configuration in the ordinary application and external connection modes for administrators is possible only in certain justified cases.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
-
+<ul>
+<li>Source: <a href="https://its.1c.ru/db/v8std#content:467:hdoc">Standard: General Configuration Requirements</a></li>
+</ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>

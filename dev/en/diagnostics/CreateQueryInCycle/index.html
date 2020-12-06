@@ -371,52 +371,41 @@
 <p>Execution query in cycle</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <p>Bad</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
-<span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
-<span class="k">Для</span> <span class="nv">индекс</span> <span class="o">=</span> <span class="m">0</span> <span class="k">По</span> <span class="nv">СписокДокументов</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">()</span> <span class="k">Цикл</span>
-    <span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
-    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
-        <span class="s1">&quot;ВЫБРАТЬ</span>
-        <span class="s">|   ПоступлениеТоваровУслуг.СуммаДокумента</span>
-        <span class="s">|ИЗ</span>
-        <span class="s">|   Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг</span>
-        <span class="s">|ГДЕ</span>
-        <span class="s">|   ПоступлениеТоваровУслуг.Ссылка = &amp;Ссылка&quot;</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BanksToProcessing - contains an array of banks</span>
 
-    <span class="nv">Запрос</span><span class="o">.</span><span class="nv">УстановитьПараметр</span><span class="p">(</span><span class="s1">&quot;Ссылка&quot;</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">[</span><span class="nv">индекс</span><span class="p">]);</span>
+<span class="nv">InidividualQuery</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">(</span><span class="s1">&quot;</span>
+  <span class="s">|SELECT</span>
+  <span class="s">| BankAccounts.Ref AS Account</span>
+  <span class="s">|FROM</span>
+  <span class="s">| Catalog.BankAccounts AS BankAccounts</span>
+  <span class="s">|WHERE</span>
+  <span class="s">| BankAccounts.Bank = &amp;Bank&quot;</span><span class="p">);</span>
 
-    <span class="nv">РезультатЗапроса</span> <span class="o">=</span> <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Выполнить</span><span class="p">();</span>
-
-    <span class="nv">ВыборкаДетальныеЗаписи</span> <span class="o">=</span> <span class="nv">РезультатЗапроса</span><span class="o">.</span><span class="nv">Выбрать</span><span class="p">();</span>
-
-    <span class="k">Пока</span> <span class="nv">ВыборкаДетальныеЗаписи</span><span class="o">.</span><span class="nv">Следующий</span><span class="p">()</span> <span class="k">Цикл</span>
-        <span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="nv">СуммаДокументов</span> <span class="o">+</span> <span class="nv">ВыборкаДетальныеЗаписи</span><span class="o">.</span><span class="nv">СуммаДокумента</span><span class="p">;</span>
-    <span class="k">КонецЦикла</span><span class="p">;</span>
-<span class="k">КонецЦикла</span><span class="p">;</span>
+<span class="nv">For</span> <span class="k">Each</span> <span class="nv">Bank</span> <span class="nv">From</span> <span class="nv">BanksToProcess</span> <span class="k">Do</span>
+  <span class="nv">InidividualQuery</span> <span class="o">.</span><span class="nv">SetParameter</span><span class="p">(</span><span class="s1">&quot;Bank&quot;</span><span class="p">,</span> <span class="nv">Bank</span><span class="p">);</span>
+  <span class="nv">AccountsSelection</span> <span class="o">=</span> <span class="nv">InidividualQuery</span> <span class="o">.</span><span class="nv">Execute</span><span class="p">()</span><span class="o">.</span><span class="nv">Select</span><span class="p">();</span>
+  <span class="k">While</span> <span class="nv">AccountsSelection</span><span class="o">.</span><span class="nv">Next</span><span class="p">()</span> <span class="k">Do</span>
+    <span class="nv">ProcessBankAccounts</span><span class="p">(</span><span class="nv">AccountsSelection</span><span class="o">.</span><span class="nv">Account</span><span class="p">);</span>
+  <span class="k">EndDo</span><span class="p">;</span>
+<span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
 
 <p>Good</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СписокДокументов</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Массив</span><span class="p">;</span>
-<span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BanksToProcess - contains an array of banks</span>
 
-<span class="nv">Запрос</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Запрос</span><span class="p">;</span>
-<span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span>
-    <span class="s1">&quot;ВЫБРАТЬ</span>
-    <span class="s">|   СУММА(ПоступлениеТоваровУслуг.СуммаДокумента) КАК СуммаДокумента</span>
-    <span class="s">|ИЗ</span>
-    <span class="s">|   Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг</span>
-    <span class="s">|ГДЕ</span>
-    <span class="s">|   ПоступлениеТоваровУслуг.Ссылка В(&amp;СписокДокументов)&quot;</span><span class="p">;</span>
+<span class="nv">MergedQuery</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Query</span><span class="p">(</span><span class="s1">&quot;</span>
+  <span class="s">|SELECT</span>
+  <span class="s">| BankAccounts.Ref AS Account</span>
+  <span class="s">|FROM</span>
+  <span class="s">| Catalog.BankAccounts AS BankAccounts</span>
+  <span class="s">|WHERE</span>
+  <span class="s">| BankAccounts.Bank In(&amp;BanksToProcess)&quot;</span><span class="p">);</span>
 
-<span class="nv">Запрос</span><span class="o">.</span><span class="nv">УстановитьПараметр</span><span class="p">(</span><span class="s1">&quot;Ссылка&quot;</span><span class="p">,</span> <span class="nv">СписокДокументов</span><span class="p">);</span>
-
-<span class="nv">РезультатЗапроса</span> <span class="o">=</span> <span class="nv">Запрос</span><span class="o">.</span><span class="nv">Выполнить</span><span class="p">();</span>
-
-<span class="nv">ВыборкаДетальныеЗаписи</span> <span class="o">=</span> <span class="nv">РезультатЗапроса</span><span class="o">.</span><span class="nv">Выбрать</span><span class="p">();</span>
-
-<span class="k">Пока</span> <span class="nv">ВыборкаДетальныеЗаписи</span><span class="o">.</span><span class="nv">Следующий</span><span class="p">()</span> <span class="k">Цикл</span>
-    <span class="nv">СуммаДокументов</span> <span class="o">=</span> <span class="nv">ВыборкаДетальныеЗаписи</span><span class="o">.</span><span class="nv">СуммаДокумента</span><span class="p">;</span>
-<span class="k">КонецЦикла</span><span class="p">;</span>
+<span class="nv">MergedQuery</span><span class="o">.</span><span class="nv">SetParameter</span><span class="p">(</span><span class="s1">&quot;BanksToProcess&quot;</span><span class="p">,</span> <span class="nv">BanksToProcess</span><span class="p">);</span>
+<span class="nv">AccountsSelection</span> <span class="o">=</span> <span class="nv">MergedQuery</span><span class="o">.</span><span class="nv">Execute</span><span class="p">()</span><span class="o">.</span><span class="nv">Select</span><span class="p">();</span>
+<span class="k">While</span> <span class="nv">AccountsSelection</span><span class="o">.</span><span class="nv">Next</span><span class="p">()</span> <span class="k">Do</span>
+  <span class="nv">ProcessBankAccounts</span><span class="p">(</span><span class="nv">AccountsSelection</span><span class="o">.</span><span class="nv">Account</span><span class="p">);</span>
+<span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
 
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
