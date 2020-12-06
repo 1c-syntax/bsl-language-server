@@ -1,10 +1,11 @@
-# ThisObject assign (ThisObjectAssign)
+# Присвоение значения свойству ЭтотОбъект (ThisObjectAssign)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Blocker` | `Yes` | `1` | `error` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Error` | `BSL` | `Blocker` | `Yes` | `1` | `error`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 In managed form modules and common modules, there should not be a variable named "ThisObject".
@@ -13,9 +14,10 @@ Often this error appears when updating the platform version: the "ThisObject" pr
 
 ## Examples
 
-Wrong:
+Incorrect:
 
 ```bsl
+
 ThisObject = FormAttributeToValue("Object");
 ```
 
@@ -24,6 +26,7 @@ ThisObject = FormAttributeToValue("Object");
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
