@@ -8,10 +8,10 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
-`listForCheckLeft` | `String` | `List to check for the space to the left of (separated by space)` | ``````
-`listForCheckRight` | `String` | `Список для проверки справа (разделенные пробелом). Например: ( =` | `, ;`
-`listForCheckLeftAndRight` | `String` | `Список для проверки с обоих сторон (разделенные пробелом). Например: + - * / = % < >` | `+ - * / = % < > <> <= >=`
-`checkSpaceToRightOfUnary` | `Булево` | `Check for space to the right of unary signs (+ -)` | `false`
+`listForCheckLeft` | `String` | `List to check for the space to the left of symbol (separated by space). For example: ) =` | ``````
+`listForCheckRight` | `String` | `List to check for the space to the right of symbol (separated by a space). For example: ( =` | `, ;`
+`listForCheckLeftAndRight` | `String` | `List of symbols to check for the space from both sides of (separated by space). Example: + - * / = % < >` | `+ - * / = % < > <> <= >=`
+`checkSpaceToRightOfUnary` | `Boolean` | `Check for space to the right of unary signs (+ -)` | `false`
 `allowMultipleCommas` | `Boolean` | `Allow several commas in a row` | `false`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
@@ -67,8 +67,8 @@ The parameter has sense only if `,` is listed in one of three base parameters
 If set to `false`
 
 ```bsl
-    ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения,,,, Отказ);        // Плохо
-    ОбщегоНазначенияКлиентСервер.СообщитьПользователю(ТекстСообщения, , , , Отказ);     // Хорошо
+    CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Bad
+    CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
 ```
 
 If set to `true`
