@@ -1,17 +1,18 @@
 # Deprecated 8.3.12 platform features. (DeprecatedAttributes8312)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Info` | `Yes` | `1` | `deprecated` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL` | `Info` | `Yes` | `1` | `deprecated`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 The following items are deprecated and their use is not recommended since platform version 8.3.12:
 
-- Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum. The Horizontal value of the ChildFormItemsGroup system enum is deprecated;
+- Implemented the new AlwaysHorizontal value of the ChildFormItemsGroup system enum.<br>The Horizontal value of the ChildFormItemsGroup system enum is deprecated
 
 - ChartLabelsOrientation system enum is no longer available. Actual variant is ChartLabelsOrientation;
 
@@ -43,7 +44,7 @@ The following items are deprecated and their use is not recommended since platfo
 
 - Property ShowTitle of Chart, GanttChart, PivotChart objects are obsolete and not recomended for use.
 
-- The global context method ClearEventLog() is applicable only to a event log in SQLite format, is obsolete and its use is not recommended.
+- Global context method ClearEventLog() is deprecated and only applicable to logs that have SQLite format. It is recommended that you do not use this method.
 
 ## Sources
 
@@ -54,6 +55,7 @@ The following items are deprecated and their use is not recommended since platfo
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
