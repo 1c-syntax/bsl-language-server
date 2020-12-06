@@ -6,18 +6,24 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+You should use style elements to change the appearance, rather than setting specific values directly in the controls. This is required in order for similar controls to look the same in all forms where they occur.
+
+Types of style elements:
+
+- Color (set to RGB value)
+- Font (type, size and style are set)
+- Frame (set the type and width of the borders)
 
 ## Examples
+
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+System of standards
+
+- Source: [Standard: Style Elements](https://its.1c.ru/db/v8std#content:667:hdoc)
 
 ## Snippets
 

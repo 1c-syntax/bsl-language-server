@@ -14,58 +14,43 @@ Execution query in cycle
 Bad
 
 ```Bsl
+// BanksToProcessing - contains an array of banks
 
-СписокДокументов = Новый Массив;
-СуммаДокументов = 0;
-Для индекс = 0 По СписокДокументов.ВГраница() Цикл
-	Запрос = Новый Запрос;
-	Запрос.Текст =
-		"ВЫБРАТЬ
-		|	ПоступлениеТоваровУслуг.СуммаДокумента
-		|ИЗ
-		|	Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг
-		|ГДЕ
-		|	ПоступлениеТоваровУслуг.Ссылка = &Ссылка";
-	
-	Запрос.УстановитьПараметр("Ссылка", СписокДокументов[индекс]);
-	
-	РезультатЗапроса = Запрос.Выполнить();
+InidividualQuery = New Query("
+  |SELECT
+  | BankAccounts.Ref AS Account
+  |FROM
+  | Catalog.BankAccounts AS BankAccounts
+  |WHERE
+  | BankAccounts.Bank = &Bank");
 
-	ВыборкаДетальныеЗаписи = РезультатЗапроса.Выбрать();
-
-	Пока ВыборкаДетальныеЗаписи.Следующий() Цикл
-		СуммаДокументов = СуммаДокументов + ВыборкаДетальныеЗаписи.СуммаДокумента;
-	КонецЦикла;
-КонецЦикла;
-
-
+For Each Bank From BanksToProcess Do
+  InidividualQuery .SetParameter("Bank", Bank);
+  AccountsSelection = InidividualQuery .Execute().Select();
+  While AccountsSelection.Next() Do
+    ProcessBankAccounts(AccountsSelection.Account);
+  EndDo;
+EndDo;
 ```
 
 Good
 
 ```Bsl
-СписокДокументов = Новый Массив;
-СуммаДокументов = 0;
+// BanksToProcess - contains an array of banks
 
-Запрос = Новый Запрос;
-Запрос.Текст =
-	"ВЫБРАТЬ
-	|	СУММА(ПоступлениеТоваровУслуг.СуммаДокумента) КАК СуммаДокумента
-	|ИЗ
-	|	Документ.ПоступлениеТоваровУслуг КАК ПоступлениеТоваровУслуг
-	|ГДЕ
-	|	ПоступлениеТоваровУслуг.Ссылка В(&СписокДокументов)";
+MergedQuery = New Query("
+  |SELECT
+  | BankAccounts.Ref AS Account
+  |FROM
+  | Catalog.BankAccounts AS BankAccounts
+  |WHERE
+  | BankAccounts.Bank In(&BanksToProcess)");
 
-Запрос.УстановитьПараметр("Ссылка", СписокДокументов);
-
-РезультатЗапроса = Запрос.Выполнить();
-
-ВыборкаДетальныеЗаписи = РезультатЗапроса.Выбрать();
-
-Пока ВыборкаДетальныеЗаписи.Следующий() Цикл
-	СуммаДокументов = ВыборкаДетальныеЗаписи.СуммаДокумента;
-КонецЦикла;
-
+MergedQuery.SetParameter("BanksToProcess", BanksToProcess);
+AccountsSelection = MergedQuery.Execute().Select();
+While AccountsSelection.Next() Do
+  ProcessBankAccounts(AccountsSelection.Account);
+EndDo;
 ```
 
 ## Snippets

@@ -14,16 +14,18 @@ Method "Find" is deprecated. Use "StrFind" instead.
 Incorrect:
 
 ```bsl
-If Find(Collaborator.Name, "Boris") > 0 Then
-    
+
+If Find(Employee.Name, "Boris") > 0 Then
+
 EndIf;
 ```
 
 Correct:
 
 ```bsl
-If StrFind(Collaborator.Name, "Boris") > 0 Then
-    
+
+If StrFind(Employee.Name, "Boris") > 0 Then
+
 EndIf;
 ```
 

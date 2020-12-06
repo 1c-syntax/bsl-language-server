@@ -66,8 +66,8 @@ The parameter has sense only if `,` is listed in one of three base parameters
 If set to `false`
 
 ```bsl
-CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Incorrect
-CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
+    CommonModuleClientServer.MessageToUser(MessageText,,,, Cancel);        // Bad
+    CommonModuleClientServer.MessageToUser(MessageText, , , , Cancel);     // Correct
 ```
 
 If set to `true`

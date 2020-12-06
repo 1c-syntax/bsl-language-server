@@ -9,7 +9,7 @@
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Modules intended for implementing functions on the server or client with cached of the returned values (for the time of the call or for the session) are named with the postfix "Cached" and "ClientCached" respectively.
+Use the "Cached" and "ClientCached" postfixes for the modules that implement functions with repeated use of return values (upon the call or session time) on the server and on the client respectively.
 
 ## Examples
 

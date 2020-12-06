@@ -6,18 +6,48 @@
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+In most cases, when you need to combine the results of two or more queries into a single result set, employ UNION ALL clause instead of UNION. The recommendation is based on the algorithm of the UNION clause, which searches for and removes duplicates from the united result even when duplicates are impossible by the query design.
+
+Employ UNION only when removing duplicates from the result is required.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+Incorrect:
+
+```bsl
+SELECT
+GoodsReceipt.Ref
+FROM
+Document.GoodsReceipt AS GoodsReceipt
+
+UNION
+
+SELECT
+GoodsSale.Ref
+FROM
+Document.GoodsSale AS GoodsSale
+```
+
+Correct:
+
+```bsl
+SELECT
+GoodsReceipt.Ref
+FROM
+Document.GoodsReceipt AS GoodsReceipt
+
+UNION ALL
+
+SELECT
+GoodsSale.Ref
+FROM
+Document.GoodsSale AS GoodsSale
+```
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+- Link: [Development Standart: Using UNION and UNION ALL words in queries](https://its.1c.ru/db/v8std#content:434:hdoc)
 
 ## Snippets
 
