@@ -1,16 +1,17 @@
 # Methods should not have too many return statements (TooManyReturns)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `20` | `brainoverload` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL`<br>`OS` | `Minor` | `No` | `20` | `brainoverload`
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `maxReturnsCount` | `Integer` | ```Maximum allowed return statements per method``` | ```3``` 
+Name | Type | Description | Default value
+:-: | :-: | :-- | :-:
+`maxReturnsCount` | `Integer` | `Maximum allowed return statements per method` | `3`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -24,7 +25,21 @@ A large number of returns in a method (procedure or function) increases its comp
 Bad method example
 
 ```bsl
-Function Example(Condition)     If Condition = 1 Then         Return "Check passed";     ElsIf Condition = 2 Then         ExecuteSomething();         Return "Check not passed";     ElsIf Condition > 7 Then         Если Validate(Contidtion) Then             Return "Check passed";         Else             Return "Check not passed";         EndIf;     EndIf;     Return ""; EndFunction
+Функция Пример(Условие)
+    Если Условие = 1 Тогда
+        Возврат "Проверка пройдена";
+    ИначеЕсли Условие = 2 Тогда
+        ВыполнитьДействие();
+        Возврат "Проверка не пройдена";
+    ИначеЕсли Условие > 7 Тогда
+        Если ВыполнитьПроверку(Условие) Тогда
+            Возврат "Проверка пройдена";
+        Иначе
+            Возврат "Проверка не пройдена";
+        КонецЕсли;
+    КонецЕсли;
+    Возврат "";
+КонецФункции
 ```
 
 ## Sources
@@ -36,6 +51,7 @@ Function Example(Condition)     If Condition = 1 Then         Return "Check pass
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
