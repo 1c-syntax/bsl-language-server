@@ -1,10 +1,11 @@
 # Unsafe SafeMode method call (UnsafeSafeModeMethodCall)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Blocker` | `Yes` | `1` | `deprecated`<br>`error` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Error` | `BSL` | `Blocker` | `Yes` | `1` | `deprecated`<br>`error`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -20,15 +21,21 @@ Using the Safe Mode () method, in which the result is implicitly converted to a 
 Wrong:
 
 ```
-If SafeMode() Then // some code EndIf;
+Если БезопасныйРежим() Тогда
+     // Логика выполнения в безопасном режиме...
+КонецЕсли;
+
+Если Не БезопасныйРежим() Тогда
+     // Логика выполнения в небезопасном режиме...
+КонецЕсли;
 ```
 
 Correct:
 
 ```
-If SafeMode() <> False Then
-// some code
-EndIf;
+Если БезопасныйРежим() <> Ложь Тогда
+    // Логика выполнения в безопасном режиме...
+КонецЕсли
 ```
 
 ## Sources
@@ -40,6 +47,7 @@ EndIf;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
