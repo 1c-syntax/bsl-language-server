@@ -1,17 +1,18 @@
 # Cyclomatic complexity (CyclomaticComplexity)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `25` | `brainoverload` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `25` | `brainoverload`
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```20``` 
- `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` 
+Name | Type | Description | Default value
+:-: | :-: | :-- | :-:
+`complexityThreshold` | `Integer` | `Complexity threshold` | `20`
+`checkModuleBody` | `Boolean` | `Check module body` | `true`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -37,7 +38,41 @@ Cyclomatic complexity increases by 1 for each of following constructions:
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-Функция СерверныйМодульМенеджера(Имя)                                                   // 1 	ОбъектНайден = Ложь;                                                                // 0                                                                                         // 0 	ЧастиИмени = СтрРазделить(Имя, ".");                                                // 0 	Если ЧастиИмени.Количество() = 2 Тогда                                              // 1                                                                                         // 0 		ИмяВида = ВРег(ЧастиИмени[0]);                                                  // 0 		ИмяОбъекта = ЧастиИмени[1];                                                     // 0                                                                                         // 0 		Если ИмяВида = ВРег("Константы") Тогда                                          // 1 			Если Метаданные.Константы.Найти(ИмяОбъекта) <> Неопределено Тогда           // 1 				ОбъектНайден = Истина;                                                  // 0 			КонецЕсли;                                                                  // 0 		ИначеЕсли ИмяВида = ВРег("РегистрыСведений") Тогда                              // 1 			Если Метаданные.РегистрыСведений.Найти(ИмяОбъекта) <> Неопределено Тогда    // 1 				ОбъектНайден = Истина;                                                  // 0 			КонецЕсли;                                                                  // 0 		Иначе                                                                           // 1 			ОбъектНайден = Ложь;                                                        // 0 		КонецЕсли;                                                                      // 0 	КонецЕсли;                                                                          // 0                                                                                         // 0 	Если Не ОбъектНайден Тогда                                                          // 1 		ВызватьИсключение СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(      // 0 			НСтр("ru = 'Объект метаданных ""%1"" не найден,                             // 0 			           |либо для него не поддерживается получение модуля менеджера.'"), // 0 			Имя);                                                                       // 0 	КонецЕсли;                                                                          // 0 	УстановитьБезопасныйРежим(Истина);                                                  // 0 	Модуль = Вычислить(Имя);                                                            // 0 	F = ?(Условие, ИСТИНА, НЕОПРЕДЕЛЕНО);                                               // 1 	А = ?(Условие, ИСТИНА, ?(Условие2, ЛОЖЬ, НЕОПРЕДЕЛЕНО));                            // 2 	M = ИСТИНА ИЛИ 7;                                                                   // 1 	Возврат Модуль;                                                                     // 0 КонецФункции                                                                            // итог 12
+Function ServerModuleManager(Name)                                                      // 1
+	ObjectFounded = False;                                                              // 0
+                                                                                        // 0
+	NameParts = StrSplit(Name, ".");                                                    // 0
+	If NameParts.Count() = 2 Then                                                       // 1
+                                                                                        // 0
+		TypeName = Upper(NameParts[0]);                                                 // 0
+		ObjectName = NameParts[1];                                                      // 0
+                                                                                        // 0
+		If TypeName = Upper("Constants") Then                                           // 1
+			If Metadata.Constants.Find(ObjectName) <> Undefined Then                    // 1
+				ObjectFounded = True;                                                   // 0
+			EndIf;                                                                      // 0
+		ElsIf TypeName = Upper("InformationRegisters") Then                            // 1
+			If Metadata.InformationRegisters.Find(ObjectName) <> Undefined Then         // 1
+				ObjectFounded = True;                                                   // 0
+			EndIf;                                                                      // 0
+		Else                                                                            // 1
+			ObjectFounded = False;                                                      // 0
+		EndIf;                                                                          // 0
+	EndIf;                                                                              // 0
+                                                                                        // 0
+	If Not ObjectFounded Then                                                           // 1
+		Raise СтроковыеФункцииКлиентСервер.ПодставитьПараметрыВСтроку(                  // 0
+			НСтр("ru = 'Объект метаданных ""%1"" не найден,                             // 0
+			           |либо для него не поддерживается получение модуля менеджера.'"), // 0
+			Name);                                                                      // 0
+	EndIf;                                                                              // 0
+	SetSafeMode(True);                                                                  // 0
+	Module = Eval(Name);                                                                // 0
+	F = ?(SomeCondition1, True, Undefined);                                             // 1
+	А = ?(SomeCondition1, True, ?(SomeCondition2, False, Undefined));                   // 2
+	M = True Or 7;                                                                      // 1
+	Return Module;                                                                      // 0
+EndFunction                                                                              // Total 12
 ```
 
 ## Sources
@@ -50,6 +85,7 @@ Cyclomatic complexity increases by 1 for each of following constructions:
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
