@@ -1,19 +1,20 @@
 # Missed postfix "ServerCall" (CommonModuleNameServerCall)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Server common modules for calling from the client code contain server methods available for use from client code. It forms the application server client interface. Such methods are placed in common modules with the attribute:
+Common server modules for calling from the client contain server procedures and functions available from the client code. They constitute the client interface of the application server.<br>Such procedures and functions are placed in common modules with the following property:
 
 - Server (ServerCall is enabled)
 
-Server common modules for calling from the client must be named with the postfix "ServerCall"
+Name common server modules to be called from the client according to general rules of naming metadata objects. Make sure they include the "ServerCall" postfix
 
 ## Examples
 
@@ -30,6 +31,7 @@ FilesServerCall, CommonServerCall
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
