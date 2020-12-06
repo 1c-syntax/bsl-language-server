@@ -1,22 +1,21 @@
 # Cognitive complexity (CognitiveComplexity)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `brainoverload` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `brainoverload`
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```15``` 
- `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` 
+Name | Type | Description | Default value
+:-: | :-: | :-- | :-:
+`complexityThreshold` | `Integer` | `Complexity threshold` | `15`
+`checkModuleBody` | `Boolean` | `Check module body` | `true`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
-Cognitive complexity shows how difficult it is to perceive the written code.
- High cognitive complexity clearly indicates the need for refactoring to make future support easier.
- The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
+Cognitive complexity shows how difficult it is to perceive the written code. High cognitive complexity clearly indicates the need for refactoring to make future support easier. The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
 ### Cognitive Complexity calculation
 
@@ -26,58 +25,58 @@ Bellow are given code analysis rules, conditions increase cognitive complexity.
 
 ```bsl
 
-// Loop For Each
-For Each Element In Collection Do                    // +1
-EndDo;
+// Цикл `Для каждого`
+Для каждого Элемент Из Коллекция Цикл                // +1
+КонецЦикла;
 
-// Loop For
-For It = Start To End Do                             // +1
-EndDo;
+// Цикл `Для`
+Для Ит = Начало По Конец Цикл                        // +1
+КонецЦикла;
 
-// Loop While
-While Condition Do                                   // +1
-EndDo;
+// Цикл `Пока`
+Пока Условие Цикл                                    // +1
+КонецЦикла;
 
 
-// Condition
-If Condition Then                                    // +1
+// Условие
+Если Условие Тогда                                   // +1
 
-// Alternative condition branch
-ElseIf Condition2 Then                               // +1
+// Альтернативная ветвь условия
+ИначеЕсли Условие2 Тогда                             // +1
 
-// Default branch
-Else
-EndIf;
+// Ветвь по-умолчанию
+Иначе
+КонецЕсли;
 
-// Ternary operator
-Value = ?(Condition, ValueTrue, ValueFalse);         // +1
+// Тернарный оператор
+Значение = ?(Условие, ЗначениеИстина, ЗначениеЛожь); // +1
 
-Try
-// Except processing
-Except                                               // +1
-EndTry;
+Попытка
+// Обработка исключения
+Исключение                                           // +1
+КонецПопытки;
 
-// Goto label
-Goto ~Label;                                         // +1
+// Переход на метку
+Перейти ~Метка;                                      // +1
 
-// Binary logical operators
+// Бинарные логические операции
 
-While Condition OR Condition2 Do                     // +2
-EndDo;
+Пока Условие ИЛИ Условие2 Цикл                       // +2
+КонецЦикла;
 
-If Condition OR Condition2 Then                      // +2
+Если Условие И Условие2 Тогда                        // +2
 
-ElseIf Condition2                                    // +1
-        Or Condition3 AND Condition4 Then            // +2
+ИначеЕсли Условие2                                   // +1
+        ИЛИ Условие3 И Условие4 Тогда                // +2
 
-EndIf;
+КонецЕсли;
 
-Value = ?(Condition OR Condition2 OR NOT Condition3, // +3
-                ValueTrue, ValueFalse);
+Значение = ?(Условие ИЛИ Условие2 ИЛИ НЕ Условие3,   // +3
+                ЗначениеИстина, ЗначениеЛожь);
 
-Value = First OR Second;                             // +1
+Значение = Одно ИЛИ Второе;                          // +1
 
-Value = A <> B;                                      // +1
+Значение = А <> B;                                   // +1
 
 ```
 
@@ -85,31 +84,32 @@ Value = A <> B;                                      // +1
 
 ```bsl
 
-// Loop For Each
-For Each Element In Collection Do
-EndDo;
+// Цикл `Для каждого`
+Для каждого Элемент Из Коллекция Цикл
+КонецЦикла;
 
-/// Loop For
-For It = Start To End Do
+// Цикл `Для`
+Для Ит = Начало По Конец Цикл
+КонецЦикла;
 
-// Loop While
-While Condition Do
-EndDo;
+// Цикл `Пока`
+Пока Условие Цикл
+КонецЦикла;
 
 
-// Condition
-If Condition Then
-EndIf;
+// Условие
+Если Условие Тогда
+КонецЕсли;
 
-// Ternary operator
-Value = ?(Condition, ValueTrue, ValueFalse);
+// Тернарный оператор
+Значение = ?(Условие, ЗначениеИстина, ЗначениеЛожь);
 
-Try
-// Except processing
-Except
-EndTry;
+Попытка
+// Обработка исключения
+Исключение
+КонецПопытки;
 
-~Label:
+~Метка:
 
 ```
 
@@ -218,6 +218,7 @@ EndFunction
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
