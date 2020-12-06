@@ -1,4 +1,4 @@
-# Global context method names collision (GlobalContextMethodCollision8312)
+# Конфликт имен методов с методами глобального контекста (GlobalContextMethodCollision8312)
 
  Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
  :-: | :-: | :-: | :-: | :-: | :-: 

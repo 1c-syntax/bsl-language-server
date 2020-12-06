@@ -67,7 +67,7 @@
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | Функция всегда возвращает одно и то же примитивное значение | Да | Важный | Ошибка | `design`<br>`badpractice` 
  [FunctionShouldHaveReturn](FunctionShouldHaveReturn.md) | Функция должна содержать возврат | Да | Важный | Ошибка | `suspicious`<br>`unpredictable` 
  [GetFormMethod](GetFormMethod.md) | Использование метода ПолучитьФорму | Да | Важный | Ошибка | `error` 
- [GlobalContextMethodCollision8312](GlobalContextMethodCollision8312.md) | Global context method names collision | Да | Блокирующий | Ошибка | `error`<br>`unpredictable` 
+ [GlobalContextMethodCollision8312](GlobalContextMethodCollision8312.md) | Конфликт имен методов с методами глобального контекста | Да | Блокирующий | Ошибка | `error`<br>`unpredictable` 
  [IdenticalExpressions](IdenticalExpressions.md) | Одинаковые выражения слева и справа от "foo" оператора | Да | Важный | Ошибка | `suspicious` 
  [IfConditionComplexity](IfConditionComplexity.md) | Использование сложных выражений в условии оператора "Если" | Да | Незначительный | Дефект кода | `brainoverload` 
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` 
