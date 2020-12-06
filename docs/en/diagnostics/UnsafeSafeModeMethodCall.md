@@ -21,21 +21,21 @@ Using the Safe Mode () method, in which the result is implicitly converted to a 
 Wrong:
 
 ```
-Если БезопасныйРежим() Тогда
-     // Логика выполнения в безопасном режиме...
-КонецЕсли;
+If SafeMode() Then
+     // some logic in safe mode...
+EndIf;
 
-Если Не БезопасныйРежим() Тогда
-     // Логика выполнения в небезопасном режиме...
-КонецЕсли;
+If No SafeMode() Then
+     // some logic in unsafe mode...
+EndIf;
 ```
 
 Correct:
 
 ```
-Если БезопасныйРежим() <> Ложь Тогда
-    // Логика выполнения в безопасном режиме...
-КонецЕсли
+If SafeMode() <> False Then
+   // some code
+EndIf;
 ```
 
 ## Sources
