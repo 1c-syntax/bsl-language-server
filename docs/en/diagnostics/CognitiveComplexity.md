@@ -25,92 +25,89 @@ Bellow are given code analysis rules, conditions increase cognitive complexity.
 
 ```bsl
 
-// Цикл `Для каждого`
-Для каждого Элемент Из Коллекция Цикл                // +1
-КонецЦикла;
+// Loop `For each`
+For Each Element in Collection Do                    // +1
+EndDo;
 
-// Цикл `Для`
-Для Ит = Начало По Конец Цикл                        // +1
-КонецЦикла;
+// Loop `For`
+For i = StartValue To EndValue Do                    // +1
+EndDo;
 
-// Цикл `Пока`
-Пока Условие Цикл                                    // +1
-КонецЦикла;
+// Loop `While`
+While Condition Do                                   // +1
+EndDo;
 
 
-// Условие
-Если Условие Тогда                                   // +1
+// Condition
+If Condition1 Then                                   // +1
 
-// Альтернативная ветвь условия
-ИначеЕсли Условие2 Тогда                             // +1
+// Alternative condition branch
+ElseIf Condition2 Then                               // +1
 
-// Ветвь по-умолчанию
-Иначе
-КонецЕсли;
+// default branch
+Else
+EndIf;
 
-// Тернарный оператор
-Значение = ?(Условие, ЗначениеИстина, ЗначениеЛожь); // +1
+// ternary operator
+Value = ?(Condition, ValueTrue, ValueFalse);         // +1
 
-Попытка
-// Обработка исключения
-Исключение                                           // +1
-КонецПопытки;
+Try
+// Exception handling
+Except                                               // +1
+EndTry;
 
-// Переход на метку
-Перейти ~Метка;                                      // +1
+// Go to label
+Goto ~Label;                                          // +1
 
-// Бинарные логические операции
+// Binary logical operations
 
-Пока Условие ИЛИ Условие2 Цикл                       // +2
-КонецЦикла;
+While Condition1 Or Condition2 Do                    // +2
+EndDo;
 
-Если Условие И Условие2 Тогда                        // +2
+If Condition1 And Condition2 Then                    // +2
 
-ИначеЕсли Условие2                                   // +1
-        ИЛИ Условие3 И Условие4 Тогда                // +2
+ElseIf Condition2                                    // +1
+        Or Condition3 And Condition4 Then            // +2
 
-КонецЕсли;
+EndIf;
 
-Значение = ?(Условие ИЛИ Условие2 ИЛИ НЕ Условие3,   // +3
-                ЗначениеИстина, ЗначениеЛожь);
+Value = ?(Condition1 Or Condition2 Or Not Condition3,// +3
+                ValueTrue, ValueFalse);
 
-Значение = Одно ИЛИ Второе;                          // +1
+Value = First Or Second;                             // +1
 
-Значение = А <> B;                                   // +1
-
+Value = A <> B;                                      // +1
 ```
 
 #### For each nesting level, next blocks get additional 1 to complexity
 
 ```bsl
 
-// Цикл `Для каждого`
-Для каждого Элемент Из Коллекция Цикл
-КонецЦикла;
+// Loop `For each`
+For Each Element in Collection Do
+EndDo;
 
-// Цикл `Для`
-Для Ит = Начало По Конец Цикл
-КонецЦикла;
+// Loop `For`
+For i = StartValue To EndValue Do
+EndDo;
 
-// Цикл `Пока`
-Пока Условие Цикл
-КонецЦикла;
+// Loop `While`
+While Condition Do
+EndDo;
 
+// Condition
+If Condition1 Then
+EndIf;
 
-// Условие
-Если Условие Тогда
-КонецЕсли;
+// ternary operator
+Value = ?(Condition, ValueTrue, ValueFalse);
 
-// Тернарный оператор
-Значение = ?(Условие, ЗначениеИстина, ЗначениеЛожь);
+Try
+// Exception handling
+Except
+EndTry;
 
-Попытка
-// Обработка исключения
-Исключение
-КонецПопытки;
-
-~Метка:
-
+~Label:
 ```
 
 #### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
