@@ -1,16 +1,17 @@
 # Using modal windows (UsingModalWindows)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard`
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `forceModalityMode` | `Boolean` | ```Ignore configurations modality mode``` | ```false``` 
+Name | Type | Description | Default value
+:-: | :-: | :-- | :-:
+`forceModalityMode` | `Boolean` | `Ignore configurations modality mode` | `false`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 Modal windows and pop-ups are considered bad taste. Users are accustomed to working "in one window." When developing configurations designed to work in the web client, it is forbidden to use modal windows and dialogs. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard.
@@ -39,11 +40,11 @@ Russian variant | English variant
 ## Examples
 
 ```bsl
-// Example "Incorrect"
-warning(NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
+// Incorrect
+DoMessageBox(NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 
-// Example "Correct"
-ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
+// Correct
+ShowMessageBox(, NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 ```
 
 ## Sources
@@ -54,6 +55,7 @@ ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a do
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
