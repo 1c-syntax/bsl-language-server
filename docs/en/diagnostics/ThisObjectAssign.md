@@ -1,4 +1,4 @@
-# Присвоение значения свойству ЭтотОбъект (ThisObjectAssign)
+# ThisObject assign (ThisObjectAssign)
 
 Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 :-: | :-: | :-: | :-: | :-: | :-:
