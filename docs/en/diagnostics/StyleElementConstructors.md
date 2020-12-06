@@ -1,11 +1,10 @@
 # Style element constructor (StyleElementConstructors)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Error` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`badpractice`
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL` | `Minor` | `Yes` | `5` | `standard`<br>`badpractice` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 You should use style elements to change the appearance, rather than setting specific values directly in the controls. This is required in order for similar controls to look the same in all forms where they occur.
@@ -29,7 +28,6 @@ System of standards
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

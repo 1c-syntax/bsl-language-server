@@ -1,11 +1,10 @@
 # Export methods in command and general command modules (CommandModuleExportMethods)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`clumsy`
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard`<br>`clumsy` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 You should not place export methods in command and General command modules. You can't access these modules from code external to them, so export methods in these modules do not make sense.
@@ -17,7 +16,6 @@ You should not place export methods in command and General command modules. You 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

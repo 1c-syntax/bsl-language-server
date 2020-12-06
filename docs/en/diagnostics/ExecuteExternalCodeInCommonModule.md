@@ -1,11 +1,10 @@
 # Executing of external code in a common module on the server (ExecuteExternalCodeInCommonModule)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Security Hotspot` | `BSL` | `Critical` | `Yes` | `15` | `badpractice`<br>`standard`
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Security Hotspot` | `BSL` | `Critical` | `Yes` | `15` | `badpractice`<br>`standard` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -27,7 +26,6 @@ When you develop applications, note that not only execution of a code written in
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

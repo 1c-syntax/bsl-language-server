@@ -1,11 +1,10 @@
-# Использование метода ДанныеФормыВЗначение (FormDataToValue)
+# FormDataToValue method call (FormDataToValue)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL` | `Info` | `Yes` | `5` | `badpractice`
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL` | `Info` | `Yes` | `5` | `badpractice` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -34,7 +33,6 @@ Source: [Using of FormAttributeToValue and FormDataToValue methods](https://its.
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

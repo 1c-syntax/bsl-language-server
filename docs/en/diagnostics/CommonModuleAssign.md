@@ -1,11 +1,10 @@
 # CommonModuleAssign (CommonModuleAssign)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `2` | `error`
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Error` | `BSL`<br>`OS` | `Blocker` | `Yes` | `2` | `error` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
@@ -23,7 +22,6 @@ Setting a value to a common module throws exception.<br>Such situation is possib
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl

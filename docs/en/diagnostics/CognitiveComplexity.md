@@ -1,18 +1,17 @@
 # Cognitive complexity (CognitiveComplexity)
 
-Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
-:-: | :-: | :-: | :-: | :-: | :-:
-`Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `brainoverload`
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `brainoverload` 
 
-## Parameters
+## Parameters 
 
-Name | Type | Description | Default value
-:-: | :-: | :-- | :-:
-`complexityThreshold` | `Integer` | `Complexity threshold` | `15`
-`checkModuleBody` | `Boolean` | `Check module body` | `true`
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```15``` 
+ `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 ## Description
 
 Cognitive complexity shows how difficult it is to perceive the written code. High cognitive complexity clearly indicates the need for refactoring to make future support easier. The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
@@ -215,7 +214,6 @@ EndFunction
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 ### Diagnostic ignorance in code
 
 ```bsl
