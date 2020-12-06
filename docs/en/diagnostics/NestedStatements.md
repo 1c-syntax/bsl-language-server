@@ -8,7 +8,7 @@ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
 
 Name | Type | Description | Default value
 :-: | :-: | :-- | :-:
-`maxAllowedLevel` | `Целое` | `Max nested level` | `4`
+`maxAllowedLevel` | `Integer` | `Max nested level` | `4`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 
