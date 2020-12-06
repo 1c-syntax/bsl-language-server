@@ -1,15 +1,16 @@
 # Missed postfix "Cached" (CommonModuleNameCached)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable` 
+Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags
+:-: | :-: | :-: | :-: | :-: | :-:
+`Code smell` | `BSL` | `Major` | `Yes` | `5` | `standard`<br>`badpractice`<br>`unpredictable`
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
+
 ## Description
 
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Modules intended for implementing functions on the server or client with cached of the returned values (for the time of the call or for the session) are named with the postfix "Cached" and "ClientCached" respectively.
+Use the "Cached" and "ClientCached" postfixes for the modules that implement functions with repeated use of return values (upon the call or session time) on the server and on the client respectively.
 
 ## Examples
 
@@ -26,6 +27,7 @@ FilesClientCached, UsersInternalCached
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
+
 ### Diagnostic ignorance in code
 
 ```bsl
