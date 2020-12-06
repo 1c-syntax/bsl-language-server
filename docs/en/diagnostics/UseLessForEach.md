@@ -16,24 +16,22 @@ Incorrect:
 
 ```Bsl
 
-Для Каждого Итератор Из Коллекция Цикл
+For Each Iterator From Collection Loop
 
-    ВыполнитьДействиеНадЭлементом(Коллекция);
+    ProcessElement(Collection);
     
-КонецЦикла;
-
+EndLoop;
 ```
 
 Correct:
 
 ```Bsl
 
-Для Каждого Итератор Из Коллекция Цикл
+For Each Iterator From Collection Loop
 
-    ВыполнитьДействиеНадЭлементом(Итератор);
+    ProcessElement(Iterator);
     
-КонецЦикла;
-
+EndLoop;
 ```
 
 ```bsl
