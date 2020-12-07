@@ -130,16 +130,18 @@ public class CallHierarchyProvider {
   @SuppressWarnings("UnstableApiUsage")
   private static CallHierarchyItem getCallHierarchyItem(MethodSymbol methodSymbol) {
     CallHierarchyItem item = new CallHierarchyItem();
-    item.setUri(methodSymbol.getUri().toString());
     item.setName(methodSymbol.getName());
+    item.setDetail(methodSymbol.getMdoRef());
     item.setKind(methodSymbol.getSymbolKind());
-    item.setRange(methodSymbol.getRange());
-    item.setSelectionRange(methodSymbol.getSubNameRange());
 
     List<SymbolTag> tags = methodSymbol.isDeprecated()
       ? Collections.singletonList(SymbolTag.Deprecated)
       : Collections.emptyList();
     item.setTags(tags);
+
+    item.setUri(methodSymbol.getUri().toString());
+    item.setRange(methodSymbol.getRange());
+    item.setSelectionRange(methodSymbol.getSubNameRange());
 
     return item;
   }
