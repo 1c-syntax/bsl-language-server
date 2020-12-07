@@ -119,28 +119,20 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
   }
 
   private static String getTableNameOrAlias(ParseTree dataSource) {
-
-    String alias = Optional.of(dataSource)
-      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_alias))
-      .filter(Optional::isPresent)
-      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .map(BSLParserRuleContext::getText)
-      .orElse("");
-
-    if (!alias.isBlank()) {
-      return alias;
-    }
-
     return Optional.of(dataSource)
-      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_table))
-      .filter(Optional::isPresent)
-      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .map(BSLParserRuleContext::getText)
+      .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_alias))
+      .or(() -> Optional.of(dataSource)
+        .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_table)))
+      .or(() -> Optional.of(dataSource)
+        .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_parameterTable)))
       .orElse("");
+  }
+
+  private static Optional<String> extractTextFromChild(ParseTree parseTree, int childRuleType) {
+    return Optional.of(parseTree)
+      .flatMap(tree -> Trees.getFirstChild(tree, childRuleType))
+      .flatMap(child -> Trees.getFirstChild(child, SDBLParser.RULE_identifier))
+      .map(BSLParserRuleContext::getText);
   }
 
 }
