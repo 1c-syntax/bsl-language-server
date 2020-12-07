@@ -64,6 +64,10 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
     var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
 
+    if (dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
+      return ctx;
+    }
+
     if (dataSourceCollection.isEmpty()) {
       performSimpleCheck(columnsCollection);
       return ctx;
