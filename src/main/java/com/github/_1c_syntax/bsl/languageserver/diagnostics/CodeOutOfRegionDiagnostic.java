@@ -61,7 +61,7 @@ public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
   private final List<Range> regionsRanges = new ArrayList<>();
 
   @DiagnosticParameter(
-    type = String.class,
+    type = Boolean.class,
     defaultValue = "" + CHECK_UNKNOWN_MODULE_TYPE
   )
   private boolean checkUnknownModuleType = CHECK_UNKNOWN_MODULE_TYPE;
