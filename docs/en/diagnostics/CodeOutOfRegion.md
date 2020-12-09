@@ -4,6 +4,12 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL` | `Info` | `Yes` | `1` | `standard` 
 
+## Parameters 
+
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `checkUnknownModuleType` | `String` | ```Check unknown module type``` | ```false``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -69,5 +75,7 @@ RU | EN
 ### Parameter for config
 
 ```json
-"CodeOutOfRegion": false
+"CodeOutOfRegion": {
+    "checkUnknownModuleType": "false"
+}
 ```

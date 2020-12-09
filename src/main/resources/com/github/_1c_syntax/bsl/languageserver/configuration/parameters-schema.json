@@ -52,6 +52,14 @@
                 "object"
             ],
             "title": "Code out of region",
+            "properties": {
+                "checkUnknownModuleType": {
+                    "description": "Check unknown module type",
+                    "default": "false",
+                    "type": "string",
+                    "title": "Check unknown module type"
+                }
+            },
             "$id": "#/definitions/CodeOutOfRegion"
         },
         "CognitiveComplexity": {
