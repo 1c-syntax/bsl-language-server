@@ -284,27 +284,34 @@
       
         <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
-    Описание диагностики
+    Параметры
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
-    Примеры
+    Описание диагностики
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
-    Источники
+    Примеры
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
+    Источники
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     Сниппеты
   </a>
   
@@ -312,14 +319,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     Экранирование кода
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     Параметр конфигурационного файла
   </a>
   
@@ -373,13 +380,32 @@
 </tr>
 </tbody>
 </table>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="left">Описание</th>
+<th align="center">Значение по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>checkUnknownModuleType</code></td>
+<td align="center"><code>Строка</code></td>
+<td align="left"><code>Проверять неизвестные типы модулей</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
 <p>Весь код модуля должен быть структурирован и разделен по разделам (областям).<br />
 Требование о разделении кода модуля на разделы призвано повысить читаемость кода и упростить внесение изменений в код разными авторами (разработчиками) как при коллективной разработке, так и при доработке прикладных решений на конкретных внедрениях.</p>
-<h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <div class="codehilite"><pre><span></span><code><span class="kd">#Область &lt;ИмяОбласти&gt;</span>
@@ -410,21 +436,23 @@
 | ОписаниеПеременных  | Variables  |
 | Инициализация  | Initialize  |
 | ОбработчикиСобытийЭлементовТаблицыФормы  | FormTableItemsEventHandlers  |</p>
-<h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <ul>
 <li>Источник <a href="https://its.1c.ru/db/v8std#content:455:hdoc">Соглашения при написания кода. Структура модуля</a></li>
 </ul>
-<h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-<h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CodeOutOfRegion-off</span>
 <span class="c c-Singleline">// BSLLS:CodeOutOfRegion-on</span>
 </code></pre></div>
 
-<h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CodeOutOfRegion&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CodeOutOfRegion&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;checkUnknownModuleType&quot;</span><span class="p">:</span> <span class="s2">&quot;false&quot;</span>
+<span class="p">}</span>
 </code></pre></div>
                 
               
