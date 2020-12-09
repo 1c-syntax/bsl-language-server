@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -56,13 +57,20 @@ import java.util.stream.Collectors;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
 )
 public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
+  private static final boolean CHECK_UNKNOWN_MODULE_TYPE = false;
   private final List<Range> regionsRanges = new ArrayList<>();
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = "" + CHECK_UNKNOWN_MODULE_TYPE
+  )
+  private boolean checkUnknownModuleType = CHECK_UNKNOWN_MODULE_TYPE;
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
 
     // Для неизвестных модулей не будем требовать нахождения кода в области
-    if (documentContext.getModuleType() == ModuleType.UNKNOWN) {
+    if (documentContext.getModuleType() == ModuleType.UNKNOWN && !checkUnknownModuleType) {
       return ctx;
     }
 

@@ -78,6 +78,13 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
   void testNoRegionsUnknown() {
     var diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticNoRegions", ModuleType.UNKNOWN);
     assertThat(diagnostics).isEmpty();
+
+    var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("checkUnknownModuleType", true);
+    diagnosticInstance.configure(configuration);
+
+    diagnostics = getDiagnostics("CodeOutOfRegionDiagnosticNoRegions", ModuleType.UNKNOWN);
+    assertThat(diagnostics).isNotEmpty();
   }
 
   @Test
