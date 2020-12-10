@@ -8,7 +8,7 @@
 
  Имя | Тип | Описание | Значение по умолчанию 
  :-: | :-: | :-- | :-: 
- `checkUnknownModuleType` | `Строка` | ```Проверять неизвестные типы модулей``` | ```false``` 
+ `checkUnknownModuleType` | `Булево` | ```Проверять неизвестные типы модулей``` | ```false``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -72,6 +72,6 @@
 
 ```json
 "CodeOutOfRegion": {
-    "checkUnknownModuleType": "false"
+    "checkUnknownModuleType": false
 }
 ```

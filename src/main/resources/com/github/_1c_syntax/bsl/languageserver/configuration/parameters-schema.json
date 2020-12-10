@@ -55,8 +55,8 @@
             "properties": {
                 "checkUnknownModuleType": {
                     "description": "Check unknown module type",
-                    "default": "false",
-                    "type": "string",
+                    "default": false,
+                    "type": "boolean",
                     "title": "Check unknown module type"
                 }
             },
