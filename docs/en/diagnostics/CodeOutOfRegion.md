@@ -8,7 +8,7 @@
 
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
- `checkUnknownModuleType` | `String` | ```Check unknown module type``` | ```false``` 
+ `checkUnknownModuleType` | `Boolean` | ```Check unknown module type``` | ```false``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -76,6 +76,6 @@ RU | EN
 
 ```json
 "CodeOutOfRegion": {
-    "checkUnknownModuleType": "false"
+    "checkUnknownModuleType": false
 }
 ```
