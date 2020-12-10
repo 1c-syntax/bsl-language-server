@@ -65,6 +65,8 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
       return;
     }
 
+    var description = methodSymbol.getDescription().get();
+
     List<ParameterDefinition> parameters = methodSymbol.getParameters();
     List<ParameterDescription> parametersDescriptions = methodSymbol.getDescription()
       .map(MethodDescription::getParameters)
@@ -82,6 +84,10 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
     }
 
     if (parametersDescriptions.isEmpty()) {
+      if (!description.getLink().isEmpty()) {
+        // пока считаем ссылку наличием описания всего и вся
+        return;
+      }
       // ошибка отсутствует описание всех параметров
       diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange());
       return;

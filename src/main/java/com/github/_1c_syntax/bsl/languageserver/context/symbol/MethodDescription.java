@@ -80,6 +80,12 @@ public class MethodDescription {
    * Возвращаемые значения (типы)
    */
   List<TypeDescription> returnedValue;
+  /**
+   * Если описание содержит только ссылку, то здесь будет ее значение
+   *
+   * TODO Временное решение, надо будет продумать в следующем релизе
+   */
+  String link;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
@@ -90,6 +96,7 @@ public class MethodDescription {
     var ast = tokenizer.getAst();
 
     purposeDescription = DescriptionReader.readPurposeDescription(ast);
+    link = DescriptionReader.readLink(ast);
     deprecated = ast != null && ast.deprecate() != null;
     deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
     callOptions = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);

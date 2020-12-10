@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class DescriptionReader {
 
+  private static final int HYPERLINK_REF_LEN = 4;
   /**
    * Выполняет разбор прочитанного AST дерева описания метода и формирует список описаний параметров метода
    *
@@ -168,6 +170,38 @@ public class DescriptionReader {
       }
     }
     return "";
+  }
+
+  /**
+   * Выполняет разбор прочитанного AST дерева описания метода и достает описание назначения метода.
+   * Если описание метода представляет собой только ссылку, то возвращает ее значение, иначе - пустая строка
+   *
+   * @param ctx Дерево описания метода
+   * @return Ссылка в методе
+   */
+  public static String readLink(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx == null || ctx.description() == null) {
+      return "";
+    }
+    var allStrings = ctx.description().descriptionString();
+    if (allStrings == null) {
+      return "";
+    }
+
+    // достаем из описания непустые строки
+    var strings = allStrings.stream()
+      .filter(stringContext -> !stringContext.getText().isEmpty())
+      .collect(Collectors.toList());
+    if (strings.size() != 1) {
+      return "";
+    }
+
+    AtomicReference<String> result = new AtomicReference<>("");
+    strings.get(0).getTokens(BSLMethodDescriptionParser.HYPERLINK).stream()
+      .findFirst()
+      .ifPresent(hyperLink -> result.set(hyperLink.getText().substring(HYPERLINK_REF_LEN)));
+
+    return result.get();
   }
 
   private List<? extends BSLMethodDescriptionParser.ParametersStringContext> getParametersStrings(

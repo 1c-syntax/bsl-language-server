@@ -59,6 +59,8 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
       return;
     }
 
+    var description = methodSymbol.getDescription().get();
+
     List<TypeDescription> returnedValueDescription = methodSymbol.getDescription()
       .map(MethodDescription::getReturnedValue)
       .orElse(Collections.emptyList());
@@ -76,6 +78,10 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
 
     // функция без описания - ошибка
     if (returnedValueDescription.isEmpty()) {
+      if (!description.getLink().isEmpty()) {
+        // пока считаем ссылку наличием описания всего и вся
+        return;
+      }
       diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getMessage());
       return;
     }
