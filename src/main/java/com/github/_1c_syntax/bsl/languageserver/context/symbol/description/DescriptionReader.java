@@ -42,13 +42,16 @@ import java.util.stream.Collectors;
 public class DescriptionReader {
 
   private static final int HYPERLINK_REF_LEN = 4;
+
   /**
    * Выполняет разбор прочитанного AST дерева описания метода и формирует список описаний параметров метода
    *
    * @param ctx Дерево описания метода
    * @return Список описаний параметров метода
    */
-  public static List<ParameterDescription> readParameters(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static List<ParameterDescription> readParameters(
+    @NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+
     List<ParameterDescription> result = new ArrayList<>();
     var current = new TempParameterData();
     var strings = getParametersStrings(ctx);
@@ -82,7 +85,9 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Список описаний возвращаемых значений
    */
-  public static List<TypeDescription> readReturnedValue(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static List<TypeDescription> readReturnedValue(
+    @NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+
     var current = new TempParameterData();
     var strings = getReturnedValuesStrings(ctx);
     for (BSLMethodDescriptionParser.ReturnsValuesStringContext string : strings) {
@@ -125,7 +130,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Описание устаревшего метода
    */
-  public static String readDeprecationInfo(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static String readDeprecationInfo(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
     if (ctx.deprecate() != null) {
       var deprecationDescription = ctx.deprecate().deprecateDescription();
       if (deprecationDescription != null) {
@@ -141,7 +146,8 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Список примеров
    */
-  public static List<String> readExamples(BSLMethodDescriptionParser.MethodDescriptionContext ctx, int ruleIndex) {
+  public static List<String> readExamples(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx,
+                                          int ruleIndex) {
     var exampleStringNodes = Trees.findAllRuleNodes(ctx, ruleIndex);
     if (exampleStringNodes.isEmpty()) {
       return Collections.emptyList();
@@ -159,8 +165,8 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Описание назначения метода
    */
-  public static String readPurposeDescription(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    if (ctx != null && ctx.description() != null) {
+  public static String readPurposeDescription(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx.description() != null) {
       var strings = ctx.description().descriptionString();
       if (strings != null) {
         return strings.stream()
@@ -179,29 +185,27 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Ссылка в методе
    */
-  public static String readLink(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    if (ctx == null || ctx.description() == null) {
-      return "";
-    }
-    var allStrings = ctx.description().descriptionString();
-    if (allStrings == null) {
-      return "";
-    }
+  public static String readLink(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx.description() != null) {
+      var allStrings = ctx.description().descriptionString();
+      if (allStrings == null) {
+        return "";
+      }
 
-    // достаем из описания непустые строки
-    var strings = allStrings.stream()
-      .filter(stringContext -> !stringContext.getText().isEmpty())
-      .collect(Collectors.toList());
-    if (strings.size() != 1) {
-      return "";
+      // достаем из описания непустые строки
+      var strings = allStrings.stream()
+        .filter(stringContext -> !stringContext.getText().isBlank())
+        .collect(Collectors.toList());
+      if (strings.size() == 1) {
+        AtomicReference<String> result = new AtomicReference<>("");
+        strings.get(0).getTokens(BSLMethodDescriptionParser.HYPERLINK).stream()
+          .findFirst()
+          .ifPresent(hyperLink -> result.set(hyperLink.getText().substring(HYPERLINK_REF_LEN)));
+
+        return result.get();
+      }
     }
-
-    AtomicReference<String> result = new AtomicReference<>("");
-    strings.get(0).getTokens(BSLMethodDescriptionParser.HYPERLINK).stream()
-      .findFirst()
-      .ifPresent(hyperLink -> result.set(hyperLink.getText().substring(HYPERLINK_REF_LEN)));
-
-    return result.get();
+    return "";
   }
 
   private List<? extends BSLMethodDescriptionParser.ParametersStringContext> getParametersStrings(

@@ -57,7 +57,9 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
   @Override
   public void visitMethod(MethodSymbol methodSymbol) {
 
-    boolean hasDescription = methodSymbol.getDescription()
+    var description = methodSymbol.getDescription();
+
+    boolean hasDescription = description
       .map(methodDescription -> !methodDescription.isEmpty())
       .orElse(false);
 
@@ -65,10 +67,8 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
       return;
     }
 
-    var description = methodSymbol.getDescription().get();
-
     List<ParameterDefinition> parameters = methodSymbol.getParameters();
-    List<ParameterDescription> parametersDescriptions = methodSymbol.getDescription()
+    List<ParameterDescription> parametersDescriptions = description
       .map(MethodDescription::getParameters)
       .orElse(Collections.emptyList());
 
@@ -84,7 +84,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
     }
 
     if (parametersDescriptions.isEmpty()) {
-      if (!description.getLink().isEmpty()) {
+      if (!description.get().getLink().isEmpty()) {
         // пока считаем ссылку наличием описания всего и вся
         return;
       }
