@@ -22,4 +22,7 @@
 /**
  * Классы для хранения информации, прочитанной из комментариев-описаний
  */
+@ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
+
+import javax.annotation.ParametersAreNonnullByDefault;

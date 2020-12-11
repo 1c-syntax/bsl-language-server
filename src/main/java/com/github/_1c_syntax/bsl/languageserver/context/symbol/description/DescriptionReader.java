@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,8 +48,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Список описаний параметров метода
    */
-  public static List<ParameterDescription> readParameters(
-    @NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static List<ParameterDescription> readParameters(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
 
     List<ParameterDescription> result = new ArrayList<>();
     var current = new TempParameterData();
@@ -85,8 +83,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Список описаний возвращаемых значений
    */
-  public static List<TypeDescription> readReturnedValue(
-    @NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static List<TypeDescription> readReturnedValue(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
 
     var current = new TempParameterData();
     var strings = getReturnedValuesStrings(ctx);
@@ -130,7 +127,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Описание устаревшего метода
    */
-  public static String readDeprecationInfo(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static String readDeprecationInfo(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
     if (ctx.deprecate() != null) {
       var deprecationDescription = ctx.deprecate().deprecateDescription();
       if (deprecationDescription != null) {
@@ -146,7 +143,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Список примеров
    */
-  public static List<String> readExamples(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx,
+  public static List<String> readExamples(BSLMethodDescriptionParser.MethodDescriptionContext ctx,
                                           int ruleIndex) {
     var exampleStringNodes = Trees.findAllRuleNodes(ctx, ruleIndex);
     if (exampleStringNodes.isEmpty()) {
@@ -165,7 +162,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Описание назначения метода
    */
-  public static String readPurposeDescription(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static String readPurposeDescription(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
     if (ctx.description() != null) {
       var strings = ctx.description().descriptionString();
       if (strings != null) {
@@ -185,7 +182,7 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Ссылка в методе
    */
-  public static String readLink(@NotNull BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+  public static String readLink(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
     if (ctx.description() != null) {
       var allStrings = ctx.description().descriptionString();
       if (allStrings == null) {
@@ -245,7 +242,6 @@ public class DescriptionReader {
     return current;
   }
 
-  @NotNull
   private static TempParameterData readUnknownParameterString(List<ParameterDescription> result,
                                                               TempParameterData current,
                                                               BSLParserRuleContext string) {
@@ -308,19 +304,15 @@ public class DescriptionReader {
 
     TempParameterData(BSLParserRuleContext ctx, TempParameterData current) {
       this();
-      if (current != null) {
-        level = current.level + 1;
-        parent = current;
-      }
+      level = current.level + 1;
+      parent = current;
       readAndAddType(ctx);
     }
 
     TempParameterData(String text, TempParameterData current) {
       this(text);
-      if (current != null) {
-        level = current.level;
-        parent = current;
-      }
+      level = current.level;
+      parent = current;
     }
 
     private void readAndAddType(BSLParserRuleContext ctx) {
