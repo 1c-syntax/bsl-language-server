@@ -374,15 +374,14 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-<p>Server common modules for calling from the client code contain server methods available for use from client code. It forms the application server client interface. Such methods are placed in common modules with the attribute:</p>
+<p>Common server modules for calling from the client contain server procedures and functions available from the client code. They constitute the client interface of the application server.<br>Such procedures and functions are placed in common modules with the following property:</p>
 <ul>
 <li>Server (ServerCall is enabled)</li>
 </ul>
-<p>Server common modules for calling from the client must be named with the postfix "ServerCall"</p>
+<p>Name common server modules to be called from the client according to general rules of naming metadata objects. Make sure they include the "ServerCall" postfix</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -393,15 +392,13 @@
 <p><a href="https://its.1c.ru/db/v8std#content:469:hdoc:2.2">Standard: Modules (RU)</a></p>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommonModuleNameServerCall-off</span>
 <span class="c c-Singleline">// BSLLS:CommonModuleNameServerCall-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;CommonModuleNameServerCall&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CommonModuleNameServerCall&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

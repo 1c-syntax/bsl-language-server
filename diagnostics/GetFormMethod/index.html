@@ -374,10 +374,9 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-Для открытия форм следует применять метод глобального контекста ОткрытьФорму (при использовании версии платформы 1С:Предприятие 8.2 и более ранних версий - также ОткрытьФормуМодально). 
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+<p>Для открытия форм следует применять метод глобального контекста ОткрытьФорму (при использовании версии платформы 1С:Предприятие 8.2 и более ранних версий - также ОткрытьФормуМодально). 
 Применение альтернативного способа, с получением формы и ее последующим открытием с помощью метода ПолучитьФорму, не рекомендуется.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
@@ -388,12 +387,10 @@
 <span class="err">КонецПроцедуры</span>
 </code></pre></div>
 
-
 <div class="codehilite"><pre><span></span><code><span class="err">Процедура Тест2()</span>
 <span class="err">    ФормаРедактора = ПолучитьФорму(&quot;Обработка.УниверсальныйРедактор.Форма&quot;);</span>
 <span class="err">КонецПроцедуры</span>
 </code></pre></div>
-
 
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -401,15 +398,13 @@
 <p>Источник: <a href="https://its.1c.ru/db/v8std/content/404/hdoc">Стандарты разработки</a></p>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:GetFormMethod-off</span>
 <span class="c c-Singleline">// BSLLS:GetFormMethod-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;GetFormMethod&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;GetFormMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

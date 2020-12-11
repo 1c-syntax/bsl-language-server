@@ -374,20 +374,19 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
+<p>If you need to mark a procedure or function as deprecated, start its description with "Deprecated" at the top.</p>
 <p>Use or extension of deprecated methods should be avoided. Marking method as deprecated is a warning that means the method will be removed in future versions and left for temporary backward compatibility.</p>
 <p>Exception: It is possible to call deprecated methods from deprecated methods.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Deprecated. Need to use DontDeprecatedProcedure.</span>
+<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Deprecated. Need to use NotDeprecatedProcedure.</span>
 <span class="nv">Procedure</span> <span class="nv">DeprecatedProcedure</span><span class="p">()</span>
 <span class="k">EndProcedure</span>
 
 <span class="nv">DeprecatedProcedure</span><span class="p">();</span> <span class="c c-Singleline">// Triggering diagnostics</span>
 </code></pre></div>
-
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
 <ul>
@@ -396,15 +395,13 @@
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeprecatedMethodCall-off</span>
 <span class="c c-Singleline">// BSLLS:DeprecatedMethodCall-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;DeprecatedMethodCall&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;DeprecatedMethodCall&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

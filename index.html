@@ -478,7 +478,6 @@ Commands:
   lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
 </code></pre></div>
 
-
 <p>При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. Для взаимодействия используются stdin и stdout.</p>
 <p>По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр <code>language</code> в конфигурационном файле или вызвав событие <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
@@ -498,20 +497,17 @@ Run analysis and get diagnostic info
                            Workspace directory
 </code></pre></div>
 
-
 <p>Для указания каталога расположения анализируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
 Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр <code>--reporter</code> (сокращенно <code>-r</code>), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе <strong>Репортеры</strong>.</p>
 <p>Пример строки запуска анализа:</p>
 <div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 </code></pre></div>
 
-
 <blockquote>
 <p>При анализе больших исходников рекомендуется дополнительно указывать параметр -Xmx, отвечающий за предел оперативной памяти для java процесса. Размер выделяемой памяти зависит от размера анализируемой кодовой базы.</p>
 </blockquote>
 <div class="codehilite"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 </code></pre></div>
-
 
 <p><a id="format"></a></p>
 <h2 id="_4">Запуск в режиме форматтера<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
@@ -520,15 +516,13 @@ Run analysis and get diagnostic info
 Format files in <span class="nb">source</span> directory
   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
   -q, --silent          Silent mode
-  -s, --srcDir<span class="o">=</span>&lt;path&gt;   Source directory
+  -s, --src<span class="o">=</span>&lt;path&gt;      Source directory or file
 </code></pre></div>
 
-
-<p>Для указания каталога расположения форматируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников.</p>
+<p>Для указания каталога расположения форматируемых исходников (или файла) используется параметр <code>--src</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников (или файлу).</p>
 <p>Пример строки запуска форматирования:</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --srcDir ./src/cf
+<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
 </code></pre></div>
-
 
 <p><a id="configuration"></a></p>
 <h2 id="_5">Конфигурационный файл<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
@@ -542,8 +536,8 @@ Format files in <span class="nb">source</span> directory
 <p>Создатель инновационных и интеллектуальных инструментов для профилирования приложений <code>Java</code> и <code>.NET</code> <a href="https://www.yourkit.com">YourKit, LLC</a> любезно предоставил нам лицензии на продукт <code>YourKit Java Profiler</code>.</p>
 <p>С помощью <code>YourKit Java Profiler</code> мы мониторим и улучшаем производительность проекта.</p>
 <hr />
-<p><a href="https://www.jetbrains.com"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a>  </p>
-<p>Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, <a href="https://www.jetbrains.com">JetBrains</a> поддержал наш проект, предоставив лицензии на свои продукты, в том числе на <code>IntelliJ IDEA Ultimate</code>.</p>
+<p><a href="https://www.jetbrains.com?from=bsl-language-server"><img alt="JetBrains" src="assets/images/jetbrains-variant-4.png" /></a>  </p>
+<p>Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, <a href="https://www.jetbrains.com?from=bsl-language-server">JetBrains</a> поддержал наш проект, предоставив лицензии на свои продукты, в том числе на <code>IntelliJ IDEA Ultimate</code>.</p>
 <p><code>IntelliJ IDEA Ultimate</code> один из лучших инструментов в своем классе.</p>
                 
               

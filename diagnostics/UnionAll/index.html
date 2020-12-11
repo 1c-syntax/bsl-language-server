@@ -374,7 +374,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>В общем случае, при объединении в запросе результатов нескольких запросов следует использовать конструкцию ОБЪЕДИНИТЬ ВСЕ,
 а не ОБЪЕДИНИТЬ. Поскольку во втором варианте, при объединении запросов полностью одинаковые строки заменяются одной,
@@ -396,7 +395,6 @@
 <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="nv">КАК</span> <span class="nv">РеализацияТоваровУслуг</span>
 </code></pre></div>
 
-
 <p>Правильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span>
 <span class="nv">ПоступлениеТоваровУслуг</span><span class="o">.</span><span class="nv">Ссылка</span>
@@ -411,22 +409,19 @@
 <span class="nv">Документ</span><span class="o">.</span><span class="nv">РеализацияТоваровУслуг</span> <span class="nv">КАК</span> <span class="nv">РеализацияТоваровУслуг</span>
 </code></pre></div>
 
-
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Источник: <a href="https://its.1c.ru/db/v8std#content:434:hdoc">Стандарт: Использование ключевых слов "ОБЪЕДИНИТЬ" и "ОБЪЕДИНИТЬ ВСЕ" в запросах</a></li>
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnionAll-off</span>
 <span class="c c-Singleline">// BSLLS:UnionAll-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UnionAll&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UnionAll&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

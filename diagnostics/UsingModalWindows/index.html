@@ -284,6 +284,13 @@
       
         <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
+    Параметры
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
     Описание диагностики
   </a>
   
@@ -291,7 +298,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     Ограничения диагностики
   </a>
   
@@ -303,21 +310,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     Примеры
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     Источники
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     Сниппеты
   </a>
   
@@ -325,14 +332,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     Экранирование кода
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     Параметр конфигурационного файла
   </a>
   
@@ -386,11 +393,29 @@
 </tr>
 </tbody>
 </table>
+<h2 id="_1">Параметры<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th align="center">Имя</th>
+<th align="center">Тип</th>
+<th align="left">Описание</th>
+<th align="center">Значение по умолчанию</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><code>forceModalityMode</code></td>
+<td align="center"><code>Булево</code></td>
+<td align="left"><code>Игнорировать использование модальности конфигурации</code></td>
+<td align="center"><code>false</code></td>
+</tr>
+</tbody>
+</table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
-<h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Модальные и всплывающие окна считаются плохим тоном, пользователи привыкли к работе "в одном окне". При разработке конфигураций, предназначенных для работы в веб-клиенте, запрещено использовать модальные формы и диалоги. В противном случае, конфигурация окажется неработоспособной в ряде веб-браузеров, так как модальные окна не входят в стандарт веб-разработки.</p>
-<h3 id="_2">Ограничения диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<h3 id="_3">Ограничения диагностики<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p>На данный момент диагностируется <strong>только использование методов глобального контекста</strong>.</p>
 <p>Список методов:</p>
 <table>
@@ -451,7 +476,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_3">Примеры<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_4">Примеры<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Пример &quot;Плохо&quot;</span>
 <span class="nb">Предупреждение</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 
@@ -459,23 +484,22 @@
 <span class="nb">ПоказатьПредупреждение</span><span class="p">(,</span> <span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выберите документ!&#39;; en = &#39;Select a document!&#39;&quot;</span><span class="p">),</span> <span class="m">10</span><span class="p">);</span>
 </code></pre></div>
 
-
-<h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_5">Источники<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std/content/703/hdoc/">Ограничение на использование модальных окон и синхронных вызовов</a></li>
 <li>Полезная информация: <a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
 </ul>
-<h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_6">Сниппеты<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
-<h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<h3 id="_7">Экранирование кода<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingModalWindows-off</span>
 <span class="c c-Singleline">// BSLLS:UsingModalWindows-on</span>
 </code></pre></div>
 
-
-<h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UsingModalWindows&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<h3 id="_8">Параметр конфигурационного файла<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingModalWindows&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;forceModalityMode&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<span class="p">}</span>
 </code></pre></div>
                 
               

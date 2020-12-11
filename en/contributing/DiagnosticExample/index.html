@@ -404,7 +404,6 @@
 <span class="p">}</span>
 </code></pre></div>
 
-
 <p>Each diagnostic must have a <code>@DiagnosticMetadata</code>, class annotation containing diagnostic metadata. ПDetails on annotations in [article][DiagnosticStructure].
  In the example, we implement diagnostics related to the quality of the code (<code>CODE_SMELL</code>), low priority (<code>MINOR</code>), which requires 1 minute to fix and related to the 1C standard. Final class view</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
@@ -421,7 +420,6 @@
 <span class="p">}</span>
 </code></pre></div>
 
-
 <h3 id="class-resources">Class resources<a class="headerlink" href="#class-resources" title="Permanent link">Link</a></h3>
 <p>In the directory <code>src/main/resources</code>  in the package <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> create 2 diagnostic resource files. In our example, these will be files <code>SemicolonPresenceDiagnostic_ru.properties</code> and <code>SemicolonPresenceDiagnostic_en.properties</code>.
 In the created files, write the name of the diagnostic (parameter <code>diagnosticName</code>) and the warning message (<code>diagnosticMessage</code>).
@@ -431,12 +429,10 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
 <span class="na">diagnosticName</span><span class="o">=</span><span class="s">Выражение должно заканчиваться &quot;;&quot;</span>
 </code></pre></div>
 
-
 <p>File <code>SemicolonPresenceDiagnostic_en.properties</code></p>
 <div class="codehilite"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="o">=</span><span class="s">Missed semicolon at the end of statement</span>
 <span class="na">diagnosticName</span><span class="o">=</span><span class="s">Statement should end with &quot;;&quot;</span>
 </code></pre></div>
-
 
 <h3 id="test-fixtures">Test fixtures<a class="headerlink" href="#test-fixtures" title="Permanent link">Link</a></h3>
 <p>For testing purposes, let's add a file to the project containing examples of both erroneous and correct code. We will place the <code>SemicolonPresenceDiagnostic.bsl</code> file with fixtures in the  <code>src/test/resources</code> resources directory in the  <code>diagnostics</code> package.
@@ -447,7 +443,6 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
   <span class="nv">A</span> <span class="o">=</span> <span class="m">0</span>           <span class="c c-Singleline">// Diagnostics should work here</span>
 <span class="nv">EndIf</span>             <span class="c c-Singleline">// and here</span>
 </code></pre></div>
-
 
 <p><strong>Attention!</strong>
  It is necessary to mark with comments the places where the diagnostics should work.</p>
@@ -463,7 +458,6 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 
 <p>Simplified basic test consists of the steps</p>
 <ul>
@@ -496,7 +490,6 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
 <span class="p">}</span>
 </code></pre></div>
 
-
 <h3 id="diagnostic-algorithm-implementation">Diagnostic algorithm implementation<a class="headerlink" href="#diagnostic-algorithm-implementation" title="Permanent link">Link</a></h3>
 <p>According to the rules of the grammar of the language, described in the project <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>, for our example, it is necessary to analyze nodes with the type <code>statement</code>. Need to use visitor <code>visitStatement</code>. Each selected node of the AST-tree must contain an ending "semicolon" represented by node <code>SEMICOLON</code>.</p>
 <p>Thus, the check will be to find the <code>SEMICOLON</code>  token in each <code>statement</code> node. If the token is not found, then an error must be filed.
@@ -520,7 +513,6 @@ In the created files, write the name of the diagnostic (parameter <code>diagnost
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 
 <p>It is necessary to run a diagnostic test and make sure that it works correctly.</p>
 <h3 id="creating-a-diagnostic-description">Creating a diagnostic description<a class="headerlink" href="#creating-a-diagnostic-description" title="Permanent link">Link</a></h3>

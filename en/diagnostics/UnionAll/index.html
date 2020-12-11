@@ -374,32 +374,51 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">Link</a></h2>
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
+<p>In most cases, when you need to combine the results of two or more queries into a single result set, employ UNION ALL clause instead of UNION. The recommendation is based on the algorithm of the UNION clause, which searches for and removes duplicates from the united result even when duplicates are impossible by the query design.</p>
+<p>Employ UNION only when removing duplicates from the result is required.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">Link</a></h2>
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<p>Incorrect:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">SELECT</span>
+<span class="nv">GoodsReceipt</span><span class="o">.</span><span class="nv">Ref</span>
+<span class="nv">FROM</span>
+<span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsReceipt</span> <span class="nv">AS</span> <span class="nv">GoodsReceipt</span>
+
+<span class="nv">UNION</span>
+
+<span class="nv">SELECT</span>
+<span class="nv">GoodsSale</span><span class="o">.</span><span class="nv">Ref</span>
+<span class="nv">FROM</span>
+<span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsSale</span> <span class="nv">AS</span> <span class="nv">GoodsSale</span>
+</code></pre></div>
+
+<p>Correct:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">SELECT</span>
+<span class="nv">GoodsReceipt</span><span class="o">.</span><span class="nv">Ref</span>
+<span class="nv">FROM</span>
+<span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsReceipt</span> <span class="nv">AS</span> <span class="nv">GoodsReceipt</span>
+
+<span class="nv">UNION</span> <span class="nv">ALL</span>
+
+<span class="nv">SELECT</span>
+<span class="nv">GoodsSale</span><span class="o">.</span><span class="nv">Ref</span>
+<span class="nv">FROM</span>
+<span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsSale</span> <span class="nv">AS</span> <span class="nv">GoodsSale</span>
+</code></pre></div>
 
 <h2 id="sources">Sources<a class="headerlink" href="#sources" title="Permanent link">Link</a></h2>
-<p><!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-&lt;!-- Примеры источников</p>
 <ul>
-<li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc">Стандарт: Тексты модулей</a></li>
-<li>Полезная информация: <a href="https://its.1c.ru/db/metod8dev#content:5272:hdoc">Отказ от использования модальных окон</a></li>
-<li>Источник: <a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a> --&gt;</li>
+<li>Link: <a href="https://its.1c.ru/db/v8std#content:434:hdoc">Development Standart: Using UNION and UNION ALL words in queries</a></li>
 </ul>
 <h2 id="snippets">Snippets<a class="headerlink" href="#snippets" title="Permanent link">Link</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#diagnostic-ignorance-in-code" title="Permanent link">Link</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnionAll-off</span>
 <span class="c c-Singleline">// BSLLS:UnionAll-on</span>
 </code></pre></div>
 
-
 <h3 id="parameter-for-config">Parameter for config<a class="headerlink" href="#parameter-for-config" title="Permanent link">Link</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UnionAll&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UnionAll&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

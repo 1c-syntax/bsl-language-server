@@ -404,7 +404,6 @@
 <span class="p">}</span>
 </code></pre></div>
 
-
 <p>Каждая диагностика должна иметь аннотацию класса <code>@DiagnosticMetadata</code>, содержащую метаданные диагностики. Подробная информация об аннотациях в [статье][DiagnosticStructure].<br />
 В примере у нас реализуется диагностика, относящаяся к качеству кода (<code>CODE_SMELL</code>), низкого приоритета (<code>MINOR</code>), требующая для исправления 1 минуту и относящаяся к стандарту 1С. Итоговый вид класса с аннотацией</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">package</span> <span class="nn">com.github._1c_syntax.bsl.languageserver.diagnostics</span><span class="p">;</span>
@@ -421,7 +420,6 @@
 <span class="p">}</span>
 </code></pre></div>
 
-
 <h3 id="_6">Ресурсы класса<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <p>В соответствии с правилами, в каталоге <code>src/main/resources</code> в пакете <code>com.github._1c_syntax.bsl.languageserver.diagnostics</code> создаем 2 файла ресурсов диагностики, в нашем примере это будут файлы <code>SemicolonPresenceDiagnostic_ru.properties</code> и <code>SemicolonPresenceDiagnostic_en.properties</code>.<br />
 В созданных файлах сохраним название диагностики (параметр <code>diagnosticName</code>) и сообщение замечания (<code>diagnosticMessage</code>).<br />
@@ -431,12 +429,10 @@
 <span class="na">diagnosticName</span><span class="o">=</span><span class="s">Выражение должно заканчиваться &quot;;&quot;</span>
 </code></pre></div>
 
-
 <p>Файл <code>SemicolonPresenceDiagnostic_en.properties</code></p>
 <div class="codehilite"><pre><span></span><code><span class="na">diagnosticMessage</span><span class="o">=</span><span class="s">Missed semicolon at the end of statement</span>
 <span class="na">diagnosticName</span><span class="o">=</span><span class="s">Statement should end with &quot;;&quot;</span>
 </code></pre></div>
-
 
 <h3 id="_7">Фикстуры для теста<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
 <p>Для тестирования добавим в проект файл, содержащий примеры как ошибочного, так и корректного кода. Файл <code>SemicolonPresenceDiagnostic.bsl</code> с фикстурами разместим в каталоге <code>src/test/resources</code> в пакете <code>diagnostics</code>.<br />
@@ -447,7 +443,6 @@
   <span class="nv">А</span> <span class="o">=</span> <span class="m">0</span>           <span class="c c-Singleline">// Диагностика должна сработать здесь</span>
 <span class="k">КонецЕсли</span>         <span class="c c-Singleline">// и здесь</span>
 </code></pre></div>
-
 
 <p><strong>Внимание!</strong><br />
 Стоит принять за правило выделение комментарями мест, где диагностика должна сработать.</p>
@@ -463,7 +458,6 @@
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 
 <p>Упрощенный базовый тест состоит из следующих шагов</p>
 <ul>
@@ -496,7 +490,6 @@
 <span class="p">}</span>
 </code></pre></div>
 
-
 <h3 id="_9">Реализация диагностики<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
 <p>В соответствии грамматикой языка, описанной в проекте <a href="https://github.com/1c-syntax/bsl-parser/blob/master/src/main/antlr/BSLParser.g4">BSLParser</a>, для нашего примера необходимо анализировать узлы с типом <code>statement</code>, следовательно нужно использовать визитер <code>visitStatement</code>. Каждый выбранный узел должен содержать конечную "точку с запятой", представленную узлом <code>SEMICOLON</code>.</p>
 <p>Таким образом, проверка будет состоять в том, чтобы в каждом узле <code>statement</code> найти токен <code>SEMICOLON</code>. Если токен не будет найден, то необходимо зарегистрировать замечание.<br />
@@ -523,7 +516,6 @@
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 
 <p>Необходимо запустить тест диагностики и убедиться в корректной работе.</p>
 <h3 id="_10">Создание описания диагностики<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>

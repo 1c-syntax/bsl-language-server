@@ -374,18 +374,17 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p><!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-В "1С:Предприятии 8.3" метод глобального контекста БезопасныйРежим() возвращает тип Строка, 
+<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+<p>В "1С:Предприятии 8.3" метод глобального контекста БезопасныйРежим() возвращает тип Строка, 
 если безопасный режим был установлен с указанием имени профиля безопасности.</p>
 <p>Использования метода БезопасныйРежим(),
  в которых результат неявно преобразовывается к типу Булево является небезопасным, 
  необходимо исправить на код с явным сравнением результата со значением Ложь. 
  Таким образом, при установленном профиле безопасности код будет выполняться так же, как и в безопасном режиме.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p><!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-Неправильно:</p>
+<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<p>Неправильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="err">Если</span> <span class="err">БезопасныйРежим</span><span class="p">()</span> <span class="err">Тогда</span>
      <span class="o">//</span> <span class="err">Логика</span> <span class="err">выполнения</span> <span class="err">в</span> <span class="err">безопасном</span> <span class="err">режиме</span><span class="p">...</span>
 <span class="err">КонецЕсли</span><span class="p">;</span>
@@ -395,13 +394,11 @@
 <span class="err">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 
-
 <p>Правильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="err">Если БезопасныйРежим() &lt;&gt; Ложь Тогда</span>
 <span class="err">    // Логика выполнения в безопасном режиме...</span>
 <span class="err">КонецЕсли</span>
 </code></pre></div>
-
 
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
@@ -411,15 +408,13 @@
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnsafeSafeModeMethodCall-off</span>
 <span class="c c-Singleline">// BSLLS:UnsafeSafeModeMethodCall-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;UnsafeSafeModeMethodCall&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UnsafeSafeModeMethodCall&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

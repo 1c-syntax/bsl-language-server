@@ -400,7 +400,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>При работе с внешними ресурсами с помощью объектов WSОпределения, WSПрокси, HTTPСоединение, FTPСоединение следует задавать таймаут – предельное время ожидания выполнения операции. В противном случае, в результате бесконечного ожидания программа зависнет или часть функционала программы станет недоступна.<br />
 Для ИнтернетПочтовыйПрофиль платформа устанавливает значение таймаута по умолчанию в 30 секунд, но, несмотря на это, стоит явно указывать значение таймаута при использовании.</p>
@@ -416,22 +415,18 @@
 <div class="codehilite"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">HTTPСоединение</span><span class="p">(</span><span class="s1">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span>
 </code></pre></div>
 
-
 <p>или</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">FTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">FTPСоединение</span><span class="p">(</span><span class="nv">Сервер</span><span class="p">,</span> <span class="nv">Порт</span><span class="p">,</span> <span class="nv">Пользователь</span><span class="p">,</span> <span class="nv">Пароль</span><span class="p">,</span> <span class="nv">Прокси</span><span class="p">,</span> <span class="nv">ПассивныйРежим</span><span class="p">);</span>
 </code></pre></div>
-
 
 <p>Правильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">HTTPСоединение</span><span class="p">(</span><span class="s1">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">,,,,</span> <span class="m">1</span><span class="p">);</span>
 </code></pre></div>
 
-
 <p>или</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">HTTPСоединение</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">HTTPСоединение</span><span class="p">(</span><span class="s1">&quot;zabbix.localhost&quot;</span><span class="p">,</span> <span class="m">80</span><span class="p">);</span>
 <span class="nv">HTTPСоединение</span><span class="o">.</span><span class="nv">Таймаут</span> <span class="o">=</span> <span class="m">1</span><span class="p">;</span>
 </code></pre></div>
-
 
 <h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
@@ -440,15 +435,13 @@
 </ul>
 <h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TimeoutsInExternalResources-off</span>
 <span class="c c-Singleline">// BSLLS:TimeoutsInExternalResources-on</span>
 </code></pre></div>
 
-
 <h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;TimeoutsInExternalResources&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;TimeoutsInExternalResources&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;analyzeInternetMailProfileZeroTimeout&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>
 </code></pre></div>

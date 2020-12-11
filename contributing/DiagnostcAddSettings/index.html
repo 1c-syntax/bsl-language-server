@@ -360,7 +360,6 @@
   <span class="kd">private</span> <span class="n">String</span> <span class="n">commentsAnnotation</span> <span class="o">=</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="p">;</span>
 </code></pre></div>
 
-
 <p>Если параметр примитивный или типа String и он устанавливается в соответствующее свойство класса диагностики простым сеттером, то на этом все.<br />
 Если же параметр более сложный, например строка-паттерн для регулярного выражения, которое необходимо вычислить перед установкой, то нужно реализовать метод установки значений параметров <code>configure</code>.  </p>
 <p>Например есть два параметра:</p>
@@ -381,7 +380,6 @@
   <span class="p">}</span>
 </code></pre></div>
 
-
 <h3 id="_4">Доработка тестов<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <p>Обязательно нужно добавить тест для случая изменения настроек диагностики.<br />
 Тест добавляется во все тот же класс теста диагностики <em>(отдельный метод для каждой комбинации вариантов настроек диагностики)</em>. В начале теста необходимо выполнить установку значения параметра диагностики, последующие действия аналогичны общим правилам написания тестов.<br />
@@ -397,14 +395,12 @@
 <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
 </code></pre></div>
 
-
 <h3 id="_5">Добавление описания параметров<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <p>Для корректной работы необходимо в ресурсных файлах диагностики добавить для каждого языка описание параметра.<br />
 Ресурсы диагностики расположены в файлах <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_en.properties</code> и <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_ru.properties</code>.<br />
 В каждом файле необходимо добавить новую строку с именем параметра и его описанием</p>
 <div class="codehilite"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)</span>
 </code></pre></div>
-
 
 <h3 id="_6">Доработка документации<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <p>Добавление информации о параметрах диагностики в документацию вручную не требуется: после добавления/изменения параметров диагностики необходимо запустить gradlew задачу <code>updateDiagnosticDocs</code>, которая самостоятельно выполнит необходимые правки.</p>

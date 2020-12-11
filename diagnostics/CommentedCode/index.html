@@ -393,7 +393,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>Программные модули не должны иметь закомментированных фрагментов кода, а также фрагментов,
 которые каким-либо образом связаны с процессом разработки (отладочный код, служебные отметки, например, !!!_, MRG и т.п.)
@@ -406,7 +405,6 @@
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 
-
 <p>также неправильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередУдалением</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
     <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">Тогда</span>
@@ -414,7 +412,6 @@
     <span class="k">КонецЕсли</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 
 <p>Правильно: после завершения отладки или рефакторинга удалить обработчик ПередУдалением из кода.</p>
 <p><strong>ВНИМАНИЕ</strong>:<br />
@@ -425,15 +422,13 @@
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommentedCode-off</span>
 <span class="c c-Singleline">// BSLLS:CommentedCode-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;CommentedCode&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CommentedCode&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.9</span>
 <span class="p">}</span>
 </code></pre></div>

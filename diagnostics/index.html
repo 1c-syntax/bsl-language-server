@@ -356,12 +356,12 @@
 <p>Некоторые диагностики выключены по умолчанию. Для их включения используйте <a href="../features/ConfigurationFile/">конфигурационный файл</a></a>.</p>
 <p>Для экранирования отдельных участков кода или файлов от срабатывания диагностик можно воспользоваться специальными комментариями вида <code>// BSLLS:КлючДиагностики-выкл</code>. Более подробно данная функциональность описана в <a href="../features/DiagnosticIgnorance/">Экранирование участков кода</a>.</p>
 <h2 id="_2">Список реализованных диагностик<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Общее количество: <strong>117</strong></p>
+<p>Общее количество: <strong>128</strong></p>
 <ul>
-<li>Дефект кода: <strong>74</strong></li>
-<li>Уязвимость: <strong>3</strong></li>
-<li>Ошибка: <strong>36</strong></li>
 <li>Потенциальная уязвимость: <strong>4</strong></li>
+<li>Уязвимость: <strong>3</strong></li>
+<li>Ошибка: <strong>38</strong></li>
+<li>Дефект кода: <strong>83</strong></li>
 </ul>
 <table>
 <thead>
@@ -422,6 +422,14 @@
 <td>Критичный</td>
 <td>Дефект кода</td>
 <td><code>brainoverload</code></td>
+</tr>
+<tr>
+<td><a href="CommandModuleExportMethods/">CommandModuleExportMethods</a></td>
+<td>Экспортные методы в модулях команд и общих команд</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br><code>clumsy</code></td>
 </tr>
 <tr>
 <td><a href="CommentedCode/">CommentedCode</a></td>
@@ -728,6 +736,14 @@
 <td><code>standard</code></td>
 </tr>
 <tr>
+<td><a href="FunctionOutParameter/">FunctionOutParameter</a></td>
+<td>Исходящий параметр функции</td>
+<td align="center">Нет</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>design</code></td>
+</tr>
+<tr>
 <td><a href="FunctionReturnsSamePrimitive/">FunctionReturnsSamePrimitive</a></td>
 <td>Функция всегда возвращает одно и то же примитивное значение</td>
 <td align="center">Да</td>
@@ -750,6 +766,14 @@
 <td>Важный</td>
 <td>Ошибка</td>
 <td><code>error</code></td>
+</tr>
+<tr>
+<td><a href="GlobalContextMethodCollision8312/">GlobalContextMethodCollision8312</a></td>
+<td>Конфликт имен методов с методами глобального контекста</td>
+<td align="center">Да</td>
+<td>Блокирующий</td>
+<td>Ошибка</td>
+<td><code>error</code><br><code>unpredictable</code></td>
 </tr>
 <tr>
 <td><a href="IdenticalExpressions/">IdenticalExpressions</a></td>
@@ -824,12 +848,28 @@
 <td><code>sql</code><br><code>standard</code><br><code>performance</code></td>
 </tr>
 <tr>
+<td><a href="LatinAndCyrillicSymbolInWord/">LatinAndCyrillicSymbolInWord</a></td>
+<td>Смешивание латинских и кириллических символов в одном идентификаторе</td>
+<td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
+<td><code>brainoverload</code><br><code>suspicious</code></td>
+</tr>
+<tr>
 <td><a href="LineLength/">LineLength</a></td>
 <td>Ограничение на длину строки</td>
 <td align="center">Да</td>
 <td>Незначительный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="MagicDate/">MagicDate</a></td>
+<td>Магические даты</td>
+<td align="center">Да</td>
+<td>Незначительный</td>
+<td>Дефект кода</td>
+<td><code>badpractice</code><br><code>brainoverload</code></td>
 </tr>
 <tr>
 <td><a href="MagicNumber/">MagicNumber</a></td>
@@ -864,8 +904,32 @@
 <td><code>standard</code><br><code>badpractice</code></td>
 </tr>
 <tr>
+<td><a href="MissingEventSubscriptionHandler/">MissingEventSubscriptionHandler</a></td>
+<td>Отсутствует обработчик подписки на событие</td>
+<td align="center">Да</td>
+<td>Блокирующий</td>
+<td>Ошибка</td>
+<td><code>error</code></td>
+</tr>
+<tr>
+<td><a href="MissingParameterDescription/">MissingParameterDescription</a></td>
+<td>Отсутствует описание параметров метода</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="MissingReturnedValueDescription/">MissingReturnedValueDescription</a></td>
+<td>Отсутствует описание возвращаемого значения функции</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br><code>badpractice</code></td>
+</tr>
+<tr>
 <td><a href="MissingSpace/">MissingSpace</a></td>
-<td>Пропущены пробелы слева или справа от операторов <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code>, а так же справа от <code>,</code> и <code>;</code></td>
+<td>Пропущены пробелы слева или справа от операторов <code>+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=</code>, от ключевых слов, а так же справа от <code>,</code> и <code>;</code></td>
 <td align="center">Да</td>
 <td>Информационный</td>
 <td>Дефект кода</td>
@@ -1000,6 +1064,14 @@
 <td><code>standard</code><br><code>design</code></td>
 </tr>
 <tr>
+<td><a href="OrdinaryAppSupport/">OrdinaryAppSupport</a></td>
+<td>Поддержка обычного приложения</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br><code>unpredictable</code></td>
+</tr>
+<tr>
 <td><a href="PairingBrokenTransaction/">PairingBrokenTransaction</a></td>
 <td>Нарушение парности использования методов "НачатьТранзакцию()" и "ЗафиксироватьТранзакцию()" / "ОтменитьТранзакцию()"</td>
 <td align="center">Да</td>
@@ -1030,6 +1102,22 @@
 <td>Информационный</td>
 <td>Дефект кода</td>
 <td><code>standard</code><br><code>brainoverload</code><br><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="RedundantAccessToObject/">RedundantAccessToObject</a></td>
+<td>Избыточное обращение к объекту</td>
+<td align="center">Да</td>
+<td>Информационный</td>
+<td>Дефект кода</td>
+<td><code>standard</code><br><code>clumsy</code></td>
+</tr>
+<tr>
+<td><a href="RefOveruse/">RefOveruse</a></td>
+<td>Избыточное использование "Ссылка" в запросе</td>
+<td align="center">Да</td>
+<td>Важный</td>
+<td>Дефект кода</td>
+<td><code>sql</code><br><code>performance</code></td>
 </tr>
 <tr>
 <td><a href="SelfAssign/">SelfAssign</a></td>
@@ -1181,7 +1269,7 @@
 <td align="center">Да</td>
 <td>Важный</td>
 <td>Дефект кода</td>
-<td><code>standard</code><br><code>suspicious</code></td>
+<td><code>standard</code><br><code>suspicious</code><br><code>unused</code></td>
 </tr>
 <tr>
 <td><a href="UnusedParameters/">UnusedParameters</a></td>
@@ -1189,7 +1277,7 @@
 <td align="center">Да</td>
 <td>Важный</td>
 <td>Дефект кода</td>
-<td><code>design</code></td>
+<td><code>design</code><br><code>unused</code></td>
 </tr>
 <tr>
 <td><a href="UseLessForEach/">UseLessForEach</a></td>

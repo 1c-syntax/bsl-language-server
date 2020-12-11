@@ -2,6 +2,7 @@ com.github._1c_syntax.bsl.languageserver
 com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
+com.github._1c_syntax.bsl.languageserver.codelenses
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
@@ -13,11 +14,13 @@ com.github._1c_syntax.bsl.languageserver.context.computer
 com.github._1c_syntax.bsl.languageserver.context.infrastructure
 com.github._1c_syntax.bsl.languageserver.context.symbol
 com.github._1c_syntax.bsl.languageserver.context.symbol.annotations
+com.github._1c_syntax.bsl.languageserver.context.symbol.description
 com.github._1c_syntax.bsl.languageserver.context.symbol.variable
 com.github._1c_syntax.bsl.languageserver.diagnostics
 com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure
 com.github._1c_syntax.bsl.languageserver.diagnostics.metadata
 com.github._1c_syntax.bsl.languageserver.diagnostics.typo
+com.github._1c_syntax.bsl.languageserver.folding
 com.github._1c_syntax.bsl.languageserver.infrastructure
 com.github._1c_syntax.bsl.languageserver.jsonrpc
 com.github._1c_syntax.bsl.languageserver.providers

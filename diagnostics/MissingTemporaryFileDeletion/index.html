@@ -400,7 +400,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_2">Описание диагностики<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <p>После окончания работы с временным файлом или каталогом, его необходимо удалить самостоятельно. 
 Нельзя рассчитывать на автоматическое удаление файлов и каталогов при следующем запуске платформы, 
@@ -411,7 +410,6 @@
 <span class="nv">Данные</span><span class="o">.</span><span class="nv">Записать</span><span class="p">(</span><span class="nv">ИмяПромежуточногоФайла</span><span class="p">);</span>
 <span class="c c-Singleline">// далее нет удаления файла</span>
 </code></pre></div>
-
 
 <p>Правильно:</p>
 <div class="codehilite"><pre><span></span><code><span class="nv">ИмяПромежуточногоФайла</span> <span class="o">=</span> <span class="nb">ПолучитьИмяВременногоФайла</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
@@ -428,22 +426,19 @@
 <span class="k">КонецПопытки</span><span class="p">;</span>
 </code></pre></div>
 
-
 <h2 id="_4">Источники<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:542:hdoc">Доступ к файловой системе из кода конфигурации</a></li>
 </ul>
 <h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-off</span>
 <span class="c c-Singleline">// BSLLS:MissingTemporaryFileDeletion-on</span>
 </code></pre></div>
 
-
 <h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;MissingTemporaryFileDeletion&quot;</span><span class="err">:</span> <span class="p">{</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;MissingTemporaryFileDeletion&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchDeleteFileMethod&quot;</span><span class="p">:</span> <span class="s2">&quot;УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

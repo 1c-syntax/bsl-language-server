@@ -374,7 +374,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>В большинстве случаев, вместо переменных программных модулей следует использовать более подходящие средства разработки платформы 1С:Предприятие.
 Поскольку область видимости (использования) таких переменных сложно контролировать,
@@ -392,7 +391,6 @@
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
 
-
 <p>Для передачи параметров между обработчиками подписок на события и в обработчики событий модуля объекта из внешнего кода
 рекомендуется использовать свойство объекта ДополнительныеСвойства</p>
 <div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
@@ -407,22 +405,20 @@
 <span class="nv">ФайлОбъект</span><span class="o">.</span><span class="nv">Записать</span><span class="p">();</span>
 </code></pre></div>
 
-
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p><!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников --></p>
+<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
+<!-- Примеры источников -->
+
 <p><a href="https://its.1c.ru/db/v8std#content:639:hdoc">Стандарт: Использование переменных в программных модулях</a></p>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExportVariables-off</span>
 <span class="c c-Singleline">// BSLLS:ExportVariables-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;ExportVariables&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;ExportVariables&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

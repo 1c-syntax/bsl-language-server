@@ -387,7 +387,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Использование вложенных тернарных операторов затрудняет читаемость кода.</p>
 <h2 id="_2">Примеры<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
@@ -395,14 +394,12 @@
 <div class="codehilite"><pre><span></span><code><span class="nv">Результат</span>  <span class="o">=</span>  <span class="o">?</span><span class="p">(</span><span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">5</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">3</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="nv">x</span><span class="p">,</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">),</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">),</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">);</span> 
 </code></pre></div>
 
-
 <div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="o">?</span><span class="p">(</span><span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
 
       <span class="nv">Статус</span> <span class="o">=</span> <span class="s1">&quot;Готово&quot;</span><span class="p">;</span>
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 
 <h3 id="_4">Возможные вариант реализации<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
@@ -416,7 +413,6 @@
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 
-
 <div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span> <span class="k">ИЛИ</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
 
       <span class="nv">Статус</span> <span class="o">=</span> <span class="s1">&quot;Готово&quot;</span><span class="p">;</span>
@@ -424,18 +420,15 @@
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 
-
 <h2 id="_5">Сниппеты<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_6">Экранирование кода<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedTernaryOperator-off</span>
 <span class="c c-Singleline">// BSLLS:NestedTernaryOperator-on</span>
 </code></pre></div>
 
-
 <h3 id="_7">Параметр конфигурационного файла<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;NestedTernaryOperator&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NestedTernaryOperator&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

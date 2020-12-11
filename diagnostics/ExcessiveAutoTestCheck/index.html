@@ -374,7 +374,6 @@
 </tbody>
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
-
 <h2 id="_1">Описание диагностики<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>Стандарт 772 "Взаимодействие со средствами автоматизированного тестирования" был отменен.
 В связи с этим, больше не нужна проверка параметра "АвтоТест" в коде форм.</p>
@@ -384,7 +383,6 @@
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 
-
 <p>и обработчике ОбработкаЗаполнения модуля объекта (набора записей):</p>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Пропускаем обработку, чтобы гарантировать получение формы при передаче параметра &quot;АвтоТест&quot;.</span>
 <span class="k">Если</span> <span class="nv">ДанныеЗаполнения</span> <span class="o">=</span> <span class="s1">&quot;АвтоТест&quot;</span> <span class="k">Тогда</span>
@@ -392,22 +390,19 @@
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
 
-
 <h2 id="_3">Источники<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc:3">Стандарт: Тексты модулей пункт 3</a></li>
 </ul>
 <h2 id="_4">Сниппеты<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-
 <h3 id="_5">Экранирование кода<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExcessiveAutoTestCheck-off</span>
 <span class="c c-Singleline">// BSLLS:ExcessiveAutoTestCheck-on</span>
 </code></pre></div>
 
-
 <h3 id="_6">Параметр конфигурационного файла<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="s2">&quot;ExcessiveAutoTestCheck&quot;</span><span class="err">:</span> <span class="kc">false</span>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;ExcessiveAutoTestCheck&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               
