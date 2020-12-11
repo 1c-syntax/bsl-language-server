@@ -26,12 +26,12 @@ import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
 @UtilityClass
 public class DescriptionReader {
 
+  private static final int HYPERLINK_REF_LEN = 4;
+
   /**
    * Выполняет разбор прочитанного AST дерева описания метода и формирует список описаний параметров метода
    *
@@ -47,6 +49,7 @@ public class DescriptionReader {
    * @return Список описаний параметров метода
    */
   public static List<ParameterDescription> readParameters(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+
     List<ParameterDescription> result = new ArrayList<>();
     var current = new TempParameterData();
     var strings = getParametersStrings(ctx);
@@ -81,6 +84,7 @@ public class DescriptionReader {
    * @return Список описаний возвращаемых значений
    */
   public static List<TypeDescription> readReturnedValue(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+
     var current = new TempParameterData();
     var strings = getReturnedValuesStrings(ctx);
     for (BSLMethodDescriptionParser.ReturnsValuesStringContext string : strings) {
@@ -139,7 +143,8 @@ public class DescriptionReader {
    * @param ctx Дерево описания метода
    * @return Список примеров
    */
-  public static List<String> readExamples(BSLMethodDescriptionParser.MethodDescriptionContext ctx, int ruleIndex) {
+  public static List<String> readExamples(BSLMethodDescriptionParser.MethodDescriptionContext ctx,
+                                          int ruleIndex) {
     var exampleStringNodes = Trees.findAllRuleNodes(ctx, ruleIndex);
     if (exampleStringNodes.isEmpty()) {
       return Collections.emptyList();
@@ -158,13 +163,43 @@ public class DescriptionReader {
    * @return Описание назначения метода
    */
   public static String readPurposeDescription(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    if (ctx != null && ctx.description() != null) {
+    if (ctx.description() != null) {
       var strings = ctx.description().descriptionString();
       if (strings != null) {
         return strings.stream()
           .map(BSLParserRuleContext::getText)
           .collect(Collectors.joining("\n"))
           .strip();
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Выполняет разбор прочитанного AST дерева описания метода и достает описание назначения метода.
+   * Если описание метода представляет собой только ссылку, то возвращает ее значение, иначе - пустая строка
+   *
+   * @param ctx Дерево описания метода
+   * @return Ссылка в методе
+   */
+  public static String readLink(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx.description() != null) {
+      var allStrings = ctx.description().descriptionString();
+      if (allStrings == null) {
+        return "";
+      }
+
+      // достаем из описания непустые строки
+      var strings = allStrings.stream()
+        .filter(stringContext -> !stringContext.getText().isBlank())
+        .collect(Collectors.toList());
+      if (strings.size() == 1) {
+        AtomicReference<String> result = new AtomicReference<>("");
+        strings.get(0).getTokens(BSLMethodDescriptionParser.HYPERLINK).stream()
+          .findFirst()
+          .ifPresent(hyperLink -> result.set(hyperLink.getText().substring(HYPERLINK_REF_LEN)));
+
+        return result.get();
       }
     }
     return "";
@@ -207,7 +242,6 @@ public class DescriptionReader {
     return current;
   }
 
-  @NotNull
   private static TempParameterData readUnknownParameterString(List<ParameterDescription> result,
                                                               TempParameterData current,
                                                               BSLParserRuleContext string) {
@@ -270,19 +304,15 @@ public class DescriptionReader {
 
     TempParameterData(BSLParserRuleContext ctx, TempParameterData current) {
       this();
-      if (current != null) {
-        level = current.level + 1;
-        parent = current;
-      }
+      level = current.level + 1;
+      parent = current;
       readAndAddType(ctx);
     }
 
     TempParameterData(String text, TempParameterData current) {
       this(text);
-      if (current != null) {
-        level = current.level;
-        parent = current;
-      }
+      level = current.level;
+      parent = current;
     }
 
     private void readAndAddType(BSLParserRuleContext ctx) {

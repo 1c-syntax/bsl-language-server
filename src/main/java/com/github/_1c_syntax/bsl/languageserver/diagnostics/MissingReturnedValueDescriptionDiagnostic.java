@@ -51,7 +51,9 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
   @Override
   public void visitMethod(MethodSymbol methodSymbol) {
 
-    boolean hasDescription = methodSymbol.getDescription()
+    var description = methodSymbol.getDescription();
+
+    boolean hasDescription = description
       .map(methodDescription -> !methodDescription.isEmpty())
       .orElse(false);
 
@@ -59,7 +61,7 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
       return;
     }
 
-    List<TypeDescription> returnedValueDescription = methodSymbol.getDescription()
+    List<TypeDescription> returnedValueDescription = description
       .map(MethodDescription::getReturnedValue)
       .orElse(Collections.emptyList());
 
@@ -76,6 +78,10 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
 
     // функция без описания - ошибка
     if (returnedValueDescription.isEmpty()) {
+      if (!description.get().getLink().isEmpty()) {
+        // пока считаем ссылку наличием описания всего и вся
+        return;
+      }
       diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), info.getMessage());
       return;
     }

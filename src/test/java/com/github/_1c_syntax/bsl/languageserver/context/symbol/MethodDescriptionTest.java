@@ -45,7 +45,7 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(10);
+      assertThat(methods.size()).isEqualTo(11);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
@@ -53,8 +53,22 @@ class MethodDescriptionTest {
         .map(Optional::get)
         .collect(Collectors.toList());
 
-      assertThat(methodsWithDescription.size()).isEqualTo(9);
+      assertThat(methodsWithDescription.size()).isEqualTo(10);
     }
+  }
+
+  @Test
+  void testMethod10() {
+    var method = methodsWithDescription.get(9);
+    assertThat(method.getPurposeDescription())
+      .isEqualTo("См. ОбщийМодуль.Метод()");
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).isEmpty();
+    assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isEqualTo("ОбщийМодуль.Метод()");
   }
 
   @Test
@@ -68,6 +82,7 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).hasSize(1);
+    assertThat(method.getLink()).isEmpty();
   }
 
   @Test
@@ -81,6 +96,7 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(3);
     assertThat(method.getReturnedValue()).hasSize(1);
+    assertThat(method.getLink()).isEmpty();
   }
 
   @Test
@@ -99,6 +115,7 @@ class MethodDescriptionTest {
       .isEqualTo("УниверсальнаяПроцедура(Тип11, Тип21) - описание ...");
     assertThat(method.getParameters()).hasSize(3);
     assertThat(method.getReturnedValue()).hasSize(2);
+    assertThat(method.getLink()).isEmpty();
   }
 
   @Test
@@ -112,6 +129,7 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isEmpty();
   }
 
   @Test
@@ -126,6 +144,7 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isEmpty();
   }
 
   @Test
@@ -138,6 +157,7 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).hasSize(2);
+    assertThat(method.getLink()).isEmpty();
     var type = method.getReturnedValue().get(0);
     assertThat(type.getDescription()).isEqualTo("ссылка на предопределенный элемент.");
     assertThat(type.getName()).isEqualTo("ЛюбаяСсылка");
@@ -160,6 +180,7 @@ class MethodDescriptionTest {
       .isEqualTo("УниверсальнаяПроцедура(Тип11, Тип21) - описание ...");
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isEmpty();
   }
 
   @Test
@@ -171,6 +192,7 @@ class MethodDescriptionTest {
     assertThat(method.getExamples()).isEmpty();
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(8);
+    assertThat(method.getLink()).isEmpty();
     var param = method.getParameters().get(0);
     assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("ПараметрБезТипаИОписания");
@@ -325,5 +347,6 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).isEmpty();
     assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isEmpty();
   }
 }
