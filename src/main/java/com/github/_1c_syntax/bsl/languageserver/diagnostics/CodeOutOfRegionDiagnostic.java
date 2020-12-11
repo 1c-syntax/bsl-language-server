@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -34,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
@@ -55,14 +57,27 @@ import java.util.stream.Collectors;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_1
 )
 public class CodeOutOfRegionDiagnostic extends AbstractVisitorDiagnostic {
+  private static final boolean CHECK_UNKNOWN_MODULE_TYPE = false;
   private final List<Range> regionsRanges = new ArrayList<>();
+
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_UNKNOWN_MODULE_TYPE
+  )
+  private boolean checkUnknownModuleType = CHECK_UNKNOWN_MODULE_TYPE;
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
+
+    // Для неизвестных модулей не будем требовать нахождения кода в области
+    if (documentContext.getModuleType() == ModuleType.UNKNOWN && !checkUnknownModuleType) {
+      return ctx;
+    }
+
     List<RegionSymbol> regions = documentContext.getSymbolTree().getModuleLevelRegions();
     regionsRanges.clear();
 
-    // если областей нет, то и смысла дальше анализировть тоже нет
+    // если областей нет, то и смысла дальше анализировать тоже нет
     if (regions.isEmpty() && !ctx.getTokens().isEmpty()) {
 
       List<DiagnosticRelatedInformation> relatedInformation = createRelatedInformations(ctx);

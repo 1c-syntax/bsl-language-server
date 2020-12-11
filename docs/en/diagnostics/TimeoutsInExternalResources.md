@@ -52,8 +52,8 @@ HTTPConnection.Timeout = 1;
 
 ## Reference
 
-- [](https://its.1c.ru/db/v8std#content:748:hdoc)[Timeouts when working with external resources](https://its.1c.ru/db/v8std#content:748:hdoc)
-- [](https://its.1c.ru/db/metod8dev/content/2358/hdoc)[InternetMail Profilehas a default timeout](https://its.1c.ru/db/metod8dev/content/2358/hdoc)
+- [Timeouts when working with external resources](https://its.1c.ru/db/v8std#content:748:hdoc)
+- [InternetMail Profilehas a default timeout](https://its.1c.ru/db/metod8dev/content/2358/hdoc)
 
 ## Snippets
 

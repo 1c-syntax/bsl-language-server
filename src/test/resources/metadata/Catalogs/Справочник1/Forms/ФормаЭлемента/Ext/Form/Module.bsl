@@ -62,5 +62,6 @@
 
 SupportEmail = "v8@1c.ru";
 Ctor();
+ThisObject.Ctor();
 
 #EndRegion

@@ -162,6 +162,7 @@ public final class FormatProvider {
 
     int lastLine = firstToken.getLine();
     int previousTokenType = -1;
+    boolean previousIsUnary = false;
 
     for (Token token : filteredTokens) {
       int tokenType = token.getType();
@@ -222,7 +223,7 @@ public final class FormatProvider {
         String currentIndentation = StringUtils.repeat(indentation, currentIndentLevel);
         newTextBuilder.append("\n");
         newTextBuilder.append(currentIndentation);
-      } else if (needAddSpace(tokenType, previousTokenType)) {
+      } else if (needAddSpace(tokenType, previousTokenType, previousIsUnary)) {
         newTextBuilder.append(' ');
       } else {
         // no-op
@@ -256,6 +257,7 @@ public final class FormatProvider {
       }
 
       lastLine = token.getLine();
+      previousIsUnary = isUnary(tokenType, previousTokenType);
       previousTokenType = tokenType;
     }
 
@@ -283,7 +285,12 @@ public final class FormatProvider {
       .collect(Collectors.toList());
   }
 
-  private static boolean needAddSpace(int type, int previousTokenType) {
+  private static boolean needAddSpace(int type, int previousTokenType, boolean previousIsUnary) {
+
+    if (previousIsUnary) {
+      return false;
+    }
+
     switch (previousTokenType) {
       case BSLLexer.DOT:
       case BSLLexer.HASH:
@@ -327,6 +334,32 @@ public final class FormatProvider {
         return false;
       default:
         return true;
+    }
+  }
+
+  private static boolean isUnary(int type, int previousTokenType) {
+    if (type != BSLLexer.MINUS) {
+      return false;
+    }
+    switch (previousTokenType) {
+      case BSLLexer.PLUS:
+      case BSLLexer.MINUS:
+      case BSLLexer.MUL:
+      case BSLLexer.QUOTIENT:
+      case BSLLexer.ASSIGN:
+      case BSLLexer.MODULO:
+      case BSLLexer.LESS:
+      case BSLLexer.GREATER:
+      case BSLLexer.LBRACK:
+      case BSLLexer.LPAREN:
+      case BSLLexer.RETURN_KEYWORD:
+      case BSLLexer.NOT_EQUAL:
+      case BSLLexer.COMMA:
+      case BSLLexer.LESS_OR_EQUAL:
+      case BSLLexer.GREATER_OR_EQUAL:
+        return true;
+      default:
+        return false;
     }
   }
 

@@ -40,11 +40,31 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private final DocumentContext documentContext;
   private final List<SDBLTokenizer> queries = new ArrayList<>();
 
+  /**
+   * Ключевые слова для поиска потенциально запросных строк
+   */
   private static final Pattern QUERIES_ROOT_KEY = CaseInsensitivePattern.compile(
-    "select|выбрать|drop|уничтожить");
-  private static final Pattern QUERIES_STARTING_QUOTE = CaseInsensitivePattern.compile("^\\s*\"");
+    "(?:[\\s\";]|^)(?:select|выбрать|drop|уничтожить)(?:\\s|$)");
 
+  private static final Pattern NON_QUERIES_START = CaseInsensitivePattern.compile(
+    "(?:^\\s*(?:(?:\\|)|(?:\"\")))");
+
+  /**
+   * Минимальная строка для анализа
+   */
   private static final int MINIMAL_QUERY_STRING_LENGTH = 8;
+
+  /**
+   * Поиск сдвоенных кавычек
+   */
+  private static final Pattern QUOTE_LINE_PATTERN = CaseInsensitivePattern.compile(
+    "(?:\"{12}|\"{10}|\"{8}|\"{6}|\"{4}|\"{2})");
+
+  /**
+   * Поиск первой кавычки в строке
+   */
+  private static final Pattern FIRST_QUOTE_PATTERN = CaseInsensitivePattern.compile(
+    "^\\s*(\")");
 
   public QueryComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -74,18 +94,44 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
     boolean isQuery = false;
 
+    // конкатенация строк в одну
+    int prevTokenLine = -1;
+    String partString = "";
     var strings = new StringJoiner("\n");
     for (Token token : ctx.getTokens()) {
-      var partString = getString(startLine, token);
-      if (!isQuery) {
-        isQuery = QUERIES_ROOT_KEY.matcher(partString).find();
+
+      // бывает несколько токенов строки в одной строе файла
+      // добавляем часть строки только в случае находления ее на другой строке файла
+      if (token.getLine() != prevTokenLine && prevTokenLine != -1) {
+        strings.add(partString);
+        partString = "";
       }
-      strings.add(partString);
+
+      // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
+      if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
+        String newString = getString(startLine, token);
+        partString = newString.substring(partString.length());
+      } else {
+        partString = getString(startLine, token);
+      }
+
+      // проверяем подстроку на вероятность запроса
+      if (!isQuery) {
+        isQuery = QUERIES_ROOT_KEY.matcher(partString).find()
+          && !NON_QUERIES_START.matcher(partString).find();
+      }
+
       startLine = token.getLine();
+      prevTokenLine = token.getLine();
+    }
+
+    // последнюю часть тоже необходимо добавить к общему тексту
+    if (!partString.isEmpty()) {
+      strings.add(partString);
     }
 
     if (isQuery) {
-      queries.add(new SDBLTokenizer(startEmptyLines + removeExtremeQuotes(strings.toString())));
+      queries.add(new SDBLTokenizer(startEmptyLines + removeDoubleQuotes(strings.toString())));
     }
 
     return ctx;
@@ -95,11 +141,35 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
   private static String getString(int startLine, Token token) {
     var string = addEmptyLines(startLine, token) + " ".repeat(token.getCharPositionInLine());
     if (token.getText().startsWith("|")) {
-      string += " " + token.getText().substring(1);
+      string += " " + trimLastQuote(token.getText().substring(1));
     } else {
-      string += token.getText();
+      string += trimQuotes(token.getText());
     }
     return string;
+  }
+
+  private static String trimLastQuote(String text) {
+    var quoteCount = text.length() - text.replace("\"", "").length();
+    if (quoteCount % 2 == 1) {
+      String newString;
+      var quotePosition = text.lastIndexOf("\"");
+      newString = text.substring(0, quotePosition) + " ";
+      if (quotePosition + 1 < text.length()) {
+        newString += text.substring(quotePosition + 1);
+      }
+      return newString;
+    }
+    return text;
+  }
+
+  private static String trimQuotes(String text) {
+    var matcher = FIRST_QUOTE_PATTERN.matcher(text);
+    if (matcher.find()) {
+      var newText = text.substring(0, matcher.start(1)) + " " + text.substring(matcher.end(1));
+      return trimLastQuote(newText);
+    }
+
+    return text;
   }
 
   private static String addEmptyLines(int startLine, Token token) {
@@ -109,13 +179,34 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     return "";
   }
 
-  private static String removeExtremeQuotes(String text) {
-    if (QUERIES_STARTING_QUOTE.matcher(text).find()) {
-      // Кавычка может быть не первым символом строки
-      var quoteIndex = text.indexOf("\"");
-      return text.substring(0, quoteIndex) + " " + text.substring(quoteIndex + 1, text.length() - 1);
+  private static String removeDoubleQuotes(String text) {
+    var leftQuoteFound = false;
+    var matcher = QUOTE_LINE_PATTERN.matcher(text);
+    var newText = text;
+    var textLength = text.length();
+    var strings = new StringJoiner("");
+    while (matcher.find()) {
+      var quotesLineLength = matcher.group(0).length();
+      var emptyString = (" ".repeat(quotesLineLength / 2)).intern();
+      strings.add(newText.substring(0, matcher.start()) + (leftQuoteFound ? "" : emptyString)
+        + matcher.group(0).substring(0, quotesLineLength / 2) + (leftQuoteFound ? emptyString : ""));
+
+      if (matcher.end() < textLength) {
+        newText = newText.substring(matcher.end());
+        textLength = newText.length();
+      } else {
+        newText = "";
+        break;
+      }
+
+      matcher = QUOTE_LINE_PATTERN.matcher(newText);
+      leftQuoteFound = !leftQuoteFound;
     }
 
-    return text;
+    if (!newText.isEmpty()) {
+      strings.add(newText);
+    }
+
+    return strings.toString();
   }
 }

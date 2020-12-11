@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-
 /**
  * Пакет предназначен для реализации CLI функциональности BSL Language Server.
  * Каждый класс пакета реализовывает интерфейс Command (и одноименный суффикс имени) и имеет javadoc-описание своих

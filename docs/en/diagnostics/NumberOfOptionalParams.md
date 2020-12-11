@@ -38,7 +38,7 @@ EndProcedure
 
 ## Sources
 
-- [](https://its.1c.ru/db/v8std#content:640:hdoc)[Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
+- [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
 
 ## Snippets
 

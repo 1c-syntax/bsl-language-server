@@ -44,9 +44,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class DiagnosticsTest {
@@ -72,21 +72,21 @@ class DiagnosticsTest {
     var serverContext = spy(context);
     var bslConfiguration = spy(serverContext.getConfiguration());
 
-    when(documentContext.getServerContext()).thenReturn(serverContext);
-    when(serverContext.getConfiguration()).thenReturn(bslConfiguration);
+    doReturn(serverContext).when(documentContext).getServerContext();
+    doReturn(bslConfiguration).when(serverContext).getConfiguration();
 
     configuration.getDiagnosticsOptions().setMode(Mode.ON);
 
     // when-then pairs
-    when(bslConfiguration.getCompatibilityMode()).thenReturn(new CompatibilityMode(3, 10));
+    doReturn(new CompatibilityMode(3, 10)).when(bslConfiguration).getCompatibilityMode();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
 
-    when(bslConfiguration.getCompatibilityMode()).thenReturn(new CompatibilityMode(3, 6));
+    doReturn(new CompatibilityMode(3, 6)).when(bslConfiguration).getCompatibilityMode();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
 
-    when(bslConfiguration.getCompatibilityMode()).thenReturn(new CompatibilityMode(2, 16));
+    doReturn(new CompatibilityMode(2, 16)).when(bslConfiguration).getCompatibilityMode();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
   }
@@ -97,19 +97,19 @@ class DiagnosticsTest {
     documentContext = spy(TestUtils.getDocumentContext(""));
 
     // when-then pairs
-    when(documentContext.getModuleType()).thenReturn(ModuleType.CommandModule);
+    doReturn(ModuleType.CommandModule).when(documentContext).getModuleType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+    doReturn(ModuleType.FormModule).when(documentContext).getModuleType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
+    doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
+    doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
   }
@@ -120,18 +120,18 @@ class DiagnosticsTest {
     documentContext = spy(TestUtils.getDocumentContext(""));
 
     // when-then pairs
-    when(documentContext.getModuleType()).thenReturn(ModuleType.CommonModule);
-    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
+    doReturn(FileType.BSL).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
-    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
+    doReturn(FileType.BSL).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
 
-    when(documentContext.getModuleType()).thenReturn(ModuleType.UNKNOWN);
-    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
+    doReturn(FileType.OS).when(documentContext).getFileType();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof UnusedLocalMethodDiagnostic);
   }
@@ -145,67 +145,67 @@ class DiagnosticsTest {
 
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
-    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
+    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
+    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
-    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
+    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
+    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
-    when(documentContext.getSupportVariants()).thenReturn(Collections.emptyMap());
+    doReturn(Collections.emptyMap()).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NONE));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NONE)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isNotEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_SUPPORTED)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED));
+    doReturn(Map.of(supportConfiguration, SupportVariant.EDITABLE_SUPPORT_ENABLED)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
 
-    when(documentContext.getSupportVariants()).thenReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE));
+    doReturn(Map.of(supportConfiguration, SupportVariant.NOT_EDITABLE)).when(documentContext).getSupportVariants();
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
   }

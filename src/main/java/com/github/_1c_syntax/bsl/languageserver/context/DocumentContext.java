@@ -42,6 +42,7 @@ import com.github._1c_syntax.mdclasses.metadata.SupportConfiguration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
+import lombok.Getter;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -67,6 +68,8 @@ public class DocumentContext {
 
   private final URI uri;
   private String content;
+  @Getter
+  private int version;
   private final ServerContext context;
   private final DiagnosticComputer diagnosticComputer;
 
@@ -92,9 +95,16 @@ public class DocumentContext {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  public DocumentContext(URI uri, String content, ServerContext context, DiagnosticComputer diagnosticComputer) {
+  public DocumentContext(
+    URI uri,
+    String content,
+    ServerContext context,
+    int version,
+    DiagnosticComputer diagnosticComputer
+  ) {
     this.uri = uri;
     this.content = content;
+    this.version = version;
     this.context = context;
     this.diagnosticComputer = diagnosticComputer;
 
@@ -219,28 +229,46 @@ public class DocumentContext {
       .orElseGet(Collections::emptyList);
   }
 
-  public void rebuild(String content) {
+  public void rebuild(String content, int version) {
     computeLock.lock();
+
+    boolean versionMatches = version == this.version && version != 0;
+    boolean contentWasCleared = this.content == null;
+
+    if (versionMatches && !contentWasCleared) {
+      clearDependantData();
+      computeLock.unlock();
+      return;
+    }
+
     clearSecondaryData();
     symbolTree.clear();
     this.content = content;
     tokenizer = new BSLTokenizer(content);
+    this.version = version;
     computeLock.unlock();
   }
 
   public void clearSecondaryData() {
     computeLock.lock();
-    diagnosticsLock.lock();
     content = null;
     contentList.clear();
     tokenizer = null;
-
     cognitiveComplexityData.clear();
     cyclomaticComplexityData.clear();
     metrics.clear();
     diagnosticIgnoranceData.clear();
-    diagnostics.clear();
     queries.clear();
+    clearDependantData();
+    computeLock.unlock();
+  }
+
+  private void clearDependantData() {
+    computeLock.lock();
+    diagnosticsLock.lock();
+
+    diagnostics.clear();
+
     diagnosticsLock.unlock();
     computeLock.unlock();
   }

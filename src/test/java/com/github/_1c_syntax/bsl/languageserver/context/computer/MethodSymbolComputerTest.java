@@ -209,18 +209,22 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(0).getName()).isEqualTo("Парам");
     assertThat(parameters.get(0).isByValue()).isFalse();
     assertThat(parameters.get(0).isOptional()).isFalse();
+    assertThat(parameters.get(0).getRange()).isEqualTo(Ranges.create(14, 12, 17));
 
     assertThat(parameters.get(1).getName()).isEqualTo("Парам2");
     assertThat(parameters.get(1).isByValue()).isTrue();
     assertThat(parameters.get(1).isOptional()).isFalse();
+    assertThat(parameters.get(1).getRange()).isEqualTo(Ranges.create(14, 24, 30));
 
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).isByValue()).isFalse();
     assertThat(parameters.get(2).isOptional()).isTrue();
+    assertThat(parameters.get(2).getRange()).isEqualTo(Ranges.create(14, 32, 38));
 
     assertThat(parameters.get(3).getName()).isEqualTo("Парам4");
     assertThat(parameters.get(3).isByValue()).isTrue();
     assertThat(parameters.get(3).isOptional()).isTrue();
+    assertThat(parameters.get(3).getRange()).isEqualTo(Ranges.create(14, 49, 55));
 
   }
 
@@ -249,8 +253,8 @@ class MethodSymbolComputerTest {
 
     var path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
-    checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 5);
-    checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 1);
+    checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 7);
+    checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 2);
     checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1", 1);
   }
 
@@ -280,7 +284,7 @@ class MethodSymbolComputerTest {
   ) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
     var uri = Absolute.uri(file);
-    var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8));
+    var documentContext = serverContext.addDocument(uri, FileUtils.readFileToString(file, StandardCharsets.UTF_8), 0);
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");

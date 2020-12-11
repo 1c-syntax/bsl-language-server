@@ -52,7 +52,8 @@ import java.util.stream.Collectors;
   minutesToFix = 1,
   tags = {
     DiagnosticTag.STANDARD,
-    DiagnosticTag.SUSPICIOUS
+    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.UNUSED
   }
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {

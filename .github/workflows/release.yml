@@ -32,7 +32,7 @@ jobs:
             - name: Set up JDK
               uses: actions/setup-java@v1
               with:
-                java-version: 14
+                java-version: 15
             - name: Build bootJar with Gradle
               run: ./gradlew check bootJar
             - name: Build jpackage app-image

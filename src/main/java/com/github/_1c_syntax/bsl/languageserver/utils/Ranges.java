@@ -21,11 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+
+import java.util.Collection;
+import java.util.Optional;
 
 public final class Ranges {
 
@@ -94,5 +98,14 @@ public final class Ranges {
 
   public static boolean containsPosition(Range range, Position position) {
     return org.eclipse.lsp4j.util.Ranges.containsPosition(range, position);
+  }
+
+  public static Optional<Range> getFirstSignificantTokenRange(Collection<Token> tokens) {
+    return tokens.stream()
+      .filter(token -> token.getType() != Token.EOF)
+      .filter(token -> token.getType() != BSLLexer.WHITE_SPACE)
+      .map(Ranges::create)
+      .filter(range -> (!range.getStart().equals(range.getEnd())))
+      .findFirst();
   }
 }

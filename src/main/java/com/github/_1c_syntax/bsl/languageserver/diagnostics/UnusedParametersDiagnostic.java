@@ -43,9 +43,11 @@ import java.util.stream.Collectors;
   severity = DiagnosticSeverity.MAJOR,
   scope = DiagnosticScope.OS,
   minutesToFix = 5,
-  tags = {DiagnosticTag.DESIGN}
+  tags = {
+    DiagnosticTag.DESIGN,
+    DiagnosticTag.UNUSED
+  }
 )
-
 public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(

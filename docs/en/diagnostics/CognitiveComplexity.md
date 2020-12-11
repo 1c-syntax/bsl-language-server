@@ -14,9 +14,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Cognitive complexity shows how difficult it is to perceive the written code.
- High cognitive complexity clearly indicates the need for refactoring to make future support easier.
- The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
+Cognitive complexity shows how difficult it is to perceive the written code. High cognitive complexity clearly indicates the need for refactoring to make future support easier. The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
 ### Cognitive Complexity calculation
 
@@ -26,91 +24,89 @@ Bellow are given code analysis rules, conditions increase cognitive complexity.
 
 ```bsl
 
-// Loop For Each
-For Each Element In Collection Do                    // +1
+// Loop `For each`
+For Each Element in Collection Do                    // +1
 EndDo;
 
-// Loop For
-For It = Start To End Do                             // +1
+// Loop `For`
+For i = StartValue To EndValue Do                    // +1
 EndDo;
 
-// Loop While
+// Loop `While`
 While Condition Do                                   // +1
 EndDo;
 
 
 // Condition
-If Condition Then                                    // +1
+If Condition1 Then                                   // +1
 
 // Alternative condition branch
 ElseIf Condition2 Then                               // +1
 
-// Default branch
+// default branch
 Else
 EndIf;
 
-// Ternary operator
+// ternary operator
 Value = ?(Condition, ValueTrue, ValueFalse);         // +1
 
 Try
-// Except processing
+// Exception handling
 Except                                               // +1
 EndTry;
 
-// Goto label
-Goto ~Label;                                         // +1
+// Go to label
+Goto ~Label;                                          // +1
 
-// Binary logical operators
+// Binary logical operations
 
-While Condition OR Condition2 Do                     // +2
+While Condition1 Or Condition2 Do                    // +2
 EndDo;
 
-If Condition OR Condition2 Then                      // +2
+If Condition1 And Condition2 Then                    // +2
 
 ElseIf Condition2                                    // +1
-        Or Condition3 AND Condition4 Then            // +2
+        Or Condition3 And Condition4 Then            // +2
 
 EndIf;
 
-Value = ?(Condition OR Condition2 OR NOT Condition3, // +3
+Value = ?(Condition1 Or Condition2 Or Not Condition3,// +3
                 ValueTrue, ValueFalse);
 
-Value = First OR Second;                             // +1
+Value = First Or Second;                             // +1
 
 Value = A <> B;                                      // +1
-
 ```
 
 #### For each nesting level, next blocks get additional 1 to complexity
 
 ```bsl
 
-// Loop For Each
-For Each Element In Collection Do
+// Loop `For each`
+For Each Element in Collection Do
 EndDo;
 
-/// Loop For
-For It = Start To End Do
+// Loop `For`
+For i = StartValue To EndValue Do
+EndDo;
 
-// Loop While
+// Loop `While`
 While Condition Do
 EndDo;
 
-
 // Condition
-If Condition Then
+If Condition1 Then
 EndIf;
 
-// Ternary operator
+// ternary operator
 Value = ?(Condition, ValueTrue, ValueFalse);
 
 Try
-// Except processing
+// Exception handling
 Except
 EndTry;
 
 ~Label:
-
 ```
 
 #### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.

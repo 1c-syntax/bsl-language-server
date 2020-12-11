@@ -7,7 +7,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Absence of iterator in the loop body indicates to useless collection iteration or to the error in the loop body.
+The absence of an iterator in the loop body indicates either a useless iteration of the collection or an error in the loop body.
 
 ## Examples
 

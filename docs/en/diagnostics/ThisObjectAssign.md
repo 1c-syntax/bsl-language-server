@@ -13,9 +13,10 @@ Often this error appears when updating the platform version: the "ThisObject" pr
 
 ## Examples
 
-Wrong:
+Incorrect:
 
 ```bsl
+
 ThisObject = FormAttributeToValue("Object");
 ```
 

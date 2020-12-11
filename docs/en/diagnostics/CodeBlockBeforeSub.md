@@ -24,7 +24,12 @@ Based on the structure described above, the location of the program code before 
 Wrong
 
 ```bsl
-Method(); Message("Before methods");  Procedure Method() // Method body EndProcedure
+SomeMethod();
+Message("Before methods definition");
+
+Procedure SomeMethod()
+// Method body
+EndProcedure
 ```
 
 ## Sources

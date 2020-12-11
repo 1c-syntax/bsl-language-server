@@ -71,6 +71,7 @@ class LanguageServerConfigurationTest {
     // then
     assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
     assertThat(configuration.getDiagnosticsOptions().getParameters()).isEmpty();
+    assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isTrue();
   }
 
   @Test
@@ -105,6 +106,7 @@ class LanguageServerConfigurationTest {
     assertThat(configurationRoot).isNotNull();
 
     assertThat(configuration.getDocumentLinkOptions().isUseDevSite()).isTrue();
+    assertThat(configuration.getDiagnosticsOptions().isOrdinaryAppSupport()).isFalse();
 
   }
 

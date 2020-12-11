@@ -4,6 +4,12 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL` | `Major` | `Yes` | `15` | `standard` 
 
+## Parameters 
+
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `forceModalityMode` | `Boolean` | ```Ignore configurations modality mode``` | ```false``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -33,11 +39,11 @@ Russian variant | English variant
 ## Examples
 
 ```bsl
-// Example "Incorrect"
-warning(NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
+// Incorrect
+DoMessageBox(NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 
-// Example "Correct"
-ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
+// Correct
+ShowMessageBox(, NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 ```
 
 ## Sources
@@ -58,5 +64,7 @@ ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a do
 ### Parameter for config
 
 ```json
-"UsingModalWindows": false
+"UsingModalWindows": {
+    "forceModalityMode": false
+}
 ```

@@ -23,13 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,10 +54,13 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
       return Collections.emptyList();
     }
 
-    List<Diagnostic> computedDiagnostics = documentContext.getComputedDiagnostics();
+    Set<LightDiagnostic> computedDiagnostics = documentContext.getComputedDiagnostics()
+      .stream()
+      .map(LightDiagnostic::new)
+      .collect(Collectors.toSet());
 
     Stream<Diagnostic> diagnosticStream = incomingDiagnostics.stream()
-      .filter(computedDiagnostics::contains);
+      .filter(diagnostic -> computedDiagnostics.contains(new LightDiagnostic(diagnostic)));
 
     return processDiagnosticStream(diagnosticStream, params, documentContext)
       .collect(Collectors.toList());
@@ -65,4 +72,17 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
     CodeActionParams params,
     DocumentContext documentContext
   );
+
+  @Value
+  private static class LightDiagnostic {
+    Either<String, Number> code;
+    Range range;
+    String source;
+
+    public LightDiagnostic(Diagnostic diagnostic) {
+      this.code = diagnostic.getCode();
+      this.range = diagnostic.getRange();
+      this.source = diagnostic.getSource();
+    }
+  }
 }

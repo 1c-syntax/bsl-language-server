@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Comput
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
@@ -46,7 +47,6 @@ import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -74,14 +74,10 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageClient;
-import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -89,7 +85,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class BSLTextDocumentService implements TextDocumentService, LanguageClientAware, ProtocolExtension {
+public class BSLTextDocumentService implements TextDocumentService, ProtocolExtension {
 
   private final ServerContext context;
   private final LanguageServerConfiguration configuration;
@@ -101,9 +97,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   private final FoldingRangeProvider foldingRangeProvider;
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
-
-  @CheckForNull
-  private LanguageClient client;
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
@@ -245,7 +238,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
       return;
     }
 
-    documentContext.rebuild(params.getContentChanges().get(0).getText());
+    documentContext.rebuild(params.getContentChanges().get(0).getText(), params.getTextDocument().getVersion());
 
     if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
@@ -261,9 +254,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
 
     documentContext.clearSecondaryData();
 
-    if (client != null) {
-      diagnosticProvider.publishEmptyDiagnosticList(client, documentContext);
-    }
+    diagnosticProvider.publishEmptyDiagnosticList(documentContext);
   }
 
   @Override
@@ -279,11 +270,6 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public void connect(LanguageClient client) {
-    this.client = client;
-  }
-
-  @Override
   public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
@@ -294,10 +280,10 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   @Override
-  public CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params) {
+  public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
+      return CompletableFuture.completedFuture(Diagnostics.EMPTY);
     }
 
     return CompletableFuture.supplyAsync(() -> {
@@ -309,7 +295,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
           .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
           .collect(Collectors.toList());
       }
-      return diagnostics;
+      return new Diagnostics(diagnostics, documentContext.getVersion());
     });
   }
 
@@ -318,10 +304,7 @@ public class BSLTextDocumentService implements TextDocumentService, LanguageClie
   }
 
   private void validate(DocumentContext documentContext) {
-    if (client == null) {
-      return;
-    }
-    diagnosticProvider.computeAndPublishDiagnostics(client, documentContext);
+    diagnosticProvider.computeAndPublishDiagnostics(documentContext);
   }
 
 }

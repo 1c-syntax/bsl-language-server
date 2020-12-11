@@ -67,6 +67,19 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
   private static final String UNARY = "+ - * / = % < > ( [ , Возврат Return <> <= >=";
 
+  /**
+   * Ключевые слова, требующие пробел слева и справа
+   */
+  private static final Set<Integer> KEYWORDS_WITH_LEFT_RIGHT_SPACE = computeKeywordsWithLeftRightSpace();
+  /**
+   * Ключевые слова, требующие пробел слева
+   */
+  private static final Set<Integer> KEYWORDS_WITH_LEFT_SPACE = computeKeywordsWithLeftSpace();
+  /**
+   * Ключевые слова, требующие пробел справа
+   */
+  private static final Set<Integer> KEYWORDS_WITH_RIGHT_SPACE = computeKeywordsWithRightSpace();
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
@@ -128,19 +141,21 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
       String tokenText = token.getText();
 
       // проверяем слева
-      if (setL.contains(tokenText) && (noSpaceLeft = noSpaceLeft(tokens, token))) {
+      if ((setL.contains(tokenText) || KEYWORDS_WITH_LEFT_SPACE.contains(token.getType()))
+        && (noSpaceLeft = noSpaceLeft(tokens, token))) {
         leftComputed = true;
         addDiagnostic(token, mainMessage, indexWordLeftMsg);
       }
 
       // проверяем справа
-      if (setR.contains(tokenText) && (noSpaceRight = noSpaceRight(tokens, token))) {
+      if ((setR.contains(tokenText) || KEYWORDS_WITH_RIGHT_SPACE.contains(token.getType()))
+        && (noSpaceRight = noSpaceRight(tokens, token))) {
         rightComputed = true;
         addDiagnostic(token, mainMessage, indexWordRightMsg);
       }
 
       // проверяем слева и справа
-      if (setLR.contains(tokenText)) {
+      if (setLR.contains(tokenText) || KEYWORDS_WITH_LEFT_RIGHT_SPACE.contains(token.getType())) {
         if (!leftComputed) {
           noSpaceLeft = noSpaceLeft(tokens, token);
         }
@@ -275,4 +290,33 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   private static String getErrorMessage(String formatString, String errorMessage, String tokenText) {
     return String.format(formatString, errorMessage, tokenText).intern();
   }
+
+  private static Set<Integer> computeKeywordsWithLeftRightSpace() {
+    return Set.of(
+      BSLParser.TO_KEYWORD,
+      BSLParser.IN_KEYWORD,
+      BSLParser.OR_KEYWORD,
+      BSLParser.AND_KEYWORD
+    );
+  }
+
+  private static Set<Integer> computeKeywordsWithLeftSpace() {
+    return Set.of(
+      BSLParser.EXPORT_KEYWORD,
+      BSLParser.THEN_KEYWORD,
+      BSLParser.DO_KEYWORD
+    );
+  }
+
+  private static Set<Integer> computeKeywordsWithRightSpace() {
+    return Set.of(
+      BSLParser.IF_KEYWORD,
+      BSLParser.ELSIF_KEYWORD,
+      BSLParser.WHILE_KEYWORD,
+      BSLParser.FOR_KEYWORD,
+      BSLParser.NOT_KEYWORD,
+      BSLParser.EACH_KEYWORD
+    );
+  }
+
 }

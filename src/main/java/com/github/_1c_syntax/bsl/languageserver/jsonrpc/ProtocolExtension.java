@@ -21,22 +21,20 @@
  */
 package com.github._1c_syntax.bsl.languageserver.jsonrpc;
 
-import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface ProtocolExtension {
 
   /**
    * @param params Параметры запроса.
-   * @return Список диагностик.
+   * @return Список рассчитанных диагностик.
    */
   @JsonRequest(
     value = "textDocument/x-diagnostics",
     useSegment = false
   )
-  CompletableFuture<List<Diagnostic>> diagnostics(DiagnosticParams params);
+  CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params);
 
 }

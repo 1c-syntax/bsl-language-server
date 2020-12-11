@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,7 @@ public class DiagnosticInfo {
 
   private static final Map<DiagnosticSeverity, org.eclipse.lsp4j.DiagnosticSeverity> severityToLSPSeverityMap
     = createSeverityToLSPSeverityMap();
+  private static final Map<DiagnosticTag, org.eclipse.lsp4j.DiagnosticTag> diagnosticTagMap = createDiagnosticTagMap();
 
   private final Class<? extends BSLDiagnostic> diagnosticClass;
   private final LanguageServerConfiguration configuration;
@@ -154,6 +156,13 @@ public class DiagnosticInfo {
     return new ArrayList<>(Arrays.asList(diagnosticMetadata.tags()));
   }
 
+  public List<org.eclipse.lsp4j.DiagnosticTag> getLSPTags() {
+    return getTags().stream()
+      .map(diagnosticTag -> diagnosticTagMap.getOrDefault(diagnosticTag, null))
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
+  }
+
   public List<DiagnosticParameterInfo> getParameters() {
     return new ArrayList<>(diagnosticParameters);
   }
@@ -185,5 +194,12 @@ public class DiagnosticInfo {
     map.put(DiagnosticSeverity.BLOCKER, org.eclipse.lsp4j.DiagnosticSeverity.Warning);
 
     return map;
+  }
+
+  private static Map<DiagnosticTag, org.eclipse.lsp4j.DiagnosticTag> createDiagnosticTagMap() {
+    return Map.of(
+      DiagnosticTag.UNUSED, org.eclipse.lsp4j.DiagnosticTag.Unnecessary,
+      DiagnosticTag.DEPRECATED, org.eclipse.lsp4j.DiagnosticTag.Deprecated
+    );
   }
 }

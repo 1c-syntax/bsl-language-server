@@ -22,23 +22,34 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
+
   TypoDiagnosticTest() {
     super(TypoDiagnostic.class);
+  }
+
+  @BeforeEach
+  void resetJLanguageToolPool() {
+    var lang = diagnosticInstance.getInfo().getResourceString("diagnosticLanguage");
+    diagnosticInstance.acquireLanguageTool(lang).getLanguageTool("Ы");
   }
 
   @Test
   void test() {
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     diagnosticInstance.configure(configuration);
-
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(3);
@@ -76,6 +87,20 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
     assertThat(diagnostics).hasSize(2);
     assertThat(diagnostics, true)
       .hasRange(1, 13, 1, 21)
+      .hasRange(8, 13, 8, 18);
+  }
+
+  @Test
+  void testConfigureUserWordsToIgnoreWithSpaces() {
+
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("userWordsToIgnore", "Варинаты, Атмена");
+    diagnosticInstance.configure(configuration);
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
       .hasRange(8, 13, 8, 18);
   }
 }

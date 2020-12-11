@@ -41,6 +41,9 @@
                 "CognitiveComplexity": {
                     "$ref": "parameters-schema.json#/definitions/CognitiveComplexity"
                 },
+                "CommandModuleExportMethods": {
+                    "$ref": "parameters-schema.json#/definitions/CommandModuleExportMethods"
+                },
                 "CommentedCode": {
                     "$ref": "parameters-schema.json#/definitions/CommentedCode"
                 },
@@ -155,6 +158,9 @@
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
                 },
+                "FunctionOutParameter": {
+                    "$ref": "parameters-schema.json#/definitions/FunctionOutParameter"
+                },
                 "FunctionReturnsSamePrimitive": {
                     "$ref": "parameters-schema.json#/definitions/FunctionReturnsSamePrimitive"
                 },
@@ -163,6 +169,9 @@
                 },
                 "GetFormMethod": {
                     "$ref": "parameters-schema.json#/definitions/GetFormMethod"
+                },
+                "GlobalContextMethodCollision8312": {
+                    "$ref": "parameters-schema.json#/definitions/GlobalContextMethodCollision8312"
                 },
                 "IdenticalExpressions": {
                     "$ref": "parameters-schema.json#/definitions/IdenticalExpressions"
@@ -191,8 +200,14 @@
                 "JoinWithVirtualTable": {
                     "$ref": "parameters-schema.json#/definitions/JoinWithVirtualTable"
                 },
+                "LatinAndCyrillicSymbolInWord": {
+                    "$ref": "parameters-schema.json#/definitions/LatinAndCyrillicSymbolInWord"
+                },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
+                },
+                "MagicDate": {
+                    "$ref": "parameters-schema.json#/definitions/MagicDate"
                 },
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
@@ -205,6 +220,15 @@
                 },
                 "MissingCodeTryCatchEx": {
                     "$ref": "parameters-schema.json#/definitions/MissingCodeTryCatchEx"
+                },
+                "MissingEventSubscriptionHandler": {
+                    "$ref": "parameters-schema.json#/definitions/MissingEventSubscriptionHandler"
+                },
+                "MissingParameterDescription": {
+                    "$ref": "parameters-schema.json#/definitions/MissingParameterDescription"
+                },
+                "MissingReturnedValueDescription": {
+                    "$ref": "parameters-schema.json#/definitions/MissingReturnedValueDescription"
                 },
                 "MissingSpace": {
                     "$ref": "parameters-schema.json#/definitions/MissingSpace"
@@ -257,6 +281,9 @@
                 "OrderOfParams": {
                     "$ref": "parameters-schema.json#/definitions/OrderOfParams"
                 },
+                "OrdinaryAppSupport": {
+                    "$ref": "parameters-schema.json#/definitions/OrdinaryAppSupport"
+                },
                 "PairingBrokenTransaction": {
                     "$ref": "parameters-schema.json#/definitions/PairingBrokenTransaction"
                 },
@@ -268,6 +295,12 @@
                 },
                 "PublicMethodsDescription": {
                     "$ref": "parameters-schema.json#/definitions/PublicMethodsDescription"
+                },
+                "RedundantAccessToObject": {
+                    "$ref": "parameters-schema.json#/definitions/RedundantAccessToObject"
+                },
+                "RefOveruse": {
+                    "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
@@ -510,6 +543,22 @@
                     ],
                     "title": "Diagnostics enabling/disabling mode.",
                     "default": "on"
+                },
+                "ordinaryAppSupport": {
+                    "$id": "#/properties/ordinaryAppSupport",
+                    "type": "boolean",
+                    "title": "Ordinary client support. Diagnostics will require taking into account the features of a ordinary application.",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Configuration uses ordinary application (default)."
+                        },
+                        {
+                            "const": false,
+                            "description": "Ignore ordinary application warnings."
+                        }
+                    ]
                 }
             }
         },
