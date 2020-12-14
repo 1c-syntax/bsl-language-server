@@ -134,7 +134,11 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       return ctx;
     }
 
-    if (PATTERN.matcher(identifier.getText()).matches() && modifiers.get(0) != null) {
+    if (
+      PATTERN.matcher(identifier.getText()).matches()
+      && modifiers.get(0) != null
+      && modifiers.get(0).accessIndex() == null
+    ) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
