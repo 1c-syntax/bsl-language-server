@@ -96,7 +96,7 @@ public class SymbolProvider {
       symbol.getSymbolKind(),
       new Location(uri.toString(), symbol.getRange())
     );
-    symbolInformation.setDeprecated(symbol.isDeprecated());
+    symbolInformation.setTags(symbol.getTags());
     return symbolInformation;
   }
 }

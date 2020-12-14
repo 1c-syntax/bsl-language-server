@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.SymbolTag;
 
 import java.util.Collections;
 import java.util.List;
@@ -51,6 +52,12 @@ public interface Symbol {
 
   default Optional<Symbol> getRootParent() {
     return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
+  }
+
+  default List<SymbolTag> getTags() {
+    return this.isDeprecated()
+      ? Collections.singletonList(SymbolTag.Deprecated)
+      : Collections.emptyList();
   }
 
   void accept(SymbolTreeVisitor visitor);

@@ -57,7 +57,7 @@ public final class DocumentSymbolProvider {
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .collect(Collectors.toList());
 
-    documentSymbol.setDeprecated(symbol.isDeprecated());
+    documentSymbol.setTags(symbol.getTags());
     documentSymbol.setChildren(children);
 
     return documentSymbol;
