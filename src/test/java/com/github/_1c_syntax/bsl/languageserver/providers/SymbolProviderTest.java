@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.WorkspaceSymbolParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,25 +71,25 @@ class SymbolProviderTest {
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
           && uriContains(symbolInformation, "ПервыйОбщийМодуль")
           && symbolInformation.getKind() == SymbolKind.Method
-          && !symbolInformation.getDeprecated()
+          && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("НеУстаревшаяПроцедура")
           && uriContains(symbolInformation, "РегистрСведений1")
           && symbolInformation.getKind() == SymbolKind.Method
-          && !symbolInformation.getDeprecated()
+          && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("УстаревшаяПроцедура")
           && uriContains(symbolInformation, "ПервыйОбщийМодуль")
           && symbolInformation.getKind() == SymbolKind.Method
-          && symbolInformation.getDeprecated()
+          && symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
       .anyMatch(symbolInformation ->
         symbolInformation.getName().equals("ВалютаУчета")
           && uriContains(symbolInformation, "ManagedApplicationModule")
           && symbolInformation.getKind() == SymbolKind.Variable
-          && !symbolInformation.getDeprecated()
+          && !symbolInformation.getTags().contains(SymbolTag.Deprecated)
       )
     ;
   }

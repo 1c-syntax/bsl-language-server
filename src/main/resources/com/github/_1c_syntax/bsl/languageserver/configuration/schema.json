@@ -543,6 +543,22 @@
                     ],
                     "title": "Diagnostics enabling/disabling mode.",
                     "default": "on"
+                },
+                "ordinaryAppSupport": {
+                    "$id": "#/properties/ordinaryAppSupport",
+                    "type": "boolean",
+                    "title": "Ordinary client support. Diagnostics will require taking into account the features of a ordinary application.",
+                    "default": true,
+                    "oneOf": [
+                        {
+                            "const": true,
+                            "description": "Configuration uses ordinary application (default)."
+                        },
+                        {
+                            "const": false,
+                            "description": "Ignore ordinary application warnings."
+                        }
+                    ]
                 }
             }
         },

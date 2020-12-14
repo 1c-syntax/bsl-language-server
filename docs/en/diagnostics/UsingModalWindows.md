@@ -39,11 +39,11 @@ Russian variant | English variant
 ## Examples
 
 ```bsl
-// Example "Incorrect"
-warning(NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
+// Incorrect
+DoMessageBox(NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 
-// Example "Correct"
-ShowWarning(, NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
+// Correct
+ShowMessageBox(, NStr("ru = 'Выберите документ!'; en = 'Select a document!'"), 10);
 ```
 
 ## Sources

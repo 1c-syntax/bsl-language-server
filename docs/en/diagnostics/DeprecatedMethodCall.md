@@ -7,6 +7,8 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
+If you need to mark a procedure or function as deprecated, start its description with "Deprecated" at the top.
+
 Use or extension of deprecated methods should be avoided. Marking method as deprecated is a warning that means the method will be removed in future versions and left for temporary backward compatibility.
 
 Exception: It is possible to call deprecated methods from deprecated methods.
@@ -16,7 +18,7 @@ Exception: It is possible to call deprecated methods from deprecated methods.
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 ```bsl
-// Deprecated. Need to use DontDeprecatedProcedure.
+// Deprecated. Need to use NotDeprecatedProcedure.
 Procedure DeprecatedProcedure()
 EndProcedure
 

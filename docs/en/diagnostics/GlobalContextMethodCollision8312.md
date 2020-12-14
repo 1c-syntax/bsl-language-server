@@ -1,4 +1,4 @@
-# <Diagnostic name> (GlobalContextMethodCollision8312)
+# Global context method names collision (GlobalContextMethodCollision8312)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 

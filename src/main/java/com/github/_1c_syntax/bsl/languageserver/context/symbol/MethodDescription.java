@@ -32,6 +32,8 @@ import org.antlr.v4.runtime.Token;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Класс-описание метода (процедуры или функции)
  */
@@ -80,6 +82,12 @@ public class MethodDescription {
    * Возвращаемые значения (типы)
    */
   List<TypeDescription> returnedValue;
+  /**
+   * Если описание содержит только ссылку, то здесь будет ее значение
+   * <p>
+   * TODO Временное решение, надо будет продумать в следующем релизе
+   */
+  String link;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
@@ -87,10 +95,11 @@ public class MethodDescription {
       .collect(Collectors.joining("\n"));
 
     var tokenizer = new BSLMethodDescriptionTokenizer(description);
-    var ast = tokenizer.getAst();
+    var ast = requireNonNull(tokenizer.getAst());
 
     purposeDescription = DescriptionReader.readPurposeDescription(ast);
-    deprecated = ast != null && ast.deprecate() != null;
+    link = DescriptionReader.readLink(ast);
+    deprecated = ast.deprecate() != null;
     deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
     callOptions = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
     examples = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);

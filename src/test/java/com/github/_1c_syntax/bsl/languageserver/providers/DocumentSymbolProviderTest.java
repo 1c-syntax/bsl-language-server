@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.SymbolTag;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ class DocumentSymbolProviderTest {
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(7, 0, 8, 12)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(10, 0, 13, 14)))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(47, 0, 48, 12)))
-      .filteredOn(DocumentSymbol::getDeprecated)
+      .filteredOn(documentSymbol1 -> documentSymbol1.getTags().contains(SymbolTag.Deprecated))
       .anyMatch(documentSymbol -> documentSymbol.getRange().equals(Ranges.create(47, 0, 48, 12)))
     ;
 

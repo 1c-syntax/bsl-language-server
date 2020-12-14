@@ -33,10 +33,10 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -47,7 +47,6 @@ import java.util.regex.Pattern;
     DiagnosticTag.SQL,
     DiagnosticTag.PERFORMANCE
   }
-
 )
 public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
@@ -57,10 +56,15 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitQuery(SDBLParser.QueryContext ctx) {
-    var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
     var columnsCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_column);
 
     if (columnsCollection.isEmpty()) {
+      return ctx;
+    }
+
+    var dataSourceCollection = Trees.findAllRuleNodes(ctx, SDBLParser.RULE_dataSource);
+
+    if (dataSourceCollection.stream().anyMatch(Trees::treeContainsErrors)) {
       return ctx;
     }
 
@@ -69,10 +73,10 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return ctx;
     }
 
-    Set<String> tableNames = new HashSet<>();
-    for (var dataSource : dataSourceCollection) {
-      tableNames.add(getTableNameOrAlias(dataSource));
-    }
+    Set<String> tableNames = dataSourceCollection.stream()
+      .map(RefOveruseDiagnostic::getTableNameOrAlias)
+      .collect(Collectors.toSet());
+
     columnsCollection.forEach(column -> checkColumnNode((SDBLParser.ColumnContext) column, tableNames));
     return ctx;
 
@@ -114,29 +118,21 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     }
   }
 
-  private String getTableNameOrAlias(ParseTree dataSource) {
-
-    String alias = Optional.of(dataSource)
-      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_alias))
-      .filter(Optional::isPresent)
-      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .map(BSLParserRuleContext::getText)
-      .orElse("");
-
-    if (!alias.isBlank()) {
-      return alias;
-    }
-
+  private static String getTableNameOrAlias(ParseTree dataSource) {
     return Optional.of(dataSource)
-      .map(dataSrc -> Trees.getFirstChild(dataSrc, SDBLParser.RULE_table))
-      .filter(Optional::isPresent)
-      .map(optionalAlias -> Trees.getFirstChild(optionalAlias.get(), SDBLParser.RULE_identifier))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .map(BSLParserRuleContext::getText)
+      .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_alias))
+      .or(() -> Optional.of(dataSource)
+        .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_table)))
+      .or(() -> Optional.of(dataSource)
+        .flatMap(dataSrc -> extractTextFromChild(dataSrc, SDBLParser.RULE_parameterTable)))
       .orElse("");
+  }
+
+  private static Optional<String> extractTextFromChild(ParseTree parseTree, int childRuleType) {
+    return Optional.of(parseTree)
+      .flatMap(tree -> Trees.getFirstChild(tree, childRuleType))
+      .flatMap(child -> Trees.getFirstChild(child, SDBLParser.RULE_identifier))
+      .map(BSLParserRuleContext::getText);
   }
 
 }

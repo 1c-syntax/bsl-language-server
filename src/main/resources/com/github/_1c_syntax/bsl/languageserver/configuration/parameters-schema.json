@@ -52,6 +52,14 @@
                 "object"
             ],
             "title": "Code out of region",
+            "properties": {
+                "checkUnknownModuleType": {
+                    "description": "Check unknown module type",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check unknown module type"
+                }
+            },
             "$id": "#/definitions/CodeOutOfRegion"
         },
         "CognitiveComplexity": {
@@ -577,13 +585,13 @@
             "$id": "#/definitions/GetFormMethod"
         },
         "GlobalContextMethodCollision8312": {
-            "description": "<Diagnostic name>",
+            "description": "Global context method names collision",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "<Diagnostic name>",
+            "title": "Global context method names collision",
             "$id": "#/definitions/GlobalContextMethodCollision8312"
         },
         "IdenticalExpressions": {

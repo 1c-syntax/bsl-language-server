@@ -20,14 +20,20 @@ Using the Safe Mode () method, in which the result is implicitly converted to a 
 Wrong:
 
 ```
-If SafeMode() Then // some code EndIf;
+If SafeMode() Then
+     // some logic in safe mode...
+EndIf;
+
+If No SafeMode() Then
+     // some logic in unsafe mode...
+EndIf;
 ```
 
 Correct:
 
 ```
 If SafeMode() <> False Then
-// some code
+   // some code
 EndIf;
 ```
 

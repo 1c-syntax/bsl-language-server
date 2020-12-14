@@ -13,7 +13,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Nested operators "If", "For", "ForEach", "While" and "Try" are key ingredients for so called "spaghetti-code".
+Nested "If, "For", "For Each", "While" and "Try" operators are the key ingredients for creating so-called "spaghetti code"
 
 Such code is hard for reading, refactoring and support.
 

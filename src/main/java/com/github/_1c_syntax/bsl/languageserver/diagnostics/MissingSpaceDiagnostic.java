@@ -70,15 +70,15 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   /**
    * Ключевые слова, требующие пробел слева и справа
    */
-  private static final List<Integer> KEYWORDS_WITH_LEFT_RIGHT_SPACE = computeKeywordsWithLeftRightSpace();
+  private static final Set<Integer> KEYWORDS_WITH_LEFT_RIGHT_SPACE = computeKeywordsWithLeftRightSpace();
   /**
    * Ключевые слова, требующие пробел слева
    */
-  private static final List<Integer> KEYWORDS_WITH_LEFT_SPACE = computeKeywordsWithLeftSpace();
+  private static final Set<Integer> KEYWORDS_WITH_LEFT_SPACE = computeKeywordsWithLeftSpace();
   /**
    * Ключевые слова, требующие пробел справа
    */
-  private static final List<Integer> KEYWORDS_WITH_RIGHT_SPACE = computeKeywordsWithRightSpace();
+  private static final Set<Integer> KEYWORDS_WITH_RIGHT_SPACE = computeKeywordsWithRightSpace();
 
   @DiagnosticParameter(
     type = String.class,
@@ -291,32 +291,32 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     return String.format(formatString, errorMessage, tokenText).intern();
   }
 
-  private static List<Integer> computeKeywordsWithLeftRightSpace() {
-    List<Integer> leftRight = new ArrayList<>();
-    leftRight.add(BSLParser.TO_KEYWORD);
-    leftRight.add(BSLParser.IN_KEYWORD);
-    leftRight.add(BSLParser.OR_KEYWORD);
-    leftRight.add(BSLParser.AND_KEYWORD);
-    return leftRight;
+  private static Set<Integer> computeKeywordsWithLeftRightSpace() {
+    return Set.of(
+      BSLParser.TO_KEYWORD,
+      BSLParser.IN_KEYWORD,
+      BSLParser.OR_KEYWORD,
+      BSLParser.AND_KEYWORD
+    );
   }
 
-  private static List<Integer> computeKeywordsWithLeftSpace() {
-    List<Integer> left = new ArrayList<>();
-    left.add(BSLParser.EXPORT_KEYWORD);
-    left.add(BSLParser.THEN_KEYWORD);
-    left.add(BSLParser.DO_KEYWORD);
-    return left;
+  private static Set<Integer> computeKeywordsWithLeftSpace() {
+    return Set.of(
+      BSLParser.EXPORT_KEYWORD,
+      BSLParser.THEN_KEYWORD,
+      BSLParser.DO_KEYWORD
+    );
   }
 
-  private static List<Integer> computeKeywordsWithRightSpace() {
-    List<Integer> right = new ArrayList<>();
-    right.add(BSLParser.IF_KEYWORD);
-    right.add(BSLParser.ELSIF_KEYWORD);
-    right.add(BSLParser.WHILE_KEYWORD);
-    right.add(BSLParser.FOR_KEYWORD);
-    right.add(BSLParser.NOT_KEYWORD);
-    right.add(BSLParser.EACH_KEYWORD);
-    return right;
+  private static Set<Integer> computeKeywordsWithRightSpace() {
+    return Set.of(
+      BSLParser.IF_KEYWORD,
+      BSLParser.ELSIF_KEYWORD,
+      BSLParser.WHILE_KEYWORD,
+      BSLParser.FOR_KEYWORD,
+      BSLParser.NOT_KEYWORD,
+      BSLParser.EACH_KEYWORD
+    );
   }
 
 }
