@@ -48,12 +48,11 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
       .hasRange(2, 4, 2, 14)
       .hasRange(3, 4, 3, 14)
       .hasRange(6, 18, 6, 28)
-      .hasRange(7, 18, 7, 28)
       .hasRange(8, 18, 8, 28)
       .hasRange(10, 4, 10, 14)
       .hasRange(16, 4, 16, 14)
