@@ -9,11 +9,11 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.0.2"
+    id("net.kyori.indra.license-header") version "1.2.1"
     id("org.sonarqube") version "3.0"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.33.0"
+    id("com.github.ben-manes.versions") version "0.36.0"
     id("io.freefair.javadoc-links") version "5.2.1"
     id("org.springframework.boot") version "2.3.5.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
@@ -43,7 +43,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.11.2"
+val jacksonVersion = "2.11.3"
 val junitVersion = "5.6.1"
 val languageToolVersion = "5.1"
 
@@ -56,7 +56,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.5.2")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.10.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "2cfed6c4f59b3ea2e24e0badfd4f1ff21df7215a") {
@@ -108,8 +108,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.18.0")
-    testImplementation("org.mockito", "mockito-core", "3.6.0")
+    testImplementation("org.assertj", "assertj-core", "3.18.1")
+    testImplementation("org.mockito", "mockito-core", "3.6.28")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
