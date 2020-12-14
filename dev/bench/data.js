@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1607699705317,
+  "lastUpdate": 1607935989132,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -7378,6 +7378,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.0532428365818147",
             "extra": "mean: 75.95820212364197 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36b135b6c5f90996aa00d6a1ec6ab6bf1a209c29",
+          "message": "Merge pull request #1483 from qtLex/fix/RedundantAccessToObject\n\nИсправление FP на доступе через индекс",
+          "timestamp": "2020-12-14T11:45:20+03:00",
+          "tree_id": "00a6ef3f7f5c8a376df7de8c3902d67b87b22384",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/36b135b6c5f90996aa00d6a1ec6ab6bf1a209c29"
+        },
+        "date": 1607935985379,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.19123760859172,
+            "unit": "sec",
+            "range": "stddev: 1.0132745108174128",
+            "extra": "mean: 76.19123760859172 sec\nrounds: 3"
           }
         ]
       }
