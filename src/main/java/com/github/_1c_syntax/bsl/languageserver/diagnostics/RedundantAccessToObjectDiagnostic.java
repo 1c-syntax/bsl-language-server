@@ -95,7 +95,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       documentContext.getMdObject().ifPresent(mdObjectBase -> {
         needCheckName = true;
         skipLValue = true;
-        namePattern = CaseInsensitivePattern.compile(String.format("^%s", mdObjectBase.getName()));
         namePatternWithDot = CaseInsensitivePattern.compile(
           String.format(getManagerModuleName(mdObjectBase.getType()), mdObjectBase.getName())
         );
@@ -142,10 +141,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
-    if (needCheckName && namePattern.matcher(identifier.getText()).matches() && modifiers.get(0) != null) {
-      diagnosticStorage.addDiagnostic(ctx.getStart());
-    }
-
     return ctx;
   }
 
@@ -163,10 +158,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     }
 
     if (PATTERN.matcher(identifier.getText()).matches() && acceptor.accessProperty() != null) {
-      diagnosticStorage.addDiagnostic(ctx.getStart());
-    }
-
-    if (needCheckName && namePattern.matcher(identifier.getText()).matches() && acceptor.accessProperty() != null) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
