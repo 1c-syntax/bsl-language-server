@@ -67,7 +67,6 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
 
   private boolean needCheckName = false;
   private boolean skipLValue = false;
-  private Pattern namePattern;
   private Pattern namePatternWithDot;
 
   @DiagnosticParameter(
@@ -157,7 +156,11 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
       return ctx;
     }
 
-    if (PATTERN.matcher(identifier.getText()).matches() && acceptor.accessProperty() != null) {
+    if (
+      PATTERN.matcher(identifier.getText()).matches()
+      && notHasAccessIndex(acceptor)
+      && hasAccessProperty(acceptor)
+    ) {
       diagnosticStorage.addDiagnostic(ctx.getStart());
     }
 
@@ -186,5 +189,17 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     return typeModule == ModuleType.ObjectModule && !checkObjectModule
       || typeModule == ModuleType.RecordSetModule && !checkRecordSetModule
       || typeModule == ModuleType.FormModule && !checkFormModule;
+  }
+
+  private static boolean notHasAccessIndex(BSLParser.AcceptorContext acceptor) {
+    var modifiers = acceptor.modifier();
+    return modifiers == null
+      || modifiers.size() == 0
+      || modifiers.get(0) == null
+      || modifiers.get(0).accessIndex() == null;
+  }
+
+  private static boolean hasAccessProperty(BSLParser.AcceptorContext acceptor) {
+    return acceptor.accessProperty() != null;
   }
 }
