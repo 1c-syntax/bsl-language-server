@@ -34,7 +34,7 @@ import org.eclipse.lsp4j.Range;
 public class ParameterDefinition {
   String name;
   boolean byValue;
-  DefaultValue defaultValue = DefaultValue.EMPTY;
+  DefaultValue defaultValue;
   Range range;
 
   public boolean isOptional() {
