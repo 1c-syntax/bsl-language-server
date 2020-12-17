@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -45,6 +46,7 @@ import org.eclipse.lsp4j.Range;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -207,7 +209,7 @@ public final class MethodSymbolComputer
       .description(description)
       .deprecated(deprecated)
       .mdoRef(mdoRef)
-      .parameters(createParameters(paramList))
+      .parameters(createParameters(paramList, description))
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)
       .build();
@@ -222,20 +224,25 @@ public final class MethodSymbolComputer
     return Optional.of(new MethodDescription(comments));
   }
 
-  private static List<ParameterDefinition> createParameters(@Nullable BSLParser.ParamListContext paramList) {
+  private static List<ParameterDefinition> createParameters(
+    @Nullable BSLParser.ParamListContext paramList,
+    Optional<MethodDescription> description
+  ) {
     if (paramList == null) {
       return Collections.emptyList();
     }
 
     return paramList.param().stream()
-      .map(param ->
-        ParameterDefinition.builder()
-          .name(getParameterName(param.IDENTIFIER()))
+      .map((BSLParser.ParamContext param) -> {
+        String parameterName = getParameterName(param.IDENTIFIER());
+        return ParameterDefinition.builder()
+          .name(parameterName)
           .byValue(param.VAL_KEYWORD() != null)
           .defaultValue(getDefaultValue(param))
           .range(getParameterRange(param))
-          .build()
-      ).collect(Collectors.toList());
+          .description(getParameterDescription(parameterName, description))
+          .build();
+      }).collect(Collectors.toList());
   }
 
   private static ParameterDefinition.DefaultValue getDefaultValue(BSLParser.ParamContext param) {
@@ -290,10 +297,22 @@ public final class MethodSymbolComputer
   }
 
   private static Range getParameterRange(BSLParser.ParamContext param) {
-    if(param.IDENTIFIER() == null) {
+    if (param.IDENTIFIER() == null) {
       return Ranges.create(param.start);
     }
     return Ranges.create(param.IDENTIFIER());
+  }
+
+  private static Optional<ParameterDescription> getParameterDescription(
+    String parameterName,
+    Optional<MethodDescription> description) {
+
+    return description.map(MethodDescription::getParameters)
+      .stream()
+      .flatMap(Collection::stream)
+      .filter(parameterDescription -> parameterDescription.getName().equalsIgnoreCase(parameterName))
+      .findFirst();
+
   }
 
   private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
