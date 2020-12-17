@@ -61,7 +61,7 @@ class MethodSymbolComputerTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(23);
+    assertThat(methods.size()).isEqualTo(24);
 
     assertThat(methods.get(0).getName()).isEqualTo("Один");
     assertThat(methods.get(0).getDescription()).isNotPresent();
@@ -227,6 +227,14 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(3).isOptional()).isTrue();
     assertThat(parameters.get(3).getDefaultValue().getValue()).isEqualTo("0");
     assertThat(parameters.get(3).getRange()).isEqualTo(Ranges.create(14, 49, 55));
+
+    parameters = methods.get(23).getParameters();
+    assertThat(parameters.get(0).getName()).isEqualTo("Парам1");
+    assertThat(parameters.get(0).getDescription()).isPresent();
+    assertThat(parameters.get(1).getName()).isEqualTo("Парам2");
+    assertThat(parameters.get(1).getDescription()).isEmpty();
+    assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
+    assertThat(parameters.get(2).getDescription()).isPresent();
 
   }
 
