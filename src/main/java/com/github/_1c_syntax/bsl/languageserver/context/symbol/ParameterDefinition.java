@@ -34,6 +34,34 @@ import org.eclipse.lsp4j.Range;
 public class ParameterDefinition {
   String name;
   boolean byValue;
-  boolean optional;
+  DefaultValue defaultValue = DefaultValue.EMPTY;
   Range range;
+
+  public boolean isOptional() {
+    return !DefaultValue.EMPTY.equals(defaultValue);
+  }
+
+  public enum ParameterType {
+    DATETIME,
+    BOOLEAN,
+    UNDEFINED,
+    NULL,
+    STRING,
+    NUMERIC,
+    EMPTY
+  }
+
+  @Value
+  public static class DefaultValue {
+    public static final DefaultValue EMPTY = new DefaultValue(ParameterType.EMPTY, "");
+
+    ParameterType type;
+    String value;
+
+    public static DefaultValue datetime(String value) {
+      return new DefaultValue(ParameterType.DATETIME, value);
+    }
+
+
+  }
 }

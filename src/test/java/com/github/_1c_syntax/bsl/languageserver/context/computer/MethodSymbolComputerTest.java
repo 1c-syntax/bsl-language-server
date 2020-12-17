@@ -219,11 +219,13 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).isByValue()).isFalse();
     assertThat(parameters.get(2).isOptional()).isTrue();
+    assertThat(parameters.get(2).getDefaultValue().getValue()).isEqualTo("0");
     assertThat(parameters.get(2).getRange()).isEqualTo(Ranges.create(14, 32, 38));
 
     assertThat(parameters.get(3).getName()).isEqualTo("Парам4");
     assertThat(parameters.get(3).isByValue()).isTrue();
     assertThat(parameters.get(3).isOptional()).isTrue();
+    assertThat(parameters.get(3).getDefaultValue().getValue()).isEqualTo("0");
     assertThat(parameters.get(3).getRange()).isEqualTo(Ranges.create(14, 49, 55));
 
   }
