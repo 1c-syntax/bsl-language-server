@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.ParameterType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
@@ -231,10 +232,55 @@ public final class MethodSymbolComputer
         ParameterDefinition.builder()
           .name(getParameterName(param.IDENTIFIER()))
           .byValue(param.VAL_KEYWORD() != null)
-          .optional(param.defaultValue() != null)
+          .defaultValue(getDefaultValue(param))
           .range(getParameterRange(param))
           .build()
       ).collect(Collectors.toList());
+  }
+
+  private static ParameterDefinition.DefaultValue getDefaultValue(BSLParser.ParamContext param) {
+    if (param.defaultValue() == null) {
+      return ParameterDefinition.DefaultValue.EMPTY;
+    }
+
+    var constValue = param.defaultValue().constValue();
+
+    ParameterDefinition.DefaultValue defaultValue;
+    if (constValue.DATETIME() != null) {
+      var value = constValue.DATETIME().getSymbol().getText();
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.DATETIME, value);
+    } else if (constValue.FALSE() != null) {
+      var value = constValue.FALSE().getSymbol().getText();
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.BOOLEAN, value);
+    } else if (constValue.TRUE() != null) {
+      var value = constValue.TRUE().getSymbol().getText();
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.BOOLEAN, value);
+    } else if (constValue.UNDEFINED() != null) {
+      var value = constValue.UNDEFINED().getSymbol().getText();
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.UNDEFINED, value);
+    } else if (constValue.NULL() != null) {
+      var value = constValue.NULL().getSymbol().getText();
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.NULL, value);
+    } else if (constValue.string() != null) {
+      var value = constValue.string().STRING().stream()
+        .map(TerminalNode::getSymbol)
+        .map(Token::getText)
+        .collect(Collectors.joining("\n"));
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.STRING, value);
+    } else if (constValue.numeric() != null) {
+      var value = constValue.numeric().getText();
+      if (constValue.MINUS() != null) {
+        value = constValue.MINUS().getSymbol().getText() + value;
+      }
+      if (constValue.PLUS() != null) {
+        value = constValue.PLUS().getSymbol().getText() + value;
+      }
+      defaultValue = new ParameterDefinition.DefaultValue(ParameterType.NUMERIC, value);
+    } else {
+      defaultValue = ParameterDefinition.DefaultValue.EMPTY;
+    }
+
+    return defaultValue;
   }
 
   private static String getParameterName(TerminalNode identifier) {
