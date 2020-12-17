@@ -21,9 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import lombok.Builder;
 import lombok.Value;
 import org.eclipse.lsp4j.Range;
+
+import java.util.Optional;
 
 /**
  * Класс хранит информацию о параметре метода.
@@ -32,9 +35,29 @@ import org.eclipse.lsp4j.Range;
 @Value
 @Builder
 public class ParameterDefinition {
+  /**
+   * Имя параметра.
+   */
   String name;
+
+  /**
+   * Передача параметра по значению.
+   */
   boolean byValue;
+
+  /**
+   * Описание параметра.
+   */
+  Optional<ParameterDescription> description;
+
+  /**
+   * Значение по умолчанию.
+   */
   DefaultValue defaultValue;
+
+  /**
+   * Место объявления параметра.
+   */
   Range range;
 
   public boolean isOptional() {
@@ -57,11 +80,5 @@ public class ParameterDefinition {
 
     ParameterType type;
     String value;
-
-    public static DefaultValue datetime(String value) {
-      return new DefaultValue(ParameterType.DATETIME, value);
-    }
-
-
   }
 }
