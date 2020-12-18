@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
@@ -57,6 +57,7 @@ import static java.util.stream.Collectors.toCollection;
 @SuppressWarnings("UnstableApiUsage")
 public class CallHierarchyProvider {
 
+  private final ReferenceResolver referenceResolver;
   private final CalleeStorage calleeStorage;
 
   public List<CallHierarchyItem> prepareCallHierarchy(
@@ -65,14 +66,11 @@ public class CallHierarchyProvider {
   ) {
     Position position = params.getPosition();
 
-    // TODO: SymbolResolver.getSymbol
-    return documentContext.getSymbolTree()
-      .getMethods().stream()
-      .filter(methodSymbol -> Ranges.containsPosition(methodSymbol.getSubNameRange(), position))
-      .findAny()
-      .or(() -> calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-        .map(Pair::getKey)
-      )
+    // TODO: generic symbol api
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .map(Pair::getKey)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
       // в случае отсутствия ответа по протоколу надо возвращать null, а не пустой список
