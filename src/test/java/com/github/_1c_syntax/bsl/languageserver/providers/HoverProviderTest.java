@@ -30,12 +30,14 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class HoverProviderTest {
 
   @Autowired
@@ -53,11 +55,30 @@ class HoverProviderTest {
   }
 
   @Test
-  @Disabled
   void testLocalMethods() {
+    // given
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
+
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(15, 0));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    var content = hover.getContents().getRight().getValue();
+
+    assertThat(content)
+      .contains("providers/hover.bsl")
+      .contains("```bsl\nФункция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, Знач П3: Строка = \"\", П4, ПДата = '20100101', ПДатаВремя = '20110101121212', П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт");
+  }
+
+  @Test
+  @Disabled
+  void testHoverOnMethodDefinitionOfLocalModule() {
     // todo
-    //  hover.contents[0].should.has.a.key("_value").which.is.equal("Метод текущего модуля");
-    //  hover.contents[2].should.has.a.key("_value").which.is.equal("```bsl\nПроцедура НеЭкспортнаяПроцедура()\n```\n");
   }
 
   @Test

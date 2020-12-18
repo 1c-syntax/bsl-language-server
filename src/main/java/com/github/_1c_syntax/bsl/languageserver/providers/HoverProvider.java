@@ -22,44 +22,40 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.hover.MarkupContentBuilder;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.MarkupContent;
-import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public final class HoverProvider {
 
-  private final CalleeStorage calleeStorage;
+  private final ReferenceResolver referenceResolver;
+  private final Map<Class<Symbol>, MarkupContentBuilder<Symbol>> markupContentBuilders;
 
   public Optional<Hover> getHover(DocumentContext documentContext, HoverParams params) {
     Position position = params.getPosition();
 
-    return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-      .map((Pair<MethodSymbol, Range> pair) -> {
-        var hover = new Hover();
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .map((Pair<Symbol, Range> pair) -> {
+        var symbol = pair.getLeft();
+        var range = pair.getRight();
 
-        Range range = pair.getValue();
-        MethodSymbol methodSymbol = pair.getKey();
+        var markupContentBuilder = markupContentBuilders.get(symbol.getClass());
+        MarkupContent content = markupContentBuilder.getContent(symbol);
 
-        String description = methodSymbol.getDescription()
-          .map(MethodDescription::getDescription)
-          .orElse("");
-
-        MarkupContent content = new MarkupContent();
-        content.setValue(description);
-        content.setKind(MarkupKind.MARKDOWN);
+        Hover hover = new Hover();
 
         hover.setContents(content);
         hover.setRange(range);
