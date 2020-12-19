@@ -249,6 +249,7 @@ public class DocumentContext {
     symbolTree.clear();
     this.content = content;
     tokenizer = new BSLTokenizer(content);
+    this.version = version;
     computeLock.unlock();
   }
 
