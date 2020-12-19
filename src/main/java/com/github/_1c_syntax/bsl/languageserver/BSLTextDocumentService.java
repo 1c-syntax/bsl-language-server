@@ -208,7 +208,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
-
+  
   @Override
   @SuppressWarnings("UnstableApiUsage")
   public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
