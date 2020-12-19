@@ -189,13 +189,17 @@ public abstract class ServerContext {
     if (configurationRoot == null) {
       return Configuration.create();
     }
+
+    Configuration configuration;
     ForkJoinPool customThreadPool = new ForkJoinPool();
     try {
-      return customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
-    } catch (InterruptedException | ExecutionException e) {
-      LOGGER.error("Can't parse configuration metadata", e);
-      return Configuration.create();
+      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).join();
+    } catch (RuntimeException e) {
+      LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
+      configuration = Configuration.create();
     }
+
+    return configuration;
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
