@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.metadata.Configuration;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
@@ -179,31 +180,31 @@ public abstract class ServerContext {
     return documentContext;
   }
 
-  @SneakyThrows
   private Configuration computeConfigurationMetadata() {
     if (configurationRoot == null) {
       return Configuration.create();
     }
+
+    Configuration configuration;
     ForkJoinPool customThreadPool = new ForkJoinPool();
-    return customThreadPool.submit(() -> Configuration.create(configurationRoot)).get();
+    try {
+      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).join();
+    } catch (RuntimeException e) {
+      LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
+      configuration = Configuration.create();
+    }
+
+    return configuration;
   }
 
   private void addMdoRefByUri(URI uri, DocumentContext documentContext) {
-    var modulesByObject = getConfiguration().getModulesByObject();
-    var mdoByUri = modulesByObject.get(uri);
+    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
 
-    if (mdoByUri != null) {
-      var mdoRef = mdoByUri.getMdoReference().getMdoRef();
-      mdoRefs.put(uri, mdoRef);
-      var documentsGroup = documentsByMDORef.get(mdoRef);
-      if (documentsGroup == null) {
-        Map<ModuleType, DocumentContext> newDocumentsGroup = new EnumMap<>(ModuleType.class);
-        newDocumentsGroup.put(documentContext.getModuleType(), documentContext);
-        documentsByMDORef.put(mdoRef, newDocumentsGroup);
-      } else {
-        documentsGroup.put(documentContext.getModuleType(), documentContext);
-      }
-    }
+    mdoRefs.put(uri, mdoRef);
+    documentsByMDORef.computeIfAbsent(
+      mdoRef,
+      k -> new EnumMap<>(ModuleType.class)
+    ).put(documentContext.getModuleType(), documentContext);
   }
 
   private void removeDocumentMdoRefByUri(URI uri) {

@@ -142,13 +142,22 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
 
   private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
     var modifiers = ctx.modifier();
-    var methodName = getMethodName(ctx.accessCall());
+    Optional<Token> methodName;
+    if (ctx.globalMethodCall() != null) {
+      methodName = getMethodName(ctx.globalMethodCall());
+    } else {
+      methodName = getMethodName(ctx.accessCall());
+    }
 
     if (modifiers.isEmpty()) {
       return methodName;
     } else {
       return getMethodName(modifiers).or(() -> methodName);
     }
+  }
+
+  private static Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
+    return Optional.of(ctx.methodName().getStart());
   }
 
   private static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
