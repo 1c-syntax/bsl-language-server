@@ -36,10 +36,10 @@ import java.util.stream.Collectors;
 
 @Value
 public class SymbolTree {
-  List<Symbol> children;
+  List<LocatableSymbol> children;
 
   @Getter(lazy = true)
-  List<Symbol> childrenFlat = createChildrenFlat();
+  List<LocatableSymbol> childrenFlat = createChildrenFlat();
 
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
@@ -108,8 +108,8 @@ public class SymbolTree {
       .findAny();
   }
 
-  private List<Symbol> createChildrenFlat() {
-    List<Symbol> symbols = new ArrayList<>();
+  private List<LocatableSymbol> createChildrenFlat() {
+    List<LocatableSymbol> symbols = new ArrayList<>();
     getChildren().forEach(child -> flatten(child, symbols));
 
     return symbols;
@@ -119,7 +119,7 @@ public class SymbolTree {
     return getChildrenFlat(MethodSymbol.class);
   }
 
-  private static void flatten(Symbol symbol, List<Symbol> symbols) {
+  private static void flatten(LocatableSymbol symbol, List<LocatableSymbol> symbols) {
     symbols.add(symbol);
     symbol.getChildren().forEach(child -> flatten(child, symbols));
   }

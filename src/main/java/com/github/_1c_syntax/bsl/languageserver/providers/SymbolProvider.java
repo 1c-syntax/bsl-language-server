@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.LocatableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
@@ -70,7 +71,7 @@ public class SymbolProvider {
       .collect(Collectors.toList());
   }
 
-  private static Stream<Pair<URI, Symbol>> getSymbolPairs(DocumentContext documentContext) {
+  private static Stream<Pair<URI, LocatableSymbol>> getSymbolPairs(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildrenFlat().stream()
       .filter(SymbolProvider::isSupported)
       .map(symbol -> Pair.of(documentContext.getUri(), symbol));
@@ -88,7 +89,7 @@ public class SymbolProvider {
     }
   }
 
-  private static SymbolInformation createSymbolInformation(Pair<URI, Symbol> symbolPair) {
+  private static SymbolInformation createSymbolInformation(Pair<URI, LocatableSymbol> symbolPair) {
     var uri = symbolPair.getKey();
     var symbol = symbolPair.getValue();
     var symbolInformation = new SymbolInformation(

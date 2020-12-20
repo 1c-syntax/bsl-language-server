@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.LocatableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 
@@ -36,11 +36,11 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
     visitChildren(documentContext.getSymbolTree().getChildren());
   }
 
-  void visitChildren(List<Symbol> children) {
+  void visitChildren(List<LocatableSymbol> children) {
     children.forEach(this::visit);
   }
 
-  void visit(Symbol symbol) {
+  void visit(LocatableSymbol symbol) {
     symbol.accept(this);
   }
 

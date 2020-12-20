@@ -202,6 +202,7 @@ public final class MethodSymbolComputer
 
     return MethodSymbol.builder()
       .name(subName.getText())
+      .uri(documentContext.getUri())
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(subName))
       .function(function)

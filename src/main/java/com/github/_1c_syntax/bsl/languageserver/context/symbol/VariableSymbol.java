@@ -33,6 +33,7 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -41,10 +42,11 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements Symbol {
+public class VariableSymbol implements LocatableSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
+  URI uri;
   Range range;
   Range variableNameRange;
 
@@ -52,10 +54,10 @@ public class VariableSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<LocatableSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = Collections.emptyList();
+  List<LocatableSymbol> children = Collections.emptyList();
 
   VariableKind kind;
   boolean export;
@@ -65,4 +67,10 @@ public class VariableSymbol implements Symbol {
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitVariable(this);
   }
+
+  @Override
+  public Range getSelectionRange() {
+    return getVariableNameRange();
+  }
+
 }
