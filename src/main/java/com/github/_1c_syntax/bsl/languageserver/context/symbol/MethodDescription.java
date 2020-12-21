@@ -101,8 +101,8 @@ public class MethodDescription {
     link = DescriptionReader.readLink(ast);
     deprecated = ast.deprecate() != null;
     deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
-    callOptions = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
-    examples = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);
+    callOptions = DescriptionReader.readCallOptions(ast);
+    examples = DescriptionReader.readExamples(ast);
     parameters = DescriptionReader.readParameters(ast);
     returnedValue = DescriptionReader.readReturnedValue(ast);
 

@@ -75,7 +75,7 @@ class MethodDescriptionTest {
   void testMethod9() {
     var method = methodsWithDescription.get(8);
     assertThat(method.getPurposeDescription())
-      .isEqualTo("Описание метода\n\n Несколько строк");
+      .isEqualTo("Описание метода\nНесколько строк");
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
@@ -89,7 +89,7 @@ class MethodDescriptionTest {
   void testMethod8() {
     var method = methodsWithDescription.get(7);
     assertThat(methodsWithDescription.get(7).getPurposeDescription())
-      .isEqualTo("Описание метода\n\n Несколько строк");
+      .isEqualTo("Описание метода\nНесколько строк");
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
@@ -103,7 +103,7 @@ class MethodDescriptionTest {
   void testMethod7() {
     var method = methodsWithDescription.get(6);
     assertThat(method.getPurposeDescription())
-      .isEqualTo("Описание метода\n\n Несколько строк");
+      .isEqualTo("Описание метода\nНесколько строк");
     assertThat(method.isDeprecated()).isTrue();
     assertThat(method.getDeprecationInfo())
       .isEqualTo("Следует использовать новую см. ОбщегоНазначения.Метод()");
