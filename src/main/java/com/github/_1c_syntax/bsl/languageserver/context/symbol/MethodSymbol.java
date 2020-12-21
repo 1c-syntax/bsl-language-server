@@ -42,7 +42,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements LocatableSymbol {
+public class MethodSymbol implements SourceDefinedSymbol {
   String name;
 
   @Builder.Default
@@ -56,10 +56,10 @@ public class MethodSymbol implements LocatableSymbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<LocatableSymbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<LocatableSymbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   boolean function;
   boolean export;

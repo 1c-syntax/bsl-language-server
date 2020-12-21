@@ -42,7 +42,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements LocatableSymbol {
+public class VariableSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
@@ -54,10 +54,10 @@ public class VariableSymbol implements LocatableSymbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<LocatableSymbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<LocatableSymbol> children = Collections.emptyList();
+  List<SourceDefinedSymbol> children = Collections.emptyList();
 
   VariableKind kind;
   boolean export;

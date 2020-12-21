@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @Builder(access = lombok.AccessLevel.PUBLIC)
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class RegionSymbol implements LocatableSymbol {
+public class RegionSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
@@ -55,10 +55,10 @@ public class RegionSymbol implements LocatableSymbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<LocatableSymbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<LocatableSymbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   public List<MethodSymbol> getMethods() {
     return children.stream()

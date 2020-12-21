@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.LocatableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -49,26 +49,26 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     List<RegionSymbol> regions = new RegionSymbolComputer(documentContext).compute();
     List<VariableSymbol> variables = new VariableSymbolComputer(documentContext).compute();
 
-    List<LocatableSymbol> allOfThem = new ArrayList<>(methods);
+    List<SourceDefinedSymbol> allOfThem = new ArrayList<>(methods);
     allOfThem.addAll(regions);
     allOfThem.addAll(variables);
 
     allOfThem.sort(Comparator.comparingInt(symbol -> symbol.getRange().getStart().getLine()));
 
-    List<LocatableSymbol> topLevelSymbols = new ArrayList<>();
-    LocatableSymbol currentParent = LocatableSymbol.emptySymbol();
+    List<SourceDefinedSymbol> topLevelSymbols = new ArrayList<>();
+    SourceDefinedSymbol currentParent = SourceDefinedSymbol.emptySymbol();
 
-    for (LocatableSymbol symbol : allOfThem) {
+    for (SourceDefinedSymbol symbol : allOfThem) {
       currentParent = placeSymbol(topLevelSymbols, currentParent, symbol);
     }
 
     return new SymbolTree(topLevelSymbols);
   }
 
-  private static LocatableSymbol placeSymbol(
-    List<LocatableSymbol> topLevelSymbols,
-    LocatableSymbol currentParent,
-    LocatableSymbol symbol
+  private static SourceDefinedSymbol placeSymbol(
+    List<SourceDefinedSymbol> topLevelSymbols,
+    SourceDefinedSymbol currentParent,
+    SourceDefinedSymbol symbol
   ) {
 
     if (Ranges.containsRange(currentParent.getRange(), symbol.getRange())) {
@@ -78,7 +78,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
       return symbol;
     }
 
-    Optional<LocatableSymbol> maybeParent = currentParent.getParent();
+    Optional<SourceDefinedSymbol> maybeParent = currentParent.getParent();
     if (maybeParent.isEmpty()) {
       topLevelSymbols.add(symbol);
       return symbol;

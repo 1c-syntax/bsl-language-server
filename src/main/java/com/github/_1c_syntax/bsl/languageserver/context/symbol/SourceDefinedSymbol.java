@@ -32,25 +32,25 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public interface LocatableSymbol extends Symbol {
+public interface SourceDefinedSymbol extends Symbol {
   URI getUri();
 
   Range getRange();
 
   Range getSelectionRange();
 
-  Optional<LocatableSymbol> getParent();
+  Optional<SourceDefinedSymbol> getParent();
 
-  void setParent(Optional<LocatableSymbol> symbol);
+  void setParent(Optional<SourceDefinedSymbol> symbol);
 
-  List<LocatableSymbol> getChildren();
+  List<SourceDefinedSymbol> getChildren();
 
-  default Optional<LocatableSymbol> getRootParent() {
-    return getParent().flatMap(LocatableSymbol::getRootParent).or(() -> Optional.of(this));
+  default Optional<SourceDefinedSymbol> getRootParent() {
+    return getParent().flatMap(SourceDefinedSymbol::getRootParent).or(() -> Optional.of(this));
   }
 
-  static LocatableSymbol emptySymbol() {
-    return new LocatableSymbol() {
+  static SourceDefinedSymbol emptySymbol() {
+    return new SourceDefinedSymbol() {
       @Getter
       private final String name = "empty";
       @Getter
@@ -61,9 +61,9 @@ public interface LocatableSymbol extends Symbol {
       private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter
       @Setter
-      private Optional<LocatableSymbol> parent = Optional.empty();
+      private Optional<SourceDefinedSymbol> parent = Optional.empty();
       @Getter
-      private final List<LocatableSymbol> children = Collections.emptyList();
+      private final List<SourceDefinedSymbol> children = Collections.emptyList();
 
       @Override
       public void accept(SymbolTreeVisitor visitor) {

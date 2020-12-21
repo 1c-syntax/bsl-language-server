@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.LocatableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -41,7 +41,7 @@ public final class DocumentSymbolProvider {
       .collect(Collectors.toList());
   }
 
-  private static DocumentSymbol toDocumentSymbol(LocatableSymbol symbol) {
+  private static DocumentSymbol toDocumentSymbol(SourceDefinedSymbol symbol) {
     var documentSymbol = new DocumentSymbol(
       symbol.getName(),
       symbol.getSymbolKind(),
