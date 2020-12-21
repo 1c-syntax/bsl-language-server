@@ -23,13 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -41,19 +38,19 @@ import java.util.Optional;
  */
 @Component
 @RequiredArgsConstructor
-public class MethodDeclarationReferenceFinder implements ReferenceFinder {
+public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceFinder {
 
   private final ServerContext serverContext;
 
   @Override
-  public Optional<Pair<Symbol, Range>> findReference(URI uri, Position position) {
+  public Optional<Reference> findReference(URI uri, Position position) {
     return Optional.ofNullable(serverContext.getDocument(uri))
       .map(DocumentContext::getSymbolTree)
-      .map(SymbolTree::getMethods)
+      .map(SymbolTree::getChildrenFlat)
       .stream()
       .flatMap(Collection::stream)
-      .filter(symbol -> Ranges.containsPosition(symbol.getSubNameRange(), position))
-      .map(methodSymbol -> Pair.of((Symbol) methodSymbol, methodSymbol.getSubNameRange()))
+      .filter(sourceDefinedSymbol-> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
+      .map(sourceDefinedSymbol-> new Reference(sourceDefinedSymbol, sourceDefinedSymbol.getSelectionRange()))
       .findFirst();
   }
 }

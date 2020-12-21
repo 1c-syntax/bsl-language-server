@@ -49,6 +49,7 @@ public class MethodSymbol implements SourceDefinedSymbol {
   SymbolKind symbolKind = SymbolKind.Method;
 
   URI uri;
+  String mdoRef;
   Range range;
   Range subNameRange;
 
@@ -66,12 +67,6 @@ public class MethodSymbol implements SourceDefinedSymbol {
   Optional<MethodDescription> description;
 
   boolean deprecated;
-
-  /**
-   * Ссылка на объект метаданных, в модуле которого находится метод
-   * Формат ссылки: Document.Заказ, CommonModule.ОбщегоНазначения
-   */
-  String mdoRef;
 
   @Builder.Default
   List<ParameterDefinition> parameters = new ArrayList<>();

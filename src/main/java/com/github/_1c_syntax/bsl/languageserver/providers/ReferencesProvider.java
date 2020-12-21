@@ -23,7 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.ReferenceParams;
@@ -36,21 +37,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReferencesProvider {
 
+  private final ReferenceResolver referenceResolver;
   private final CalleeStorage calleeStorage;
 
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
 
     var position = params.getPosition();
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> Ranges.containsPosition(methodSymbol.getRange(), position))
-      .findAny()
-      .map(methodSymbol ->
-        calleeStorage.getCalleesOf(
-          methodSymbol.getMdoRef(),
-          documentContext.getModuleType(),
-          methodSymbol
-        )
-      )
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol)
+      .map(symbol -> calleeStorage.getCalleesOf(
+        symbol.getMdoRef(),
+        // todo: getModuleType надо брать от DocumentContext из symbol.
+        documentContext.getModuleType(),
+        symbol
+      ))
       .orElseGet(Collections::emptyList);
   }
 }

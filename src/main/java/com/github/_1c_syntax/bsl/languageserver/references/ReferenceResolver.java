@@ -21,11 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -48,9 +45,9 @@ public class ReferenceResolver {
    *
    * @param uri URI документа, в котором необходимо осуществить поиск.
    * @param position позиция курсора.
-   * @return пара в виде символа и полной области, ссылающейся на этот символ.
+   * @return данные ссылки.
    */
-  public Optional<Pair<Symbol, Range>> findReference(URI uri, Position position) {
+  public Optional<Reference> findReference(URI uri, Position position) {
     return finders.stream()
       .map(referenceFinder -> referenceFinder.findReference(uri, position))
       .filter(Optional::isPresent)

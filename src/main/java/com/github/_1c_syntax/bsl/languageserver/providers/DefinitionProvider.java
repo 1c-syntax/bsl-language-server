@@ -22,14 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -39,25 +38,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DefinitionProvider {
 
-  private final CalleeStorage calleeStorage;
+  private final ReferenceResolver referenceResolver;
 
   public List<LocationLink> getDefinition(DocumentContext documentContext, DefinitionParams params) {
     Position position = params.getPosition();
 
-    return calleeStorage.getCalledMethodSymbol(documentContext.getUri(), position)
-      .map((Pair<MethodSymbol, Range> entry) -> {
-        MethodSymbol methodSymbol = entry.getKey();
-
-        String targetUri = methodSymbol.getUri().toString();
-        Range targetRange = methodSymbol.getRange();
-        Range targetSelectionRange = methodSymbol.getSubNameRange();
-        Range originSelectionRange = entry.getValue();
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .filter(Reference::isSourceDefinedSymbolReference)
+      .map((Reference reference) -> {
+        SourceDefinedSymbol symbol = (SourceDefinedSymbol) reference.getSymbol();
 
         return new LocationLink(
-          targetUri,
-          targetRange,
-          targetSelectionRange,
-          originSelectionRange
+          symbol.getUri().toString(),
+          symbol.getRange(),
+          symbol.getSelectionRange(),
+          reference.getSelectionRange()
         );
       })
       .map(List::of)

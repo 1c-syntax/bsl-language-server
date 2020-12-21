@@ -35,6 +35,12 @@ import java.util.Optional;
 public interface SourceDefinedSymbol extends Symbol {
   URI getUri();
 
+  /**
+   * Ссылка на объект метаданных, в модуле которого находится символ.
+   * Формат ссылки: Document.Заказ, CommonModule.ОбщегоНазначения или текстовое представление {@link URI}.
+   */
+  String getMdoRef();
+
   Range getRange();
 
   Range getSelectionRange();
@@ -57,6 +63,8 @@ public interface SourceDefinedSymbol extends Symbol {
       private final SymbolKind symbolKind = SymbolKind.Null;
       @Getter
       private final URI uri = URI.create("");
+      @Getter
+      private final String mdoRef = "file:///fake.bsl";
       @Getter
       private final Range range = Ranges.create(-1, 0, -1, 0);
       @Getter

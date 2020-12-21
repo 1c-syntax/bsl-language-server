@@ -46,6 +46,7 @@ public class RegionSymbol implements SourceDefinedSymbol {
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
   URI uri;
+  String mdoRef;
   Range range;
   Range startRange;
   Range endRange;

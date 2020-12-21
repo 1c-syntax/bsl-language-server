@@ -194,18 +194,16 @@ public final class MethodSymbolComputer
       .map(MethodDescription::isDeprecated)
       .orElse(false);
 
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext);
-
     return MethodSymbol.builder()
       .name(subName.getText())
       .uri(documentContext.getUri())
+      .mdoRef(MdoRefBuilder.getMdoRef(documentContext))
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(subName))
       .function(function)
       .export(export)
       .description(description)
       .deprecated(deprecated)
-      .mdoRef(mdoRef)
       .parameters(createParameters(paramList, description))
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)

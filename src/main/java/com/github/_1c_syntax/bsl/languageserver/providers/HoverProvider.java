@@ -24,14 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.hover.MarkupContentBuilder;
+import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
-import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -48,19 +46,13 @@ public final class HoverProvider {
     Position position = params.getPosition();
 
     return referenceResolver.findReference(documentContext.getUri(), position)
-      .map((Pair<Symbol, Range> pair) -> {
-        var symbol = pair.getLeft();
-        var range = pair.getRight();
+      .flatMap((Reference reference) -> {
+        var symbol = reference.getSymbol();
+        var range = reference.getSelectionRange();
 
-        var markupContentBuilder = markupContentBuilders.get(symbol.getClass());
-        MarkupContent content = markupContentBuilder.getContent(symbol);
-
-        Hover hover = new Hover();
-
-        hover.setContents(content);
-        hover.setRange(range);
-
-        return hover;
+        return Optional.ofNullable(markupContentBuilders.get(symbol.getClass()))
+          .map(markupContentBuilder -> markupContentBuilder.getContent(symbol))
+          .map(content -> new Hover(content, range));
       });
   }
 

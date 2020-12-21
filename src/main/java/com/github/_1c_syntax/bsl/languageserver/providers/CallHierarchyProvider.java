@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +39,6 @@ import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolTag;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -66,11 +67,8 @@ public class CallHierarchyProvider {
   ) {
     Position position = params.getPosition();
 
-    // TODO: generic symbol api
     return referenceResolver.findReference(documentContext.getUri(), position)
-      .map(Pair::getKey)
-      .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
+      .flatMap(Reference::getSourceDefinedSymbol)
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
       // в случае отсутствия ответа по протоколу надо возвращать null, а не пустой список
@@ -126,20 +124,15 @@ public class CallHierarchyProvider {
   }
 
   @SuppressWarnings("UnstableApiUsage")
-  private static CallHierarchyItem getCallHierarchyItem(MethodSymbol methodSymbol) {
+  private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
     CallHierarchyItem item = new CallHierarchyItem();
-    item.setName(methodSymbol.getName());
-    item.setDetail(methodSymbol.getMdoRef());
-    item.setKind(methodSymbol.getSymbolKind());
-
-    List<SymbolTag> tags = methodSymbol.isDeprecated()
-      ? Collections.singletonList(SymbolTag.Deprecated)
-      : Collections.emptyList();
-    item.setTags(tags);
-
-    item.setUri(methodSymbol.getUri().toString());
-    item.setRange(methodSymbol.getRange());
-    item.setSelectionRange(methodSymbol.getSubNameRange());
+    item.setName(sourceDefinedSymbol.getName());
+    item.setDetail(sourceDefinedSymbol.getMdoRef());
+    item.setKind(sourceDefinedSymbol.getSymbolKind());
+    item.setTags(sourceDefinedSymbol.getTags());
+    item.setUri(sourceDefinedSymbol.getUri().toString());
+    item.setRange(sourceDefinedSymbol.getRange());
+    item.setSelectionRange(sourceDefinedSymbol.getSelectionRange());
 
     return item;
   }

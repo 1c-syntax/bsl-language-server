@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
@@ -68,6 +69,7 @@ public final class RegionSymbolComputer
 
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
       .uri(documentContext.getUri())
+      .mdoRef(MdoRefBuilder.getMdoRef(documentContext))
       .name(ctx.regionName().getText())
       .uri(documentContext.getUri())
       .regionNameRange(Ranges.create(ctx.regionName()))

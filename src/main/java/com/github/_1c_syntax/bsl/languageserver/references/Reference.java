@@ -21,21 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import org.eclipse.lsp4j.Position;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import lombok.Value;
+import org.eclipse.lsp4j.Range;
 
-import java.net.URI;
 import java.util.Optional;
 
-/**
- * Интерфейс поискового движка.
- */
-public interface ReferenceFinder {
-  /**
-   * Поиск символа по позиции курсора.
-   *
-   * @param uri URI документа, в котором необходимо осуществить поиск.
-   * @param position позиция курсора.
-   * @return данные ссылки.
-   */
-  Optional<Reference> findReference(URI uri, Position position);
+@Value
+public class Reference {
+  Symbol symbol;
+  Range selectionRange;
+  // todo: uri
+
+  public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
+    return Optional.of(symbol)
+      .filter(SourceDefinedSymbol.class::isInstance)
+      .map(SourceDefinedSymbol.class::cast);
+  }
+
+  public boolean isSourceDefinedSymbolReference() {
+    return symbol instanceof SourceDefinedSymbol;
+  }
+
 }

@@ -47,6 +47,7 @@ public class VariableSymbol implements SourceDefinedSymbol {
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
   URI uri;
+  String mdoRef;
   Range range;
   Range variableNameRange;
 
