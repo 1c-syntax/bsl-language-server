@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import lombok.Builder;
@@ -33,7 +34,6 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +48,7 @@ public class MethodSymbol implements SourceDefinedSymbol {
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Method;
 
-  URI uri;
+  DocumentContext owner;
   Range range;
   Range subNameRange;
 
@@ -66,12 +66,6 @@ public class MethodSymbol implements SourceDefinedSymbol {
   Optional<MethodDescription> description;
 
   boolean deprecated;
-
-  /**
-   * Ссылка на объект метаданных, в модуле которого находится метод
-   * Формат ссылки: Document.Заказ, CommonModule.ОбщегоНазначения
-   */
-  String mdoRef;
 
   @Builder.Default
   List<ParameterDefinition> parameters = new ArrayList<>();

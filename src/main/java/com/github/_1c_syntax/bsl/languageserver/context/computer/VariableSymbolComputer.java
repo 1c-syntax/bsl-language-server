@@ -78,7 +78,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   ) {
     return VariableSymbol.builder()
       .name(varName.getText())
-      .uri(documentContext.getUri())
+      .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(varName))
       .export(export)

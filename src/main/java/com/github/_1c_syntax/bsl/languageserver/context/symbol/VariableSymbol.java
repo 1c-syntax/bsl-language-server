@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import lombok.Builder;
@@ -33,7 +34,6 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +46,7 @@ public class VariableSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
-  URI uri;
+  DocumentContext owner;
   Range range;
   Range variableNameRange;
 
