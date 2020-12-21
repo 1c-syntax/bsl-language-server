@@ -33,6 +33,7 @@ import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,12 +42,13 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements Symbol {
+public class MethodSymbol implements SourceDefinedSymbol {
   String name;
 
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Method;
 
+  URI uri;
   Range range;
   Range subNameRange;
 
@@ -54,10 +56,10 @@ public class MethodSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   boolean function;
   boolean export;
@@ -88,5 +90,10 @@ public class MethodSymbol implements Symbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitMethod(this);
+  }
+
+  @Override
+  public Range getSelectionRange() {
+    return getSubNameRange();
   }
 }
