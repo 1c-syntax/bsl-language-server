@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1608385122638,
+  "lastUpdate": 1608551561823,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -7688,6 +7688,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8268695377608047",
             "extra": "mean: 75.3150581518809 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "94e904e1b4dcc32b8434bade1c6a67a430eaf505",
+          "message": "Merge pull request #1498 from 1c-syntax/feature/locatable-symbol",
+          "timestamp": "2020-12-21T14:44:59+03:00",
+          "tree_id": "1f2a286b41f16be6c526a3ff34a6a0c6215ff2fa",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/94e904e1b4dcc32b8434bade1c6a67a430eaf505"
+        },
+        "date": 1608551558270,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.92295265197754,
+            "unit": "sec",
+            "range": "stddev: 2.8249620512915845",
+            "extra": "mean: 76.92295265197754 sec\nrounds: 3"
           }
         ]
       }
