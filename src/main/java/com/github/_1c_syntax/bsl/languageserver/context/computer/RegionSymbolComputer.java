@@ -67,6 +67,7 @@ public final class RegionSymbolComputer
   public ParseTree visitRegionStart(BSLParser.RegionStartContext ctx) {
 
     RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
+      .uri(documentContext.getUri())
       .name(ctx.regionName().getText())
       .uri(documentContext.getUri())
       .regionNameRange(Ranges.create(ctx.regionName()))

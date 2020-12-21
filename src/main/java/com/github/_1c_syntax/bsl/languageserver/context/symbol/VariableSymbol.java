@@ -42,7 +42,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements Symbol {
+public class VariableSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;
@@ -54,10 +54,10 @@ public class VariableSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = Collections.emptyList();
+  List<SourceDefinedSymbol> children = Collections.emptyList();
 
   VariableKind kind;
   boolean export;
@@ -67,4 +67,10 @@ public class VariableSymbol implements Symbol {
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitVariable(this);
   }
+
+  @Override
+  public Range getSelectionRange() {
+    return getVariableNameRange();
+  }
+
 }

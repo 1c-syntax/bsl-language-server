@@ -21,17 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.Getter;
-import lombok.Setter;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public interface Symbol {
 
@@ -39,22 +33,8 @@ public interface Symbol {
 
   SymbolKind getSymbolKind();
 
-  URI getUri();
-
-  Range getRange();
-
-  Optional<Symbol> getParent();
-
-  void setParent(Optional<Symbol> symbol);
-
-  List<Symbol> getChildren();
-
   default boolean isDeprecated() {
     return false;
-  }
-
-  default Optional<Symbol> getRootParent() {
-    return getParent().flatMap(Symbol::getRootParent).or(() -> Optional.of(this));
   }
 
   default List<SymbolTag> getTags() {
@@ -64,27 +44,5 @@ public interface Symbol {
   }
 
   void accept(SymbolTreeVisitor visitor);
-
-  static Symbol emptySymbol() {
-    return new Symbol() {
-      @Getter
-      private final String name = "empty";
-      @Getter
-      private final SymbolKind symbolKind = SymbolKind.Null;
-      @Getter
-      private final URI uri = URI.create("");
-      @Getter
-      private final Range range = Ranges.create(-1, 0, -1, 0);
-      @Getter
-      @Setter
-      private Optional<Symbol> parent = Optional.empty();
-      @Getter
-      private final List<Symbol> children = Collections.emptyList();
-
-      @Override
-      public void accept(SymbolTreeVisitor visitor) {
-      }
-    };
-  }
 
 }

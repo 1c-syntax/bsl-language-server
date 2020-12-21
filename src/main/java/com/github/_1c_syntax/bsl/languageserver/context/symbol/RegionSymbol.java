@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @Builder(access = lombok.AccessLevel.PUBLIC)
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class RegionSymbol implements Symbol {
+public class RegionSymbol implements SourceDefinedSymbol {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Namespace;
@@ -55,10 +55,10 @@ public class RegionSymbol implements Symbol {
   @Setter
   @Builder.Default
   @NonFinal
-  Optional<Symbol> parent = Optional.empty();
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
   @Builder.Default
-  List<Symbol> children = new ArrayList<>();
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
   public List<MethodSymbol> getMethods() {
     return children.stream()
@@ -70,5 +70,10 @@ public class RegionSymbol implements Symbol {
   @Override
   public void accept(SymbolTreeVisitor visitor) {
     visitor.visitRegion(this);
+  }
+
+  @Override
+  public Range getSelectionRange() {
+    return getRegionNameRange();
   }
 }
