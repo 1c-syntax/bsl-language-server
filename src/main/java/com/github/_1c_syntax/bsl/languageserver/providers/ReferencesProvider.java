@@ -22,35 +22,34 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
+import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class ReferencesProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final CalleeStorage calleeStorage;
+  private final ReferencesStorage referencesStorage;
 
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
 
     var position = params.getPosition();
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
-      .map(symbol -> calleeStorage.getCalleesOf(
-        MdoRefBuilder.getMdoRef(symbol.getOwner()),
-        symbol.getOwner().getModuleType(),
-        symbol
-      ))
-      .orElseGet(Collections::emptyList);
+      .stream()
+      .map(referencesStorage::getReferencesTo)
+      .flatMap(Collection::stream)
+      .map(Reference::toLocation)
+      .collect(Collectors.toList());
   }
 }

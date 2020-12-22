@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
+import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
@@ -59,7 +58,7 @@ import static java.util.stream.Collectors.toCollection;
 public class CallHierarchyProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final CalleeStorage calleeStorage;
+  private final ReferencesStorage referencesStorage;
 
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
@@ -83,21 +82,19 @@ public class CallHierarchyProvider {
 
     var serverContext = documentContext.getServerContext();
     CallHierarchyItem item = params.getItem();
+    Position position = item.getSelectionRange().getStart();
 
-    return documentContext.getSymbolTree().getMethodSymbol(item.getName())
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
-      .flatMap(methodSymbol ->
-        calleeStorage.getCalleesOf(
-          MdoRefBuilder.getMdoRef(documentContext),
-          documentContext.getModuleType(),
-          methodSymbol
-        ).stream()
-      )
-      .map((Location location) -> Optional.ofNullable(serverContext.getDocument(location.getUri()))
+      .flatMap(symbol -> referencesStorage.getReferencesTo(symbol).stream())
+      // todo: рефакторинг. Как красиво найти метод-символ по его рэнжу, не заглядывая в сервер-контекст и символ-три?
+      // todo: SourceDefinedSymbol reference::from?
+      .map((Reference reference) -> Optional.ofNullable(serverContext.getDocument(reference.getUri()))
         .map(DocumentContext::getSymbolTree)
-        .flatMap(symbolTree -> symbolTree.getMethodSymbol(location.getRange())
-        .map(CallHierarchyProvider::getCallHierarchyItem)
-        .map(callHierarchyItem -> Pair.of(callHierarchyItem, location.getRange()))))
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(reference.getSelectionRange())
+          .map(CallHierarchyProvider::getCallHierarchyItem)
+          .map(callHierarchyItem -> Pair.of(callHierarchyItem, reference.getSelectionRange()))))
       .filter(Optional::isPresent)
       .map(Optional::get)
       .collect(groupingBy(Pair::getKey, mapping(Pair::getValue, toCollection(ArrayList::new))))
@@ -112,7 +109,7 @@ public class CallHierarchyProvider {
     CallHierarchyOutgoingCallsParams params
   ) {
 
-    return calleeStorage.getCalledMethodSymbolsFrom(documentContext.getUri(), params.getItem().getRange())
+    return referencesStorage.getCalledMethodSymbolsFrom(documentContext.getUri(), params.getItem().getRange())
       .entrySet().stream()
       .map((Map.Entry<MethodSymbol, Collection<Range>> entry) -> {
         var callHierarchyItem = getCallHierarchyItem(entry.getKey());

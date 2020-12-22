@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.callee;
+package com.github._1c_syntax.bsl.languageserver.context.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -46,7 +46,7 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleContext> {
+public class ReferencesStorageFiller extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
     ModuleType.ManagerModule,
@@ -54,7 +54,7 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
     ModuleType.UNKNOWN
   );
 
-  private final CalleeStorage storage;
+  private final ReferencesStorage storage;
 
   private DocumentContext documentContext;
 
@@ -160,7 +160,7 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
     return modifiers.stream()
       .map(BSLParser.ModifierContext::accessCall)
       .filter(Objects::nonNull)
-      .map(CalleeStorageFiller::getMethodName)
+      .map(ReferencesStorageFiller::getMethodName)
       .findFirst()
       .orElse(Optional.empty());
   }

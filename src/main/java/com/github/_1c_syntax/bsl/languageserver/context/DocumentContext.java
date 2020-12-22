@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorageFiller;
+import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorageFiller;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
@@ -73,7 +73,7 @@ public class DocumentContext {
   private int version;
   private final ServerContext context;
   private final DiagnosticComputer diagnosticComputer;
-  private final CalleeStorageFiller calleeStorageFiller;
+  private final ReferencesStorageFiller referencesStorageFiller;
 
   private final FileType fileType;
   private BSLTokenizer tokenizer;
@@ -103,14 +103,14 @@ public class DocumentContext {
     int version,
     ServerContext context,
     DiagnosticComputer diagnosticComputer,
-    CalleeStorageFiller calleeStorageFiller
+    ReferencesStorageFiller referencesStorageFiller
   ) {
     this.uri = uri;
     this.content = content;
     this.version = version;
     this.context = context;
     this.diagnosticComputer = diagnosticComputer;
-    this.calleeStorageFiller = calleeStorageFiller;
+    this.referencesStorageFiller = referencesStorageFiller;
 
     this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
@@ -393,7 +393,7 @@ public class DocumentContext {
 
   public void computeCallees() {
     computeLock.lock();
-    calleeStorageFiller.fill(this);
+    referencesStorageFiller.fill(this);
     computeLock.unlock();
   }
 }

@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.eclipse.lsp4j.Position;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -38,7 +40,9 @@ public class ReferenceResolver {
   /**
    * Список конкретных поисковых движков.
    */
-  private final List<ReferenceFinder> finders;
+  @Setter(onMethod = @__({@Autowired}))
+  // todo: это удобно, но не кажется нормальным... Проблема в циклической зависимости из ReferencesStorage.
+  private List<ReferenceFinder> finders;
 
   /**
    * Поиск символа по позиции курсора.

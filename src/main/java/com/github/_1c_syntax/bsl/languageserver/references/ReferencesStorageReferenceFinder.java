@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
+import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
@@ -30,18 +30,16 @@ import java.net.URI;
 import java.util.Optional;
 
 /**
- * Реализация поискового движка на основе поиска в {@link CalleeStorage}.
+ * Реализация поискового движка на основе поиска в {@link ReferencesStorage}.
  */
 @Component
 @RequiredArgsConstructor
 public class ReferencesStorageReferenceFinder implements ReferenceFinder {
 
-  private final CalleeStorage calleeStorage;
+  private final ReferencesStorage referencesStorage;
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    return calleeStorage.getCalledMethodSymbol(uri, position).map(
-      pair -> new Reference(pair.getLeft(), pair.getRight())
-    );
+    return referencesStorage.getReference(uri, position);
   }
 }

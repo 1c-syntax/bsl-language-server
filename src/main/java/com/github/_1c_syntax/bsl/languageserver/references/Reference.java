@@ -24,15 +24,35 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.Value;
+import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
+import java.net.URI;
 import java.util.Optional;
 
+/**
+ * Ссылка на символ.
+ */
 @Value
 public class Reference {
+  /**
+   * Символ, на который указывает ссылка.
+   */
   Symbol symbol;
+
+  // todo: единый класс Location из URI и Range? Как lsp'шный, только URI объектом, а не строкой.
+
+  // todo: Symbol from?
+
+  /**
+   * URI, в котором находится ссылка.
+   */
+  URI uri;
+
+  /**
+   * Диапазон, в котором располагается ссылка.
+   */
   Range selectionRange;
-  // todo: uri
 
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
@@ -42,6 +62,14 @@ public class Reference {
 
   public boolean isSourceDefinedSymbolReference() {
     return symbol instanceof SourceDefinedSymbol;
+  }
+
+  public Location toLocation() {
+    return new Location(uri.toString(), selectionRange);
+  }
+
+  public static Reference of(Symbol symbol, Location location) {
+    return new Reference(symbol, URI.create(location.getUri()), location.getRange());
   }
 
 }

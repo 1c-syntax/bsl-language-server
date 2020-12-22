@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
+import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -46,13 +46,13 @@ import java.util.Map;
 )
 @RequiredArgsConstructor
 public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
-  private final CalleeStorage calleeStorage;
+  private final ReferencesStorage referencesStorage;
 
   @Override
   public void check() {
     var uri = documentContext.getUri();
 
-    Map<MethodSymbol, Collection<Range>> calledSymbols = calleeStorage.getCalledMethodSymbolsFrom(uri);
+    Map<MethodSymbol, Collection<Range>> calledSymbols = referencesStorage.getCalledMethodSymbolsFrom(uri);
     SymbolTree symbolTree = documentContext.getSymbolTree();
 
     calledSymbols.forEach((MethodSymbol methodSymbol, Collection<Range> ranges) -> {

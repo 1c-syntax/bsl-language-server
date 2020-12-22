@@ -19,12 +19,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.callee;
+package com.github._1c_syntax.bsl.languageserver.context.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.RequiredArgsConstructor;
@@ -33,14 +36,12 @@ import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,50 +54,56 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class CalleeStorage {
+public class ReferencesStorage {
 
+  private final ReferenceResolver referenceResolver;
   private final ServerContext serverContext;
 
   /**
-   * Хранит информацию о том, какие methodName (ключ MultiValuedMap) каких mdoRef каких moduleType (ключ MultiKey)
+   * Хранит информацию о том, какие symbolName (ключ MultiValuedMap) каких mdoRef каких moduleType (ключ MultiKey)
    * были вызваны из списка Location (URI + Range).
    */
-  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> calleesOf = new HashMap<>();
+  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> referencesTo = new HashMap<>();
 
   /**
-   * Хранит информацию о том, какие methodName с mdoRef с moduleType (ключ MultiKey) в каких URI были вызваны
+   * Хранит информацию о том, какие symbolName с mdoRef с moduleType (ключ MultiKey) в каких URI были вызваны
    * и в каких Range, расположены вызовы
    */
-  private final Map<URI, MultiValuedMap<MultiKey<String>, Range>> calleesFrom = new HashMap<>();
+  private final Map<URI, MultiValuedMap<MultiKey<String>, Range>> referencesFrom = new HashMap<>();
 
   /**
    * Хранит информацию о том, в каких Range каких URI были вызваны
-   * какие methodName каких mdoRef с каким moduleType (ключ MultiKey)
+   * какие symbolName каких mdoRef с каким moduleType (ключ MultiKey)
    */
-  private final Map<URI, Map<Range, MultiKey<String>>> calleesRanges = new HashMap<>();
+  private final Map<URI, Map<Range, MultiKey<String>>> referencesRanges = new HashMap<>();
 
-  public List<Location> getCalleesOf(String mdoRef, ModuleType moduleType, Symbol symbol) {
+  public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
+    var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
+    var moduleType = symbol.getOwner().getModuleType();
     var key = getKey(mdoRef, moduleType);
-    var methodName = symbol.getName().toLowerCase(Locale.ENGLISH);
+    var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
 
-    var locations = calleesOf.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(methodName);
-
-    return new ArrayList<>(locations);
+    return referencesTo.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(symbolName)
+      .stream()
+      .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .collect(Collectors.toList());
   }
 
-  public Optional<Pair<MethodSymbol, Range>> getCalledMethodSymbol(URI uri, Position position) {
-    return calleesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
+  public Optional<Reference> getReference(URI uri, Position position) {
+    return referencesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
       .flatMap(entry -> getMethodSymbol(entry.getValue())
-        .map(methodSymbol -> Pair.of(methodSymbol, entry.getKey()))
+        .map(symbol -> new Reference(symbol, uri, entry.getKey()))
       );
   }
 
   public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri) {
     Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
 
-    calleesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
+    referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
       getMethodSymbol(multikey).ifPresent(methodSymbol ->
         methodSymbols.put(methodSymbol, value)
       )
@@ -109,7 +116,7 @@ public class CalleeStorage {
     Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
 
     // todo: refactor this and getCalledMethodSymbolsFrom(URI)
-    calleesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
+    referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
       getMethodSymbol(multikey).ifPresent((MethodSymbol methodSymbol) -> {
           var filteredRanges = value.stream()
             .filter(calleesRange -> Ranges.containsRange(range, calleesRange))
@@ -128,14 +135,14 @@ public class CalleeStorage {
   public void clearCallees(URI uri) {
     String stringUri = uri.toString();
 
-    calleesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
+    referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
       var key = new MultiKey<>(multikey.getKey(0), multikey.getKey(1));
-      Collection<Location> locations = calleesOf.get(key).values();
+      Collection<Location> locations = referencesTo.get(key).values();
       locations.removeIf(location -> location.getUri().equals(stringUri));
     });
 
-    calleesFrom.remove(uri);
-    calleesRanges.remove(uri);
+    referencesFrom.remove(uri);
+    referencesRanges.remove(uri);
   }
 
   @Synchronized
@@ -147,9 +154,9 @@ public class CalleeStorage {
     MultiKey<String> key = getKey(mdoRef, moduleType);
     MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, methodNameCanonical);
 
-    calleesOf.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodNameCanonical, location);
-    calleesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
-    calleesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
+    referencesTo.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodNameCanonical, location);
+    referencesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
+    referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
   }
 
   private Optional<MethodSymbol> getMethodSymbol(MultiKey<String> multikey) {
