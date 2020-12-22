@@ -259,13 +259,13 @@ class MethodSymbolComputerTest {
   }
 
   @Test
-  void testMdoRef() throws IOException {
+  void testOwner() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);
     serverContext.setConfigurationRoot(path);
-    checkModule(serverContext, PATH_TO_MODULE_FILE, "CommonModule.ПервыйОбщийМодуль", 7);
-    checkModule(serverContext, PATH_TO_CATALOG_FILE, "Catalog.Справочник1", 2);
-    checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, "Catalog.Справочник1", 1);
+    checkModule(serverContext, PATH_TO_MODULE_FILE, 7);
+    checkModule(serverContext, PATH_TO_CATALOG_FILE, 2);
+    checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, 1);
   }
 
   @Test
@@ -289,7 +289,6 @@ class MethodSymbolComputerTest {
   private void checkModule(
     ServerContext serverContext,
     String path,
-    String mdoRef,
     int methodsCount
   ) throws IOException {
     var file = new File(PATH_TO_METADATA, path);
@@ -298,6 +297,6 @@ class MethodSymbolComputerTest {
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
     assertThat(methods.get(0).getName()).isEqualTo("Тест");
-    assertThat(methods.get(0).getMdoRef()).isEqualTo(mdoRef);
+    assertThat(methods.get(0).getOwner()).isEqualTo(documentContext);
   }
 }

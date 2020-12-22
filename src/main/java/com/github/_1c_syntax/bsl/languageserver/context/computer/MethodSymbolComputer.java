@@ -36,8 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
-import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -195,21 +193,15 @@ public final class MethodSymbolComputer
       .map(MethodDescription::isDeprecated)
       .orElse(false);
 
-    String mdoRef = documentContext.getMdObject()
-      .map(MDObjectBase::getMdoReference)
-      .map(MDOReference::getMdoRef)
-      .orElse("");
-
     return MethodSymbol.builder()
       .name(subName.getText())
-      .uri(documentContext.getUri())
+      .owner(documentContext)
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(subName))
       .function(function)
       .export(export)
       .description(description)
       .deprecated(deprecated)
-      .mdoRef(mdoRef)
       .parameters(createParameters(paramList, description))
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)
