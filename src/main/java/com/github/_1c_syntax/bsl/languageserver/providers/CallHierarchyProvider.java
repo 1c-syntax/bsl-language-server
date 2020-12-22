@@ -125,12 +125,14 @@ public class CallHierarchyProvider {
 
   @SuppressWarnings("UnstableApiUsage")
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
+    String detail = MdoRefBuilder.getMdoRef(sourceDefinedSymbol.getOwner());
+
     CallHierarchyItem item = new CallHierarchyItem();
     item.setName(sourceDefinedSymbol.getName());
-    item.setDetail(sourceDefinedSymbol.getMdoRef());
+    item.setDetail(detail);
     item.setKind(sourceDefinedSymbol.getSymbolKind());
     item.setTags(sourceDefinedSymbol.getTags());
-    item.setUri(sourceDefinedSymbol.getUri().toString());
+    item.setUri(sourceDefinedSymbol.getOwner().getUri().toString());
     item.setRange(sourceDefinedSymbol.getRange());
     item.setSelectionRange(sourceDefinedSymbol.getSelectionRange());
 

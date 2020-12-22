@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.context.callee;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -99,6 +98,7 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
 
   @Override
   public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
     var moduleType = documentContext.getModuleType();
     var methodName = ctx.methodName().getStart();
     var methodNameText = methodName.getText();
@@ -106,7 +106,7 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
     documentContext.getSymbolTree().getMethods().stream()
       .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText))
       .findAny()
-      .ifPresent(methodSymbol -> addMethodCall(moduleType, methodSymbol, Ranges.create(methodName)));
+      .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
 
     return super.visitGlobalMethodCall(ctx);
   }
@@ -122,10 +122,6 @@ public class CalleeStorageFiller extends BSLParserBaseVisitor<BSLParserRuleConte
       }
       addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
     }
-  }
-
-  private void addMethodCall(ModuleType moduleType, MethodSymbol methodSymbol, Range range) {
-    addMethodCall(methodSymbol.getMdoRef(), moduleType, methodSymbol.getName(), range);
   }
 
   private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {

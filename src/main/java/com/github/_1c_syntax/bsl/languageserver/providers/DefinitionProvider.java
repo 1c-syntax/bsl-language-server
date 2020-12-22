@@ -49,7 +49,7 @@ public class DefinitionProvider {
         SourceDefinedSymbol symbol = (SourceDefinedSymbol) reference.getSymbol();
 
         return new LocationLink(
-          symbol.getUri().toString(),
+          symbol.getOwner().getUri().toString(),
           symbol.getRange(),
           symbol.getSelectionRange(),
           reference.getSelectionRange()

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.callee.CalleeStorage;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.ReferenceParams;
@@ -46,9 +47,8 @@ public class ReferencesProvider {
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .map(symbol -> calleeStorage.getCalleesOf(
-        symbol.getMdoRef(),
-        // todo: getModuleType надо брать от DocumentContext из symbol.
-        documentContext.getModuleType(),
+        MdoRefBuilder.getMdoRef(symbol.getOwner()),
+        symbol.getOwner().getModuleType(),
         symbol
       ))
       .orElseGet(Collections::emptyList);

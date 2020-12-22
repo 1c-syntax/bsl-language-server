@@ -22,11 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
@@ -56,6 +58,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
 
+  private final ServerContext serverContext;
   private final LanguageServerConfiguration configuration;
 
   @Override
@@ -207,7 +210,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   }
 
   private String getMethodLocation(MethodSymbol methodSymbol) {
-    return getResourceString(METHOD_LOCATION_KEY, methodSymbol.getMdoRef());
+    String mdoRef = MdoRefBuilder.getMdoRef(methodSymbol.getOwner());
+    return getResourceString(METHOD_LOCATION_KEY, mdoRef);
 //    String methodLocation;
 //    if (methodSymbol.getUri().equals(documentContext.getUri())) {
 //      methodLocation = getResourceString(CURRENT_METHOD_KEY);

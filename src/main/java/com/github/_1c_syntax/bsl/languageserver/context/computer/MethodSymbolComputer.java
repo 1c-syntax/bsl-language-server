@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -196,8 +195,7 @@ public final class MethodSymbolComputer
 
     return MethodSymbol.builder()
       .name(subName.getText())
-      .uri(documentContext.getUri())
-      .mdoRef(MdoRefBuilder.getMdoRef(documentContext))
+      .owner(documentContext)
       .range(Ranges.create(startNode, stopNode))
       .subNameRange(Ranges.create(subName))
       .function(function)
