@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1608551561823,
+  "lastUpdate": 1608649024694,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -7719,6 +7719,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.8249620512915845",
             "extra": "mean: 76.92295265197754 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bc8823b642702b5fcf761ca42f96e43e0a8155dd",
+          "message": "Merge pull request #1500 from 1c-syntax/feature/source-defined-symbol-mdoRef\n\nДобавление owner в SourceDefinedSymbol",
+          "timestamp": "2020-12-22T17:46:29+03:00",
+          "tree_id": "069c787a7c16f8eb88b09bc476aac6d8d4c9e624",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/bc8823b642702b5fcf761ca42f96e43e0a8155dd"
+        },
+        "date": 1608649021666,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.66602730751038,
+            "unit": "sec",
+            "range": "stddev: 2.1591095092908494",
+            "extra": "mean: 78.66602730751038 sec\nrounds: 3"
           }
         ]
       }
