@@ -105,7 +105,7 @@ class MethodDescriptionTest {
     assertThat(type.getName()).isEqualTo("Соответствие");
     assertThat(type.getDescription()).isEqualTo("список объектов и значений их реквизитов:");
     assertThat(type.getParameters()).hasSize(2);
-    
+
   }
 
   @Test
