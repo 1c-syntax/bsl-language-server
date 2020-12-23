@@ -127,20 +127,16 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private String getParametersSection(MethodSymbol methodSymbol) {
     var parameters = new StringJoiner("\n");
-    String parameterTemplate = "**_%s_**: `%s` - %s\n";
+    String parameterTemplate = "**_%s_**: `%s`\n";
     methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
       String types = parameterDefinition.getDescription()
         .map(ParameterDescription::getTypes)
         .map(MethodSymbolMarkupContentBuilder::getTypes)
         .orElse("");
-      String description = parameterDefinition.getDescription()
-        .map(ParameterDescription::getDescription)
-        .orElse("");
       String parameter = String.format(
         parameterTemplate,
         parameterDefinition.getName(),
-        types,
-        description
+        types
       );
 
       parameters.add(parameter);
