@@ -59,7 +59,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.10.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "59f01ff70479881a6462d07764b72b03951bf55d") {
+    api("com.github.1c-syntax", "bsl-parser", "b088f749bad11ba6ce9c2a33bce8ade0c5f44736") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")

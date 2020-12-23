@@ -45,7 +45,7 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(13);
+      assertThat(methods.size()).isEqualTo(14);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
@@ -53,8 +53,59 @@ class MethodDescriptionTest {
         .map(Optional::get)
         .collect(Collectors.toList());
 
-      assertThat(methodsWithDescription.size()).isEqualTo(12);
+      assertThat(methodsWithDescription.size()).isEqualTo(13);
     }
+  }
+
+  @Test
+  void testMethod13() {
+    var method = methodsWithDescription.get(12);
+    assertThat(method.getPurposeDescription()).isEqualTo("Значения реквизитов, прочитанные из информационной базы для нескольких объектов.\n" +
+      "\nЕсли необходимо зачитать реквизит независимо от прав текущего пользователя,\n" +
+      "то следует использовать предварительный переход в привилегированный режим.");
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).hasSize(3);
+    assertThat(method.getReturnedValue()).hasSize(1);
+    assertThat(method.getLink()).isEmpty();
+
+    var param = method.getParameters().get(0);
+    assertThat(param.getName()).isEqualTo("Ссылки");
+    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes().get(0).getName()).isEqualTo("Массив");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo("массив ссылок на объекты одного типа.\n" +
+      "Значения массива должны быть ссылками на объекты одного типа.\n" +
+      "если массив пуст, то результатом будет пустое соответствие.");
+    assertThat(param.isHyperlink()).isFalse();
+
+    param = method.getParameters().get(1);
+    assertThat(param.getName()).isEqualTo("Реквизиты");
+    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes().get(0).getName()).isEqualTo("Строка");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo(
+      "имена реквизитов перечисленные через запятую, в формате требований к свойствам\n" +
+      "структуры. Например, \"Код, Наименование, Родитель\".");
+    assertThat(param.isHyperlink()).isFalse();
+
+    param = method.getParameters().get(2);
+    assertThat(param.getName()).isEqualTo("ВыбратьРазрешенные");
+    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes().get(0).getName()).isEqualTo("Булево");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo(
+      "если Истина, то запрос к объектам выполняется с учетом прав пользователя, и в случае,\n" +
+      "- если какой-либо объект будет исключен из выборки по правам, то этот объект\n" +
+      "будет исключен и из результата;\n" +
+      "- если Ложь, то возникнет исключение при отсутствии прав на таблицу\n" +
+      "или любой из реквизитов.");
+    assertThat(param.isHyperlink()).isFalse();
+
+    var type = method.getReturnedValue().get(0);
+    assertThat(type.getName()).isEqualTo("Соответствие");
+    assertThat(type.getDescription()).isEqualTo("список объектов и значений их реквизитов:");
+    assertThat(type.getParameters()).hasSize(2);
+    
   }
 
   @Test
