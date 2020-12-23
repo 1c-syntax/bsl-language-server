@@ -75,42 +75,6 @@ public class DescriptionReader {
 
   }
 
-  private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
-    List<ParameterDescription> result = new ArrayList<>();
-    var current = new TempParameterData();
-
-    for (BSLMethodDescriptionParser.ParameterStringContext string : strings) {
-      // это строка с параметром
-      if (string.parameter() != null) {
-        if (!current.isEmpty()) {
-          result.add(current.makeParameterDescription());
-        }
-        current = new TempParameterData(string.parameter());
-      } else if (string.typesBlock() != null) { // это строка с описанием параметра
-        current.addType(string.typesBlock().type(), string.typesBlock().typeDescription());
-      } else if (string.typeDescription() != null) { // это строка с описанием
-        if (current.isEmpty()) {
-          var text = string.typeDescription().getText().strip();
-          if (text.split("\\s").length == 1) {
-            current = new TempParameterData(text);
-          }
-        } else {
-          current.addTypeDescription(string.typeDescription());
-        }
-      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа
-        current.addSubParameter(string.subParameter());
-      } else { // прочее - пустая строка
-        // noop
-      }
-    }
-
-    if (!current.isEmpty()) {
-      result.add(current.makeParameterDescription());
-    }
-
-    return result;
-  }
-
   /**
    * Выполняет разбор прочитанного AST дерева описания метода и формирует список описаний возвращаемых значений
    *
@@ -266,6 +230,42 @@ public class DescriptionReader {
     return strings.toString().strip();
   }
 
+  private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+    List<ParameterDescription> result = new ArrayList<>();
+    var current = new TempParameterData();
+
+    for (BSLMethodDescriptionParser.ParameterStringContext string : strings) {
+      // это строка с параметром
+      if (string.parameter() != null) {
+        if (!current.isEmpty()) {
+          result.add(current.makeParameterDescription());
+        }
+        current = new TempParameterData(string.parameter());
+      } else if (string.typesBlock() != null) { // это строка с описанием параметра
+        current.addType(string.typesBlock().type(), string.typesBlock().typeDescription());
+      } else if (string.typeDescription() != null) { // это строка с описанием
+        if (current.isEmpty()) {
+          var text = string.typeDescription().getText().strip();
+          if (text.split("\\s").length == 1) {
+            current = new TempParameterData(text);
+          }
+        } else {
+          current.addTypeDescription(string.typeDescription());
+        }
+      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа
+        current.addSubParameter(string.subParameter());
+      } else { // прочее - пустая строка
+        // noop
+      }
+    }
+
+    if (!current.isEmpty()) {
+      result.add(current.makeParameterDescription());
+    }
+
+    return result;
+  }
+
   /**
    * Служебный класс для временного хранения прочитанной информации из описания параметра
    */
@@ -282,7 +282,7 @@ public class DescriptionReader {
       this.level = 1;
     }
 
-    public TempParameterData(BSLMethodDescriptionParser.ParameterContext parameter) {
+    private TempParameterData(BSLMethodDescriptionParser.ParameterContext parameter) {
       this();
       if (parameter.parameterName() != null) {
         this.name = parameter.parameterName().getText().strip();
@@ -293,7 +293,7 @@ public class DescriptionReader {
       }
     }
 
-    public TempParameterData(BSLMethodDescriptionParser.SubParameterContext subParameter, int level) {
+    private TempParameterData(BSLMethodDescriptionParser.SubParameterContext subParameter, int level) {
       this();
       this.level = level;
       if (subParameter.parameterName() != null) {
@@ -305,7 +305,7 @@ public class DescriptionReader {
       }
     }
 
-    public TempParameterData(String name) {
+    private TempParameterData(String name) {
       this();
       this.name = name.strip();
       this.empty = false;
@@ -404,7 +404,7 @@ public class DescriptionReader {
       return Optional.empty();
     }
 
-    public void addSubParameter(BSLMethodDescriptionParser.SubParameterContext subParameter) {
+    private void addSubParameter(BSLMethodDescriptionParser.SubParameterContext subParameter) {
       var star = subParameter.getToken(BSLMethodDescriptionParser.STAR, 0);
       if (star == null) {
         return;
@@ -417,5 +417,4 @@ public class DescriptionReader {
       }
     }
   }
-
 }
