@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
-import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import lombok.Value;
 import org.antlr.v4.runtime.Token;
@@ -101,8 +100,8 @@ public class MethodDescription {
     link = DescriptionReader.readLink(ast);
     deprecated = ast.deprecate() != null;
     deprecationInfo = DescriptionReader.readDeprecationInfo(ast);
-    callOptions = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_callOptionsString);
-    examples = DescriptionReader.readExamples(ast, BSLMethodDescriptionParser.RULE_examplesString);
+    callOptions = DescriptionReader.readCallOptions(ast);
+    examples = DescriptionReader.readExamples(ast);
     parameters = DescriptionReader.readParameters(ast);
     returnedValue = DescriptionReader.readReturnedValue(ast);
 
