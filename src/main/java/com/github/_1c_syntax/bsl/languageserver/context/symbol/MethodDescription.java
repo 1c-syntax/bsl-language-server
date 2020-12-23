@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
-import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionParser;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import lombok.Value;
 import org.antlr.v4.runtime.Token;

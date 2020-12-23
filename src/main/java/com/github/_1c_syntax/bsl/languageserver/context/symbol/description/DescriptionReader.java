@@ -49,15 +49,14 @@ public class DescriptionReader {
    */
   public static List<ParameterDescription> readParameters(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
 
-    List<ParameterDescription> result = new ArrayList<>();
-
     // параметров нет
     if (ctx.parameters() == null) {
-      return result;
+      return Collections.emptyList();
     }
 
     // есть только гиперссылка вместо параметров
     if (ctx.parameters().hyperlinkBlock() != null) {
+      List<ParameterDescription> result = new ArrayList<>();
       if (ctx.parameters().hyperlinkBlock().hyperlinkType() != null) {
         result.add(new ParameterDescription("",
           Collections.emptyList(),
@@ -69,11 +68,18 @@ public class DescriptionReader {
 
     // блок параметры есть, но самих нет
     if (ctx.parameters().parameterString() == null) {
-      return result;
+      return Collections.emptyList();
     }
 
+    return getParametersStrings(ctx.parameters().parameterString());
+
+  }
+
+  private List<ParameterDescription> getParametersStrings(List<? extends BSLMethodDescriptionParser.ParameterStringContext> strings) {
+    List<ParameterDescription> result = new ArrayList<>();
     var current = new TempParameterData();
-    for (BSLMethodDescriptionParser.ParameterStringContext string : ctx.parameters().parameterString()) {
+
+    for (BSLMethodDescriptionParser.ParameterStringContext string : strings) {
       // это строка с параметром
       if (string.parameter() != null) {
         if (!current.isEmpty()) {
@@ -112,15 +118,15 @@ public class DescriptionReader {
    * @return Список описаний возвращаемых значений
    */
   public static List<TypeDescription> readReturnedValue(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-    List<TypeDescription> result = new ArrayList<>();
 
     // возвращаемого значения нет
     if (ctx.returnsValues() == null) {
-      return result;
+      return Collections.emptyList();
     }
 
     // есть только гиперссылка вместо значения
     if (ctx.returnsValues().hyperlinkBlock() != null) {
+      List<TypeDescription> result = new ArrayList<>();
       if (ctx.returnsValues().hyperlinkBlock().hyperlinkType() != null) {
         result.add(new TypeDescription("",
           "",
@@ -133,7 +139,7 @@ public class DescriptionReader {
 
     // блок возвращаемого значения есть, но самих нет
     if (ctx.returnsValues().returnsValuesString() == null) {
-      return result;
+      return Collections.emptyList();
     }
 
     var fakeParam = new TempParameterData("");
@@ -263,7 +269,7 @@ public class DescriptionReader {
   /**
    * Служебный класс для временного хранения прочитанной информации из описания параметра
    */
-  private static class TempParameterData {
+  private static final class TempParameterData {
     private String name;
     private boolean empty;
     private final List<TempParameterTypeData> types;
@@ -310,7 +316,7 @@ public class DescriptionReader {
     }
 
     private Optional<TempParameterTypeData> lastType() {
-      if (types.size() > 0) {
+      if (!types.isEmpty()) {
         return Optional.of(types.get(types.size() - 1));
       }
       return Optional.empty();
@@ -372,7 +378,7 @@ public class DescriptionReader {
   /**
    * Служебный класс для временного хранения прочитанной информации из описания типа
    */
-  private static class TempParameterTypeData {
+  private static final class TempParameterTypeData {
     private final String name;
     private final StringJoiner description;
     private final int level;
@@ -392,7 +398,7 @@ public class DescriptionReader {
     }
 
     private Optional<TempParameterData> lastSubParameter() {
-      if (subParameters.size() > 0) {
+      if (!subParameters.isEmpty()) {
         return Optional.of(subParameters.get(subParameters.size() - 1));
       }
       return Optional.empty();
