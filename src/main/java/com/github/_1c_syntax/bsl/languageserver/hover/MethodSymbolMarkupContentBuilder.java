@@ -153,8 +153,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private String getReturnedValueSection(MethodSymbol methodSymbol) {
     var result = new StringJoiner("  \n"); // два пробела
     methodSymbol.getDescription().ifPresent((MethodDescription methodDescription) -> {
-      var types = collectTypes(methodDescription.getReturnedValue(), 0);
-      result.add(typesToString(types, 1));
+      var typesMap = typesToMap(methodDescription.getReturnedValue(), 0);
+      result.add(typesMapToString(typesMap, 1));
     });
 
     var returnedValue = result.toString();
@@ -286,21 +286,21 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private String parameterToString(ParameterDescription parameter, int level) {
     var result = new StringJoiner("  \n"); // два пробела
-    var types = collectTypes(parameter.getTypes(), level);
+    var typesMap = typesToMap(parameter.getTypes(), level);
     var parameterTemplate = "  ".repeat(level) + "* **%s**: %s";
 
-    if (types.size() == 1) {
+    if (typesMap.size() == 1) {
       result.add(String.format(parameterTemplate,
         parameter.getName(),
-        typesToString(types, 0)));
+        typesMapToString(typesMap, 0)));
     } else {
       result.add(String.format(parameterTemplate, parameter.getName(), ""));
-      result.add(typesToString(types, level + 1));
+      result.add(typesMapToString(typesMap, level + 1));
     }
     return result.toString();
   }
 
-  private Map<String, String> collectTypes(List<TypeDescription> parameterTypes, int level) {
+  private Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {
     Map<String, String> types = new HashMap<>();
 
     parameterTypes.forEach((TypeDescription type) -> {
@@ -322,7 +322,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return types;
   }
 
-  private String typesToString(Map<String, String> types, int level) {
+  private String typesMapToString(Map<String, String> types, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     var indent = "&nbsp;&nbsp;".repeat(level);
     types.forEach((key, value) -> {
