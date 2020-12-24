@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +61,7 @@ class HoverProviderTest {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
 
     HoverParams params = new HoverParams();
-    params.setPosition(new Position(15, 0));
+    params.setPosition(new Position(34, 0));
 
     // when
     Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
@@ -69,10 +70,42 @@ class HoverProviderTest {
 
     var hover = optionalHover.get();
     var content = hover.getContents().getRight().getValue();
+    assertThat(content).isNotEmpty();
 
-    assertThat(content)
-      .contains("providers/hover.bsl")
-      .contains("```bsl\nФункция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, Знач П3: Строка = \"\", П4, ПДата = '20100101', ПДатаВремя = '20110101121212', П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт");
+    var blocks = Arrays.asList(content.split("---\n"));
+
+    assertThat(blocks).hasSize(5);
+    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
+      "Функция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, Знач П3: Структура = \"\", " +
+      "П4: Массив | СписокЗначений, ПДата: См. ОбщийМодуль.СуперМетод() = '20100101', ПДатаВремя = '20110101121212', " +
+      "П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт: Строка | Структура\n```\n\n");
+    assertThat(blocks.get(1)).isEqualTo("Метод из file:///E:/reps/bsl-language-server/src/test/resources/providers/hover.bsl\n\n");
+    assertThat(blocks.get(2)).isEqualTo("Описание функции.\nМногострочное.\n\n");
+    assertThat(blocks.get(3)).isEqualTo("**Параметры:**\n\n" +
+      "* **П1**: `Дата` | `Число` - Описание даты/числа  \n" +
+      "* **П2**: `Число` - Описание числа  \n" +
+      "* **П3**: `Структура` - Описание строки<br>&nbsp;&nbsp;продолжается на следующей строкке:  \n" +
+      "  * **Поле1**: `Число` - Описание поле1  \n" +
+      "  * **Поле2**: `Строка` - Описание поле2  \n" +
+      "  * **Поле3**: `Структура` :  \n" +
+      "    * **Поле31**: `строка`  \n" +
+      "    * **Поле32**: `Структура` :  \n" +
+      "      * **Поле321**: `Число` - Описание поля 321  \n" +
+      "    * **Поле33**: `строка`  \n" +
+      "  * **Поле4**: `строка`  \n" +
+      "* **П4**:   \n" +
+      "&nbsp;&nbsp;`Массив` - Описание Массива  \n" +
+      "&nbsp;&nbsp;`СписокЗначений` - Описание списка  \n" +
+      "* **ПДата**: [См. ОбщийМодуль.СуперМетод()](ОбщийМодуль.СуперМетод())\n" +
+      "\n");
+    assertThat(blocks.get(4)).isEqualTo("**Возвращаемое значение:**\n\n" +
+      "&nbsp;&nbsp;`Строка` - вернувшаяся строка  \n" +
+      "&nbsp;&nbsp;`Структура` - Описание строки<br>&nbsp;&nbsp;продолжается на следующей строкке:  \n" +
+      "  * **Поле1**: `Число` - Описание поле1  \n" +
+      "  * **Поле2**: `Строка` - Описание поле2  \n" +
+      "  * **Поле3**: `Структура` :  \n" +
+      "    * **Поле31**: `строка`  \n" +
+      "    * **Поле32**: `Структура`\n\n");
   }
 
   @Test

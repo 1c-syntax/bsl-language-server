@@ -329,7 +329,15 @@ public class DescriptionReader {
           if (!child.subParameters.isEmpty()) {
             child.subParameters.forEach(subParam -> subParameters.add(subParam.makeParameterDescription()));
           }
-          return new TypeDescription(child.name, child.description.toString(), subParameters, "", false);
+          var link = "";
+          if(child.isHyperlink) {
+            link = child.name.substring(HYPERLINK_REF_LEN);
+          }
+          return new TypeDescription(child.name,
+            child.description.toString(),
+            subParameters,
+            link,
+            child.isHyperlink);
         }).collect(Collectors.toList());
       return new ParameterDescription(name, parameterTypes, "", false);
     }
@@ -344,22 +352,24 @@ public class DescriptionReader {
         var stringTypes = paramType.listTypes().getText().split(",");
         for (String stringType : stringTypes) {
           if (!stringType.isBlank()) {
-            addType(paramDescription, stringType.strip());
+            addType(paramDescription, stringType.strip(), false);
           }
         }
       } else if (paramType.hyperlinkType() != null) {
-        addType(paramDescription, paramType.hyperlinkType().getText());
+        addType(paramDescription, paramType.hyperlinkType().getText(), true);
       } else if (paramType.simpleType() != null) {
-        addType(paramDescription, paramType.simpleType().getText());
+        addType(paramDescription, paramType.simpleType().getText(), false);
       } else if (paramType.complexType() != null) {
-        addType(paramDescription, paramType.complexType().getText());
+        addType(paramDescription, paramType.complexType().getText(), false);
       } else {
         // noop
       }
     }
 
-    private void addType(@Nullable BSLMethodDescriptionParser.TypeDescriptionContext descriptionContext, String text) {
-      var newType = new TempParameterTypeData(text, level);
+    private void addType(@Nullable BSLMethodDescriptionParser.TypeDescriptionContext descriptionContext,
+                         String text,
+                         boolean isHyperlink) {
+      var newType = new TempParameterTypeData(text, level, isHyperlink);
       if (descriptionContext != null) {
         newType.addTypeDescription(descriptionContext);
       }
@@ -383,12 +393,14 @@ public class DescriptionReader {
     private final StringJoiner description;
     private final int level;
     private final List<TempParameterData> subParameters;
+    private final boolean isHyperlink;
 
-    private TempParameterTypeData(String name, int level) {
+    private TempParameterTypeData(String name, int level, boolean isHyperlink) {
       this.name = name;
       this.description = new StringJoiner("\n");
       this.level = level;
       this.subParameters = new ArrayList<>();
+      this.isHyperlink = isHyperlink;
     }
 
     private void addTypeDescription(BSLMethodDescriptionParser.TypeDescriptionContext typeDescription) {
