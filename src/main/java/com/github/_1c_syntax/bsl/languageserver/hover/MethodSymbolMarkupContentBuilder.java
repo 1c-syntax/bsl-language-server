@@ -153,7 +153,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private String getReturnedValueSection(MethodSymbol methodSymbol) {
     var result = new StringJoiner("  \n"); // два пробела
     methodSymbol.getDescription().ifPresent((MethodDescription methodDescription) -> {
-      var typesMap = typesToMap(methodDescription.getReturnedValue(), 0);
+      Map<String, String> typesMap = typesToMap(methodDescription.getReturnedValue(), 0);
       result.add(typesMapToString(typesMap, 1));
     });
 
@@ -286,7 +286,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
   private String parameterToString(ParameterDescription parameter, int level) {
     var result = new StringJoiner("  \n"); // два пробела
-    var typesMap = typesToMap(parameter.getTypes(), level);
+    Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
     var parameterTemplate = "  ".repeat(level) + "* **%s**: %s";
 
     if (typesMap.size() == 1) {

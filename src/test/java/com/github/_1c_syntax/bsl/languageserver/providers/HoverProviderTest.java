@@ -22,7 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
@@ -32,17 +35,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class HoverProviderTest {
+
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata";
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/hover.bsl";
 
   @Autowired
   private HoverProvider hoverProvider;
+
+  @Autowired
+  protected ServerContext context;
 
   @Test
   void getEmptyHover() {
@@ -58,7 +70,7 @@ class HoverProviderTest {
   @Test
   void testLocalMethods() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     HoverParams params = new HoverParams();
     params.setPosition(new Position(34, 0));
@@ -72,7 +84,7 @@ class HoverProviderTest {
     var content = hover.getContents().getRight().getValue();
     assertThat(content).isNotEmpty();
 
-    var blocks = Arrays.asList(content.split("---\n"));
+    var blocks = Arrays.asList(content.split("---\n?"));
 
     assertThat(blocks).hasSize(5);
     assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
@@ -115,28 +127,115 @@ class HoverProviderTest {
   }
 
   @Test
-  @Disabled
   void testMethodsFromManagerModule() {
-    // todo
-    //    hover.contents[0].should.has.a.key("_value").which.startWith("Метод из")
-    //      .and.endWith("Document/Ext/ManagerModule.bsl");
-    //    hover.contents[2].should.has.a.key("_value").which.is
-    //      .equal("```bsl\nПроцедура ПроцедураМодуляМенеджера()\n```\n");
+
+    DocumentContext documentContext = getTestDocumentContext();
+
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(36, 25));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    var content = hover.getContents().getRight().getValue();
+    assertThat(content).isNotEmpty();
+
+    var blocks = Arrays.asList(content.split("---\n?"));
+
+    assertThat(blocks).hasSize(2);
+    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
+      "Процедура ТестЭкспортная() Экспорт\n```\n\n");
+    assertThat(blocks.get(1)).isEqualTo("Метод из Catalog.Справочник1\n\n");
   }
 
   @Test
-  @Disabled
   void testMethodsFromCommonModule() {
-    // todo
+    DocumentContext documentContext = getTestDocumentContext();
+
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(38, 25));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    var content = hover.getContents().getRight().getValue();
+    assertThat(content).isNotEmpty();
+
+    var blocks = Arrays.asList(content.split("---\n?"));
+
+    assertThat(blocks).hasSize(3);
+    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
+      "Процедура УстаревшаяПроцедура() Экспорт\n```\n\n");
+    assertThat(blocks.get(1)).isEqualTo("Метод из CommonModule.ПервыйОбщийМодуль\n\n");
+    assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 
   @Test
-  @Disabled
-  void testMethodsFromGlobalContext() {
-    // todo
-    //    hover.contents[0].should.has.a.key("_value").which.startWith("Метод глобального контекста");
-    //    hover.contents[2].should.has.a.key("_value").which.startWith("```bsl\nПроцедура Сообщить(");
-    //    hover.contents[3].should.has.a.key("_value").which.startWith("***ТекстСообщения***");
+  void testMethodsFromCommonModuleNonPublic() {
+    DocumentContext documentContext = getTestDocumentContext();
+
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(40, 25));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // TODO а должен ли ховер ее видеть???
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    var content = hover.getContents().getRight().getValue();
+    assertThat(content).isNotEmpty();
+
+    var blocks = Arrays.asList(content.split("---\n?"));
+
+    assertThat(blocks).hasSize(2);
+    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
+      "Процедура РегистрацияИзмененийПередУдалением(Источник, Отказ)\n```\n\n");
+    assertThat(blocks.get(1)).isEqualTo("Метод из CommonModule.ПервыйОбщийМодуль\n\n");
   }
 
+  @Test
+  void testMethodsFromGlobalContext() {
+    DocumentContext documentContext = getTestDocumentContext();
+
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(42, 10));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    var content = hover.getContents().getRight().getValue();
+    assertThat(content).isNotEmpty();
+
+    var blocks = Arrays.asList(content.split("---\n?"));
+
+    assertThat(blocks).hasSize(2);
+    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
+      "Процедура ПроцедураМодуляПриложения() Экспорт\n```\n\n");
+    assertThat(blocks.get(1)).isEqualTo("Метод из ManagedApplicationModule\n\n");
+    assertThat(blocks.get(2)).isEqualTo("Доступный на клиенте метод\n\n");
+  }
+
+  @SneakyThrows
+  private DocumentContext getTestDocumentContext() {
+    context.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
+    context.populateContext();
+
+    Path testFile = Paths.get(PATH_TO_FILE);
+    return TestUtils.getDocumentContext(
+      testFile.toUri(),
+      FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
+      context
+    );
+  }
 }
