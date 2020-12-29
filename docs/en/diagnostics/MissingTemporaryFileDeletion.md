@@ -8,7 +8,7 @@
 
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
- `searchDeleteFileMethod` | `String` | ```Keywords to search for delete/move files methods``` | ```УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile``` 
+ `searchDeleteFileMethod` | `String` | ```Keywords to search for delete/move files methods``` | ```УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -61,6 +61,6 @@ EndTry;
 
 ```json
 "MissingTemporaryFileDeletion": {
-    "searchDeleteFileMethod": "УдалитьФайлы|DeleteFiles|ПереместитьФайл|MoveFile"
+    "searchDeleteFileMethod": "УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile"
 }
 ```
