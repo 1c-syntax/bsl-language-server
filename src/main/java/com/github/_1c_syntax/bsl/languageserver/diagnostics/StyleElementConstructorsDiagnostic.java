@@ -55,7 +55,7 @@ public class StyleElementConstructorsDiagnostic extends AbstractVisitorDiagnosti
       diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctxTypeName));
     }
 
-    return ctx;
+    return super.visitNewExpression(ctx);
   }
 
   private static String typeName(BSLParser.NewExpressionContext ctx) {
