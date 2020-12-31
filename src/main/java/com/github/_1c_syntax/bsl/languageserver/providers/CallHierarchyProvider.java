@@ -70,7 +70,6 @@ public class CallHierarchyProvider {
       .flatMap(Reference::getSourceDefinedSymbol)
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
-      // в случае отсутствия ответа по протоколу надо возвращать null, а не пустой список
       .orElse(Collections.emptyList())
       ;
   }
@@ -95,8 +94,7 @@ public class CallHierarchyProvider {
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(reference.getSelectionRange())
           .map(CallHierarchyProvider::getCallHierarchyItem)
           .map(callHierarchyItem -> Pair.of(callHierarchyItem, reference.getSelectionRange()))))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .collect(groupingBy(Pair::getKey, mapping(Pair::getValue, toCollection(ArrayList::new))))
       .entrySet()
       .stream()

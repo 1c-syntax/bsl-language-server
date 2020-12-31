@@ -54,7 +54,6 @@ public class ReferenceResolver {
   public Optional<Reference> findReference(URI uri, Position position) {
     return finders.stream()
       .map(referenceFinder -> referenceFinder.findReference(uri, position))
-      .filter(Optional::isPresent)
       .flatMap(Optional::stream)
       .findFirst();
   }

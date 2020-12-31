@@ -86,8 +86,7 @@ public class ReferencesStorage {
     return referencesTo.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(symbolName)
       .stream()
       .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
 
