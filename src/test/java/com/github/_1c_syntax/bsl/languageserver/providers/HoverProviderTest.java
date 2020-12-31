@@ -29,7 +29,6 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -91,7 +90,7 @@ class HoverProviderTest {
       "Функция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, Знач П3: Структура = \"\", " +
       "П4: Массив | СписокЗначений, ПДата: См. ОбщийМодуль.СуперМетод() = '20100101', ПДатаВремя = '20110101121212', " +
       "П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт: Строка | Структура\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из file:///E:/reps/bsl-language-server/src/test/resources/providers/hover.bsl\n\n");
+    assertThat(blocks.get(1)).matches("Метод из file://.*/src/test/resources/providers/hover.bsl\n\n");
     assertThat(blocks.get(2)).isEqualTo("Описание функции.\nМногострочное.\n\n");
     assertThat(blocks.get(3)).isEqualTo("**Параметры:**\n\n" +
       "* **П1**: `Дата` | `Число` - Описание даты/числа  \n" +
@@ -144,7 +143,7 @@ class HoverProviderTest {
       "Функция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, Знач П3: Структура = \"\", " +
       "П4: Массив | СписокЗначений, ПДата: См. ОбщийМодуль.СуперМетод() = '20100101', ПДатаВремя = '20110101121212', " +
       "П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт: Строка | Структура\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из file:///E:/reps/bsl-language-server/src/test/resources/providers/hover.bsl\n\n");
+    assertThat(blocks.get(1)).matches("Метод из file://.*/src/test/resources/providers/hover.bsl\n\n");
     assertThat(blocks.get(2)).isEqualTo("Описание функции.\nМногострочное.\n\n");
     assertThat(blocks.get(3)).isEqualTo("**Параметры:**\n\n" +
       "* **П1**: `Дата` | `Число` - Описание даты/числа  \n" +
