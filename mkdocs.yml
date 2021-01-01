@@ -31,8 +31,10 @@ extra_javascript:
 markdown_extensions:
   - admonition
   - codehilite
-  - toc:
+  - markdown.extensions.toc:
       permalink: true
+      slugify: !!python/name:pymdownx.slugs.uslugify_cased
+      toc_depth: 2
 
 plugins:
   - search:
