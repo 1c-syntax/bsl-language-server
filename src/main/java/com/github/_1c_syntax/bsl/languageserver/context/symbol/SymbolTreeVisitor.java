@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 public interface SymbolTreeVisitor {
+  void visitModule(ModuleSymbol moduleSymbol);
+
   void visitRegion(RegionSymbol region);
 
   void visitMethod(MethodSymbol method);

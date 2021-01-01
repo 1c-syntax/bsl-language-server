@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
@@ -51,6 +52,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
   @Override
   public SymbolTree compute() {
 
+    ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
     List<RegionSymbol> regions = new RegionSymbolComputer(documentContext).compute();
     List<VariableSymbol> variables = new VariableSymbolComputer(documentContext).compute();
@@ -62,13 +64,13 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     allOfThem.sort(Comparator.comparingInt(symbol -> symbol.getRange().getStart().getLine()));
 
     List<SourceDefinedSymbol> topLevelSymbols = new ArrayList<>();
-    SourceDefinedSymbol currentParent = emptySymbol();
+    SourceDefinedSymbol currentParent = moduleSymbol;
 
     for (SourceDefinedSymbol symbol : allOfThem) {
       currentParent = placeSymbol(topLevelSymbols, currentParent, symbol);
     }
 
-    return new SymbolTree(topLevelSymbols);
+    return new SymbolTree(moduleSymbol);
   }
 
   private static SourceDefinedSymbol placeSymbol(

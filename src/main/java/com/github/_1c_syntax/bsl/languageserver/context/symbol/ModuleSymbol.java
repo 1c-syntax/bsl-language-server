@@ -22,36 +22,48 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.Value;
+import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public interface SourceDefinedSymbol extends Symbol {
-  DocumentContext getOwner();
+@Value
+@Builder
+@EqualsAndHashCode(exclude = {"children", "parent"})
+@ToString(exclude = {"children", "parent"})
+public class ModuleSymbol implements SourceDefinedSymbol {
+  String name;
+  @Builder.Default
+  SymbolKind symbolKind = SymbolKind.Module;
+  DocumentContext owner;
+  Range range;
 
-  Range getRange();
+  @Getter
+  @Setter
+  @Builder.Default
+  @NonFinal
+  Optional<SourceDefinedSymbol> parent = Optional.empty();
 
-  Range getSelectionRange();
+  @Builder.Default
+  List<SourceDefinedSymbol> children = new ArrayList<>();
 
-  Optional<SourceDefinedSymbol> getParent();
-
-  void setParent(Optional<SourceDefinedSymbol> symbol);
-
-  List<SourceDefinedSymbol> getChildren();
-
-  default Optional<SourceDefinedSymbol> getRootParent(SymbolKind symbolKind) {
-    SourceDefinedSymbol rootParent = null;
-    Optional<SourceDefinedSymbol> currentParent = getParent();
-    while (currentParent.isPresent()) {
-      var symbol = currentParent.get();
-      if (symbol.getSymbolKind() == symbolKind) {
-        rootParent = symbol;
-      }
-      currentParent = symbol.getParent();
-    }
-
-    return Optional.ofNullable(rootParent);
+  @Override
+  public void accept(SymbolTreeVisitor visitor) {
+    visitor.visitModule(this);
   }
+
+  @Override
+  public Range getSelectionRange() {
+    return getRange();
+  }
+
 }

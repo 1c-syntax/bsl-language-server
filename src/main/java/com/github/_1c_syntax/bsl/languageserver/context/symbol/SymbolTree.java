@@ -36,13 +36,18 @@ import java.util.stream.Collectors;
 
 @Value
 public class SymbolTree {
-  List<SourceDefinedSymbol> children;
+
+  ModuleSymbol module;
 
   @Getter(lazy = true)
   List<SourceDefinedSymbol> childrenFlat = createChildrenFlat();
 
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
+
+  public List<SourceDefinedSymbol> getChildren() {
+    return module.getChildren();
+  }
 
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
@@ -54,7 +59,7 @@ public class SymbolTree {
   public List<RegionSymbol> getModuleLevelRegions() {
     return getChildren().stream()
       .filter(RegionSymbol.class::isInstance)
-      .map(symbol -> (RegionSymbol) symbol)
+      .map(RegionSymbol.class::cast)
       .collect(Collectors.toList());
   }
 
@@ -80,6 +85,30 @@ public class SymbolTree {
 
     return getMethods().stream()
       .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange))
+      .findAny();
+  }
+
+  /**
+   * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
+   *
+   * @param methodName Имя метода
+   * @return MethodSymbol, если он был найден в дереве символов.
+   */
+  public Optional<MethodSymbol> getMethodSymbol(String methodName) {
+    return getMethods().stream()
+      .filter(methodSymbol -> methodName.equalsIgnoreCase(methodSymbol.getName()))
+      .findAny();
+  }
+
+  /**
+   * Поиск метода, включающего переданный Range
+   *
+   * @param range Область для поиска
+   * @return MethodSymbol, если он был найден в дереве символов.
+   */
+  public Optional<MethodSymbol> getMethodSymbol(Range range) {
+    return getMethods().stream()
+      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), range))
       .findAny();
   }
 

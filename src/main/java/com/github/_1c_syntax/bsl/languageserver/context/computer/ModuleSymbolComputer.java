@@ -19,39 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 
-import java.util.List;
-import java.util.Optional;
+public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
-public interface SourceDefinedSymbol extends Symbol {
-  DocumentContext getOwner();
+  private final DocumentContext documentContext;
 
-  Range getRange();
+  public ModuleSymbolComputer(DocumentContext documentContext) {
+    this.documentContext = documentContext;
+  }
 
-  Range getSelectionRange();
-
-  Optional<SourceDefinedSymbol> getParent();
-
-  void setParent(Optional<SourceDefinedSymbol> symbol);
-
-  List<SourceDefinedSymbol> getChildren();
-
-  default Optional<SourceDefinedSymbol> getRootParent(SymbolKind symbolKind) {
-    SourceDefinedSymbol rootParent = null;
-    Optional<SourceDefinedSymbol> currentParent = getParent();
-    while (currentParent.isPresent()) {
-      var symbol = currentParent.get();
-      if (symbol.getSymbolKind() == symbolKind) {
-        rootParent = symbol;
-      }
-      currentParent = symbol.getParent();
-    }
-
-    return Optional.ofNullable(rootParent);
+  @Override
+  public ModuleSymbol compute() {
+    return ModuleSymbol.builder()
+      .name(documentContext.getUri().toString())
+      .owner(documentContext)
+      .range(Ranges.create(documentContext.getAst()))
+      .build();
   }
 }
