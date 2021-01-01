@@ -15,6 +15,8 @@ theme:
     scheme: preference
     primary: 'white'
     accent: 'indigo'
+  features:
+    - toc.integrate
 extra:
   social:
     - icon: fontawesome/brands/github
