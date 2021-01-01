@@ -29,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -248,6 +249,7 @@ class HoverProviderTest {
   }
 
   @Test
+  @Disabled
   void testMethodsFromGlobalContext() {
     DocumentContext documentContext = getTestDocumentContext();
 
