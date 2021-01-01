@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1609525316308,
+  "lastUpdate": 1609525787814,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -7874,6 +7874,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.627504637998704",
             "extra": "mean: 75.8026762008667 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cfcefe875a52f0c73363a1f70993d86d7fcbafa8",
+          "message": "Merge pull request #1489 from qtLex/fix/RedundantAccessToObject\n\nИсправление ложного срабатывания на имени переменной",
+          "timestamp": "2021-01-01T21:14:53+03:00",
+          "tree_id": "9267414759d62f92dedd7824b87bc0a91536553a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cfcefe875a52f0c73363a1f70993d86d7fcbafa8"
+        },
+        "date": 1609525785168,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 77.5108892917633,
+            "unit": "sec",
+            "range": "stddev: 2.144641617586698",
+            "extra": "mean: 77.5108892917633 sec\nrounds: 3"
           }
         ]
       }
