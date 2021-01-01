@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.regex.Pattern;
 
@@ -55,7 +56,7 @@ public class NonExportMethodsInApiRegionDiagnostic extends AbstractVisitorDiagno
         return;
       }
 
-      methodSymbol.getRootParent().ifPresent((Symbol rootRegion) -> {
+      methodSymbol.getRootParent(SymbolKind.Namespace).ifPresent((Symbol rootRegion) -> {
         if (REGION_NAME.matcher(rootRegion.getName()).matches()) {
           String message = info.getMessage(methodSymbol.getName(), rootRegion.getName());
           diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange(), message);

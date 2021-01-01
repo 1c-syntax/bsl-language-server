@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
@@ -42,6 +43,11 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
 
   void visit(SourceDefinedSymbol symbol) {
     symbol.accept(this);
+  }
+
+  @Override
+  public void visitModule(ModuleSymbol moduleSymbol) {
+    visitChildren(moduleSymbol.getChildren());
   }
 
   @Override

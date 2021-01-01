@@ -36,13 +36,18 @@ import java.util.stream.Collectors;
 
 @Value
 public class SymbolTree {
-  List<SourceDefinedSymbol> children;
+
+  ModuleSymbol module;
 
   @Getter(lazy = true)
   List<SourceDefinedSymbol> childrenFlat = createChildrenFlat();
 
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
+
+  public List<SourceDefinedSymbol> getChildren() {
+    return module.getChildren();
+  }
 
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
@@ -54,7 +59,7 @@ public class SymbolTree {
   public List<RegionSymbol> getModuleLevelRegions() {
     return getChildren().stream()
       .filter(RegionSymbol.class::isInstance)
-      .map(symbol -> (RegionSymbol) symbol)
+      .map(RegionSymbol.class::cast)
       .collect(Collectors.toList());
   }
 
