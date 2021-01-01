@@ -49,8 +49,13 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
       .map(SymbolTree::getChildrenFlat)
       .stream()
       .flatMap(Collection::stream)
-      .filter(sourceDefinedSymbol-> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
-      .map(sourceDefinedSymbol-> new Reference(sourceDefinedSymbol, uri, sourceDefinedSymbol.getSelectionRange()))
+      .filter(sourceDefinedSymbol -> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
+      .map(sourceDefinedSymbol -> new Reference(
+        sourceDefinedSymbol,
+        sourceDefinedSymbol,
+        uri,
+        sourceDefinedSymbol.getSelectionRange())
+      )
       .findFirst();
   }
 }

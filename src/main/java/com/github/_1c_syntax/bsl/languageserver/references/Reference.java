@@ -35,14 +35,19 @@ import java.util.Optional;
  */
 @Value
 public class Reference {
+
+  // todo: ModuleSymbol для ссылок из тела модуля.
+  /**
+   * Символ, в котором располагается данная ссылка.
+   */
+  SourceDefinedSymbol from;
+
   /**
    * Символ, на который указывает ссылка.
    */
   Symbol symbol;
 
   // todo: единый класс Location из URI и Range? Как lsp'шный, только URI объектом, а не строкой.
-
-  // todo: Symbol from?
 
   /**
    * URI, в котором находится ссылка.
@@ -68,8 +73,8 @@ public class Reference {
     return new Location(uri.toString(), selectionRange);
   }
 
-  public static Reference of(Symbol symbol, Location location) {
-    return new Reference(symbol, URI.create(location.getUri()), location.getRange());
+  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange());
   }
 
 }

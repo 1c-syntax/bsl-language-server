@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -39,6 +40,7 @@ import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -95,7 +97,10 @@ public class ReferencesStorage {
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
       .flatMap(entry -> getMethodSymbol(entry.getValue())
-        .map(symbol -> new Reference(symbol, uri, entry.getKey()))
+        .map((MethodSymbol symbol) -> {
+          SourceDefinedSymbol from = getFromSymbol(uri, position);
+          return new Reference(from, symbol, uri, entry.getKey());
+        })
       );
   }
 
@@ -166,6 +171,18 @@ public class ReferencesStorage {
     return serverContext.getDocument(mdoRef, moduleType)
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(methodName));
+  }
+
+  private SourceDefinedSymbol getFromSymbol(URI uri, Position position) {
+    return Optional.ofNullable(serverContext.getDocument(uri))
+      .map(DocumentContext::getSymbolTree)
+      .map(SymbolTree::getChildren)
+      .stream()
+      .flatMap(Collection::stream)
+      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() != SymbolKind.Namespace)
+      .filter(symbol -> Ranges.containsPosition(symbol.getRange(), position))
+      .findFirst()
+      .orElse(null);
   }
 
   private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {

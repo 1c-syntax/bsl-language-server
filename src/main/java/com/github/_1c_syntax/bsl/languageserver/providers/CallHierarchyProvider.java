@@ -45,7 +45,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -79,7 +78,6 @@ public class CallHierarchyProvider {
     CallHierarchyIncomingCallsParams params
   ) {
 
-    var serverContext = documentContext.getServerContext();
     CallHierarchyItem item = params.getItem();
     Position position = item.getSelectionRange().getStart();
 
@@ -87,14 +85,10 @@ public class CallHierarchyProvider {
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
       .flatMap(symbol -> referencesStorage.getReferencesTo(symbol).stream())
-      // todo: рефакторинг. Как красиво найти метод-символ по его рэнжу, не заглядывая в сервер-контекст и символ-три?
-      // todo: SourceDefinedSymbol reference::from?
-      .map((Reference reference) -> Optional.ofNullable(serverContext.getDocument(reference.getUri()))
-        .map(DocumentContext::getSymbolTree)
-        .flatMap(symbolTree -> symbolTree.getMethodSymbol(reference.getSelectionRange())
-          .map(CallHierarchyProvider::getCallHierarchyItem)
-          .map(callHierarchyItem -> Pair.of(callHierarchyItem, reference.getSelectionRange()))))
-      .flatMap(Optional::stream)
+      .map((Reference reference) -> {
+        var callHierarchyItem = getCallHierarchyItem(reference.getFrom());
+        return Pair.of(callHierarchyItem, reference.getSelectionRange());
+      })
       .collect(groupingBy(Pair::getKey, mapping(Pair::getValue, toCollection(ArrayList::new))))
       .entrySet()
       .stream()
