@@ -25,6 +25,9 @@ extra:
       link: 'https://t.me/bsl_language_server'
 extra_css:
   - 'assets/stylesheets/extra.css'
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js
+  - assets/javascripts/tables.js
 markdown_extensions:
   - admonition
   - codehilite
