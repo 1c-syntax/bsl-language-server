@@ -1,10 +1,36 @@
 site_name: BSL Language Server
 nav:
-  - Home: index.md
-  - Contributing: contributing/index.md
-  - Reporters: reporters/index.md
+  - Home:
+    - index.md
+    - faq.md
+    - systemRequirements.md
+  - Contributing:
+    - About: contributing/index.md
+    - Start:
+      - contributing/EnvironmentSetting.md
+      - contributing/FastStart.md
+      - contributing/StyleGuide.md
+      - JavaDoc: javadoc/index.html
+    - Diagnostics development:
+      - contributing/DiagnosticDevWorkFlow.md
+      - contributing/DiagnosticExample.md
+      - contributing/DiagnosticStructure.md
+      - contributing/DiagnosticTypeAndSeverity.md
+      - contributing/DiagnosticTag.md
+      - contributing/DiagnostcAddSettings.md
+      - contributing/DiagnosticQuickFix.md
+  - Reporters:
+    - About: reporters/index.md
+    - JSON: reporters/json.md
+    - Generic Issue: reporters/generic.md
+    - JUnit: reporters/junit.md
+    - TSLint: reporters/tslint.md
+    - Console: reporters/console.md
   - Diagnostics: diagnostics/index.md
-  - Features: features/index.md
+  - Features:
+    - About: features/index.md
+    - features/ConfigurationFile.md
+    - features/DiagnosticIgnorance.md
   - Russian: https://1c-syntax.github.io/bsl-language-server
 theme: 
   name: material
@@ -12,8 +38,14 @@ theme:
   logo: 'assets/images/logo.png'
   favicon: 'assets/images/logo.png'
   palette:
+    scheme: preference
     primary: 'white'
     accent: 'indigo'
+  features:
+    - navigation.tabs
+    - search.highlight
+    - toc.integrate
+    - header.autohide
 extra:
   social:
     - icon: fontawesome/brands/github
@@ -22,11 +54,16 @@ extra:
       link: 'https://t.me/bsl_language_server'
 extra_css:
   - 'assets/stylesheets/extra.css'
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js
+  - assets/javascripts/tables.js
 markdown_extensions:
   - admonition
   - codehilite
-  - toc:
-      permalink: Link
+  - markdown.extensions.toc:
+      permalink: true
+      slugify: !!python/name:pymdownx.slugs.uslugify_cased
+      toc_depth: 2
 
 plugins:
   - search:
