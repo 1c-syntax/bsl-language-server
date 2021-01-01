@@ -45,7 +45,7 @@ class MethodDescriptionTest {
       var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/MethodDescription.bsl");
       var methods = documentContext.getSymbolTree().getMethods();
 
-      assertThat(methods.size()).isEqualTo(11);
+      assertThat(methods.size()).isEqualTo(14);
 
       methodsWithDescription = methods.stream()
         .map(MethodSymbol::getDescription)
@@ -53,8 +53,98 @@ class MethodDescriptionTest {
         .map(Optional::get)
         .collect(Collectors.toList());
 
-      assertThat(methodsWithDescription.size()).isEqualTo(10);
+      assertThat(methodsWithDescription.size()).isEqualTo(13);
     }
+  }
+
+  @Test
+  void testMethod13() {
+    var method = methodsWithDescription.get(12);
+    assertThat(method.getPurposeDescription()).isEqualTo("Значения реквизитов, прочитанные из информационной базы для нескольких объектов.\n" +
+      "\nЕсли необходимо зачитать реквизит независимо от прав текущего пользователя,\n" +
+      "то следует использовать предварительный переход в привилегированный режим.");
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).hasSize(3);
+    assertThat(method.getReturnedValue()).hasSize(1);
+    assertThat(method.getLink()).isEmpty();
+
+    var param = method.getParameters().get(0);
+    assertThat(param.getName()).isEqualTo("Ссылки");
+    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes().get(0).getName()).isEqualTo("Массив");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo("массив ссылок на объекты одного типа.\n" +
+      "Значения массива должны быть ссылками на объекты одного типа.\n" +
+      "если массив пуст, то результатом будет пустое соответствие.");
+    assertThat(param.isHyperlink()).isFalse();
+
+    param = method.getParameters().get(1);
+    assertThat(param.getName()).isEqualTo("Реквизиты");
+    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes().get(0).getName()).isEqualTo("Строка");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo(
+      "имена реквизитов перечисленные через запятую, в формате требований к свойствам\n" +
+      "структуры. Например, \"Код, Наименование, Родитель\".");
+    assertThat(param.isHyperlink()).isFalse();
+
+    param = method.getParameters().get(2);
+    assertThat(param.getName()).isEqualTo("ВыбратьРазрешенные");
+    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes().get(0).getName()).isEqualTo("Булево");
+    assertThat(param.getTypes().get(0).getDescription()).isEqualTo(
+      "если Истина, то запрос к объектам выполняется с учетом прав пользователя, и в случае,\n" +
+      "- если какой-либо объект будет исключен из выборки по правам, то этот объект\n" +
+      "будет исключен и из результата;\n" +
+      "- если Ложь, то возникнет исключение при отсутствии прав на таблицу\n" +
+      "или любой из реквизитов.");
+    assertThat(param.isHyperlink()).isFalse();
+
+    var type = method.getReturnedValue().get(0);
+    assertThat(type.getName()).isEqualTo("Соответствие");
+    assertThat(type.getDescription()).isEqualTo("список объектов и значений их реквизитов:");
+    assertThat(type.getParameters()).hasSize(2);
+
+  }
+
+  @Test
+  void testMethod12() {
+    var method = methodsWithDescription.get(11);
+    assertThat(method.getPurposeDescription()).isEmpty();
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).isEmpty();
+    assertThat(method.getReturnedValue()).hasSize(1);
+    assertThat(method.getLink()).isEmpty();
+
+    var type = method.getReturnedValue().get(0);
+    assertThat(type.getName()).isEmpty();
+    assertThat(type.getDescription()).isEmpty();
+    assertThat(type.getParameters()).isEmpty();
+    assertThat(type.isHyperlink()).isTrue();
+    assertThat(type.getLink()).isEqualTo("ОбщийМодуль.Метод()");
+  }
+
+  @Test
+  void testMethod11() {
+    var method = methodsWithDescription.get(10);
+    assertThat(method.getPurposeDescription()).isEmpty();
+    assertThat(method.isDeprecated()).isFalse();
+    assertThat(method.getDeprecationInfo()).isEmpty();
+    assertThat(method.getExamples()).isEmpty();
+    assertThat(method.getCallOptions()).isEmpty();
+    assertThat(method.getParameters()).hasSize(1);
+    assertThat(method.getReturnedValue()).isEmpty();
+    assertThat(method.getLink()).isEmpty();
+
+    var param = method.getParameters().get(0);
+    assertThat(param.getName()).isEmpty();
+    assertThat(param.getTypes()).isEmpty();
+    assertThat(param.isHyperlink()).isTrue();
+    assertThat(param.getLink()).isEqualTo("ОбщийМодуль.Метод()");
   }
 
   @Test
@@ -75,7 +165,7 @@ class MethodDescriptionTest {
   void testMethod9() {
     var method = methodsWithDescription.get(8);
     assertThat(method.getPurposeDescription())
-      .isEqualTo("Описание метода\n\n Несколько строк");
+      .isEqualTo("Описание метода\nНесколько строк");
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
@@ -89,7 +179,7 @@ class MethodDescriptionTest {
   void testMethod8() {
     var method = methodsWithDescription.get(7);
     assertThat(methodsWithDescription.get(7).getPurposeDescription())
-      .isEqualTo("Описание метода\n\n Несколько строк");
+      .isEqualTo("Описание метода\nНесколько строк");
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
     assertThat(method.getExamples()).isEmpty();
@@ -103,7 +193,7 @@ class MethodDescriptionTest {
   void testMethod7() {
     var method = methodsWithDescription.get(6);
     assertThat(method.getPurposeDescription())
-      .isEqualTo("Описание метода\n\n Несколько строк");
+      .isEqualTo("Описание метода\nНесколько строк");
     assertThat(method.isDeprecated()).isTrue();
     assertThat(method.getDeprecationInfo())
       .isEqualTo("Следует использовать новую см. ОбщегоНазначения.Метод()");
@@ -194,12 +284,10 @@ class MethodDescriptionTest {
     assertThat(method.getParameters()).hasSize(8);
     assertThat(method.getLink()).isEmpty();
     var param = method.getParameters().get(0);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("ПараметрБезТипаИОписания");
     assertThat(param.getTypes()).isEmpty();
 
     param = method.getParameters().get(1);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("ПараметрСТипом");
     assertThat(param.getTypes()).hasSize(1);
     var type = param.getTypes().get(0);
@@ -208,7 +296,6 @@ class MethodDescriptionTest {
     assertThat(type.getParameters()).isEmpty();
 
     param = method.getParameters().get(2);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("ПараметрСОписаниемСсылкой");
     assertThat(param.getTypes()).hasSize(1);
     type = param.getTypes().get(0);
@@ -217,7 +304,6 @@ class MethodDescriptionTest {
     assertThat(type.getParameters()).isEmpty();
 
     param = method.getParameters().get(3);
-    assertThat(param.getDescription()).isEqualTo("описание параметра см. Справочник.Контрагенты.");
     assertThat(param.getName()).isEqualTo("ПараметрСТипомИОписанием");
     assertThat(param.getTypes()).hasSize(1);
     type = param.getTypes().get(0);
@@ -226,25 +312,30 @@ class MethodDescriptionTest {
     assertThat(type.getParameters()).isEmpty();
 
     param = method.getParameters().get(4);
-    assertThat(param.getDescription()).isEqualTo("простое описание параметра.");
     assertThat(param.getName()).isEqualTo("ПараметрСТипамиИОписанием");
-    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes()).hasSize(2);
     type = param.getTypes().get(0);
     assertThat(type.getDescription()).isEqualTo("простое описание параметра.");
-    assertThat(type.getName()).isEqualTo("Произвольный, ДокументСсылка");
+    assertThat(type.getName()).isEqualTo("Произвольный");
+    assertThat(type.getParameters()).isEmpty();
+    type = param.getTypes().get(1);
+    assertThat(type.getDescription()).isEqualTo("простое описание параметра.");
+    assertThat(type.getName()).isEqualTo("ДокументСсылка");
     assertThat(type.getParameters()).isEmpty();
 
     param = method.getParameters().get(5);
-    assertThat(param.getDescription()).isEqualTo("многострочное\nописание параметра");
     assertThat(param.getName()).isEqualTo("ПараметрСТипамиИОписанием2");
-    assertThat(param.getTypes()).hasSize(1);
+    assertThat(param.getTypes()).hasSize(2);
     type = param.getTypes().get(0);
+    assertThat(type.getDescription()).isEqualTo("многострочное");
+    assertThat(type.getName()).isEqualTo("Произвольный");
+    assertThat(type.getParameters()).isEmpty();
+    type = param.getTypes().get(1);
     assertThat(type.getDescription()).isEqualTo("многострочное\nописание параметра");
-    assertThat(type.getName()).isEqualTo("Произвольный, ДокументСсылка");
+    assertThat(type.getName()).isEqualTo("ДокументСсылка");
     assertThat(type.getParameters()).isEmpty();
 
     param = method.getParameters().get(6);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("ПараметрСТипамиИОписанием3");
     assertThat(param.getTypes()).hasSize(4);
     type = param.getTypes().get(0);
@@ -265,7 +356,6 @@ class MethodDescriptionTest {
     assertThat(type.getParameters()).isEmpty();
 
     param = method.getParameters().get(7);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("ПараметрМассив");
     assertThat(param.getTypes()).hasSize(1);
     type = param.getTypes().get(0);
@@ -273,35 +363,28 @@ class MethodDescriptionTest {
     assertThat(type.getName()).isEqualTo("Массив из Структура:");
     assertThat(type.getParameters()).hasSize(4);
     param = type.getParameters().get(0);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("Элемент1");
     assertThat(param.getTypes()).hasSize(1);
     var subtype = param.getTypes().get(0);
     assertThat(subtype.getDescription()).isEmpty();
-    assertThat(subtype.getName()).isEqualTo("Структура:");
+    assertThat(subtype.getName()).isEqualTo("Структура");
     assertThat(subtype.getParameters()).hasSize(3);
     var subparam = subtype.getParameters().get(0);
-    assertThat(subparam.getDescription()).isEqualTo("код региона (длина - 2).");
     assertThat(subparam.getName()).isEqualTo("СубЭлемент1");
     assertThat(subparam.getTypes()).hasSize(1);
     subparam = subtype.getParameters().get(1);
-    assertThat(subparam.getDescription()).isEqualTo("код населенного пункта (длина - 3).");
     assertThat(subparam.getName()).isEqualTo("Субэлемент2");
     assertThat(subparam.getTypes()).hasSize(1);
     subparam = subtype.getParameters().get(2);
-    assertThat(subparam.getDescription()).isEqualTo("код улицы (длина - 4).");
     assertThat(subparam.getName()).isEqualTo("СубЭлемент3");
     assertThat(subparam.getTypes()).hasSize(1);
     param = type.getParameters().get(1);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("Элемент2");
     assertThat(param.getTypes()).hasSize(1);
     param = type.getParameters().get(2);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("Элемент3");
     assertThat(param.getTypes()).hasSize(1);
     param = type.getParameters().get(3);
-    assertThat(param.getDescription()).isEmpty();
     assertThat(param.getName()).isEqualTo("Жесть");
     assertThat(param.getTypes()).hasSize(1);
     subtype = param.getTypes().get(0);
@@ -309,7 +392,6 @@ class MethodDescriptionTest {
     assertThat(subtype.getName()).isEqualTo("Структура");
     assertThat(subtype.getParameters()).hasSize(1);
     subparam = subtype.getParameters().get(0);
-    assertThat(subparam.getDescription()).isEmpty();
     assertThat(subparam.getName()).isEqualTo("Массив");
     assertThat(subparam.getTypes()).hasSize(1);
     var subsubtype = subparam.getTypes().get(0);
@@ -317,11 +399,9 @@ class MethodDescriptionTest {
     assertThat(subsubtype.getName()).isEqualTo("Массив из Структура:");
     assertThat(subsubtype.getParameters()).hasSize(2);
     var subsubparam = subsubtype.getParameters().get(0);
-    assertThat(subsubparam.getDescription()).isEqualTo("описание");
     assertThat(subsubparam.getName()).isEqualTo("Элемент");
     assertThat(subsubparam.getTypes()).hasSize(1);
     subsubparam = subsubtype.getParameters().get(1);
-    assertThat(subsubparam.getDescription()).isEmpty();
     assertThat(subsubparam.getName()).isEqualTo("Элемент4");
     assertThat(subsubparam.getTypes()).hasSize(1);
     subsubtype = subsubparam.getTypes().get(0);
@@ -329,7 +409,6 @@ class MethodDescriptionTest {
     assertThat(subsubtype.getName()).isEqualTo("строка");
     assertThat(subsubtype.getParameters()).hasSize(1);
     subsubparam = subsubtype.getParameters().get(0);
-    assertThat(subsubparam.getDescription()).isEmpty();
     assertThat(subsubparam.getName()).isEqualTo("Элемент5");
     assertThat(subsubparam.getTypes()).hasSize(1);
     assertThat(method.getReturnedValue()).isEmpty();

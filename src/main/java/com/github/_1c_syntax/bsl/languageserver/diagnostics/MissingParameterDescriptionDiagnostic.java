@@ -122,7 +122,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
       }
 
       // параметр в описании есть, но нет типа и описания типа
-      if (description.getTypes().isEmpty() && description.getDescription().isEmpty()) {
+      if (description.getTypes().isEmpty()) {
         addDiagnostic(parameter, "emptyDescription");
       }
 
