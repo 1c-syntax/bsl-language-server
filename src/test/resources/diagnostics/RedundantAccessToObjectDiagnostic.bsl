@@ -21,5 +21,7 @@ Procedure Test(Data)
     Variable = ThisObject.Value; // Error
 
     ThisObject.RunFillByStructure(Data); // Error
+    ThisObject["ContactInformationField"].Value = Data.Phone;
+    ThisObject["ContactInformationField"].Value2 = ThisObject["ContactInformationField"].Value;
 
 EndProcedure
