@@ -22,17 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.mdclasses.mdo.MDObjectBase;
+import com.github._1c_syntax.mdclasses.metadata.additional.MDOReference;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class ModuleSymbolComputerTest {
 
   @Test
-  void compute() {
+  void testBasicCompute() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/ModuleSymbol.bsl");
 
@@ -44,5 +53,44 @@ class ModuleSymbolComputerTest {
     // then
     assertThat(moduleSymbol.getOwner()).isEqualTo(documentContext);
     assertThat(moduleSymbol.getSymbolKind()).isEqualTo(SymbolKind.Module);
+    assertThat(moduleSymbol.getName()).isEqualTo(documentContext.getUri().toString());
+  }
+
+  @Test
+  void testModuleName() {
+    // given
+    var documentContext = spy(TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/ModuleSymbol.bsl"));
+    var computer = new ModuleSymbolComputer(documentContext);
+
+    MDOReference mdoReference = mock(MDOReference.class);
+    when(mdoReference.getMdoRef()).thenReturn("Document.Document1");
+
+    MDObjectBase mdObject = mock(MDObjectBase.class);
+    when(mdObject.getMdoReference()).thenReturn(mdoReference);
+
+    doReturn(Optional.of(mdObject)).when(documentContext).getMdObject();
+
+    // when-then pairs:
+
+    // when
+    doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
+    var moduleSymbol = computer.compute();
+
+    // then
+    assertThat(moduleSymbol.getName()).isEqualTo("Document.Document1");
+
+    // when
+    doReturn(ModuleType.ObjectModule).when(documentContext).getModuleType();
+    moduleSymbol = computer.compute();
+
+    // then
+    assertThat(moduleSymbol.getName()).isEqualTo("Document.Document1.ObjectModule");
+
+    // when
+    doReturn(ModuleType.ManagerModule).when(documentContext).getModuleType();
+    moduleSymbol = computer.compute();
+
+    // then
+    assertThat(moduleSymbol.getName()).isEqualTo("Document.Document1.ManagerModule");
   }
 }
