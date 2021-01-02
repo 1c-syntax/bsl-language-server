@@ -37,6 +37,7 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
   public ModuleSymbol compute() {
     return ModuleSymbol.builder()
       .name(documentContext.getUri().toString())
+      .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
       .build();

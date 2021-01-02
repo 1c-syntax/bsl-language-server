@@ -42,8 +42,7 @@ import java.util.Optional;
 @ToString(exclude = {"children", "parent"})
 public class ModuleSymbol implements SourceDefinedSymbol {
   String name;
-  @Builder.Default
-  SymbolKind symbolKind = SymbolKind.Module;
+  SymbolKind symbolKind;
   DocumentContext owner;
   Range range;
 
