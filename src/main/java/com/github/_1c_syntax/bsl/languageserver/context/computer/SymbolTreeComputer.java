@@ -27,16 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTreeVisitor;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.Getter;
-import lombok.Setter;
-import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -95,28 +89,4 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     return placeSymbol(topLevelSymbols, maybeParent.get(), symbol);
   }
 
-  private static SourceDefinedSymbol emptySymbol() {
-    return new SourceDefinedSymbol() {
-      @Getter
-      private final DocumentContext owner = null;
-      @Getter
-      private final String name = "empty";
-      @Getter
-      private final SymbolKind symbolKind = SymbolKind.Null;
-      @Getter
-      private final Range range = Ranges.create(-1, 0, -1, 0);
-      @Getter
-      private final Range selectionRange = Ranges.create(-1, 0, -1, 0);
-      @Getter
-      @Setter
-      private Optional<SourceDefinedSymbol> parent = Optional.empty();
-      @Getter
-      private final List<SourceDefinedSymbol> children = Collections.emptyList();
-
-      @Override
-      public void accept(SymbolTreeVisitor visitor) {
-      }
-
-    };
-  }
 }
