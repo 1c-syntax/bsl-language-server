@@ -24,9 +24,6 @@ package com.github._1c_syntax.bsl.languageserver;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionList;
-import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -35,7 +32,6 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,7 +41,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,24 +50,6 @@ class BSLTextDocumentServiceTest {
 
   @Autowired
   private BSLTextDocumentService textDocumentService;
-
-  @Test
-  void completion() throws ExecutionException, InterruptedException {
-    // given
-    CompletionParams position = new CompletionParams();
-
-    // when
-    CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion = textDocumentService.completion(position);
-
-    // then
-    Either<List<CompletionItem>, CompletionList> listCompletionListEither = completion.get();
-    List<CompletionItem> completionItems = listCompletionListEither.getLeft();
-
-    assertThat(completionItems)
-      .isNotEmpty()
-      .allMatch(completionItem -> "Hello World".equals(completionItem.getLabel()))
-    ;
-  }
 
   @Test
   void didOpen() throws IOException {
