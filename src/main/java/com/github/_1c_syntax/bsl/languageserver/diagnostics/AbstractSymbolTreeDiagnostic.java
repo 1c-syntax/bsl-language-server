@@ -46,7 +46,7 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
   }
 
   @Override
-  public void visitModule(ModuleSymbol moduleSymbol) {
+  public void visitModule(ModuleSymbol module) {
     visitChildren(moduleSymbol.getChildren());
   }
 
