@@ -34,7 +34,7 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
 
   @Override
   protected void check() {
-    visitChildren(documentContext.getSymbolTree().getChildren());
+    visit(documentContext.getSymbolTree().getModule());
   }
 
   void visitChildren(List<SourceDefinedSymbol> children) {
@@ -47,7 +47,7 @@ public abstract class AbstractSymbolTreeDiagnostic extends AbstractDiagnostic im
 
   @Override
   public void visitModule(ModuleSymbol module) {
-    visitChildren(moduleSymbol.getChildren());
+    visitChildren(module.getChildren());
   }
 
   @Override
