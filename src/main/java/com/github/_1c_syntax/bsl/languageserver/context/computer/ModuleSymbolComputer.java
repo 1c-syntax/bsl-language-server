@@ -31,6 +31,9 @@ import org.eclipse.lsp4j.SymbolKind;
 import java.util.EnumSet;
 import java.util.Set;
 
+/**
+ * Компьютер символа модуля документа.
+ */
 public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
 
   private static final Set<ModuleType> MODULE_TYPES_TO_APPEND_NAME = EnumSet.of(
