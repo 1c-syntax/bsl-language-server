@@ -53,6 +53,7 @@ class CallHierarchyProviderTest {
 
   private final Position firstProcedureDeclarationPosition = new Position(0, 15);
   private final Position firstFunctionCallPosition = new Position(1, 15);
+  private final Position secondFunctionDeclarationPosition = new Position(14, 15);
   private final Position secondFunctionCallPosition = new Position(2, 15);
 
   @BeforeEach
@@ -171,6 +172,39 @@ class CallHierarchyProviderTest {
 
     assertThat(incomingCalls)
       .filteredOn(incomingCall -> incomingCall.getFrom().getName().equals("ВтораяПроцедура"))
+      .flatExtracting(CallHierarchyIncomingCall::getFromRanges)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void testIncomingCallsToMethodCalledFromModuleEntry() {
+
+    // given
+    var item = getCallHierarchyItem(secondFunctionDeclarationPosition);
+    var params = new CallHierarchyIncomingCallsParams(item);
+
+    // when
+    List<CallHierarchyIncomingCall> incomingCalls = provider.incomingCalls(documentContext, params);
+
+    // then
+    assertThat(incomingCalls)
+      .hasSize(3);
+
+    assertThat(incomingCalls)
+      .filteredOn(incomingCall -> incomingCall.getFrom().getName().equals("ПерваяПроцедура"))
+      .flatExtracting(CallHierarchyIncomingCall::getFromRanges)
+      .hasSize(1)
+    ;
+
+    assertThat(incomingCalls)
+      .filteredOn(incomingCall -> incomingCall.getFrom().getName().equals("ПерваяФункция"))
+      .flatExtracting(CallHierarchyIncomingCall::getFromRanges)
+      .hasSize(1)
+    ;
+
+    assertThat(incomingCalls)
+      .filteredOn(incomingCall -> incomingCall.getFrom().getKind().equals(SymbolKind.Module))
       .flatExtracting(CallHierarchyIncomingCall::getFromRanges)
       .hasSize(1)
     ;

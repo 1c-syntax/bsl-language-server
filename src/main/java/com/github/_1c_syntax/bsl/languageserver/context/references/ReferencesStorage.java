@@ -174,15 +174,17 @@ public class ReferencesStorage {
   }
 
   private SourceDefinedSymbol getFromSymbol(URI uri, Position position) {
-    return Optional.ofNullable(serverContext.getDocument(uri))
-      .map(DocumentContext::getSymbolTree)
+    Optional<SymbolTree> symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
+      .map(DocumentContext::getSymbolTree);
+    return symbolTree
       .map(SymbolTree::getChildren)
       .stream()
       .flatMap(Collection::stream)
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() != SymbolKind.Namespace)
       .filter(symbol -> Ranges.containsPosition(symbol.getRange(), position))
       .findFirst()
-      .orElse(null);
+      .or(() -> symbolTree.map(SymbolTree::getModule))
+      .orElseThrow();
   }
 
   private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {
