@@ -177,7 +177,7 @@ public class ReferencesStorage {
     Optional<SymbolTree> symbolTree = Optional.ofNullable(serverContext.getDocument(uri))
       .map(DocumentContext::getSymbolTree);
     return symbolTree
-      .map(SymbolTree::getChildren)
+      .map(SymbolTree::getChildrenFlat)
       .stream()
       .flatMap(Collection::stream)
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() != SymbolKind.Namespace)
