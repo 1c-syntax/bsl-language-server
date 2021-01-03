@@ -23,22 +23,22 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
-public class DiagnosticCode extends Either<String, Number> {
+public class DiagnosticCode extends Either<String, Integer> {
 
   public DiagnosticCode(String code) {
     super(code, null);
   }
 
-  public DiagnosticCode(String left, Number right) {
+  public DiagnosticCode(String left, Integer right) {
     super(left, right);
   }
 
   public String getStringValue() {
-    return isLeft() ? getLeft() : Integer.toString(getRight().intValue());
+    return isLeft() ? getLeft() : Integer.toString(getRight());
   }
 
-  public static String getStringValue(Either<String, Number> diagnosticCode) {
-    return diagnosticCode.isLeft() ? diagnosticCode.getLeft() : Integer.toString(diagnosticCode.getRight().intValue());
+  public static String getStringValue(Either<String, Integer> diagnosticCode) {
+    return diagnosticCode.isLeft() ? diagnosticCode.getLeft() : Integer.toString(diagnosticCode.getRight());
   }
 
 }

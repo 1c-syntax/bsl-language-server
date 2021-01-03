@@ -33,10 +33,10 @@ import java.io.IOException;
  * Сериализатор для {@link Either}, выступающего в роли хранилища кода диагностики.
  * См. {@link DiagnosticCode}
  */
-public class DiagnosticCodeSerializer extends JsonSerializer<Either<String, Number>> {
+public class DiagnosticCodeSerializer extends JsonSerializer<Either<String, Integer>> {
   @Override
   public void serialize(
-    Either<String, Number> value,
+    Either<String, Integer> value,
     JsonGenerator gen,
     SerializerProvider serializers
   ) throws IOException {

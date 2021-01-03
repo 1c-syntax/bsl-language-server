@@ -75,7 +75,7 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 
   @Value
   private static class LightDiagnostic {
-    Either<String, Number> code;
+    Either<String, Integer> code;
     Range range;
     String source;
 
