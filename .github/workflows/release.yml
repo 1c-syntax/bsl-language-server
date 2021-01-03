@@ -89,7 +89,7 @@ jobs:
                     start()
               shell: python
             - name: Upload artifact
-              uses: actions/upload-artifact@master
+              uses: actions/upload-artifact@v2.2.1
               with:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
