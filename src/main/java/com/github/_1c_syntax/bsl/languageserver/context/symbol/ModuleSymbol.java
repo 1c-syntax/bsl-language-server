@@ -36,14 +36,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Символ модуля документа.
+ */
 @Value
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
 public class ModuleSymbol implements SourceDefinedSymbol {
+  /**
+   * Имя символа.
+   * <p/>
+   * Если у документа есть валидный mdoRef, то содержит его и (при необходимости) квалификатор в виде типа модуля
+   * ({@link com.github._1c_syntax.mdclasses.metadata.additional.ModuleType}).
+   * В остальных случаях содержит строковое представление uri ({@link DocumentContext#getUri()}.
+   */
   String name;
-  @Builder.Default
-  SymbolKind symbolKind = SymbolKind.Module;
+  SymbolKind symbolKind;
   DocumentContext owner;
   Range range;
 

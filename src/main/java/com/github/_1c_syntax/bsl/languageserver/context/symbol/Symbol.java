@@ -27,22 +27,42 @@ import org.eclipse.lsp4j.SymbolTag;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Мета-информация о логически конечной единице в модуле (переменная, метод, класс и т.д.).
+ */
 public interface Symbol {
 
+  /**
+   * @return Имя символа.
+   */
   String getName();
 
+  /**
+   * @return Тип символа.
+   */
   SymbolKind getSymbolKind();
 
+  /**
+   * @return Является ли символ "устаревшим".
+   */
   default boolean isDeprecated() {
     return false;
   }
 
+  /**
+   * @return Список тегов символа.
+   */
   default List<SymbolTag> getTags() {
     return this.isDeprecated()
       ? Collections.singletonList(SymbolTag.Deprecated)
       : Collections.emptyList();
   }
 
+  /**
+   * Обработчик захода в символ при обходе символьного дерева.
+   *
+   * @param visitor Обходчик дерева.
+   */
   void accept(SymbolTreeVisitor visitor);
 
 }

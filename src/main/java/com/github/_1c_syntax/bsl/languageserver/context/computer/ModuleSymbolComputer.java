@@ -23,9 +23,23 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.eclipse.lsp4j.SymbolKind;
 
+import java.util.EnumSet;
+import java.util.Set;
+
+/**
+ * Компьютер символа модуля документа.
+ */
 public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
+
+  private static final Set<ModuleType> MODULE_TYPES_TO_APPEND_NAME = EnumSet.of(
+    ModuleType.ObjectModule,
+    ModuleType.ManagerModule
+  );
 
   private final DocumentContext documentContext;
 
@@ -36,9 +50,19 @@ public class ModuleSymbolComputer implements Computer<ModuleSymbol> {
   @Override
   public ModuleSymbol compute() {
     return ModuleSymbol.builder()
-      .name(documentContext.getUri().toString())
+      .name(getName(documentContext))
+      .symbolKind(SymbolKind.Module)
       .owner(documentContext)
       .range(Ranges.create(documentContext.getAst()))
       .build();
+  }
+
+  private static String getName(DocumentContext documentContext) {
+    String name = MdoRefBuilder.getMdoRef(documentContext);
+    ModuleType moduleType = documentContext.getModuleType();
+    if (MODULE_TYPES_TO_APPEND_NAME.contains(moduleType)) {
+      name += "." + moduleType.name();
+    }
+    return name;
   }
 }
