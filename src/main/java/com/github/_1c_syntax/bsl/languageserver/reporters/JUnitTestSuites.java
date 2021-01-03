@@ -91,7 +91,7 @@ class JUnitTestSuites {
       this.testcase = new ArrayList<>();
 
       List<Diagnostic> diagnostics = fileInfo.getDiagnostics();
-      Map<Either<String, Number>, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
+      Map<Either<String, Integer>, List<Diagnostic>> groupedDiagnostics = diagnostics.stream()
         .collect(Collectors.groupingBy(
           Diagnostic::getCode,
           Collectors.toList())

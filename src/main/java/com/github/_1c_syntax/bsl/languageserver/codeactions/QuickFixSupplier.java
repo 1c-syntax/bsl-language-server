@@ -45,7 +45,7 @@ public class QuickFixSupplier {
   // Возможно через аннотацию.
 
   @SuppressWarnings("unchecked")
-  public <T extends Either<String, Number>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
+  public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
     T diagnosticCode
   ) {
     return Optional.ofNullable(
