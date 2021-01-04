@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.context.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
@@ -96,43 +95,22 @@ public class ReferencesStorage {
     return referencesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
       .findAny()
-      .flatMap(entry -> getMethodSymbol(entry.getValue())
-        .map((MethodSymbol symbol) -> {
-          SourceDefinedSymbol from = getFromSymbol(uri, position);
-          return new Reference(from, symbol, uri, entry.getKey());
-        })
-      );
+      .flatMap(entry -> buildReference(uri, position, entry.getValue(), entry.getKey()));
   }
 
-  public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri) {
-    Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
+  public List<Reference> getReferencesFrom(URI uri) {
 
-    referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
-      getMethodSymbol(multikey).ifPresent(methodSymbol ->
-        methodSymbols.put(methodSymbol, value)
-      )
-    );
+    return referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).entries().stream()
+      .map(entry -> buildReference(uri, entry.getValue().getStart(), entry.getKey(), entry.getValue()))
+      .flatMap(Optional::stream)
+      .collect(Collectors.toList());
 
-    return methodSymbols;
   }
 
-  public Map<MethodSymbol, Collection<Range>> getCalledMethodSymbolsFrom(URI uri, Range range) {
-    Map<MethodSymbol, Collection<Range>> methodSymbols = new HashMap<>();
-
-    // todo: refactor this and getCalledMethodSymbolsFrom(URI)
-    referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).asMap().forEach((multikey, value) ->
-      getMethodSymbol(multikey).ifPresent((MethodSymbol methodSymbol) -> {
-          var filteredRanges = value.stream()
-            .filter(calleesRange -> Ranges.containsRange(range, calleesRange))
-            .collect(Collectors.toList());
-          if (!filteredRanges.isEmpty()) {
-            methodSymbols.put(methodSymbol, filteredRanges);
-          }
-        }
-      )
-    );
-
-    return methodSymbols;
+  public List<Reference> getReferencesFrom(SourceDefinedSymbol symbol) {
+    return getReferencesFrom(symbol.getOwner().getUri()).stream()
+      .filter(reference -> reference.getFrom().equals(symbol))
+      .collect(Collectors.toList());
   }
 
   @Synchronized
@@ -163,14 +141,27 @@ public class ReferencesStorage {
     referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
   }
 
-  private Optional<MethodSymbol> getMethodSymbol(MultiKey<String> multikey) {
+  private Optional<Reference> buildReference(
+    URI uri,
+    Position position,
+    MultiKey<String> multikey,
+    Range selectionRange
+  ) {
+    return getSourceDefinedSymbol(multikey)
+      .map((SourceDefinedSymbol symbol) -> {
+        SourceDefinedSymbol from = getFromSymbol(uri, position);
+        return new Reference(from, symbol, uri, selectionRange);
+      });
+  }
+
+  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
     String mdoRef = multikey.getKey(0);
     ModuleType moduleType = getModuleType(multikey.getKey(1));
-    String methodName = multikey.getKey(2);
+    String symbolName = multikey.getKey(2);
 
     return serverContext.getDocument(mdoRef, moduleType)
       .map(DocumentContext::getSymbolTree)
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol(methodName));
+      .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
   private SourceDefinedSymbol getFromSymbol(URI uri, Position position) {
@@ -199,6 +190,6 @@ public class ReferencesStorage {
     return Arrays.stream(ModuleType.values())
       .filter(type -> type.getFileName().equals(filename))
       .findFirst()
-      .get();
+      .orElseThrow();
   }
 }

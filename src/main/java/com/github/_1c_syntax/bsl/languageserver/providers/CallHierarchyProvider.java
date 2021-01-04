@@ -23,13 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyItem;
@@ -37,14 +35,13 @@ import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -84,14 +81,13 @@ public class CallHierarchyProvider {
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
       .flatMap(symbol -> referencesStorage.getReferencesTo(symbol).stream())
-      .map((Reference reference) -> {
-        var callHierarchyItem = getCallHierarchyItem(reference.getFrom());
-        return Pair.of(callHierarchyItem, reference.getSelectionRange());
-      })
-      .collect(groupingBy(Pair::getKey, mapping(Pair::getValue, toCollection(ArrayList::new))))
+      .collect(groupingBy(
+        Reference::getFrom,
+        mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
+      )
       .entrySet()
       .stream()
-      .map(entry -> new CallHierarchyIncomingCall(entry.getKey(), entry.getValue()))
+      .map(entry -> new CallHierarchyIncomingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
       .collect(Collectors.toList());
   }
 
@@ -100,13 +96,22 @@ public class CallHierarchyProvider {
     CallHierarchyOutgoingCallsParams params
   ) {
 
-    return referencesStorage.getCalledMethodSymbolsFrom(documentContext.getUri(), params.getItem().getRange())
-      .entrySet().stream()
-      .map((Map.Entry<MethodSymbol, Collection<Range>> entry) -> {
-        var callHierarchyItem = getCallHierarchyItem(entry.getKey());
-        Collection<Range> value = entry.getValue();
-        return new CallHierarchyOutgoingCall(callHierarchyItem, new ArrayList<>(value));
-      })
+    URI uri = documentContext.getUri();
+    Position position = params.getItem().getSelectionRange().getStart();
+
+    return referenceResolver.findReference(uri, position)
+      .flatMap(Reference::getSourceDefinedSymbol)
+      .stream()
+      .map(referencesStorage::getReferencesFrom)
+      .flatMap(Collection::stream)
+      .filter(Reference::isSourceDefinedSymbolReference)
+      .collect(groupingBy(
+        reference -> reference.getSourceDefinedSymbol().orElseThrow(),
+        mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
+      )
+      .entrySet()
+      .stream()
+      .map(entry -> new CallHierarchyOutgoingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
       .collect(Collectors.toList());
 
   }

@@ -136,18 +136,6 @@ public class SymbolTree {
   }
 
   /**
-   * Поиск метода, включающего переданный Range
-   *
-   * @param range Область для поиска
-   * @return MethodSymbol, если он был найден в дереве символов.
-   */
-  public Optional<MethodSymbol> getMethodSymbol(Range range) {
-    return getMethods().stream()
-      .filter(methodSymbol -> Ranges.containsRange(methodSymbol.getRange(), range))
-      .findAny();
-  }
-
-  /**
    * @return плоский список всех переменных документа.
    */
   public List<VariableSymbol> getVariables() {
