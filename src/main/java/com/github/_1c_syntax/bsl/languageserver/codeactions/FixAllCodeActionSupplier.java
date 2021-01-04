@@ -59,7 +59,7 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
   }
 
   private List<CodeAction> getFixAllCodeAction(
-    Either<String, Number> diagnosticCode,
+    Either<String, Integer> diagnosticCode,
     CodeActionParams params,
     DocumentContext documentContext
   ) {
