@@ -52,9 +52,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionList;
-import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
@@ -79,8 +76,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -102,13 +97,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final ReferencesProvider referencesProvider;
   private final DefinitionProvider definitionProvider;
   private final CallHierarchyProvider callHierarchyProvider;
-
-  @Override
-  public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams position) {
-    List<CompletionItem> completionItems = new ArrayList<>();
-    completionItems.add(new CompletionItem("Hello World"));
-    return CompletableFuture.completedFuture(Either.forLeft(completionItems));
-  }
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
