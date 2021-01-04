@@ -30,7 +30,6 @@ import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -44,14 +43,17 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    return Optional.ofNullable(serverContext.getDocument(uri))
-      .map(DocumentContext::getSymbolTree)
-      .map(SymbolTree::getChildrenFlat)
+    DocumentContext document = serverContext.getDocument(uri);
+    if (document == null) {
+      return Optional.empty();
+    }
+
+    SymbolTree symbolTree = document.getSymbolTree();
+    return symbolTree.getChildrenFlat()
       .stream()
-      .flatMap(Collection::stream)
       .filter(sourceDefinedSymbol -> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
       .map(sourceDefinedSymbol -> new Reference(
-        sourceDefinedSymbol,
+        symbolTree.getModule(),
         sourceDefinedSymbol,
         uri,
         sourceDefinedSymbol.getSelectionRange())
