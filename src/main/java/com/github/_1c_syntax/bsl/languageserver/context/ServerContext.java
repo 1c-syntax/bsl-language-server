@@ -188,7 +188,7 @@ public abstract class ServerContext {
     Configuration configuration;
     ForkJoinPool customThreadPool = new ForkJoinPool();
     try {
-      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).join();
+      configuration = customThreadPool.submit(() -> Configuration.create(configurationRoot)).fork().join();
     } catch (RuntimeException e) {
       LOGGER.error("Can't parse configuration metadata. Execution exception.", e);
       configuration = Configuration.create();
