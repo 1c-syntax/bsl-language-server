@@ -128,15 +128,15 @@ public class ReferencesStorage {
   }
 
   @Synchronized
-  public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String methodName, Range range) {
-    String methodNameCanonical = methodName.toLowerCase(Locale.ENGLISH);
+  public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+    String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
 
     Location location = new Location(uri.toString(), range);
 
     MultiKey<String> key = getKey(mdoRef, moduleType);
-    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, methodNameCanonical);
+    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, symbolNameCanonical);
 
-    referencesTo.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(methodNameCanonical, location);
+    referencesTo.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(symbolNameCanonical, location);
     referencesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
     referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
   }
@@ -161,6 +161,8 @@ public class ReferencesStorage {
 
     return serverContext.getDocument(mdoRef, moduleType)
       .map(DocumentContext::getSymbolTree)
+      // TODO: SymbolTree#getSymbol(Position)?
+      //  Для поиска не только методов, но и переменных, которые могут иметь одинаковые имена
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
@@ -182,8 +184,8 @@ public class ReferencesStorage {
     return new MultiKey<>(mdoRef, moduleType.getFileName());
   }
 
-  private static MultiKey<String> getRangesKey(String mdoRef, ModuleType moduleType, String methodName) {
-    return new MultiKey<>(mdoRef, moduleType.getFileName(), methodName);
+  private static MultiKey<String> getRangesKey(String mdoRef, ModuleType moduleType, String symbolName) {
+    return new MultiKey<>(mdoRef, moduleType.getFileName(), symbolName);
   }
 
   private static ModuleType getModuleType(String filename) {

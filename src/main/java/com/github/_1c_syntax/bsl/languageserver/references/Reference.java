@@ -36,7 +36,6 @@ import java.util.Optional;
 @Value
 public class Reference {
 
-  // todo: ModuleSymbol для ссылок из тела модуля.
   /**
    * Символ, в котором располагается данная ссылка.
    */
@@ -46,8 +45,6 @@ public class Reference {
    * Символ, на который указывает ссылка.
    */
   Symbol symbol;
-
-  // todo: единый класс Location из URI и Range? Как lsp'шный, только URI объектом, а не строкой.
 
   /**
    * URI, в котором находится ссылка.

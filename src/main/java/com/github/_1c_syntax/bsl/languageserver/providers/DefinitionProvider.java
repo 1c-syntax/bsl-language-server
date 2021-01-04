@@ -55,7 +55,7 @@ public class DefinitionProvider {
           reference.getSelectionRange()
         );
       })
-      .map(List::of)
+      .map(Collections::singletonList)
       .orElse(Collections.emptyList());
   }
 }

@@ -197,16 +197,17 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
-  
+
   @Override
   public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
+    // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
+      return CompletableFuture.completedFuture(null);
     }
+    
     return CompletableFuture.supplyAsync(() -> {
       List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
-      // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
       if (callHierarchyItems.isEmpty()) {
         return null;
       }

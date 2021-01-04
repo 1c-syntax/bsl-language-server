@@ -74,13 +74,15 @@ public class CallHierarchyProvider {
     CallHierarchyIncomingCallsParams params
   ) {
 
+    URI uri = documentContext.getUri();
     CallHierarchyItem item = params.getItem();
-    Position position = item.getSelectionRange().getStart();
+    Position position = params.getItem().getSelectionRange().getStart();
 
-    return referenceResolver.findReference(documentContext.getUri(), position)
+    return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
-      .flatMap(symbol -> referencesStorage.getReferencesTo(symbol).stream())
+      .map(referencesStorage::getReferencesTo)
+      .flatMap(Collection::stream)
       .collect(groupingBy(
         Reference::getFrom,
         mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
@@ -89,6 +91,7 @@ public class CallHierarchyProvider {
       .stream()
       .map(entry -> new CallHierarchyIncomingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
       .collect(Collectors.toList());
+
   }
 
   public List<CallHierarchyOutgoingCall> outgoingCalls(

@@ -41,7 +41,6 @@ public class ReferenceResolver {
    * Список конкретных поисковых движков.
    */
   @Setter(onMethod = @__({@Autowired}))
-  // todo: это удобно, но не кажется нормальным... Проблема в циклической зависимости из ReferencesStorage.
   private List<ReferenceFinder> finders;
 
   /**
