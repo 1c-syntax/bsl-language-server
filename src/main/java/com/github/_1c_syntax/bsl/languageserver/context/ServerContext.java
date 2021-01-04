@@ -161,7 +161,7 @@ public abstract class ServerContext {
   }
 
   @Lookup
-  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content, int version);
+  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content, Integer version);
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file, int version) {
