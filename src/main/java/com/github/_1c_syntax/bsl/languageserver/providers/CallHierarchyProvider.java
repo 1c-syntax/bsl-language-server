@@ -53,7 +53,6 @@ import static java.util.stream.Collectors.toCollection;
 
 @Component
 @RequiredArgsConstructor
-@SuppressWarnings("UnstableApiUsage")
 public class CallHierarchyProvider {
 
   private final ReferenceResolver referenceResolver;
@@ -112,7 +111,6 @@ public class CallHierarchyProvider {
 
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
     String detail = MdoRefBuilder.getMdoRef(sourceDefinedSymbol.getOwner());
 

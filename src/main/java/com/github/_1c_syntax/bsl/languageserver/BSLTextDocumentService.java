@@ -199,7 +199,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
   
   @Override
-  @SuppressWarnings("UnstableApiUsage")
   public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
@@ -216,7 +215,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  @SuppressWarnings("UnstableApiUsage")
   public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
     CallHierarchyIncomingCallsParams params
   ) {
@@ -229,7 +227,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   }
 
   @Override
-  @SuppressWarnings("UnstableApiUsage")
   public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
     CallHierarchyOutgoingCallsParams params
   ) {

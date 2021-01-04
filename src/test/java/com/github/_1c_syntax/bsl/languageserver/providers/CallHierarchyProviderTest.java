@@ -43,7 +43,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@SuppressWarnings("UnstableApiUsage")
 class CallHierarchyProviderTest {
 
   @Autowired
