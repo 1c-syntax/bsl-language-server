@@ -34,16 +34,44 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель->дети
+ */
 @Value
 public class SymbolTree {
-  List<SourceDefinedSymbol> children;
 
+  /**
+   * Корневой символ модуля документа.
+   */
+  ModuleSymbol module;
+
+  /**
+   * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
+   */
   @Getter(lazy = true)
   List<SourceDefinedSymbol> childrenFlat = createChildrenFlat();
 
+  /**
+   * Список методов документа.
+   */
   @Getter(lazy = true)
   List<MethodSymbol> methods = createMethods();
 
+  /**
+   * @return Список символов верхнего уровня за исключением символа модуля документа.
+   */
+  public List<SourceDefinedSymbol> getChildren() {
+    return module.getChildren();
+  }
+
+  /**
+   * Список всех символов всех уровней указанного типа (за исключением символа модуля документа),
+   * преобразованных в плоский список.
+   *
+   * @param clazz класс искомого символа.
+   * @param <T> тип искомого символа.
+   * @return плоский список символов указанного типа.
+   */
   public <T> List<T> getChildrenFlat(Class<T> clazz) {
     return getChildrenFlat().stream()
       .filter(clazz::isInstance)
@@ -51,17 +79,29 @@ public class SymbolTree {
       .collect(Collectors.toList());
   }
 
+  /**
+   * @return Список областей, расположенных на верхнем уровне документа.
+   */
   public List<RegionSymbol> getModuleLevelRegions() {
     return getChildren().stream()
       .filter(RegionSymbol.class::isInstance)
-      .map(symbol -> (RegionSymbol) symbol)
+      .map(RegionSymbol.class::cast)
       .collect(Collectors.toList());
   }
 
+  /**
+   * @return плоский список всех областей документа.
+   */
   public List<RegionSymbol> getRegionsFlat() {
     return getChildrenFlat(RegionSymbol.class);
   }
 
+  /**
+   * Попытка поиска символа метода по узлу дерева разбора.
+   * @implNote Поиск осуществляется по месту определения метода (declaration).
+   * @param ctx узел дерева разбора документа.
+   * @return найденный символ метода.
+   */
   public Optional<MethodSymbol> getMethodSymbol(BSLParserRuleContext ctx) {
     BSLParserRuleContext subNameNode;
     if (Trees.nodeContainsErrors(ctx)) {
@@ -83,10 +123,19 @@ public class SymbolTree {
       .findAny();
   }
 
+  /**
+   * @return плоский список всех переменных документа.
+   */
   public List<VariableSymbol> getVariables() {
     return getChildrenFlat(VariableSymbol.class);
   }
 
+  /**
+   * Попытка поиска символа переменной по узлу дерева разбора.
+   * @implNote Поиск осуществляется по месту определения переменной (declaration).
+   * @param ctx узел дерева разбора документа.
+   * @return найденный символ переменной.
+   */
   public Optional<VariableSymbol> getVariableSymbol(BSLParserRuleContext ctx) {
 
     BSLParserRuleContext varNameNode;

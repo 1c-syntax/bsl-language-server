@@ -23,24 +23,68 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Мета-информация о логически конечной единице, созданной и описанной в исходном коде, например,
+ * объявленный в коде метод, созданная область и т.д.
+ * @see Symbol
+ */
 public interface SourceDefinedSymbol extends Symbol {
+  /**
+   * @return Документ, в котором объявлен данный символ.
+   */
   DocumentContext getOwner();
 
+  /**
+   * @return Диапазон, который захватывает символ.
+   */
   Range getRange();
 
+  /**
+   * @return Место интереса символа.
+   * Например, диапазон, где указано имя символа (в противовес полной строки декларации символа).
+   */
   Range getSelectionRange();
 
+  /**
+   * @return Символ, внутри которого располагается данный символ.
+   */
   Optional<SourceDefinedSymbol> getParent();
 
+  /**
+   * @param symbol Символ, внутри которого располагается данный символ.
+   */
   void setParent(Optional<SourceDefinedSymbol> symbol);
 
+  /**
+   * @return Список "детей" символа - символов, которые располагаются внутри данного символа.
+   */
   List<SourceDefinedSymbol> getChildren();
 
-  default Optional<SourceDefinedSymbol> getRootParent() {
-    return getParent().flatMap(SourceDefinedSymbol::getRootParent).or(() -> Optional.of(this));
+  /**
+   * Получить наиболее близкий к корню символ указанного типа.
+   * <p/>
+   * Например, если переменная объявлена внутри области, которая в свою очередь объявлена внутри области,
+   * вызов данного метода с {@link SymbolKind#Namespace} вернет внешнюю область.
+   *
+   * @param symbolKind Тип искомого символа
+   * @return Найденный символ.
+   */
+  default Optional<SourceDefinedSymbol> getRootParent(SymbolKind symbolKind) {
+    SourceDefinedSymbol rootParent = null;
+    Optional<SourceDefinedSymbol> currentParent = getParent();
+    while (currentParent.isPresent()) {
+      var symbol = currentParent.get();
+      if (symbol.getSymbolKind() == symbolKind) {
+        rootParent = symbol;
+      }
+      currentParent = symbol.getParent();
+    }
+
+    return Optional.ofNullable(rootParent);
   }
 }
