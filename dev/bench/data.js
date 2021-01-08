@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1609762696459,
+  "lastUpdate": 1610108973364,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8029,6 +8029,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.090982664009253",
             "extra": "mean: 74.27538681030273 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "904a9814eb2bd492e9bc8c46e97bdd05db0301d0",
+          "message": "Merge pull request #1514 from 1c-syntax/feature/DocumentContextInitialization\n\nDocumentContext как полноценный spring component",
+          "timestamp": "2021-01-08T15:21:49+03:00",
+          "tree_id": "99ba55065f887d20f005f12b98dcad8b6cb0ced6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/904a9814eb2bd492e9bc8c46e97bdd05db0301d0"
+        },
+        "date": 1610108969584,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.89950235684712,
+            "unit": "sec",
+            "range": "stddev: 3.706925503707008",
+            "extra": "mean: 74.89950235684712 sec\nrounds: 3"
           }
         ]
       }
