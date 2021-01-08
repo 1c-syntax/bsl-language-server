@@ -43,6 +43,9 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.antlr.v4.runtime.tree.Tree;
@@ -50,7 +53,12 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -64,16 +72,25 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
+@Component
+@Scope("prototype")
+@RequiredArgsConstructor
 public class DocumentContext {
 
   private final URI uri;
+  @NonNull
+  @Nullable
   private String content;
   @Getter
-  private int version;
-  private final ServerContext context;
-  private final DiagnosticComputer diagnosticComputer;
+  @NonNull
+  private Integer version;
 
-  private final FileType fileType;
+  @Setter(onMethod = @__({@Autowired}))
+  private ServerContext context;
+  @Setter(onMethod = @__({@Autowired}))
+  private DiagnosticComputer diagnosticComputer;
+
+  private FileType fileType;
   private BSLTokenizer tokenizer;
 
   private final ReentrantLock computeLock = new ReentrantLock();
@@ -95,18 +112,9 @@ public class DocumentContext {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  public DocumentContext(
-    URI uri,
-    String content,
-    ServerContext context,
-    int version,
-    DiagnosticComputer diagnosticComputer
-  ) {
-    this.uri = uri;
-    this.content = content;
-    this.version = version;
-    this.context = context;
-    this.diagnosticComputer = diagnosticComputer;
+  @PostConstruct
+  void init() {
+    requireNonNull(content);
 
     this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
