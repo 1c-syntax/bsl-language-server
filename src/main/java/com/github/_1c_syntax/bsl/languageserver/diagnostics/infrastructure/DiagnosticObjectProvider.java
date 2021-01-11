@@ -24,9 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
 public class DiagnosticObjectProvider {
 
