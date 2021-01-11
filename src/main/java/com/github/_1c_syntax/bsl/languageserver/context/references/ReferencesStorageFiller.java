@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -31,8 +32,7 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Range;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -45,8 +45,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class ReferencesStorageFiller extends BSLParserBaseVisitor<BSLParserRuleContext> {
+public class ReferencesStorageFiller {
 
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
     ModuleType.ManagerModule,
@@ -56,112 +55,120 @@ public class ReferencesStorageFiller extends BSLParserBaseVisitor<BSLParserRuleC
 
   private final ReferencesStorage storage;
 
-  private DocumentContext documentContext;
+  @EventListener
+  public void handleEvent(DocumentContextContentChangedEvent event) {
+    DocumentContext documentContext = event.getSource();
+    fill(documentContext);
+  }
 
   public void fill(DocumentContext documentContext) {
-    this.documentContext = documentContext;
-    storage.clearCallees(documentContext.getUri());
-    visitFile(documentContext.getAst());
+    storage.clearReferences(documentContext.getUri());
+    new ReferenceFinder(documentContext).visitFile(documentContext.getAst());
   }
 
+  @RequiredArgsConstructor
+  private class ReferenceFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
 
-  @Override
-  public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+    private final DocumentContext documentContext;
 
-    if (ctx.globalMethodCall() != null) {
-      // see visitGlobalMethodCall
+    @Override
+    public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+
+      if (ctx.globalMethodCall() != null) {
+        // see visitGlobalMethodCall
+        return super.visitCallStatement(ctx);
+      }
+
+      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+      if (mdoRef.isEmpty()) {
+        return super.visitCallStatement(ctx);
+      }
+
+      getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+
       return super.visitCallStatement(ctx);
     }
 
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
-    if (mdoRef.isEmpty()) {
-      return super.visitCallStatement(ctx);
-    }
+    @Override
+    public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
 
-    getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+      if (mdoRef.isEmpty()) {
+        return super.visitComplexIdentifier(ctx);
+      }
 
-    return super.visitCallStatement(ctx);
-  }
+      getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
-  @Override
-  public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
-
-    String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
-    if (mdoRef.isEmpty()) {
       return super.visitComplexIdentifier(ctx);
     }
 
-    getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+    @Override
+    public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+      var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+      var moduleType = documentContext.getModuleType();
+      var methodName = ctx.methodName().getStart();
+      var methodNameText = methodName.getText();
 
-    return super.visitComplexIdentifier(ctx);
-  }
+      documentContext.getSymbolTree().getMethods().stream()
+        .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText))
+        .findAny()
+        .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
 
-  @Override
-  public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
-    var moduleType = documentContext.getModuleType();
-    var methodName = ctx.methodName().getStart();
-    var methodNameText = methodName.getText();
+      return super.visitGlobalMethodCall(ctx);
+    }
 
-    documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodNameText))
-      .findAny()
-      .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
+    private void checkCall(String mdoRef, Token methodName) {
 
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  private void checkCall(String mdoRef, Token methodName) {
-
-    String methodNameText = methodName.getText();
-    Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
-    for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
-      ModuleType moduleType = e.getKey();
-      if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
-        continue;
+      String methodNameText = methodName.getText();
+      Map<ModuleType, URI> modules = documentContext.getServerContext().getConfiguration().getModulesByMDORef(mdoRef);
+      for (Map.Entry<ModuleType, URI> e : modules.entrySet()) {
+        ModuleType moduleType = e.getKey();
+        if (!DEFAULT_MODULE_TYPES.contains(moduleType)) {
+          continue;
+        }
+        addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
       }
-      addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
-    }
-  }
-
-  private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
-    storage.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
-  }
-
-  private static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
-    var modifiers = ctx.modifier();
-    Optional<Token> methodName;
-    if (ctx.globalMethodCall() != null) {
-      methodName = getMethodName(ctx.globalMethodCall());
-    } else {
-      methodName = getMethodName(ctx.accessCall());
     }
 
-    if (modifiers.isEmpty()) {
-      return methodName;
-    } else {
-      return getMethodName(modifiers).or(() -> methodName);
+    private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
+      storage.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
     }
-  }
 
-  private static Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
-    return Optional.of(ctx.methodName().getStart());
-  }
+    private Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
+      var modifiers = ctx.modifier();
+      Optional<Token> methodName;
+      if (ctx.globalMethodCall() != null) {
+        methodName = getMethodName(ctx.globalMethodCall());
+      } else {
+        methodName = getMethodName(ctx.accessCall());
+      }
 
-  private static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
-    return Optional.of(ctx.methodCall().methodName().getStart());
-  }
+      if (modifiers.isEmpty()) {
+        return methodName;
+      } else {
+        return getMethodName(modifiers).or(() -> methodName);
+      }
+    }
 
-  private static Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
-    return getMethodName(ctx.modifier());
-  }
+    private Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
+      return Optional.of(ctx.methodName().getStart());
+    }
 
-  private static Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
-    return modifiers.stream()
-      .map(BSLParser.ModifierContext::accessCall)
-      .filter(Objects::nonNull)
-      .map(ReferencesStorageFiller::getMethodName)
-      .findFirst()
-      .orElse(Optional.empty());
+    private Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
+      return Optional.of(ctx.methodCall().methodName().getStart());
+    }
+
+    private Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
+      return getMethodName(ctx.modifier());
+    }
+
+    private Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
+      return modifiers.stream()
+        .map(BSLParser.ModifierContext::accessCall)
+        .filter(Objects::nonNull)
+        .map(this::getMethodName)
+        .findFirst()
+        .orElse(Optional.empty());
+    }
   }
 }

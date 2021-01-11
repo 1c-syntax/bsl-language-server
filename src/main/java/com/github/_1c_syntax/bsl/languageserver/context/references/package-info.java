@@ -20,6 +20,6 @@
  * License along with BSL Language Server.
  */
 @ParametersAreNonnullByDefault
-package com.github._1c_syntax.bsl.languageserver.context;
+package com.github._1c_syntax.bsl.languageserver.context.references;
 
 import javax.annotation.ParametersAreNonnullByDefault;

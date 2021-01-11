@@ -19,7 +19,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-@ParametersAreNonnullByDefault
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.context.ApplicationEvent;
+
+public class DocumentContextContentChangedEvent extends ApplicationEvent {
+
+  public DocumentContextContentChangedEvent(DocumentContext source) {
+    super(source);
+  }
+
+  @Override
+  public DocumentContext getSource() {
+    return (DocumentContext) super.getSource();
+  }
+}

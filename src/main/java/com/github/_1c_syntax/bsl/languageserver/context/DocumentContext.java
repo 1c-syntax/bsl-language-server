@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
-import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorageFiller;
 import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.computer.Computer;
@@ -55,6 +54,7 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -91,7 +91,7 @@ public class DocumentContext {
   @Setter(onMethod = @__({@Autowired}))
   private DiagnosticComputer diagnosticComputer;
   @Setter(onMethod = @__({@Autowired}))
-  private ReferencesStorageFiller referencesStorageFiller;
+  private ApplicationEventPublisher applicationEventPublisher;
 
   private FileType fileType;
   private BSLTokenizer tokenizer;
@@ -121,6 +121,7 @@ public class DocumentContext {
 
     this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
+    fireContentChanged();
   }
 
   public ServerContext getServerContext() {
@@ -258,6 +259,8 @@ public class DocumentContext {
     tokenizer = new BSLTokenizer(content);
     this.version = version;
     computeLock.unlock();
+
+    fireContentChanged();
   }
 
   public void clearSecondaryData() {
@@ -398,9 +401,7 @@ public class DocumentContext {
     return (new QueryComputer(this)).compute();
   }
 
-  public void computeCallees() {
-    computeLock.lock();
-    referencesStorageFiller.fill(this);
-    computeLock.unlock();
+  private void fireContentChanged() {
+    applicationEventPublisher.publishEvent(new DocumentContextContentChangedEvent(this));
   }
 }

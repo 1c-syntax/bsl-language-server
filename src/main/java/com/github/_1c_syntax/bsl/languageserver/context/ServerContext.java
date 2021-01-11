@@ -179,7 +179,6 @@ public abstract class ServerContext {
     addMdoRefByUri(absoluteURI, documentContext);
 
     documentContext.getSymbolTree();
-    documentContext.computeCallees();
 
     return documentContext;
   }

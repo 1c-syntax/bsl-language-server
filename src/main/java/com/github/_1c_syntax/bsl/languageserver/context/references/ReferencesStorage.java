@@ -114,7 +114,7 @@ public class ReferencesStorage {
   }
 
   @Synchronized
-  public void clearCallees(URI uri) {
+  public void clearReferences(URI uri) {
     String stringUri = uri.toString();
 
     referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
