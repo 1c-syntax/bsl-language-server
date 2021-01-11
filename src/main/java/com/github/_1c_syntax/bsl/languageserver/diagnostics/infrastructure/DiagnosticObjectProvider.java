@@ -24,19 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
-public class DiagnosticConfiguration {
+public class DiagnosticObjectProvider {
 
   private final ApplicationContext applicationContext;
 
-  @Bean
-  @Scope("prototype")
-  public <T extends BSLDiagnostic> T diagnostic(Class<T> clazz) {
+  public <T extends BSLDiagnostic> T get(Class<T> clazz) {
     return applicationContext.getBean(clazz);
   }
 
