@@ -185,10 +185,6 @@ tasks.processResources {
     }
 }
 
-jacoco {
-    toolVersion = "0.8.6"
-}
-
 license {
     header = rootProject.file("license/HEADER.txt")
     ext["year"] = "2018-" + Calendar.getInstance().get(Calendar.YEAR)
