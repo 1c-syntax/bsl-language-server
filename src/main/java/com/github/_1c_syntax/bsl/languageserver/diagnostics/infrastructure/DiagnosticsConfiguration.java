@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 public abstract class DiagnosticsConfiguration {
 
   private final LanguageServerConfiguration configuration;
-  private final DiagnosticConfiguration diagnosticConfiguration;
+  private final DiagnosticObjectProvider diagnosticObjectProvider;
 
   @Bean
   @Scope("prototype")
@@ -78,7 +78,7 @@ public abstract class DiagnosticsConfiguration {
         .filter(info -> correctModuleType(info, moduleType, fileType))
         .filter(info -> passedCompatibilityMode(info, compatibilityMode))
         .map(DiagnosticInfo::getDiagnosticClass)
-        .map(diagnosticConfiguration::diagnostic)
+        .map(diagnosticObjectProvider::get)
         .collect(Collectors.toList());
     } else {
       return Collections.emptyList();

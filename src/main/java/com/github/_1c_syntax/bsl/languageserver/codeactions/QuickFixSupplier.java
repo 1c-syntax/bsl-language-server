@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ import java.util.Optional;
 public class QuickFixSupplier {
 
   private final Map<String, DiagnosticInfo> diagnosticInfos;
-  private final DiagnosticConfiguration diagnosticConfiguration;
+  private final DiagnosticObjectProvider diagnosticObjectProvider;
 
   // TODO: Рефакторинг апи квик-фиксов.
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
@@ -59,7 +59,7 @@ public class QuickFixSupplier {
   @SuppressWarnings("unchecked")
   public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
-    return (QuickFixProvider) diagnosticConfiguration.diagnostic(diagnosticClass);
+    return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticClass);
   }
 
 }
