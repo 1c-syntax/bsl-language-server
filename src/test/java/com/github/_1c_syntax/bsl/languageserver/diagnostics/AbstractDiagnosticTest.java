@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
@@ -49,7 +49,7 @@ import java.util.List;
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   @Autowired
-  private DiagnosticConfiguration diagnosticConfiguration;
+  private DiagnosticObjectProvider diagnosticObjectProvider;
   @Autowired
   protected ServerContext context;
   @Autowired
@@ -64,7 +64,7 @@ abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   @PostConstruct
   public void init() {
-    diagnosticInstance = diagnosticConfiguration.diagnostic(diagnosticClass);
+    diagnosticInstance = diagnosticObjectProvider.get(diagnosticClass);
     context.clear();
     configuration.reset();
   }
