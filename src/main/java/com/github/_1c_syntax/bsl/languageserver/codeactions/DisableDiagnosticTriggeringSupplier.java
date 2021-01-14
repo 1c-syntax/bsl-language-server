@@ -45,6 +45,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider.SOURCE;
+
 
 @Component
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
@@ -160,10 +162,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
     return result;
   }
 
-  private List<CodeAction> actionDisableDiagnostic(Function <String, CodeAction> func, CodeActionParams params) {
+  private List<CodeAction> actionDisableDiagnostic(Function<String, CodeAction> func, CodeActionParams params) {
     return params.getContext()
       .getDiagnostics()
       .stream()
+      .filter(diagnostic -> SOURCE.equals(diagnostic.getSource()))
       .map(Diagnostic::getCode)
       .map(DiagnosticCode::getStringValue)
       .distinct()
