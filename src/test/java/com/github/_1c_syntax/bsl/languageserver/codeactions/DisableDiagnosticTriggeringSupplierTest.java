@@ -31,11 +31,11 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -190,6 +190,32 @@ class DisableDiagnosticTriggeringSupplierTest {
 
     CodeActionContext codeActionContext = new CodeActionContext();
     codeActionContext.setDiagnostics(documentContext.getDiagnostics());
+
+    CodeActionParams params = new CodeActionParams();
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    assertThat(codeActions)
+      .hasSize(1)
+      .extracting(Either::getRight)
+      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
+
+  }
+
+  @Test
+  void testNoBslLsDiagnostic() {
+
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/suppliers/disableDiagnosticTriggeringEmpty.bsl"
+    );
+
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setDiagnostics(List.of(new Diagnostic()));
 
     CodeActionParams params = new CodeActionParams();
     params.setRange(new Range());
