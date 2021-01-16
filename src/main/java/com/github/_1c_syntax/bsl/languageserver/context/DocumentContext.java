@@ -43,7 +43,6 @@ import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.mdclasses.metadata.additional.SupportVariant;
 import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.antlr.v4.runtime.Token;
@@ -79,12 +78,11 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext {
 
   private final URI uri;
-  @NonNull
+
   @Nullable
   private String content;
   @Getter
-  @NonNull
-  private Integer version;
+  private int version;
 
   @Setter(onMethod = @__({@Autowired}))
   private ServerContext context;
@@ -117,9 +115,6 @@ public class DocumentContext {
 
   @PostConstruct
   void init() {
-    requireNonNull(content);
-
-    this.tokenizer = new BSLTokenizer(content);
     this.fileType = computeFileType(this.uri);
     fireContentChanged();
   }
