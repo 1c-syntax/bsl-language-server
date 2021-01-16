@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -54,7 +53,7 @@ public class FileAwarePrintWriter extends PrintWriter {
    * Конструктор по умолчанию. Отправляет вывод в /dev/null.
    */
   public FileAwarePrintWriter() {
-    super(OutputStream.nullOutputStream());
+    super(OutputStream.nullOutputStream(), false, StandardCharsets.UTF_8);
   }
 
   /**
@@ -115,7 +114,7 @@ public class FileAwarePrintWriter extends PrintWriter {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationFileChangeEvent}.
+   * Обработчик события {@link LanguageServerConfigurationChangeEvent}.
    *
    * @param event Событие
    */
