@@ -53,7 +53,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -88,8 +87,6 @@ public class DocumentContext {
   private ServerContext context;
   @Setter(onMethod = @__({@Autowired}))
   private DiagnosticComputer diagnosticComputer;
-  @Setter(onMethod = @__({@Autowired}))
-  private ApplicationEventPublisher applicationEventPublisher;
 
   private FileType fileType;
   private BSLTokenizer tokenizer;
@@ -116,7 +113,6 @@ public class DocumentContext {
   @PostConstruct
   void init() {
     this.fileType = computeFileType(this.uri);
-    fireContentChanged();
   }
 
   public ServerContext getServerContext() {
@@ -254,8 +250,6 @@ public class DocumentContext {
     tokenizer = new BSLTokenizer(content);
     this.version = version;
     computeLock.unlock();
-
-    fireContentChanged();
   }
 
   public void clearSecondaryData() {
@@ -396,7 +390,4 @@ public class DocumentContext {
     return (new QueryComputer(this)).compute();
   }
 
-  private void fireContentChanged() {
-    applicationEventPublisher.publishEvent(new DocumentContextContentChangedEvent(this));
-  }
 }

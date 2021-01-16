@@ -17,6 +17,7 @@ plugins {
     id("io.freefair.javadoc-links") version "5.3.0"
     id("org.springframework.boot") version "2.4.2"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
 }
 
 apply(plugin = "io.spring.dependency-management")
@@ -54,6 +55,10 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
+    // aop
+    // todo: sync aspectjrt version with transitive org.aspectj:aspectjweaver from aop-starter
+    api("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.aspectj", "aspectjrt", "1.9.6")
 
     // lsp4j core
 //    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.10.0")
