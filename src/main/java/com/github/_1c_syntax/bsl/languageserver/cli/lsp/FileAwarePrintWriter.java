@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangeEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
