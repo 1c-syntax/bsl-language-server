@@ -29,20 +29,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.annotation.Role;
 import org.springframework.stereotype.Component;
 
@@ -73,7 +69,7 @@ import static com.fasterxml.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITI
 @NoArgsConstructor
 @Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LanguageServerConfiguration implements ApplicationEventPublisherAware {
+public class LanguageServerConfiguration {
 
   private static final Pattern searchConfiguration = Pattern.compile("Configuration\\.(xml|mdo)$");
 
@@ -101,10 +97,6 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
   @Setter(value = AccessLevel.NONE)
   private File configurationFile = new File(".bsl-language-server.json");
 
-  @JsonIgnore
-  @Getter(value = AccessLevel.NONE)
-  private ApplicationEventPublisher applicationEventPublisher;
-
   public void update(File configurationFile) {
     if (!configurationFile.exists()) {
       return;
@@ -125,13 +117,10 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     this.configurationFile = configurationFile;
 
     copyPropertiesFrom(configuration);
-    notifyConfigurationChanged();
   }
-
 
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
-    notifyConfigurationChanged();
   }
   
   public static Path getCustomConfigurationRoot(LanguageServerConfiguration configuration, Path srcDir) {
@@ -195,7 +184,4 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
   }
 
-  private void notifyConfigurationChanged() {
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangeEvent(this));
-  }
 }

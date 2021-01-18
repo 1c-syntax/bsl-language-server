@@ -17,6 +17,7 @@ plugins {
     id("io.freefair.javadoc-links") version "5.3.0"
     id("org.springframework.boot") version "2.4.2"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
 }
 
 apply(plugin = "io.spring.dependency-management")
@@ -75,6 +76,9 @@ dependencies {
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
+
+    // AOP
+    implementation("org.aspectj", "aspectjrt", "1.9.6")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.8.0")
