@@ -86,7 +86,6 @@ public abstract class ServerContext {
       DocumentContext documentContext = getDocument(file.toURI());
       if (documentContext == null) {
         documentContext = createDocumentContext(file, 0);
-        documentContext.getSymbolTree();
         documentContext.clearSecondaryData();
       }
     });
@@ -161,7 +160,7 @@ public abstract class ServerContext {
   }
 
   @Lookup
-  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI, String content, Integer version);
+  protected abstract DocumentContext lookupDocumentContext(URI absoluteURI);
 
   @SneakyThrows
   private DocumentContext createDocumentContext(File file, int version) {
@@ -172,10 +171,13 @@ public abstract class ServerContext {
   private DocumentContext createDocumentContext(URI uri, String content, int version) {
     URI absoluteURI = Absolute.uri(uri);
 
-    DocumentContext documentContext = lookupDocumentContext(absoluteURI, content, version);
+    DocumentContext documentContext = lookupDocumentContext(absoluteURI);
+    documentContext.rebuild(content, version);
 
     documents.put(absoluteURI, documentContext);
     addMdoRefByUri(absoluteURI, documentContext);
+
+    documentContext.getSymbolTree();
 
     return documentContext;
   }
