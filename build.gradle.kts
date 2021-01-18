@@ -55,10 +55,6 @@ dependencies {
     // spring
     api("org.springframework.boot:spring-boot-starter")
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
-    // aop
-    // todo: sync aspectjrt version with transitive org.aspectj:aspectjweaver from aop-starter
-    api("org.springframework.boot:spring-boot-starter-aop")
-    implementation("org.aspectj", "aspectjrt", "1.9.6")
 
     // lsp4j core
 //    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.10.0")
@@ -80,6 +76,9 @@ dependencies {
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
     implementation("org.languagetool", "language-en", languageToolVersion)
     implementation("org.languagetool", "language-ru", languageToolVersion)
+
+    // AOP
+    implementation("org.aspectj", "aspectjrt", "1.9.6")
 
     // commons utils
     implementation("commons-io", "commons-io", "2.8.0")
