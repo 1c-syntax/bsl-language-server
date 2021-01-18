@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensO
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationFileChangeEvent;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -124,7 +123,6 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     }
 
     this.configurationFile = configurationFile;
-    notifyConfigurationFileChanged();
 
     copyPropertiesFrom(configuration);
     notifyConfigurationChanged();
@@ -133,7 +131,6 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
 
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
-    notifyConfigurationFileChanged();
     notifyConfigurationChanged();
   }
   
@@ -196,10 +193,6 @@ public class LanguageServerConfiguration implements ApplicationEventPublisherAwa
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
-  }
-
-  private void notifyConfigurationFileChanged() {
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationFileChangeEvent(this.configurationFile));
   }
 
   private void notifyConfigurationChanged() {
