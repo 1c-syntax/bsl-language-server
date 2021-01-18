@@ -29,8 +29,8 @@ import org.springframework.context.ApplicationEvent;
  * <p>
  * В качестве источника события содержит ссылку на конфигурацию.
  */
-public class LanguageServerConfigurationChangeEvent extends ApplicationEvent {
-  public LanguageServerConfigurationChangeEvent(LanguageServerConfiguration configuration) {
+public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {
+  public LanguageServerConfigurationChangedEvent(LanguageServerConfiguration configuration) {
     super(configuration);
   }
 

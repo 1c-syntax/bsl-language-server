@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangeEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import lombok.Setter;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -45,7 +45,7 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
   public void languageServerConfigurationUpdated(JoinPoint joinPoint) {
     var configuration = (LanguageServerConfiguration) joinPoint.getThis();
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangeEvent(configuration));
+    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
   }
 
 }
