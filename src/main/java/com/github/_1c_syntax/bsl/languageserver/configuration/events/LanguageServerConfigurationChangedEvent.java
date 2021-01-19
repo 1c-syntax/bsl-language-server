@@ -30,6 +30,9 @@ import org.springframework.context.ApplicationEvent;
  * В качестве источника события содержит ссылку на конфигурацию.
  */
 public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {
+
+  private static final long serialVersionUID = 649143503434640953L;
+
   public LanguageServerConfigurationChangedEvent(LanguageServerConfiguration configuration) {
     super(configuration);
   }
