@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -37,6 +38,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
  * с помощью Spring Events.
  */
 @Aspect
+@NoArgsConstructor
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
   @Setter
