@@ -17,3 +17,5 @@
     - [Тэги диагностик](DiagnosticTag.md)
     - [Добавление параметров диагностике](DiagnostcAddSettings.md)
     - [Добавление быстрых исправлений диагностик](DiagnosticQuickFix.md)
+- Общие механизмы
+    - [Подсистема событий](EventsApi.md)

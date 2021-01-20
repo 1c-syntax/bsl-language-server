@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.watcher.LanguageServerConfigurationChangeEvent;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -114,12 +114,12 @@ public class FileAwarePrintWriter extends PrintWriter {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationChangeEvent}.
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationChangeEvent event) {
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
     setFile(event.getSource().getTraceLog());
   }
 

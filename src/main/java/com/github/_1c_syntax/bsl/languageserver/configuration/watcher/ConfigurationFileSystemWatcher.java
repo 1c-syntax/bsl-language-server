@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.utils.Absolute;
 import com.sun.nio.file.SensitivityWatchEventModifier;
 import lombok.RequiredArgsConstructor;
@@ -102,13 +103,13 @@ public class ConfigurationFileSystemWatcher {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationFileChangeEvent}.
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationFileChangeEvent event) {
-    registerWatchService(event.getSource());
+  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    registerWatchService(event.getSource().getConfigurationFile());
   }
 
   @SneakyThrows
