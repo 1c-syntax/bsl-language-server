@@ -1,4 +1,5 @@
 com.github._1c_syntax.bsl.languageserver
+com.github._1c_syntax.bsl.languageserver.aop
 com.github._1c_syntax.bsl.languageserver.cli
 com.github._1c_syntax.bsl.languageserver.cli.lsp
 com.github._1c_syntax.bsl.languageserver.codeactions
@@ -8,6 +9,7 @@ com.github._1c_syntax.bsl.languageserver.configuration.codelens
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.databind
 com.github._1c_syntax.bsl.languageserver.configuration.documentlink
+com.github._1c_syntax.bsl.languageserver.configuration.events
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
 com.github._1c_syntax.bsl.languageserver.context.computer
