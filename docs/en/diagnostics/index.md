@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **128**
+Total: **129**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
 * Error: **38**
-* Code smell: **83**
+* Code smell: **84**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -62,6 +62,7 @@ Total: **128**
  [ExportVariables](ExportVariables.md) | Ban export global module variables | Yes | Major | Code smell | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Commas without a parameter at the end of a method call | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [FormDataToValue](FormDataToValue.md) | FormDataToValue method call | Yes | Info | Code smell | `badpractice` 
+ [FullOuterJoinQuery](FullOuterJoinQuery.md) | Using of "FULL OUTER JOIN" in queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Function name shouldn't start with "Получить" | No | Info | Code smell | `standard` 
  [FunctionOutParameter](FunctionOutParameter.md) | Out function parameter | No | Major | Code smell | `design` 
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | The function always returns the same primitive value | Yes | Major | Error | `design`<br>`badpractice` 
