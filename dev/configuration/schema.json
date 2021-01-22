@@ -155,6 +155,9 @@
                 "FormDataToValue": {
                     "$ref": "parameters-schema.json#/definitions/FormDataToValue"
                 },
+                "FullOuterJoinQuery": {
+                    "$ref": "parameters-schema.json#/definitions/FullOuterJoinQuery"
+                },
                 "FunctionNameStartsWithGet": {
                     "$ref": "parameters-schema.json#/definitions/FunctionNameStartsWithGet"
                 },

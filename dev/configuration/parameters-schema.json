@@ -520,6 +520,16 @@
             "title": "FormDataToValue method call",
             "$id": "#/definitions/FormDataToValue"
         },
+        "FullOuterJoinQuery": {
+            "description": "Using of \"FULL OUTER JOIN\" in queries",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using of \"FULL OUTER JOIN\" in queries",
+            "$id": "#/definitions/FullOuterJoinQuery"
+        },
         "FunctionNameStartsWithGet": {
             "description": "Function name shouldn't start with \"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c\"",
             "default": false,
