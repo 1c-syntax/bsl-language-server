@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1611211243211,
+  "lastUpdate": 1611322904772,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8339,6 +8339,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1416717197895432",
             "extra": "mean: 72.70302700996399 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5f18313cdfe6dd9decad82c5aa29fdbce5c42a04",
+          "message": "Merge pull request #1531 from ovcharenko-di/feature/FullOuterJoinDiagnostic",
+          "timestamp": "2021-01-22T16:26:45+03:00",
+          "tree_id": "cc17490736db98c435bd3458a2bb8f4350e92067",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5f18313cdfe6dd9decad82c5aa29fdbce5c42a04"
+        },
+        "date": 1611322900852,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 74.29194259643555,
+            "unit": "sec",
+            "range": "stddev: 0.9933889674375297",
+            "extra": "mean: 74.29194259643555 sec\nrounds: 3"
           }
         ]
       }
