@@ -102,25 +102,24 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return;
     }
 
-    var lastChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 1));
-    var penultimateChild = ctx.getChild(Math.min(ctx.children.size(), ctx.children.size() - 3));
+    final int childCount = ctx.children.size();
+    var lastChild = ctx.getChild(childCount - 1);
+    // dots are also children of ColumnContext,
+    // that is why -3 must be an index of penultimate identifier
+    var penultimateChild = ctx.getChild(childCount - 3);
 
     if (lastChild != penultimateChild
       && lastChild instanceof SDBLParser.IdentifierContext
       && penultimateChild instanceof SDBLParser.IdentifierContext) {
 
-      performCheck(ctx, (SDBLParser.IdentifierContext) lastChild,
-        (SDBLParser.IdentifierContext) penultimateChild, tableNames);
-    }
+      String lastIdentifierName = lastChild.getText();
+      String penultimateIdentifierName = penultimateChild.getText();
 
-  }
-
-  private void performCheck(SDBLParser.ColumnContext ctx, SDBLParser.IdentifierContext lastChild,
-                            SDBLParser.IdentifierContext penultimateChild, Set<String> tableNames) {
-
-    if (!tableNames.contains(penultimateChild.getText()) &&
-      REF_PATTERN.matcher(lastChild.getText()).matches()) {
-      diagnosticStorage.addDiagnostic(ctx);
+      if (!tableNames.contains(penultimateIdentifierName)
+        && (REF_PATTERN.matcher(lastIdentifierName).matches()
+        || REF_PATTERN.matcher(penultimateIdentifierName).matches())) {
+        diagnosticStorage.addDiagnostic(ctx);
+      }
     }
   }
 
