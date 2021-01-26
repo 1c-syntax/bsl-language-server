@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1611322904772,
+  "lastUpdate": 1611645873445,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8370,6 +8370,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9933889674375297",
             "extra": "mean: 74.29194259643555 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e6bc531d42584a25434959f7f33647c57a0d81b7",
+          "message": "Merge pull request #1533 from 1c-syntax/dependabot/gradle/org.sonarqube-3.1.1\n\nBump org.sonarqube from 3.1 to 3.1.1",
+          "timestamp": "2021-01-26T10:16:30+03:00",
+          "tree_id": "1c17d6537fa285df0fcf4ad6753b48bbe3a020a4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e6bc531d42584a25434959f7f33647c57a0d81b7"
+        },
+        "date": 1611645869164,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.99993260701497,
+            "unit": "sec",
+            "range": "stddev: 1.1251613752042275",
+            "extra": "mean: 76.99993260701497 sec\nrounds: 3"
           }
         ]
       }
