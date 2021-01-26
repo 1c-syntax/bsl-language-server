@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
@@ -38,21 +40,21 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class ReferencesStorageFillerTest {
+class ReferenceIndexFillerTest {
 
   @Autowired
-  private ReferencesStorageFiller referencesStorageFiller;
+  private ReferenceIndexFiller referenceIndexFiller;
   @Autowired
-  private ReferencesStorage referencesStorage;
+  private ReferenceIndex referenceIndex;
 
   @Test
   void testFindCalledMethod() {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CalleeStorageFillerTest.bsl");
-    referencesStorageFiller.fill(documentContext);
+    referenceIndexFiller.fill(documentContext);
 
     // when
-    Optional<Reference> referencedSymbol = referencesStorage.getReference(documentContext.getUri(), new Position(4, 0));
+    Optional<Reference> referencedSymbol = referenceIndex.getReference(documentContext.getUri(), new Position(4, 0));
 
     // then
     assertThat(referencedSymbol).isPresent();
@@ -74,16 +76,16 @@ class ReferencesStorageFillerTest {
     MethodSymbol methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").get();
 
     // when
-    referencesStorageFiller.fill(documentContext);
-    List<Reference> calleesOf = referencesStorage.getReferencesTo(methodSymbol);
+    referenceIndexFiller.fill(documentContext);
+    List<Reference> calleesOf = referenceIndex.getReferencesTo(methodSymbol);
 
     // then
     assertThat(calleesOf).hasSize(1);
 
     // when
     // recalculate
-    referencesStorageFiller.fill(documentContext);
-    calleesOf = referencesStorage.getReferencesTo(methodSymbol);
+    referenceIndexFiller.fill(documentContext);
+    calleesOf = referenceIndex.getReferencesTo(methodSymbol);
 
     // then
     assertThat(calleesOf).hasSize(1);

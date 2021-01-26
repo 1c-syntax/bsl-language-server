@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.references;
+package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContextContentChangedEvent;
@@ -45,7 +45,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-public class ReferencesStorageFiller {
+public class ReferenceIndexFiller {
 
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES = EnumSet.of(
     ModuleType.ManagerModule,
@@ -53,7 +53,7 @@ public class ReferencesStorageFiller {
     ModuleType.UNKNOWN
   );
 
-  private final ReferencesStorage storage;
+  private final ReferenceIndex index;
 
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
@@ -62,7 +62,7 @@ public class ReferencesStorageFiller {
   }
 
   public void fill(DocumentContext documentContext) {
-    storage.clearReferences(documentContext.getUri());
+    index.clearReferences(documentContext.getUri());
     new ReferenceFinder(documentContext).visitFile(documentContext.getAst());
   }
 
@@ -131,7 +131,7 @@ public class ReferencesStorageFiller {
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
-      storage.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+      index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
     }
 
     private Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {

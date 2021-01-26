@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
@@ -30,16 +29,16 @@ import java.net.URI;
 import java.util.Optional;
 
 /**
- * Реализация поискового движка на основе поиска в {@link ReferencesStorage}.
+ * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
  */
 @Component
 @RequiredArgsConstructor
-public class ReferencesStorageReferenceFinder implements ReferenceFinder {
+public class ReferenceIndexReferenceFinder implements ReferenceFinder {
 
-  private final ReferencesStorage referencesStorage;
+  private final ReferenceIndex referenceIndex;
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    return referencesStorage.getReference(uri, position);
+    return referenceIndex.getReference(uri, position);
   }
 }

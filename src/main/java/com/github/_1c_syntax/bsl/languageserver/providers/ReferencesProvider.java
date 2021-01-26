@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class ReferencesProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final ReferencesStorage referencesStorage;
+  private final ReferenceIndex referenceIndex;
 
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
 
@@ -47,7 +47,7 @@ public class ReferencesProvider {
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
-      .map(referencesStorage::getReferencesTo)
+      .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
       .map(Reference::toLocation)
       .collect(Collectors.toList());

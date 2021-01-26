@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
@@ -30,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -45,13 +45,13 @@ import java.util.Optional;
 )
 @RequiredArgsConstructor
 public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
-  private final ReferencesStorage referencesStorage;
+  private final ReferenceIndex referenceIndex;
 
   @Override
   public void check() {
     var uri = documentContext.getUri();
 
-    referencesStorage.getReferencesFrom(uri).stream()
+    referenceIndex.getReferencesFrom(uri).stream()
       .filter(reference -> reference.getSymbol().isDeprecated())
       .filter(reference -> !reference.getFrom().isDeprecated())
       .forEach((Reference reference) -> {

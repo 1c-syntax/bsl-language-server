@@ -22,7 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.references.ReferencesStorage;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
@@ -53,7 +53,7 @@ import static java.util.stream.Collectors.toCollection;
 public class CallHierarchyProvider {
 
   private final ReferenceResolver referenceResolver;
-  private final ReferencesStorage referencesStorage;
+  private final ReferenceIndex referenceIndex;
 
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
@@ -81,7 +81,7 @@ public class CallHierarchyProvider {
     return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
-      .map(referencesStorage::getReferencesTo)
+      .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
       .collect(groupingBy(
         Reference::getFrom,
@@ -105,7 +105,7 @@ public class CallHierarchyProvider {
     return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()
-      .map(referencesStorage::getReferencesFrom)
+      .map(referenceIndex::getReferencesFrom)
       .flatMap(Collection::stream)
       .filter(Reference::isSourceDefinedSymbolReference)
       .collect(groupingBy(
