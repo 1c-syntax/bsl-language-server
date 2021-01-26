@@ -119,7 +119,6 @@ public class LanguageServerConfiguration {
     copyPropertiesFrom(configuration);
   }
 
-
   public void reset() {
     copyPropertiesFrom(new LanguageServerConfiguration());
   }

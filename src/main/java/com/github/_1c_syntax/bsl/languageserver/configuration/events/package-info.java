@@ -19,23 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
-
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import org.springframework.context.ApplicationEvent;
-
 /**
- * Описание события изменения конфигурации.
- * <p>
- * В качестве источника события содержит ссылку на конфигурацию.
+ * События пакета com.github._1c_syntax.bsl.languageserver.configuration.
  */
-public class LanguageServerConfigurationChangeEvent extends ApplicationEvent {
-  public LanguageServerConfigurationChangeEvent(LanguageServerConfiguration configuration) {
-    super(configuration);
-  }
+@ParametersAreNonnullByDefault
+package com.github._1c_syntax.bsl.languageserver.configuration.events;
 
-  @Override
-  public LanguageServerConfiguration getSource() {
-    return (LanguageServerConfiguration) super.getSource();
-  }
-}
+import javax.annotation.ParametersAreNonnullByDefault;

@@ -90,8 +90,6 @@ public abstract class ServerContext {
       }
     });
 
-    // TODO: clean up callee storage from bad calls?
-
     contextLock.writeLock().unlock();
     LOGGER.debug("Context populated.");
   }

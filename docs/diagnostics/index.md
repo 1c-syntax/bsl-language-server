@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **128**
+Общее количество: **129**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
 * Ошибка: **38**
-* Дефект кода: **83**
+* Дефект кода: **84**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -62,6 +62,7 @@
  [ExportVariables](ExportVariables.md) | Запрет экспортных глобальных переменных модуля | Да | Важный | Дефект кода | `standard`<br>`design`<br>`unpredictable` 
  [ExtraCommas](ExtraCommas.md) | Запятые без указания параметра в конце вызова метода | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [FormDataToValue](FormDataToValue.md) | Использование метода ДанныеФормыВЗначение | Да | Информационный | Дефект кода | `badpractice` 
+ [FullOuterJoinQuery](FullOuterJoinQuery.md) | Использование конструкции "ПОЛНОЕ ВНЕШНЕЕ СОЕДИНЕНИЕ" в запросах | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
  [FunctionNameStartsWithGet](FunctionNameStartsWithGet.md) | Имя функции не должно начинаться с "Получить" | Нет | Информационный | Дефект кода | `standard` 
  [FunctionOutParameter](FunctionOutParameter.md) | Исходящий параметр функции | Нет | Важный | Дефект кода | `design` 
  [FunctionReturnsSamePrimitive](FunctionReturnsSamePrimitive.md) | Функция всегда возвращает одно и то же примитивное значение | Да | Важный | Ошибка | `design`<br>`badpractice` 

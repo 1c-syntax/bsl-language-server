@@ -19,17 +19,26 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.infrastructure;
+package com.github._1c_syntax.bsl.languageserver.configuration.events;
 
-import org.aspectj.lang.Aspects;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import org.springframework.context.ApplicationEvent;
 
-@Configuration
-public class AspectJConfiguration {
+/**
+ * Описание события изменения конфигурации.
+ * <p>
+ * В качестве источника события содержит ссылку на конфигурацию.
+ */
+public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {
 
-  @Bean
-  public EventPublisherAspect eventPublisherAspect() {
-    return Aspects.aspectOf(EventPublisherAspect.class);
+  private static final long serialVersionUID = 649143503434640953L;
+
+  public LanguageServerConfigurationChangedEvent(LanguageServerConfiguration configuration) {
+    super(configuration);
+  }
+
+  @Override
+  public LanguageServerConfiguration getSource() {
+    return (LanguageServerConfiguration) super.getSource();
   }
 }
