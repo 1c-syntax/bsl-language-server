@@ -67,24 +67,24 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
-  void testRebuildClearCallees() {
+  void testRebuildClearReferences() {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
-    MethodSymbol methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").get();
+    MethodSymbol methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
 
     // when
     referenceIndexFiller.fill(documentContext);
-    List<Reference> calleesOf = referenceIndex.getReferencesTo(methodSymbol);
+    List<Reference> referencesTo = referenceIndex.getReferencesTo(methodSymbol);
 
     // then
-    assertThat(calleesOf).hasSize(1);
+    assertThat(referencesTo).hasSize(1);
 
     // when
     // recalculate
     referenceIndexFiller.fill(documentContext);
-    calleesOf = referenceIndex.getReferencesTo(methodSymbol);
+    referencesTo = referenceIndex.getReferencesTo(methodSymbol);
 
     // then
-    assertThat(calleesOf).hasSize(1);
+    assertThat(referencesTo).hasSize(1);
   }
 }
