@@ -19,14 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.references;
+package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.references.Reference;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
-import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndexFiller;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
@@ -50,7 +47,7 @@ class ReferenceIndexFillerTest {
   @Test
   void testFindCalledMethod() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CalleeStorageFillerTest.bsl");
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     referenceIndexFiller.fill(documentContext);
 
     // when
@@ -72,7 +69,7 @@ class ReferenceIndexFillerTest {
   @Test
   void testRebuildClearCallees() {
     // given
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CalleeStorageFillerTest.bsl");
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
     MethodSymbol methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").get();
 
     // when
