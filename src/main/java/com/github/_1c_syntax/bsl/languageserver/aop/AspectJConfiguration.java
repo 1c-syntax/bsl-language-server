@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop;
 
+import com.github._1c_syntax.bsl.languageserver.aop.measures.ConditionalOnMeasuresEnabled;
 import org.aspectj.lang.Aspects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,5 +40,14 @@ public class AspectJConfiguration {
   @Bean
   public EventPublisherAspect eventPublisherAspect() {
     return Aspects.aspectOf(EventPublisherAspect.class);
+  }
+
+  /**
+   * @return Аспект выполнения замеров производительности.
+   */
+  @Bean
+  @ConditionalOnMeasuresEnabled
+  public MeasuresAspect measuresAspect() {
+    return Aspects.aspectOf(MeasuresAspect.class);
   }
 }
