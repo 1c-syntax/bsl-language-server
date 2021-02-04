@@ -87,6 +87,9 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   @Option(names = "--debug", hidden = true)
   private boolean debug;
 
+  @CommandLine.Unmatched
+  private List<String> unmatched;
+
   private final CommandLine.IFactory picocliFactory;
 
   private int exitCode;
