@@ -21,23 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import org.springframework.test.context.TestExecutionListeners;
 
-@Component
-public class TestApplicationContext implements ApplicationContextAware {
-  private static ApplicationContext CONTEXT;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
-    CONTEXT = context;
-  }
-
-  public static <T> T getBean(Class<T> requiredType) {
-    return CONTEXT.getBean(requiredType);
-  }
-
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@TestExecutionListeners(
+  mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS,
+  listeners = {DirtyContextBeforeClassAndAfterClassTestExecutionListener.class}
+)
+public @interface CleanupContextBeforeClassAndAfterClass {
 }

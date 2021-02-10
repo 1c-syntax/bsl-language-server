@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.UseMode;
@@ -36,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@CleanupContextBeforeClassAndAfterClass
 class UsingSynchronousCallsDiagnosticTest extends AbstractDiagnosticTest<UsingSynchronousCallsDiagnostic> {
   UsingSynchronousCallsDiagnosticTest() {
     super(UsingSynchronousCallsDiagnostic.class);

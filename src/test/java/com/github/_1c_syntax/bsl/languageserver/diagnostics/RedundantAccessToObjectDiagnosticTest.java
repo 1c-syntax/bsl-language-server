@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
@@ -38,6 +39,7 @@ import java.util.Map;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 
+@CleanupContextBeforeClassAndAfterClass
 class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<RedundantAccessToObjectDiagnostic> {
   RedundantAccessToObjectDiagnosticTest() {
     super(RedundantAccessToObjectDiagnostic.class);
