@@ -24,25 +24,35 @@ package com.github._1c_syntax.bsl.languageserver.aop.measures;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(properties = "app.measures.enabled=true")
-@DirtiesContext
+@SpringBootTest
+@ActiveProfiles("measures")
 class MeasuresSubsystemTest {
 
   @Autowired
   private ServerContext serverContext;
 
   @Autowired
+  private ConfigurableApplicationContext applicationContext;
+
+  @Autowired
   private MeasureCollector measureCollector;
+
+  @AfterEach
+  void afterAll() {
+    applicationContext.getBeanFactory().destroySingletons();
+  }
 
   @Test
   void testMeasuresAreCollected() {

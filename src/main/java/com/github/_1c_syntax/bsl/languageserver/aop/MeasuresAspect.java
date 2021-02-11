@@ -35,6 +35,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.util.Collection;
 
@@ -45,6 +46,11 @@ public class MeasuresAspect {
 
   @Setter(onMethod = @__({@Autowired}))
   private MeasureCollector measureCollector;
+
+  @PreDestroy
+  void destroy() {
+    setMeasureCollector(null);
+  }
 
   @Around("Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()")
   public Object measureBSLDiagnostic(ProceedingJoinPoint jp) throws Throwable {

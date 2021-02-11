@@ -45,7 +45,6 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 })
 
 val jacksonVersion = "2.11.3"
-val junitVersion = "5.6.1"
 val languageToolVersion = "5.1"
 
 dependencies {
@@ -102,11 +101,6 @@ dependencies {
     annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
     // TEST
-
-    // junit
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
-    testImplementation("org.junit.jupiter", "junit-jupiter-params", junitVersion)
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     // spring
     testImplementation("org.springframework.boot:spring-boot-starter-test")
