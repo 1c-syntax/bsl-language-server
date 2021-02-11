@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 
@@ -62,18 +63,19 @@ public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
   public void languageServerConfigurationUpdated(JoinPoint joinPoint) {
-    if (!active) {
-      LOGGER.warn("Trying to send event in not active event publisher.");
-      return;
-    }
-    var configuration = (LanguageServerConfiguration) joinPoint.getThis();
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+    publishEvent(new LanguageServerConfigurationChangedEvent((LanguageServerConfiguration) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildCall()")
   public void documentContextRebuild(JoinPoint joinPoint) {
-    var documentContext = (DocumentContext) joinPoint.getThis();
-    applicationEventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    publishEvent(new DocumentContextContentChangedEvent((DocumentContext) joinPoint.getThis()));
   }
 
+  private void publishEvent(ApplicationEvent event) {
+    if (!active) {
+      LOGGER.warn("Trying to send event in not active event publisher.");
+      return;
+    }
+    applicationEventPublisher.publishEvent(event);
+  }
 }
