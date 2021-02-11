@@ -27,6 +27,9 @@ import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
+/**
+ * Вспомогательный базовый класс для обработчиков, помечающих контекст как грязный.
+ */
 public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecutionListener {
   @Override
   public int getOrder() {

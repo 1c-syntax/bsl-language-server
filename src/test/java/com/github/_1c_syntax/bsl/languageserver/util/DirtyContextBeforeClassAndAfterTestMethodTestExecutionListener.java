@@ -23,6 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.util;
 
 import org.springframework.test.context.TestContext;
 
+/**
+ * Слушатель выполнения тестов, отмечающий контекст приложения как грязный
+ * при инстанцировании тест-класса и после окончания работы каждого тест-метода.
+ */
 public class DirtyContextBeforeClassAndAfterTestMethodTestExecutionListener extends AbstractDirtyContextTestExecutionListener {
 
   @Override

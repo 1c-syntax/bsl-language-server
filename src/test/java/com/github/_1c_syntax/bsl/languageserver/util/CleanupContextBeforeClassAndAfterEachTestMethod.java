@@ -28,6 +28,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Маркерная аннотация для теста, заставляющая сбросить контекст приложения
+ * при инстанцировании тест-класса и после окончания работы каждого тест-метода.
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @TestExecutionListeners(

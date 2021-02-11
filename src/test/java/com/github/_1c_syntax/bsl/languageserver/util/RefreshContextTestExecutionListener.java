@@ -27,6 +27,10 @@ import org.springframework.core.Ordered;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.support.AbstractTestExecutionListener;
 
+/**
+ * Вспомогательный слушатель выполнения тестов, вызывающий обновление контекста при
+ * инстанцировании тест-класса, если по какой-либо причине текущий контекст не активен.
+ */
 @NoArgsConstructor
 public class RefreshContextTestExecutionListener extends AbstractTestExecutionListener {
   @Override
