@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
 import com.github._1c_syntax.bsl.languageserver.utils.ThrowingSupplier;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @NoArgsConstructor
 @Slf4j
 public class MeasureCollector {
+
+  /**
+   * Коллекция замеров.
+   * <p/>
+   * В качестве ключа выступает тип замера (метрики, дерево разбора, диагностика, и т. д.), в качестве значений -
+   * список длительностей выполнения замера.
+   */
+  @Getter
   private final Map<String, List<Long>> measures = new ConcurrentHashMap<>();
 
   /**
