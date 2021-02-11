@@ -35,12 +35,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParameterException;
+import picocli.CommandLine.Unmatched;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
 
@@ -81,13 +83,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     defaultValue = "")
   private String configurationOption;
 
-  @Option(names = "--spring.config.location", hidden = true)
-  private String springConfigLocation;
-
-  @Option(names = "--debug", hidden = true)
-  private boolean debug;
-
-  @CommandLine.Unmatched
+  @Unmatched
   private List<String> unmatched;
 
   private final CommandLine.IFactory picocliFactory;
@@ -113,21 +109,25 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     if (args.length == 0) {
       args = addDefaultCommand(args);
     } else {
-      // выполнение проверки строки запуска в попытке, т.к. парсер при нахождении
-      // неизвестных параметров выдает ошибку
-      try {
-        var parseResult = cmd.parseArgs(args);
-        // если переданы параметры без команды и это не справка
-        // то считаем, что параметры для команды по умолчанию
-        if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
-          args = addDefaultCommand(args);
-        }
-      } catch (ParameterException ex) {
-        // если поймали ошибку, а имя команды не передано, подставим команду и посмотрим,
-        // вдруг заработает
-        if (!ex.getCommandLine().getParseResult().hasSubcommand()) {
-          args = addDefaultCommand(args);
-        }
+      var parseResult = cmd.parseArgs(args);
+      var unmatchedArgs = parseResult.unmatched().stream()
+        .filter(s -> !s.startsWith("--spring."))
+        .filter(s -> !s.startsWith("--app."))
+        .filter(s -> !s.startsWith("--logging."))
+        .filter(s -> !Objects.equals(s, "--debug"))
+        .peek(s -> cmd.getErr().println("Unknown option: '" + s + "'"))
+        .collect(Collectors.toList());
+
+      if (!unmatchedArgs.isEmpty()) {
+        cmd.usage(cmd.getOut());
+        exitCode = cmd.getCommandSpec().exitCodeOnInvalidInput();
+        return;
+      }
+
+      // если переданы параметры без команды и это не справка
+      // то считаем, что параметры для команды по умолчанию
+      if (!parseResult.hasSubcommand() && !parseResult.isUsageHelpRequested()) {
+        args = addDefaultCommand(args);
       }
     }
 
