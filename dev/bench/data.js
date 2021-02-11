@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1613044776722,
+  "lastUpdate": 1613046737052,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8494,6 +8494,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.8616129420573815",
             "extra": "mean: 79.51263014475505 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a96eb80218fed9dec1c76fab0a7c51683f55cd5",
+          "message": "Merge pull request #1536 from 1c-syntax/dependabot/gradle/net.kyori.indra.license-header-1.3.1",
+          "timestamp": "2021-02-11T12:24:23Z",
+          "tree_id": "05bcc7e2bfea8264bfbdb75dc21b7eaeba557a63",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6a96eb80218fed9dec1c76fab0a7c51683f55cd5"
+        },
+        "date": 1613046734433,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 77.0765408674876,
+            "unit": "sec",
+            "range": "stddev: 1.9542105044670983",
+            "extra": "mean: 77.0765408674876 sec\nrounds: 3"
           }
         ]
       }
