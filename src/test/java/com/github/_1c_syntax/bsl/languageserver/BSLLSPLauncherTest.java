@@ -22,11 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.ginsberg.junit.exit.ExpectSystemExitWithStatus;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
@@ -36,7 +36,7 @@ import java.io.PrintStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@CleanupContextBeforeClassAndAfterEachTestMethod
 class BSLLSPLauncherTest {
 
   private ByteArrayOutputStream outContent;

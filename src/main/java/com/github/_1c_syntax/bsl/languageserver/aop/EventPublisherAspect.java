@@ -24,12 +24,14 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+
+import javax.annotation.PreDestroy;
 
 /**
  * Аспект подсистемы событий.
@@ -38,14 +40,30 @@ import org.springframework.context.ApplicationEventPublisherAware;
  * с помощью Spring Events.
  */
 @Aspect
+@Slf4j
 @NoArgsConstructor
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
-  @Setter
+  private boolean active;
   private ApplicationEventPublisher applicationEventPublisher;
+
+  @PreDestroy
+  public void destroy() {
+    active = false;
+    applicationEventPublisher = null;
+  }
+
+  public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+    active = true;
+    this.applicationEventPublisher = applicationEventPublisher;
+  }
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
   public void languageServerConfigurationUpdated(JoinPoint joinPoint) {
+    if (!active) {
+      LOGGER.warn("Trying to send event in not active event publisher.");
+      return;
+    }
     var configuration = (LanguageServerConfiguration) joinPoint.getThis();
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
   }

@@ -37,8 +37,6 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class DiagnosticInfosTest {
@@ -104,15 +102,13 @@ class DiagnosticInfosTest {
   }
 
   void allParametersHaveResources(Language language) {
-    var config = spy(configuration);
-    when(config.getLanguage()).thenReturn(language);
+    configuration.setLanguage(language);
 
     assertThatCode(() -> diagnosticInfos.values().forEach(diagnosticInfo -> {
       boolean allParametersHaveDescription;
 
       try {
-        var info = new DiagnosticInfo(diagnosticInfo.getDiagnosticClass(), config);
-        allParametersHaveDescription = info.getParameters().stream()
+        allParametersHaveDescription = diagnosticInfo.getParameters().stream()
           .map(DiagnosticParameterInfo::getDescription)
           .noneMatch(String::isEmpty);
       } catch (MissingResourceException e) {
@@ -122,5 +118,4 @@ class DiagnosticInfosTest {
       assertThat(allParametersHaveDescription).isTrue();
     })).doesNotThrowAnyException();
   }
-
 }

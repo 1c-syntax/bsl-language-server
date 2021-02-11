@@ -44,7 +44,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class MethodSymbolComputerTest {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata";
@@ -259,6 +258,7 @@ class MethodSymbolComputerTest {
   }
 
   @Test
+  @DirtiesContext
   void testOwner() throws IOException {
 
     var path = Absolute.path(PATH_TO_METADATA);

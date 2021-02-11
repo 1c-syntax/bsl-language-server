@@ -24,42 +24,37 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.util.ArrayList;
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@DirtiesContext
 class DisableDiagnosticTriggeringSupplierTest {
 
-  private final CodeActionProvider codeActionProvider;
+  @Autowired
+  private LanguageServerConfiguration configuration;
+  @Autowired
+  private DisableDiagnosticTriggeringSupplier codeActionSupplier;
 
-  public DisableDiagnosticTriggeringSupplierTest() {
-
-    List<CodeActionSupplier> codeActionSuppliers = new ArrayList<>();
-    var configuration = new LanguageServerConfiguration();
+  @PostConstruct
+  public void init() {
     configuration.setLanguage(Language.EN);
-    codeActionSuppliers.add(new DisableDiagnosticTriggeringSupplier(configuration));
-    codeActionProvider = new CodeActionProvider(codeActionSuppliers);
-
   }
 
   @Test
@@ -79,11 +74,10 @@ class DisableDiagnosticTriggeringSupplierTest {
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
-    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
       .hasSize(10)
-      .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable NumberOfValuesInStructureConstructor in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable ExportVariables in file"))
@@ -124,18 +118,16 @@ class DisableDiagnosticTriggeringSupplierTest {
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
-    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
       .hasSize(6)
-      .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in line"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
-
   }
 
   @Test
@@ -163,11 +155,10 @@ class DisableDiagnosticTriggeringSupplierTest {
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
-    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
       .hasSize(8)
-      .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
@@ -176,7 +167,6 @@ class DisableDiagnosticTriggeringSupplierTest {
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CanonicalSpellingKeywords in range"))
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CanonicalSpellingKeywords in file"));
-
   }
 
   @Test
@@ -196,13 +186,11 @@ class DisableDiagnosticTriggeringSupplierTest {
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
-    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
       .hasSize(1)
-      .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
-
   }
 
   @Test
@@ -222,12 +210,10 @@ class DisableDiagnosticTriggeringSupplierTest {
     params.setTextDocument(textDocumentIdentifier);
     params.setContext(codeActionContext);
 
-    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+    List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
     assertThat(codeActions)
       .hasSize(1)
-      .extracting(Either::getRight)
       .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
-
   }
 }

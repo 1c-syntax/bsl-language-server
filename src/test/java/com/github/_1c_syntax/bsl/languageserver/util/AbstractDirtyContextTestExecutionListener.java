@@ -21,23 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import org.springframework.core.Ordered;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestContext;
+import org.springframework.test.context.support.AbstractTestExecutionListener;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
-@Component
-public class TestApplicationContext implements ApplicationContextAware {
-  private static ApplicationContext CONTEXT;
-
+/**
+ * Вспомогательный базовый класс для обработчиков, помечающих контекст как грязный.
+ */
+public class AbstractDirtyContextTestExecutionListener extends AbstractTestExecutionListener {
   @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
-    CONTEXT = context;
+  public int getOrder() {
+    return Ordered.HIGHEST_PRECEDENCE;
   }
 
-  public static <T> T getBean(Class<T> requiredType) {
-    return CONTEXT.getBean(requiredType);
+  protected static void dirtyContext(TestContext testContext) {
+    testContext.markApplicationContextDirty(DirtiesContext.HierarchyMode.EXHAUSTIVE);
+    testContext.setAttribute(DependencyInjectionTestExecutionListener.REINJECT_DEPENDENCIES_ATTRIBUTE, Boolean.TRUE);
   }
-
 }

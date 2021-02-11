@@ -39,7 +39,7 @@ import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext
 class NonStandardRegionDiagnosticTest extends AbstractDiagnosticTest<NonStandardRegionDiagnostic> {
   private static final Path CONFIGURATION_PATH = Paths.get("src/test/resources/metadata");
   private final Map<ModuleType, String> pathByModuleType = new HashMap<>();

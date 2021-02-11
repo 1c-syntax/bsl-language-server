@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.DeprecatedAttributes
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.MultilingualStringHasAllDeclaredLanguagesDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.UnusedLocalMethodDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import org.assertj.core.api.Assertions;
 import org.eclipse.lsp4j.DiagnosticTag;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterClass
 class DiagnosticInfoTest {
 
   @Autowired
