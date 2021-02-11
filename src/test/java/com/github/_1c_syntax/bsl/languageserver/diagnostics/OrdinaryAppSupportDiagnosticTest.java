@@ -21,12 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-@CleanupContextBeforeClassAndAfterClass
+@DirtiesContext
 class OrdinaryAppSupportDiagnosticTest extends AbstractDiagnosticTest<OrdinaryAppSupportDiagnostic> {
   OrdinaryAppSupportDiagnosticTest() {
     super(OrdinaryAppSupportDiagnostic.class);
