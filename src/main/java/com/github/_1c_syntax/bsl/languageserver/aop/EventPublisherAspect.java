@@ -26,12 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+
+import javax.annotation.PreDestroy;
 
 /**
  * Аспект подсистемы событий.
@@ -40,22 +43,39 @@ import org.springframework.context.ApplicationEventPublisherAware;
  * с помощью Spring Events.
  */
 @Aspect
+@Slf4j
 @NoArgsConstructor
 public class EventPublisherAspect implements ApplicationEventPublisherAware {
 
-  @Setter
+  private boolean active;
   private ApplicationEventPublisher applicationEventPublisher;
+
+  @PreDestroy
+  public void destroy() {
+    active = false;
+    applicationEventPublisher = null;
+  }
+
+  public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+    active = true;
+    this.applicationEventPublisher = applicationEventPublisher;
+  }
 
   @AfterReturning("Pointcuts.isLanguageServerConfiguration() && (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())")
   public void languageServerConfigurationUpdated(JoinPoint joinPoint) {
-    var configuration = (LanguageServerConfiguration) joinPoint.getThis();
-    applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+    publishEvent(new LanguageServerConfigurationChangedEvent((LanguageServerConfiguration) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildCall()")
   public void documentContextRebuild(JoinPoint joinPoint) {
-    var documentContext = (DocumentContext) joinPoint.getThis();
-    applicationEventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    publishEvent(new DocumentContextContentChangedEvent((DocumentContext) joinPoint.getThis()));
   }
 
+  private void publishEvent(ApplicationEvent event) {
+    if (!active) {
+      LOGGER.warn("Trying to send event in not active event publisher.");
+      return;
+    }
+    applicationEventPublisher.publishEvent(event);
+  }
 }

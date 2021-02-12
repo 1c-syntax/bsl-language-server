@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
 
@@ -50,6 +51,13 @@ public class Pointcuts {
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.DocumentContext)")
   public void isDocumentContext() {
+  }
+
+  /**
+   * Это обращение к классу {@link ServerContext}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContext)")
+  public void isServerContext() {
   }
 
   /**

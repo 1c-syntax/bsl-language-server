@@ -41,7 +41,7 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext
 class CommonModuleNameClientServerDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameClientServerDiagnostic> {
   private CommonModule module;
   private DocumentContext documentContext;

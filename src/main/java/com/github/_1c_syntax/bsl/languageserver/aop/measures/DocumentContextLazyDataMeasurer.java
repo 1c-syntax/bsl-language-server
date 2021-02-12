@@ -51,15 +51,15 @@ public class DocumentContextLazyDataMeasurer {
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
 
-    measureCollector.measureIt(documentContext::getAst, "[ast]");
-    measureCollector.measureIt(documentContext::getQueries, "[queries]");
+    measureCollector.measureIt(documentContext::getAst, "context: ast");
+    measureCollector.measureIt(documentContext::getQueries, "context: queries");
     for (SDBLTokenizer sdblTokenizer : documentContext.getQueries()) {
-      measureCollector.measureIt(sdblTokenizer::getAst, "[queryAst]");
+      measureCollector.measureIt(sdblTokenizer::getAst, "context: queryAst");
     }
-    measureCollector.measureIt(documentContext::getSymbolTree, "[symbolTree]");
-    measureCollector.measureIt(documentContext::getDiagnosticIgnorance, "[diagnosticIgnorance]");
-    measureCollector.measureIt(documentContext::getCognitiveComplexityData, "[cognitiveComplexity]");
-    measureCollector.measureIt(documentContext::getCyclomaticComplexityData, "[cyclomaticComplexity]");
-    measureCollector.measureIt(documentContext::getMetrics, "[metrics]");
+    measureCollector.measureIt(documentContext::getSymbolTree, "context: symbolTree");
+    measureCollector.measureIt(documentContext::getDiagnosticIgnorance, "context: diagnosticIgnorance");
+    measureCollector.measureIt(documentContext::getCognitiveComplexityData, "context: cognitiveComplexity");
+    measureCollector.measureIt(documentContext::getCyclomaticComplexityData, "context: cyclomaticComplexity");
+    measureCollector.measureIt(documentContext::getMetrics, "context: metrics");
   }
 }

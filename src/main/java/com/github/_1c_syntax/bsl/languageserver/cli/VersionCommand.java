@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.ServerInfo;
 import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
 import java.util.concurrent.Callable;
 
@@ -45,12 +44,6 @@ import java.util.concurrent.Callable;
 @Component
 @RequiredArgsConstructor
 public class VersionCommand implements Callable<Integer> {
-
-  @Option(names = "--spring.config.location", hidden = true)
-  private String springConfigLocation;
-
-  @Option(names = "--debug", hidden = true)
-  private boolean debug;
 
   private final ServerInfo serverInfo;
 

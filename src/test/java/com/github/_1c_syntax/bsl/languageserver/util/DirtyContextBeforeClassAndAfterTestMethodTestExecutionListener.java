@@ -21,23 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.util;
 
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import org.springframework.test.context.TestContext;
 
-@Component
-public class TestApplicationContext implements ApplicationContextAware {
-  private static ApplicationContext CONTEXT;
+/**
+ * Слушатель выполнения тестов, отмечающий контекст приложения как грязный
+ * при инстанцировании тест-класса и после окончания работы каждого тест-метода.
+ */
+public class DirtyContextBeforeClassAndAfterTestMethodTestExecutionListener extends AbstractDirtyContextTestExecutionListener {
 
   @Override
-  public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
-    CONTEXT = context;
+  public void prepareTestInstance(TestContext testContext) {
+    dirtyContext(testContext);
   }
 
-  public static <T> T getBean(Class<T> requiredType) {
-    return CONTEXT.getBean(requiredType);
+  @Override
+  public void afterTestMethod(TestContext testContext) {
+    dirtyContext(testContext);
   }
 
 }

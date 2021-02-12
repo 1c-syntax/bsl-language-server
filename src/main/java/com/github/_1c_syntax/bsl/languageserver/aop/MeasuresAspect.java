@@ -22,15 +22,22 @@
 package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.aop.measures.MeasureCollector;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PreDestroy;
+import java.io.File;
+import java.util.Collection;
 
 @Aspect
 @Slf4j
@@ -40,6 +47,11 @@ public class MeasuresAspect {
   @Setter(onMethod = @__({@Autowired}))
   private MeasureCollector measureCollector;
 
+  @PreDestroy
+  void destroy() {
+    setMeasureCollector(null);
+  }
+
   @Around("Pointcuts.isBSLDiagnostic() && Pointcuts.isGetDiagnosticsCall()")
   public Object measureBSLDiagnostic(ProceedingJoinPoint jp) throws Throwable {
     if (measureCollector == null) {
@@ -47,7 +59,25 @@ public class MeasuresAspect {
     }
     var diagnostic = (BSLDiagnostic) jp.getThis();
     String diagnosticCode = diagnostic.getInfo().getCode().getStringValue();
-    return measureCollector.measureIt(jp::proceed, diagnosticCode);
+    return measureCollector.measureIt(jp::proceed, "diagnostic: " + diagnosticCode);
+  }
+
+  @Before("Pointcuts.isServerContext() && execution(* populateContext(..)) && args(files)")
+  public void initializeConfiguration(JoinPoint jp, Collection<File> files) {
+    if (measureCollector == null) {
+      return;
+    }
+    var serverContext = (ServerContext) jp.getTarget();
+    measureCollector.measureIt(serverContext::getConfiguration, "context: configuration");
+  }
+
+  @Around("within(com.github._1c_syntax.bsl.languageserver.context.computer.*) && execution(* compute(..))")
+  public Object measureComputers(ProceedingJoinPoint jp) throws Throwable {
+    if (measureCollector == null) {
+      return jp.proceed();
+    }
+    var simpleName = jp.getTarget().getClass().getSimpleName();
+    return measureCollector.measureIt(jp::proceed, "computer: " + simpleName);
   }
 
   @AfterReturning("within(com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand) && execution(* call(..))")

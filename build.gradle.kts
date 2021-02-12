@@ -9,7 +9,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("net.kyori.indra.license-header") version "1.2.1"
+    id("net.kyori.indra.license-header") version "1.3.1"
     id("org.sonarqube") version "3.1.1"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "3.0.0"
@@ -45,7 +45,6 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
 })
 
 val jacksonVersion = "2.11.3"
-val junitVersion = "5.6.1"
 val languageToolVersion = "5.1"
 
 dependencies {
@@ -57,11 +56,10 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
-//    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.10.0")
     api("com.github.eclipse.lsp4j", "org.eclipse.lsp4j", "5cc2304f3fde9b1e82bf9e76eb6e6be4bf8fb28c")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "b088f749bad11ba6ce9c2a33bce8ade0c5f44736") {
+    api("com.github.1c-syntax", "bsl-parser", "84aedf3975e211116ef6d8f8fd8d828186c777dc") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -103,11 +101,6 @@ dependencies {
     annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
     // TEST
-
-    // junit
-    testImplementation("org.junit.jupiter", "junit-jupiter-api", junitVersion)
-    testImplementation("org.junit.jupiter", "junit-jupiter-params", junitVersion)
-    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", junitVersion)
 
     // spring
     testImplementation("org.springframework.boot:spring-boot-starter-test")
