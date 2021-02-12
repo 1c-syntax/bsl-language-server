@@ -44,7 +44,6 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.11.3"
 val languageToolVersion = "5.1"
 
 dependencies {
@@ -88,9 +87,8 @@ dependencies {
     implementation("me.tongfei", "progressbar", "0.9.0")
 
     // (de)serialization
-    implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
-    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
-    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // stat analysis
     implementation("com.google.code.findbugs", "jsr305", "3.0.2")
