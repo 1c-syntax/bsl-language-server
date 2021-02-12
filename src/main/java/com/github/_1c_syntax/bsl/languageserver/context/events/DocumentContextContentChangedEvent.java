@@ -26,6 +26,8 @@ import org.springframework.context.ApplicationEvent;
 
 public class DocumentContextContentChangedEvent extends ApplicationEvent {
 
+  private static final long serialVersionUID = 3091414460731918073L;
+
   public DocumentContextContentChangedEvent(DocumentContext source) {
     super(source);
   }
