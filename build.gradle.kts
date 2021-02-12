@@ -90,13 +90,14 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
-    // stat analysis
-    implementation("com.google.code.findbugs", "jsr305", "3.0.2")
-
     // COMPILE
 
+    // lombok
     compileOnly("org.projectlombok", "lombok", lombok.version)
     annotationProcessor("org.projectlombok", "lombok", lombok.version)
+
+    // stat analysis
+    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
 
     // TEST
 
