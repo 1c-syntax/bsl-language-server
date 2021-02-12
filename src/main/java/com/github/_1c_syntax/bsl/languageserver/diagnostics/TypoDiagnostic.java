@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPool;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPoolEntry;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
@@ -46,11 +45,14 @@ import org.languagetool.rules.RuleMatch;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -62,7 +64,6 @@ import java.util.stream.Collectors;
     DiagnosticTag.BADPRACTICE
   }
 )
-
 @Slf4j
 public class TypoDiagnostic extends AbstractDiagnostic {
 
@@ -70,6 +71,14 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private static final Map<String, JLanguageToolPool> languageToolPoolMap = Map.of(
     "en", new JLanguageToolPool(new AmericanEnglish()),
     "ru", new JLanguageToolPool(new Russian())
+  );
+
+  /**
+   * Карта, хранящая результат проверки слова (ошибка/нет ошибки) в разрезе языков.
+   */
+  private static final Map<String, Map<String, Boolean>> checkedWords = Map.of(
+    "en", new ConcurrentHashMap<>(),
+    "ru", new ConcurrentHashMap<>()
   );
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
@@ -110,25 +119,31 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     minWordLength = Math.max(minWordLength, DEFAULT_MIN_WORD_LENGTH);
   }
 
-  private String getWordsToIgnore() {
+  private Set<String> getWordsToIgnore() {
+    String delimiter = ",";
     String exceptions = SPACES_PATTERN.matcher(info.getResourceString("diagnosticExceptions")).replaceAll("");
     if (!userWordsToIgnore.isEmpty()) {
-      exceptions = exceptions + "," + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
+      exceptions = exceptions + delimiter + SPACES_PATTERN.matcher(userWordsToIgnore).replaceAll("");
     }
 
-    return exceptions.intern();
+    return Arrays.stream(exceptions.split(delimiter))
+      .collect(Collectors.toSet());
   }
 
-  JLanguageToolPoolEntry acquireLanguageTool(String lang) {
+  private static JLanguageTool acquireLanguageTool(String lang) {
     return getLanguageToolPoolMap().get(lang).checkOut();
   }
 
-  private static void releaseLanguageTool(String lang, JLanguageToolPoolEntry languageToolPoolEntry) {
-    getLanguageToolPoolMap().get(lang).checkIn(languageToolPoolEntry);
+  private static void releaseLanguageTool(String lang, JLanguageTool languageTool) {
+    getLanguageToolPoolMap().get(lang).checkIn(languageTool);
   }
 
-  private String getTokenizedStringFromTokens(DocumentContext documentContext, Map<String, List<Token>> tokensMap) {
+  private Set<String> getTokenizedStringsFromTokens(
+    DocumentContext documentContext,
+    Map<String, List<Token>> tokensMap
+  ) {
     StringBuilder text = new StringBuilder();
+    Set<String> wordsToIgnore = getWordsToIgnore();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
       .map(BSLParserRuleContext.class::cast)
@@ -149,8 +164,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       );
 
     return Arrays.stream(SPACES_PATTERN.split(text.toString().trim()))
-      .distinct()
-      .collect(Collectors.joining(" "));
+      .filter(Predicate.not(wordsToIgnore::contains))
+      .collect(Collectors.toSet());
   }
 
   @Override
@@ -158,40 +173,65 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, List<Token>> tokensMap = new HashMap<>();
+    Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
+    Set<Token> uniqueValues = new HashSet<>();
 
-    JLanguageToolPoolEntry languageToolPoolEntry = acquireLanguageTool(lang);
-    JLanguageTool languageTool = languageToolPoolEntry.getLanguageTool(getWordsToIgnore());
+    Set<String> stringsFromTokens = getTokenizedStringsFromTokens(documentContext, tokensMap);
 
-    String result = getTokenizedStringFromTokens(documentContext, tokensMap);
+    // fire already checked words
+    stringsFromTokens.stream()
+      .filter(word -> checkedWordsForLang.getOrDefault(word, false))
+      .forEach((String word) -> {
+        List<Token> tokens = tokensMap.get(word);
+        if (tokens != null) {
+          tokens.stream()
+            .filter(uniqueValues::add)
+            .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
+        }
+      });
 
+    // build string of unchecked words
+    Set<String> uncheckedWords = stringsFromTokens.stream()
+      .filter(word -> !checkedWordsForLang.containsKey(word))
+      .collect(Collectors.toSet());
+
+    if (uncheckedWords.isEmpty()) {
+      return;
+    }
+
+    String uncheckedWordsString = String.join(" ", uncheckedWords);
+
+    JLanguageTool languageTool = acquireLanguageTool(lang);
+
+    List<RuleMatch> matches = Collections.emptyList();
     try {
-      List<RuleMatch> matches = languageTool.check(
-        result,
+      matches = languageTool.check(
+        uncheckedWordsString,
         true,
         JLanguageTool.ParagraphHandling.ONLYNONPARA
       );
-
-      if (!matches.isEmpty()) {
-
-        Set<Token> uniqueValues = new HashSet<>();
-        matches
-          .stream()
-          .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
-          .map(ruleMatch -> result.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
-          .forEach((String substring) -> {
-            List<Token> tokens = tokensMap.get(substring);
-            if (tokens != null) {
-              tokens.stream()
-                .filter(uniqueValues::add)
-                .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(substring)));
-            }
-          });
-      }
     } catch (IOException e) {
       LOGGER.error(e.getMessage(), e);
+    } finally {
+      releaseLanguageTool(lang, languageTool);
     }
 
-    releaseLanguageTool(lang, languageToolPoolEntry);
+    // check words and mark matched as checked
+    matches.stream()
+      .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
+      .map(ruleMatch -> uncheckedWordsString.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
+      .forEach((String substring) -> {
+        checkedWordsForLang.put(substring, true);
+        List<Token> tokens = tokensMap.get(substring);
+        if (tokens != null) {
+          tokens.stream()
+            .filter(uniqueValues::add)
+            .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(substring)));
+        }
+      });
+
+    // mark unmatched words without errors as checked
+    uncheckedWords.forEach(word -> checkedWordsForLang.putIfAbsent(word, false));
   }
 
 }
