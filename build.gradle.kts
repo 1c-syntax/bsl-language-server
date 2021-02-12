@@ -44,7 +44,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val languageToolVersion = "5.1"
+val languageToolVersion = "5.2"
 
 dependencies {
 
@@ -209,8 +209,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.16"
-    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
+    version = "1.18.18"
+    sha256 = "601ec46206e0f9cac2c0583b3350e79f095419c395e991c761640f929038e9cc"
 }
 
 tasks {
