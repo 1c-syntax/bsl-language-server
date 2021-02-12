@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.VersionCommand;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.CommandLineRunner;
@@ -40,8 +41,9 @@ import picocli.CommandLine.Unmatched;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static picocli.CommandLine.Command;
@@ -86,6 +88,13 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
   @Unmatched
   private List<String> unmatched;
 
+  private final Set<Pattern> allowedAdditionalArgs = Set.of(
+    CaseInsensitivePattern.compile("--spring\\."),
+    CaseInsensitivePattern.compile("--app\\."),
+    CaseInsensitivePattern.compile("--logging\\."),
+    CaseInsensitivePattern.compile("--debug")
+  );
+
   private final CommandLine.IFactory picocliFactory;
 
   private int exitCode;
@@ -111,10 +120,7 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
     } else {
       var parseResult = cmd.parseArgs(args);
       var unmatchedArgs = parseResult.unmatched().stream()
-        .filter(s -> !s.startsWith("--spring."))
-        .filter(s -> !s.startsWith("--app."))
-        .filter(s -> !s.startsWith("--logging."))
-        .filter(s -> !Objects.equals(s, "--debug"))
+        .filter(s -> allowedAdditionalArgs.stream().noneMatch(pattern -> pattern.matcher(s).matches()))
         .collect(Collectors.toList());
 
       if (!unmatchedArgs.isEmpty()) {
