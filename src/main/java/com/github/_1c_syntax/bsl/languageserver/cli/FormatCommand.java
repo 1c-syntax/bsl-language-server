@@ -96,12 +96,6 @@ public class FormatCommand implements Callable<Integer> {
     description = "Silent mode")
   private boolean silentMode;
 
-  @Option(names = "--spring.config.location", hidden = true)
-  private String springConfigLocation;
-
-  @Option(names = "--debug", hidden = true)
-  private boolean debug;
-
   public Integer call() {
     serverContext.clear();
 

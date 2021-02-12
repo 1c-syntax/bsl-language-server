@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import org.aspectj.lang.annotation.Pointcut;
 
 /**
@@ -36,10 +40,38 @@ public class Pointcuts {
   }
 
   /**
-   * Это обращение к классу LanguageServerConfiguration.
+   * Это обращение к классу {@link LanguageServerConfiguration}.
    */
   @Pointcut("within(com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration)")
   public void isLanguageServerConfiguration() {
+  }
+
+  /**
+   * Это обращение к классу {@link DocumentContext}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.DocumentContext)")
+  public void isDocumentContext() {
+  }
+
+  /**
+   * Это обращение к классу {@link ServerContext}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.context.ServerContext)")
+  public void isServerContext() {
+  }
+
+  /**
+   * Это обращение к реализации интерфейса {@link BSLDiagnostic}.
+   */
+  @Pointcut("within(com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic+)")
+  public void isBSLDiagnostic() {
+  }
+
+  /**
+   * Это вызов метода rebuild.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* rebuild(..))")
+  public void isRebuildCall() {
   }
 
   /**
@@ -54,5 +86,12 @@ public class Pointcuts {
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* reset(..))")
   public void isResetCall() {
+  }
+
+  /**
+   * Это вызов метода getDiagnostics.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* getDiagnostics(..))")
+  public void isGetDiagnosticsCall() {
   }
 }

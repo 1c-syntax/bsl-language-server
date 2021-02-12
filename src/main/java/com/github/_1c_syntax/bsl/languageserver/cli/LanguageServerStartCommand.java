@@ -70,12 +70,6 @@ public class LanguageServerStartCommand implements Callable<Integer> {
     defaultValue = "")
   private String configurationOption;
 
-  @Option(names = "--spring.config.location", hidden = true)
-  private String springConfigLocation;
-
-  @Option(names = "--debug", hidden = true)
-  private boolean debug;
-
   private final LanguageServerConfiguration configuration;
   private final Launcher<LanguageClient> launcher;
   private final List<LanguageClientAware> languageClientAwares;
