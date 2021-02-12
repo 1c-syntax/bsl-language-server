@@ -104,8 +104,6 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.18.1")
-    testImplementation("org.mockito", "mockito-core", "3.6.28")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
