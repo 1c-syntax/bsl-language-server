@@ -115,10 +115,10 @@ public class BSLLSPLauncher implements Callable<Integer>, CommandLineRunner, Exi
         .filter(s -> !s.startsWith("--app."))
         .filter(s -> !s.startsWith("--logging."))
         .filter(s -> !Objects.equals(s, "--debug"))
-        .peek(s -> cmd.getErr().println("Unknown option: '" + s + "'"))
         .collect(Collectors.toList());
 
       if (!unmatchedArgs.isEmpty()) {
+        unmatchedArgs.forEach(s -> cmd.getErr().println("Unknown option: '" + s + "'"));
         cmd.usage(cmd.getOut());
         exitCode = cmd.getCommandSpec().exitCodeOnInvalidInput();
         return;
