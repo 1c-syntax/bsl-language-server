@@ -847,18 +847,18 @@ You should call at first RollbackTransaction method in Exception block, and then
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="err">BeginTransaction();</span>
-<span class="err">Attempt</span>
-<span class="err">    CommitTransaction();</span>
-<span class="err">Exception</span>
-<span class="err">    WriteLogEvent(NStr(&quot;ru = &#39;OperationExecution&#39;&quot;),</span>
-<span class="err">EventLogLevel.Error,</span>
-<span class="err">        ,</span>
-<span class="err">        ,</span>
-<span class="err">        DetailedErrorPresentation(InformationAboutError()));</span>
-<span class="err">    RollbackTransaction();</span>
-<span class="err">    CallException; // there is external transaction</span>
-<span class="err">EndTry;</span>
+<div class="codehilite"><pre><span></span><code>BeginTransaction();
+Attempt
+    CommitTransaction();
+Exception
+    WriteLogEvent(NStr(&quot;ru = &#39;OperationExecution&#39;&quot;),
+EventLogLevel.Error,
+        ,
+        ,
+        DetailedErrorPresentation(InformationAboutError()));
+    RollbackTransaction();
+    CallException; // there is external transaction
+EndTry;
 </code></pre></div>
 
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>

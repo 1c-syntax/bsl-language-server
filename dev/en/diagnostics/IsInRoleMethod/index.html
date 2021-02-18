@@ -852,13 +852,13 @@
 <div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;AddChangeWorldCountries&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;ViewPopularCountriesReport&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
 </code></pre></div>
 
-<div class="codehilite"><pre><span></span><code><span class="err">Correct example: If AccessRight(&quot;Edit&quot;, Metadata.Catalogs.WorldCountries) Then ... If AccessRight(&quot;View&quot;, Metadata.Reports.PopularCountries) Then ...</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Correct</span> <span class="nv">example</span>: <span class="k">If</span> <span class="nv">AccessRight</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">Edit</span><span class="s2">&quot;</span>, <span class="nv">Metadata</span>.<span class="nv">Catalogs</span>.<span class="nv">WorldCountries</span><span class="ss">)</span> <span class="k">Then</span> ... <span class="k">If</span> <span class="nv">AccessRight</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">View</span><span class="s2">&quot;</span>, <span class="nv">Metadata</span>.<span class="nv">Reports</span>.<span class="nv">PopularCountries</span><span class="ss">)</span> <span class="k">Then</span> ...
 </code></pre></div>
 
 <div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;Paymaster&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
 </code></pre></div>
 
-<div class="codehilite"><pre><span></span><code><span class="err">Correct example: If IsInRole(&quot;Paymaster&quot;) OR PrivilegedMode() Then ...</span>
+<div class="codehilite"><pre><span></span><code><span class="nv">Correct</span> <span class="nv">example</span>: <span class="k">If</span> <span class="nv">IsInRole</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">Paymaster</span><span class="s2">&quot;</span><span class="ss">)</span> <span class="nv">OR</span> <span class="nv">PrivilegedMode</span><span class="ss">()</span> <span class="k">Then</span> ...
 </code></pre></div>
 
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>

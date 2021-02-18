@@ -849,19 +849,19 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Wrong:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">If</span> <span class="n">SafeMode</span><span class="p">()</span> <span class="k">Then</span>
-     <span class="o">//</span> <span class="k">some</span> <span class="n">logic</span> <span class="k">in</span> <span class="n">safe</span> <span class="k">mode</span><span class="p">...</span>
-<span class="n">EndIf</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><code><span class="k">If</span> <span class="nv">SafeMode</span><span class="ss">()</span> <span class="k">Then</span>
+     <span class="o">//</span> <span class="nv">some</span> <span class="nv">logic</span> <span class="nv">in</span> <span class="nv">safe</span> <span class="nv">mode</span>...
+<span class="k">EndIf</span><span class="c1">;</span>
 
-<span class="k">If</span> <span class="k">No</span> <span class="n">SafeMode</span><span class="p">()</span> <span class="k">Then</span>
-     <span class="o">//</span> <span class="k">some</span> <span class="n">logic</span> <span class="k">in</span> <span class="n">unsafe</span> <span class="k">mode</span><span class="p">...</span>
-<span class="n">EndIf</span><span class="p">;</span>
+<span class="k">If</span> <span class="nv">No</span> <span class="nv">SafeMode</span><span class="ss">()</span> <span class="k">Then</span>
+     <span class="o">//</span> <span class="nv">some</span> <span class="nv">logic</span> <span class="nv">in</span> <span class="nv">unsafe</span> <span class="nv">mode</span>...
+<span class="k">EndIf</span><span class="c1">;</span>
 </code></pre></div>
 
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">If SafeMode() &lt;&gt; False Then</span>
-<span class="err">   // some code</span>
-<span class="err">EndIf;</span>
+<div class="codehilite"><pre><span></span><code><span class="k">If</span> <span class="nv">SafeMode</span><span class="ss">()</span> <span class="o">&lt;&gt;</span> <span class="nv">False</span> <span class="k">Then</span>
+   <span class="o">//</span> <span class="nv">some</span> <span class="nv">code</span>
+<span class="k">EndIf</span><span class="c1">;</span>
 </code></pre></div>
 
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>

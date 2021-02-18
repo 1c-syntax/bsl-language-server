@@ -847,22 +847,22 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="err">НачатьТранзакцию</span><span class="p">();</span>
-<span class="err">Попытка</span>
-    <span class="err">ДокументОбъект</span><span class="p">.</span><span class="err">Записать</span><span class="p">();</span>
-    <span class="err">ЗафиксироватьТранзакцию</span><span class="p">();</span>
-<span class="err">Исключение</span>
-    <span class="err">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="err">НСтр</span><span class="p">(</span><span class="ss">&quot;ru = &#39;Выполнение операции&#39;&quot;</span><span class="p">),</span>
-        <span class="err">УровеньЖурналаРегистрации</span><span class="p">.</span><span class="err">Ошибка</span><span class="p">,</span>
-        <span class="p">,</span>
-        <span class="p">,</span>
-        <span class="err">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="err">ИнформацияОбОшибке</span><span class="p">()));</span>
+<div class="codehilite"><pre><span></span><code>НачатьТранзакцию();
+Попытка
+    ДокументОбъект.Записать();
+    ЗафиксироватьТранзакцию();
+Исключение
+    ЗаписьЖурналаРегистрации(НСтр(&quot;ru = &#39;Выполнение операции&#39;&quot;),
+        УровеньЖурналаРегистрации.Ошибка,
+        ,
+        ,
+        ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
 
-    <span class="err">ОтменитьТранзакцию</span><span class="p">();</span> <span class="o">//</span> <span class="err">Срабатывание</span> <span class="err">здесь</span>
+    ОтменитьТранзакцию(); // Срабатывание здесь
 
-    <span class="err">ВызватьИсключение</span><span class="p">;</span> <span class="o">//</span> <span class="err">есть</span> <span class="err">внешняя</span> <span class="err">транзакция</span>
+    ВызватьИсключение; // есть внешняя транзакция
 
-<span class="err">КонецПопытки</span><span class="p">;</span>
+КонецПопытки;
 </code></pre></div>
 
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>

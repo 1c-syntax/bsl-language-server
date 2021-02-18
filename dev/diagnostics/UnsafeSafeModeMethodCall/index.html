@@ -851,19 +851,19 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 <p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">Если</span> <span class="err">БезопасныйРежим</span><span class="p">()</span> <span class="err">Тогда</span>
-     <span class="o">//</span> <span class="err">Логика</span> <span class="err">выполнения</span> <span class="err">в</span> <span class="err">безопасном</span> <span class="err">режиме</span><span class="p">...</span>
-<span class="err">КонецЕсли</span><span class="p">;</span>
+<div class="codehilite"><pre><span></span><code>Если БезопасныйРежим() Тогда
+     // Логика выполнения в безопасном режиме...
+КонецЕсли;
 
-<span class="err">Если</span> <span class="err">Не</span> <span class="err">БезопасныйРежим</span><span class="p">()</span> <span class="err">Тогда</span>
-     <span class="o">//</span> <span class="err">Логика</span> <span class="err">выполнения</span> <span class="err">в</span> <span class="err">небезопасном</span> <span class="err">режиме</span><span class="p">...</span>
-<span class="err">КонецЕсли</span><span class="p">;</span>
+Если Не БезопасныйРежим() Тогда
+     // Логика выполнения в небезопасном режиме...
+КонецЕсли;
 </code></pre></div>
 
 <p>Правильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">Если БезопасныйРежим() &lt;&gt; Ложь Тогда</span>
-<span class="err">    // Логика выполнения в безопасном режиме...</span>
-<span class="err">КонецЕсли</span>
+<div class="codehilite"><pre><span></span><code>Если БезопасныйРежим() &lt;&gt; Ложь Тогда
+    // Логика выполнения в безопасном режиме...
+КонецЕсли
 </code></pre></div>
 
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
