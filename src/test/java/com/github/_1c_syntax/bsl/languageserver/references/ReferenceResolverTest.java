@@ -22,12 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import org.eclipse.lsp4j.Position;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.net.URI;
@@ -39,23 +40,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(properties = {"spring.main.allow-bean-definition-overriding=true"})
+@ActiveProfiles("referenceResolverTest")
 @ContextConfiguration
 class ReferenceResolverTest {
 
   @Autowired
   private ReferenceResolver referenceResolver;
-
-  @Autowired
-  private ReferenceFinder zeroLineReferenceFinder;
-
-  @Autowired
-  private ReferenceFinder firstLineReferenceFinder;
-
-  @BeforeEach
-  void before() {
-    referenceResolver.setFinders(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
-  }
 
   @Test
   void testReferenceResolverCyclesThroughReferenceFinders() {
@@ -91,6 +82,17 @@ class ReferenceResolverTest {
 
   @TestConfiguration
   static class Configuration {
+
+    @Bean
+    @Profile("referenceResolverTest")
+    ReferenceResolver referenceResolver(
+      ReferenceFinder zeroLineReferenceFinder,
+      ReferenceFinder firstLineReferenceFinder
+    ) {
+      var referenceResolver = new ReferenceResolver();
+      referenceResolver.setFinders(List.of(zeroLineReferenceFinder, firstLineReferenceFinder));
+      return referenceResolver;
+    }
 
     @Bean
     ReferenceFinder zeroLineReferenceFinder() {

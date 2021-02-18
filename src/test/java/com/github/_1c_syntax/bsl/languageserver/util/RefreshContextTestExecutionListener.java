@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.util;
 
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.test.context.TestContext;
@@ -33,6 +35,7 @@ import org.springframework.test.context.support.AbstractTestExecutionListener;
  */
 @NoArgsConstructor
 public class RefreshContextTestExecutionListener extends AbstractTestExecutionListener {
+
   @Override
   public int getOrder() {
     return Ordered.HIGHEST_PRECEDENCE + 1;
@@ -45,6 +48,8 @@ public class RefreshContextTestExecutionListener extends AbstractTestExecutionLi
       if (!applicationContext.isActive()) {
         applicationContext.refresh();
       }
+      var testApplicationContext = applicationContext.getBean(TestApplicationContext.class);
+      testApplicationContext.setApplicationContext(applicationContext);
     }
   }
 }
