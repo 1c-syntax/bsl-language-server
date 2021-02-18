@@ -44,8 +44,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val jacksonVersion = "2.11.3"
-val languageToolVersion = "5.1"
+val languageToolVersion = "5.2"
 
 dependencies {
 
@@ -88,26 +87,26 @@ dependencies {
     implementation("me.tongfei", "progressbar", "0.9.0")
 
     // (de)serialization
-    implementation("com.fasterxml.jackson.core", "jackson-databind", jacksonVersion)
-    implementation("com.fasterxml.jackson.datatype", "jackson-datatype-jsr310", jacksonVersion)
-    implementation("com.fasterxml.jackson.dataformat", "jackson-dataformat-xml", jacksonVersion)
-
-    // stat analysis
-    implementation("com.google.code.findbugs", "jsr305", "3.0.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // COMPILE
 
+    // lombok
     compileOnly("org.projectlombok", "lombok", lombok.version)
     annotationProcessor("org.projectlombok", "lombok", lombok.version)
+
+    // stat analysis
+    compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
 
     // TEST
 
     // spring
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude("com.vaadin.external.google", "android-json")
+    }
 
     // test utils
-    testImplementation("org.assertj", "assertj-core", "3.18.1")
-    testImplementation("org.mockito", "mockito-core", "3.6.28")
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
@@ -212,8 +211,8 @@ sonarqube {
 }
 
 lombok {
-    version = "1.18.16"
-    sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7"
+    version = "1.18.18"
+    sha256 = "601ec46206e0f9cac2c0583b3350e79f095419c395e991c761640f929038e9cc"
 }
 
 tasks {
