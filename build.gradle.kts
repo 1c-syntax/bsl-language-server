@@ -102,7 +102,9 @@ dependencies {
     // TEST
 
     // spring
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude("com.vaadin.external.google", "android-json")
+    }
 
     // test utils
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")

@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
-import com.github._1c_syntax.bsl.languageserver.util.RefreshContextTestExecutionListener;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
@@ -39,7 +38,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestExecutionListeners;
 
 import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
@@ -48,10 +46,6 @@ import java.util.Collections;
 import java.util.List;
 
 @SpringBootTest
-@TestExecutionListeners(
-  mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS,
-  listeners = {RefreshContextTestExecutionListener.class}
-)
 abstract class AbstractDiagnosticTest<T extends BSLDiagnostic> {
 
   @Autowired
