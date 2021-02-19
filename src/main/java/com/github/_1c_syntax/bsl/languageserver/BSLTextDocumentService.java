@@ -68,7 +68,6 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -93,8 +92,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = hoverProvider.getHover(params, documentContext);
-    return CompletableFuture.completedFuture(hover.orElse(null));
+    return CompletableFuture.supplyAsync(() ->
+      hoverProvider.getHover(documentContext, params).orElse(null)
+    );
   }
 
   @Override

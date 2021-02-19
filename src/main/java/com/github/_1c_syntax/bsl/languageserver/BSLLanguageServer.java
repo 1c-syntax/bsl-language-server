@@ -77,6 +77,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setCodeLensProvider(new CodeLensOptions());
     capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
     capabilities.setWorkspaceSymbolProvider(Boolean.TRUE);
+    capabilities.setHoverProvider(Boolean.TRUE);
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 

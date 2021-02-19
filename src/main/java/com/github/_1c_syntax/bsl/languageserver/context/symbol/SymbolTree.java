@@ -124,6 +124,18 @@ public class SymbolTree {
   }
 
   /**
+   * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
+   *
+   * @param methodName Имя метода
+   * @return MethodSymbol, если он был найден в дереве символов.
+   */
+  public Optional<MethodSymbol> getMethodSymbol(String methodName) {
+    return getMethods().stream()
+      .filter(methodSymbol -> methodName.equalsIgnoreCase(methodSymbol.getName()))
+      .findAny();
+  }
+
+  /**
    * @return плоский список всех переменных документа.
    */
   public List<VariableSymbol> getVariables() {
