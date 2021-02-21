@@ -81,4 +81,23 @@ class HoverProviderTest {
     assertThat(hover.getRange()).isEqualTo(Ranges.create(3, 8, 18));
   }
 
+  @Test
+  void testSourceDefinedVariable() {
+    // given
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(6, 15));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    assertThat(hover.getContents().getRight().getValue()).isNotEmpty();
+    assertThat(hover.getRange()).isEqualTo(Ranges.create(6, 10, 20));
+  }
+
 }
