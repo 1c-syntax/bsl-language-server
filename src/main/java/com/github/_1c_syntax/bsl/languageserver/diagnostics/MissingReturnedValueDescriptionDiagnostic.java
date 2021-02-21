@@ -53,9 +53,7 @@ public class MissingReturnedValueDescriptionDiagnostic extends AbstractSymbolTre
 
     var description = methodSymbol.getDescription();
 
-    boolean hasDescription = description
-      .map(methodDescription -> !methodDescription.isEmpty())
-      .orElse(false);
+    boolean hasDescription = description.isPresent();
 
     if (!hasDescription) {
       return;
