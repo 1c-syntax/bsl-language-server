@@ -404,6 +404,9 @@
                 "UsingThisForm": {
                     "$ref": "parameters-schema.json#/definitions/UsingThisForm"
                 },
+                "VirtualTableWithoutParameters": {
+                    "$ref": "parameters-schema.json#/definitions/VirtualTableWithoutParameters"
+                },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
                 },

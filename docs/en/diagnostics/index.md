@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **129**
+Total: **130**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
 * Error: **38**
-* Code smell: **84**
+* Code smell: **85**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -145,5 +145,6 @@ Total: **129**
  [UsingServiceTag](UsingServiceTag.md) | Using service tags | Yes | Info | Code smell | `badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
+ [VirtualTableWithoutParameters](VirtualTableWithoutParameters.md) | Virtual tables without parameters | Yes | Critical | Code smell | `sql`<br>`suspicious`<br>`performance` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` 

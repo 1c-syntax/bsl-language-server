@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **129**
+Общее количество: **130**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
 * Ошибка: **38**
-* Дефект кода: **84**
+* Дефект кода: **85**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -145,5 +145,6 @@
  [UsingServiceTag](UsingServiceTag.md) | Использование служебных тегов | Да | Информационный | Дефект кода | `badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
+ [VirtualTableWithoutParameters](VirtualTableWithoutParameters.md) | Виртуальные таблицы без параметров | Да | Критичный | Дефект кода | `sql`<br>`suspicious`<br>`performance` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 
