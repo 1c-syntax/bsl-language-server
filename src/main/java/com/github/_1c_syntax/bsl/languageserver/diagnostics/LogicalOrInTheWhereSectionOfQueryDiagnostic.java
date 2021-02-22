@@ -41,7 +41,7 @@ import java.util.Set;
   tags = {
     DiagnosticTag.SQL,
     DiagnosticTag.PERFORMANCE,
-    DiagnosticTag.UNPREDICTABLE
+    DiagnosticTag.STANDARD
   },
   scope = DiagnosticScope.BSL
 

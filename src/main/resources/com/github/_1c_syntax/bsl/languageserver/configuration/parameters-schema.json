@@ -739,13 +739,13 @@
             "$id": "#/definitions/LineLength"
         },
         "LogicalOrInTheWhereSectionOfQuery": {
-            "description": "Using a logical OR in the WHERE section of a query",
+            "description": "Using a logical \"OR\" in the \"WHERE\" section of a query",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Using a logical OR in the WHERE section of a query",
+            "title": "Using a logical \"OR\" in the \"WHERE\" section of a query",
             "$id": "#/definitions/LogicalOrInTheWhereSectionOfQuery"
         },
         "MagicDate": {

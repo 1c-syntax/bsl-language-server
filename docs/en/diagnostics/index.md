@@ -80,7 +80,7 @@ Total: **130**
  [JoinWithVirtualTable](JoinWithVirtualTable.md) | Join with virtual table | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [LatinAndCyrillicSymbolInWord](LatinAndCyrillicSymbolInWord.md) | Mixing Latin and Cyrillic characters in one identifier | Yes | Minor | Code smell | `brainoverload`<br>`suspicious` 
  [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br>`badpractice` 
- [LogicalOrInTheWhereSectionOfQuery](LogicalOrInTheWhereSectionOfQuery.md) | Using a logical OR in the WHERE section of a query | Yes | Major | Code smell | `sql`<br>`performance`<br>`unpredictable` 
+ [LogicalOrInTheWhereSectionOfQuery](LogicalOrInTheWhereSectionOfQuery.md) | Using a logical "OR" in the "WHERE" section of a query | Yes | Major | Code smell | `sql`<br>`performance`<br>`standard` 
  [MagicDate](MagicDate.md) | Magic dates | Yes | Minor | Code smell | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` 
