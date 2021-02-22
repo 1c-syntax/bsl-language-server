@@ -30,7 +30,7 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 @DiagnosticMetadata(
-  type = DiagnosticType.CODE_SMELL,
+  type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
   minutesToFix = 5,
   tags = {
