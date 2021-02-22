@@ -49,6 +49,7 @@ public class VirtualTableWithoutParametersDiagnostic extends AbstractSDBLVisitor
       diagnosticStorage.addDiagnostic(ctx);
     } else {
       var vtParamsStream = vtContext.virtualTableParameter().stream();
+      // пропускаю первый параметр, как правило, это указание периода
       if (vtContext.virtualTableParameter().size() > 1){
         vtParamsStream = vtParamsStream.skip(1);
       }
