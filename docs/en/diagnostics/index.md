@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **129**
+Total: **130**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
 * Error: **38**
-* Code smell: **84**
+* Code smell: **85**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -80,6 +80,7 @@ Total: **129**
  [JoinWithVirtualTable](JoinWithVirtualTable.md) | Join with virtual table | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
  [LatinAndCyrillicSymbolInWord](LatinAndCyrillicSymbolInWord.md) | Mixing Latin and Cyrillic characters in one identifier | Yes | Minor | Code smell | `brainoverload`<br>`suspicious` 
  [LineLength](LineLength.md) | Line Length limit | Yes | Minor | Code smell | `standard`<br>`badpractice` 
+ [LogicalOrInTheWhereSectionOfQuery](LogicalOrInTheWhereSectionOfQuery.md) | Using a logical OR in the WHERE section of a query | Yes | Major | Code smell | `sql`<br>`performance`<br>`unpredictable` 
  [MagicDate](MagicDate.md) | Magic dates | Yes | Minor | Code smell | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Magic numbers | Yes | Minor | Code smell | `badpractice` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Metadata object names must not exceed the allowed length | Yes | Major | Error | `standard` 

@@ -1,8 +1,8 @@
-# <Diagnostic name> (LogicalOrInTheWhereSectionOfQuery)
+# Использование логического "ИЛИ" в секции "ГДЕ" запроса (LogicalOrInTheWhereSectionOfQuery)
 
-<Metadata>
-
-## <Params>
+ Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Дефект кода` | `BSL` | `Важный` | `Да` | `15` | `sql`<br>`performance`<br>`unpredictable` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Описание диагностики
@@ -100,8 +100,8 @@
 - [Использование логического ИЛИ в условиях - Типичные причины неоптимальной работы запросов и методы оптимизации](https://its.1c.ru/db/content/metod8dev/src/developers/scalability/standards/i8105842.htm#or)
 
 ## Сниппеты
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Экранирование кода
 
 ```bsl
@@ -112,5 +112,5 @@
 ### Параметр конфигурационного файла
 
 ```json
-"LogicalOrInTheWhereSectionOfQuery": <DiagnosticConfig>
+"LogicalOrInTheWhereSectionOfQuery": false
 ```

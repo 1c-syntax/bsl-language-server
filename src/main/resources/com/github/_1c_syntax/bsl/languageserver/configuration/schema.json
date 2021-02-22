@@ -209,6 +209,9 @@
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
                 },
+                "LogicalOrInTheWhereSectionOfQuery": {
+                    "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
+                },
                 "MagicDate": {
                     "$ref": "parameters-schema.json#/definitions/MagicDate"
                 },
