@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1613949289071,
+  "lastUpdate": 1614091776604,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8742,6 +8742,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 9.787705564506124",
             "extra": "mean: 83.91320315996806 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d78d89de89b05f83235f67d0b6ea657235cafae5",
+          "message": "Merge pull request #1565 from artbear/boost-UsingHardcodeNetworkAddress\n\nУскорение диагностики UsingHardcodeNetworkAddress - упрощена обработка строк",
+          "timestamp": "2021-02-23T17:41:36+03:00",
+          "tree_id": "2983bc2c5bdd45a58b17829144ec1cdf585da546",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/d78d89de89b05f83235f67d0b6ea657235cafae5"
+        },
+        "date": 1614091771043,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.97283991177876,
+            "unit": "sec",
+            "range": "stddev: 2.250574229849037",
+            "extra": "mean: 76.97283991177876 sec\nrounds: 3"
           }
         ]
       }
