@@ -29,19 +29,21 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import com.github._1c_syntax.utils.Lazy;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -56,10 +58,31 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
   private static final Set<ModuleType> DEFAULT_MODULE_TYPES =
     EnumSet.of(ModuleType.ManagerModule, ModuleType.CommonModule);
 
+  private static Optional<BSLParserRuleContext> currentSubCtx;
+  private Lazy<Boolean> currentSubIsDeprecated;
+
+  private final Map<String, Map<String, MethodSymbol>> deprecatedMethodsForModules = new HashMap<>();
+
+  @Override
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    currentSubCtx = Optional.empty();
+    currentSubIsDeprecated = new Lazy<>(() -> false);
+
+    return super.visitFile(ctx);
+  }
+
+  @Override
+  public ParseTree visitSub(BSLParser.SubContext ctx) {
+    currentSubCtx = Optional.of(ctx);
+    currentSubIsDeprecated = new Lazy<>(this::getCurrentSubIsDeprecated);
+
+    return super.visitSub(ctx);
+  }
+
   @Override
   public ParseTree visitCallStatement(BSLParser.CallStatementContext ctx) {
 
-    if (currentMethodIsDeprecated(ctx, documentContext)) {
+    if (currentMethodIsDeprecated()) {
       return super.visitCallStatement(ctx);
     }
 
@@ -76,7 +99,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
 
-    if (currentMethodIsDeprecated(ctx, documentContext)) {
+    if (currentMethodIsDeprecated()) {
       return super.visitComplexIdentifier(ctx);
     }
 
@@ -92,7 +115,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    if (currentMethodIsDeprecated(ctx, documentContext)) {
+    if (currentMethodIsDeprecated()) {
       return super.visitGlobalMethodCall(ctx);
     }
 
@@ -108,26 +131,35 @@ public class DeprecatedMethodCallDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitGlobalMethodCall(ctx);
   }
 
-  private static boolean currentMethodIsDeprecated(BSLParserRuleContext ctx, DocumentContext documentContext) {
-    return Optional.ofNullable(Trees.getRootParent(ctx, BSLParser.RULE_sub))
-      .flatMap(sub -> documentContext.getSymbolTree().getMethodSymbol(sub))
-      .map(MethodSymbol::isDeprecated)
-      .orElse(false);
+  private boolean getCurrentSubIsDeprecated() {
+    return currentSubCtx
+      .flatMap(ctx -> documentContext.getSymbolTree().getMethodSymbol(ctx))
+      .filter(MethodSymbol::isDeprecated)
+      .isPresent();
+  }
+
+  private boolean currentMethodIsDeprecated() {
+    return currentSubIsDeprecated.getOrCompute();
   }
 
   private void checkDeprecatedCall(String mdoRef, Token methodName) {
-    var documentContexts = documentContext.getServerContext().getDocuments(mdoRef);
-    String methodNameText = methodName.getText();
 
-    documentContexts.entrySet().stream()
+    Optional.ofNullable(deprecatedMethodsForModules.computeIfAbsent(mdoRef, this::getDeprecatedMethodsForMDO)
+      .get(methodName.getText()))
+      .ifPresent(methodSymbol -> fireIssue(methodSymbol, methodName));
+  }
+
+  private Map<String, MethodSymbol> getDeprecatedMethodsForMDO(String mdoRef) {
+
+    return documentContext.getServerContext()
+      .getDocuments(mdoRef)
+      .entrySet().stream()
       .filter(entry -> DEFAULT_MODULE_TYPES.contains(entry.getKey()))
       .map(Map.Entry::getValue)
       .map(DocumentContext::getSymbolTree)
       .flatMap(symbolTree -> symbolTree.getMethods().stream())
-      .filter(methodSymbol -> methodSymbol.isDeprecated()
-        && methodSymbol.getName().equalsIgnoreCase(methodNameText))
-      .findAny()
-      .ifPresent(methodSymbol -> fireIssue(methodSymbol, methodName));
+      .filter(MethodSymbol::isDeprecated)
+      .collect(Collectors.toMap(MethodSymbol::getName, methodSymbol1 -> methodSymbol1));
   }
 
   private void fireIssue(MethodSymbol methodSymbol, Token methodName) {
