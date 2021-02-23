@@ -191,6 +191,9 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
+                "IncorrectUseOfStrTemplate": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },

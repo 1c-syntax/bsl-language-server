@@ -662,6 +662,16 @@
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
         },
+        "IncorrectUseOfStrTemplate": {
+            "description": "Incorrect use of \"StrTemplate\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of \"StrTemplate\"",
+            "$id": "#/definitions/IncorrectUseOfStrTemplate"
+        },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
             "default": true,

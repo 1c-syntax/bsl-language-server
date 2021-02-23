@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **129**
+Total: **130**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
-* Error: **38**
+* Error: **39**
 * Code smell: **84**
 
 
@@ -74,6 +74,7 @@ Total: **129**
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` 
+ [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Incorrect use of "StrTemplate" | Yes | Blocker | Error | `brainoverload`<br>`suspicious`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | IsInRole global method call | Yes | Major | Code smell | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Join with sub queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 

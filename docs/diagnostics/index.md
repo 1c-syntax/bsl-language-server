@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **129**
+Общее количество: **130**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
-* Ошибка: **38**
+* Ошибка: **39**
 * Дефект кода: **84**
 
 
@@ -74,6 +74,7 @@
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` 
+ [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Неверное использование "СтрШаблон" | Да | Блокирующий | Ошибка | `brainoverload`<br>`suspicious`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Соединение с вложенными запросами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
