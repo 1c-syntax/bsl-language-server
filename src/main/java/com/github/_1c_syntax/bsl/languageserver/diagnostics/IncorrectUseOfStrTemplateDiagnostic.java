@@ -25,12 +25,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,15 +125,91 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
 
   private static Optional<String> getString(Optional<BSLParser.CallParamContext> ctx) {
 
-    return ctx
-      .map(BSLParser.CallParamContext::expression)
-      .map(BSLParser.ExpressionContext::member)
-      .filter(memberContexts -> memberContexts.size() == 1)
-      .map(memberContexts -> memberContexts.get(0))
-      .map(BSLParser.MemberContext::constValue)
+    final var expressionContext = ctx
+      .map(BSLParser.CallParamContext::expression);
+    return getStringFromExpression(expressionContext);
+  }
+
+  @NotNull
+  private static Optional<String> getStringFromExpression(Optional<BSLParser.ExpressionContext> expressionContext) {
+    return getConstValue(expressionContext, true)
       .map(BSLParser.ConstValueContext::string)
       .map(BSLParserRuleContext::getText)
       .filter(s -> s.length() > 2);
+  }
+
+  @NotNull
+  private static Optional<BSLParser.ConstValueContext> getConstValue(Optional<BSLParser.ExpressionContext> expressionContext, boolean isFullSearch) {
+    return expressionContext
+      .map(BSLParser.ExpressionContext::member)
+      .filter(memberContexts -> memberContexts.size() == 1)
+      .map(memberContexts -> memberContexts.get(0))
+      .flatMap(memberContext -> calcStringForMemberContext(memberContext, isFullSearch));
+  }
+
+  private static Optional<BSLParser.ConstValueContext> calcStringForMemberContext(BSLParser.MemberContext memberContext, boolean isFullSearch) {
+    final var constValue = memberContext.constValue();
+    if (constValue != null) {
+      return Optional.of(constValue);
+    }
+    if (isFullSearch){
+      final var complexIdentifier = memberContext.complexIdentifier();
+      if (complexIdentifier != null) {
+        return calcAssignedValueForIdentifier(complexIdentifier);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<BSLParser.ConstValueContext> calcAssignedValueForIdentifier(BSLParser.ComplexIdentifierContext complexIdentifier) {
+    final var identifier = complexIdentifier.IDENTIFIER();
+    if (identifier == null){
+      return Optional.empty();
+    }
+    final var varName = identifier.getText();
+
+    var prevStatement = (BSLParser.StatementContext) Objects.requireNonNull(Trees.getRootParent(complexIdentifier,
+      BSLParser.RULE_statement));
+    while (true) {
+      prevStatement = (BSLParser.StatementContext) getPreviousNode(Objects.requireNonNull(prevStatement), BSLParser.RULE_statement);
+      if (prevStatement == null){
+        break;
+      }
+      final var constValueContext = Optional.ofNullable(prevStatement.assignment())
+        .filter(assignment -> isAssignmentForVar(varName, assignment))
+        .map(BSLParser.AssignmentContext::expression)
+        .flatMap(expression -> getConstValue(Optional.of(expression), false));
+      if (constValueContext.isPresent()){
+        return constValueContext;
+      }
+    }
+    return Optional.empty();
+  }
+
+  @Nullable
+  private static BSLParserRuleContext getPreviousNode(BSLParserRuleContext node, int rule_statement) {
+
+    final var children = node.getParent().children;
+    final var pos = children.indexOf(node);
+    if (pos > 0) {
+      for (int i = pos - 1; i >= 0; i--) {
+        final var prev = (BSLParserRuleContext) children.get(i);
+        if (prev.getRuleIndex() == rule_statement){
+          return prev;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private static boolean isAssignmentForVar(String varName, BSLParser.AssignmentContext assignment) {
+    final var lValue = assignment.lValue();
+    if (lValue == null){
+      return false;
+    }
+    final var identifier = lValue.IDENTIFIER();
+    return identifier != null && identifier.getText().equalsIgnoreCase(varName);
   }
 
   private static Optional<String> getStringFromNStrCall(Optional<BSLParser.CallParamContext> ctx) {

@@ -38,14 +38,17 @@ class IncorrectUseOfStrTemplateDiagnosticTest extends AbstractDiagnosticTest<Inc
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
-      .hasRange(2, 8, 2, 45)
-      .hasRange(4, 8, 4, 49)
-      .hasRange(6, 8, 6, 51)
-      .hasRange(8, 8, 8, 50)
-      .hasRange(10, 8, 10, 71)
-      .hasRange(13, 8, 13, 66)
+      .hasRange(2, 8, 45)
+      .hasRange(4, 8, 49)
+      .hasRange(6, 8, 51)
+      .hasRange(8, 8, 50)
+      .hasRange(10, 8, 71)
+      .hasRange(13, 8, 66)
+      .hasRange(16, 8, 44)
+      .hasRange(20, 8, 45)
+      .hasRange(24, 8, 45)
     ;
 
   }
