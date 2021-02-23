@@ -28,8 +28,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -93,6 +93,9 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     boolean haveParams = usedParamsCount > 0;
 
     final String templateString = getTemplateString(params.get(0));
+    if (templateString == null){
+      return false;
+    }
 
     var matcher = paramsPattern.matcher(templateString);
     boolean matches = matcher.find();
@@ -102,7 +105,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       || matches && variousParams(usedParamsCount, matcher);
   }
 
-  @NotNull
+  @Nullable
   private static String getTemplateString(BSLParser.CallParamContext context) {
 
     final var ctx = Optional.of(context);
@@ -110,7 +113,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       .orElseGet(() -> getStringFromNStrCall(ctx)
         .orElse(""));
     if (templateStringBefore.isEmpty()) {
-      return "";
+      return null;
     }
 
     return templateStringBefore.substring(1, templateStringBefore.length() - 1);
