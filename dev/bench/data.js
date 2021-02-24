@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1614091776604,
+  "lastUpdate": 1614173763944,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8773,6 +8773,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.250574229849037",
             "extra": "mean: 76.97283991177876 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "distinct": true,
+          "id": "edcabb5da2fa97144b23bd05b0a3b22b3c4a9af1",
+          "message": "Исправление расчета зависимостей после переезда на управление зависимостями через spring boot dependency manager",
+          "timestamp": "2021-02-24T16:27:45+03:00",
+          "tree_id": "6347dd4891a2e11eec7e9c613da69770f9656d79",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/edcabb5da2fa97144b23bd05b0a3b22b3c4a9af1"
+        },
+        "date": 1614173759475,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 76.51603325208028,
+            "unit": "sec",
+            "range": "stddev: 1.9354040007849784",
+            "extra": "mean: 76.51603325208028 sec\nrounds: 3"
           }
         ]
       }
