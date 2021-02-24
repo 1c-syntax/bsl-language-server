@@ -15,7 +15,7 @@ plugins {
     id("me.qoomon.git-versioning") version "3.0.0"
     id("com.github.ben-manes.versions") version "0.36.0"
     id("io.freefair.javadoc-links") version "5.3.0"
-    id("org.springframework.boot") version "2.4.3"
+    id("org.springframework.boot") version "2.4.2"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
     id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
 }
@@ -261,19 +261,18 @@ publishing {
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
-                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
+                configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts.forEach(addDependency(dependenciesNode, "runtime"))
+                configurations.compileClasspath.get().resolvedConfiguration.resolvedArtifacts.forEach(addDependency(dependenciesNode, "compile"))
             }
         }
     }
 }
 
-fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
-    if (dependency !is SelfResolvingDependency) {
-        val dependencyNode = dependenciesNode.appendNode("dependency")
-        dependencyNode.appendNode("groupId", dependency.group)
-        dependencyNode.appendNode("artifactId", dependency.name)
-        dependencyNode.appendNode("version", dependency.version)
-        dependencyNode.appendNode("scope", scope)
-    }
+fun addDependency(dependenciesNode: Node, scope: String): (ResolvedArtifact) -> Unit = { artifact: ResolvedArtifact ->
+    val dependency = artifact.moduleVersion.id;
+    val dependencyNode = dependenciesNode.appendNode("dependency")
+    dependencyNode.appendNode("groupId", dependency.group)
+    dependencyNode.appendNode("artifactId", dependency.name)
+    dependencyNode.appendNode("version", dependency.version)
+    dependencyNode.appendNode("scope", scope)
 }
