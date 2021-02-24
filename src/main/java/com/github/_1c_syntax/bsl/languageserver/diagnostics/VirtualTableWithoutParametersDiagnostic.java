@@ -35,7 +35,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
   minutesToFix = 5,
   tags = {
     DiagnosticTag.SQL,
-    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.STANDARD,
     DiagnosticTag.PERFORMANCE
   },
   scope = DiagnosticScope.BSL

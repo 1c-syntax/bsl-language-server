@@ -2,7 +2,7 @@
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Critical` | `Yes` | `5` | `sql`<br>`suspicious`<br>`performance` 
+ `Error` | `BSL` | `Critical` | `Yes` | `5` | `sql`<br>`standard`<br>`performance` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
