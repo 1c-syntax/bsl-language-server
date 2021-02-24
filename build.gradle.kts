@@ -261,15 +261,18 @@ publishing {
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.runtimeClasspath.get().resolvedConfiguration.resolvedArtifacts.forEach(addDependency(dependenciesNode, "runtime"))
-                configurations.compileClasspath.get().resolvedConfiguration.resolvedArtifacts.forEach(addDependency(dependenciesNode, "compile"))
+                configurations.implementation.get().isCanBeResolved = true
+                configurations.api.get().isCanBeResolved = true
+
+                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "runtime"))
+                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "compile"))
             }
         }
     }
 }
 
-fun addDependency(dependenciesNode: Node, scope: String): (ResolvedArtifact) -> Unit = { artifact: ResolvedArtifact ->
-    val dependency = artifact.moduleVersion.id;
+fun addDependency(dependenciesNode: Node, scope: String): (ResolvedDependency) -> Unit = { artifact: ResolvedDependency ->
+    val dependency = artifact.module.id;
     val dependencyNode = dependenciesNode.appendNode("dependency")
     dependencyNode.appendNode("groupId", dependency.group)
     dependencyNode.appendNode("artifactId", dependency.name)
