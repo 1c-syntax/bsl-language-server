@@ -46,7 +46,7 @@ import java.util.Optional;
 public class ModuleSymbol implements SourceDefinedSymbol {
   /**
    * Имя символа.
-   * <p/>
+   * <p>
    * Если у документа есть валидный mdoRef, то содержит его и (при необходимости) квалификатор в виде типа модуля
    * ({@link com.github._1c_syntax.mdclasses.metadata.additional.ModuleType}).
    * В остальных случаях содержит строковое представление uri ({@link DocumentContext#getUri()}.
