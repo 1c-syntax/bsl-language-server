@@ -111,6 +111,9 @@ dependencies {
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
 
+configurations.implementation.get().isCanBeResolved = true
+configurations.api.get().isCanBeResolved = true
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
@@ -260,9 +263,6 @@ publishing {
             artifact(tasks["javadocJar"])
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
-
-                configurations.implementation.get().isCanBeResolved = true
-                configurations.api.get().isCanBeResolved = true
 
                 configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "runtime"))
                 configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "compile"))
