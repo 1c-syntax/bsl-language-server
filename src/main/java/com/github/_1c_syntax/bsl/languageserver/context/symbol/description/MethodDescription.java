@@ -19,12 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import lombok.Value;
