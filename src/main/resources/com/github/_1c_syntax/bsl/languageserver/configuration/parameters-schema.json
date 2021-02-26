@@ -1458,6 +1458,16 @@
             "title": "Unused parameter",
             "$id": "#/definitions/UnusedParameters"
         },
+        "UsageWriteLogEvent": {
+            "description": "Incorrect use of the method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of the method",
+            "$id": "#/definitions/UsageWriteLogEvent"
+        },
         "UseLessForEach": {
             "description": "Useless collection iteration",
             "default": true,
