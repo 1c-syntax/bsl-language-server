@@ -127,6 +127,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "\n");
     assertThat(blocks.get(1)).matches("Переменная из file:///T:/repo/1c-syntax/bsl-language-server/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
       "\n");
+    // TODO баг - нет \n для многострочного описания переменной
     assertThat(blocks.get(2)).matches("описание 1 строка// 2 строка\n" +
       "\n");
   }
@@ -152,8 +153,31 @@ class VariableSymbolMarkupContentBuilderTest {
       "\n");
     assertThat(blocks.get(1)).matches("Переменная из file:///T:/repo/1c-syntax/bsl-language-server/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
       "\n");
+    // TODO баг - нет \n для многострочного описания переменной
     assertThat(blocks.get(2)).matches("описание 1 строка// 2 строка//\n" +
       "\n");
+  }
+
+  @Test
+  void testContentFromObjectModule() {
+
+    // given
+    var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
+    final var symbolTree = documentContext.getSymbolTree();
+    var varSymbol = (VariableSymbol) symbolTree.getChildrenFlat().get(1);
+
+    // when
+    var content = markupContentBuilder.getContent(varSymbol).getValue();
+
+    // then
+    assertThat(content).isNotEmpty();
+
+    var blocks = Arrays.asList(content.split("---\n?"));
+
+    assertThat(blocks).hasSize(2);
+    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
+      "Перем ВалютаУчета\n```\n\n");
+    assertThat(blocks.get(1)).isEqualTo("Переменная из Catalog.Справочник1\n\n");
   }
 
 }
