@@ -31,6 +31,7 @@ import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -83,40 +84,44 @@ public class UsageWriteLogEventDiagnostic extends AbstractFindMethodDiagnostic {
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
 
+    check(ctx);
+    return false;
+  }
+
+  private void check(BSLParser.GlobalMethodCallContext ctx) {
+
     if (!super.checkGlobalMethodCall(ctx)) {
-      return false;
+      return;
     }
 
     final var callParamListContext = ctx.doCall().callParamList();
     final var callParamContexts = callParamListContext.callParam();
     if (callParamContexts.size() < 5) {
       fireIssue(ctx, "wrongNumberMessage");
-      return false;
+      return;
     }
 
     final BSLParser.CallParamContext secondParamCtx = callParamContexts.get(1);
     if (secondParamCtx.getChildCount() == 0) {
       fireIssue(ctx, "noSecondParameter");
-      return false;
+      return;
     }
 
     final BSLParser.CallParamContext commentsCtx = callParamContexts.get(4);
     if (commentsCtx.getChildCount() == 0) {
       fireIssue(ctx, "noComment");
-      return false;
+      return;
     }
 
     if (!haveErrorLogLevel(secondParamCtx) && insideExceptBlock(ctx)){
       fireIssue(ctx, "noErrorLogLevelInsideExceptBlock");
-      return false;
+      return;
     }
 
     if (!isRightComments(commentsCtx)) {
       fireIssue(ctx, "noDetailErrorDescription");
-      return false;
     }
 
-    return false; // todo
   }
 
   private void fireIssue(BSLParser.GlobalMethodCallContext ctx, String wrongNumberMessage2) {
@@ -125,22 +130,39 @@ public class UsageWriteLogEventDiagnostic extends AbstractFindMethodDiagnostic {
     diagnosticStorage.addDiagnostic(ctx, wrongNumberMessage);
   }
 
+  private static boolean haveErrorLogLevel(BSLParser.CallParamContext callParamContext) {
+    final var complexIdentifier = Optional.of(callParamContext.expression())
+      .map(BSLParser.ExpressionContext::member)
+      .filter(memberContexts -> memberContexts.size() == 1)
+      .map(memberContexts -> memberContexts.get(0))
+      .map(BSLParser.MemberContext::complexIdentifier)
+      .filter(identifier -> identifier.IDENTIFIER() != null);
+    if (complexIdentifier.isEmpty()){
+      return true;
+    }
+
+    final var result = complexIdentifier
+      .filter(identifier -> PATTERN_EVENT_LOG_LEVEL.matcher(identifier.IDENTIFIER().getText()).matches())
+      .filter(identifier -> identifier.modifier().size() == 1)
+      .map(identifier -> identifier.modifier(0))
+      .map(BSLParser.ModifierContext::accessProperty)
+      .filter(accessProperty -> PATTERN_ERROR.matcher(accessProperty.IDENTIFIER().getText()).matches())
+      .isPresent();
+    if (result){
+      return true;
+    }
+    return complexIdentifier
+      .filter(identifier -> identifier.getChildCount() == 1)
+      .isPresent();
+  }
+
   private boolean isRightComments(BSLParser.CallParamContext commentsCtx) {
 
     final var codeBlockContext = (BSLParser.CodeBlockContext) Trees.getRootParent(commentsCtx, BSLParser.RULE_codeBlock);
     if (haveRaiseStatement(codeBlockContext)) {
       return true;
     }
-    final var globalCalls = Trees.findAllRuleNodes(commentsCtx, BSLParser.RULE_globalMethodCall);
-    if (!globalCalls.isEmpty()) {
-      if (isRightErrorDescriptionCall(globalCalls)) {
-        return true;
-      }
-      if (isHaveBriefErrorDescription(globalCalls)) {  // TODO возможно, вот здесь проблемно для 17 строки
-        return false;
-      }
-    }
-    return isValidExpression(commentsCtx.expression(), codeBlockContext, true);
+    return isValidExpression(codeBlockContext, commentsCtx.expression(), true);
   }
 
   private boolean haveRaiseStatement(BSLParser.CodeBlockContext codeBlockContext) {
@@ -150,6 +172,26 @@ public class UsageWriteLogEventDiagnostic extends AbstractFindMethodDiagnostic {
       .filter(Objects::nonNull)
       .map(BSLParser.CompoundStatementContext::raiseStatement)
       .anyMatch(Objects::nonNull);
+  }
+
+  // если в одном блоке с ЗаписьЖР есть присвоение переменой из выражения-комментария,
+  // то проверим, что в присвоении есть ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()
+  // если есть какая-то переменная, определенная на уровень выше (например, параметр метода), то не анализируем ее
+
+  private static boolean isValidExpression(BSLParser.CodeBlockContext codeBlock, @Nullable BSLParser.ExpressionContext expression, boolean checkPrevAssignment) {
+    if (expression == null){
+      return true;
+    }
+    final var assignmentGlobalCalls = Trees.findAllRuleNodes(expression, BSLParser.RULE_globalMethodCall);
+    if (!assignmentGlobalCalls.isEmpty()) {
+      if (isRightErrorDescriptionCall(assignmentGlobalCalls)) {
+        return true;
+      }
+      if (isHaveBriefErrorDescription(assignmentGlobalCalls)) {
+        return false;
+      }
+    }
+    return isValidExpression(expression, codeBlock, checkPrevAssignment);
   }
 
   private static boolean isRightErrorDescriptionCall(Collection<ParseTree> globalCalls) {
@@ -177,10 +219,6 @@ public class UsageWriteLogEventDiagnostic extends AbstractFindMethodDiagnostic {
       .anyMatch(ctx -> isAppropriateName((BSLParser.GlobalMethodCallContext) ctx, PATTERN_BRIEF_ERROR_DESCRIPTION));
   }
 
-  // если в одном блоке с ЗаписьЖР есть присвоение переменой из выражения-комментария,
-  // то проверим, что в присвоении есть ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()
-  // если есть какая-то переменная, определенная на уровень выше (например, параметр метода), то не анализируем ее
-
   private static boolean isValidExpression(BSLParser.ExpressionContext ctx, BSLParser.CodeBlockContext codeBlock,
                                            boolean checkPrevAssignment) {
     return ctx.member().stream()
@@ -207,67 +245,18 @@ public class UsageWriteLogEventDiagnostic extends AbstractFindMethodDiagnostic {
       if (assignment.isEmpty()) {
         return true;
       }
-      final var assignmentGlobalCalls = Trees.findAllRuleNodes(assignment.get(), BSLParser.RULE_globalMethodCall);
-      if (haveAssignWithRightErrorDescription(assignment, assignmentGlobalCalls)) {
-        return true;
-      }
-      if (haveAssignWithBriefErrorDescription(assignment, assignmentGlobalCalls)) {
-        return false;
-      }
-      return assignment.map(BSLParser.AssignmentContext::expression)
-        .filter(expressionContext -> isValidExpression(expressionContext, codeBlock, false))
-        .isPresent();
+    return isValidExpression(codeBlock, assignment.get().expression(), false);
   }
 
   @NotNull
   private static Optional<BSLParser.AssignmentContext> getAssignment(String varName, BSLParser.CodeBlockContext codeBlock) {
     return Optional.of(codeBlock)
       .map(BSLParser.CodeBlockContext::statement)
-      .filter(statementContexts -> statementContexts.size() >= 1)
+      .filter(statementContexts -> !statementContexts.isEmpty())
       .map(statementContexts -> codeBlock.statement(0))
       .map(BSLParser.StatementContext::assignment)
       .filter(Objects::nonNull)
       .filter(assignmentContext -> assignmentContext.lValue().getText().equalsIgnoreCase(varName));
-  }
-
-  private static boolean haveAssignWithRightErrorDescription(Optional<BSLParser.AssignmentContext> assignment,
-                                                             Collection<ParseTree> assignmentGlobalCalls) {
-    return assignment
-      .filter(assignmentContext -> isRightErrorDescriptionCall(assignmentGlobalCalls))
-      .isPresent();
-  }
-
-  private static boolean haveAssignWithBriefErrorDescription(Optional<BSLParser.AssignmentContext> assignment,
-                                                             Collection<ParseTree> assignmentGlobalCalls) {
-    return assignment
-      .filter(assignmentContext -> isHaveBriefErrorDescription(assignmentGlobalCalls))
-      .isPresent();
-  }
-
-  private static boolean haveErrorLogLevel(BSLParser.CallParamContext callParamContext) {
-    final var complexIdentifier = Optional.of(callParamContext.expression())
-      .map(BSLParser.ExpressionContext::member)
-      .filter(memberContexts -> memberContexts.size() == 1)
-      .map(memberContexts -> memberContexts.get(0))
-      .map(BSLParser.MemberContext::complexIdentifier)
-      .filter(identifier -> identifier.IDENTIFIER() != null);
-    if (complexIdentifier.isEmpty()){
-      return true;
-    }
-
-    final var result = complexIdentifier
-      .filter(identifier -> PATTERN_EVENT_LOG_LEVEL.matcher(identifier.IDENTIFIER().getText()).matches())
-      .filter(identifier -> identifier.modifier().size() == 1)
-      .map(identifier -> identifier.modifier(0))
-      .map(BSLParser.ModifierContext::accessProperty)
-      .filter(accessProperty -> PATTERN_ERROR.matcher(accessProperty.IDENTIFIER().getText()).matches())
-      .isPresent();
-    if (result){
-      return true;
-    }
-    return complexIdentifier
-      .filter(identifier -> identifier.getChildCount() == 1)
-      .isPresent();
   }
 
   private boolean insideExceptBlock(BSLParser.GlobalMethodCallContext ctx) {
