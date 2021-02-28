@@ -1,8 +1,8 @@
-# <Diagnostic name> (UsageGetFromTempStorage)
+# Missing temporary storage data deletion after using (MissingTempStorageDeletion)
 
-<Metadata>
-
-## <Params>
+ Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
+ :-: | :-: | :-: | :-: | :-: | :-: 
+ `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `3` | `standard`<br>`performance`<br>`badpractice` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -20,17 +20,17 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 ## Snippets
-<!-- Блоки ниже заполняются автоматически, не трогать -->
 
+<!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:UsageGetFromTempStorage-off
-// BSLLS:UsageGetFromTempStorage-on
+// BSLLS:MissingTempStorageDeletion-off
+// BSLLS:MissingTempStorageDeletion-on
 ```
 
 ### Parameter for config
 
 ```json
-"UsageGetFromTempStorage": <DiagnosticConfig>
+"MissingTempStorageDeletion": false
 ```
