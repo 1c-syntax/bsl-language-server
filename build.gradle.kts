@@ -1,6 +1,5 @@
 import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
@@ -39,7 +38,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
         pattern = "v(?<tagVersion>[0-9].*)"
         versionFormat = "\${tagVersion}\${dirty}"
     })
-    commit(closureOf<CommitVersionDescription> {
+    commit(closureOf<VersionDescription> {
         versionFormat = "\${commit.short}\${dirty}"
     })
 })
