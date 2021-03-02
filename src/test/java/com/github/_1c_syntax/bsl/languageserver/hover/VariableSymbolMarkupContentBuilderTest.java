@@ -23,11 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,7 +126,7 @@ class VariableSymbolMarkupContentBuilderTest {
     assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
       "\n");
     // TODO баг - нет \n для многострочного описания переменной
-    assertThat(blocks.get(2)).matches("описание 1 строка// 2 строка\n" +
+    assertThat(blocks.get(2)).matches("описание 1 строка\n2 строка\n" +
       "\n");
   }
 
@@ -153,8 +151,7 @@ class VariableSymbolMarkupContentBuilderTest {
       "\n");
     assertThat(blocks.get(1)).matches("Переменная из file://.*/src/test/resources/hover/variableSymbolMarkupContentBuilder.bsl.ИмяФункции\n" +
       "\n");
-    // TODO баг - нет \n для многострочного описания переменной
-    assertThat(blocks.get(2)).matches("описание 1 строка// 2 строка//\n" +
+    assertThat(blocks.get(2)).matches("описание 1 строка\n2 строка\n" +
       "\n");
   }
 

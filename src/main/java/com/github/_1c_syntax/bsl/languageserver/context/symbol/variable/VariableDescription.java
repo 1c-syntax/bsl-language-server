@@ -31,6 +31,7 @@ import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -79,7 +80,9 @@ public class VariableDescription implements SourceDefinedSymbolDescription {
   }
 
   public VariableDescription(List<Token> comments, Optional<Token> trailingComment) {
-    description = comments.stream().map(Token::getText).reduce("", String::concat);
+    description = comments.stream()
+      .map(Token::getText)
+      .collect(Collectors.joining("\n"));
 
     var tokenizer = new BSLMethodDescriptionTokenizer(description);
     var ast = requireNonNull(tokenizer.getAst());
