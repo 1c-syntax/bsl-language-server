@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1614691947103,
+  "lastUpdate": 1614692431440,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -8990,6 +8990,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.3621165541733973",
             "extra": "mean: 77.69583972295125 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8a2400116a438e5eb0bcb6c29b0bb0318762c556",
+          "message": "Merge pull request #1569 from artbear/boost-using-hardcode",
+          "timestamp": "2021-03-02T16:19:19+03:00",
+          "tree_id": "05c96401e54a743e2bcce98270fcf1781dd564a7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8a2400116a438e5eb0bcb6c29b0bb0318762c556"
+        },
+        "date": 1614692428785,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.0744861761729,
+            "unit": "sec",
+            "range": "stddev: 4.675037785705642",
+            "extra": "mean: 79.0744861761729 sec\nrounds: 3"
           }
         ]
       }
