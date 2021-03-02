@@ -1,4 +1,4 @@
-# Virtual tables without parameters (VirtualTableWithoutParameters)
+# Virtual table call without parameters (VirtualTableCallWithoutParameters)
 
  Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -25,12 +25,12 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-// BSLLS:VirtualTableWithoutParameters-off
-// BSLLS:VirtualTableWithoutParameters-on
+// BSLLS:VirtualTableCallWithoutParameters-off
+// BSLLS:VirtualTableCallWithoutParameters-on
 ```
 
 ### Parameter for config
 
 ```json
-"VirtualTableWithoutParameters": false
+"VirtualTableCallWithoutParameters": false
 ```

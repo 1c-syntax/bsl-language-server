@@ -1,4 +1,4 @@
-# Виртуальные таблицы без параметров (VirtualTableWithoutParameters)
+# Обращение к виртуальной таблице без параметров (VirtualTableCallWithoutParameters)
 
  Тип | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) | Тэги 
  :-: | :-: | :-: | :-: | :-: | :-: 
@@ -52,12 +52,12 @@
 ### Экранирование кода
 
 ```bsl
-// BSLLS:VirtualTableWithoutParameters-off
-// BSLLS:VirtualTableWithoutParameters-on
+// BSLLS:VirtualTableCallWithoutParameters-off
+// BSLLS:VirtualTableCallWithoutParameters-on
 ```
 
 ### Параметр конфигурационного файла
 
 ```json
-"VirtualTableWithoutParameters": false
+"VirtualTableCallWithoutParameters": false
 ```

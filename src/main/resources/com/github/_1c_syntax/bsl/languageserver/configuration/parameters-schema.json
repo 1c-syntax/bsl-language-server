@@ -1628,15 +1628,15 @@
             "title": "Using deprecated property \"ThisForm\"",
             "$id": "#/definitions/UsingThisForm"
         },
-        "VirtualTableWithoutParameters": {
-            "description": "Virtual tables without parameters",
+        "VirtualTableCallWithoutParameters": {
+            "description": "Virtual table call without parameters",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Virtual tables without parameters",
-            "$id": "#/definitions/VirtualTableWithoutParameters"
+            "title": "Virtual table call without parameters",
+            "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",

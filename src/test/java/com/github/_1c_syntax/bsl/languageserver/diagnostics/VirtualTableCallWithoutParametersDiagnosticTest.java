@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class VirtualTableWithoutParametersDiagnosticTest extends AbstractDiagnosticTest<VirtualTableWithoutParametersDiagnostic> {
-  VirtualTableWithoutParametersDiagnosticTest() {
-    super(VirtualTableWithoutParametersDiagnostic.class);
+class VirtualTableCallWithoutParametersDiagnosticTest extends AbstractDiagnosticTest<VirtualTableCallWithoutParametersDiagnostic> {
+  VirtualTableCallWithoutParametersDiagnosticTest() {
+    super(VirtualTableCallWithoutParametersDiagnostic.class);
   }
 
   @Test

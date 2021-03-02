@@ -40,7 +40,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
   },
   scope = DiagnosticScope.BSL
 )
-public class VirtualTableWithoutParametersDiagnostic extends AbstractSDBLVisitorDiagnostic {
+public class VirtualTableCallWithoutParametersDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
