@@ -77,6 +77,14 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
   }
 
   @Override
+  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    currentSub = null;
+    statements = null;
+
+    return super.visitFileCodeBlock(ctx);
+  }
+
+  @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
     currentSub = ctx;
     statements = null;
