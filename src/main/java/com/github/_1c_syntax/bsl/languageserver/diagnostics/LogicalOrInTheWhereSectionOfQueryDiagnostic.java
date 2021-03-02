@@ -32,8 +32,6 @@ import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.Set;
-
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -44,21 +42,16 @@ import java.util.Set;
     DiagnosticTag.STANDARD
   },
   scope = DiagnosticScope.BSL
-
 )
 public class LogicalOrInTheWhereSectionOfQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
-
-  private static final Set<Integer> ROOT_LIST = Set.of(
-    SDBLParser.RULE_where, SDBLParser.RULE_query, SDBLParser.RULE_temparyTableMainQuery,
-    SDBLParser.RULE_temparyTableQuery);
 
   @Override
   public ParseTree visitBoolOperation(SDBLParser.BoolOperationContext ctx) {
 
     TerminalNode orNode = ctx.OR();
     if (orNode != null) {
-      BSLParserRuleContext whereCtx = Trees.getRootParent(ctx, ROOT_LIST);
-      if (whereCtx != null && whereCtx.getRuleIndex() == SDBLParser.RULE_where){
+      BSLParserRuleContext whereCtx = Trees.getRootParent(ctx, SDBLParser.RULE_where);
+      if (whereCtx != null) {
         diagnosticStorage.addDiagnostic(orNode);
       }
     }
