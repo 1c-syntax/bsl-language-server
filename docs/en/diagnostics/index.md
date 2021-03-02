@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **130**
+Total: **131**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
 * Error: **39**
-* Code smell: **84**
+* Code smell: **85**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -132,6 +132,7 @@ Total: **130**
  [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Unsafe SafeMode method call | Yes | Blocker | Error | `deprecated`<br>`error` 
  [UnusedLocalMethod](UnusedLocalMethod.md) | Unused local method | Yes | Major | Code smell | `standard`<br>`suspicious`<br>`unused` 
  [UnusedParameters](UnusedParameters.md) | Unused parameter | Yes | Major | Code smell | `design`<br>`unused` 
+ [UsageWriteLogEvent](UsageWriteLogEvent.md) | Incorrect use of the method | Yes | Info | Code smell | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Useless collection iteration | Yes | Critical | Error | `clumsy` 
  [UsingCancelParameter](UsingCancelParameter.md) | Using parameter "Cancel" | Yes | Major | Code smell | `standard`<br>`badpractice` 
  [UsingExternalCodeTools](UsingExternalCodeTools.md) | Using external code tools | Yes | Critical | Security Hotspot | `standard`<br>`design` 
