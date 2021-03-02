@@ -84,8 +84,9 @@ public class UsingHardcodePathDiagnostic extends AbstractVisitorDiagnostic {
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().replace("\"", "");
-    if (content.length() > 2) {
+    // пропускаю 4 символа, т.к. 2 кавычки и значимые 2 символа точно не попадют под регулярки
+    if (ctx.getText().length() > 4) {
+      String content = ctx.getText().substring(1, ctx.getText().length() - 1);
       Matcher matcher = patternPath.matcher(content);
       Matcher matcherURL = patternURL.matcher(content);
       if (matcher.find() && !matcherURL.find()) {

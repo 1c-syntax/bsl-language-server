@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **130**
+Общее количество: **133**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
-* Ошибка: **38**
-* Дефект кода: **85**
+* Ошибка: **39**
+* Дефект кода: **87**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -80,6 +80,7 @@
  [JoinWithVirtualTable](JoinWithVirtualTable.md) | Соединение с виртуальными таблицами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
  [LatinAndCyrillicSymbolInWord](LatinAndCyrillicSymbolInWord.md) | Смешивание латинских и кириллических символов в одном идентификаторе | Да | Незначительный | Дефект кода | `brainoverload`<br>`suspicious` 
  [LineLength](LineLength.md) | Ограничение на длину строки | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
+ [LogicalOrInTheWhereSectionOfQuery](LogicalOrInTheWhereSectionOfQuery.md) | Использование логического "ИЛИ" в секции "ГДЕ" запроса | Да | Важный | Дефект кода | `sql`<br>`performance`<br>`standard` 
  [MagicDate](MagicDate.md) | Магические даты | Да | Незначительный | Дефект кода | `badpractice`<br>`brainoverload` 
  [MagicNumber](MagicNumber.md) | Магические числа | Да | Незначительный | Дефект кода | `badpractice` 
  [MetadataObjectNameLength](MetadataObjectNameLength.md) | Имена объектов метаданных не должны превышать допустимой длины наименования | Да | Важный | Ошибка | `standard` 
@@ -133,6 +134,7 @@
  [UnsafeSafeModeMethodCall](UnsafeSafeModeMethodCall.md) | Небезопасное использование функции БезопасныйРежим() | Да | Блокирующий | Ошибка | `deprecated`<br>`error` 
  [UnusedLocalMethod](UnusedLocalMethod.md) | Неиспользуемый локальный метод | Да | Важный | Дефект кода | `standard`<br>`suspicious`<br>`unused` 
  [UnusedParameters](UnusedParameters.md) | Неиспользуемый параметр | Да | Важный | Дефект кода | `design`<br>`unused` 
+ [UsageWriteLogEvent](UsageWriteLogEvent.md) | Неверное использование метода "ЗаписьЖурналаРегистрации" | Да | Информационный | Дефект кода | `standard`<br>`badpractice` 
  [UseLessForEach](UseLessForEach.md) | Бесполезный перебор коллекции | Да | Критичный | Ошибка | `clumsy` 
  [UsingCancelParameter](UsingCancelParameter.md) | Работа с параметром "Отказ" | Да | Важный | Дефект кода | `standard`<br>`badpractice` 
  [UsingExternalCodeTools](UsingExternalCodeTools.md) | Использование возможностей выполнения внешнего кода | Да | Критичный | Потенциальная уязвимость | `standard`<br>`design` 
@@ -146,5 +148,6 @@
  [UsingServiceTag](UsingServiceTag.md) | Использование служебных тегов | Да | Информационный | Дефект кода | `badpractice` 
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
+ [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Обращение к виртуальной таблице без параметров | Да | Критичный | Ошибка | `sql`<br>`standard`<br>`performance` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 
