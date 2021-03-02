@@ -12,7 +12,7 @@
         <link rel="canonical" href="https://1c-syntax.github.io/bsl-language-server/dev/diagnostics/">
       
       <link rel="shortcut icon" href="../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.1">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.3">
     
     
       
@@ -330,7 +330,6 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
   
   
@@ -397,7 +396,6 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
   
   
@@ -430,7 +428,6 @@
           Start
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
-          
           
             
   
@@ -506,7 +503,6 @@
           Diagnostics development
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
-          
           
             
   
@@ -627,7 +623,6 @@
           Reporters
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
-          
           
             
   
@@ -784,7 +779,6 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
   
   
@@ -864,11 +858,11 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="Implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#Implemented-diagnostics" title="Permanent link">&para;</a></h2>
-<p>Total: <strong>129</strong></p>
+<p>Total: <strong>130</strong></p>
 <ul>
 <li>Security Hotspot: <strong>4</strong></li>
 <li>Vulnerability: <strong>3</strong></li>
-<li>Error: <strong>38</strong></li>
+<li>Error: <strong>39</strong></li>
 <li>Code smell: <strong>84</strong></li>
 </ul>
 <table>
@@ -1900,6 +1894,14 @@
 <td><code>standard</code><br><code>deprecated</code></td>
 </tr>
 <tr>
+<td><a href="VirtualTableCallWithoutParameters/">VirtualTableCallWithoutParameters</a></td>
+<td>Virtual table call without parameters</td>
+<td align="center">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>sql</code><br><code>standard</code><br><code>performance</code></td>
+</tr>
+<tr>
 <td><a href="WrongUseOfRollbackTransactionMethod/">WrongUseOfRollbackTransactionMethod</a></td>
 <td>Not recommended using of RollbackTransaction method</td>
 <td align="center">Yes</td>
@@ -2005,10 +2007,10 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.f5903571.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.fb4a9340.min.js", "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.4e3fea51.min.js"></script>
+      <script src="../assets/javascripts/bundle.ca5457b8.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       
