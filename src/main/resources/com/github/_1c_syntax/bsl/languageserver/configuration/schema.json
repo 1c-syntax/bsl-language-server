@@ -368,6 +368,9 @@
                 "UnusedParameters": {
                     "$ref": "parameters-schema.json#/definitions/UnusedParameters"
                 },
+                "UsageWriteLogEvent": {
+                    "$ref": "parameters-schema.json#/definitions/UsageWriteLogEvent"
+                },
                 "UseLessForEach": {
                     "$ref": "parameters-schema.json#/definitions/UseLessForEach"
                 },
@@ -406,6 +409,9 @@
                 },
                 "UsingThisForm": {
                     "$ref": "parameters-schema.json#/definitions/UsingThisForm"
+                },
+                "VirtualTableCallWithoutParameters": {
+                    "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
                 },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"

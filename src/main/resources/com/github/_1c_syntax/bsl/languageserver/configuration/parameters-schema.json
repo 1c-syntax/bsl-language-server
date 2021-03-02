@@ -1468,6 +1468,16 @@
             "title": "Unused parameter",
             "$id": "#/definitions/UnusedParameters"
         },
+        "UsageWriteLogEvent": {
+            "description": "Incorrect use of the method",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of the method",
+            "$id": "#/definitions/UsageWriteLogEvent"
+        },
         "UseLessForEach": {
             "description": "Useless collection iteration",
             "default": true,
@@ -1637,6 +1647,16 @@
             ],
             "title": "Using deprecated property \"ThisForm\"",
             "$id": "#/definitions/UsingThisForm"
+        },
+        "VirtualTableCallWithoutParameters": {
+            "description": "Virtual table call without parameters",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Virtual table call without parameters",
+            "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",
