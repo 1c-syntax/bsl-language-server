@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -58,6 +58,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private static final String RETURNED_VALUE_KEY = "returnedValue";
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
+  private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
 
   private final LanguageServerConfiguration configuration;
 
@@ -128,10 +129,13 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private String getParametersSection(MethodSymbol methodSymbol) {
     var result = new StringJoiner("  \n"); // два пробела
     var level = 0;
-    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) ->
-      parameterDefinition.getDescription().ifPresent((ParameterDescription parameter) ->
-        result.add(parameterToString(parameter, level))
-      )
+    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
+        if (parameterDefinition.getDescription().isPresent()) {
+          result.add(parameterToString(parameterDefinition.getDescription().get(), level));
+        } else {
+          result.add(parameterToString(parameterDefinition));
+        }
+      }
     );
 
     var parameters = result.toString();
@@ -190,7 +194,6 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
 
     return codeFences;
   }
-
 
   private String getMethodLocation(MethodSymbol methodSymbol) {
     String mdoRef = MdoRefBuilder.getMdoRef(methodSymbol.getOwner());
@@ -275,7 +278,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private static String parameterToString(ParameterDescription parameter, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
-    var parameterTemplate = "  ".repeat(level) + "* **%s**: %s";
+    var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
 
     if (typesMap.size() == 1) {
       result.add(String.format(parameterTemplate,
@@ -286,6 +289,10 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
       result.add(typesMapToString(typesMap, level + 1));
     }
     return result.toString();
+  }
+
+  private String parameterToString(ParameterDefinition parameterDefinition) {
+    return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
   }
 
   private static Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {
