@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,7 +42,7 @@ public class MarkupContentBuilderConfiguration {
    */
   @Bean
   public <T extends Symbol> Map<Class<T>, MarkupContentBuilder<T>> markupContentBuilders(
-    List<MarkupContentBuilder<T>> builders
+    Collection<MarkupContentBuilder<T>> builders
   ) {
     return builders.stream().collect(Collectors.toMap(MarkupContentBuilder::getType, Function.identity()));
   }

@@ -291,7 +291,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return result.toString();
   }
 
-  private String parameterToString(ParameterDefinition parameterDefinition) {
+  private static String parameterToString(ParameterDefinition parameterDefinition) {
     return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
   }
 
