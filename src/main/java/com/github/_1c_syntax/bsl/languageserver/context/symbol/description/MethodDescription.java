@@ -19,14 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.context.symbol.description;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.DescriptionReader;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLMethodDescriptionTokenizer;
 import lombok.Value;
 import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.Range;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,59 +33,53 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Класс-описание метода (процедуры или функции)
+ * Класс-описание метода (процедуры или функции).
  */
 @Value
-public class MethodDescription {
-
+public class MethodDescription implements SourceDefinedSymbolDescription {
   /**
-   * Номер первой строки описания
-   */
-  int startLine;
-  /**
-   * Номер последней строки описания
-   */
-  int endLine;
-  /**
-   * Содержит полное описание метода (весь текст)
+   * Содержит полное описание метода (весь текст).
    */
   String description;
   /**
    * Содержит часть строки после ключевого слова, в которой должно быть
-   * описание причины устаревания метода либо альтернативы
+   * описание причины устаревания метода либо альтернативы.
    */
   String deprecationInfo;
-
   /**
-   * Признак устарения метода
+   * Признак устаревания метода.
    */
   boolean deprecated;
   /**
-   * Описание назначения метода
+   * Описание назначения метода.
    */
   String purposeDescription;
   /**
-   * Примеры использования метода
+   * Примеры использования метода.
    */
   List<String> examples;
   /**
-   * Варианты вызова метода
+   * Варианты вызова метода.
    */
   List<String> callOptions;
   /**
-   * Параметры метода с типами и описанием
+   * Параметры метода с типами и описанием.
    */
   List<ParameterDescription> parameters;
   /**
-   * Возвращаемые значения (типы)
+   * Возвращаемые значения (типы).
    */
   List<TypeDescription> returnedValue;
   /**
-   * Если описание содержит только ссылку, то здесь будет ее значение
+   * Если описание содержит только ссылку, то здесь будет ее значение.
    * <p>
    * TODO Временное решение, надо будет продумать в следующем релизе
    */
   String link;
+  /**
+   * Диапазон, в котором располагается описание.
+   */
+  Range range;
 
   public MethodDescription(List<Token> comments) {
     description = comments.stream()
@@ -106,23 +99,15 @@ public class MethodDescription {
     returnedValue = DescriptionReader.readReturnedValue(ast);
 
     if (comments.isEmpty()) {
-      startLine = 0;
-      endLine = 0;
+      range = Ranges.create();
       return;
     }
 
-    this.startLine = comments.get(0).getLine();
-    this.endLine = comments.get(comments.size() - 1).getLine();
-  }
-
-  public boolean isEmpty() {
-    return description.isEmpty();
+    range = Ranges.create(comments);
   }
 
   public boolean contains(Token first, Token last) {
-    int firstLine = first.getLine();
-    int lastLine = last.getLine();
-    return (firstLine >= startLine && lastLine <= endLine);
+    return Ranges.containsRange(range, Ranges.create(first, last));
   }
 
 }

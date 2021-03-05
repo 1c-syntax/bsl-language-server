@@ -22,10 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.description.TypeDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -35,7 +34,7 @@ import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +58,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private static final String RETURNED_VALUE_KEY = "returnedValue";
   private static final String EXAMPLES_KEY = "examples";
   private static final String CALL_OPTIONS_KEY = "callOptions";
+  private static final String PARAMETER_TEMPLATE = "* **%s**: %s";
 
-  private final ServerContext serverContext;
   private final LanguageServerConfiguration configuration;
 
   @Override
@@ -130,10 +129,13 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   private String getParametersSection(MethodSymbol methodSymbol) {
     var result = new StringJoiner("  \n"); // два пробела
     var level = 0;
-    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) ->
-      parameterDefinition.getDescription().ifPresent((ParameterDescription parameter) ->
-        result.add(parameterToString(parameter, level))
-      )
+    methodSymbol.getParameters().forEach((ParameterDefinition parameterDefinition) -> {
+        if (parameterDefinition.getDescription().isPresent()) {
+          result.add(parameterToString(parameterDefinition.getDescription().get(), level));
+        } else {
+          result.add(parameterToString(parameterDefinition));
+        }
+      }
     );
 
     var parameters = result.toString();
@@ -167,46 +169,35 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
   }
 
   private String getExamplesSection(MethodSymbol methodSymbol) {
-    String examples = methodSymbol.getDescription()
+    var examples = methodSymbol.getDescription()
       .map(MethodDescription::getExamples)
-      .stream()
-      .flatMap(Collection::stream)
-      .map(s -> "```bsl\n" + s + "\n```")
-      .collect(Collectors.joining("\n"));
-
-    if (!examples.isEmpty()) {
-      examples = "**" + getResourceString(EXAMPLES_KEY) + ":**\n\n" + examples;
-    }
-
-    return examples;
+      .orElseGet(Collections::emptyList);
+    return getSectionWithCodeFences(examples, EXAMPLES_KEY);
   }
 
   private String getCallOptionsSection(MethodSymbol methodSymbol) {
-    String callOptions = methodSymbol.getDescription()
+    var callOptions = methodSymbol.getDescription()
       .map(MethodDescription::getCallOptions)
+      .orElseGet(Collections::emptyList);
+    return getSectionWithCodeFences(callOptions, CALL_OPTIONS_KEY);
+  }
+
+  private String getSectionWithCodeFences(List<String> codeBlocks, String resourceKey) {
+    String codeFences = codeBlocks
       .stream()
-      .flatMap(Collection::stream)
-      .map(s -> "```bsl\n" + s + "\n```")
+      .map(codeBlock -> "```bsl\n" + codeBlock + "\n```")
       .collect(Collectors.joining("\n"));
 
-    if (!callOptions.isEmpty()) {
-      callOptions = "**" + getResourceString(CALL_OPTIONS_KEY) + ":**\n\n" + callOptions;
+    if (!codeFences.isEmpty()) {
+      codeFences = "**" + getResourceString(resourceKey) + ":**\n\n" + codeFences;
     }
 
-    return callOptions;
+    return codeFences;
   }
 
   private String getMethodLocation(MethodSymbol methodSymbol) {
     String mdoRef = MdoRefBuilder.getMdoRef(methodSymbol.getOwner());
     return getResourceString(METHOD_LOCATION_KEY, mdoRef);
-//    String methodLocation;
-//    if (methodSymbol.getUri().equals(documentContext.getUri())) {
-//      methodLocation = getResourceString(CURRENT_METHOD_KEY);
-//    } else {
-//      var uri = methodSymbol.getUri();
-//      String uriPresentation = "file".equals(uri.getScheme()) ? Path.of(uri).toString() : uri.toString();
-//      methodLocation = getResourceString(EXTERNAL_METHOD_KEY, uriPresentation);
-//    }
   }
 
   private String getSignature(MethodSymbol methodSymbol) {
@@ -284,10 +275,10 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return Resources.getResourceString(configuration.getLanguage(), getClass(), key, args);
   }
 
-  private String parameterToString(ParameterDescription parameter, int level) {
+  private static String parameterToString(ParameterDescription parameter, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     Map<String, String> typesMap = typesToMap(parameter.getTypes(), level);
-    var parameterTemplate = "  ".repeat(level) + "* **%s**: %s";
+    var parameterTemplate = "  ".repeat(level) + PARAMETER_TEMPLATE;
 
     if (typesMap.size() == 1) {
       result.add(String.format(parameterTemplate,
@@ -300,7 +291,11 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return result.toString();
   }
 
-  private Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {
+  private static String parameterToString(ParameterDefinition parameterDefinition) {
+    return String.format(PARAMETER_TEMPLATE, parameterDefinition.getName(), "");
+  }
+
+  private static Map<String, String> typesToMap(List<TypeDescription> parameterTypes, int level) {
     Map<String, String> types = new HashMap<>();
 
     parameterTypes.forEach((TypeDescription type) -> {
@@ -312,20 +307,15 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
         typeName = String.format("`%s`", type.getName());
       }
 
-      var existType = types.get(typeDescription);
-      if (existType == null) {
-        types.put(typeDescription, typeName);
-      } else {
-        types.put(typeDescription, String.format("%s | %s", existType, typeName));
-      }
+      types.merge(typeDescription, typeName, (oldValue, newValue) -> String.format("%s | %s", oldValue, newValue));
     });
     return types;
   }
 
-  private String typesMapToString(Map<String, String> types, int level) {
+  private static String typesMapToString(Map<String, String> types, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     var indent = "&nbsp;&nbsp;".repeat(level);
-    types.forEach((key, value) -> {
+    types.forEach((String key, String value) -> {
       if (key.isBlank()) {
         result.add(value);
       } else {
@@ -335,7 +325,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder<Me
     return result.toString();
   }
 
-  private String typeToString(TypeDescription type, int level) {
+  private static String typeToString(TypeDescription type, int level) {
     var result = new StringJoiner("  \n"); // два пробела
     var description = type.getDescription().replace("\n", "<br>" + "&nbsp;&nbsp;".repeat(level + 1));
 

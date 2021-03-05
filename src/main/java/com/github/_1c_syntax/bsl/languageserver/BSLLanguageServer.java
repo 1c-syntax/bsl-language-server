@@ -89,13 +89,15 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   }
 
   private void setConfigurationRoot(InitializeParams params) {
-    if (params.getRootUri() == null) {
+    var workspaceFolders = params.getWorkspaceFolders();
+    if (workspaceFolders == null || workspaceFolders.isEmpty()) {
       return;
     }
 
+    String rootUri = workspaceFolders.get(0).getUri();
     Path rootPath;
     try {
-      rootPath = new File(new URI(params.getRootUri()).getPath()).getCanonicalFile().toPath();
+      rootPath = new File(new URI(rootUri).getPath()).getCanonicalFile().toPath();
     } catch (URISyntaxException | IOException e) {
       LOGGER.error("Can't read root URI from initialization params.", e);
       return;

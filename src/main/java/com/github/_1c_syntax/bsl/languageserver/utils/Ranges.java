@@ -29,12 +29,17 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public final class Ranges {
 
   private Ranges() {
     // Utility class
+  }
+
+  public static Range create() {
+    return create(0, 0, 0, 0);
   }
 
   public static Range create(int startLine, int startChar, int endLine, int endChar) {
@@ -73,6 +78,16 @@ public final class Ranges {
     }
 
     return create(startLine, startChar, endLine, endChar);
+  }
+
+  public static Range create(List<Token> tokens) {
+    if (tokens.isEmpty()) {
+      return Ranges.create();
+    }
+    Token firstElement = tokens.get(0);
+    Token lastElement = tokens.get(tokens.size() - 1);
+
+    return Ranges.create(firstElement, lastElement);
   }
 
   public static Range create(TerminalNode terminalNode) {
