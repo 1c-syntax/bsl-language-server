@@ -169,6 +169,26 @@ public class SymbolTree {
       .findAny();
   }
 
+  /**
+   * Поиск VariableSymbol в дереве по указанному имени (без учета регистра) и области объявления.
+   *
+   * @param variableName Имя переменной
+   * @param scopeSymbol Символ, внутри которого осуществляется поиск.
+   *                    Например, {@link ModuleSymbol} или {@link MethodSymbol}.
+   * @return VariableSymbol, если он был найден в дереве символов.
+   */
+  public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
+    var scopeSymbolKind = scopeSymbol.getSymbolKind();
+
+    return getVariables().stream()
+      .filter(variableSymbol -> variableName.equalsIgnoreCase(variableSymbol.getName()))
+      .filter(variableSymbol -> variableSymbol.getRootParent(scopeSymbolKind)
+        .filter(scopeSymbol::equals)
+        .isPresent()
+      )
+      .findAny();
+  }
+
   private List<SourceDefinedSymbol> createChildrenFlat() {
     List<SourceDefinedSymbol> symbols = new ArrayList<>();
     getChildren().forEach(child -> flatten(child, symbols));
