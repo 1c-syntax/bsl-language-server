@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.hover;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
@@ -61,7 +60,7 @@ class VariableSymbolMarkupContentBuilderTest {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
-    var varSymbol = symbolTree.getVariables().get(0);
+    var varSymbol = symbolTree.getVariableSymbol("ИмяБезОписания", symbolTree.getModule()).orElseThrow();
 
     // when
     var content = markupContentBuilder.getContent(varSymbol).getValue();
@@ -84,7 +83,7 @@ class VariableSymbolMarkupContentBuilderTest {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
-    var varSymbol = symbolTree.getVariables().get(1);
+    var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСправаОднойСтрокой", symbolTree.getModule()).orElseThrow();
 
     // when
     var content = markupContentBuilder.getContent(varSymbol).getValue();
@@ -109,7 +108,8 @@ class VariableSymbolMarkupContentBuilderTest {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
-    var varSymbol = (VariableSymbol) symbolTree.getChildrenFlat().get(9);
+    var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
+    var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуДвеСтроки_Функция", methodSymbol).orElseThrow();
 
     // when
     var content = markupContentBuilder.getContent(varSymbol).getValue();
@@ -135,7 +135,8 @@ class VariableSymbolMarkupContentBuilderTest {
     // given
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     final var symbolTree = documentContext.getSymbolTree();
-    var varSymbol = (VariableSymbol) symbolTree.getChildrenFlat().get(10);
+    var methodSymbol = symbolTree.getMethodSymbol("ИмяФункции").orElseThrow();
+    var varSymbol = symbolTree.getVariableSymbol("Имя_ОписаниеСверхуТриСтрокиПоследняяПустая_Функция", methodSymbol).orElseThrow();
 
     // when
     var content = markupContentBuilder.getContent(varSymbol).getValue();
@@ -161,7 +162,7 @@ class VariableSymbolMarkupContentBuilderTest {
     // given
     var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ObjectModule).orElseThrow();
     final var symbolTree = documentContext.getSymbolTree();
-    var varSymbol = (VariableSymbol) symbolTree.getChildrenFlat().get(1);
+    var varSymbol = symbolTree.getVariableSymbol("ВалютаУчета", symbolTree.getModule()).orElseThrow();
 
     // when
     var content = markupContentBuilder.getContent(varSymbol).getValue();
