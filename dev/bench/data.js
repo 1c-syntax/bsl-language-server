@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1614944179823,
+  "lastUpdate": 1615021797202,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -9145,6 +9145,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.7656204660607364",
             "extra": "mean: 76.51728955904643 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c6b8272617e85578f8f837453e0fe3470149a3c9",
+          "message": "Merge pull request #1583 from 1c-syntax/feature/findVariable\n\nРасширение символьного апи для поиска переменной с учетом области объявления",
+          "timestamp": "2021-03-06T12:01:58+03:00",
+          "tree_id": "77a9b90216f5c1b397c10dda38f2d954eae1d61a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c6b8272617e85578f8f837453e0fe3470149a3c9"
+        },
+        "date": 1615021793892,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 79.84121902783711,
+            "unit": "sec",
+            "range": "stddev: 2.8971880262635756",
+            "extra": "mean: 79.84121902783711 sec\nrounds: 3"
           }
         ]
       }
