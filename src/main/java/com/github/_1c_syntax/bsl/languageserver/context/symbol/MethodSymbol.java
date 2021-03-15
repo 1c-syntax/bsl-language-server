@@ -43,7 +43,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable {
   String name;
 
   @Builder.Default
