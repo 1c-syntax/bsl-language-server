@@ -133,6 +133,21 @@ class ReferenceIndexReferenceFinderTest {
   }
 
   @Test
+  void testCantFindNonExportMethodFromOtherModule() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var uri = documentContext.getUri();
+    var position = new Position(4, 25);
+
+    // when
+    var reference = referenceFinder.findReference(uri, position);
+
+    // then
+    assertThat(reference).isEmpty();
+  }
+
+  @Test
   void testUnknownLocationReturnsEmptyReference() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);

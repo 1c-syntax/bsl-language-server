@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -149,7 +150,8 @@ public class ReferenceIndex {
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(uri, position);
         return new Reference(from, symbol, uri, selectionRange);
-      });
+      })
+      .filter(ReferenceIndex::isReferenceAccessible);
   }
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
@@ -192,4 +194,23 @@ public class ReferenceIndex {
       .findFirst()
       .orElseThrow();
   }
+
+  private static boolean isReferenceAccessible(Reference reference) {
+    if (!reference.isSourceDefinedSymbolReference()) {
+      return true;
+    }
+
+    SourceDefinedSymbol to = reference.getSourceDefinedSymbol().orElseThrow();
+    SourceDefinedSymbol from = reference.getFrom();
+    if (to.getOwner().equals(from.getOwner())) {
+      return true;
+    }
+
+    if (to instanceof Exportable) {
+      return ((Exportable) to).isExport();
+    }
+
+    return true;
+  }
+
 }
