@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1615452976803,
+  "lastUpdate": 1615877933891,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -9207,6 +9207,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3244290998486072",
             "extra": "mean: 78.18569167455037 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "52c18384ce20a1c711bc49ae434f9cbb7acaf2f9",
+          "message": "Merge pull request #1589 from EightM/fix/1553\n\nfix(diagnostics): Фильтрация строк Typo",
+          "timestamp": "2021-03-16T09:50:49+03:00",
+          "tree_id": "86b9204a1661cc2b6836c504448a17c777a0a6dc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/52c18384ce20a1c711bc49ae434f9cbb7acaf2f9"
+        },
+        "date": 1615877930011,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 78.61530415217082,
+            "unit": "sec",
+            "range": "stddev: 0.6478211332338581",
+            "extra": "mean: 78.61530415217082 sec\nrounds: 3"
           }
         ]
       }
