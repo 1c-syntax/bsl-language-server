@@ -174,21 +174,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, List<Token>> tokensMap = new HashMap<>();
     Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
-    Set<Token> uniqueValues = new HashSet<>();
 
     Set<String> stringsFromTokens = getTokenizedStringsFromTokens(documentContext, tokensMap);
-
-    // fire already checked words
-    stringsFromTokens.stream()
-      .filter(word -> checkedWordsForLang.getOrDefault(word, false))
-      .forEach((String word) -> {
-        List<Token> tokens = tokensMap.get(word);
-        if (tokens != null) {
-          tokens.stream()
-            .filter(uniqueValues::add)
-            .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
-        }
-      });
 
     // build string of unchecked words
     Set<String> uncheckedWords = stringsFromTokens.stream()
@@ -196,6 +183,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .collect(Collectors.toSet());
 
     if (uncheckedWords.isEmpty()) {
+      fireDiagnosticOnCheckedWordsWithErrors(tokensMap, stringsFromTokens);
       return;
     }
 
@@ -220,18 +208,32 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     matches.stream()
       .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
       .map(ruleMatch -> uncheckedWordsString.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
-      .forEach((String substring) -> {
-        checkedWordsForLang.put(substring, true);
-        List<Token> tokens = tokensMap.get(substring);
-        if (tokens != null) {
-          tokens.stream()
-            .filter(uniqueValues::add)
-            .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(substring)));
-        }
-      });
+      .forEach((String substring) -> checkedWordsForLang.put(substring, true));
 
     // mark unmatched words without errors as checked
     uncheckedWords.forEach(word -> checkedWordsForLang.putIfAbsent(word, false));
+
+    fireDiagnosticOnCheckedWordsWithErrors(tokensMap, stringsFromTokens);
+  }
+
+  private void fireDiagnosticOnCheckedWordsWithErrors(
+    Map<String, List<Token>> tokensMap,
+    Set<String> stringsFromTokens
+  ) {
+    Set<Token> uniqueValues = new HashSet<>();
+    String lang = info.getResourceString("diagnosticLanguage");
+    Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
+
+    stringsFromTokens.stream()
+      .filter(word -> checkedWordsForLang.getOrDefault(word, false))
+      .forEach((String word) -> {
+        List<Token> tokens = tokensMap.get(word);
+        if (tokens != null) {
+          tokens.stream()
+            .filter(uniqueValues::add)
+            .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
+        }
+      });
   }
 
 }
