@@ -672,6 +672,16 @@
             "title": "Else...The...ElseIf... statement should end with Else branch",
             "$id": "#/definitions/IfElseIfEndsWithElse"
         },
+        "IncorrectUseLikeInQuery": {
+            "description": "Incorrect use of 'LIKE'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of 'LIKE'",
+            "$id": "#/definitions/IncorrectUseLikeInQuery"
+        },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
             "default": true,
@@ -1619,6 +1629,16 @@
                 }
             },
             "$id": "#/definitions/UsingHardcodeSecretInformation"
+        },
+        "UsingLikeInQuery": {
+            "description": "Using 'LIKE' in query",
+            "default": false,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'LIKE' in query",
+            "$id": "#/definitions/UsingLikeInQuery"
         },
         "UsingModalWindows": {
             "description": "Using modal windows",

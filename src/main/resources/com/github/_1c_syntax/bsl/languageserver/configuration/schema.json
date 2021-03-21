@@ -194,6 +194,9 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
+                "IncorrectUseLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
@@ -403,6 +406,9 @@
                 },
                 "UsingHardcodeSecretInformation": {
                     "$ref": "parameters-schema.json#/definitions/UsingHardcodeSecretInformation"
+                },
+                "UsingLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/UsingLikeInQuery"
                 },
                 "UsingModalWindows": {
                     "$ref": "parameters-schema.json#/definitions/UsingModalWindows"
