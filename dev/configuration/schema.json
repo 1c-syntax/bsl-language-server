@@ -308,6 +308,9 @@
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
+                "SelectTopWithoutOrderBy": {
+                    "$ref": "parameters-schema.json#/definitions/SelectTopWithoutOrderBy"
+                },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
                 },
