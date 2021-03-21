@@ -89,6 +89,9 @@
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
                 },
+                "CrazyMultilineString": {
+                    "$ref": "parameters-schema.json#/definitions/CrazyMultilineString"
+                },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
                 },
@@ -244,6 +247,9 @@
                 },
                 "MissingVariablesDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
+                },
+                "MultilineStringInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/MultilineStringInQuery"
                 },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
