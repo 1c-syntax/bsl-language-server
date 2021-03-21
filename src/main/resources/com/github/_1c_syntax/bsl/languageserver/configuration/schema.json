@@ -245,6 +245,9 @@
                 "MissingVariablesDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
                 },
+                "MultilineStringInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/MultilineStringInQuery"
+                },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
                 },

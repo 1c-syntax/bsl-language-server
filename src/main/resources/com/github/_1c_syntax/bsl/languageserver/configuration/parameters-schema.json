@@ -944,6 +944,16 @@
             "title": "All variables declarations must have a description",
             "$id": "#/definitions/MissingVariablesDescription"
         },
+        "MultilineStringInQuery": {
+            "description": "Multi-line literal in query",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Multi-line literal in query",
+            "$id": "#/definitions/MultilineStringInQuery"
+        },
         "MultilingualStringHasAllDeclaredLanguages": {
             "description": "There is a localized text for all languages declared in the configuration",
             "default": true,
