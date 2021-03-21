@@ -8,7 +8,7 @@
 
  Name | Type | Description | Default value 
  :-: | :-: | :-- | :-: 
- `isSkipSelectTopOne` | `Boolean` | ```Skip most 'SELECT TOP 1' instructions``` | ```true``` 
+ `skipSelectTopOne` | `Boolean` | ```Skip 'SELECT TOP 1' if there is 'WHERE'``` | ```true``` 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -39,6 +39,6 @@
 
 ```json
 "SelectTopWithoutOrderBy": {
-    "isSkipSelectTopOne": true
+    "skipSelectTopOne": true
 }
 ```

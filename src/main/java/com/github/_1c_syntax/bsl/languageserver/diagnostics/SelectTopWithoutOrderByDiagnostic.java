@@ -44,26 +44,26 @@ import org.antlr.v4.runtime.tree.ParseTree;
 )
 public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
+  private static final String TOP_ONE_STRING = "1";
+
   // for skip queries with 'TOP 1' limitation without 'ORDER BY'
   private static final boolean SKIP_SELECT_TOP_ONE = true;
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "" + SKIP_SELECT_TOP_ONE
   )
-  private boolean isSkipSelectTopOne = SKIP_SELECT_TOP_ONE;
-
-  private static final String TOP_ONE_STRING = "1";
+  private boolean skipSelectTopOne = SKIP_SELECT_TOP_ONE;
 
   @Override
   public ParseTree visitSubquery(SDBLParser.SubqueryContext ctx) {
-    if (ctx.union() != null && !ctx.union().isEmpty()) {
+    if (!ctx.union().isEmpty()) {
       // always presence of 'top' is a mistake
       checkQuery(ctx.query(), false);
       ctx.union().forEach(unionCtx -> checkQuery(unionCtx.query(), false));
     } else {
       // missing order by
       if (!Trees.nodeContains(ctx.getParent(), SDBLParser.RULE_orders)) {
-        checkQuery(ctx.query(), isSkipSelectTopOne);
+        checkQuery(ctx.query(), skipSelectTopOne);
       }
     }
     return super.visitSubquery(ctx);
@@ -71,8 +71,7 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
 
   private void checkQuery(SDBLParser.QueryContext ctx, boolean canTopOne) {
     // top is missing
-    if (ctx.limitations().isEmpty()
-      || ctx.limitations().top() == null) {
+    if (ctx.limitations().top() == null) {
       return;
     }
 

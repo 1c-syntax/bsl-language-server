@@ -59,7 +59,7 @@ class SelectTopWithoutOrderByDiagnosticTest extends AbstractDiagnosticTest<Selec
   void testConfigure() {
     // given
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("isSkipSelectTopOne", false);
+    configuration.put("skipSelectTopOne", false);
     diagnosticInstance.configure(configuration);
 
     // when

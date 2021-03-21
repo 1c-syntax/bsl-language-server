@@ -1239,11 +1239,11 @@
             ],
             "title": "Using 'SELECT TOP' without 'ORDER BY'",
             "properties": {
-                "isSkipSelectTopOne": {
-                    "description": "Skip most 'SELECT TOP 1' instructions",
+                "skipSelectTopOne": {
+                    "description": "Skip 'SELECT TOP 1' if there is 'WHERE'",
                     "default": true,
                     "type": "boolean",
-                    "title": "Skip most 'SELECT TOP 1' instructions"
+                    "title": "Skip 'SELECT TOP 1' if there is 'WHERE'"
                 }
             },
             "$id": "#/definitions/SelectTopWithoutOrderBy"
