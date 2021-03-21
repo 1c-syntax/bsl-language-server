@@ -1230,6 +1230,24 @@
             "title": "Overuse \"Reference\" in a query",
             "$id": "#/definitions/RefOveruse"
         },
+        "SelectTopWithoutOrderBy": {
+            "description": "Using 'SELECT TOP' without 'ORDER BY'",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using 'SELECT TOP' without 'ORDER BY'",
+            "properties": {
+                "isSkipSelectTopOne": {
+                    "description": "Skip most 'SELECT TOP 1' instructions",
+                    "default": true,
+                    "type": "boolean",
+                    "title": "Skip most 'SELECT TOP 1' instructions"
+                }
+            },
+            "$id": "#/definitions/SelectTopWithoutOrderBy"
+        },
         "SelfAssign": {
             "description": "Variable is assigned to itself",
             "default": true,
