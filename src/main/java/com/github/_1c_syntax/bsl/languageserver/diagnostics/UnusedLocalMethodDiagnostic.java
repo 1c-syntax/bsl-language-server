@@ -67,6 +67,14 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
    * Префиксы подключаемых методов
    */
   private static final String ATTACHABLE_METHOD_PREFIXES = "подключаемый_,attachable_";
+
+  private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
+    AnnotationKind.AFTER,
+    AnnotationKind.AROUND,
+    AnnotationKind.BEFORE,
+    AnnotationKind.CHANGEANDVALIDATE
+  );
+
   @DiagnosticParameter(
     type = String.class,
     defaultValue = ATTACHABLE_METHOD_PREFIXES
@@ -78,13 +86,6 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     this.attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(
       (String) configuration.getOrDefault("attachableMethodPrefixes", ATTACHABLE_METHOD_PREFIXES));
   }
-
-  private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
-    AnnotationKind.AFTER,
-    AnnotationKind.AROUND,
-    AnnotationKind.BEFORE,
-    AnnotationKind.CHANGEANDVALIDATE
-  );
 
   private boolean isAttachable(MethodSymbol methodSymbol) {
     return attachableMethodPrefixes.matcher(methodSymbol.getName()).matches();
