@@ -29,9 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import com.sun.istack.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -82,7 +82,7 @@ public class IncorrectUseLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagno
                                    @Nullable TerminalNode like,
                                    List<? extends BSLParserRuleContext> statements) {
 
-    if (like == null || statements.size() < 1) {
+    if (like == null || statements.size() <= 1) {
       return;
     }
 

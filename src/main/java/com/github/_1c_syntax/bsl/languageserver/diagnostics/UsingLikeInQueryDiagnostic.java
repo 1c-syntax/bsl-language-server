@@ -46,8 +46,8 @@ public class UsingLikeInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
   @Override
   public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
     Trees.getDescendants(ctx).stream()
-      .filter(node -> node instanceof TerminalNode)
-      .map(node -> (TerminalNode) node)
+      .filter(TerminalNode.class::isInstance)
+      .map(TerminalNode.class::cast)
       .filter(child -> child.getSymbol().getType() == SDBLParser.LIKE)
       .forEach(node -> diagnosticStorage.addDiagnostic(node.getParent()));
     return ctx;
