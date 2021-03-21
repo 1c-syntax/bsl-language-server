@@ -89,6 +89,9 @@
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
                 },
+                "CrazyMultilineString": {
+                    "$ref": "parameters-schema.json#/definitions/CrazyMultilineString"
+                },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
                 },

@@ -270,6 +270,16 @@
             },
             "$id": "#/definitions/ConsecutiveEmptyLines"
         },
+        "CrazyMultilineString": {
+            "description": "Crazy multiline literals",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Crazy multiline literals",
+            "$id": "#/definitions/CrazyMultilineString"
+        },
         "CreateQueryInCycle": {
             "description": "Execution query on cycle",
             "default": true,
