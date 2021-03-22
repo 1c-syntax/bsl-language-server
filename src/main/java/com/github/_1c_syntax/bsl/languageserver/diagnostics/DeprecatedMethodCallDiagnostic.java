@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Optional;
 
@@ -52,6 +53,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     var uri = documentContext.getUri();
 
     referenceIndex.getReferencesFrom(uri).stream()
+      .filter(reference -> reference.getSymbol().getSymbolKind() == SymbolKind.Method)
       .filter(reference -> reference.getSymbol().isDeprecated())
       .filter(reference -> !reference.getFrom().isDeprecated())
       .forEach((Reference reference) -> {
@@ -62,15 +64,12 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
       });
   }
 
-  // TODO: Подумать: новый интерфейс Description с базовыми методами описания всех Symbol/SourceDefinedSymbol, в т.ч.
-  //  getDeprecationInfo и getPurpose. Добавить в Symbol/SourceDefinedSymbol поле description.
-  //  Это позволит унифицировать работу с описаниями всех символов.
   private static String getDeprecationInfo(Symbol deprecatedSymbol) {
     return Optional.of(deprecatedSymbol)
-      .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
-      .flatMap(MethodSymbol::getDescription)
-      .map(MethodDescription::getDeprecationInfo)
+      .filter(Describable.class::isInstance)
+      .map(Describable.class::cast)
+      .flatMap(Describable::getDescription)
+      .map(SourceDefinedSymbolDescription::getDeprecationInfo)
       .orElse("");
   }
 }
