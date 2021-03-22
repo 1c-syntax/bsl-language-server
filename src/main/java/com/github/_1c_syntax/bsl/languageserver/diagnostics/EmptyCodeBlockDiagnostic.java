@@ -86,7 +86,7 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     int lineOfStop = ctx.getStop().getLine();
 
     List<Tree> list = Trees.getChildren(ctx.getParent()).stream()
-      .filter(node -> node instanceof TerminalNode)
+      .filter(TerminalNode.class::isInstance)
       .filter(node -> ((TerminalNode) node).getSymbol().getLine() == lineOfStop)
       .collect(Collectors.toList());
 
