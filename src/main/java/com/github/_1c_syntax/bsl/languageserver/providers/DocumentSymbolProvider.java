@@ -34,6 +34,11 @@ import java.util.stream.Collectors;
 @Component
 public final class DocumentSymbolProvider {
 
+  /**
+   * Идентификатор источника символов документа.
+   */
+  public static final String LABEL = "BSL Language Server";
+
   public List<Either<SymbolInformation, DocumentSymbol>> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .map(DocumentSymbolProvider::toDocumentSymbol)
