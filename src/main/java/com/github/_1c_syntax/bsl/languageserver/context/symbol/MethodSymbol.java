@@ -43,7 +43,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;
 
   @Builder.Default
@@ -78,8 +78,8 @@ public class MethodSymbol implements SourceDefinedSymbol {
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
-      .filter(symbol -> symbol instanceof RegionSymbol)
-      .map(symbol -> (RegionSymbol) symbol);
+      .filter(RegionSymbol.class::isInstance)
+      .map(RegionSymbol.class::cast);
   }
 
   @Override
