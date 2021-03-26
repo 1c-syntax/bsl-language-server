@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Hover;
@@ -43,9 +42,6 @@ class HoverProviderTest {
 
   @Autowired
   private HoverProvider hoverProvider;
-
-  @Autowired
-  protected ServerContext context;
 
   @Test
   void testEmptyHover() {
