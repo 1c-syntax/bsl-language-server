@@ -76,7 +76,7 @@ public class CallHierarchyProvider {
 
     URI uri = documentContext.getUri();
     CallHierarchyItem item = params.getItem();
-    Position position = params.getItem().getSelectionRange().getStart();
+    Position position = item.getSelectionRange().getStart();
 
     return referenceResolver.findReference(uri, position)
       .flatMap(Reference::getSourceDefinedSymbol)

@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
@@ -93,7 +94,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setHoverProvider(getHoverProvider());
     capabilities.setReferencesProvider(getReferencesProvider());
     capabilities.setDefinitionProvider(getDefinitionProvider());
-    capabilities.setCallHierarchyProvider(Boolean.TRUE);
+    capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
@@ -242,6 +243,13 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var referenceOptions = new ReferenceOptions();
     referenceOptions.setWorkDoneProgress(Boolean.FALSE);
     return referenceOptions;
+  }
+
+  private CallHierarchyRegistrationOptions getCallHierarchyProvider() {
+    var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
+    callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    callHierarchyRegistrationOptions.setDocumentSelector(documentSelector.asList());
+    return callHierarchyRegistrationOptions;
   }
 
   private static WorkspaceSymbolOptions getWorkspaceProvider() {
