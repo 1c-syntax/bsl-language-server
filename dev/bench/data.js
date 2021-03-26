@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1616757395426,
+  "lastUpdate": 1616764664137,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -9548,6 +9548,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9861193110391935",
             "extra": "mean: 82.00640789667766 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e18072701677f1b0c48360444dbc5f4fbd75a80a",
+          "message": "Merge pull request #1604 from 1c-syntax/feature/call-hierarchy-provider\n\nCall Hierarchy Provider",
+          "timestamp": "2021-03-26T16:08:59+03:00",
+          "tree_id": "b39c3a69ba8b361ba67f05f76bff339949f1d4f7",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e18072701677f1b0c48360444dbc5f4fbd75a80a"
+        },
+        "date": 1616764661346,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 82.9554816087087,
+            "unit": "sec",
+            "range": "stddev: 1.6740120129814062",
+            "extra": "mean: 82.9554816087087 sec\nrounds: 3"
           }
         ]
       }
