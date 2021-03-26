@@ -21,50 +21,98 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import org.junit.jupiter.api.Disabled;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.PostConstruct;
+import java.nio.file.Paths;
+
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterClass
 class DefinitionProviderTest {
 
   @Autowired
   private DefinitionProvider definitionProvider;
 
-  @Test
-  @Disabled
-  void testDefinitionOfManagerModule() {
-    // todo
+  @Autowired
+  private ServerContext serverContext;
+
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/definition.bsl";
+
+  @PostConstruct
+  void prepareServerContext() {
+    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
+    serverContext.populateContext();
   }
 
   @Test
-  @Disabled
-  void testDefinitionOfCommonModule() {
-    // todo
+  void testEmptyDefinition() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new DefinitionParams();
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var definitions = definitionProvider.getDefinition(documentContext, params);
+
+    // then
+    assertThat(definitions).isEmpty();
   }
 
   @Test
-  @Disabled
-  void testCantGoToPrivateMethodsFromCommonModule() {
-    // todo
-  }
-
-  @Test
-  @Disabled
   void testDefinitionOfLocalMethod() {
-    // todo
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
+
+    var params = new DefinitionParams();
+    params.setPosition(new Position(4, 10));
+
+    // when
+    var definitions = definitionProvider.getDefinition(documentContext, params);
+
+    // then
+    assertThat(definitions).hasSize(1);
+
+    var definition = definitions.get(0);
+
+    assertThat(definition.getTargetUri()).isEqualTo(documentContext.getUri().toString());
+    assertThat(definition.getTargetSelectionRange()).isEqualTo(methodSymbol.getSelectionRange());
+    assertThat(definition.getTargetRange()).isEqualTo(methodSymbol.getRange());
+    assertThat(definition.getOriginSelectionRange()).isEqualTo(Ranges.create(4, 0, 10));
   }
 
   @Test
-  @Disabled
-  void testDefinitionShouldNotGoToNonExportMethodFromOtherModule() {
-    // todo
-  }
+  void testDefinitionOfCommonModule() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var managerModule = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+    var methodSymbol = managerModule.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 
-  @Test
-  @Disabled
-  void testDefinitionShouldNotOpenGlobalMethods() {
-    // todo
+    var params = new DefinitionParams();
+    params.setPosition(new Position(6, 30));
+
+    // when
+    var definitions = definitionProvider.getDefinition(documentContext, params);
+
+    // then
+    assertThat(definitions).hasSize(1);
+
+    var definition = definitions.get(0);
+
+    assertThat(definition.getTargetUri()).isEqualTo(managerModule.getUri().toString());
+    assertThat(definition.getTargetSelectionRange()).isEqualTo(methodSymbol.getSelectionRange());
+    assertThat(definition.getTargetRange()).isEqualTo(methodSymbol.getRange());
+    assertThat(definition.getOriginSelectionRange()).isEqualTo(Ranges.create(6, 24, 38));
   }
 }

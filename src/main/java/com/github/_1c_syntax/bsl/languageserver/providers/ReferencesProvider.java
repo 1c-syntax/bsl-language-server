@@ -42,8 +42,8 @@ public class ReferencesProvider {
   private final ReferenceIndex referenceIndex;
 
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
-
     var position = params.getPosition();
+
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .stream()

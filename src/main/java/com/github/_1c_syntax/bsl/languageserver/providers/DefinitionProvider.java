@@ -45,17 +45,19 @@ public class DefinitionProvider {
 
     return referenceResolver.findReference(documentContext.getUri(), position)
       .filter(Reference::isSourceDefinedSymbolReference)
-      .map((Reference reference) -> {
-        SourceDefinedSymbol symbol = (SourceDefinedSymbol) reference.getSymbol();
-
-        return new LocationLink(
-          symbol.getOwner().getUri().toString(),
-          symbol.getRange(),
-          symbol.getSelectionRange(),
-          reference.getSelectionRange()
-        );
-      })
+      .map(DefinitionProvider::toLocationLink)
       .map(Collections::singletonList)
       .orElse(Collections.emptyList());
+  }
+
+  private static LocationLink toLocationLink(Reference reference) {
+    SourceDefinedSymbol symbol = (SourceDefinedSymbol) reference.getSymbol();
+
+    return new LocationLink(
+      symbol.getOwner().getUri().toString(),
+      symbol.getRange(),
+      symbol.getSelectionRange(),
+      reference.getSelectionRange()
+    );
   }
 }

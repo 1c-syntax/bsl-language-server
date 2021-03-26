@@ -21,34 +21,93 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import org.junit.jupiter.api.Disabled;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.ReferenceParams;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.PostConstruct;
+import java.nio.file.Paths;
+
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
+@CleanupContextBeforeClassAndAfterClass
 class ReferencesProviderTest {
 
-  @Test
-  @Disabled
-  void testMethodsFromCommonModule() {
-    // todo
+  @Autowired
+  private ReferencesProvider referencesProvider;
+
+  @Autowired
+  private ServerContext serverContext;
+
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/references.bsl";
+
+  @PostConstruct
+  void prepareServerContext() {
+    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
+    serverContext.populateContext();
   }
 
   @Test
-  @Disabled
-  void testCantGoToPrivateMethodsFromCommonModule() {
-    // todo
+  void testEmptyReferences() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(1, 0));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    assertThat(references).isEmpty();
   }
 
   @Test
-  @Disabled
-  void testMethodsFromManagerModule() {
-    // todo
-  }
-
-  @Test
-  @Disabled
   void testLocalMethods() {
-    // todo
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    assertThat(references).hasSize(1);
+
+    var reference = references.get(0);
+
+    assertThat(reference.getUri()).isEqualTo(documentContext.getUri().toString());
+    assertThat(reference.getRange()).isEqualTo(Ranges.create(4, 0, 10));
   }
+
+  @Test
+  void testMethodsFromManagerModule() {
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var managerModule = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(24, 15));
+
+    // when
+    var references = referencesProvider.getReferences(managerModule, params);
+
+    // then
+    var location = new Location(documentContext.getUri().toString(), Ranges.create(6, 24, 38));
+
+    assertThat(references)
+      .isNotEmpty()
+      .contains(location);
+  }
+
 }
