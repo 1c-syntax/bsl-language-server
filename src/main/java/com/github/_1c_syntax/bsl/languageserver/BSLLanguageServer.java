@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.DefinitionOptions;
 import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
@@ -40,6 +41,7 @@ import org.eclipse.lsp4j.FoldingRangeProviderOptions;
 import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
@@ -89,6 +91,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setDocumentLinkProvider(getDocumentLinkProvider());
     capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
     capabilities.setHoverProvider(getHoverProvider());
+    capabilities.setReferencesProvider(getReferencesProvider());
+    capabilities.setDefinitionProvider(getDefinitionProvider());
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
@@ -225,6 +229,18 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var hoverOptions = new HoverOptions();
     hoverOptions.setWorkDoneProgress(Boolean.FALSE);
     return hoverOptions;
+  }
+
+  private static DefinitionOptions getDefinitionProvider() {
+    var definitionOptions = new DefinitionOptions();
+    definitionOptions.setWorkDoneProgress(Boolean.FALSE);
+    return definitionOptions;
+  }
+
+  private static ReferenceOptions getReferencesProvider() {
+    var referenceOptions = new ReferenceOptions();
+    referenceOptions.setWorkDoneProgress(Boolean.FALSE);
+    return referenceOptions;
   }
 
   private static WorkspaceSymbolOptions getWorkspaceProvider() {
