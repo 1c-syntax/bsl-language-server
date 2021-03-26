@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
@@ -88,6 +89,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
   private final ReferencesProvider referencesProvider;
+  private final DefinitionProvider definitionProvider;
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -104,7 +106,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
     DefinitionParams params
   ) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
+    }
+
+    return CompletableFuture.supplyAsync(() ->
+      Either.forRight(definitionProvider.getDefinition(documentContext, params))
+    );
   }
 
   @Override
@@ -112,7 +121,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
     if (documentContext == null) {
       return CompletableFuture.completedFuture(Collections.emptyList());
-  }
+    }
 
     return CompletableFuture.supplyAsync(() -> referencesProvider.getReferences(documentContext, params));
   }
@@ -180,7 +189,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
-  
+
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());
