@@ -27,19 +27,15 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class HoverProviderTest {
 
   private static final String PATH_TO_FILE = "./src/test/resources/providers/hover.bsl";
@@ -98,84 +94,6 @@ class HoverProviderTest {
     var hover = optionalHover.get();
     assertThat(hover.getContents().getRight().getValue()).isNotEmpty();
     assertThat(hover.getRange()).isEqualTo(Ranges.create(6, 10, 20));
-  }
-
-  @Test
-  @Disabled
-  void testMethodsFromCommonModule() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-
-    HoverParams params = new HoverParams();
-    params.setPosition(new Position(38, 25));
-
-    // when
-    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
-
-    assertThat(optionalHover).isPresent();
-
-    var hover = optionalHover.get();
-    var content = hover.getContents().getRight().getValue();
-    assertThat(content).isNotEmpty();
-
-    var blocks = Arrays.asList(content.split("---\n?"));
-
-    assertThat(blocks).hasSize(3);
-    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
-      "Процедура УстаревшаяПроцедура() Экспорт\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из CommonModule.ПервыйОбщийМодуль\n\n");
-    assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
-  }
-
-  @Test
-  @Disabled
-  void testMethodsFromCommonModuleNonPublic() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-
-    HoverParams params = new HoverParams();
-    params.setPosition(new Position(40, 25));
-
-    // when
-    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
-
-    // TODO а должен ли ховер ее видеть???
-    assertThat(optionalHover).isPresent();
-
-    var hover = optionalHover.get();
-    var content = hover.getContents().getRight().getValue();
-    assertThat(content).isNotEmpty();
-
-    var blocks = Arrays.asList(content.split("---\n?"));
-
-    assertThat(blocks).hasSize(2);
-    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
-      "Процедура РегистрацияИзмененийПередУдалением(Источник, Отказ)\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из CommonModule.ПервыйОбщийМодуль\n\n");
-  }
-
-  @Test
-  @Disabled
-  void testMethodsFromGlobalContext() {
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-
-    HoverParams params = new HoverParams();
-    params.setPosition(new Position(42, 10));
-
-    // when
-    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
-
-    assertThat(optionalHover).isPresent();
-
-    var hover = optionalHover.get();
-    var content = hover.getContents().getRight().getValue();
-    assertThat(content).isNotEmpty();
-
-    var blocks = Arrays.asList(content.split("---\n?"));
-
-    assertThat(blocks).hasSize(2);
-    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
-      "Процедура ПроцедураМодуляПриложения() Экспорт\n```\n\n");
-    assertThat(blocks.get(1)).isEqualTo("Метод из ManagedApplicationModule\n\n");
-    assertThat(blocks.get(2)).isEqualTo("Доступный на клиенте метод\n\n");
   }
 
 }

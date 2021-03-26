@@ -58,7 +58,7 @@ class BSLLanguageServerTest {
     InitializeResult initialize = server.initialize(params).get();
 
     // then
-    assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider()).isTrue();
+    assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider().isRight()).isTrue();
   }
 
   @Test

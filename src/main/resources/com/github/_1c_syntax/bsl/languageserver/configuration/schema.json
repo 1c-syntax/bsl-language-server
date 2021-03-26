@@ -89,6 +89,9 @@
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
                 },
+                "CrazyMultilineString": {
+                    "$ref": "parameters-schema.json#/definitions/CrazyMultilineString"
+                },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
                 },
@@ -191,6 +194,9 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
+                "IncorrectUseLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
@@ -244,6 +250,9 @@
                 },
                 "MissingVariablesDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
+                },
+                "MultilineStringInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/MultilineStringInQuery"
                 },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
@@ -307,6 +316,9 @@
                 },
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
+                },
+                "SelectTopWithoutOrderBy": {
+                    "$ref": "parameters-schema.json#/definitions/SelectTopWithoutOrderBy"
                 },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
@@ -394,6 +406,9 @@
                 },
                 "UsingHardcodeSecretInformation": {
                     "$ref": "parameters-schema.json#/definitions/UsingHardcodeSecretInformation"
+                },
+                "UsingLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/UsingLikeInQuery"
                 },
                 "UsingModalWindows": {
                     "$ref": "parameters-schema.json#/definitions/UsingModalWindows"

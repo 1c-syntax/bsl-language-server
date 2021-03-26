@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.JLanguageToolPo
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +74,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
+  private static final String FORMAT_STRING_RU = "Л=|ЧЦ=|ЧДЦ=|ЧС=|ЧРД=|ЧРГ=|ЧН=|ЧВН=|ЧГ=|ЧО=|ДФ=|ДЛФ=|ДП=|БЛ=|БИ=";
+  private static final String FORMAT_STRING_EN = "|L=|ND=|NFD=0|NS=|NDS=|NGS=|NZ=|NLZ=|NG=|NN=|NF=|DF=|DLF=|DE=|BF=|BT=";
+  private static final Pattern FORMAT_STRING_PATTERN =
+    CaseInsensitivePattern.compile(FORMAT_STRING_RU + FORMAT_STRING_EN);
 
   private static final Integer[] rulesToFind = new Integer[]{
     BSLParser.RULE_string,
@@ -126,9 +131,10 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     StringBuilder text = new StringBuilder();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
-      .map(ruleContext -> (BSLParserRuleContext) ruleContext)
+      .map(BSLParserRuleContext.class::cast)
       .flatMap(ruleContext -> ruleContext.getTokens().stream())
       .filter(token -> tokenTypes.contains(token.getType()))
+      .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
       .forEach((Token token) -> {
           String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("");
           var splitList = Arrays.asList(StringUtils.splitByCharacterTypeCamelCase(curText));

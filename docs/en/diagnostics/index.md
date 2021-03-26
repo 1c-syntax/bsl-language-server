@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **132**
+Total: **137**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
-* Error: **39**
-* Code smell: **86**
+* Error: **42**
+* Code smell: **88**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -40,6 +40,7 @@ Total: **132**
  [CompilationDirectiveLost](CompilationDirectiveLost.md) | Methods compilation directive | Yes | Major | Code smell | `standard`<br>`unpredictable` 
  [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Needless compilation directive | Yes | Major | Code smell | `clumsy`<br>`standard`<br>`unpredictable` 
  [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Consecutive empty lines | Yes | Info | Code smell | `badpractice` 
+ [CrazyMultilineString](CrazyMultilineString.md) | Crazy multiline literals | Yes | Major | Code smell | `badpractice`<br>`suspicious`<br>`unpredictable` 
  [CreateQueryInCycle](CreateQueryInCycle.md) | Execution query on cycle | Yes | Critical | Error | `performance` 
  [CyclomaticComplexity](CyclomaticComplexity.md) | Cyclomatic complexity | Yes | Critical | Code smell | `brainoverload` 
  [DataExchangeLoading](DataExchangeLoading.md) | There is no check for the attribute DataExchange.Load in the object's event handler | Yes | Critical | Error | `standard`<br>`badpractice`<br>`unpredictable` 
@@ -74,6 +75,7 @@ Total: **132**
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Duplicated code blocks in If...Then...ElseIf... statements | Yes | Minor | Code smell | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` 
+ [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Incorrect use of 'LIKE' | Yes | Critical | Error | `standard`<br>`sql`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | IsInRole global method call | Yes | Major | Code smell | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Join with sub queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
@@ -92,6 +94,7 @@ Total: **132**
  [MissingSpace](MissingSpace.md) | Missing spaces to the left or right of operators + - * / = % < > <> <= >=, keywords, and also to the right of , and ; | Yes | Info | Code smell | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Missing temporary file deletion after using | Yes | Major | Error | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | All variables declarations must have a description | Yes | Minor | Code smell | `standard` 
+ [MultilineStringInQuery](MultilineStringInQuery.md) | Multi-line literal in query | Yes | Critical | Error | `badpractice`<br>`suspicious`<br>`unpredictable` 
  [MultilingualStringHasAllDeclaredLanguages](MultilingualStringHasAllDeclaredLanguages.md) | There is a localized text for all languages declared in the configuration | Yes | Minor | Error | `error`<br>`localize` 
  [MultilingualStringUsingWithTemplate](MultilingualStringUsingWithTemplate.md) | Partially localized text is used in the StrTemplate function | Yes | Major | Error | `error`<br>`localize` 
  [NestedConstructorsInStructureDeclaration](NestedConstructorsInStructureDeclaration.md) | Nested constructors with parameters in structure declaration | Yes | Minor | Code smell | `badpractice`<br>`brainoverload` 
@@ -113,6 +116,7 @@ Total: **132**
  [PublicMethodsDescription](PublicMethodsDescription.md) | All public methods must have a description | Yes | Info | Code smell | `standard`<br>`brainoverload`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Redundant access to an object | Yes | Info | Code smell | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Overuse "Reference" in a query | Yes | Major | Code smell | `sql`<br>`performance` 
+ [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Using 'SELECT TOP' without 'ORDER BY' | Yes | Major | Code smell | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Variable is assigned to itself | Yes | Major | Error | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Insert a collection into itself | Yes | Major | Error | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Statement should end with semicolon symbol ";" | Yes | Minor | Code smell | `standard`<br>`badpractice` 
@@ -142,6 +146,7 @@ Total: **132**
  [UsingHardcodeNetworkAddress](UsingHardcodeNetworkAddress.md) | Using hardcode ip addresses in code | Yes | Critical | Vulnerability | `standard` 
  [UsingHardcodePath](UsingHardcodePath.md) | Using hardcode file paths in code | Yes | Critical | Error | `standard` 
  [UsingHardcodeSecretInformation](UsingHardcodeSecretInformation.md) | Storing confidential information in code | Yes | Critical | Vulnerability | `standard` 
+ [UsingLikeInQuery](UsingLikeInQuery.md) | Using 'LIKE' in query | No | Critical | Error | `sql`<br>`unpredictable` 
  [UsingModalWindows](UsingModalWindows.md) | Using modal windows | Yes | Major | Code smell | `standard` 
  [UsingObjectNotAvailableUnix](UsingObjectNotAvailableUnix.md) | Using unavailable in Unix objects | Yes | Critical | Error | `standard`<br>`lockinos` 
  [UsingServiceTag](UsingServiceTag.md) | Using service tags | Yes | Info | Code smell | `badpractice` 

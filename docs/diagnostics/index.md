@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **132**
+Общее количество: **137**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
-* Ошибка: **39**
-* Дефект кода: **86**
+* Ошибка: **42**
+* Дефект кода: **88**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -40,6 +40,7 @@
  [CompilationDirectiveLost](CompilationDirectiveLost.md) | Директивы компиляции методов | Да | Важный | Дефект кода | `standard`<br>`unpredictable` 
  [CompilationDirectiveNeedLess](CompilationDirectiveNeedLess.md) | Лишняя директива компиляции | Да | Важный | Дефект кода | `clumsy`<br>`standard`<br>`unpredictable` 
  [ConsecutiveEmptyLines](ConsecutiveEmptyLines.md) | Подряд идущие пустые строки | Да | Информационный | Дефект кода | `badpractice` 
+ [CrazyMultilineString](CrazyMultilineString.md) | Безумные многострочные литералы | Да | Важный | Дефект кода | `badpractice`<br>`suspicious`<br>`unpredictable` 
  [CreateQueryInCycle](CreateQueryInCycle.md) | Выполнение запроса в цикле | Да | Критичный | Ошибка | `performance` 
  [CyclomaticComplexity](CyclomaticComplexity.md) | Цикломатическая сложность | Да | Критичный | Дефект кода | `brainoverload` 
  [DataExchangeLoading](DataExchangeLoading.md) | Отсутствует проверка признака ОбменДанными.Загрузка в обработчике событий объекта | Да | Критичный | Ошибка | `standard`<br>`badpractice`<br>`unpredictable` 
@@ -74,6 +75,7 @@
  [IfElseDuplicatedCodeBlock](IfElseDuplicatedCodeBlock.md) | Повторяющиеся блоки кода в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Незначительный | Дефект кода | `suspicious` 
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` 
+ [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Некорректное использование 'ПОДОБНО' | Да | Критичный | Ошибка | `standard`<br>`sql`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Соединение с вложенными запросами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
@@ -92,6 +94,7 @@
  [MissingSpace](MissingSpace.md) | Пропущены пробелы слева или справа от операторов `+ - * / = % < > <> <= >=`, от ключевых слов, а так же справа от `,` и `;` | Да | Информационный | Дефект кода | `badpractice` 
  [MissingTemporaryFileDeletion](MissingTemporaryFileDeletion.md) | Отсутствует удаление временного файла после использования | Да | Важный | Ошибка | `badpractice`<br>`standard` 
  [MissingVariablesDescription](MissingVariablesDescription.md) | Все объявления переменных должны иметь описание | Да | Незначительный | Дефект кода | `standard` 
+ [MultilineStringInQuery](MultilineStringInQuery.md) | Многострочный литерал в запросе | Да | Критичный | Ошибка | `badpractice`<br>`suspicious`<br>`unpredictable` 
  [MultilingualStringHasAllDeclaredLanguages](MultilingualStringHasAllDeclaredLanguages.md) | Есть локализованный текст для всех заявленных в конфигурации языков | Да | Незначительный | Ошибка | `error`<br>`localize` 
  [MultilingualStringUsingWithTemplate](MultilingualStringUsingWithTemplate.md) | Частично локализованный текст используется в функции СтрШаблон | Да | Важный | Ошибка | `error`<br>`localize` 
  [NestedConstructorsInStructureDeclaration](NestedConstructorsInStructureDeclaration.md) | Использование конструкторов с параметрами при объявлении структуры | Да | Незначительный | Дефект кода | `badpractice`<br>`brainoverload` 
@@ -113,6 +116,7 @@
  [PublicMethodsDescription](PublicMethodsDescription.md) | Все методы программного интерфейса должны иметь описание | Да | Информационный | Дефект кода | `standard`<br>`brainoverload`<br>`badpractice` 
  [RedundantAccessToObject](RedundantAccessToObject.md) | Избыточное обращение к объекту | Да | Информационный | Дефект кода | `standard`<br>`clumsy` 
  [RefOveruse](RefOveruse.md) | Избыточное использование "Ссылка" в запросе | Да | Важный | Дефект кода | `sql`<br>`performance` 
+ [SelectTopWithoutOrderBy](SelectTopWithoutOrderBy.md) | Использование 'ВЫБРАТЬ ПЕРВЫЕ' без 'УПОРЯДОЧИТЬ ПО' | Да | Важный | Дефект кода | `standard`<br>`sql`<br>`suspicious` 
  [SelfAssign](SelfAssign.md) | Присвоение переменной самой себе | Да | Важный | Ошибка | `suspicious` 
  [SelfInsertion](SelfInsertion.md) | Вставка коллекции в саму себя | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`performance` 
  [SemicolonPresence](SemicolonPresence.md) | Выражение должно заканчиваться символом ";" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice` 
@@ -142,6 +146,7 @@
  [UsingHardcodeNetworkAddress](UsingHardcodeNetworkAddress.md) | Хранение ip-адресов в коде | Да | Критичный | Уязвимость | `standard` 
  [UsingHardcodePath](UsingHardcodePath.md) | Хранение путей к файлам в коде | Да | Критичный | Ошибка | `standard` 
  [UsingHardcodeSecretInformation](UsingHardcodeSecretInformation.md) | Хранение конфиденциальной информации в коде | Да | Критичный | Уязвимость | `standard` 
+ [UsingLikeInQuery](UsingLikeInQuery.md) | Использование 'ПОДОБНО' в запросе | Нет | Критичный | Ошибка | `sql`<br>`unpredictable` 
  [UsingModalWindows](UsingModalWindows.md) | Использование модальных окон | Да | Важный | Дефект кода | `standard` 
  [UsingObjectNotAvailableUnix](UsingObjectNotAvailableUnix.md) | Использование объектов недоступных в Unix системах | Да | Критичный | Ошибка | `standard`<br>`lockinos` 
  [UsingServiceTag](UsingServiceTag.md) | Использование служебных тегов | Да | Информационный | Дефект кода | `badpractice` 

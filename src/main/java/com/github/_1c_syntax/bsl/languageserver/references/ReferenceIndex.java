@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
@@ -76,6 +77,12 @@ public class ReferenceIndex {
    */
   private final Map<URI, Map<Range, MultiKey<String>>> referencesRanges = new HashMap<>();
 
+  /**
+   * Получить ссылки на символ.
+   *
+   * @param symbol Символ, для которого необходимо осуществить поиск ссылок.
+   * @return Список ссылок на символ.
+   */
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
@@ -89,6 +96,13 @@ public class ReferenceIndex {
       .collect(Collectors.toList());
   }
 
+  /**
+   * Поиск символа по позиции курсора.
+   *
+   * @param uri URI документа, в котором необходимо осуществить поиск.
+   * @param position позиция курсора.
+   * @return данные ссылки.
+   */
   public Optional<Reference> getReference(URI uri, Position position) {
     return referencesRanges.getOrDefault(uri, Collections.emptyMap()).entrySet().stream()
       .filter(entry -> Ranges.containsPosition(entry.getKey(), position))
@@ -96,21 +110,36 @@ public class ReferenceIndex {
       .flatMap(entry -> buildReference(uri, position, entry.getValue(), entry.getKey()));
   }
 
+  /**
+   * Поиск ссылок на символы в документе.
+   *
+   * @param uri URI документа, в котором нужно найти ссылки на другие символы.
+   * @return Список ссылок на символы.
+   */
   public List<Reference> getReferencesFrom(URI uri) {
-
     return referencesFrom.getOrDefault(uri, MultiMapUtils.emptyMultiValuedMap()).entries().stream()
       .map(entry -> buildReference(uri, entry.getValue().getStart(), entry.getKey(), entry.getValue()))
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
-
   }
 
+  /**
+   * Поиск ссылок на символы в символе.
+   *
+   * @param symbol Символ, в котором нужно найти ссылки на другие символы.
+   * @return Список ссылок на символы.
+   */
   public List<Reference> getReferencesFrom(SourceDefinedSymbol symbol) {
     return getReferencesFrom(symbol.getOwner().getUri()).stream()
       .filter(reference -> reference.getFrom().equals(symbol))
       .collect(Collectors.toList());
   }
 
+  /**
+   * Очистить ссылки из/на текущий документ.
+   *
+   * @param uri URI документа.
+   */
   @Synchronized
   public void clearReferences(URI uri) {
     String stringUri = uri.toString();
@@ -125,6 +154,15 @@ public class ReferenceIndex {
     referencesRanges.remove(uri);
   }
 
+  /**
+   * Добавить вызов метода в индекс.
+   *
+   * @param uri URI документа, откуда произошел вызов.
+   * @param mdoRef Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
+   * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
+   * @param symbolName Имя символа, к которому происходит обращение.
+   * @param range Диапазон, в котором происходит обращение к символу.
+   */
   @Synchronized
   public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
     String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
@@ -149,7 +187,8 @@ public class ReferenceIndex {
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(uri, position);
         return new Reference(from, symbol, uri, selectionRange);
-      });
+      })
+      .filter(ReferenceIndex::isReferenceAccessible);
   }
 
   private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
@@ -192,4 +231,23 @@ public class ReferenceIndex {
       .findFirst()
       .orElseThrow();
   }
+
+  private static boolean isReferenceAccessible(Reference reference) {
+    if (!reference.isSourceDefinedSymbolReference()) {
+      return true;
+    }
+
+    SourceDefinedSymbol to = reference.getSourceDefinedSymbol().orElseThrow();
+    SourceDefinedSymbol from = reference.getFrom();
+    if (to.getOwner().equals(from.getOwner())) {
+      return true;
+    }
+
+    if (to instanceof Exportable) {
+      return ((Exportable) to).isExport();
+    }
+
+    return true;
+  }
+
 }
