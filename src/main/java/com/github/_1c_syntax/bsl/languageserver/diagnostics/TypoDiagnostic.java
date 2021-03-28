@@ -75,7 +75,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
   private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
   private static final Pattern QUOTE_PATTERN = Pattern.compile("\"");
   private static final String FORMAT_STRING_RU = "Л=|ЧЦ=|ЧДЦ=|ЧС=|ЧРД=|ЧРГ=|ЧН=|ЧВН=|ЧГ=|ЧО=|ДФ=|ДЛФ=|ДП=|БЛ=|БИ=";
-  private static final String FORMAT_STRING_EN = "|L=|ND=|NFD=0|NS=|NDS=|NGS=|NZ=|NLZ=|NG=|NN=|NF=|DF=|DLF=|DE=|BF=|BT=";
+  private static final String FORMAT_STRING_EN = "|L=|ND=|NFD=|NS=|NDS=|NGS=|NZ=|NLZ=|NG=|NN=|NF=|DF=|DLF=|DE=|BF=|BT=";
   private static final Pattern FORMAT_STRING_PATTERN =
     CaseInsensitivePattern.compile(FORMAT_STRING_RU + FORMAT_STRING_EN);
 
