@@ -137,12 +137,11 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     getLanguageToolPoolMap().get(lang).checkIn(languageTool);
   }
 
-  private Set<String> getTokenizedStringsFromTokens(
-    DocumentContext documentContext,
-    Map<String, List<Token>> tokensMap
+  private Map<String, List<Token>> getTokensMap(
+    DocumentContext documentContext
   ) {
-    StringBuilder text = new StringBuilder();
     Set<String> wordsToIgnore = getWordsToIgnore();
+    Map<String, List<Token>> tokensMap = new HashMap<>();
 
     Trees.findAllRuleNodes(documentContext.getAst(), rulesToFind).stream()
       .map(BSLParserRuleContext.class::cast)
@@ -150,39 +149,34 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .filter(token -> tokenTypes.contains(token.getType()))
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
       .forEach((Token token) -> {
-          String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("");
-          var splitList = Arrays.asList(StringUtils.splitByCharacterTypeCamelCase(curText));
-          splitList.stream()
+          String curText = QUOTE_PATTERN.matcher(token.getText().trim()).replaceAll("");
+          String[] camelCaseSplitedWords = StringUtils.splitByCharacterTypeCamelCase(curText);
+          var splitList = Arrays.stream(camelCaseSplitedWords)
             .filter(element -> element.length() >= minWordLength)
-            .forEach(element -> tokensMap.computeIfAbsent(element, newElement -> new ArrayList<>()).add(token));
+            .filter(Predicate.not(wordsToIgnore::contains))
+            .collect(Collectors.toList());
 
-          text.append(" ");
-          text.append(String.join(" ", splitList));
-
+          splitList.forEach(element -> tokensMap.computeIfAbsent(element, newElement -> new ArrayList<>()).add(token));
         }
       );
 
-    return Arrays.stream(SPACES_PATTERN.split(text.toString().trim()))
-      .filter(Predicate.not(wordsToIgnore::contains))
-      .collect(Collectors.toSet());
+    return tokensMap;
   }
 
   @Override
   protected void check() {
 
     String lang = info.getResourceString("diagnosticLanguage");
-    Map<String, List<Token>> tokensMap = new HashMap<>();
     Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
-
-    Set<String> stringsFromTokens = getTokenizedStringsFromTokens(documentContext, tokensMap);
+    Map<String, List<Token>> tokensMap = getTokensMap(documentContext);
 
     // build string of unchecked words
-    Set<String> uncheckedWords = stringsFromTokens.stream()
+    Set<String> uncheckedWords = tokensMap.keySet().stream()
       .filter(word -> !checkedWordsForLang.containsKey(word))
       .collect(Collectors.toSet());
 
     if (uncheckedWords.isEmpty()) {
-      fireDiagnosticOnCheckedWordsWithErrors(tokensMap, stringsFromTokens);
+      fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
       return;
     }
 
@@ -212,23 +206,22 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     // mark unmatched words without errors as checked
     uncheckedWords.forEach(word -> checkedWordsForLang.putIfAbsent(word, false));
 
-    fireDiagnosticOnCheckedWordsWithErrors(tokensMap, stringsFromTokens);
+    fireDiagnosticOnCheckedWordsWithErrors(tokensMap);
   }
 
   private void fireDiagnosticOnCheckedWordsWithErrors(
-    Map<String, List<Token>> tokensMap,
-    Set<String> stringsFromTokens
+    Map<String, List<Token>> tokensMap
   ) {
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
 
-    stringsFromTokens.stream()
-      .filter(word -> checkedWordsForLang.getOrDefault(word, false))
-      .forEach((String word) -> {
-        List<Token> tokens = tokensMap.get(word);
-        if (tokens != null) {
-          tokens.forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
-        }
+    tokensMap.entrySet().stream()
+      .filter(entry -> checkedWordsForLang.getOrDefault(entry.getKey(), false))
+      .forEach((Map.Entry<String, List<Token>> entry) -> {
+        String word = entry.getKey();
+        List<Token> tokens = entry.getValue();
+
+        tokens.forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
       });
   }
 
