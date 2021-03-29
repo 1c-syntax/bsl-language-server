@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -220,7 +219,6 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     Map<String, List<Token>> tokensMap,
     Set<String> stringsFromTokens
   ) {
-    Set<Token> uniqueValues = new HashSet<>();
     String lang = info.getResourceString("diagnosticLanguage");
     Map<String, Boolean> checkedWordsForLang = checkedWords.get(lang);
 
@@ -229,9 +227,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .forEach((String word) -> {
         List<Token> tokens = tokensMap.get(word);
         if (tokens != null) {
-          tokens.stream()
-            .filter(uniqueValues::add)
-            .forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
+          tokens.forEach(token -> diagnosticStorage.addDiagnostic(token, info.getMessage(word)));
         }
       });
   }
