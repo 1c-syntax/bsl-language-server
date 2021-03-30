@@ -76,14 +76,13 @@ public class WrongUseFunctionProceedWithCallDiagnostic extends AbstractFindMetho
       return false;
     }
 
-    List<Annotation> methodAnnotations = documentContext.getSymbolTree().getMethodSymbol(parentNode).map(MethodSymbol::getAnnotations).get();
-    for (Annotation methodAnnotation : methodAnnotations) {
-      if (EXTENSION_ANNOTATIONS.contains(methodAnnotation.getKind())) {
-        return false;
-      }
-    }
+    var isWrongMethodAnnotation = documentContext.getSymbolTree()
+      .getMethodSymbol(parentNode)
+      .flatMap(MethodSymbol -> MethodSymbol.getAnnotations().stream().findFirst())
+      .filter(annotation -> EXTENSION_ANNOTATIONS.contains(annotation.getKind()))
+      .isEmpty();
 
-    return true;
+    return isWrongMethodAnnotation;
   }
 
   @Override
