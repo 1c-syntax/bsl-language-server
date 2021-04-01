@@ -57,7 +57,7 @@ dependencies {
     api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.11.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "71731f69761250743ed49e28315df2d237da9bb0") {
+    api("com.github.1c-syntax", "bsl-parser", "0.18.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -271,7 +271,7 @@ publishing {
 }
 
 fun addDependency(dependenciesNode: Node, scope: String): (ResolvedDependency) -> Unit = { artifact: ResolvedDependency ->
-    val dependency = artifact.module.id;
+    val dependency = artifact.module.id
     val dependencyNode = dependenciesNode.appendNode("dependency")
     dependencyNode.appendNode("groupId", dependency.group)
     dependencyNode.appendNode("artifactId", dependency.name)
