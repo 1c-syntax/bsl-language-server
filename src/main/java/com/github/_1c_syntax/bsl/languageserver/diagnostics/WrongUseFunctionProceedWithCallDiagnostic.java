@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -33,9 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -55,9 +50,7 @@ public class WrongUseFunctionProceedWithCallDiagnostic extends AbstractFindMetho
     "(ПродолжитьВызов|ProceedWithCall)"
   );
 
-  private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
-    AnnotationKind.AROUND
-  );
+  private static final AnnotationKind EXTENSION_ANNOTATION_AROUND = AnnotationKind.AROUND;
 
   public WrongUseFunctionProceedWithCallDiagnostic() {
     super(MESSAGE_PATTERN);
@@ -65,22 +58,22 @@ public class WrongUseFunctionProceedWithCallDiagnostic extends AbstractFindMetho
 
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-
-    var isFindMethod = getMethodPattern().matcher(ctx.methodName().getText()).matches();
-    if (!isFindMethod) {
-      return false;
-    }
-
     var parentNode = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
+
     if (parentNode == null) {
       return false;
     }
 
-    return documentContext.getSymbolTree()
-      .getMethodSymbol(parentNode)
-      .flatMap(MethodSymbol -> MethodSymbol.getAnnotations().stream().findFirst())
-      .filter(annotation -> EXTENSION_ANNOTATIONS.contains(annotation.getKind()))
-      .isEmpty();
+    var isAroundAnnotationMethod = documentContext.getSymbolTree().getMethodSymbol(parentNode)
+      .stream()
+      .flatMap(methodSymbol -> methodSymbol.getAnnotations().stream())
+      .filter(annotation -> annotation.getKind() == EXTENSION_ANNOTATION_AROUND)
+      .count() == 1;
+    if (!isAroundAnnotationMethod) {
+      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
+    }
+
+    return false;
 
   }
 
