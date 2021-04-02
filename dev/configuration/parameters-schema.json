@@ -1724,6 +1724,16 @@
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
         },
+        "WrongUseFunctionProceedWithCall": {
+            "description": "Wrong use of ProceedWithCall function",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong use of ProceedWithCall function",
+            "$id": "#/definitions/WrongUseFunctionProceedWithCall"
+        },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",
             "default": true,

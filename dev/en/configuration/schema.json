@@ -428,6 +428,9 @@
                 "VirtualTableCallWithoutParameters": {
                     "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
                 },
+                "WrongUseFunctionProceedWithCall": {
+                    "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
+                },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"
                 },
