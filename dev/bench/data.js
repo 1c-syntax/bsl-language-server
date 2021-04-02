@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617296355412,
+  "lastUpdate": 1617340773915,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -9703,6 +9703,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6460048429147913",
             "extra": "mean: 81.58356388409932 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "65a0f80537fedf9ab5d0103ed49ab33e23de57b4",
+          "message": "Merge pull request #1606 from sokolov-rv/feature/WrongUseFunctionProceedWithCall\n\n#1593 Создание диагностики WrongUseFunctionProceedWithCall",
+          "timestamp": "2021-04-02T08:10:53+03:00",
+          "tree_id": "29d467ad52b54d47bbba5ca1852fada7c19a5478",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/65a0f80537fedf9ab5d0103ed49ab33e23de57b4"
+        },
+        "date": 1617340770917,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 86.37110916773479,
+            "unit": "sec",
+            "range": "stddev: 1.0958667148596628",
+            "extra": "mean: 86.37110916773479 sec\nrounds: 3"
           }
         ]
       }
