@@ -1534,6 +1534,16 @@
             },
             "$id": "#/definitions/UnusedLocalMethod"
         },
+        "UnusedLocalVariable": {
+            "description": "Unused local variable",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Unused local variable",
+            "$id": "#/definitions/UnusedLocalVariable"
+        },
         "UnusedParameters": {
             "description": "Unused parameter",
             "default": true,
