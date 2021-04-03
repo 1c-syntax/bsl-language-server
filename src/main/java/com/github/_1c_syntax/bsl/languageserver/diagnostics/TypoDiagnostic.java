@@ -180,7 +180,9 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       return;
     }
 
-    String uncheckedWordsString = String.join(" ", uncheckedWords);
+    // Join with double \n to force LT make paragraph after each word.
+    // Otherwise results may be flaky cause of sort order of words in file.
+    String uncheckedWordsString = String.join("\n\n", uncheckedWords);
 
     JLanguageTool languageTool = acquireLanguageTool(lang);
 
@@ -200,7 +202,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     // check words and mark matched as checked
     matches.stream()
       .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
-      .map(ruleMatch -> uncheckedWordsString.substring(ruleMatch.getFromPos(), ruleMatch.getToPos()))
+      .map(ruleMatch -> ruleMatch.getSentence().getTokens()[1].getToken())
       .forEach((String substring) -> checkedWordsForLang.put(substring, true));
 
     // mark unmatched words without errors as checked
