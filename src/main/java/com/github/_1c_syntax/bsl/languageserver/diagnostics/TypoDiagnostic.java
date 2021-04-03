@@ -151,12 +151,12 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .forEach((Token token) -> {
           String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("").trim();
           String[] camelCaseSplitedWords = StringUtils.splitByCharacterTypeCamelCase(curText);
-          var splitList = Arrays.stream(camelCaseSplitedWords)
+
+          Arrays.stream(camelCaseSplitedWords)
+            .filter(Predicate.not(String::isBlank))
             .filter(element -> element.length() >= minWordLength)
             .filter(Predicate.not(wordsToIgnore::contains))
-            .collect(Collectors.toList());
-
-          splitList.forEach(element -> tokensMap.computeIfAbsent(element, newElement -> new ArrayList<>()).add(token));
+            .forEach(element -> tokensMap.computeIfAbsent(element, newElement -> new ArrayList<>()).add(token));
         }
       );
 
