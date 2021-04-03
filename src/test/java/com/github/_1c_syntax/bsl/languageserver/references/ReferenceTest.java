@@ -48,7 +48,8 @@ class ReferenceTest {
       moduleSymbol,
       methodSymbol,
       FAKE_DOCUMENT_URI,
-      selectionRange
+      selectionRange,
+      false
     );
 
     // then
@@ -69,7 +70,8 @@ class ReferenceTest {
       moduleSymbol,
       methodSymbol,
       FAKE_DOCUMENT_URI,
-      selectionRange
+      selectionRange,
+      false
     );
 
     // when
@@ -93,7 +95,8 @@ class ReferenceTest {
       moduleSymbol,
       methodSymbol,
       FAKE_DOCUMENT_URI,
-      selectionRange
+      selectionRange,
+      false
     );
     var location = reference.toLocation();
 

@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.variable;
 
 public enum VariableKind {
+  DYNAMIC,
   LOCAL,
+  PARAMETER,
   MODULE,
   GLOBAL
 }

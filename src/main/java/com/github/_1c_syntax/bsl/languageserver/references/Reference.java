@@ -56,6 +56,11 @@ public class Reference {
    */
   Range selectionRange;
 
+  /**
+   * Признак указывающий на перезапись значения в месте расположения ссылки
+   */
+  boolean isWrite;
+
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)
       .filter(SourceDefinedSymbol.class::isInstance)
@@ -71,7 +76,7 @@ public class Reference {
   }
 
   public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange());
+    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), false);
   }
 
 }
