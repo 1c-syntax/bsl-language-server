@@ -149,7 +149,7 @@ public class TypoDiagnostic extends AbstractDiagnostic {
       .filter(token -> tokenTypes.contains(token.getType()))
       .filter(token -> !FORMAT_STRING_PATTERN.matcher(token.getText()).find())
       .forEach((Token token) -> {
-          String curText = QUOTE_PATTERN.matcher(token.getText().trim()).replaceAll("");
+          String curText = QUOTE_PATTERN.matcher(token.getText()).replaceAll("").trim();
           String[] camelCaseSplitedWords = StringUtils.splitByCharacterTypeCamelCase(curText);
           var splitList = Arrays.stream(camelCaseSplitedWords)
             .filter(element -> element.length() >= minWordLength)
