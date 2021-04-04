@@ -224,7 +224,13 @@ public class ReferenceIndex {
     return getSourceDefinedSymbol(multikey)
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(uri, position);
-        return new Reference(from, symbol, uri, selectionRange, isReferenceWrite(uri, position));
+        return Reference.builder()
+          .from(from)
+          .symbol(symbol)
+          .uri(uri)
+          .selectionRange(selectionRange)
+          .isWrite(isReferenceWrite(uri, position))
+          .build();
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }

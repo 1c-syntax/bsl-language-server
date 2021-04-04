@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import lombok.Builder;
 import lombok.Value;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
@@ -34,6 +35,7 @@ import java.util.Optional;
  * Ссылка на символ.
  */
 @Value
+@Builder
 public class Reference {
 
   /**
@@ -59,7 +61,8 @@ public class Reference {
   /**
    * Признак указывающий на перезапись значения в месте расположения ссылки
    */
-  boolean isWrite;
+  @Builder.Default
+  boolean isWrite = false;
 
   public Optional<SourceDefinedSymbol> getSourceDefinedSymbol() {
     return Optional.of(symbol)

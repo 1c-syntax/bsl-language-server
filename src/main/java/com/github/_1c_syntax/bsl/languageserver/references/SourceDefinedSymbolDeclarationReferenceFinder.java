@@ -43,6 +43,8 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
+    // TODO: Разобраться, что тут происходит. Не обнаружил вызовов при прогоне тестов. Странная ссылка получается.
+
     DocumentContext document = serverContext.getDocument(uri);
     if (document == null) {
       return Optional.empty();
@@ -53,13 +55,12 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
       .stream()
       .filter(sourceDefinedSymbol -> Ranges.containsPosition(sourceDefinedSymbol.getSelectionRange(), position))
       .map(
-        sourceDefinedSymbol -> new Reference(
-          symbolTree.getModule(),
-          sourceDefinedSymbol,
-          uri,
-          sourceDefinedSymbol.getSelectionRange(),
-          false
-        )
+        sourceDefinedSymbol -> Reference.builder()
+          .from(symbolTree.getModule())
+          .symbol(sourceDefinedSymbol)
+          .uri(uri)
+          .selectionRange(sourceDefinedSymbol.getSelectionRange())
+          .build()
       )
       .findFirst();
   }
