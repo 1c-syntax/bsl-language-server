@@ -682,6 +682,16 @@
             "title": "Incorrect use of 'LIKE'",
             "$id": "#/definitions/IncorrectUseLikeInQuery"
         },
+        "IncorrectUseOfStrTemplate": {
+            "description": "Incorrect use of \"StrTemplate\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of \"StrTemplate\"",
+            "$id": "#/definitions/IncorrectUseOfStrTemplate"
+        },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
             "default": true,
