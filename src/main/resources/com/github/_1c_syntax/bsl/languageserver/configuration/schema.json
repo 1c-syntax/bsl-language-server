@@ -197,6 +197,9 @@
                 "IncorrectUseLikeInQuery": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
                 },
+                "IncorrectUseOfStrTemplate": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
                 },
