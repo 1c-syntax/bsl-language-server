@@ -232,9 +232,9 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
   }
 
   private static boolean isNotEmptyStringByToken(Token token) {
-    boolean result = token.getType() == BSLParser.STRING && token.getText().length() != 2;
+    boolean result = token.getType() == BSLParser.STRING && token.getText().length() > 2;
     if (result) {
-      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().replace("\"", "")).find();
+      boolean foundStars = PATTERN_CHECK_PASSWORD.matcher(token.getText().substring(1, token.getText().length() - 1)).find();
       if (foundStars) {
         result = false;
       }

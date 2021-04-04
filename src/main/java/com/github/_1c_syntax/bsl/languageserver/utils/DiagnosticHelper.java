@@ -24,16 +24,20 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameterInfo;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 @Slf4j
 @UtilityClass
@@ -127,5 +131,32 @@ public final class DiagnosticHelper {
     }
 
     configureDiagnostic(diagnostic, newConfiguration);
+  }
+
+  /**
+   * Создает PATTERN из строки со словами с разделителем ',' (запятая) (используется в параметрах диагностики).
+   * При создании паттерна удаляются концевые пробелы слов
+   *
+   * @param words Строка со словами
+   * @return Созданный паттерн
+   */
+  public static Pattern createPatternFromString(@NotNull String words) {
+    return createPatternFromString(words, ",");
+  }
+
+  /**
+   * Создает PATTERN из строки со словами с указанным разделителем (используется в параметрах диагностики).
+   * При создании паттерна удаляются концевые пробелы слов
+   *
+   * @param words Строка со словами
+   * @return Созданный паттерн
+   */
+  public static Pattern createPatternFromString(@NotNull String words, String delimiter) {
+    StringJoiner stringJoiner = new StringJoiner("|");
+    for (String elem : words.split(delimiter)) {
+      stringJoiner.add(Pattern.quote(elem.trim()));
+    }
+
+    return CaseInsensitivePattern.compile("(?:^" + stringJoiner.toString() + ").*");
   }
 }

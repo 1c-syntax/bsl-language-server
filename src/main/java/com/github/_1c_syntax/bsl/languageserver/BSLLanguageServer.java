@@ -26,17 +26,29 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.CallHierarchyRegistrationOptions;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.DefinitionOptions;
+import org.eclipse.lsp4j.DocumentFormattingOptions;
 import org.eclipse.lsp4j.DocumentLinkOptions;
+import org.eclipse.lsp4j.DocumentRangeFormattingOptions;
+import org.eclipse.lsp4j.DocumentSymbolOptions;
+import org.eclipse.lsp4j.FoldingRangeProviderOptions;
+import org.eclipse.lsp4j.HoverOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.ReferenceOptions;
 import org.eclipse.lsp4j.SaveOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.TextDocumentSyncOptions;
+import org.eclipse.lsp4j.WorkspaceSymbolOptions;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
@@ -47,6 +59,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -59,6 +72,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final BSLWorkspaceService workspaceService;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+  private final DocumentSelector documentSelector;
   private boolean shutdownWasCalled;
 
   @Override
@@ -69,14 +83,18 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
     ServerCapabilities capabilities = new ServerCapabilities();
     capabilities.setTextDocumentSync(getTextDocumentSyncOptions());
-    capabilities.setDocumentRangeFormattingProvider(Boolean.TRUE);
-    capabilities.setDocumentFormattingProvider(Boolean.TRUE);
-    capabilities.setFoldingRangeProvider(Boolean.TRUE);
-    capabilities.setDocumentSymbolProvider(Boolean.TRUE);
-    capabilities.setCodeActionProvider(Boolean.TRUE);
-    capabilities.setCodeLensProvider(new CodeLensOptions());
-    capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
-    capabilities.setWorkspaceSymbolProvider(Boolean.TRUE);
+    capabilities.setDocumentRangeFormattingProvider(getDocumentRangeFormattingProvider());
+    capabilities.setDocumentFormattingProvider(getDocumentFormattingProvider());
+    capabilities.setFoldingRangeProvider(getFoldingRangeProvider());
+    capabilities.setDocumentSymbolProvider(getDocumentSymbolProvider());
+    capabilities.setCodeActionProvider(getCodeActionProvider());
+    capabilities.setCodeLensProvider(getCodeLensProvider());
+    capabilities.setDocumentLinkProvider(getDocumentLinkProvider());
+    capabilities.setWorkspaceSymbolProvider(getWorkspaceProvider());
+    capabilities.setHoverProvider(getHoverProvider());
+    capabilities.setReferencesProvider(getReferencesProvider());
+    capabilities.setDefinitionProvider(getDefinitionProvider());
+    capabilities.setCallHierarchyProvider(getCallHierarchyProvider());
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 
@@ -152,5 +170,91 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     textDocumentSync.setSave(save);
 
     return textDocumentSync;
+  }
+
+  private static CodeActionOptions getCodeActionProvider() {
+    var codeActionOptions = new CodeActionOptions();
+    codeActionOptions.setWorkDoneProgress(Boolean.FALSE);
+    codeActionOptions.setResolveProvider(Boolean.FALSE);
+
+    var codeActionKinds = List.of(
+      CodeActionKind.QuickFix,
+      CodeActionKind.Refactor
+    );
+
+    codeActionOptions.setCodeActionKinds(codeActionKinds);
+
+    return codeActionOptions;
+  }
+
+  private static DocumentSymbolOptions getDocumentSymbolProvider() {
+    var documentSymbolOptions = new DocumentSymbolOptions();
+    documentSymbolOptions.setWorkDoneProgress(Boolean.FALSE);
+    documentSymbolOptions.setLabel(DocumentSymbolProvider.LABEL);
+    return documentSymbolOptions;
+  }
+
+  private FoldingRangeProviderOptions getFoldingRangeProvider() {
+    var foldingRangeProviderOptions = new FoldingRangeProviderOptions();
+    foldingRangeProviderOptions.setWorkDoneProgress(Boolean.FALSE);
+    foldingRangeProviderOptions.setDocumentSelector(documentSelector.asList());
+
+    return foldingRangeProviderOptions;
+  }
+
+  private static DocumentFormattingOptions getDocumentFormattingProvider() {
+    var documentFormattingOptions = new DocumentFormattingOptions();
+    documentFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
+    return documentFormattingOptions;
+  }
+
+  private static DocumentRangeFormattingOptions getDocumentRangeFormattingProvider() {
+    var documentRangeFormattingOptions = new DocumentRangeFormattingOptions();
+    documentRangeFormattingOptions.setWorkDoneProgress(Boolean.FALSE);
+    return documentRangeFormattingOptions;
+  }
+
+  private static CodeLensOptions getCodeLensProvider() {
+    var codeLensOptions = new CodeLensOptions();
+    codeLensOptions.setResolveProvider(Boolean.FALSE);
+    codeLensOptions.setWorkDoneProgress(Boolean.FALSE);
+    return codeLensOptions;
+  }
+
+  private static DocumentLinkOptions getDocumentLinkProvider() {
+    var documentLinkOptions = new DocumentLinkOptions();
+    documentLinkOptions.setResolveProvider(Boolean.FALSE);
+    return documentLinkOptions;
+  }
+
+  private static HoverOptions getHoverProvider() {
+    var hoverOptions = new HoverOptions();
+    hoverOptions.setWorkDoneProgress(Boolean.FALSE);
+    return hoverOptions;
+  }
+
+  private static DefinitionOptions getDefinitionProvider() {
+    var definitionOptions = new DefinitionOptions();
+    definitionOptions.setWorkDoneProgress(Boolean.FALSE);
+    return definitionOptions;
+  }
+
+  private static ReferenceOptions getReferencesProvider() {
+    var referenceOptions = new ReferenceOptions();
+    referenceOptions.setWorkDoneProgress(Boolean.FALSE);
+    return referenceOptions;
+  }
+
+  private CallHierarchyRegistrationOptions getCallHierarchyProvider() {
+    var callHierarchyRegistrationOptions = new CallHierarchyRegistrationOptions();
+    callHierarchyRegistrationOptions.setWorkDoneProgress(Boolean.FALSE);
+    callHierarchyRegistrationOptions.setDocumentSelector(documentSelector.asList());
+    return callHierarchyRegistrationOptions;
+  }
+
+  private static WorkspaceSymbolOptions getWorkspaceProvider() {
+    var workspaceSymbolOptions = new WorkspaceSymbolOptions();
+    workspaceSymbolOptions.setWorkDoneProgress(Boolean.FALSE);
+    return workspaceSymbolOptions;
   }
 }

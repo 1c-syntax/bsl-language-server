@@ -42,7 +42,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class VariableSymbol implements SourceDefinedSymbol {
+public class VariableSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;
   @Builder.Default
   SymbolKind symbolKind = SymbolKind.Variable;

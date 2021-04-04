@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.Position;
@@ -37,37 +38,62 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class HoverProviderTest {
 
+  private static final String PATH_TO_FILE = "./src/test/resources/providers/hover.bsl";
+
   @Autowired
   private HoverProvider hoverProvider;
 
   @Test
-  void getEmptyHover() {
+  void testEmptyHover() {
+    // given
     HoverParams params = new HoverParams();
     params.setPosition(new Position(0, 0));
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
-    Optional<Hover> optionalHover = hoverProvider.getHover(params, documentContext);
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
     assertThat(optionalHover).isNotPresent();
   }
 
   @Test
-  void getHoverOverSubName() {
+  void testSourceDefinedMethod() {
+    // given
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
     HoverParams params = new HoverParams();
-    params.setPosition(new Position(0, 20));
+    params.setPosition(new Position(3, 10));
 
-    DocumentContext documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/providers/hover.bsl");
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
 
-    Optional<Hover> optionalHover = hoverProvider.getHover(params, documentContext);
-
+    // then
     assertThat(optionalHover).isPresent();
 
-    Hover hover = optionalHover.get();
+    var hover = optionalHover.get();
+    assertThat(hover.getContents().getRight().getValue()).isNotEmpty();
+    assertThat(hover.getRange()).isEqualTo(Ranges.create(3, 8, 18));
+  }
 
-    assertThat(hover.getContents().getRight().getValue()).isEqualTo("ИмяПроцедуры");
-    assertThat(hover.getRange().getStart()).isEqualTo(new Position(0, 10));
-    assertThat(hover.getRange().getEnd()).isEqualTo(new Position(0, 22));
+  @Test
+  void testSourceDefinedVariable() {
+    // given
+    DocumentContext documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
+    HoverParams params = new HoverParams();
+    params.setPosition(new Position(6, 15));
+
+    // when
+    Optional<Hover> optionalHover = hoverProvider.getHover(documentContext, params);
+
+    // then
+    assertThat(optionalHover).isPresent();
+
+    var hover = optionalHover.get();
+    assertThat(hover.getContents().getRight().getValue()).isNotEmpty();
+    assertThat(hover.getRange()).isEqualTo(Ranges.create(6, 10, 20));
   }
 
 }

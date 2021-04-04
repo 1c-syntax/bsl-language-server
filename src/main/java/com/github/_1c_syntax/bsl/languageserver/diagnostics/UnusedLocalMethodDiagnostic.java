@@ -25,10 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -38,6 +39,7 @@ import org.antlr.v4.runtime.tree.Trees;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -45,7 +47,6 @@ import java.util.stream.Collectors;
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  scope = DiagnosticScope.ALL,
   modules = {
     ModuleType.CommonModule
   },
@@ -58,13 +59,14 @@ import java.util.stream.Collectors;
 )
 public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern ATTACHABLE_PATTERN = CaseInsensitivePattern.compile(
-    "(подключаемый_.*|attachable_.*)"
-  );
-
   private static final Pattern HANDLER_PATTERN = CaseInsensitivePattern.compile(
     "(ПриСозданииОбъекта|OnObjectCreate)"
   );
+
+  /**
+   * Префиксы подключаемых методов
+   */
+  private static final String ATTACHABLE_METHOD_PREFIXES = "подключаемый_,attachable_";
 
   private static final Set<AnnotationKind> EXTENSION_ANNOTATIONS = EnumSet.of(
     AnnotationKind.AFTER,
@@ -73,8 +75,20 @@ public class UnusedLocalMethodDiagnostic extends AbstractVisitorDiagnostic {
     AnnotationKind.CHANGEANDVALIDATE
   );
 
-  private static boolean isAttachable(MethodSymbol methodSymbol) {
-    return ATTACHABLE_PATTERN.matcher(methodSymbol.getName()).matches();
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ATTACHABLE_METHOD_PREFIXES
+  )
+  private Pattern attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(ATTACHABLE_METHOD_PREFIXES);
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    this.attachableMethodPrefixes = DiagnosticHelper.createPatternFromString(
+      (String) configuration.getOrDefault("attachableMethodPrefixes", ATTACHABLE_METHOD_PREFIXES));
+  }
+
+  private boolean isAttachable(MethodSymbol methodSymbol) {
+    return attachableMethodPrefixes.matcher(methodSymbol.getName()).matches();
   }
 
   private static boolean isHandler(MethodSymbol methodSymbol) {

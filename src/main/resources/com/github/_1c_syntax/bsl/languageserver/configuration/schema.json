@@ -89,6 +89,9 @@
                 "ConsecutiveEmptyLines": {
                     "$ref": "parameters-schema.json#/definitions/ConsecutiveEmptyLines"
                 },
+                "CrazyMultilineString": {
+                    "$ref": "parameters-schema.json#/definitions/CrazyMultilineString"
+                },
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
                 },
@@ -191,8 +194,8 @@
                 "IfElseIfEndsWithElse": {
                     "$ref": "parameters-schema.json#/definitions/IfElseIfEndsWithElse"
                 },
-                "IncorrectUseOfStrTemplate": {
-                    "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
+                "IncorrectUseLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
                 },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
@@ -211,6 +214,9 @@
                 },
                 "LineLength": {
                     "$ref": "parameters-schema.json#/definitions/LineLength"
+                },
+                "LogicalOrInTheWhereSectionOfQuery": {
+                    "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
                 },
                 "MagicDate": {
                     "$ref": "parameters-schema.json#/definitions/MagicDate"
@@ -244,6 +250,9 @@
                 },
                 "MissingVariablesDescription": {
                     "$ref": "parameters-schema.json#/definitions/MissingVariablesDescription"
+                },
+                "MultilineStringInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/MultilineStringInQuery"
                 },
                 "MultilingualStringHasAllDeclaredLanguages": {
                     "$ref": "parameters-schema.json#/definitions/MultilingualStringHasAllDeclaredLanguages"
@@ -308,6 +317,9 @@
                 "RefOveruse": {
                     "$ref": "parameters-schema.json#/definitions/RefOveruse"
                 },
+                "SelectTopWithoutOrderBy": {
+                    "$ref": "parameters-schema.json#/definitions/SelectTopWithoutOrderBy"
+                },
                 "SelfAssign": {
                     "$ref": "parameters-schema.json#/definitions/SelfAssign"
                 },
@@ -368,6 +380,9 @@
                 "UnusedParameters": {
                     "$ref": "parameters-schema.json#/definitions/UnusedParameters"
                 },
+                "UsageWriteLogEvent": {
+                    "$ref": "parameters-schema.json#/definitions/UsageWriteLogEvent"
+                },
                 "UseLessForEach": {
                     "$ref": "parameters-schema.json#/definitions/UseLessForEach"
                 },
@@ -392,6 +407,9 @@
                 "UsingHardcodeSecretInformation": {
                     "$ref": "parameters-schema.json#/definitions/UsingHardcodeSecretInformation"
                 },
+                "UsingLikeInQuery": {
+                    "$ref": "parameters-schema.json#/definitions/UsingLikeInQuery"
+                },
                 "UsingModalWindows": {
                     "$ref": "parameters-schema.json#/definitions/UsingModalWindows"
                 },
@@ -406,6 +424,12 @@
                 },
                 "UsingThisForm": {
                     "$ref": "parameters-schema.json#/definitions/UsingThisForm"
+                },
+                "VirtualTableCallWithoutParameters": {
+                    "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
+                },
+                "WrongUseFunctionProceedWithCall": {
+                    "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"

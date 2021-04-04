@@ -1,6 +1,5 @@
 import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
-import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.CommitVersionDescription
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
 import java.util.*
@@ -12,10 +11,10 @@ plugins {
     id("net.kyori.indra.license-header") version "1.3.1"
     id("org.sonarqube") version "3.1.1"
     id("io.franzbecker.gradle-lombok") version "4.0.0"
-    id("me.qoomon.git-versioning") version "3.0.0"
-    id("com.github.ben-manes.versions") version "0.36.0"
+    id("me.qoomon.git-versioning") version "4.2.0"
+    id("com.github.ben-manes.versions") version "0.38.0"
     id("io.freefair.javadoc-links") version "5.3.0"
-    id("org.springframework.boot") version "2.4.3"
+    id("org.springframework.boot") version "2.4.4"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
     id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
 }
@@ -39,7 +38,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
         pattern = "v(?<tagVersion>[0-9].*)"
         versionFormat = "\${tagVersion}\${dirty}"
     })
-    commit(closureOf<CommitVersionDescription> {
+    commit(closureOf<VersionDescription> {
         versionFormat = "\${commit.short}\${dirty}"
     })
 })
@@ -55,10 +54,10 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
-    api("com.github.eclipse.lsp4j", "org.eclipse.lsp4j", "5cc2304f3fde9b1e82bf9e76eb6e6be4bf8fb28c")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.11.0")
 
     // 1c-syntax
-    api("com.github.1c-syntax", "bsl-parser", "84aedf3975e211116ef6d8f8fd8d828186c777dc") {
+    api("com.github.1c-syntax", "bsl-parser", "0.18.0") {
         exclude("com.tunnelvisionlabs", "antlr4-annotations")
         exclude("com.ibm.icu", "*")
         exclude("org.antlr", "ST4")
@@ -67,7 +66,7 @@ dependencies {
         exclude("org.glassfish", "javax.json")
     }
     api("com.github.1c-syntax", "utils", "0.3.1")
-    api("com.github.1c-syntax", "mdclasses", "0.7.0")
+    api("com.github.1c-syntax", "mdclasses", "0.8.0")
 
     // JLanguageTool
     implementation("org.languagetool", "languagetool-core", languageToolVersion)
@@ -110,6 +109,9 @@ dependencies {
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
+
+configurations.implementation.get().isCanBeResolved = true
+configurations.api.get().isCanBeResolved = true
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -261,19 +263,18 @@ publishing {
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().dependencies.forEach(addDependency(dependenciesNode, "runtime"))
-                configurations.api.get().dependencies.forEach(addDependency(dependenciesNode, "compile"))
+                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "runtime"))
+                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "compile"))
             }
         }
     }
 }
 
-fun addDependency(dependenciesNode: Node, scope: String) = { dependency: Dependency ->
-    if (dependency !is SelfResolvingDependency) {
-        val dependencyNode = dependenciesNode.appendNode("dependency")
-        dependencyNode.appendNode("groupId", dependency.group)
-        dependencyNode.appendNode("artifactId", dependency.name)
-        dependencyNode.appendNode("version", dependency.version)
-        dependencyNode.appendNode("scope", scope)
-    }
+fun addDependency(dependenciesNode: Node, scope: String): (ResolvedDependency) -> Unit = { artifact: ResolvedDependency ->
+    val dependency = artifact.module.id
+    val dependencyNode = dependenciesNode.appendNode("dependency")
+    dependencyNode.appendNode("groupId", dependency.group)
+    dependencyNode.appendNode("artifactId", dependency.name)
+    dependencyNode.appendNode("version", dependency.version)
+    dependencyNode.appendNode("scope", scope)
 }

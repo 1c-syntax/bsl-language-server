@@ -28,16 +28,25 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.CodeLensProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.DefinitionProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentLinkProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.HoverProvider;
+import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -67,8 +76,8 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -86,6 +95,9 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final FoldingRangeProvider foldingRangeProvider;
   private final FormatProvider formatProvider;
   private final HoverProvider hoverProvider;
+  private final ReferencesProvider referencesProvider;
+  private final DefinitionProvider definitionProvider;
+  private final CallHierarchyProvider callHierarchyProvider;
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -93,20 +105,33 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return CompletableFuture.completedFuture(null);
     }
-    Optional<Hover> hover = hoverProvider.getHover(params, documentContext);
-    return CompletableFuture.completedFuture(hover.orElse(null));
+    return CompletableFuture.supplyAsync(() ->
+      hoverProvider.getHover(documentContext, params).orElse(null)
+    );
   }
 
   @Override
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
     DefinitionParams params
   ) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
+    }
+
+    return CompletableFuture.supplyAsync(() ->
+      Either.forRight(definitionProvider.getDefinition(documentContext, params))
+    );
   }
 
   @Override
   public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-    throw new UnsupportedOperationException();
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> referencesProvider.getReferences(documentContext, params));
   }
 
   @Override
@@ -172,7 +197,48 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
     return CompletableFuture.supplyAsync(() -> foldingRangeProvider.getFoldingRange(documentContext));
   }
-  
+
+  @Override
+  public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
+    // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
+    DocumentContext documentContext = context.getDocument(params.getTextDocument().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    
+    return CompletableFuture.supplyAsync(() -> {
+      List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
+      if (callHierarchyItems.isEmpty()) {
+        return null;
+      }
+      return callHierarchyItems;
+    });
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
+    CallHierarchyIncomingCallsParams params
+  ) {
+    DocumentContext documentContext = context.getDocument(params.getItem().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> callHierarchyProvider.incomingCalls(documentContext, params));
+  }
+
+  @Override
+  public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
+    CallHierarchyOutgoingCallsParams params
+  ) {
+    DocumentContext documentContext = context.getDocument(params.getItem().getUri());
+    if (documentContext == null) {
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    return CompletableFuture.supplyAsync(() -> callHierarchyProvider.outgoingCalls(documentContext, params));
+  }
+
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     DocumentContext documentContext = context.addDocument(params.getTextDocument());

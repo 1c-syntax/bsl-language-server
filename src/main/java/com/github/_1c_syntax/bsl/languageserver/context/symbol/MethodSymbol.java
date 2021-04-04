@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,7 +43,7 @@ import java.util.Optional;
 @Builder
 @EqualsAndHashCode(exclude = {"children", "parent"})
 @ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol {
+public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
   String name;
 
   @Builder.Default
@@ -77,8 +78,8 @@ public class MethodSymbol implements SourceDefinedSymbol {
 
   public Optional<RegionSymbol> getRegion() {
     return getParent()
-      .filter(symbol -> symbol instanceof RegionSymbol)
-      .map(symbol -> (RegionSymbol) symbol);
+      .filter(RegionSymbol.class::isInstance)
+      .map(RegionSymbol.class::cast);
   }
 
   @Override

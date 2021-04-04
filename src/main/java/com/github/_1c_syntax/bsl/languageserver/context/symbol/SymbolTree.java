@@ -35,7 +35,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель->дети
+ * Символьное дерево документа. Содержит все символы документа, вложенные друг в друга по принципу родитель -&gt; дети
  */
 @Value
 public class SymbolTree {
@@ -124,6 +124,18 @@ public class SymbolTree {
   }
 
   /**
+   * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
+   *
+   * @param methodName Имя метода
+   * @return MethodSymbol, если он был найден в дереве символов.
+   */
+  public Optional<MethodSymbol> getMethodSymbol(String methodName) {
+    return getMethods().stream()
+      .filter(methodSymbol -> methodName.equalsIgnoreCase(methodSymbol.getName()))
+      .findAny();
+  }
+
+  /**
    * @return плоский список всех переменных документа.
    */
   public List<VariableSymbol> getVariables() {
@@ -154,6 +166,26 @@ public class SymbolTree {
 
     return getVariables().stream()
       .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange))
+      .findAny();
+  }
+
+  /**
+   * Поиск VariableSymbol в дереве по указанному имени (без учета регистра) и области объявления.
+   *
+   * @param variableName Имя переменной
+   * @param scopeSymbol Символ, внутри которого осуществляется поиск.
+   *                    Например, {@link ModuleSymbol} или {@link MethodSymbol}.
+   * @return VariableSymbol, если он был найден в дереве символов.
+   */
+  public Optional<VariableSymbol> getVariableSymbol(String variableName, SourceDefinedSymbol scopeSymbol) {
+    var scopeSymbolKind = scopeSymbol.getSymbolKind();
+
+    return getVariables().stream()
+      .filter(variableSymbol -> variableName.equalsIgnoreCase(variableSymbol.getName()))
+      .filter(variableSymbol -> variableSymbol.getRootParent(scopeSymbolKind)
+        .filter(scopeSymbol::equals)
+        .isPresent()
+      )
       .findAny();
   }
 

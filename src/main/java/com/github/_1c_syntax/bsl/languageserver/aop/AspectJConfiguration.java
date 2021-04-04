@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Конфигурация фреймворка AspectJ.
- * <p/>
+ * <p>
  * Каждый аспект с compile-time weaving должен быть объявлен как {@link Bean}.
  */
 @Configuration

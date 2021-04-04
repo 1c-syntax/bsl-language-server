@@ -93,7 +93,7 @@ public class UsingHardcodeNetworkAddressDiagnostic extends AbstractVisitorDiagno
    */
   @Override
   public ParseTree visitString(BSLParser.StringContext ctx) {
-    String content = ctx.getText().replace("\"", "");
+    String content = ctx.getText().substring(1, ctx.getText().length() - 1);
     if (content.length() > 2) {
       Matcher matcherURL = patternURL.matcher(content);
       if (!matcherURL.find()) {

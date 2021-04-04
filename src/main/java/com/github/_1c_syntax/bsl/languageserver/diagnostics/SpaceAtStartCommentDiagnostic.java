@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
+import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -41,7 +42,6 @@ import org.eclipse.lsp4j.TextEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -68,27 +68,16 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
     type = String.class,
     defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
   )
-  private Pattern commentsAnnotation = createCommentsAnnotationPattern(DEFAULT_COMMENTS_ANNOTATION.split(","));
+  private Pattern commentsAnnotation = DiagnosticHelper.createPatternFromString(DEFAULT_COMMENTS_ANNOTATION);
 
   public SpaceAtStartCommentDiagnostic() {
     this.codeRecognizer = new CodeRecognizer(COMMENTED_CODE_THRESHOLD, new BSLFootprint());
   }
 
-  private static Pattern createCommentsAnnotationPattern(String[] patternParts) {
-    StringJoiner stringJoiner = new StringJoiner("|");
-    for (String elem : patternParts) {
-      String commentsAnnotationPatternString = "(?:^" + Pattern.quote(elem) + ".*)";
-      stringJoiner.add(commentsAnnotationPatternString);
-    }
-
-    return CaseInsensitivePattern.compile(stringJoiner.toString());
-  }
-
   @Override
   public void configure(Map<String, Object> configuration) {
-    String commentsAnnotationString =
-      (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION);
-    this.commentsAnnotation = createCommentsAnnotationPattern(commentsAnnotationString.split(","));
+    this.commentsAnnotation = DiagnosticHelper.createPatternFromString(
+      (String) configuration.getOrDefault("commentsAnnotation", DEFAULT_COMMENTS_ANNOTATION));
   }
 
   @Override

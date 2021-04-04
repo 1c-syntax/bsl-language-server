@@ -4,6 +4,12 @@
  :-: | :-: | :-: | :-: | :-: | :-: 
  `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `1` | `standard`<br>`suspicious`<br>`unused` 
 
+## Parameters 
+
+ Name | Type | Description | Default value 
+ :-: | :-: | :-- | :-: 
+ `attachableMethodPrefixes` | `String` | ```Method prefixes (comma separated)``` | ```подключаемый_,attachable_``` 
+
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
@@ -26,5 +32,7 @@ Modules should not have unused procedures and functions.
 ### Parameter for config
 
 ```json
-"UnusedLocalMethod": false
+"UnusedLocalMethod": {
+    "attachableMethodPrefixes": "подключаемый_,attachable_"
+}
 ```
