@@ -201,9 +201,8 @@ public class TypoDiagnostic extends AbstractDiagnostic {
 
     // check words and mark matched as checked
     matches.stream()
-      .filter(ruleMatch -> !ruleMatch.getSuggestedReplacements().isEmpty())
       .map(ruleMatch -> ruleMatch.getSentence().getTokens()[1].getToken())
-      .forEach((String substring) -> checkedWordsForLang.put(substring, true));
+      .forEach(word -> checkedWordsForLang.put(word, true));
 
     // mark unmatched words without errors as checked
     uncheckedWords.forEach(word -> checkedWordsForLang.putIfAbsent(word, false));
