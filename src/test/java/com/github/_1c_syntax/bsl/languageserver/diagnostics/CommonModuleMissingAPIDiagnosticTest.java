@@ -18,8 +18,8 @@ class CommonModuleMissingAPIDiagnosticTest extends AbstractDiagnosticTest<Common
     List<Diagnostic> diagnostics = getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);
-//    assertThat(diagnostics, true)
-//      .hasRange(6, 0, 6, 20);
+    assertThat(diagnostics, true)
+      .hasRange(2, 0, 16, 0);
 
   }
 }

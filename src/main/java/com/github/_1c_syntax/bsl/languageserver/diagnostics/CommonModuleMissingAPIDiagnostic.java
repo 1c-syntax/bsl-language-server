@@ -70,14 +70,6 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
       diagnosticStorage.addDiagnostic(moduleRange, info.getMessage());
     }
 
-//    if (isModuleWithoutExportSub) {
-//      diagnosticStorage.addDiagnostic(moduleRange, "Модуль должен иметь хотя бы один экспортный метод.");
-//    }
-//
-//    if (isModuleWithoutRegionAPI) {
-//      diagnosticStorage.addDiagnostic(moduleRange, "Модуль должен иметь область API (ПрограммныйИнтерфейс или СлужебныйПрограммныйИнтерфейс).");
-//    }
-
   }
 
 }
