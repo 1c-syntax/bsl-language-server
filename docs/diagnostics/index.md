@@ -8,12 +8,12 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **137**
+Общее количество: **138**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
 * Ошибка: **42**
-* Дефект кода: **88**
+* Дефект кода: **89**
 
 
 | Ключ | Название | Включена по умолчанию | Важность | Тип | Тэги |
@@ -29,6 +29,7 @@
  [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Нарушение правил работы с транзакциями для метода 'ЗафиксироватьТранзакцию' | Да | Важный | Ошибка | `standard` 
  [CommonModuleAssign](CommonModuleAssign.md) | Присвоение общему модулю | Да | Блокирующий | Ошибка | `error` 
  [CommonModuleInvalidType](CommonModuleInvalidType.md) | Общий модуль недопустимого типа | Да | Важный | Ошибка | `standard`<br>`unpredictable`<br>`design` 
+ [CommonModuleMissingAPI](CommonModuleMissingAPI.md) | Общий модуль должен иметь программный интерфейс | Да | Важный | Дефект кода | `brainoverload`<br>`suspicious` 
  [CommonModuleNameCached](CommonModuleNameCached.md) | Пропущен постфикс "ПовтИсп" | Да | Важный | Дефект кода | `standard`<br>`badpractice`<br>`unpredictable` 
  [CommonModuleNameClient](CommonModuleNameClient.md) | Пропущен постфикс "Клиент" | Да | Незначительный | Дефект кода | `standard`<br>`badpractice`<br>`unpredictable` 
  [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Пропущен постфикс "КлиентСервер" | Да | Важный | Дефект кода | `standard`<br>`badpractice`<br>`unpredictable` 

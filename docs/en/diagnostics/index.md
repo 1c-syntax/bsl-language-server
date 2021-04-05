@@ -8,12 +8,12 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **137**
+Total: **138**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
 * Error: **42**
-* Code smell: **88**
+* Code smell: **89**
 
 
 | Key | Name| Enabled by default | Severity | Type | Tags |
@@ -29,6 +29,7 @@ Total: **137**
  [CommitTransactionOutsideTryCatch](CommitTransactionOutsideTryCatch.md) | Violating transaction rules for the 'CommitTransaction' method | Yes | Major | Error | `standard` 
  [CommonModuleAssign](CommonModuleAssign.md) | CommonModuleAssign | Yes | Blocker | Error | `error` 
  [CommonModuleInvalidType](CommonModuleInvalidType.md) | Common module invalid type | Yes | Major | Error | `standard`<br>`unpredictable`<br>`design` 
+ [CommonModuleMissingAPI](CommonModuleMissingAPI.md) | Common module should have a programming interface | Yes | Major | Code smell | `brainoverload`<br>`suspicious` 
  [CommonModuleNameCached](CommonModuleNameCached.md) | Missed postfix "Cached" | Yes | Major | Code smell | `standard`<br>`badpractice`<br>`unpredictable` 
  [CommonModuleNameClient](CommonModuleNameClient.md) | Missed postfix "Client" | Yes | Minor | Code smell | `standard`<br>`badpractice`<br>`unpredictable` 
  [CommonModuleNameClientServer](CommonModuleNameClientServer.md) | Missed postfix "ClientServer" | Yes | Major | Code smell | `standard`<br>`badpractice`<br>`unpredictable` 
