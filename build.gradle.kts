@@ -16,7 +16,7 @@ plugins {
     id("io.freefair.javadoc-links") version "5.3.0"
     id("org.springframework.boot") version "2.4.4"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
+    id("io.freefair.aspectj.post-compile-weaving") version "5.3.3.3"
 }
 
 apply(plugin = "io.spring.dependency-management")
