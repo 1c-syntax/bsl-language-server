@@ -1,20 +1,19 @@
 # Missing temporary file deletion after using (MissingTemporaryFileDeletion)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `5` | `badpractice`<br>`standard` 
+ |  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |               Tags                |
+ |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+ | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `5`           | `badpractice`<br>`standard` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `searchDeleteFileMethod` | `String` | ```Keywords to search for delete/move files methods``` | ```УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile``` 
+ |           Name           |   Type   | Description                                        |                                        Default value                                        |
+ |:------------------------:|:--------:|:-------------------------------------------------- |:-------------------------------------------------------------------------------------------:|
+ | `searchDeleteFileMethod` | `String` | `Keywords to search for delete/move files methods` | `УдалитьФайлы|DeleteFiles|НачатьУдалениеФайлов|BeginDeletingFiles|ПереместитьФайл|MoveFile` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-After you finished working with temporary file or folder, you need to delete it yourself.
-You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
+After you finished working with temporary file or folder, you need to delete it yourself. You should not rely on automatic deletion of files and folders before platform start. This can cause temp folder free space shortage.
 
 ## Examples
 
@@ -45,7 +44,7 @@ EndTry;
 
 ## Reference
 
-- [FileSystem access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)
+* [FileSystem access from application code](https://its.1c.ru/db/v8std#content:542:hdoc)
 
 ## Snippets
 
