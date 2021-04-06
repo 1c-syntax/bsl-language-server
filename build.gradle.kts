@@ -13,7 +13,7 @@ plugins {
     id("io.franzbecker.gradle-lombok") version "4.0.0"
     id("me.qoomon.git-versioning") version "4.2.0"
     id("com.github.ben-manes.versions") version "0.38.0"
-    id("io.freefair.javadoc-links") version "5.3.0"
+    id("io.freefair.javadoc-links") version "5.3.3.3"
     id("org.springframework.boot") version "2.4.4"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
     id("io.freefair.aspectj.post-compile-weaving") version "5.3.0"
