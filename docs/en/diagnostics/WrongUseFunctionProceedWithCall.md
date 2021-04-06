@@ -1,8 +1,8 @@
 # Wrong use of ProceedWithCall function (WrongUseFunctionProceedWithCall)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL` | `Blocker` | `Yes` | `1` | `error`<br>`suspicious` 
+ |  Type   | Scope | Severity  | Activated<br>by default | Minutes<br>to fix |             Tags              |
+ |:-------:|:-----:|:---------:|:-----------------------------:|:-----------------------:|:-----------------------------:|
+ | `Error` | `BSL` | `Blocker` |             `Yes`             |           `1`           | `error`<br>`suspicious` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -17,6 +17,7 @@ Procedure Test()
     ProceedWithCall(); // there is error    
 EndProcedure
 ```
+
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
