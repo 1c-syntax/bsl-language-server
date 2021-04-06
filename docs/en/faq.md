@@ -27,11 +27,11 @@ In case of doubt (or confidence) that the diagnosis is not working correctly, th
 
 `BSL Language Server` can be used with any application that has an LSP client implementation. Verified connections:
 
-- plugin for [VS code](https://github.com/1c-syntax/vsc-language-1c-bsl/) ;
-- additional utility for 1C:Enterprise in DESIGNER mode [Phoenix BSL](https://github.com/otymko/phoenixbsl) ;
-- plugin for [Sublime Text](https://github.com/sublimelsp/LSP) .
+* plugin for [VS code](https://github.com/1c-syntax/vsc-language-1c-bsl/) ;
+* additional utility for 1C:Enterprise in DESIGNER mode [Phoenix BSL](https://github.com/otymko/phoenixbsl) ;
+* plugin for [Sublime Text](https://github.com/sublimelsp/LSP) .
 
 Also through direct import `BSL Language Server` work:
 
-- plugin for [1C: Enterprise development tools](https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator) (own implementation, without LSP);
-- plugin for [SonarQube](https://github.com/1c-syntax/sonar-bsl-plugin-community) ;
+* plugin for [1C: Enterprise development tools](https://github.com/DoublesunRUS/ru.capralow.dt.bslls.validator) (own implementation, without LSP);
+* plugin for [SonarQube](https://github.com/1c-syntax/sonar-bsl-plugin-community) ;
