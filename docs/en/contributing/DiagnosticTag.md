@@ -1,7 +1,6 @@
 # Diagnostic Tags
 
-Each diagnostic has a set of tags. They are groups in which diagnostics are included.
- For the correct tag selection, their detailed description is given below.
+Each diagnostic has a set of tags. They are groups in which diagnostics are included. For the correct tag selection, their detailed description is given below.
 
 **ATTENTION:** diagnostic can have from 1 to 3 tags
 
