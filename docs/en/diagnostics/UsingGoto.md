@@ -1,8 +1,8 @@
 # "goto" statement should not be used (UsingGoto)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `standard`<br>`badpractice` 
+ |     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |               Tags                |
+ |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------------------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `5`           | `standard`<br>`badpractice` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -17,11 +17,11 @@ Bad
 i = 0;
  ~loop: Message("i = " + i);
  i = i + 1;
- 
+
  If i < 10 Then
- 
+
      Goto ~Loop;
- 
+
  EndIf;
 ```
 
@@ -36,10 +36,9 @@ EndDo;
 ```
 
 ## Sources
-
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-- Source: [Standard: Using goto (RU)](https://its.1c.ru/db/v8std/content/547/hdoc/_top/)
+* [Стандарт: Использование перейти](https://its.1c.ru/db/v8std/content/547/hdoc/_top/)
 
 ## Snippets
 
