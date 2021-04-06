@@ -33,6 +33,7 @@ jobs:
               uses: actions/setup-java@v2
               with:
                 java-version: 15
+                distribution: 'adopt'
             - name: Build bootJar with Gradle
               run: ./gradlew check bootJar
             - name: Build jpackage app-image
