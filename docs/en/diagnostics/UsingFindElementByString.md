@@ -1,8 +1,8 @@
 # Using FindByName and FindByCode (UsingFindElementByString)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `2` | `standard`<br>`badpractice`<br>`performance` 
+ |     Type     | Scope | Severity | Activated<br>by default | Minutes<br>to fix |                           Tags                           |
+ |:------------:|:-----:|:--------:|:-----------------------------:|:-----------------------:|:--------------------------------------------------------:|
+ | `Code smell` | `BSL` | `Major`  |             `Yes`             |           `2`           | `standard`<br>`badpractice`<br>`performance` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -22,11 +22,9 @@ Position = Catalogs.Positions.FindByCode("00-0000001");
 ```
 
 Acceptable use:
-
 ```bsl
 Catalogs.Currencies.FindByCode(CurrentData.CurrencyCodeDigital);
 ```
-
 ```bsl
 Catalogs.BankClassifier.FindByCode(BankDetails.BIK);
 ```
