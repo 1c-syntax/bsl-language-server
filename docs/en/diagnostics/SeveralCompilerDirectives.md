@@ -1,8 +1,8 @@
 # Erroneous indication of several compilation directives (SeveralCompilerDirectives)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Critical` | `Yes` | `5` | `unpredictable`<br>`error` 
+ |  Type   |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |               Tags               |
+ |:-------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------:|
+ | `Error` | `BSL`<br>`OS` | `Critical` |             `Yes`             |           `5`           | `unpredictable`<br>`error` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -13,7 +13,7 @@ Indication of several compilation directives for a method or a variable is an er
 
 Incorrect
 
-```Bsl
+```bsl
 &AtServer
 &AtClient
 Var MyVariable;
