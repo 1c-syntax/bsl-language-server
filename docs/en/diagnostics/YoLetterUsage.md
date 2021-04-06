@@ -1,14 +1,13 @@
 # Using Russian character "yo" ("ё") in code (YoLetterUsage)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `5` | `standard` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `5`           | `standard` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-In code it is prohibited to use character "yo" ("ё").
-Exception is interface texts, displayed to user in messages, forms and help, where it is applicable.
+In code it is prohibited to use character "yo" ("ё"). Exception is interface texts, displayed to user in messages, forms and help, where it is applicable.
 
 ## Sources
 
