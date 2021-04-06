@@ -1,8 +1,8 @@
 # Invalid character (InvalidCharacterInFile)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Error` | `BSL`<br>`OS` | `Major` | `Yes` | `1` | `error`<br>`standard`<br>`unpredictable` 
+ |  Type   |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |                         Tags                         |
+ |:-------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------------------------------------------------:|
+ | `Error` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `1`           | `error`<br>`standard`<br>`unpredictable` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -29,7 +29,7 @@ Diagnostics detects the following invalid characters
 
 ## Sources
 
-- [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
+* [Standard: Modules](https://its.1c.ru/db/v8std#content:456:hdoc)
 
 ## Snippets
 
