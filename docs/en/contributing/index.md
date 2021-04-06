@@ -17,3 +17,6 @@ This section contains articles containing information for developers of diagnost
     - [Diagnostic tags](DiagnosticTag.md)
     - [Add parameters to Diagnostic](DiagnostcAddSettings.md)
     - [Add QuickFix to Diagnostic](DiagnosticQuickFix.md)
+- Общие механизмы
+    - [Подсистема событий](EventsApi.md)
+    - [Замер производительности](Measures.md)
