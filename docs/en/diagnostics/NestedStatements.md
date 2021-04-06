@@ -1,14 +1,14 @@
 # Control flow statements should not be nested too deep (NestedStatements)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `30` | `badpractice`<br>`brainoverload` 
+ |     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |                  Tags                  |
+ |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:--------------------------------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `30`           | `badpractice`<br>`brainoverload` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `maxAllowedLevel` | `Integer` | ```Max nested level``` | ```4``` 
+ |       Name        |   Type    | Description        | Default value |
+ |:-----------------:|:---------:|:------------------ |:-------------:|
+ | `maxAllowedLevel` | `Integer` | `Max nested level` |      `4`      | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -23,7 +23,12 @@ Incorrect:
 
 ```bsl
 
-If Something Then                  // Acceptable - level = 1
+Если Чтото Тогда                  // Допустимо - уровень = 1
+  /* ... */
+  Если ЧтоТоЕще Тогда             // Допустимо - уровень = 2
+    /* ... */
+    Для Ном = 0 По 10 Цикл          // Допустимо - уровень = 3
+      /* ... If Something Then                  // Acceptable - level = 1
   /* ... */
   If SomethingElse Then             // Acceptable - level = 2
     /* ... */
@@ -37,12 +42,19 @@ If Something Then                  // Acceptable - level = 1
       EndIf;
     EndLoop;
   EndIf;
-EndIf;
+EndIf; */
+        КонецЕсли;
+        Возврат;
+      КонецЕсли;
+    КонецЦикла;
+  КонецЕсли;
+КонецЕсли;
+
 ```
 
 ## Sources
 
-- [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
+* [RSPEC-134](https://rules.sonarsource.com/java/RSPEC-134)
 
 ## Snippets
 
