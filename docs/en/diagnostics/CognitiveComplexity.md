@@ -1,15 +1,15 @@
 # Cognitive complexity (CognitiveComplexity)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Critical` | `Yes` | `15` | `brainoverload` 
+ |     Type     |        Scope        |  Severity  | Activated<br>by default | Minutes<br>to fix |      Tags       |
+ |:------------:|:-------------------:|:----------:|:-----------------------------:|:-----------------------:|:---------------:|
+ | `Code smell` | `BSL`<br>`OS` | `Critical` |             `Yes`             |          `15`           | `brainoverload` |
 
-## Parameters 
+## Parameters
 
- Name | Type | Description | Default value 
- :-: | :-: | :-- | :-: 
- `complexityThreshold` | `Integer` | ```Complexity threshold``` | ```15``` 
- `checkModuleBody` | `Boolean` | ```Check module body``` | ```true``` 
+ |         Name          |   Type    | Description            | Default value |
+ |:---------------------:|:---------:|:---------------------- |:-------------:|
+ | `complexityThreshold` | `Integer` | `Complexity threshold` |     `15`      |
+ |   `checkModuleBody`   | `Boolean` | `Check module body`    |    `true`     | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -76,9 +76,11 @@ Value = ?(Condition1 Or Condition2 Or Not Condition3,// +3
 Value = First Or Second;                             // +1
 
 Value = A <> B;                                      // +1
+
 ```
 
 #### For each nesting level, next blocks get additional 1 to complexity
+
 
 ```bsl
 
@@ -107,6 +109,7 @@ Except
 EndTry;
 
 ~Label:
+
 ```
 
 #### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
@@ -149,6 +152,7 @@ Function Example1(ClassType)
 
     Return Undefined;
 EndFunction
+
 ```
 
 ```bsl
@@ -209,7 +213,7 @@ EndFunction
 
 ## Sources
 
-- [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
+* [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
 
 ## Snippets
 
