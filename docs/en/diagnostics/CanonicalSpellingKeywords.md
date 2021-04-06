@@ -1,18 +1,18 @@
 # Canonical keyword writing (CanonicalSpellingKeywords)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Info` | `Yes` | `1` | `standard` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL`<br>`OS` |  `Info`  |             `Yes`             |           `1`           | `standard` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
 A built-in language constructs, keywords must be written canonically.
 
-**Keywords**
+### Diagnostic ignorance in code
 
 | RU                 | EN            |
-|--------------------|---------------|
+| ------------------ | ------------- |
 | ВызватьИсключение  | Raise         |
 | Выполнить          | Execute       |
 | ДобавитьОбработчик | AddHandler    |
@@ -48,17 +48,17 @@ A built-in language constructs, keywords must be written canonically.
 | Функция            | Function      |
 | Экспорт            | Export        |
 
-**Preprocessor Instructions**
+### Parameter for config
 
 | RU                                 | EN                             |
-|------------------------------------|--------------------------------|
+| ---------------------------------- | ------------------------------ |
 | ВебКлиент                          | WebClient                      |
 | ВнешнееСоединение                  | ExternalConnection             |
 | Если                               | If                             |
 | И                                  | AND, And                       |
 | ИЛИ, Или                           | OR, Or                         |
 | Иначе                              | Else                           |
-| ИначеЕсли                          | ИначеЕсли                      |
+| ИначеЕсли                          | ElsIf                          |
 | КонецЕсли                          | EndIf                          |
 | КонецОбласти                       | EndRegion                      |
 | Клиент                             | Client                         |
@@ -75,10 +75,10 @@ A built-in language constructs, keywords must be written canonically.
 | ТолстыйКлиентУправляемоеПриложение | ThickClientManagedApplication  |
 | ТонкийКлиент                       | ThinClient                     |
 
-**Compilation directives**
+### Compilation directives
 
 | RU                             | EN                        |
-|--------------------------------|---------------------------|
+| ------------------------------ | ------------------------- |
 | НаКлиенте                      | AtClient                  |
 | НаСервере                      | AtServer                  |
 | НаСервереБезКонтекста          | AtServerNoContext         |
@@ -87,19 +87,19 @@ A built-in language constructs, keywords must be written canonically.
 
 ## Sources
 
-* [Standart: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
++ [Standart: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+### Экранирование кода
 
 ```bsl
 // BSLLS:CanonicalSpellingKeywords-off
 // BSLLS:CanonicalSpellingKeywords-on
 ```
 
-### Parameter for config
+### Параметр конфигурационного файла
 
 ```json
 "CanonicalSpellingKeywords": false
