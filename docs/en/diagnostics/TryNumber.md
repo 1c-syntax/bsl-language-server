@@ -1,8 +1,8 @@
 # Cast to number of try catch block (TryNumber)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL`<br>`OS` | `Major` | `Yes` | `2` | `standard` 
+ |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |    Tags    |
+ |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:----------:|
+ | `Code smell` | `BSL`<br>`OS` | `Major`  |             `Yes`             |           `2`           | `standard` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -30,7 +30,7 @@ NumberDaysAllowance = TypeDescription.CastValue(Value);
 
 ## Reference
 
-- [Standard: Catch exceptions in code](https://its.1c.ru/db/v8std#content:499:hdoc)
+* [Standard: Catch exceptions in code](https://its.1c.ru/db/v8std#content:499:hdoc)
 
 ## Snippets
 
