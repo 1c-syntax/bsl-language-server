@@ -1,6 +1,6 @@
 # System requirements
 
-Using ` BSL Language Server ` has some limitations, listed bellow
+Using `BSL Language Server` has some limitations, listed bellow
 
 ## Supported Java Versions
 
