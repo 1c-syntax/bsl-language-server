@@ -102,24 +102,29 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
       return;
     }
 
+    // children:
+    //
+    // Контрагент.Ссылка.ЮрФизЛицо
+    //     ^     ^   ^  ^    ^
+    //     0     1   2  3    4
+    //
+    // Контрагент.ЮрФизЛицо
+    //     ^     ^    ^
+    //     0     1    2
+
     final int childCount = ctx.children.size();
     var lastChild = ctx.getChild(childCount - 1);
     // dots are also children of ColumnContext,
     // that is why -3 must be an index of penultimate identifier
     var penultimateChild = ctx.getChild(childCount - 3);
 
-    if (lastChild != penultimateChild
-      && lastChild instanceof SDBLParser.IdentifierContext
-      && penultimateChild instanceof SDBLParser.IdentifierContext) {
+    String lastIdentifierName = lastChild.getText();
+    String penultimateIdentifierName = penultimateChild.getText();
 
-      String lastIdentifierName = lastChild.getText();
-      String penultimateIdentifierName = penultimateChild.getText();
-
-      if (!tableNames.contains(penultimateIdentifierName)
-        && (REF_PATTERN.matcher(lastIdentifierName).matches()
-        || REF_PATTERN.matcher(penultimateIdentifierName).matches())) {
-        diagnosticStorage.addDiagnostic(ctx);
-      }
+    if (REF_PATTERN.matcher(penultimateIdentifierName).matches()
+      || (REF_PATTERN.matcher(lastIdentifierName).matches()
+      && !tableNames.contains(penultimateIdentifierName))) {
+      diagnosticStorage.addDiagnostic(ctx);
     }
   }
 
