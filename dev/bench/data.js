@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1617982322870,
+  "lastUpdate": 1618002914681,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -9920,6 +9920,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.042252345103438",
             "extra": "mean: 83.28672202428181 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ab2d6f98bb13423fe35d09a66c1c6cd85e0c0069",
+          "message": "Merge pull request #1532 from ovcharenko-di/fix/RefOveruse\n\nУлучшение RefOveruseDiagnostic",
+          "timestamp": "2021-04-10T00:06:45+03:00",
+          "tree_id": "982a2c45e0478255d02e5b5f556b3235a671190e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/ab2d6f98bb13423fe35d09a66c1c6cd85e0c0069"
+        },
+        "date": 1618002911971,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 84.491126537323,
+            "unit": "sec",
+            "range": "stddev: 1.5692335364006518",
+            "extra": "mean: 84.491126537323 sec\nrounds: 3"
           }
         ]
       }
