@@ -113,6 +113,11 @@ public class RefOveruseDiagnostic extends AbstractSDBLVisitorDiagnostic {
     //     0     1    2
 
     final int childCount = ctx.children.size();
+
+    if (childCount < 3) {
+      return;
+    }
+
     var lastChild = ctx.getChild(childCount - 1);
     // dots are also children of ColumnContext,
     // that is why -3 must be an index of penultimate identifier
