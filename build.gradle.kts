@@ -1,4 +1,3 @@
-import groovy.util.Node
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig
 import me.qoomon.gradle.gitversioning.GitVersioningPluginConfig.VersionDescription
 import org.apache.tools.ant.filters.EscapeUnicode
@@ -17,6 +16,7 @@ plugins {
     id("org.springframework.boot") version "2.4.4"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
     id("io.freefair.aspectj.post-compile-weaving") version "5.3.3.3"
+    id("ru.vyarus.pom") version "2.1.0"
 }
 
 apply(plugin = "io.spring.dependency-management")
@@ -109,9 +109,6 @@ dependencies {
     testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
-
-configurations.implementation.get().isCanBeResolved = true
-configurations.api.get().isCanBeResolved = true
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -256,25 +253,8 @@ artifacts {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            artifact(tasks["jar"])
-            artifact(tasks["sourcesJar"])
+            from(components["java"])
             artifact(tasks["bootJar"])
-            artifact(tasks["javadocJar"])
-            pom.withXml {
-                val dependenciesNode = asNode().appendNode("dependencies")
-
-                configurations.api.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "compile"))
-                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "provided"))
-            }
         }
     }
-}
-
-fun addDependency(dependenciesNode: Node, scope: String): (ResolvedDependency) -> Unit = { artifact: ResolvedDependency ->
-    val dependency = artifact.module.id
-    val dependencyNode = dependenciesNode.appendNode("dependency")
-    dependencyNode.appendNode("groupId", dependency.group)
-    dependencyNode.appendNode("artifactId", dependency.name)
-    dependencyNode.appendNode("version", dependency.version)
-    dependencyNode.appendNode("scope", scope)
 }
