@@ -263,8 +263,8 @@ publishing {
             pom.withXml {
                 val dependenciesNode = asNode().appendNode("dependencies")
 
-                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "runtime"))
-                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "compile"))
+                configurations.api.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "compile"))
+                configurations.implementation.get().resolvedConfiguration.firstLevelModuleDependencies.forEach(addDependency(dependenciesNode, "provided"))
             }
         }
     }
