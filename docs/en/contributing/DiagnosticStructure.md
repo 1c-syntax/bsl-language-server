@@ -1,16 +1,16 @@
-# Структура диагностики, назначение и содержимое файлов
+# Diagnostics structure, files contents and purpose
 
-В данной статье содержится информация о правилах использования, создания и шаблонах содержимого диагностики.
+This article contains rules of diagnostics usage, creation and information about content templates.
 
-- [Структура диагностики, назначение и содержимое файлов](#%d0%a1%d1%82%d1%80%d1%83%d0%ba%d1%82%d1%83%d1%80%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d0%bd%d0%b0%d0%b7%d0%bd%d0%b0%d1%87%d0%b5%d0%bd%d0%b8%d0%b5-%d0%b8-%d1%81%d0%be%d0%b4%d0%b5%d1%80%d0%b6%d0%b8%d0%bc%d0%be%d0%b5-%d1%84%d0%b0%d0%b9%d0%bb%d0%be%d0%b2)
-  - [Состав диагностики](#%d0%a1%d0%be%d1%81%d1%82%d0%b0%d0%b2-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
-  - [Класс реализации диагностики](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d0%b0%d1%86%d0%b8%d0%b8-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
-    - [Класс диагностики, реализующий интерфейс BSLDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d1%83%d1%8e%d1%89%d0%b8%d0%b9-%d0%b8%d0%bd%d1%82%d0%b5%d1%80%d1%84%d0%b5%d0%b9%d1%81-bsldiagnostic)
-    - [Класс диагностики, унаследованный от AbstractDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractdiagnostic)
-    - [Класс диагностики, унаследованный от AbstractVisitorDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractvisitordiagnostic)
-    - [Класс диагностики, унаследованный от AbstractListenerDiagnostic **(В РАЗРАБОТКЕ)**](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
-  - [Класс теста диагностики](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
-    - [Тест диагностики](#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
+- [Diagnostics structure, files contents and purpose](#%d0%a1%d1%82%d1%80%d1%83%d0%ba%d1%82%d1%83%d1%80%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d0%bd%d0%b0%d0%b7%d0%bd%d0%b0%d1%87%d0%b5%d0%bd%d0%b8%d0%b5-%d0%b8-%d1%81%d0%be%d0%b4%d0%b5%d1%80%d0%b6%d0%b8%d0%bc%d0%be%d0%b5-%d1%84%d0%b0%d0%b9%d0%bb%d0%be%d0%b2)
+  - [Diagnostics structure](#%d0%a1%d0%be%d1%81%d1%82%d0%b0%d0%b2-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
+  - [Diagnostics implementation class](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d0%b0%d1%86%d0%b8%d0%b8-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
+    - [Diagnostics class, implements BSLDiagnostic interface](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%80%d0%b5%d0%b0%d0%bb%d0%b8%d0%b7%d1%83%d1%8e%d1%89%d0%b8%d0%b9-%d0%b8%d0%bd%d1%82%d0%b5%d1%80%d1%84%d0%b5%d0%b9%d1%81-bsldiagnostic)
+    - [Diagnostics class, inherits from AbstractDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractdiagnostic)
+    - [Diagnostics class, inherits from AbstractVisitorDiagnostic](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractvisitordiagnostic)
+    - [Diagnostics class, inherits from AbstractListenerDiagnostic **(Work in Progress)**](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8-%d1%83%d0%bd%d0%b0%d1%81%d0%bb%d0%b5%d0%b4%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d0%b9-%d0%be%d1%82-abstractlistenerdiagnostic-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
+  - [Diagnostics test class](#%d0%9a%d0%bb%d0%b0%d1%81%d1%81-%d1%82%d0%b5%d1%81%d1%82%d0%b0-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
+    - [Diagnostics test](#%d0%a2%d0%b5%d1%81%d1%82-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
     - [Тест метода конфигурирования для параметризованных диагностик](#%d0%a2%d0%b5%d1%81%d1%82-%d0%bc%d0%b5%d1%82%d0%be%d0%b4%d0%b0-%d0%ba%d0%be%d0%bd%d1%84%d0%b8%d0%b3%d1%83%d1%80%d0%b8%d1%80%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d1%8f-%d0%b4%d0%bb%d1%8f-%d0%bf%d0%b0%d1%80%d0%b0%d0%bc%d0%b5%d1%82%d1%80%d0%b8%d0%b7%d0%be%d0%b2%d0%b0%d0%bd%d0%bd%d1%8b%d1%85-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba)
     - [Тест "быстрых замен" **(В РАЗРАБОТКЕ)**](#%d0%a2%d0%b5%d1%81%d1%82-%22%d0%b1%d1%8b%d1%81%d1%82%d1%80%d1%8b%d1%85-%d0%b7%d0%b0%d0%bc%d0%b5%d0%bd%22-%d0%92-%d0%a0%d0%90%d0%97%d0%a0%d0%90%d0%91%d0%9e%d0%a2%d0%9a%d0%95)
   - [Ресурсы диагностики](#%d0%a0%d0%b5%d1%81%d1%83%d1%80%d1%81%d1%8b-%d0%b4%d0%b8%d0%b0%d0%b3%d0%bd%d0%be%d1%81%d1%82%d0%b8%d0%ba%d0%b8)
