@@ -79,29 +79,4 @@ class ReferenceTest {
     assertThat(location.getUri()).isEqualTo(FAKE_DOCUMENT_URI.toString());
     assertThat(location.getRange()).isEqualTo(methodSymbol.getSelectionRange());
   }
-
-  @Test
-  void testOf() {
-    // given
-    var methodSymbol = mock(MethodSymbol.class);
-    var moduleSymbol = mock(ModuleSymbol.class);
-    var selectionRange = mock(Range.class);
-
-    when(methodSymbol.getSelectionRange()).thenReturn(selectionRange);
-
-    var reference = Reference.builder()
-      .from(moduleSymbol)
-      .symbol(methodSymbol)
-      .uri(FAKE_DOCUMENT_URI)
-      .selectionRange(selectionRange)
-      .build();
-
-    var location = reference.toLocation();
-
-    // when
-    var newReference = Reference.of(moduleSymbol, methodSymbol, location);
-
-    // then
-    assertThat(newReference).isEqualTo(reference);
-  }
 }

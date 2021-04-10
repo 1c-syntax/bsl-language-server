@@ -52,6 +52,7 @@ import java.util.Set;
     ModuleType.ManagerModule,
     ModuleType.ValueManagerModule,
     ModuleType.SessionModule,
+    ModuleType.UNKNOWN
   }
 )
 @RequiredArgsConstructor
@@ -66,19 +67,9 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     documentContext.getSymbolTree().getVariables().stream()
-      .filter(v -> v.getSymbolKind() == SymbolKind.Variable)
       .filter(v -> CHECKING_VARIABLE_KINDS.contains(v.getKind()))
       .filter(v -> !v.isExport())
       .filter(v -> referenceIndex.getReferencesTo(v).stream().filter(ref -> !ref.isWrite()).findFirst().isEmpty())
       .forEach(v -> diagnosticStorage.addDiagnostic(v.getRange(), info.getMessage(v.getName())));
-  }
-
-  private static String getDeprecationInfo(Symbol deprecatedSymbol) {
-    return Optional.of(deprecatedSymbol)
-      .filter(Describable.class::isInstance)
-      .map(Describable.class::cast)
-      .flatMap(Describable::getDescription)
-      .map(SourceDefinedSymbolDescription::getDeprecationInfo)
-      .orElse("");
   }
 }

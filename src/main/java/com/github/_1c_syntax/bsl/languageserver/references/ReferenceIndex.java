@@ -243,15 +243,9 @@ public class ReferenceIndex {
     if (multikey.size() == 4) { // FIXME: Не нравится проверка на волшебное число, хотелось бы заменить на "интерфейс"
       return serverContext.getDocument(mdoRef, moduleType)
         .map(DocumentContext::getSymbolTree)
-        .flatMap(symbolTree -> {
-          var method = symbolTree.getMethodSymbol(multikey.getKey(2));
-
-          if (method.isEmpty()) {
-            return symbolTree.getVariableSymbol(symbolName, symbolTree.getModule());
-          }
-
-          return symbolTree.getVariableSymbol(symbolName, method.get());
-        });
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(multikey.getKey(2))
+          .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
+          .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
 
     return serverContext.getDocument(mdoRef, moduleType)

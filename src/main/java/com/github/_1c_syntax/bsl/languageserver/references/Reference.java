@@ -78,8 +78,4 @@ public class Reference {
     return new Location(uri.toString(), selectionRange);
   }
 
-  public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
-    return new Reference(from, symbol, URI.create(location.getUri()), location.getRange(), false);
-  }
-
 }

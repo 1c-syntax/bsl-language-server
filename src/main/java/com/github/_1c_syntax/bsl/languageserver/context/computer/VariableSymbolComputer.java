@@ -111,7 +111,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private boolean registeredGlobal(String variableName) {
     return variables.stream()
       .filter(v -> v.getKind() == VariableKind.MODULE || v.getKind() == VariableKind.GLOBAL)
-      .anyMatch(v -> v.getName().equals(variableName));
+      .anyMatch(v -> v.getName().equalsIgnoreCase(variableName));
   }
 
   private VariableSymbol createVariableSymbol(
