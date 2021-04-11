@@ -21,12 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 class CommonModuleMissingAPIDiagnosticTest extends AbstractDiagnosticTest<CommonModuleMissingAPIDiagnostic> {
   CommonModuleMissingAPIDiagnosticTest() {
@@ -34,13 +38,44 @@ class CommonModuleMissingAPIDiagnosticTest extends AbstractDiagnosticTest<Common
   }
 
   @Test
-  void test() {
+  void positiveTest() {
+    var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnostic", ModuleType.CommonModule);
+    assertThat(diagnostics).isEmpty();
+  }
 
-    List<Diagnostic> diagnostics = getDiagnostics();
+  @Test
+  void emptyFileTest() {
+    var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnosticEmptyFile", ModuleType.CommonModule);
+    assertThat(diagnostics).isEmpty();
+  }
 
+  @Test
+  void noExportSubsTest() {
+    var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnosticNoExportSubs", ModuleType.CommonModule);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(2, 0, 16, 0);
+      .hasRange(2, 0, 4, 0);
 
   }
+
+  @Test
+  void noRegionsAPITest() {
+    var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnosticNoRegionsAPI", ModuleType.CommonModule);
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(2, 0, 14, 0);
+  }
+
+  @Test
+  void noSubsTest() {
+    var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnosticNoSubs", ModuleType.CommonModule);
+    assertThat(diagnostics).isEmpty();
+  }
+
+  private List<Diagnostic> getDiagnostics(String fileName, ModuleType moduleType) {
+    var documentContext = spy(TestUtils.getDocumentContext(getText(fileName)));
+    doReturn(moduleType).when(documentContext).getModuleType();
+    return getDiagnostics(documentContext);
+  }
+
 }

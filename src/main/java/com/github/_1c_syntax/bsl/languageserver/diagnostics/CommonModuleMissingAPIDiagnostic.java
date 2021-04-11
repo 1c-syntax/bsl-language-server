@@ -21,28 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import com.github._1c_syntax.mdclasses.mdo.CommonModule;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -60,9 +48,18 @@ import java.util.regex.Pattern;
 )
 public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
 
-  private static final Pattern REGION_NAME = CaseInsensitivePattern.compile(
-    "^(?:ПрограммныйИнтерфейс|СлужебныйПрограммныйИнтерфейс|Public|Internal)$"
-  );
+  private static final Set<String> REGION_NAME = makeRegionsAPI();
+
+  private static Set<String> makeRegionsAPI() {
+
+    Set<String> result = new HashSet<>();
+    result.add(Keywords.PUBLIC_REGION_RU.toLowerCase());
+    result.add(Keywords.PUBLIC_REGION_EN.toLowerCase());
+    result.add(Keywords.INTERNAL_REGION_RU.toLowerCase());
+    result.add(Keywords.INTERNAL_REGION_EN.toLowerCase());
+    return result;
+
+  }
 
   @Override
   protected void check() {
@@ -76,15 +73,11 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
 
     var isModuleWithoutExportSub = moduleMethods
       .stream()
-      .filter(MethodSymbol -> MethodSymbol.isExport())
-      .findFirst()
-      .isEmpty();
+      .noneMatch(moduleMethod -> moduleMethod.isExport());
 
     var isModuleWithoutRegionAPI = symbolTree.getModuleLevelRegions()
       .stream()
-      .filter(regionSymbol -> REGION_NAME.matcher(regionSymbol.getName()).matches())
-      .findFirst()
-      .isEmpty();
+      .noneMatch(regionSymbol -> REGION_NAME.contains(regionSymbol.getName().toLowerCase()));
 
     var moduleRange = symbolTree.getModule().getRange();
     if (isModuleWithoutExportSub || isModuleWithoutRegionAPI) {
