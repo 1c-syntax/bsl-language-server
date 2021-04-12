@@ -26,12 +26,16 @@ Perfomance measurement - [SSL 3.1](bench/index.html)
 * File formatting
 * Selected region formatting
 * Symbol definition for current file (regions, procedures, functions, variables, defined via `Var` keyword)
-* Folding regions definition `#Region`, `#If`, procedures and functions, code blocks
+* Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода, пакеты запросов
 * Methods "Cognitive Complexity" and "Cyclomatic Complexity" scores
-* Diagnostics
-* Quick fixes for several diagnostics
-* Run diagnostics engine from command line
-* Run formatter engine from command line
+* Всплывающая подсказка по локальным методам и методам общих модулей/модулей менеджеров
+* Переходы к определению методов
+* Поиск мест использования методов
+* Иерархия вызовов методов
+* Диагностики
+* "Быстрые исправления" (quick fixes) для ряда диагностик и "быстрые действия" (code actions)
+* Запуск движка диагностик из командной строки
+* Запуск форматирования файлов в каталоге из командной строки
 
 ## Run from command line
 
@@ -44,7 +48,7 @@ Perfomance measurement - [SSL 3.1](bench/index.html)
 | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration)               | <img src="./assets/images/checkmark.svg" alt="yes" width="20" /> | с ограничениями, см. [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
 | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles)                 | <img src="./assets/images/cross.svg" alt="no" width="20" />      |                                                                                            |
 | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol)                                               | <img src="./assets/images/checkmark.svg" alt="yes" width="20" /> |                                                                                            |
-| [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand)                               | <img src="./assets/images/checkmark.svg" alt="yes" width="20" /> |                                                                                            |
+| [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand)                               | <img src="./assets/images/cross.svg" alt="no" width="20" />      |                                                                                            |
 | [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit)                 | <img src="./assets/images/cross.svg" alt="no" width="20" />      |                                                                                            |
 | [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles)     | <img src="./assets/images/cross.svg" alt="no" width="20" />      |                                                                                            |
 
