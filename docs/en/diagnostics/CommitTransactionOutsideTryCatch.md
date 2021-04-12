@@ -11,7 +11,7 @@ The CommitTransaction method should be the last one in the Try block, just befor
 
 ## Sources
 
-* [Транзакции: правила использования (RU)](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
+* [Transactions: terms of use (RU)](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
 
 ## Snippets
 
