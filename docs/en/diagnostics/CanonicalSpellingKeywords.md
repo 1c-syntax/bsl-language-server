@@ -37,7 +37,7 @@ A built-in language constructs, keywords must be written canonically.
 | Перейти            | Goto          |
 | Перем              | Var           |
 | По                 | For           |
-| Пока               | WHile         |
+| Пока               | While         |
 | Попытка            | Try           |
 | Процедура          | Procedure     |
 | Прервать           | Break         |
@@ -48,7 +48,7 @@ A built-in language constructs, keywords must be written canonically.
 | Функция            | Function      |
 | Экспорт            | Export        |
 
-### Parameter for config
+### Preprocessor instrutions
 
 | RU                                 | EN                             |
 | ---------------------------------- | ------------------------------ |
@@ -92,14 +92,14 @@ A built-in language constructs, keywords must be written canonically.
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Экранирование кода
+### Diagnostic ignorance in code
 
 ```bsl
 // BSLLS:CanonicalSpellingKeywords-off
 // BSLLS:CanonicalSpellingKeywords-on
 ```
 
-### Параметр конфигурационного файла
+### Parameter for config
 
 ```json
 "CanonicalSpellingKeywords": false
