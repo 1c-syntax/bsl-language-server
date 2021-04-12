@@ -21,16 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -44,21 +47,19 @@ import java.util.Set;
     DiagnosticTag.BRAINOVERLOAD,
     DiagnosticTag.SUSPICIOUS
   }
-
 )
 public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
 
   private static final Set<String> REGION_NAME = makeRegionsAPI();
 
   private static Set<String> makeRegionsAPI() {
+    Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    result.add(Keywords.PUBLIC_REGION_RU);
+    result.add(Keywords.PUBLIC_REGION_EN);
+    result.add(Keywords.INTERNAL_REGION_RU);
+    result.add(Keywords.INTERNAL_REGION_EN);
 
-    Set<String> result = new HashSet<>();
-    result.add(Keywords.PUBLIC_REGION_RU.toLowerCase());
-    result.add(Keywords.PUBLIC_REGION_EN.toLowerCase());
-    result.add(Keywords.INTERNAL_REGION_RU.toLowerCase());
-    result.add(Keywords.INTERNAL_REGION_EN.toLowerCase());
     return result;
-
   }
 
   @Override
@@ -67,21 +68,22 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
     var symbolTree = documentContext.getSymbolTree();
 
     var moduleMethods = symbolTree.getMethods();
-    if (moduleMethods.stream().count() == 0) {
+    if (moduleMethods.isEmpty()) {
       return;
     }
 
     var isModuleWithoutExportSub = moduleMethods
       .stream()
-      .noneMatch(moduleMethod -> moduleMethod.isExport());
+      .noneMatch(MethodSymbol::isExport);
 
     var isModuleWithoutRegionAPI = symbolTree.getModuleLevelRegions()
       .stream()
-      .noneMatch(regionSymbol -> REGION_NAME.contains(regionSymbol.getName().toLowerCase()));
+      .map(RegionSymbol::getName)
+      .noneMatch(REGION_NAME::contains);
 
-    var moduleRange = symbolTree.getModule().getRange();
     if (isModuleWithoutExportSub || isModuleWithoutRegionAPI) {
-      diagnosticStorage.addDiagnostic(moduleRange, info.getMessage());
+      Ranges.getFirstSignificantTokenRange(documentContext.getTokens())
+        .ifPresent(diagnosticStorage::addDiagnostic);
     }
 
   }
