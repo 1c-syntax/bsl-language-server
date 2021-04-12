@@ -144,6 +144,16 @@
             "title": "Common module invalid type",
             "$id": "#/definitions/CommonModuleInvalidType"
         },
+        "CommonModuleMissingAPI": {
+            "description": "Common module should have a programming interface",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module should have a programming interface",
+            "$id": "#/definitions/CommonModuleMissingAPI"
+        },
         "CommonModuleNameCached": {
             "description": "Missed postfix \"Cached\"",
             "default": true,

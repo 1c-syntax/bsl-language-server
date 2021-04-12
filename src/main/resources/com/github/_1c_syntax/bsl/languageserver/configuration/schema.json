@@ -56,6 +56,9 @@
                 "CommonModuleInvalidType": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
                 },
+                "CommonModuleMissingAPI": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleMissingAPI"
+                },
                 "CommonModuleNameCached": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
                 },
