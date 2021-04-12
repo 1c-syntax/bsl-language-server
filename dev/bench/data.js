@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1618234465244,
+  "lastUpdate": 1618238161023,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -9982,6 +9982,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4853207257114793",
             "extra": "mean: 84.59346946080525 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89b9a3e8bf822a3d328b2bda4711bfd9bea2f29b",
+          "message": "Merge pull request #1612 from sokolov-rv/feature/CommonModuleMissingAPI",
+          "timestamp": "2021-04-12T17:20:42+03:00",
+          "tree_id": "a72796f505aaa791cf4d41346f8324ac1bf2ab6a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/89b9a3e8bf822a3d328b2bda4711bfd9bea2f29b"
+        },
+        "date": 1618238157133,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 86.06130282084148,
+            "unit": "sec",
+            "range": "stddev: 3.0654881449281977",
+            "extra": "mean: 86.06130282084148 sec\nrounds: 3"
           }
         ]
       }
