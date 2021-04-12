@@ -26,6 +26,6 @@
 
 Project site - https://1c-syntax.github.io/bsl-language-server/en
 
-Project site (develop) - https://1c-syntax.github.io/bsl-language-server/en
+Project site (develop) - https://1c-syntax.github.io/bsl-language-server/dev/en
 
 Documentation sources - [GitHub](docs/en/index.md)
