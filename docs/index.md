@@ -36,10 +36,14 @@
 * Форматирование файла
 * Форматирование выбранного диапазона
 * Определение символов текущего файла (области, процедуры, функции, переменные, объявленные через `Перем`)
-* Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода
+* Определение сворачиваемых областей - `#Область`, `#Если`, процедуры и функции, блоки кода, пакеты запросов
 * Показ когнитивной и цикломатической сложности метода
+* Всплывающая подсказка по локальным методам и методам общих модулей/модулей менеджеров
+* Переходы к определению методов
+* Поиск мест использования методов
+* Иерархия вызовов методов
 * Диагностики
-* "Быстрые исправления" (quick fixes) для ряда диагностик
+* "Быстрые исправления" (quick fixes) для ряда диагностик и "быстрые действия" (code actions)
 * Запуск движка диагностик из командной строки
 * Запуск форматирования файлов в каталоге из командной строки
 
@@ -54,7 +58,7 @@
 | [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | с ограничениями, см. [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
 | [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
 | [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-| [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
+| [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/cross.svg" alt="no" width="20"> |                                                              |
 | [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
 | [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
 
