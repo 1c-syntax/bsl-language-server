@@ -82,11 +82,11 @@ class DocumentLinkProviderTest {
     // then
     assertThat(documentLinks)
       .isNotEmpty()
-      .hasSize(6)
+      .hasSize(8)
       .allMatch(documentLink -> documentLink.getTarget()
         .startsWith(SITE_EN_URL))
       .filteredOn(documentLink -> !documentLink.getTarget().endsWith(DIAGNOSTIC_CODE))
-      .hasSize(2);
+      .hasSize(4);
   }
 
   @Test

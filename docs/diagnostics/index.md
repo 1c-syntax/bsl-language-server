@@ -8,11 +8,11 @@
 
 ## Список реализованных диагностик
 
-Общее количество: **138**
+Общее количество: **140**
 
 * Потенциальная уязвимость: **4**
 * Уязвимость: **3**
-* Ошибка: **42**
+* Ошибка: **44**
 * Дефект кода: **89**
 
 
@@ -77,6 +77,7 @@
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Повторяющиеся условия в синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Использование синтаксической конструкции Если...Тогда...ИначеЕсли... | Да | Важный | Дефект кода | `badpractice` 
  [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Некорректное использование 'ПОДОБНО' | Да | Критичный | Ошибка | `standard`<br>`sql`<br>`unpredictable` 
+ [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Неверное использование "СтрШаблон" | Да | Блокирующий | Ошибка | `brainoverload`<br>`suspicious`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Недопустимый символ | Да | Важный | Ошибка | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | Использование метода РольДоступна | Да | Важный | Дефект кода | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Соединение с вложенными запросами | Да | Важный | Дефект кода | `sql`<br>`standard`<br>`performance` 
@@ -154,5 +155,6 @@
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Использование синхронных вызовов | Да | Важный | Дефект кода | `standard` 
  [UsingThisForm](UsingThisForm.md) | Использование устаревшего свойства "ЭтаФорма" | Да | Незначительный | Дефект кода | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Обращение к виртуальной таблице без параметров | Да | Критичный | Ошибка | `sql`<br>`standard`<br>`performance` 
+ [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Некорректное использование функции ПродолжитьВызов() | Да | Блокирующий | Ошибка | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Некорректное использование метода ОтменитьТранзакцию() | Да | Критичный | Ошибка | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Использование буквы "ё" в текстах модулей | Да | Информационный | Дефект кода | `standard` 

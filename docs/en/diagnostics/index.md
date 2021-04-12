@@ -8,11 +8,11 @@ To escape individual sections of code or files from triggering diagnostics, you 
 
 ## Implemented diagnostics
 
-Total: **138**
+Total: **140**
 
 * Security Hotspot: **4**
 * Vulnerability: **3**
-* Error: **42**
+* Error: **44**
 * Code smell: **89**
 
 
@@ -77,6 +77,7 @@ Total: **138**
  [IfElseDuplicatedCondition](IfElseDuplicatedCondition.md) | Duplicated conditions in If...Then...ElseIf... statements | Yes | Major | Code smell | `suspicious` 
  [IfElseIfEndsWithElse](IfElseIfEndsWithElse.md) | Else...The...ElseIf... statement should end with Else branch | Yes | Major | Code smell | `badpractice` 
  [IncorrectUseLikeInQuery](IncorrectUseLikeInQuery.md) | Incorrect use of 'LIKE' | Yes | Critical | Error | `standard`<br>`sql`<br>`unpredictable` 
+ [IncorrectUseOfStrTemplate](IncorrectUseOfStrTemplate.md) | Incorrect use of "StrTemplate" | Yes | Blocker | Error | `brainoverload`<br>`suspicious`<br>`unpredictable` 
  [InvalidCharacterInFile](InvalidCharacterInFile.md) | Invalid character | Yes | Major | Error | `error`<br>`standard`<br>`unpredictable` 
  [IsInRoleMethod](IsInRoleMethod.md) | IsInRole global method call | Yes | Major | Code smell | `error` 
  [JoinWithSubQuery](JoinWithSubQuery.md) | Join with sub queries | Yes | Major | Code smell | `sql`<br>`standard`<br>`performance` 
@@ -154,5 +155,6 @@ Total: **138**
  [UsingSynchronousCalls](UsingSynchronousCalls.md) | Using synchronous calls | Yes | Major | Code smell | `standard` 
  [UsingThisForm](UsingThisForm.md) | Using deprecated property "ThisForm" | Yes | Minor | Code smell | `standard`<br>`deprecated` 
  [VirtualTableCallWithoutParameters](VirtualTableCallWithoutParameters.md) | Virtual table call without parameters | Yes | Critical | Error | `sql`<br>`standard`<br>`performance` 
+ [WrongUseFunctionProceedWithCall](WrongUseFunctionProceedWithCall.md) | Wrong use of ProceedWithCall function | Yes | Blocker | Error | `error`<br>`suspicious` 
  [WrongUseOfRollbackTransactionMethod](WrongUseOfRollbackTransactionMethod.md) | Not recommended using of RollbackTransaction method | Yes | Critical | Error | `standard` 
  [YoLetterUsage](YoLetterUsage.md) | Using Russian character "yo" ("ё") in code | Yes | Info | Code smell | `standard` 

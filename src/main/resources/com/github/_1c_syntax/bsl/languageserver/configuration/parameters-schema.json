@@ -144,6 +144,16 @@
             "title": "Common module invalid type",
             "$id": "#/definitions/CommonModuleInvalidType"
         },
+        "CommonModuleMissingAPI": {
+            "description": "Common module should have a programming interface",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Common module should have a programming interface",
+            "$id": "#/definitions/CommonModuleMissingAPI"
+        },
         "CommonModuleNameCached": {
             "description": "Missed postfix \"Cached\"",
             "default": true,
@@ -681,6 +691,16 @@
             ],
             "title": "Incorrect use of 'LIKE'",
             "$id": "#/definitions/IncorrectUseLikeInQuery"
+        },
+        "IncorrectUseOfStrTemplate": {
+            "description": "Incorrect use of \"StrTemplate\"",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Incorrect use of \"StrTemplate\"",
+            "$id": "#/definitions/IncorrectUseOfStrTemplate"
         },
         "InvalidCharacterInFile": {
             "description": "Invalid character",
@@ -1723,6 +1743,16 @@
             ],
             "title": "Virtual table call without parameters",
             "$id": "#/definitions/VirtualTableCallWithoutParameters"
+        },
+        "WrongUseFunctionProceedWithCall": {
+            "description": "Wrong use of ProceedWithCall function",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Wrong use of ProceedWithCall function",
+            "$id": "#/definitions/WrongUseFunctionProceedWithCall"
         },
         "WrongUseOfRollbackTransactionMethod": {
             "description": "Not recommended using of RollbackTransaction method",

@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -38,12 +37,6 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
 
   TypoDiagnosticTest() {
     super(TypoDiagnostic.class);
-  }
-
-  @BeforeEach
-  void resetJLanguageToolPool() {
-    var lang = diagnosticInstance.getInfo().getResourceString("diagnosticLanguage");
-    diagnosticInstance.acquireLanguageTool(lang).getLanguageTool("Ы");
   }
 
   @Test

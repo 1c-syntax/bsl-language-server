@@ -56,6 +56,9 @@
                 "CommonModuleInvalidType": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleInvalidType"
                 },
+                "CommonModuleMissingAPI": {
+                    "$ref": "parameters-schema.json#/definitions/CommonModuleMissingAPI"
+                },
                 "CommonModuleNameCached": {
                     "$ref": "parameters-schema.json#/definitions/CommonModuleNameCached"
                 },
@@ -196,6 +199,9 @@
                 },
                 "IncorrectUseLikeInQuery": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseLikeInQuery"
+                },
+                "IncorrectUseOfStrTemplate": {
+                    "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
                 },
                 "InvalidCharacterInFile": {
                     "$ref": "parameters-schema.json#/definitions/InvalidCharacterInFile"
@@ -427,6 +433,9 @@
                 },
                 "VirtualTableCallWithoutParameters": {
                     "$ref": "parameters-schema.json#/definitions/VirtualTableCallWithoutParameters"
+                },
+                "WrongUseFunctionProceedWithCall": {
+                    "$ref": "parameters-schema.json#/definitions/WrongUseFunctionProceedWithCall"
                 },
                 "WrongUseOfRollbackTransactionMethod": {
                     "$ref": "parameters-schema.json#/definitions/WrongUseOfRollbackTransactionMethod"

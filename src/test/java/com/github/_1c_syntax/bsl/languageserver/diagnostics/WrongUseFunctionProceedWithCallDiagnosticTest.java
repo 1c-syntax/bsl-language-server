@@ -28,9 +28,9 @@ import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
-class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnostic> {
-  RefOveruseDiagnosticTest() {
-    super(RefOveruseDiagnostic.class);
+class WrongUseFunctionProceedWithCallDiagnosticTest extends AbstractDiagnosticTest<WrongUseFunctionProceedWithCallDiagnostic> {
+  WrongUseFunctionProceedWithCallDiagnosticTest() {
+    super(WrongUseFunctionProceedWithCallDiagnostic.class);
   }
 
   @Test
@@ -38,19 +38,13 @@ class RefOveruseDiagnosticTest extends AbstractDiagnosticTest<RefOveruseDiagnost
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(3, 28, 3, 45)
-      .hasRange(13, 8, 13, 34)
-      .hasRange(14, 8, 14, 38)
-      .hasRange(25, 8, 25, 21)
-      .hasRange(37, 8, 37, 29)
-      .hasRange(38, 8, 38, 35)
-      .hasRange(56, 37, 56, 43)
-      .hasRange(57, 42, 57, 48)
-      .hasRange(153, 13, 153, 41)
-      .hasRange(164, 13, 164, 53)
-      .hasRange(178, 13, 178, 35);
+      .hasRange(1, 4, 1, 19)
+      .hasRange(5, 4, 5, 19)
+      .hasRange(10, 13, 10, 28)
+      .hasRange(16, 13, 16, 28)
+    ;
 
   }
 }
