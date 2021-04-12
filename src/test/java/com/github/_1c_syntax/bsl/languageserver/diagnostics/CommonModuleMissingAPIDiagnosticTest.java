@@ -54,7 +54,7 @@ class CommonModuleMissingAPIDiagnosticTest extends AbstractDiagnosticTest<Common
     var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnosticNoExportSubs", ModuleType.CommonModule);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(2, 0, 4, 0);
+      .hasRange(0, 0, 66);
 
   }
 
@@ -63,7 +63,7 @@ class CommonModuleMissingAPIDiagnosticTest extends AbstractDiagnosticTest<Common
     var diagnostics = getDiagnostics("CommonModuleMissingAPIDiagnosticNoRegionsAPI", ModuleType.CommonModule);
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
-      .hasRange(2, 0, 14, 0);
+      .hasRange(0, 0, 111);
   }
 
   @Test
