@@ -31,7 +31,7 @@ BSL Language Server code is automatically checked against coding standards on th
 
 The list of activated rules and their settings can be viewed in the quality profile [1c-syntax way](https://sonarcloud.io/organizations/1c-syntax/rules?activation=true&qprofile=AWdJBUnB2EsKsQgQiNpk).
 
-Due to security restrictions, pull requests not from the repository  `1c-syntax/bsl-language-server` are not checked for compliance. After accepting the pull request, it is recommended to go to [the project page on SonarCloud](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server) and view the list of comments filtered by author. Пулл-реквест с исправлением замечаний приветствуется.
+Due to security restrictions, pull requests not from the repository  `1c-syntax/bsl-language-server` are not checked for compliance. After accepting the pull request, it is recommended to go to [the project page on SonarCloud](https://sonarcloud.io/dashboard?id=1c-syntax_bsl-language-server) and view the list of comments filtered by author. Pull-request with fixes is welcome.
 
 ## Linter
 
@@ -58,4 +58,4 @@ To simplify the creation of a logger instance, it is recommended to use the `@lo
 1. Import of `*.google.*` classes, as well as other parts of Guava libraries, is prohibited. With no exceptions.
 
 
-> In the process ...
+> In the process...
