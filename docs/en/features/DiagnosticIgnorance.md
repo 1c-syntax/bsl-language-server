@@ -6,11 +6,12 @@ Instead of manually mark a comment as irrelevant every time, BSL LS provides fun
 
 ## Description
 
-To hide part of the code from the BSL LS analyzer, you must add a special comment to the code. The escaping comment is formed as follows: `[Prefix][:DiagnosticKey]-[ActivationFlag]`. Now in more detail.
+To hide part of the code from the BSL LS analyzer, you must add a special comment to the code.   
+The escaping comment is formed as follows: `[Prefix][:DiagnosticKey]-[ActivationFlag]`. Now in more detail.
 
 - `Prefix` always is `// BSLLS`
-- `DiagnosticKey` can be found in the [list of diagnostics](../diagnostics/index.md) by description.
-- `ActivationFlag` string parameter if giagnostic is On or Off. Supported Russian (`вкл` and `выкл`) and English (`on` and `off`).
+- `DiagnosticKey` can be found in the [list of diagnostics](../diagnostics/index.md) by description
+- `ActivationFlag` string parameter if diagnostic is On or Off. Supported Russian (`вкл` and `выкл`) and English (`on` and `off`).
 
 To disable **ALL** diagnostics for part of the code, you must omit the diagnostic key.
 
@@ -18,7 +19,7 @@ To disable **ALL** diagnostics for part of the code, you must omit the diagnosti
 
 ### Disable all diagnostics in the module
 
-To disable all diagnostics in the module, i.e. essentially hide the module from the BSL LS analyzer, you need to insert a comment `// BSLLS-off` at the beginning of the module
+To disable all diagnostics in the module, i.e. essentially hide the module from the BSL LS analyzer, you need to insert a comment `// BSLLS-off` (or `// BSLLS-выкл`) at the beginning of the module
 
 ### Disable specific diagnostics in the module
 
