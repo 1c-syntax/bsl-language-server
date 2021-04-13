@@ -22,7 +22,7 @@ If the project uses SSL sub-system, then passwords should be stored in safe stor
 
 ### Additionally
 
-Strings with all symbols `*` are excluded from the chech:
+Strings with all symbols `*` are excluded from the check:
 
 ```bsl
 Password = "**********";
