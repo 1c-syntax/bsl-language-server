@@ -19,7 +19,7 @@
 At startup, a list of available diagnostic tags is displayed. You must enter 1-3 tags from the space separated ones.
 
 5. To develop
-6. After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks. To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Состав команды на данный момент
+6. After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks. To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Task includes subtasks
 
 - test - autotesting project
 - licenseFormat - installation of a license block in java source files
