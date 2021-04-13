@@ -15,7 +15,7 @@ Client common modules contain client business logic (functionality specific to t
 
 In cases where client methods should be available only in managed application mode (or only in regular application mode or only in external connection mode), a different combination of these two features is allowed. В таких случаях, допустима иная комбинация двух этих признаков.
 
-Client common modules are named with the "Client" postfix. "Client" ). Except when the Global flag is on.
+Client common modules are named with the "Client" postfix. "Клиент" in Rus). Except when the Global flag is on.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
