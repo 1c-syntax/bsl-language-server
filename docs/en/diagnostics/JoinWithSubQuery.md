@@ -13,7 +13,7 @@ When writing queries, you should not use subquery joins. Only metadata objects o
 If the query contains joins with subqueries, then this can lead to negative consequences:
 - Very slow query execution with low load on server hardware
 - Unstable work of the request. Sometimes the query can work fast enough, sometimes very slow
-- Significant difference in query execution time for different DBMS
+- Significant difference in query execution time for different DBMS;
 - Increased query sensitivity to the relevance and completeness of sql statistics. After a complete update of statistics, the query may work quickly, but after a while it will slow down.
 
 ## Examples
