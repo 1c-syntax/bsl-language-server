@@ -7,11 +7,11 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-The Start Transaction method must be outside the Attempt-Exclusion block immediately before the Attempt operator;
+The BeginTransaction method must be outside the TryCatch block immediately before the Try operator;
 
 ## Sources
 
-+ [Transactions: Rules of Use](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
++ [Transactions: Rules of Use (RU)](https://its.1c.ru/db/v8std/content/783/hdoc/_top/)
 
 ## Snippets
 
