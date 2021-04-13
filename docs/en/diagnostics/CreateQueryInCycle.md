@@ -7,7 +7,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Execution query in cycle
+Execution query in cycle.
 
 ## Examples
 
