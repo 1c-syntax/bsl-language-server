@@ -15,7 +15,7 @@ Currently, **only the use of global context methods** is diagnosed.
 
 Method list:
 
-| Rusian variant                           | English variant            |
+| Russian variant                          | English variant            |
 |:---------------------------------------- |:-------------------------- |
 | ВОПРОС                                   | DOQUERYBOX                 |
 | ОТКРЫТЬФОРМУМОДАЛЬНО                     | OPENFORMMODAL              |
@@ -45,7 +45,7 @@ Method list:
 
 ## Sources
 
-* [Ограничение на использование модальных окон и синхронных вызовов](https://its.1c.ru/db/v8std/content/703/hdoc/)
+* [Limit on the use of modal windows and synchronous calls (RU)](https://its.1c.ru/db/v8std/content/703/hdoc/)
 * [Opt out of modal windows (RU)](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * [Correspondence of synchronous methods to asynchronous analogues (RU)](https://its.1c.ru/db/v838doc#bookmark:dev:TI000000438)
 * [Asynchronous calls to extensions and external components (RU)](http://v8.1c.ru/o7/201412async/index.htm)
