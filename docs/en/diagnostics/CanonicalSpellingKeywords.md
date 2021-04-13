@@ -87,7 +87,7 @@ A built-in language constructs, keywords must be written canonically.
 
 ## Sources
 
-+ [Standart: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
++ [Standard: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
 
 ## Snippets
 
