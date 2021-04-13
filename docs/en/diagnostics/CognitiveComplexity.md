@@ -14,7 +14,9 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Cognitive complexity shows how difficult it is to perceive the written code. High cognitive complexity clearly indicates the need for refactoring to make future support easier. The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
+Cognitive complexity shows how difficult it is to perceive the written code.  
+High cognitive complexity clearly indicates the need for refactoring to make future support easier.  
+The most effective way to reduce cognitive complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
 ### Cognitive Complexity calculation
 
@@ -112,7 +114,7 @@ EndTry;
 
 ```
 
-#### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.
+#### Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested
 
 ## Examples
 
