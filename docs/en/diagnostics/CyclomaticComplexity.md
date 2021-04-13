@@ -15,9 +15,10 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Cyclomatic complexity of the program code is one of the oldest metrics, it was first mentioned by Thomas McCab in 1976. Cyclomatic complexity shows the minimum number of required tests. The most effective way to reduce cyclomatic complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
+Cyclomatic complexity of the program code is one of the oldest metrics, it was first mentioned by Thomas McCab in 1976.  
+Cyclomatic complexity shows the minimum number of required tests. The most effective way to reduce cyclomatic complexity is to decompose the code, split the methods into simpler ones, and also optimize logical expressions.
 
-Cyclomatic complexity increases by 1 for each of following constructions:
+Cyclomatic complexity increases by 1 for each of following constructions
 
 - `For ... To .. Do`
 - `For each ... Of ... Do`
