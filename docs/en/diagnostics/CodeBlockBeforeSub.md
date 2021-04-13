@@ -11,7 +11,7 @@
 The structure of the software module *(in general form)* is clearly defined:
 - first comes the variable definition block
 - then definitions of procedures and functions
-- then the module code block.
+- then the module code block
 
 Based on the structure described above, the location of the program code before the definition of methods is unacceptable.
 
