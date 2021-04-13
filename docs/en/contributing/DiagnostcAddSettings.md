@@ -1,6 +1,7 @@
 # Adding parameters for diagnostic
 
-Some diagnostics may have parameters that allow end users to customize the algorithm. For example: the parameter can be the maximum string length for diagnostics for long strings or a list of numeric constants that are not magic numbers.
+Some diagnostics may have parameters that allow end users to customize the algorithm.  
+For example: the parameter can be the maximum string length for diagnostics for long strings or a list of numeric constants that are not magic numbers.
 
 ## Diagnostic parameter implementation
 
@@ -10,7 +11,8 @@ To implement the diagnostic parameter, you need to make changes to the diagnosti
 
 Add a constant field to the diagnostic class, in which the default value of the parameter will be saved. For example `private static final String DEFAULT_COMMENTS_ANNOTATION = "//@";`.
 
-It is necessary to add a private field in which the parameter value will be stored. The field needs to be annotated `@DiagnosticParameter` In the annotation, you must specify the type of the parameter and the default value (the value is always a string type). For example
+It is necessary to add a private field in which the parameter value will be stored. The field needs to be annotated `@DiagnosticParameter` In the annotation, you must specify the type of the parameter and the default value (the value is always a string type).  
+For example
 
 ```java
 @DiagnosticParameter(
@@ -21,7 +23,8 @@ It is necessary to add a private field in which the parameter value will be stor
 
 ```
 
-If the parameter is primitive or of type String and it is set by a simple setter, then that's it. If the parameter is "hard", for example, a pattern string for a regular expression that must be evaluated before setting, then you need to implement a method for setting parameter values `configure`.
+If the parameter is primitive or of type String and it is set by a simple setter, then that's it.  
+If the parameter is "hard", for example, a pattern string for a regular expression that must be evaluated before setting, then you need to implement a method for setting parameter values `configure`.
 
 For example, there are two parameters:
 
