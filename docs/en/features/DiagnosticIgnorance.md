@@ -23,7 +23,7 @@ To disable all diagnostics in the module, i.e. essentially hide the module from 
 
 ### Disable specific diagnostics in the module
 
-For disable specific diagnostics in the module (for example, the cognitive complexity `CognitiveComplexity` and size limit of the method `MethodSize`), you must insert the comment `// BSLLS:CognitiveComplexity-off` and `// BSLLS:MethodSize-off`
+For disable specific diagnostics in the module (for example, the cognitive complexity `CognitiveComplexity` and size limit of the method `MethodSize`), you must insert the comment `// BSLLS:CognitiveComplexity-off` and `// BSLLS:MethodSize-off` (or `// BSLLS:CognitiveComplexity-выкл` and `// BSLLS:MethodSize-выкл`)
 
 ### Disable all diagnostics for code block
 
@@ -77,7 +77,7 @@ EndProcedure
 
 ### Disable single line diagnostics
 
-To escape a single line, you can use {code 0}wrapper{/code 0} as in the example above, but it is more convenient to use `inline comment`, i.e. the comment located at the end of the line, example
+To escape a single line, you can use `wrapper` as in the example above, but it is more convenient to use `inline comment`, i.e. the comment located at the end of the line, example
 
 ```bsl
 Procedure SomeMethode()
