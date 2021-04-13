@@ -1,16 +1,16 @@
 # Performance measurement
 
-В приложение встроен модуль сбора показателей производительности.
+The app has a built-in module for collecting performance metrics.
 
-По умолчанию замер производительности выключен. Для включения замеров можно воспользоваться одним из трех способов:
+By default, performance measurement is disabled. To enable measurements, you can use one of the following methods:
 
-* указать в `application.properties` настройку `app.measures.enabled=true`;
-* передать в качестве аргумента командной строки при запуске `java -jar` или `exe` параметр `--app.measures.enabled=true`;
-* задать переменную среды `APP_MEASURES_ENABLED` со значением `true`.
+* specify in `application.properties` the setting `app.measures.enabled = true`;
+* specify `--app.measures.enabled = true` parameter as command line argument when starting `java -jar` or `exe`;
+* set environment variable `APP_MEASURES_ENABLED` with value `true`.
 
-Вывод результата замера производительности происходит после окончания работы команды `analyze`.
+The output of the performance measurement occurs after the `analyze` command finishes.
 
-## Реализация
+## Implementation
 
 Основная логика замеров реализована в аспекте `com.github._1c_syntax.bsl.languageserver.aop.MeasuresAspect` и пакете `com.github._1c_syntax.bsl.languageserver.aop.measures`.
 
