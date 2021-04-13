@@ -22,7 +22,7 @@ When developing common modules, you should choose one of four code execution con
 
 ## Sources
 
-* Standard: Rules for creating common modules (RU)
+* Standard: [Rules for creating common modules (RU)](https://its.1c.ru/db/v8std#content:469:hdoc:1.2)
 
 ## Snippets
 
