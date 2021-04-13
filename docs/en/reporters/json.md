@@ -6,28 +6,28 @@ Reporter option - `json`
 
 Output the analize result to file  `bsl-json.json` in the current workspace directory. Output the result of JSON serialization [AnalysisInfo](https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/reporters/data/AnalysisInfo.java) object
 
-## Sample output
+## Scheme:
 
-- *date* - дата анализа.
-- *fileinfos* - массив описаний файлов.
-- *sourceDir* - Путь к папке с исходниками без префикса "file:///" с разделителями по умолчанию для ОС.
+- *date* - date of analysis.
+- *fileinfos* - array of file information.
+- *sourceDir* - path to the source directory without the "file: ///" prefix.
 
 - ### fileinfo:
-  - *path* - Полный путь к файлу с ошибками, с описанием схемы ("file:///") разделителем должен быть "/".
-  - *mdoRef* - Описание ссылки на объект (допускается пустое значение ("") ) пример: "Catalog.Организации"
-  - *diagnostics* - массив описаний диагностических сообщений.
-  - *metrics* - метрики файла (не обязательный).
+  - *path* - path to the source file with "file:///" prefix.
+  - *mdoRef* - object reference description (empty value ("") is allowed). For example: "Catalog.Organizations"
+  - *diagnostics* - array of diagnostics information.
+  - *metrics* - file metrics (optional).
 
   - #### diagnostic:
-    - *range* - Описание местоположения ошибки в файле.
-    - *severity* - Одно из Error, Warning, Hint, Information
-    - *code* - Код правила ошибки.
-    - *source* - Репозиторий правила.
-    - *message* - Сообщение ошибки.
-    - *tags* - Тэги, к которым будет отнесена ошибка. (допускается пустое значение (null))
-    - *relatedInformation* - Массив (допускается пустое значение (null) ) дополнительные места срабатывания ошибки, дополнительная уточняющая информация.
+    - *range* - Location of the error in the file.
+    - *severity* - One of Error, Warning, Hint, Information
+    - *code* - Diagnostic code.
+    - *source* - Diagnostics repo.
+    - *message* - Diagnostics message.
+    - *tags* - Diagnostics tags. (empty value allowed (null))
+    - *relatedInformation* - Array of the location of similar errors in the file or some additional information. (empty value allowed (null)).
 
-## Пример вывода
+## Sample output
 
 ```json
 {
@@ -51,7 +51,7 @@ Output the analize result to file  `bsl-json.json` in the current workspace dire
                     "severity": "Error",
                     "code": "FunctionShouldHaveReturnDiagnostic",
                     "source": "bsl-language-server",
-                    "message": "Функция не содержит \"Возврат\"",
+                    "message": "Function should have \"Return\"",
                     "tags": null,
                     "relatedInformation": null
                 }
