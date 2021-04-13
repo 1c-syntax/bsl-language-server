@@ -10,7 +10,7 @@
       3. In the local repository, switch to the branch `develop`
       4. Reset the branch state to the state of the primary repository (`git reset --hard`)
       5. Pushin the branch to your remote repository
-4. To create all the necessary files in the right places, you need to run the command `gradlew newDiagnostic --key="KeyDiagnostic"`, instead `KeyDiagnostic`  you must specify the key of your diagnostic. Details in help `gradlew -q help --task newDiagnostic`. Parameters:
+4. To create all the necessary files in the right places, you need to run the command `gradlew newDiagnostic --key="KeyDiagnostic"`, instead `KeyDiagnostic` you must specify the key of your diagnostic. Details in help `gradlew -q help --task newDiagnostic`. Parameters:
 
    * `--key` - Diagnostic key
    * `--nameRu` - Russian description
@@ -19,7 +19,8 @@
 At startup, a list of available diagnostic tags is displayed. You must enter 1-3 tags from the space separated ones.
 
 5. To develop
-6. After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks. To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Task includes subtasks
+6. After completion of the development of diagnostics: it is necessary to check the changes (after testing), and also perform a number of service tasks.  
+   To simplify, a special command has been created that can be run in the console `gradlew precommit` or from the Gradle taskbar `precommit`. Task includes subtasks
 
 - test - autotesting project
 - licenseFormat - installation of a license block in java source files
