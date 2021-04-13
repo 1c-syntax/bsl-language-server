@@ -35,11 +35,12 @@ EndProcedure
 
 Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.
 
-**ATTENTION** : A code block is considered commented , if at least one line inside the block is defined as code.
+**ATTENTION**:  
+A code block is considered commented, if at least one line inside the block is defined as code.
 
 ## Sources
 
-* [Source](https://its.1c.ru/db/v8std/content/456/hdoc)
+* [Source (RU)](https://its.1c.ru/db/v8std/content/456/hdoc)
 
 ## Snippets
 
