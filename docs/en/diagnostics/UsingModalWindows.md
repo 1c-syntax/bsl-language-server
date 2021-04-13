@@ -13,7 +13,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Modal windows and pop-ups are considered bad taste. Users are accustomed to working "in one window." When developing configurations designed to work in the web client, it is forbidden to use modal windows and dialogs. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard.
+Modal windows and pop-ups are considered bad taste. Users are accustomed to working "in one window". When developing configurations designed to work in the web client, it is forbidden to use modal windows and dialogs. Otherwise, the configuration will be inoperative in a number of web browsers, since modal windows are not part of the web development standard.
 
 ### Diagnostic restrictions
 
