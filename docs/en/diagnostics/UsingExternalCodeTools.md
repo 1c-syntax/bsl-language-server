@@ -8,7 +8,8 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-For application solutions it is forbidden to execute in unsafe mode any code on the 1C:Enterprise server that is not part of the application solution (configuration) itself. The restriction does not apply to the code that has passed the audit, and to the code executed on the client.
+For application solutions it is forbidden to execute in unsafe mode any code on the 1C:Enterprise server that is not part of the application solution (configuration) itself.  
+The restriction does not apply to the code that has passed the audit, and to the code executed on the client.
 
 Examples of invalid execution of "external" code in unsafe mode:
 
