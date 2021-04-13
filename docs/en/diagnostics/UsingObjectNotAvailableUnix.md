@@ -9,7 +9,7 @@
 
 In Linux COM, OLE, ActiveDocument are not available. For integration use other options, for example XML file exchange or web-services. For COM AddIns, it is recommended to change them to NativeAPI AddIn.
 
-Checked the use of unavailable in :
+Checked the use of unavailable in:
 
 * COMObject
 * Mail
@@ -18,7 +18,7 @@ Checked the use of unavailable in :
 
 ### Addition
 
-When found unavailable in Linux objects, the method is checked to include condition flow for platform type.
+When found unavailable in Linux objects, the method is checked to include condition flow for platform type:
 * `Linux_x86`
 * `Windows`
 * `MacOs`
