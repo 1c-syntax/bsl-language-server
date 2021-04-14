@@ -15,7 +15,7 @@ To avoid code duplication, it is recommended to create client-server common modu
 * Client (Ordinary application)
 * External connection
 
-Common modules of this type are named with the "ClientServer" postfix "ClientServer").
+Common modules of this type are named with the "ClientServer" (rus. "КлиентСервер").
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
