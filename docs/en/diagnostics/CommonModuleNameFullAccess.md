@@ -8,7 +8,7 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Modules executed in privileged mode have the Privileged flag, are named with the "FullAccess" postfix. "FullAccess").
+Modules executed in privileged mode have the Privileged flag, are named with the "FullAccess" postfix (rus. "ПолныеПрава").
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
