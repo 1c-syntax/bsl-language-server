@@ -25,10 +25,6 @@
         
         <link rel="stylesheet" href="assets/stylesheets/palette.ef6f36e2.min.css">
         
-          
-          
-          <meta name="theme-color" content="#ffffff">
-        
       
     
     
@@ -57,13 +53,17 @@
   
     
     
+      
     
     
     
-    <body dir="ltr" data-md-color-scheme="preference" data-md-color-primary="white" data-md-color-accent="indigo">
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
   
     
     <script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+      <script>var palette=__get("__palette");if(null!==palette&&"object"==typeof palette.color)for(var key in palette.color)document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -107,6 +107,50 @@
       </div>
     </div>
     
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo" type="radio" name="__palette" id="__palette_1">
+          <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31z"/></svg>
+          </label>
+        
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo" type="radio" name="__palette" id="__palette_2">
+          <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22z"/></svg>
+          </label>
+        
+      </form>
+    
+    
+      <div class="md-header__option">
+        <div class="md-select">
+          
+          <span class="md-header__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24z"/></svg>
+          </span>
+          <div class="md-select__inner">
+            <ul class="md-select__list">
+              
+                <li class="md-select__item">
+                  <a href="/bsl-language-server/dev/en/" class="md-select__link">
+                    English
+                  </a>
+                </li>
+                
+                <li class="md-select__item">
+                  <a href="/bsl-language-server/dev/" class="md-select__link">
+                    Русский
+                  </a>
+                </li>
+                
+            </ul>
+          </div>
+        </div>
+      </div>
     
     
       <label class="md-header__button md-icon" for="__search">
@@ -241,18 +285,6 @@
       </a>
     </li>
   
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="https://1c-syntax.github.io/bsl-language-server/dev/en" class="md-tabs__link">
-      English
-    </a>
-  </li>
 
       
     </ul>
@@ -859,21 +891,6 @@
   
 
     
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="https://1c-syntax.github.io/bsl-language-server/dev/en" class="md-nav__link">
-        English
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -937,77 +954,312 @@
 <li>Запуск форматирования файлов в каталоге из командной строки</li>
 </ul>
 <h2 id="Поддерживаемые-операции-протокола">Поддерживаемые операции протокола<a class="headerlink" href="#Поддерживаемые-операции-протокола" title="Permanent link">&para;</a></h2>
-<details>
-  <summary>workspace</summary>
-
-| Операция                                                     | Поддержка                                                    | Комментарий                                                  |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [didChangeWorkspaceFolders](https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
-| [didChangeConfiguration](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | с ограничениями, см. [#1431](https://github.com/1c-syntax/bsl-language-server/issues/1431) |
-| [didChangeWatchedFiles](https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
-| [symbol](https://microsoft.github.io/language-server-protocol/specification#workspace_symbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |
-| [executeCommand](https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand) | <img src="./assets/images/cross.svg" alt="no" width="20"> |                                                              |
-| [applyEdit](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
-| [willCreateFiles](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |
-
+<details class="workspace"><summary>Workspace</summary><table>
+<thead>
+<tr>
+<th>Операция</th>
+<th>Поддержка</th>
+<th>Комментарий</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification-current#workspace_didChangeWorkspaceFolders">didChangeWorkspaceFolders</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration">didChangeConfiguration</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>с ограничениями, см. <a href="https://github.com/1c-syntax/bsl-language-server/issues/1431">#1431</a></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeWatchedFiles">didChangeWatchedFiles</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_symbol">symbol</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specification#workspace_executeCommand">executeCommand</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_applyEdit">applyEdit</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workspace_willCreateFiles">willCreateFiles</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </details>
-
-<details>
-  <summary>Text Synchronization</summary>
-
-| Операция                                                                                                                                            | Поддержка                                                      | Комментарий                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [didOpen](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didOpen) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [didChange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | textDocumentSyncKind = Full                                  |                  |
-| [didClose](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [didSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didSave) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [willSave](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSave) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [willSaveWaitUntil](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSaveWaitUntil) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-
+<details><summary>Text Synchronization</summary><table>
+<thead>
+<tr>
+<th>Операция</th>
+<th>Поддержка</th>
+<th>Комментарий</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didOpen">didOpen</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didChange">didChange</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>textDocumentSyncKind = Full</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didClose">didClose</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_didSave">didSave</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSave">willSave</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_willSaveWaitUntil">willSaveWaitUntil</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </details>
-
-<details>
-  <summary>textDocument</summary>
-
-| Операция                                                     | Поддержка                                                    | Комментарий                                                  | Конфигурируется? |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------- |
-| [publishDiagnostics](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | tagSupport = true<br />versionSupport = true<br />[список диагностик](./diagnostics/index.md) | да               |
-| [completion](https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/diagnostics/index.md) | <img src="./assets/images/cross.svg" alt="no" width="20">    | resolveProvider = false                                      |                  |
-| [completionItem/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | contentFormat = MarkupContent                                |                  |
-| [signatureHelp](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [declaration](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_declaration) | <img src="./assets/images/cross.svg" alt="no" width="20">    | не применимо в 1С:Предприятие                                |                  |
-| [definition](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | linkSupport = true                                           |                  |
-| [typeDefinition](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_typeDefinition) | <img src="./assets/images/cross.svg" alt="no" width="20">    | не применимо в 1С:Предприятие                                |                  |
-| [implementation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation) | <img src="./assets/images/cross.svg" alt="no" width="20">    | не применимо в 1С:Предприятие                                |                  |
-| [references](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [documentHighlight](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [documentSymbol](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | hierarchicalDocumentSymbolSupport = true                     |                  |
-| [codeAction](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | codeActionKinds = ? (см. [#1433](https://github.com/1c-syntax/bsl-language-server/issues/1433))<br />isPreferredSupport = true | да               |
-| [codeAction/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeAction_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [codeLens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | resolveProvider = false                                      | да               |
-| [codeLens/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [codeLens/refresh](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [documentLink](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> | Показ гиперссылок на документацию по диагностикам.<br />tooltipSupport = true<br />resolveProvider = false | да               |
-| [documentLink/resolve](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#documentLink_resolve) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [documentColor](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [colorPresentation](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [rangeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [onTypeFormatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [rename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [prepareRename](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [foldingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [selectionRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_selectionRange) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [prepareCallHierarchy](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [callHierarchy/incomingCalls](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [callHierarchy/outgoingCalls](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls) | <img src="./assets/images/checkmark.svg" alt="yes" width="20"> |                                                              |                  |
-| [semanticTokens](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [linkedEditingRange](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-| [moniker](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker) | <img src="./assets/images/cross.svg" alt="no" width="20">    |                                                              |                  |
-
+<details class="textdocument"><summary>Textdocument</summary><table>
+<thead>
+<tr>
+<th>Операция</th>
+<th>Поддержка</th>
+<th>Комментарий</th>
+<th>Конфигурируется?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">publishDiagnostics</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>tagSupport = true<br />versionSupport = true<br /><a href="diagnostics/">список диагностик</a></td>
+<td>да</td>
+</tr>
+<tr>
+<td><a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/docs/diagnostics/index.md">completion</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>resolveProvider = false</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#completionItem_resolve">completionItem/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_hover">hover</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>contentFormat = MarkupContent</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_signatureHelp">signatureHelp</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_declaration">declaration</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>не применимо в 1С:Предприятие</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_definition">definition</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>linkSupport = true</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_typeDefinition">typeDefinition</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>не применимо в 1С:Предприятие</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_implementation">implementation</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td>не применимо в 1С:Предприятие</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references">references</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentHighlight">documentHighlight</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol">documentSymbol</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>hierarchicalDocumentSymbolSupport = true</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction">codeAction</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>codeActionKinds = ? (см. <a href="https://github.com/1c-syntax/bsl-language-server/issues/1433">#1433</a>)<br />isPreferredSupport = true</td>
+<td>да</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeAction_resolve">codeAction/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeLens">codeLens</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>resolveProvider = false</td>
+<td>да</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_resolve">codeLens/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#codeLens_refresh">codeLens/refresh</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink">documentLink</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td>Показ гиперссылок на документацию по диагностикам.<br />tooltipSupport = true<br />resolveProvider = false</td>
+<td>да</td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#documentLink_resolve">documentLink/resolve</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentColor">documentColor</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_colorPresentation">colorPresentation</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_formatting">formatting</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rangeFormatting">rangeFormatting</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_onTypeFormatting">onTypeFormatting</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_rename">rename</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareRename">prepareRename</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_foldingRange">foldingRange</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_selectionRange">selectionRange</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy">prepareCallHierarchy</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls">callHierarchy/incomingCalls</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls">callHierarchy/outgoingCalls</a></td>
+<td><img src="./assets/images/checkmark.svg" alt="yes" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">semanticTokens</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_linkedEditingRange">linkedEditingRange</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_moniker">moniker</a></td>
+<td><img src="./assets/images/cross.svg" alt="no" width="20"></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </details>
-
 <p><a id="cli"></a></p>
 <h2 id="Запуск-из-командной-строки">Запуск из командной строки<a class="headerlink" href="#Запуск-из-командной-строки" title="Permanent link">&para;</a></h2>
 <p>Запуск jar-файлов осуществляется через <code>java -jar path/to/file.jar</code>.</p>
