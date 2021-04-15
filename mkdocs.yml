@@ -31,16 +31,29 @@ nav:
     - О разделе: features/index.md
     - features/ConfigurationFile.md
     - features/DiagnosticIgnorance.md
-  - English: https://1c-syntax.github.io/bsl-language-server/en
 theme: 
   name: material
   language: ru
   logo: 'assets/images/logo.png'
   favicon: 'assets/images/logo.png'
   palette:
-    scheme: preference
-    primary: 'white'
-    accent: 'indigo'
+    # Light mode
+    - teal: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode  
   features:
     - navigation.tabs
     - search.highlight
@@ -52,6 +65,13 @@ extra:
       link: 'https://github.com/1c-syntax'
     - icon: fontawesome/brands/telegram
       link: 'https://t.me/bsl_language_server'
+  alternate:
+    - name: English
+      link: /bsl-language-server/en/
+      lang: en
+    - name: Русский
+      link: /bsl-language-server/
+      lang: ru
 extra_css:
   - 'assets/stylesheets/extra.css'
 extra_javascript:
@@ -60,6 +80,7 @@ extra_javascript:
 markdown_extensions:
   - admonition
   - codehilite
+  - pymdownx.details
   - markdown.extensions.toc:
       permalink: true
       slugify: !!python/name:pymdownx.slugs.uslugify_cased

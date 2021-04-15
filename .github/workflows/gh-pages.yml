@@ -77,6 +77,8 @@ jobs:
         sed -i "s%BSL Language Server%BSL Language Server Dev%g" mkdocs.en.yml
         sed -i "s%https://1c-syntax.github.io/bsl-language-server%https://1c-syntax.github.io/bsl-language-server/dev%g" mkdocs.yml
         sed -i "s%https://1c-syntax.github.io/bsl-language-server%https://1c-syntax.github.io/bsl-language-server/dev%g" mkdocs.en.yml
+        sed -i "s%link: /bsl-language-server/%link: /bsl-language-server/dev/%g" mkdocs.yml
+        sed -i "s%link: /bsl-language-server/%link: /bsl-language-server/dev/%g" mkdocs.en.yml
     
     - name: Build Russian
       run: |
