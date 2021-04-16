@@ -8,7 +8,7 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 The following global context methods are deprecated and are not recommended since platform version 8.3.10:
-```
+```bsl
 SetShortApplicationCaption();
 GetShortApplicationCaption();
 SetClientApplicationCaption();
