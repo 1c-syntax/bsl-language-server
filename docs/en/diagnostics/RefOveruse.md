@@ -10,7 +10,7 @@
 Using ".Ref" to a field of a reference type will result in an implicit left join with the source table of this field, and it has no value, but only generates excessive load on the DBMS.
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-```
+```bsl
 Query.Text = "Select Files.File.Ref, // error
    | Files.File
    | From
