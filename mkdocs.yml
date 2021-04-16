@@ -81,6 +81,8 @@ markdown_extensions:
   - admonition
   - codehilite
   - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
   - markdown.extensions.toc:
       permalink: true
       slugify: !!python/name:pymdownx.slugs.uslugify_cased

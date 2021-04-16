@@ -25,7 +25,7 @@ BSL Language Server предоставляет возможность измен
 
 Для облегчения составления и редактирования конфигурационного файла можно использовать следующую JSON-схему:
 
-```
+log
 https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 ```
 
