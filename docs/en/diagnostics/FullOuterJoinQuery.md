@@ -11,7 +11,7 @@ You should not use FULL OUTER JOIN in queries, especially in PostgreSQL database
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 Query below will lead to high load on PostgreSQL database.
-```
+```bsl
 Procedure Test1()
 
     Query = New Query;
