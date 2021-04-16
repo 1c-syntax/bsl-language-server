@@ -11,7 +11,7 @@ You should call ProceedWithCall function only in Extensions and only methods ann
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-```
+```bsl
 &AtClient
 Procedure Test()
     ProceedWithCall(); // there is error    
