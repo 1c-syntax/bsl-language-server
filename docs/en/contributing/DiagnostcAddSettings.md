@@ -49,7 +49,8 @@ Then the method of setting the parameter values will look:
 
 ### Test change
 
-It is necessary to add a test to change the diagnostic settings. The test is added to the diagnostic test class *(a separate method for each combination of diagnostic setting options)*. At the beginning of the test, you need to set the value of the diagnostic parameter, the subsequent steps are similar to the general rules for writing tests. Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по умолчанию, используя метод `getDefaultConfiguration()` from the metadata of the current diagnostic `diagnosticInstance.getInfo()`. The next step is to change the parameter value by adding to the configuration collection, and then reconfigure using the method `configure`. Example
+It is necessary to add a test to change the diagnostic settings.  
+The test is added to the diagnostic test class _(a separate method for each combination of diagnostic setting options)_. At the beginning of the test, you need to set the value of the diagnostic parameter, the subsequent steps are similar to the general rules for writing tests. Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по умолчанию, используя метод `getDefaultConfiguration()` from the metadata of the current diagnostic `diagnosticInstance.getInfo()`. The next step is to change the parameter value by adding to the configuration collection, and then reconfigure using the method `configure`. Example
 
 ```java
 // get current configuration
