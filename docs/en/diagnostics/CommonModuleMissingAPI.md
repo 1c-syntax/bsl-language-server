@@ -1,56 +1,56 @@
-# Common module should have a programming interface (CommonModuleMissingAPI)
+# Общий модуль должен иметь программный интерфейс (CommonModuleMissingAPI)
 
- Type | Scope | Severity | Activated<br>by default | Minutes<br>to fix | Tags 
- :-: | :-: | :-: | :-: | :-: | :-: 
- `Code smell` | `BSL` | `Major` | `Yes` | `1` | `brainoverload`<br>`suspicious` 
+ |      Тип      | Поддерживаются<br>языки | Важность | Включена<br>по умолчанию | Время на<br>исправление (мин) |                 Тэги                  |
+ |:-------------:|:-----------------------------:|:--------:|:------------------------------:|:-----------------------------------:|:-------------------------------------:|
+ | `Дефект кода` |             `BSL`             | `Важный` |              `Да`              |                 `1`                 | `brainoverload`<br>`suspicious` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Description
+## Описание диагностики
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-A common module should have at least one export method, and "ProgramInterface" or "ServiceProgramInterface" area.
+Общий модуль должен иметь хотя бы один экспортный метод, а также область "ПрограммныйИнтерфейс" или "СлужебныйПрограммныйИнтерфейс".
 
-## Examples
+## Примеры
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 Неправильно
 
 ```Bsl
-// begin module
-Procedure Test(A)
-    A = A + 1;
-EndProcedure
-// end module
+// начало модуля
+Процедура Тест(А)
+    А = А + 1;
+КонецПроцедуры
+// конец модуля
 ```
 
 Правильно
 
 ```Bsl
-// begin module
-#Region Internal
-Procedure Test(A)
-    A = A + 1;
-EndProcedure
-#EndRegion
-// end module
+// начало модуля
+#Область СлужебныйПрограммныйИнтерфейс
+Процедура Тест(А) Экспорт
+    А = А + 1;
+КонецПроцедуры
+#КонецОбласти
+// конец модуля
 ```
 
-## Sources
+## Источники
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Source: [Standart: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
+Источник: [Стандарт: Структура модулей](https://its.1c.ru/db/v8std#content:455:hdoc)
 
-## Snippets
+## Сниппеты
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Diagnostic ignorance in code
+### Экранирование кода
 
 ```bsl
 // BSLLS:CommonModuleMissingAPI-off
 // BSLLS:CommonModuleMissingAPI-on
 ```
 
-### Parameter for config
+### Параметр конфигурационного файла
 
 ```json
 "CommonModuleMissingAPI": false
