@@ -13,7 +13,7 @@ plugins {
     id("me.qoomon.git-versioning") version "4.2.0"
     id("com.github.ben-manes.versions") version "0.38.0"
     id("io.freefair.javadoc-links") version "5.3.3.3"
-    id("org.springframework.boot") version "2.4.4"
+    id("org.springframework.boot") version "2.4.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
     id("io.freefair.aspectj.post-compile-weaving") version "5.3.3.3"
