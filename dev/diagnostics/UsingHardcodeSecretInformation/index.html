@@ -876,19 +876,16 @@
 <p>Если в проекте 1С используется подсистема БСП, то хранение паролей можно организовать через безопасное хранилище.</p>
 <h3 id="Дополнительно">Дополнительно<a class="headerlink" href="#Дополнительно" title="Permanent link">&para;</a></h3>
 <p>В значений паролей исключаются строки, где все символы <code>*</code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Пароль</span> <span class="o">=</span> <span class="s1">&quot;**********&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Пароль</span> <span class="o">=</span> <span class="s1">&quot;**********&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Пароль</span> <span class="o">=</span> <span class="s1">&quot;12345&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Пароль</span> <span class="o">=</span> <span class="s1">&quot;12345&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Правильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Пароли</span> <span class="o">=</span> <span class="nv">ОбщегоНазначения</span><span class="o">.</span><span class="nv">ПрочитатьДанныеИзБезопасногоХранилища</span><span class="p">(</span><span class="s1">&quot;ИдентификаторХранения&quot;</span><span class="p">,</span> <span class="s1">&quot;Пароль&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Пароли</span> <span class="o">=</span> <span class="nv">ОбщегоНазначения</span><span class="o">.</span><span class="nv">ПрочитатьДанныеИзБезопасногоХранилища</span><span class="p">(</span><span class="s1">&quot;ИдентификаторХранения&quot;</span><span class="p">,</span> <span class="s1">&quot;Пароль&quot;</span><span class="p">);</span>
 <span class="nv">Пароль</span> <span class="o">=</span> <span class="nv">Пароли</span><span class="o">.</span><span class="nv">Пароль</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:740:hdoc">Стандарт: Безопасное хранение паролей</a></li>
@@ -896,12 +893,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeSecretInformation-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeSecretInformation-off</span>
 <span class="c c-Singleline">// BSLLS:UsingHardcodeSecretInformation-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingHardcodeSecretInformation&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingHardcodeSecretInformation&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchWords&quot;</span><span class="p">:</span> <span class="s2">&quot;Пароль|Password&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

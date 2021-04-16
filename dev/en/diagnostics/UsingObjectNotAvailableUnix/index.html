@@ -865,20 +865,17 @@ For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
 <li><code>MacOs</code></li>
 </ul>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">Component</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">COMObject</span><span class="p">(</span><span class="s1">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Component</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">COMObject</span><span class="p">(</span><span class="s1">&quot;System.Text.UTF8Encoding&quot;</span><span class="p">);</span>
 </code></pre></div>
-
 <p>or</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Instead of this you can use <code>StartApplication()</code>.</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">SystemInformation</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">SystemInformation</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">SystemInformation</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">SystemInformation</span><span class="p">();</span>
 <span class="nv">If</span> <span class="nv">Not</span> <span class="nv">SystemInformation</span><span class="o">.</span><span class="nv">PlatformType</span> <span class="o">=</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86</span> <span class="nv">OR</span> <span class="nv">PlatformType</span><span class="o">.</span><span class="nv">Linux_x86_64</span> <span class="k">Then</span>
     <span class="nv">Mail</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Mail</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8314doc#bookmark:dev:TI000001208">Features of the development of cross-platform applied solutions</a></li>
@@ -887,12 +884,11 @@ For COM AddIns, it is recommended to change them to NativeAPI AddIn.</p>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingObjectNotAvailableUnix-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingObjectNotAvailableUnix-off</span>
 <span class="c c-Singleline">// BSLLS:UsingObjectNotAvailableUnix-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingObjectNotAvailableUnix&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingObjectNotAvailableUnix&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

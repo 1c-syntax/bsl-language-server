@@ -854,24 +854,23 @@
 <p>You should not use FULL OUTER JOIN in queries, especially in PostgreSQL database. It is better to rewrite query without FULL OUTER JOIN.  </p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-<p>Query below will lead to high load on PostgreSQL database.</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Proc</span><span class="nv">edure</span> <span class="nv">Test1</span><span class="p">()</span>
+<p>Query below will lead to high load on PostgreSQL database.
+<div class="highlight"><pre><span></span><code>Procedure Test1()
 
-    <span class="nf">Query</span> <span class="o">=</span> <span class="nv">New</span> <span class="nv">Query</span><span class="c1">;</span>
-    <span class="nf">Query.Text</span> <span class="o">=</span> <span class="err">&quot;</span><span class="nv">SELECT</span>
-                   <span class="err">|</span>    <span class="nf">Goods.Product</span> <span class="nv">AS</span> <span class="nv">Product</span><span class="p">,</span>
-                   <span class="err">|</span>    <span class="nf">ISNULL</span><span class="p">(</span><span class="nv">SalesPlan.Sum</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="nv">AS</span> <span class="nv">PlanSum</span><span class="p">,</span>
-                   <span class="err">|</span>    <span class="nf">ISNULL</span><span class="p">(</span><span class="nv">SalesActual.Sum</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="nv">AS</span> <span class="nv">ActualSum</span>
-                   <span class="err">|</span><span class="nf">FROM</span>
-                   <span class="err">|</span>    <span class="nf">Goods</span> <span class="nv">AS</span> <span class="nv">Goods</span>
-                   <span class="err">|</span>        <span class="nf">LEFT</span> <span class="nv">JOIN</span> <span class="nv">SalesPlan</span> <span class="nv">AS</span> <span class="nv">SalesPlan</span>
-                   <span class="err">|</span>            <span class="nf">FULL</span> <span class="nv">OUTER</span> <span class="nv">JOIN</span> <span class="nv">SalesActual</span> <span class="nv">AS</span> <span class="nv">SalesActual</span> <span class="o">//</span> <span class="nv">Should</span> <span class="nv">trigger</span> <span class="nv">here</span>
-                   <span class="err">|</span>            <span class="nf">ON</span> <span class="nv">SalesPlan.Product</span> <span class="o">=</span> <span class="nv">SalesActual.Product</span>
-                   <span class="err">|</span>        <span class="nf">ON</span> <span class="nv">Goods.Product</span> <span class="o">=</span> <span class="nv">SalesPlan.Product</span><span class="err">&quot;</span><span class="c1">;</span>
+    Query = New Query;
+    Query.Text = &quot;SELECT
+                   |    Goods.Product AS Product,
+                   |    ISNULL(SalesPlan.Sum, 0) AS PlanSum,
+                   |    ISNULL(SalesActual.Sum, 0) AS ActualSum
+                   |FROM
+                   |    Goods AS Goods
+                   |        LEFT JOIN SalesPlan AS SalesPlan
+                   |            FULL OUTER JOIN SalesActual AS SalesActual // Should trigger here
+                   |            ON SalesPlan.Product = SalesActual.Product
+                   |        ON Goods.Product = SalesPlan.Product&quot;;
 
-<span class="k">EndP</span><span class="nv">rocedure</span>
-</code></pre></div>
-
+EndProcedure
+</code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -882,12 +881,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FullOuterJoinQuery-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FullOuterJoinQuery-off</span>
 <span class="c c-Singleline">// BSLLS:FullOuterJoinQuery-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;FullOuterJoinQuery&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;FullOuterJoinQuery&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

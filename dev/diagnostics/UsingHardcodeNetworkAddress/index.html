@@ -884,23 +884,20 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="s1">&quot;192.168.0.1&quot;</span><span class="p">;</span>
-</code></pre></div>
-
-<p>Правильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="nv">МойМодульПовтИсп</span><span class="o">.</span><span class="nv">СетевойАдресСервера</span><span class="p">();</span>
-</code></pre></div>
-
+<p>Неправильно:
+<div class="highlight"><pre><span></span><code><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="s1">&quot;192.168.0.1&quot;</span><span class="p">;</span>
+</code></pre></div></p>
+<p>Правильно:
+<div class="highlight"><pre><span></span><code><span class="nv">СетевойАдрес</span> <span class="o">=</span> <span class="nv">МойМодульПовтИсп</span><span class="o">.</span><span class="nv">СетевойАдресСервера</span><span class="p">();</span>
+</code></pre></div></p>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-off</span>
 <span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingHardcodeNetworkAddress&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingHardcodeNetworkAddress&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchWordsExclusion&quot;</span><span class="p">:</span> <span class="s2">&quot;Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

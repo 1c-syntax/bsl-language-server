@@ -852,33 +852,29 @@
 <p>Отстутствие итератора в теле цикла указывает на бесполезный перебор коллекции либо на ошибку в теле цикла.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="highlight"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
 
     <span class="nv">ВыполнитьДействиеНадЭлементом</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
 
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Правильно</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="highlight"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Итератор</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
 
     <span class="nv">ВыполнитьДействиеНадЭлементом</span><span class="p">(</span><span class="nv">Итератор</span><span class="p">);</span>
 
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="nv">ВыполнитьДействиеНадКоллекцией</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ВыполнитьДействиеНадКоллекцией</span><span class="p">(</span><span class="nv">Коллекция</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UseLessForEach-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UseLessForEach-off</span>
 <span class="c c-Singleline">// BSLLS:UseLessForEach-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UseLessForEach&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UseLessForEach&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

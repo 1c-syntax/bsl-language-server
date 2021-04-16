@@ -875,12 +875,11 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="kd">#Область &lt;ИмяОбласти&gt;</span>
+<div class="highlight"><pre><span></span><code><span class="kd">#Область &lt;ИмяОбласти&gt;</span>
 </code></pre></div>
-
 <p>Не смотря на то что в стандарте описано всего 10 имён, имена вложенных областей не проверяются.</p>
-<p>Правильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="kd">#Область СлужебныеПроцедурыИФункции</span>
+<p>Правильно:
+<div class="highlight"><pre><span></span><code><span class="kd">#Область СлужебныеПроцедурыИФункции</span>
 <span class="kd">#Область Печать</span>
 <span class="c c-Singleline">// Код процедур и функций</span>
 <span class="kd">#КонецОбласти</span>
@@ -888,8 +887,7 @@
 <span class="c c-Singleline">// Код процедур и функций</span>
 <span class="kd">#КонецОбласти</span>
 <span class="kd">#КонецОбласти</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <p>Таблица соответствия английских имён (полный список в <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">исходном коде</a>):
 | русск.  | англ. |
 | ------------- | ------------- |
@@ -912,12 +910,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CodeOutOfRegion-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CodeOutOfRegion-off</span>
 <span class="c c-Singleline">// BSLLS:CodeOutOfRegion-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CodeOutOfRegion&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CodeOutOfRegion&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;checkUnknownModuleType&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>

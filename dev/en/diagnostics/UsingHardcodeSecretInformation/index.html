@@ -876,19 +876,16 @@
 <p>If the project uses SSL sub-system, then passwords should be stored in safe storage.</p>
 <h3 id="Additionally">Additionally<a class="headerlink" href="#Additionally" title="Permanent link">&para;</a></h3>
 <p>Strings with all symbols <code>*</code> are excluded from the chech:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s1">&quot;**********&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s1">&quot;**********&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s1">&quot;12345&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Password</span> <span class="o">=</span> <span class="s1">&quot;12345&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Passwords</span> <span class="o">=</span> <span class="nv">CommonModule</span><span class="o">.</span><span class="nv">ReadDataFromSafeStorage</span><span class="p">(</span><span class="s1">&quot;StoringIdentifier&quot;</span><span class="p">,</span> <span class="s1">&quot;Password&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Passwords</span> <span class="o">=</span> <span class="nv">CommonModule</span><span class="o">.</span><span class="nv">ReadDataFromSafeStorage</span><span class="p">(</span><span class="s1">&quot;StoringIdentifier&quot;</span><span class="p">,</span> <span class="s1">&quot;Password&quot;</span><span class="p">);</span>
 <span class="nv">Password</span> <span class="o">=</span> <span class="nv">Passwords</span><span class="o">.</span><span class="nv">Password</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Reference">Reference<a class="headerlink" href="#Reference" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:740:hdoc">Standard: Store passwords safe</a></li>
@@ -896,12 +893,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeSecretInformation-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeSecretInformation-off</span>
 <span class="c c-Singleline">// BSLLS:UsingHardcodeSecretInformation-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingHardcodeSecretInformation&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingHardcodeSecretInformation&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchWords&quot;</span><span class="p">:</span> <span class="s2">&quot;Пароль|Password&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

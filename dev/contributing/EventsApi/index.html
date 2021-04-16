@@ -844,7 +844,7 @@
 <p>В классе события рекомендуется:
 * объявлять конструктор, принимающий в себя "источник" события - объект, на котором сработало данное событие, и вызывающий <code>super</code>-конструктор;
 * переопределять метод <code>getSource</code>, возвращая <code>source</code>, приведенный к типу источника.</p>
-<div class="codehilite"><pre><span></span><code><span class="cm">/**</span>
+<div class="highlight"><pre><span></span><code><span class="cm">/**</span>
 <span class="cm"> * Описание события изменения конфигурации.</span>
 <span class="cm"> * &lt;p&gt;</span>
 <span class="cm"> * В качестве источника события содержит ссылку на конфигурацию.</span>
@@ -860,7 +860,6 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 <h2 id="Публикация-событий">Публикация событий<a class="headerlink" href="#Публикация-событий" title="Permanent link">&para;</a></h2>
 <p>Для публикации событий используется аспект <code>EventPublisherAspect</code> пакета <code>com.github._1c_syntax.bsl.languageserver.aop</code></p>
 <blockquote>
@@ -871,7 +870,7 @@
 <p>Для формирования pointcut-выражения рекомендуется использовать заготовки методов в классе <code>Pointcuts</code>, расположенном в пакете <code>com.github._1c_syntax.bsl.languageserver.aop</code></p>
 </blockquote>
 <p>Пример перехвата события, срабатывающего на обновление конфигурации сервера, можно посмотреть ниже:</p>
-<div class="codehilite"><pre><span></span><code><span class="nd">@Aspect</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@Aspect</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">EventPublisherAspect</span> <span class="p">{</span>
   <span class="nd">@AfterReturning</span><span class="p">(</span><span class="s">&quot;Pointcuts.isLanguageServerConfiguration() &amp;&amp; (Pointcuts.isResetCall() || Pointcuts.isUpdateCall())&quot;</span><span class="p">)</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">languageServerConfigurationUpdated</span><span class="p">(</span><span class="n">JoinPoint</span> <span class="n">joinPoint</span><span class="p">)</span> <span class="p">{</span>
@@ -880,11 +879,10 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 <h2 id="Подпись-на-события">Подпись на события<a class="headerlink" href="#Подпись-на-события" title="Permanent link">&para;</a></h2>
 <p>Для подписи на событие компонент может либо реализовать интерфейс <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationListener.html"><code>ApplicationListener</code></a> либо объявить публичный метод, помеченный аннотацией <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/event/EventListener.html"><code>@EventListener</code></a>, принимающий в качестве параметра конкретный класс события.</p>
 <p>Ниже представлен пример обработки события <code>LanguageServerConfigurationChangedEvent</code> через аннотации:</p>
-<div class="codehilite"><pre><span></span><code><span class="nd">@Component</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@Component</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">FileAwarePrintWriter</span> <span class="p">{</span>
   <span class="cm">/**</span>
 <span class="cm">   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.</span>

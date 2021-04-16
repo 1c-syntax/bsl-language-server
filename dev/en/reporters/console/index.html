@@ -878,24 +878,24 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Output the analize result in stdout and/or attached logger. Output result, returned <code>toString()</code> method of object <a href="https://github.com/1c-syntax/bsl-language-server/blob/master/src/main/java/org/github/_1c_syntax/bsl/languageserver/diagnostics/reporter/AnalysisInfo.java">AnalysisInfo</a></p>
 <h2 id="Sample-output">Sample output<a class="headerlink" href="#Sample-output" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">Analysis</span> <span class="nv">date</span>: <span class="mi">2019</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">28</span><span class="nv">T15</span>:<span class="mi">32</span>:<span class="mi">06</span>.<span class="mi">856</span>
-[<span class="nv">FileInfo</span><span class="ss">(</span><span class="nv">path</span><span class="o">=</span><span class="nv">C</span>:\<span class="nv">src</span>\<span class="nv">cf</span>\<span class="nv">Catalogs</span>\МойСправочник\<span class="nv">Ext</span>\<span class="nv">ManagerModule</span>.<span class="nv">bsl</span>, <span class="nv">diagnostics</span><span class="o">=</span>[]<span class="ss">)</span>, <span class="nv">FileInfo</span><span class="ss">(</span><span class="nv">path</span><span class="o">=</span><span class="nv">C</span>:\<span class="nv">src</span>\<span class="nv">cf</span>\<span class="nv">Catalogs</span>\АккредитационныеКомиссии\<span class="nv">Ext</span>\<span class="nv">ObjectModule</span>.<span class="nv">bsl</span>, <span class="nv">diagnostics</span><span class="o">=</span>[<span class="nv">Diagnostic</span> [
-  <span class="nv">range</span> <span class="o">=</span> <span class="nv">Range</span> [
-    <span class="nv">start</span> <span class="o">=</span> <span class="nv">Position</span> [
-      <span class="nv">line</span> <span class="o">=</span> <span class="mi">55</span>
-      <span class="nv">character</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="highlight"><pre><span></span><code>Analysis date: 2019-01-28T15:32:06.856
+[FileInfo(path=C:\src\cf\Catalogs\МойСправочник\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\АккредитационныеКомиссии\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [
+  range = Range [
+    start = Position [
+      line = 55
+      character = 0
     ]
-    <span class="k">end</span> <span class="o">=</span> <span class="nv">Position</span> [
-      <span class="nv">line</span> <span class="o">=</span> <span class="mi">55</span>
-      <span class="nv">character</span> <span class="o">=</span> <span class="mi">140</span>
+    end = Position [
+      line = 55
+      character = 140
     ]
   ]
-  <span class="nv">severity</span> <span class="o">=</span> <span class="nv">Information</span>
-  <span class="nv">code</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">LineLengthDiagnostic</span><span class="s2">&quot;</span>
-  <span class="nv">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">bsl-language-server</span><span class="s2">&quot;</span>
-  <span class="nv">message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="s">Превышена длина строки</span><span class="s2">&quot;</span>
-  <span class="nv">relatedInformation</span> <span class="o">=</span> <span class="nv">null</span>
-]]<span class="ss">)</span>]
+  severity = Information
+  code = &quot;LineLengthDiagnostic&quot;
+  source = &quot;bsl-language-server&quot;
+  message = &quot;Превышена длина строки&quot;
+  relatedInformation = null
+]])]
 </code></pre></div>
                 
               

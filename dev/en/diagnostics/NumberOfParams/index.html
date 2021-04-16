@@ -872,20 +872,18 @@
 <p>If need to pass many parameters to a function, it is recommended to group same-type parameters into one or more composite parameters of type Structure.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
 <span class="nv">Procedure</span> <span class="nv">CreateNewGoods</span><span class="p">(</span><span class="nv">Description</span><span class="p">,</span> <span class="nv">Goods</span><span class="p">,</span> <span class="nv">Units</span><span class="p">,</span> <span class="nv">Weight</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 
 <span class="k">EndProcedure</span>
 </code></pre></div>
-
 <p>Correct:
  Group parameters, having goods item properties into Structure ЗначенияРеквизитов.</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Create item in catalog &quot;Goods&quot;</span>
 <span class="nv">Procedure</span> <span class="nv">CreateNewGoods</span><span class="p">(</span><span class="nv">Parameters</span><span class="p">,</span> <span class="nv">Check</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 
 <span class="k">EndProcedure</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Standard: Procedure and function parameters</a></li>
@@ -893,12 +891,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfParams-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfParams-off</span>
 <span class="c c-Singleline">// BSLLS:NumberOfParams-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NumberOfParams&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NumberOfParams&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxParamsCount&quot;</span><span class="p">:</span> <span class="mi">7</span>
 <span class="p">}</span>
 </code></pre></div>

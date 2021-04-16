@@ -854,25 +854,23 @@
 В блоке Исключение нужно сначала вызвать метод ОтменитьТранзакцию, а затем выполнять другие действия, если они требуются.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<div class="highlight"><pre><span></span><code><span class="nb">НачатьТранзакцию</span><span class="p">();</span>
+<span class="k">Попытка</span>
+    <span class="nv">ДокументОбъект</span><span class="o">.</span><span class="nv">Записать</span><span class="p">();</span>
+    <span class="nb">ЗафиксироватьТранзакцию</span><span class="p">();</span>
+<span class="k">Исключение</span>
+    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="nb">НСтр</span><span class="p">(</span><span class="s1">&quot;ru = &#39;Выполнение операции&#39;&quot;</span><span class="p">),</span>
+        <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span>
+        <span class="p">,</span>
+        <span class="p">,</span>
+        <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">()));</span>
 
-<div class="codehilite"><pre><span></span><code>НачатьТранзакцию();
-Попытка
-    ДокументОбъект.Записать();
-    ЗафиксироватьТранзакцию();
-Исключение
-    ЗаписьЖурналаРегистрации(НСтр(&quot;ru = &#39;Выполнение операции&#39;&quot;),
-        УровеньЖурналаРегистрации.Ошибка,
-        ,
-        ,
-        ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
+    <span class="nb">ОтменитьТранзакцию</span><span class="p">();</span> <span class="c c-Singleline">// Срабатывание здесь</span>
 
-    ОтменитьТранзакцию(); // Срабатывание здесь
+    <span class="nv">ВызватьИсключение</span><span class="p">;</span> <span class="c c-Singleline">// есть внешняя транзакция</span>
 
-    ВызватьИсключение; // есть внешняя транзакция
-
-КонецПопытки;
+<span class="k">КонецПопытки</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -880,12 +878,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:WrongUseOfRollbackTransactionMethod-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:WrongUseOfRollbackTransactionMethod-off</span>
 <span class="c c-Singleline">// BSLLS:WrongUseOfRollbackTransactionMethod-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;WrongUseOfRollbackTransactionMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;WrongUseOfRollbackTransactionMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

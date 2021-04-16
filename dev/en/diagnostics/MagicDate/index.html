@@ -871,27 +871,24 @@
 <p>Magic date is any date in your code that does not immediately become apparent without being immersed in context.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bad</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">now</span> <span class="o">&lt;</span> <span class="ld">&#39;20151021&#39;</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">now</span> <span class="o">&lt;</span> <span class="ld">&#39;20151021&#39;</span> <span class="k">Then</span>
     <span class="nv">HoverBoardIsReal</span> <span class="o">=</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Good</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">PredictedDate</span> <span class="o">=</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span> 
+<div class="highlight"><pre><span></span><code><span class="nv">PredictedDate</span> <span class="o">=</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span> 
 <span class="nv">If</span> <span class="nv">now</span> <span class="o">&lt;</span> <span class="nv">PredictedDate</span> <span class="k">Then</span>
     <span class="nv">HoverBoardIsReal</span> <span class="o">=</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MagicDate-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MagicDate-off</span>
 <span class="c c-Singleline">// BSLLS:MagicDate-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;MagicDate&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;MagicDate&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;authorizedDates&quot;</span><span class="p">:</span> <span class="s2">&quot;00010101,00010101000000,000101010000&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

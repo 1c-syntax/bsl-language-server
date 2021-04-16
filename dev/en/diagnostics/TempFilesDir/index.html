@@ -857,32 +857,28 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Wrong:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Catalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Catalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">();</span>
 <span class="nv">FileName</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="k">New</span> <span class="nv">UUID</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&quot;.xml&quot;</span><span class="p">;</span>
 <span class="nv">TempFile</span> <span class="o">=</span> <span class="nv">Catalog</span> <span class="o">+</span> <span class="nv">FileName</span><span class="p">;</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nv">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">TempFile</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">TempFile</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">(</span><span class="s1">&quot;xml&quot;</span><span class="p">);</span>
 <span class="nv">Data</span><span class="o">.</span><span class="nv">Write</span><span class="p">(</span><span class="nv">TempFile</span><span class="p">);</span>
 </code></pre></div>
-
 <p>To create a temporary directory, it is recommended to use the one obtained by the GetTempFileName method (with the exception of the web client).</p>
 <p>Wrong:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
 <span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">TempFilesDir</span><span class="p">()</span><span class="o">+</span><span class="s1">&quot;main_zip\&quot;</span><span class="p">;</span>
 <span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 <span class="nv">ArchFile</span><span class="o">.</span><span class="nv">ExtractAll</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ArchFile</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">ZipFileReader</span><span class="p">(</span><span class="nv">FileName</span><span class="p">);</span>
 <span class="nv">ArchCatalog</span> <span class="o">=</span> <span class="nb">GetTempFileName</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&quot;\main_zip\&quot;</span><span class="p">;</span>
 <span class="nb">CreateDirectory</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 <span class="nv">ArchFile</span><span class="o">.</span><span class="nv">ExtractAll</span><span class="p">(</span><span class="nv">ArchCatalog</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Source: <a href="https://support.1ci.com/hc/en-us/articles/360011122319-Access-to-the-file-system-from-the-configuration-code">Standard: Temporary Files and Directories</a></li>
@@ -890,12 +886,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TempFilesDir-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TempFilesDir-off</span>
 <span class="c c-Singleline">// BSLLS:TempFilesDir-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;TempFilesDir&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;TempFilesDir&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

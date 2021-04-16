@@ -888,26 +888,22 @@
 </ul>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">EchangeFolder</span> <span class="o">=</span> <span class="s1">&quot;c:/exchange/dataexchange&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">EchangeFolder</span> <span class="o">=</span> <span class="s1">&quot;c:/exchange/dataexchange&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ExchangeFolder</span> <span class="o">=</span> <span class="nb">Constants</span><span class="o">.</span><span class="nv">ExchangeFolder</span><span class="o">.</span><span class="nv">Get</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ExchangeFolder</span> <span class="o">=</span> <span class="nb">Constants</span><span class="o">.</span><span class="nv">ExchangeFolder</span><span class="o">.</span><span class="nv">Get</span><span class="p">();</span>
 </code></pre></div>
-
 <p>or</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ExchangeFolder</span> <span class="o">=</span> <span class="nv">DataExchangeReuse</span><span class="o">.</span><span class="nv">ExchangeFolder</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ExchangeFolder</span> <span class="o">=</span> <span class="nv">DataExchangeReuse</span><span class="o">.</span><span class="nv">ExchangeFolder</span><span class="p">();</span>
 </code></pre></div>
-
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodePath-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodePath-off</span>
 <span class="c c-Singleline">// BSLLS:UsingHardcodePath-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingHardcodePath&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingHardcodePath&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchWordsStdPathsUnix&quot;</span><span class="p">:</span> <span class="s2">&quot;bin|boot|dev|etc|home|lib|lost\\+found|misc|mnt|media|opt|proc|root|run|sbin|tmp|usr|var&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

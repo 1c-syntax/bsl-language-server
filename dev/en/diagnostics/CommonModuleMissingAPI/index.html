@@ -856,15 +856,14 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Неправильно</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// begin module</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// begin module</span>
 <span class="nv">Procedure</span> <span class="nv">Test</span><span class="p">(</span><span class="nv">A</span><span class="p">)</span>
     <span class="nv">A</span> <span class="o">=</span> <span class="nv">A</span> <span class="o">+</span> <span class="m">1</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 <span class="c c-Singleline">// end module</span>
 </code></pre></div>
-
 <p>Правильно</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// begin module</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// begin module</span>
 <span class="kd">#Region Internal</span>
 <span class="nv">Procedure</span> <span class="nv">Test</span><span class="p">(</span><span class="nv">A</span><span class="p">)</span>
     <span class="nv">A</span> <span class="o">=</span> <span class="nv">A</span> <span class="o">+</span> <span class="m">1</span><span class="p">;</span>
@@ -872,7 +871,6 @@
 <span class="kd">#EndRegion</span>
 <span class="c c-Singleline">// end module</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -880,12 +878,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommonModuleMissingAPI-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommonModuleMissingAPI-off</span>
 <span class="c c-Singleline">// BSLLS:CommonModuleMissingAPI-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CommonModuleMissingAPI&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CommonModuleMissingAPI&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

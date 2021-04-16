@@ -855,17 +855,15 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="k">Proc</span><span class="nv">edure</span> <span class="nv">Test</span><span class="p">()</span>
-    <span class="nf">Doc</span> <span class="o">=</span> <span class="nv">Documents.PlanOperation.CreateDocument</span><span class="p">()</span><span class="c1">;</span>
-    <span class="nf">Form</span> <span class="o">=</span> <span class="nv">Doc.GetForm</span><span class="p">(</span><span class="s">&quot;DocumentForm&quot;</span><span class="p">)</span><span class="c1">; // here</span>
-<span class="k">EndP</span><span class="nv">rocedure</span>
+<div class="highlight"><pre><span></span><code>Procedure Test()
+    Doc = Documents.PlanOperation.CreateDocument();
+    Form = Doc.GetForm(&quot;DocumentForm&quot;); // here
+EndProcedure
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Proc</span><span class="nv">edure</span> <span class="nv">Test2</span><span class="p">()</span>
-    <span class="nf">Form</span> <span class="o">=</span> <span class="nv">GetForm</span><span class="p">(</span><span class="s">&quot;CommonForms.MyForm&quot;</span><span class="p">)</span><span class="c1">;</span>
-<span class="k">EndP</span><span class="nv">rocedure</span>
+<div class="highlight"><pre><span></span><code>Procedure Test2()
+    Form = GetForm(&quot;CommonForms.MyForm&quot;);
+EndProcedure
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -873,12 +871,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:GetFormMethod-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:GetFormMethod-off</span>
 <span class="c c-Singleline">// BSLLS:GetFormMethod-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;GetFormMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;GetFormMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

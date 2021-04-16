@@ -878,8 +878,8 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+<p>Неправильно:
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
 
     <span class="k">Если</span> <span class="k">Не</span> <span class="nv">Отказ</span> <span class="k">Тогда</span>
         <span class="nv">ЗапутитьКакойТоАлгоритм</span><span class="p">();</span>
@@ -891,9 +891,8 @@
 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
-<p>Правильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+Правильно:
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">ОбменДанными</span><span class="o">.</span><span class="nv">Загрузка</span> <span class="k">Тогда</span>
          <span class="k">Возврат</span><span class="p">;</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
@@ -901,8 +900,7 @@
     <span class="c c-Singleline">// код обработчика</span>
     <span class="c c-Singleline">// ...</span>
 <span class="k">КонецПроцедуры</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -915,12 +913,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DataExchangeLoading-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DataExchangeLoading-off</span>
 <span class="c c-Singleline">// BSLLS:DataExchangeLoading-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;DataExchangeLoading&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;DataExchangeLoading&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;findFirst&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>

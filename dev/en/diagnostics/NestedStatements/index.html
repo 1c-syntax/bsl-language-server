@@ -872,7 +872,7 @@
 <p>Such code is hard for reading, refactoring and support.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c c-Singleline">// Acceptable - level = 1</span>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Something</span> <span class="k">Then</span>                  <span class="c c-Singleline">// Acceptable - level = 1</span>
   <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
   <span class="nv">If</span> <span class="nv">SomethingElse</span> <span class="k">Then</span>             <span class="c c-Singleline">// Acceptable - level = 2</span>
     <span class="o">/*</span> <span class="o">...</span> <span class="o">*/</span>
@@ -888,7 +888,6 @@
   <span class="nv">EndIf</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://rules.sonarsource.com/java/RSPEC-134">RSPEC-134</a></li>
@@ -896,12 +895,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedStatements-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedStatements-off</span>
 <span class="c c-Singleline">// BSLLS:NestedStatements-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NestedStatements&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NestedStatements&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxAllowedLevel&quot;</span><span class="p">:</span> <span class="mi">4</span>
 <span class="p">}</span>
 </code></pre></div>

@@ -870,16 +870,15 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>It is unacceptable to catch any exception, without any trace for system administrator.</p>
 <p><em>Wrong</em></p>
-<div class="codehilite"><pre><span></span><code><span class="k">Try</span>
+<div class="highlight"><pre><span></span><code><span class="k">Try</span>
     <span class="c c-Singleline">// code causing exception</span>
     <span class="o">....</span>
 <span class="k">Raise</span> <span class="c c-Singleline">// catch any exception</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
-
 <p>As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.</p>
 <p><em>Right</em></p>
-<div class="codehilite"><pre><span></span><code><span class="k">Try</span>
+<div class="highlight"><pre><span></span><code><span class="k">Try</span>
     <span class="c c-Singleline">// code causing exception</span>
     <span class="o">....</span>
 <span class="k">Raise</span>
@@ -891,7 +890,6 @@
        <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">()));</span>
 <span class="k">КонецПопытки</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:499:hdoc">Catching Exceptions in Code (RU)</a></li>
@@ -899,12 +897,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingCodeTryCatchEx-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingCodeTryCatchEx-off</span>
 <span class="c c-Singleline">// BSLLS:MissingCodeTryCatchEx-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;MissingCodeTryCatchEx&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingCodeTryCatchEx&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;commentAsCode&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>

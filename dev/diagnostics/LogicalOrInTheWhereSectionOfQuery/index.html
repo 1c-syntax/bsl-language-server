@@ -851,40 +851,35 @@
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 <p>Не следует использовать <code>ИЛИ</code> в секции <code>ГДЕ</code> запроса. Это может привести к тому, что СУБД не сможет использовать индексы таблиц и будет выполнять сканирование, что увеличит время работы запроса и вероятность возникновения блокировок. Вместо этого следует разбить один запрос на несколько и объединить результаты.</p>
-<p>Например, запрос</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> 
+<p>Например, запрос
+<div class="highlight"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> 
 <span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s1">&quot;001&quot;</span> <span class="k">ИЛИ</span> <span class="nv">Цена</span> <span class="o">=</span> <span class="m">10</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <p>следует заменить на запрос</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> <span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s1">&quot;001&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> <span class="nv">ГДЕ</span> <span class="nv">Артикул</span> <span class="o">=</span> <span class="s1">&quot;001&quot;</span>
 <span class="nv">ОБЪЕДИНИТЬ</span> <span class="nv">ВСЕ</span>
 <span class="nv">ВЫБРАТЬ</span> <span class="nv">Товар</span><span class="o">.</span><span class="nv">Наименование</span> <span class="k">ИЗ</span> <span class="nv">Справочник</span><span class="o">.</span><span class="nv">Товары</span> <span class="nv">КАК</span> <span class="nv">Товар</span> <span class="nv">ГДЕ</span> <span class="nv">Цена</span> <span class="o">=</span> <span class="m">10</span>
 </code></pre></div>
-
 <blockquote>
 <p><strong>Важно</strong> - текущая реализация диагностики срабатывает на любое <code>ИЛИ</code> в секции <code>ГДЕ</code> и может выдавать ложные срабатывания для некоторых условий.</p>
 </blockquote>
 <p>1) В основном условии оператор <code>ИЛИ</code> можно использовать только для последнего из используемых или единственного поля индекса, когда оператор <code>ИЛИ</code> можно заменить на оператор <code>В</code>.</p>
 <p>ПРАВИЛЬНО:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
     <span class="k">ИЛИ</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="o">=</span> <span class="kd">&amp;Значение2</span>
 </code></pre></div>
-
 <p>т.к. можно переписать при помощи оператора <code>В</code> (специально переписывать не нужно, можно оставить, как есть):</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле</span> <span class="nv">В</span> <span class="p">(</span><span class="kd">&amp;Значения)</span>
 </code></pre></div>
-
 <p>НЕПРАВИЛЬНО:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
     <span class="k">ИЛИ</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение2</span>
 </code></pre></div>
-
 <p>нельзя переписать при помощи <code>В</code>, но можно переписать при помощи <code>ОБЪЕДИНИТЬ ВСЕ</code> (каждое поле Поле1 и Поле2 должны быть проиндексированы):</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
 
 <span class="nv">ОБЪЕДИНИТЬ</span> <span class="nv">ВСЕ</span>
@@ -892,31 +887,27 @@
 <span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение1</span>
 </code></pre></div>
-
 <blockquote>
 <p>Примечание: заменить <code>ИЛИ</code> на <code>ОБЪЕДИНИТЬ ВСЕ</code> можно не всегда, убедитесь, что результат будет действительно тем же, что и при <code>ИЛИ</code>, перед тем, как применять.</p>
 </blockquote>
 <p>2) В дополнительном условии оператор ИЛИ можно использовать без ограничений.</p>
 <p>ПРАВИЛЬНО 1:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1 // Основное условие (использует индекс)</span>
     <span class="k">И</span> <span class="c c-Singleline">// Дополнительное условие (можно использовать ИЛИ)</span>
     <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение2 ИЛИ Таблица.Поле3 = &amp;Значение3)</span>
 </code></pre></div>
-
 <p>ПРАВИЛЬНО 2:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="o">=</span> <span class="kd">&amp;Значение1 ИЛИ Таблица.Поле1 = &amp;Значение2)</span>
     <span class="k">И</span>
     <span class="p">(</span><span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="o">=</span> <span class="kd">&amp;Значение3 ИЛИ Таблица.Поле2 = &amp;Значение4)</span>
 </code></pre></div>
-
 <p>т.к. можно переписать при помощи В (специально переписывать не нужно, можно оставить, как есть):</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ГДЕ</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ГДЕ</span>
     <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле1</span> <span class="nv">В</span> <span class="p">(</span><span class="kd">&amp;Значения1)   // Основное условие</span>
     <span class="k">И</span> <span class="nv">Таблица</span><span class="o">.</span><span class="nv">Поле2</span> <span class="nv">В</span> <span class="p">(</span><span class="kd">&amp;Значения2) // Дополнительное условие (или наоборот)</span>
 </code></pre></div>
-
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
@@ -931,12 +922,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-off</span>
 <span class="c c-Singleline">// BSLLS:LogicalOrInTheWhereSectionOfQuery-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;LogicalOrInTheWhereSectionOfQuery&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;LogicalOrInTheWhereSectionOfQuery&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

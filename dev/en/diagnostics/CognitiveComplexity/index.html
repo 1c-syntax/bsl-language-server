@@ -878,7 +878,7 @@
 <h3 id="Cognitive-Complexity-calculation">Cognitive Complexity calculation<a class="headerlink" href="#Cognitive-Complexity-calculation" title="Permanent link">&para;</a></h3>
 <p>Bellow are given code analysis rules, conditions increase cognitive complexity.</p>
 <h4 id="Each-next-block-increases-complexity-by-1">Each next block increases complexity by 1<a class="headerlink" href="#Each-next-block-increases-complexity-by-1" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Loop `For each`</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Loop `For each`</span>
 <span class="nv">For</span> <span class="k">Each</span> <span class="nv">Element</span> <span class="nv">in</span> <span class="nv">Collection</span> <span class="nv">Do</span>                    <span class="c c-Singleline">// +1</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
@@ -931,9 +931,8 @@
 
 <span class="nv">Value</span> <span class="o">=</span> <span class="nv">A</span> <span class="o">&lt;&gt;</span> <span class="nv">B</span><span class="p">;</span>                                      <span class="c c-Singleline">// +1</span>
 </code></pre></div>
-
 <h4 id="For-each-nesting-level-next-blocks-get-additional-1-to-complexity">For each nesting level, next blocks get additional 1 to complexity<a class="headerlink" href="#For-each-nesting-level-next-blocks-get-additional-1-to-complexity" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Loop `For each`</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Loop `For each`</span>
 <span class="nv">For</span> <span class="k">Each</span> <span class="nv">Element</span> <span class="nv">in</span> <span class="nv">Collection</span> <span class="nv">Do</span>
 <span class="k">EndDo</span><span class="p">;</span>
 
@@ -959,11 +958,10 @@
 
 <span class="err">~</span><span class="nv">Label</span><span class="p">:</span>
 </code></pre></div>
-
 <h4 id="Alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested">Alternative branches, binary operations, and go to label do not increase cognitive complexity when nested.<a class="headerlink" href="#Alternative-branches-binary-operations-and-go-to-label-do-not-increase-cognitive-complexity-when-nested" title="Permanent link">&para;</a></h4>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bellow are code examples and their cognitive complexity calculation.</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example1</span><span class="p">(</span><span class="nv">ClassType</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example1</span><span class="p">(</span><span class="nv">ClassType</span><span class="p">)</span>
     <span class="nv">If</span> <span class="nv">ClassType</span><span class="o">.</span><span class="nv">Unknown</span><span class="p">()</span> <span class="k">Then</span>                                                  <span class="c c-Singleline">// +1, condition expression, no nesting</span>
         <span class="k">Return</span> <span class="nv">Chars</span><span class="o">.</span><span class="nv">UnknownSymbol</span><span class="p">;</span>
     <span class="nv">EndIf</span><span class="p">;</span>
@@ -997,8 +995,7 @@
     <span class="k">Return</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="k">EndFunction</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example2</span><span class="p">(</span><span class="nv">Document</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example2</span><span class="p">(</span><span class="nv">Document</span><span class="p">)</span>
     <span class="nv">StartTransaction</span><span class="p">();</span>
     <span class="nv">NeedPost</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">Posted</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span>                                                         <span class="c c-Singleline">// +1, ternary operator</span>
                                         <span class="o">?</span><span class="p">(</span><span class="nv">Document</span><span class="o">.</span><span class="nv">DeletionMark</span><span class="p">,</span> <span class="kc">FALSE</span><span class="p">,</span> <span class="kc">TRUE</span><span class="p">));</span>                  <span class="c c-Singleline">// +2, nested ternary operator, nesting 1</span>
@@ -1051,7 +1048,6 @@
     <span class="k">Return</span> <span class="kc">Undefined</span><span class="p">;</span>
 <span class="k">EndFunction</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a></li>
@@ -1059,12 +1055,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CognitiveComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CognitiveComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
     <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>

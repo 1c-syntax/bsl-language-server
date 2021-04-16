@@ -857,18 +857,14 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;AddChangeWorldCountries&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;ViewPopularCountriesReport&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code>Incorrect: If IsInRole(&quot;AddChangeWorldCountries&quot;) Then ... If IsInRole(&quot;ViewPopularCountriesReport&quot;) Then ...
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="nv">Correct</span> <span class="nv">example</span>: <span class="k">If</span> <span class="nv">AccessRight</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">Edit</span><span class="s2">&quot;</span>, <span class="nv">Metadata</span>.<span class="nv">Catalogs</span>.<span class="nv">WorldCountries</span><span class="ss">)</span> <span class="k">Then</span> ... <span class="k">If</span> <span class="nv">AccessRight</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">View</span><span class="s2">&quot;</span>, <span class="nv">Metadata</span>.<span class="nv">Reports</span>.<span class="nv">PopularCountries</span><span class="ss">)</span> <span class="k">Then</span> ...
+<div class="highlight"><pre><span></span><code>Correct example: If AccessRight(&quot;Edit&quot;, Metadata.Catalogs.WorldCountries) Then ... If AccessRight(&quot;View&quot;, Metadata.Reports.PopularCountries) Then ...
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="n">Incorrect</span><span class="o">:</span> <span class="n">If</span> <span class="n">IsInRole</span><span class="o">(</span><span class="s2">&quot;Paymaster&quot;</span><span class="o">)</span> <span class="n">Then</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code>Incorrect: If IsInRole(&quot;Paymaster&quot;) Then ...
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="nv">Correct</span> <span class="nv">example</span>: <span class="k">If</span> <span class="nv">IsInRole</span><span class="ss">(</span><span class="s2">&quot;</span><span class="s">Paymaster</span><span class="s2">&quot;</span><span class="ss">)</span> <span class="nv">OR</span> <span class="nv">PrivilegedMode</span><span class="ss">()</span> <span class="k">Then</span> ...
+<div class="highlight"><pre><span></span><code>Correct example: If IsInRole(&quot;Paymaster&quot;) OR PrivilegedMode() Then ...
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -878,12 +874,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
 <span class="c c-Singleline">// BSLLS:IsInRoleMethod-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;IsInRoleMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;IsInRoleMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

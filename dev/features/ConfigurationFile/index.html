@@ -823,13 +823,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#Пример" class="md-nav__link">
-    Пример
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -964,31 +957,32 @@
 </tbody>
 </table>
 <p>Для облегчения составления и редактирования конфигурационного файла можно использовать следующую JSON-схему:</p>
-<div class="codehilite"><pre><span></span><code>https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
-</code></pre></div>
+<p>log
+https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
+<div class="highlight"><pre><span></span><code>## Пример
 
-<h2 id="Пример">Пример<a class="headerlink" href="#Пример" title="Permanent link">&para;</a></h2>
-<p>Ниже приведен пример настройки:</p>
-<ul>
-<li>Устанавливает язык сообщений диагностик - английский;</li>
-<li>Изменяет настройку диагностики <a href="../../diagnostics/LineLength/">LineLength - Ограничение на длину строки</a>, устанавливая предел длины строки в 140 символов;</li>
-<li>Отключает диагностику <a href="../../diagnostics/MethodSize/">MethodSize - Ограничение на размер метода</a>.</li>
-<li>Включает расчет диагностик в непрерывном режиме (<code>computeTrigger = onType</code>)</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span>
-  <span class="nt">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;language&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;diagnostics&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;computeTrigger&quot;</span><span class="p">:</span> <span class="s2">&quot;onType&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;LineLength&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="nt">&quot;maxLineLength&quot;</span><span class="p">:</span> <span class="mi">140</span>
-      <span class="p">},</span>
-      <span class="nt">&quot;MethodSize&quot;</span><span class="p">:</span> <span class="kc">false</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
+Ниже приведен пример настройки:
+
+* Устанавливает язык сообщений диагностик - английский;
+* Изменяет настройку диагностики [LineLength - Ограничение на длину строки](../diagnostics/LineLength.md), устанавливая предел длины строки в 140 символов;
+* Отключает диагностику [MethodSize - Ограничение на размер метода](../diagnostics/MethodSize.md).
+* Включает расчет диагностик в непрерывном режиме (`computeTrigger = onType`)
+
+```json
+{
+  &quot;$schema&quot;: &quot;https://1c-syntax.github.io/bsl-language-server/configuration/schema.json&quot;,
+  &quot;language&quot;: &quot;en&quot;,
+  &quot;diagnostics&quot;: {
+    &quot;computeTrigger&quot;: &quot;onType&quot;,
+    &quot;parameters&quot;: {
+      &quot;LineLength&quot;: {
+        &quot;maxLineLength&quot;: 140
+      },
+      &quot;MethodSize&quot;: false
+    }
+  }
+}
+</code></pre></div></p>
                 
               
               

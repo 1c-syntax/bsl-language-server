@@ -852,13 +852,12 @@
 <p>Don't delete elements of collection %s when iterating through collection using the 
 operator <strong>For each ... In ... Do</strong>. Because it change index of next element.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">For</span> <span class="k">each</span> <span class="nv">Element</span> <span class="nv">In</span> <span class="nv">Collection</span> <span class="k">Do</span>
+<div class="highlight"><pre><span></span><code><span class="nv">For</span> <span class="k">each</span> <span class="nv">Element</span> <span class="nv">In</span> <span class="nv">Collection</span> <span class="k">Do</span>
    <span class="nv">Collection</span><span class="o">.</span><span class="nv">Delete</span><span class="p">(</span><span class="nv">Element</span><span class="p">)</span>
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Alternatively remove elements from the end:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">IndexOf</span> <span class="o">=</span> <span class="nv">Numbers</span><span class="o">.</span><span class="nv">UBound</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">IndexOf</span> <span class="o">=</span> <span class="nv">Numbers</span><span class="o">.</span><span class="nv">UBound</span><span class="p">();</span>
 <span class="k">While</span> <span class="nv">IndexOf</span> <span class="o">&gt;=</span> <span class="m">0</span> <span class="k">Do</span>
     <span class="nv">If</span> <span class="nv">Numbers</span><span class="p">[</span><span class="nv">IndexOf</span><span class="p">]</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Then</span>
         <span class="nv">Numbers</span><span class="o">.</span><span class="nv">Delete</span><span class="p">(</span><span class="nv">IndexOf</span><span class="p">);</span>
@@ -866,7 +865,6 @@ operator <strong>For each ... In ... Do</strong>. Because it change index of nex
     <span class="nv">IndexOf</span> <span class="o">=</span> <span class="nv">IndexOf</span> <span class="err">–</span> <span class="m">1</span><span class="p">;</span>
 <span class="k">EndDo</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc">1С:Программирование для начинающих. Разработка в системе "1С:Предприятие 8.3" (RU)</a></li>
@@ -874,12 +872,11 @@ operator <strong>For each ... In ... Do</strong>. Because it change index of nex
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeletingCollectionItem-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeletingCollectionItem-off</span>
 <span class="c c-Singleline">// BSLLS:DeletingCollectionItem-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;DeletingCollectionItem&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;DeletingCollectionItem&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

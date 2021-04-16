@@ -881,8 +881,8 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Плохо:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">ПроверитьСтроку</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">СтрокаТаблицы</span><span class="p">)</span>
+<p>Плохо:
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nv">ПроверитьСтроку</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">СтрокаТаблицы</span><span class="p">)</span>
 
     <span class="k">Если</span> <span class="nv">ЭтоХорошаяСтрока</span><span class="p">(</span><span class="nv">СтрокаТаблицы</span><span class="p">)</span> <span class="k">Тогда</span>
         <span class="nv">ДелаемЧтоТоЧтобыНеРугаласьПроверкаНаПовтор</span><span class="p">();</span>
@@ -895,10 +895,9 @@
     <span class="k">КонецЕсли</span><span class="p">;</span>
 
 <span class="k">КонецФункции</span>
-</code></pre></div>
-
-<p>Хорошо:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПроверитьСтроку</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">СтрокаТаблицы</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Хорошо:
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПроверитьСтроку</span><span class="p">(</span><span class="k">Знач</span> <span class="nv">СтрокаТаблицы</span><span class="p">)</span>
 
     <span class="k">Если</span> <span class="nv">ЭтоХорошаяСтрока</span><span class="p">(</span><span class="nv">СтрокаТаблицы</span><span class="p">)</span> <span class="k">Тогда</span>
         <span class="nv">ДелаемЧтоТоЧтобыНеРугаласьПроверкаНаПовтор</span><span class="p">();</span>
@@ -909,11 +908,10 @@
     <span class="k">КонецЕсли</span><span class="p">;</span>
 
 <span class="k">КонецПроцедуры</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <h2 id="Особенности">Особенности<a class="headerlink" href="#Особенности" title="Permanent link">&para;</a></h2>
-<p>Из проверки исключаются подключаемые Функции. Например:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Подключаемый_КакаяТоКоманда</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
+<p>Из проверки исключаются подключаемые Функции. Например:
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Подключаемый_КакаяТоКоманда</span><span class="p">(</span><span class="nv">Команда</span><span class="p">)</span>
 
     <span class="k">Если</span> <span class="nb">ЗначениеЗаполнено</span><span class="p">(</span><span class="nb">ТекущаяДата</span><span class="p">)</span> <span class="k">Тогда</span>
         <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
@@ -922,20 +920,18 @@
     <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
 
 <span class="k">КонецФункции</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FunctionReturnsSamePrimitive-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FunctionReturnsSamePrimitive-off</span>
 <span class="c c-Singleline">// BSLLS:FunctionReturnsSamePrimitive-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;FunctionReturnsSamePrimitive&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;FunctionReturnsSamePrimitive&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;skipAttachable&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nt">&quot;caseSensitiveForString&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>

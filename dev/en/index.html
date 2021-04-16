@@ -944,39 +944,33 @@
 <p><a id="cli"></a></p>
 <h2 id="Run-from-command-line">Run from command line<a class="headerlink" href="#Run-from-command-line" title="Permanent link">&para;</a></h2>
 <p>jar-files run through <code>java -jar path/to/file.jar</code>.</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --help  BSL language server Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>   -c, --configuration<span class="o">=</span>&lt;path&gt;                Path to language server configuration file   -h, --help   Show this <span class="nb">help</span> message and <span class="nb">exit</span> Commands:   analyze, -a, --analyze  Run analysis and get diagnostic info   format, -f, --format    Format files <span class="k">in</span> <span class="nb">source</span> directory   version, -v, --version  Print version   lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --help  BSL language server Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>   -c, --configuration<span class="o">=</span>&lt;path&gt;                Path to language server configuration file   -h, --help   Show this <span class="nb">help</span> message and <span class="nb">exit</span> Commands:   analyze, -a, --analyze  Run analysis and get diagnostic info   format, -f, --format    Format files <span class="k">in</span> <span class="nb">source</span> directory   version, -v, --version  Print version   lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
 </code></pre></div>
-
 <p>Starting BSL Language Server in standard mode will run the Language Server communicating via <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. stdin and stdout are used for communication.</p>
 <p>By default diagnostics texts are displayed in Russian. To switch the diagnostics text language you need to set parameter <code>language</code> in configuration file or raise an event <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
 <h2 id="Run-in-analyzer-mode">Run in analyzer mode<a class="headerlink" href="#Run-in-analyzer-mode" title="Permanent link">&para;</a></h2>
 <p>To run in analyzer mode use parameter <code>--analyze</code> (short <code>-a</code>).</p>
-<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>                                    <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>... Run analysis and get diagnostic info   -c, --configuration<span class="o">=</span>&lt;path&gt;                            Path to language server configuration file   -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory   -q, --silent             Silent mode   -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>   -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory   -w, --workspaceDir<span class="o">=</span>&lt;path&gt;                             Workspace directory
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>                                    <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>... Run analysis and get diagnostic info   -c, --configuration<span class="o">=</span>&lt;path&gt;                            Path to language server configuration file   -h, --help               Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -o, --outputDir<span class="o">=</span>&lt;path&gt;   Output report directory   -q, --silent             Silent mode   -r, --reporter<span class="o">=</span>&lt;keys&gt;    Reporter key <span class="o">(</span>console, junit, json, tslint, generic<span class="o">)</span>   -s, --srcDir<span class="o">=</span>&lt;path&gt;      Source directory   -w, --workspaceDir<span class="o">=</span>&lt;path&gt;                             Workspace directory
 </code></pre></div>
-
 <p>To set source code folder for analysis use parameter <code>--srcDir</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder. To generate an analysis report you need to specify one or more reporters. To specify reporter use parameter <code>--reporter</code> or <code>-r</code>, followed by reporter key. You may specify several reporters. The list of reporters see in section  <strong>Reporters</strong>.</p>
 <p>Command line example to run analysis:</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 </code></pre></div>
-
 <blockquote>
 <p>When run analysis for large code base it is recommended to set parameter {code0}-Xmx{/code0} to set maximum limit of  memory being allocated to java process. The size of allocated memory depends on the size of code base for analysis.</p>
 </blockquote>
-<div class="codehilite"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ... other parameters
+<div class="highlight"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ... other parameters
 </code></pre></div>
-
 <p><a id="format"></a></p>
 <h2 id="Run-in-formatter-mode">Run in formatter mode<a class="headerlink" href="#Run-in-formatter-mode" title="Permanent link">&para;</a></h2>
 <p>To run in formatter mode use parameter <code>--format</code> (short <code>-f</code>).</p>
-<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span> Format files <span class="k">in</span> <span class="nb">source</span> directory   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -q, --silent          Silent mode   -s, --srcDir<span class="o">=</span>&lt;path&gt;   Source directory
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span> Format files <span class="k">in</span> <span class="nb">source</span> directory   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>   -q, --silent          Silent mode   -s, --srcDir<span class="o">=</span>&lt;path&gt;   Source directory
 </code></pre></div>
-
 <p>To set source code folder (or source file) for formatting use parameter <code>--src</code> (short <code>-s</code>) followed by the path (relative or absolute) to the source code folder (or file).</p>
 <p>Command line example to run formatting:</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
 </code></pre></div>
-
 <p><a id="configuration"></a></p>
 <h2 id="Configuration-file">Configuration file<a class="headerlink" href="#Configuration-file" title="Permanent link">&para;</a></h2>
 <p>A detailed description of the configuration file is given on <a href="features/ConfigurationFile/">this page</a></p>

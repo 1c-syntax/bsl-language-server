@@ -878,13 +878,12 @@
 Например <code>private static final String DEFAULT_COMMENTS_ANNOTATION = "//@";</code>.</p>
 <p>Необходимо добавить приватное поле, в котором будет хранится значение параметра. Поле необходимо аннотировать <code>@DiagnosticParameter</code> и указать тип параметра, значение по умолчанию (значение всегда строкового типа), а также описание параметра.<br />
 Например</p>
-<div class="codehilite"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
     <span class="n">type</span> <span class="o">=</span> <span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">,</span>
     <span class="n">defaultValue</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span>
   <span class="p">)</span>
   <span class="kd">private</span> <span class="n">String</span> <span class="n">commentsAnnotation</span> <span class="o">=</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Если параметр примитивный или типа String и он устанавливается в соответствующее свойство класса диагностики простым сеттером, то на этом все.<br />
 Если же параметр более сложный, например строка-паттерн для регулярного выражения, которое необходимо вычислить перед установкой, то нужно реализовать метод установки значений параметров <code>configure</code>.  </p>
 <p>Например есть два параметра:</p>
@@ -893,7 +892,7 @@
 <li><code>excludeMethods</code> - методы, которые не надо проверять, типа ArrayList</li>
 </ul>
 <p>Тогда метод установки значений параметров будет выглядеть:</p>
-<div class="codehilite"><pre><span></span><code> <span class="nd">@Override</span>
+<div class="highlight"><pre><span></span><code> <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// для установки &quot;простых свойств&quot;, включая &quot;commentAsCode&quot;</span>
     <span class="kd">super</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
@@ -904,13 +903,12 @@
     <span class="k">this</span><span class="p">.</span><span class="na">excludeMethods</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">asList</span><span class="p">(</span><span class="n">excludeMethodsString</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">)));</span>
   <span class="p">}</span>
 </code></pre></div>
-
 <h3 id="Доработка-тестов">Доработка тестов<a class="headerlink" href="#Доработка-тестов" title="Permanent link">&para;</a></h3>
 <p>Обязательно нужно добавить тест для случая изменения настроек диагностики.<br />
 Тест добавляется во все тот же класс теста диагностики <em>(отдельный метод для каждой комбинации вариантов настроек диагностики)</em>. В начале теста необходимо выполнить установку значения параметра диагностики, последующие действия аналогичны общим правилам написания тестов.<br />
 Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по-умолчанию, используя метод <code>getDefaultConfiguration()</code> из метаданных текущей диагностики <code>diagnosticInstance.getInfo()</code>. Затем выполнить изменение значения параметра, путем добавления в коллекцию конфигурации, а затем переконфигурировать текущую диагностику, обратившись к методу <code>configure</code>.<br />
 Пример</p>
-<div class="codehilite"><pre><span></span><code><span class="c1">// получение текущей конфигурации диагностики</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// получение текущей конфигурации диагностики</span>
 <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultConfiguration</span><span class="p">();</span>
 
 <span class="c1">// установка нового значения</span>
@@ -919,14 +917,12 @@
 <span class="c1">// переконфигурирование</span>
 <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="Добавление-описания-параметров">Добавление описания параметров<a class="headerlink" href="#Добавление-описания-параметров" title="Permanent link">&para;</a></h3>
 <p>Для корректной работы необходимо в ресурсных файлах диагностики добавить для каждого языка описание параметра.<br />
 Ресурсы диагностики расположены в файлах <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_en.properties</code> и <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_ru.properties</code>.<br />
 В каждом файле необходимо добавить новую строку с именем параметра и его описанием</p>
-<div class="codehilite"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)</span>
+<div class="highlight"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Пропускать комментарии-аннотации, начинающиеся с указанных подстрок. Список через запятую. Например: //@,//(c)</span>
 </code></pre></div>
-
 <h3 id="Доработка-документации">Доработка документации<a class="headerlink" href="#Доработка-документации" title="Permanent link">&para;</a></h3>
 <p>Добавление информации о параметрах диагностики в документацию вручную не требуется: после добавления/изменения параметров диагностики необходимо запустить gradlew задачу <code>updateDiagnosticDocs</code>, которая самостоятельно выполнит необходимые правки.</p>
                 

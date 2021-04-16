@@ -871,7 +871,7 @@
 <p>When creating an object of type Structure it is not recommended to pass more than 3 property values to the constructor. Instead, it is recommended to use the Insert method or assign values to properties explicitly.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">(</span>
    <span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных,</span>
    <span class="s">|НеРедактироватьСхемуКомпоновкиДанных,</span>
    <span class="s">|НеНастраиватьУсловноеОформление,</span>
@@ -893,9 +893,8 @@
    <span class="nv">УникальныйИдентификатор</span><span class="p">,</span>
    <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">));</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ПараметрыФормыКомпоновки</span>  <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Структура</span><span class="p">;</span>
 
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеПомещатьНастройкиВСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;НеРедактироватьСхемуКомпоновкиДанных&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
@@ -909,7 +908,6 @@
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;УникальныйИдентификатор &quot;</span><span class="p">,</span> <span class="nv">УникальныйИдентификатор</span><span class="p">);</span>
 <span class="nv">ПараметрыФормыКомпоновки</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;Заголовок&quot;</span><span class="p">,</span> <span class="nv">ЗаголовокФормыНастройкиСхемыКомпоновкиДанных</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="Reference">Reference<a class="headerlink" href="#Reference" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:693:hdoc">Standard: Using objects of type Structure</a></li>
@@ -917,12 +915,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-off</span>
 <span class="c c-Singleline">// BSLLS:NumberOfValuesInStructureConstructor-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NumberOfValuesInStructureConstructor&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxValuesCount&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>

@@ -852,7 +852,7 @@
 <p>Code located after operators "Return", "GoTo", "Raise", "Break", "Continue" never will be executed.</p>
 <p>Errors of unreachable code can be caused by developer carelessness when editing another's code.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Example</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">Example</span><span class="p">()</span>
     <span class="k">Return</span><span class="p">;</span>
     <span class="c c-Singleline">// Code below operator Return will never be executed</span>
     <span class="nv">For</span> <span class="k">each</span> <span class="nv">Line</span> <span class="nv">from</span> <span class="nv">Lines</span> <span class="k">Do</span>
@@ -862,8 +862,7 @@
     <span class="k">EndDo</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example</span><span class="p">(</span><span class="nv">Parameter1</span><span class="p">,</span> <span class="nv">Parameter2</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">Example</span><span class="p">(</span><span class="nv">Parameter1</span><span class="p">,</span> <span class="nv">Parameter2</span><span class="p">)</span>
     <span class="nv">If</span> <span class="nv">Error</span> <span class="k">Then</span>
         <span class="k">Raise</span> <span class="s1">&quot;Error occurred&quot;</span><span class="p">;</span>
         <span class="c c-Singleline">// After rise exception the code bellow will be ignored</span>
@@ -872,16 +871,14 @@
     <span class="k">Return</span> <span class="nv">Parameter1</span><span class="p">;</span>
 <span class="k">EndFunction</span>
 </code></pre></div>
-
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnreachableCode-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnreachableCode-off</span>
 <span class="c c-Singleline">// BSLLS:UnreachableCode-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UnreachableCode&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnreachableCode&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

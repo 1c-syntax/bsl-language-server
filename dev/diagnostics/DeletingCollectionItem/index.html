@@ -852,13 +852,12 @@
 <p>Не следует непосредственно удалять элементы коллекции при ее обходе через синтаксическую конструкцию
 <strong>Для каждого ... Из ... Цикл</strong>. Т.к. при удалении элемента сдвигается индекс следующего элемента.</p>
 <p>Например:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
+<div class="highlight"><pre><span></span><code><span class="k">Для</span> <span class="k">Каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
    <span class="nv">Коллекция</span><span class="o">.</span><span class="nv">Удалить</span><span class="p">(</span><span class="nv">Элемент</span><span class="p">)</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Как вариант удаляйте элементы с конца:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ТекущийИндекс</span> <span class="o">=</span> <span class="nv">Числа</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">ТекущийИндекс</span> <span class="o">=</span> <span class="nv">Числа</span><span class="o">.</span><span class="nv">ВГраница</span><span class="p">();</span>
 <span class="k">Пока</span> <span class="nv">ТекущийИндекс</span> <span class="o">&gt;=</span> <span class="m">0</span> <span class="k">Цикл</span>
     <span class="k">Если</span> <span class="nv">Числа</span><span class="p">[</span><span class="nv">ТекущийИндекс</span><span class="p">]</span> <span class="o">&lt;</span> <span class="m">10</span> <span class="k">Тогда</span>
         <span class="nv">Числа</span><span class="o">.</span><span class="nv">Удалить</span><span class="p">(</span><span class="nv">ТекущийИндекс</span><span class="p">);</span>
@@ -866,7 +865,6 @@
     <span class="nv">ТекущийИндекс</span> <span class="o">=</span> <span class="nv">ТекущийИндекс</span> <span class="err">–</span> <span class="m">1</span><span class="p">;</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/pubprogforbeginners#content:88:hdoc">1С:Программирование для начинающих. Разработка в системе "1С:Предприятие 8.3"</a></li>
@@ -874,12 +872,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeletingCollectionItem-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:DeletingCollectionItem-off</span>
 <span class="c c-Singleline">// BSLLS:DeletingCollectionItem-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;DeletingCollectionItem&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;DeletingCollectionItem&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

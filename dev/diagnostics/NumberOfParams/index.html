@@ -872,19 +872,17 @@
 <p>При необходимости передавать в функцию большое число параметров рекомендуется группировать однотипные параметры в один или несколько составных параметров типа Структура.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
 <span class="k">Процедура</span> <span class="nv">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">Наименование</span><span class="p">,</span> <span class="nv">ТоварУслуга</span><span class="p">,</span> <span class="nv">ЕдиницаИзмерения</span><span class="p">,</span> <span class="nv">ВесНетто</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <p>Правильно:<br />
 Cгруппировать параметры, описывающие значения реквизитов номенклатуры, в структуру ЗначенияРеквизитов.</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Создает элемент справочника &quot;Номенклатура&quot;</span>
 <span class="k">Процедура</span> <span class="nv">СоздатьЭлементНоменклатуры</span><span class="p">(</span><span class="nv">ЗначенияРеквизитов</span><span class="p">,</span> <span class="nv">ПроверятьУникальность</span> <span class="o">=</span> <span class="kc">Истина</span><span class="p">)</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:640:hdoc">Стандарт: Параметры процедур и функций</a></li>
@@ -892,12 +890,11 @@ Cгруппировать параметры, описывающие значе�
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfParams-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NumberOfParams-off</span>
 <span class="c c-Singleline">// BSLLS:NumberOfParams-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NumberOfParams&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NumberOfParams&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxParamsCount&quot;</span><span class="p">:</span> <span class="mi">7</span>
 <span class="p">}</span>
 </code></pre></div>

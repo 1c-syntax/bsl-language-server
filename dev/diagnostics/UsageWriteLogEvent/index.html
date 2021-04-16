@@ -859,8 +859,8 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Примеры неверного кода</p>
-<div class="codehilite"><pre><span></span><code>    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s1">&quot;Событие&quot;</span><span class="p">);</span><span class="c c-Singleline">// ошибка</span>
+<p>Примеры неверного кода
+<div class="highlight"><pre><span></span><code>    <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s1">&quot;Событие&quot;</span><span class="p">);</span><span class="c c-Singleline">// ошибка</span>
     <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s1">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">);</span><span class="c c-Singleline">// ошибка</span>
     <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s1">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">);</span><span class="c c-Singleline">// ошибка</span>
     <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s1">&quot;Событие&quot;</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nb">ПодробноеПредставлениеОшибки</span><span class="p">(</span><span class="nb">ИнформацияОбОшибке</span><span class="p">()));</span>
@@ -875,10 +875,9 @@
       <span class="nb">ЗаписьЖурналаРегистрации</span><span class="p">(</span><span class="s1">&quot;Событие&quot;</span><span class="p">,</span> <span class="nv">УровеньЖурналаРегистрации</span><span class="o">.</span><span class="nv">Ошибка</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span>
         <span class="s1">&quot;Комментарий 1&quot;</span><span class="p">);</span> <span class="c c-Singleline">// ошибка</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
-</code></pre></div>
-
-<p>Правильный код</p>
-<div class="codehilite"><pre><span></span><code>    <span class="k">Попытка</span>
+</code></pre></div></p>
+<p>Правильный код
+<div class="highlight"><pre><span></span><code>    <span class="k">Попытка</span>
       <span class="nv">КодСервер</span><span class="p">();</span>
     <span class="k">Исключение</span>
 
@@ -897,8 +896,7 @@
 
       <span class="nv">ВызватьИсключение</span><span class="p">;</span>
     <span class="k">КонецПопытки</span><span class="p">;</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -914,12 +912,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsageWriteLogEvent-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsageWriteLogEvent-off</span>
 <span class="c c-Singleline">// BSLLS:UsageWriteLogEvent-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsageWriteLogEvent&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsageWriteLogEvent&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

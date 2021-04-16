@@ -875,12 +875,11 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="kd">#Region &lt;RegionName&gt;</span>
+<div class="highlight"><pre><span></span><code><span class="kd">#Region &lt;RegionName&gt;</span>
 </code></pre></div>
-
 <p>The standard describes only 10 region names, the names of nested regions are not checked.</p>
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="kd">#Region Private</span>
+<div class="highlight"><pre><span></span><code><span class="kd">#Region Private</span>
 <span class="kd">#Region Print</span>
 <span class="c c-Singleline">// Methods code</span>
 <span class="kd">#EndRegion</span>
@@ -889,7 +888,6 @@
 <span class="kd">#EndRegion</span>
 <span class="kd">#EndRegion</span>
 </code></pre></div>
-
 <p>Name matching table (full in <a href="https://github.com/1c-syntax/bsl-language-server/blob/develop/src/main/java/com/github/_1c_syntax/bsl/languageserver/utils/Keywords.java#L255">source code</a>):</p>
 <table>
 <thead>
@@ -950,12 +948,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CodeOutOfRegion-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CodeOutOfRegion-off</span>
 <span class="c c-Singleline">// BSLLS:CodeOutOfRegion-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CodeOutOfRegion&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CodeOutOfRegion&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;checkUnknownModuleType&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>
 </code></pre></div>

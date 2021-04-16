@@ -894,7 +894,7 @@
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">ServerModuleManager</span><span class="p">(</span><span class="nv">Name</span><span class="p">)</span>                                                      <span class="c c-Singleline">// 1</span>
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">ServerModuleManager</span><span class="p">(</span><span class="nv">Name</span><span class="p">)</span>                                                      <span class="c c-Singleline">// 1</span>
     <span class="nv">ObjectFounded</span> <span class="o">=</span> <span class="kc">False</span><span class="p">;</span>                                                              <span class="c c-Singleline">// 0</span>
                                                                                         <span class="c c-Singleline">// 0</span>
     <span class="nv">NameParts</span> <span class="o">=</span> <span class="nb">StrSplit</span><span class="p">(</span><span class="nv">Name</span><span class="p">,</span> <span class="s1">&quot;.&quot;</span><span class="p">);</span>                                                    <span class="c c-Singleline">// 0</span>
@@ -930,7 +930,6 @@
     <span class="k">Return</span> <span class="nv">Module</span><span class="p">;</span>                                                                      <span class="c c-Singleline">// 0</span>
 <span class="nv">EndFunction</span>                                                                              <span class="c c-Singleline">// Total 12</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -941,12 +940,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CyclomaticComplexity-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CyclomaticComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:CyclomaticComplexity-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CyclomaticComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CyclomaticComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
     <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>

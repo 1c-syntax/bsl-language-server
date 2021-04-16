@@ -877,13 +877,12 @@
 <p>Add a constant field to the diagnostic class, in which the default value of the parameter will be saved. For example <code>private static final String DEFAULT_COMMENTS_ANNOTATION = "//@";</code>.</p>
 <p>It is necessary to add a private field in which the parameter value will be stored. The field needs to be annotated <code>@DiagnosticParameter</code> In the annotation, you must specify the type of the parameter and the default value (the value is always a string type).
  For example</p>
-<div class="codehilite"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@DiagnosticParameter</span><span class="p">(</span>
     <span class="n">type</span> <span class="o">=</span> <span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">,</span>
     <span class="n">defaultValue</span> <span class="o">=</span> <span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span>
   <span class="p">)</span>
   <span class="kd">private</span> <span class="n">String</span> <span class="n">commentsAnnotation</span> <span class="o">=</span> <span class="n">DEFAULT_COMMENTS_ANNOTATION</span><span class="p">;</span>
 </code></pre></div>
-
 <p>If the parameter is primitive or of type String and it is set by a simple setter, then that's it.
  If the parameter is "hard", for example, a pattern string for a regular expression that must be evaluated before setting, then you need to implement a method for setting parameter values <code>configure</code>.</p>
 <p>For example, there are two parameters:</p>
@@ -892,7 +891,7 @@
 <li><code>excludeMethods</code> - мmethods that do not need to be checked, type ArrayList</li>
 </ul>
 <p>Then the method of setting the parameter values will look:</p>
-<div class="codehilite"><pre><span></span><code> <span class="nd">@Override</span>
+<div class="highlight"><pre><span></span><code> <span class="nd">@Override</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">configure</span><span class="p">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// to set &quot;simple properties&quot; including &quot;commentAsCode&quot;</span>
     <span class="kd">super</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
@@ -903,13 +902,12 @@
     <span class="k">this</span><span class="p">.</span><span class="na">excludeMethods</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">Arrays</span><span class="p">.</span><span class="na">asList</span><span class="p">(</span><span class="n">excludeMethodsString</span><span class="p">.</span><span class="na">split</span><span class="p">(</span><span class="s">&quot;,&quot;</span><span class="p">)));</span>
   <span class="p">}</span>
 </code></pre></div>
-
 <h3 id="Test-change">Test change<a class="headerlink" href="#Test-change" title="Permanent link">&para;</a></h3>
 <p>It is necessary to add a test to change the diagnostic settings.
  The test is added to the diagnostic test class <em>(a separate method for each combination of diagnostic setting options)</em>. At the beginning of the test, you need to set the value of the diagnostic parameter, the subsequent steps are similar to the general rules for writing tests.
  Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по умолчанию, используя метод <code>getDefaultConfiguration()</code> from the metadata of the current diagnostic <code>diagnosticInstance.getInfo()</code>. The next step is to change the parameter value by adding to the configuration collection, and then reconfigure using the method <code>configure</code>.
  Example</p>
-<div class="codehilite"><pre><span></span><code><span class="c1">// get current configuration</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// get current configuration</span>
 <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">configuration</span> <span class="o">=</span> <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">getInfo</span><span class="p">().</span><span class="na">getDefaultConfiguration</span><span class="p">();</span>
 
 <span class="c1">// setting the new value</span>
@@ -918,14 +916,12 @@
 <span class="c1">// reconfiguring</span>
 <span class="n">diagnosticInstance</span><span class="p">.</span><span class="na">configure</span><span class="p">(</span><span class="n">configuration</span><span class="p">);</span>
 </code></pre></div>
-
 <h3 id="Adding-a-Parameter-Description">Adding a Parameter Description<a class="headerlink" href="#Adding-a-Parameter-Description" title="Permanent link">&para;</a></h3>
 <p>For correct operation, it is necessary to add a parameter description for each language in the diagnostic resource files.
  Diagnostic resources are located in files<code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_en.properties</code> and <code>resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/&lt;DIAGNOSTIC_KEY&gt;_ru.properties</code>.
 In each file you need to add a new line with the name of the parameter and its description</p>
-<div class="codehilite"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Skip annotation comments starting with the specified substrings. A comma separated list. For example: //@,//(c)</span>
+<div class="highlight"><pre><span></span><code><span class="na">commentsAnnotation</span><span class="o">=</span><span class="s">Skip annotation comments starting with the specified substrings. A comma separated list. For example: //@,//(c)</span>
 </code></pre></div>
-
 <h3 id="Documentation-change">Documentation change<a class="headerlink" href="#Documentation-change" title="Permanent link">&para;</a></h3>
 <p>Manual editing of the documentation is not required: after adding / changing diagnostic parameters, you need to run the gradlew task <code>updateDiagnosticDocs</code>.</p>
                 

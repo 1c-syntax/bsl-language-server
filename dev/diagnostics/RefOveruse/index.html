@@ -854,13 +854,11 @@
 при этом не несет никакой ценности, а только генерирует избыточную нагрузку на СУБД.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-<div class="codehilite"><pre><span></span><code>Запрос.Текст = &quot;ВЫБРАТЬ Файлы.Файл.Ссылка, // ошибка
-   | Файлы.Файл
-   | ИЗ
-   | СлужебныеФайлы КАК Файлы&quot;;
+<div class="highlight"><pre><span></span><code><span class="nv">Запрос</span><span class="o">.</span><span class="nv">Текст</span> <span class="o">=</span> <span class="s1">&quot;ВЫБРАТЬ Файлы.Файл.Ссылка, // ошибка</span>
+   <span class="s">| Файлы.Файл</span>
+   <span class="s">| ИЗ</span>
+   <span class="s">| СлужебныеФайлы КАК Файлы&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников
@@ -874,12 +872,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:RefOveruse-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:RefOveruse-off</span>
 <span class="c c-Singleline">// BSLLS:RefOveruse-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;RefOveruse&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;RefOveruse&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

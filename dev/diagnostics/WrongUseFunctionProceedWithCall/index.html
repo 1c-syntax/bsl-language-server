@@ -853,16 +853,14 @@
 <p>Вызов функции ПродолжитьВызов можно использовать только в расширениях и только в методах с аннотацией &amp;Вместо.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+<div class="highlight"><pre><span></span><code><span class="kd">&amp;НаКлиенте</span>
+<span class="k">Процедура</span> <span class="nv">Тест</span><span class="p">()</span>
 
-<div class="codehilite"><pre><span></span><code>&amp;НаКлиенте
-Процедура Тест()
+    <span class="c c-Singleline">// этот код возможно был внесен копипастой, при переносе из расширения</span>
+    <span class="nv">ПродолжитьВызов</span><span class="p">();</span> <span class="c c-Singleline">// Срабатывание здесь</span>
 
-    // этот код возможно был внесен копипастой, при переносе из расширения
-    ПродолжитьВызов(); // Срабатывание здесь
-
-КонецПроцедуры
+<span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -870,12 +868,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:WrongUseFunctionProceedWithCall-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:WrongUseFunctionProceedWithCall-off</span>
 <span class="c c-Singleline">// BSLLS:WrongUseFunctionProceedWithCall-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;WrongUseFunctionProceedWithCall&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;WrongUseFunctionProceedWithCall&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

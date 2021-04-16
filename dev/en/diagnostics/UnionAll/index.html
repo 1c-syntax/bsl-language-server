@@ -853,7 +853,7 @@
 <p>Employ UNION only when removing duplicates from the result is required.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">SELECT</span>
+<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span>
 <span class="nv">GoodsReceipt</span><span class="o">.</span><span class="nv">Ref</span>
 <span class="nv">FROM</span>
 <span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsReceipt</span> <span class="nv">AS</span> <span class="nv">GoodsReceipt</span>
@@ -865,9 +865,8 @@
 <span class="nv">FROM</span>
 <span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsSale</span> <span class="nv">AS</span> <span class="nv">GoodsSale</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">SELECT</span>
+<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span>
 <span class="nv">GoodsReceipt</span><span class="o">.</span><span class="nv">Ref</span>
 <span class="nv">FROM</span>
 <span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsReceipt</span> <span class="nv">AS</span> <span class="nv">GoodsReceipt</span>
@@ -879,7 +878,6 @@
 <span class="nv">FROM</span>
 <span class="nv">Document</span><span class="o">.</span><span class="nv">GoodsSale</span> <span class="nv">AS</span> <span class="nv">GoodsSale</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Link: <a href="https://its.1c.ru/db/v8std#content:434:hdoc">Development Standart: Using UNION and UNION ALL words in queries</a></li>
@@ -887,12 +885,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnionAll-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnionAll-off</span>
 <span class="c c-Singleline">// BSLLS:UnionAll-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UnionAll&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnionAll&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

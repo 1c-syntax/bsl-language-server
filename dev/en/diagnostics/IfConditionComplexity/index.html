@@ -871,7 +871,7 @@
 <p>Complex expressions (with more than 3 boolean constructs) must be extracted to separated method or variable.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Bad:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr1&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr1&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr2&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr3&quot;</span>
     <span class="nv">Or</span> <span class="nv">Id</span> <span class="o">=</span> <span class="s1">&quot;Expr4&quot;</span>
@@ -885,9 +885,8 @@
 
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Good:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">IsCorrectId</span><span class="p">(</span><span class="nv">Id</span><span class="p">)</span> <span class="k">Then</span>
    <span class="nv">doSomeWork</span><span class="p">();</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 
@@ -905,16 +904,14 @@
 
 <span class="k">EndFunction</span>
 </code></pre></div>
-
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IfConditionComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:IfConditionComplexity-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;IfConditionComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;IfConditionComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;maxIfConditionComplexity&quot;</span><span class="p">:</span> <span class="mi">3</span>
 <span class="p">}</span>
 </code></pre></div>

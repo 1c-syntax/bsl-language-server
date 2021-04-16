@@ -858,18 +858,16 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">СтруктураВложений</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="nv">СтруктураВложений</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span>
  <span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Наименование</span><span class="p">,</span>
  <span class="k">Новый</span> <span class="nv">Картинка</span><span class="p">(</span><span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span>
   <span class="nv">ПрисоединенныеФайлы</span><span class="o">.</span><span class="nv">ПолучитьДанныеФайла</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">)</span><span class="o">.</span><span class="nv">СсылкаНаДвоичныеДанныеФайла</span><span class="p">)));</span>
 </code></pre></div>
-
 <p>Правильно разбивать такие вызовы на отдельные операторы с помощью вспомогательных локальных переменных:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">АдресФайлаИзображения</span> <span class="o">=</span> <span class="nv">ПрисоединенныеФайлы</span><span class="o">.</span><span class="nv">ПолучитьДанныеФайла</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">)</span><span class="o">.</span><span class="nv">СсылкаНаДвоичныеДанныеФайла</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">АдресФайлаИзображения</span> <span class="o">=</span> <span class="nv">ПрисоединенныеФайлы</span><span class="o">.</span><span class="nv">ПолучитьДанныеФайла</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Ссылка</span><span class="p">)</span><span class="o">.</span><span class="nv">СсылкаНаДвоичныеДанныеФайла</span><span class="p">;</span>
 <span class="nv">ДанныеИзображения</span> <span class="o">=</span> <span class="k">Новый</span> <span class="nv">Картинка</span><span class="p">(</span><span class="nb">ПолучитьИзВременногоХранилища</span><span class="p">(</span><span class="nv">АдресФайлаИзображения</span><span class="p">));</span>
 <span class="nv">СтруктураВложений</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="nv">ПрисоединенныйФайл</span><span class="o">.</span><span class="nv">Наименование</span><span class="p">,</span> <span class="nv">ДанныеИзображения</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -879,12 +877,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedFunctionInParameters-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedFunctionInParameters-off</span>
 <span class="c c-Singleline">// BSLLS:NestedFunctionInParameters-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NestedFunctionInParameters&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NestedFunctionInParameters&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

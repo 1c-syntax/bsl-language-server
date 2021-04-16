@@ -885,22 +885,19 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">NetworkAddress</span> <span class="o">=</span> <span class="s1">&quot;192.168.0.1&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="nv">NetworkAddress</span> <span class="o">=</span> <span class="s1">&quot;192.168.0.1&quot;</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">NetworkAddress</span> <span class="o">=</span> <span class="nv">MyModuleReUse</span><span class="o">.</span><span class="nv">ServerNetworkAddress</span><span class="p">();</span>
+<div class="highlight"><pre><span></span><code><span class="nv">NetworkAddress</span> <span class="o">=</span> <span class="nv">MyModuleReUse</span><span class="o">.</span><span class="nv">ServerNetworkAddress</span><span class="p">();</span>
 </code></pre></div>
-
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-off</span>
 <span class="c c-Singleline">// BSLLS:UsingHardcodeNetworkAddress-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingHardcodeNetworkAddress&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingHardcodeNetworkAddress&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;searchWordsExclusion&quot;</span><span class="p">:</span> <span class="s2">&quot;Верси|Version|ЗапуститьПриложение|RunApp|Пространств|Namespace|Драйвер|Driver&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

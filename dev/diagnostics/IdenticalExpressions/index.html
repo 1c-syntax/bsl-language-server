@@ -851,39 +851,35 @@
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <p>Если в тексте программы имеется оператор (&lt;, &gt;, &lt;=, &gt;=, =, &lt;&gt;, И, ИЛИ, -, /), слева и справа от которого расположены одинаковые подвыражения фрагмент кода, который, скорее всего, содержит логическую ошибку.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
 
     <span class="c c-Singleline">// Тут код</span>
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Здесь оператор <code>И</code> окружен одинаковыми выражениями <code>Сумма &lt;&gt; 0</code>,
 что наталкивает на мысли об ошибке по невнимательности при копировании. Правильное выражение будет выглядеть так:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">СуммаНДС</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">И</span> <span class="nv">СуммаНДС</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
 
     <span class="c c-Singleline">// Тут код</span>
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <p>ИЛИ</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">Сумма</span> <span class="o">&lt;&gt;</span> <span class="m">0</span> <span class="k">Тогда</span>
 
     <span class="c c-Singleline">// Тут код</span>
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IdenticalExpressions-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IdenticalExpressions-off</span>
 <span class="c c-Singleline">// BSLLS:IdenticalExpressions-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;IdenticalExpressions&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;IdenticalExpressions&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

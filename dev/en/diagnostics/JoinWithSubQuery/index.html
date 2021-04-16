@@ -863,7 +863,7 @@
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 <p>An example of a potentially dangerous query using a subquery join:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">SELECT</span> <span class="o">*</span>
+<div class="highlight"><pre><span></span><code><span class="nv">SELECT</span> <span class="o">*</span>
 <span class="nv">FROM</span> <span class="nv">Document</span><span class="o">.</span><span class="nv">Sales</span>
 <span class="nb">LEFT</span> <span class="nv">JOIN</span> <span class="p">(</span>
    <span class="nv">SELECT</span> <span class="nv">Field1</span> <span class="k">ИЗ</span> <span class="nv">InformationRegister</span><span class="o">.</span><span class="nv">Limits</span>
@@ -872,7 +872,6 @@
    <span class="nv">Field1</span>
 <span class="p">)</span> <span class="nv">BY</span> <span class="nv">Refs</span> <span class="o">=</span> <span class="nv">Field1</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -888,12 +887,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:JoinWithSubQuery-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:JoinWithSubQuery-off</span>
 <span class="c c-Singleline">// BSLLS:JoinWithSubQuery-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;JoinWithSubQuery&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;JoinWithSubQuery&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

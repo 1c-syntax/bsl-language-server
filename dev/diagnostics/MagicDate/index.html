@@ -871,27 +871,24 @@
 <p>Магическая дата - это любая дата в вашем коде, которая не очевидна без погружения в контекст.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Плохо</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="ld">&#39;20151021&#39;</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="ld">&#39;20151021&#39;</span> <span class="k">Тогда</span>
     <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Хорошо</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">ПредсказаннаяДата</span> <span class="o">=</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span> 
+<div class="highlight"><pre><span></span><code><span class="nv">ПредсказаннаяДата</span> <span class="o">=</span> <span class="ld">&#39;20151021&#39;</span><span class="p">;</span> 
 <span class="k">Если</span> <span class="nv">текДата</span> <span class="o">&lt;</span> <span class="nv">ПредсказаннаяДата</span> <span class="k">Тогда</span>
     <span class="nv">ХоверБордБудетИзобретен</span> <span class="o">=</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MagicDate-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MagicDate-off</span>
 <span class="c c-Singleline">// BSLLS:MagicDate-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;MagicDate&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;MagicDate&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;authorizedDates&quot;</span><span class="p">:</span> <span class="s2">&quot;00010101,00010101000000,000101010000&quot;</span>
 <span class="p">}</span>
 </code></pre></div>

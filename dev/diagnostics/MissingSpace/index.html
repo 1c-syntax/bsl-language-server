@@ -896,54 +896,47 @@
 Так же пробел должен быть справа от <code>,</code> и <code>;</code></p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Плохо</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ВычислитьСумму</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span><span class="nv">Параметр2</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ВычислитьСумму</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span><span class="nv">Параметр2</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">Параметр1</span><span class="o">=</span><span class="nv">Параметр2</span> <span class="k">Тогда</span>
         <span class="nv">Сумма</span><span class="o">=</span><span class="nv">Цена</span><span class="o">*</span><span class="nv">Количество</span><span class="p">;</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <p>Хорошо</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ВычислитьСумму</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span> <span class="nv">Параметр2</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ВычислитьСумму</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span> <span class="nv">Параметр2</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">Параметр1</span> <span class="o">=</span> <span class="nv">Параметр2</span> <span class="k">Тогда</span>
         <span class="nv">Сумма</span> <span class="o">=</span> <span class="nv">Цена</span> <span class="o">*</span> <span class="nv">Количество</span><span class="p">;</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <h3 id="Использование-параметра-checkSpaceToRightOfUnary">Использование параметра <code>checkSpaceToRightOfUnary</code><a class="headerlink" href="#Использование-параметра-checkSpaceToRightOfUnary" title="Permanent link">&para;</a></h3>
 <p>Параметр имеет смысл, только если унарный оператор присутствует в одном из трех основных параметров.</p>
 <p>При значении <code>false</code> </p>
-<div class="codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">Б</span><span class="p">;</span>     <span class="c c-Singleline">// Хорошо</span>
+<div class="highlight"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">Б</span><span class="p">;</span>     <span class="c c-Singleline">// Хорошо</span>
 <span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">Б</span><span class="p">;</span>    <span class="c c-Singleline">// Хорошо</span>
 </code></pre></div>
-
 <p>При значении <code>true</code></p>
-<div class="codehilite"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">Б</span><span class="p">;</span>     <span class="c c-Singleline">// Плохо</span>
+<div class="highlight"><pre><span></span><code><span class="nv">А</span> <span class="o">=</span> <span class="o">-</span><span class="nv">Б</span><span class="p">;</span>     <span class="c c-Singleline">// Плохо</span>
 <span class="nv">А</span> <span class="o">=</span> <span class="o">-</span> <span class="nv">Б</span><span class="p">;</span>    <span class="c c-Singleline">// Хорошо</span>
 </code></pre></div>
-
 <h3 id="Использование-параметра-allowMultipleCommas">Использование параметра <code>allowMultipleCommas</code><a class="headerlink" href="#Использование-параметра-allowMultipleCommas" title="Permanent link">&para;</a></h3>
 <p>Параметр имеет смысл, только если <code>,</code> присутствует в одном из трех основных параметров. Значение по-умолчанию <code>false</code></p>
 <p>При значении <code>false</code></p>
-<div class="codehilite"><pre><span></span><code>    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,,,,</span> <span class="nv">Отказ</span><span class="p">);</span>        <span class="c c-Singleline">// Плохо</span>
+<div class="highlight"><pre><span></span><code>    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,,,,</span> <span class="nv">Отказ</span><span class="p">);</span>        <span class="c c-Singleline">// Плохо</span>
     <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Отказ</span><span class="p">);</span>     <span class="c c-Singleline">// Хорошо</span>
 </code></pre></div>
-
 <p>При значении <code>true</code></p>
-<div class="codehilite"><pre><span></span><code>    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,,,,</span> <span class="nv">Отказ</span><span class="p">);</span>        <span class="c c-Singleline">// Хорошо</span>
+<div class="highlight"><pre><span></span><code>    <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,,,,</span> <span class="nv">Отказ</span><span class="p">);</span>        <span class="c c-Singleline">// Хорошо</span>
     <span class="nv">ОбщегоНазначенияКлиентСервер</span><span class="o">.</span><span class="nv">СообщитьПользователю</span><span class="p">(</span><span class="nv">ТекстСообщения</span><span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="nv">Отказ</span><span class="p">);</span>     <span class="c c-Singleline">// Хорошо</span>
 </code></pre></div>
-
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingSpace-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MissingSpace-off</span>
 <span class="c c-Singleline">// BSLLS:MissingSpace-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;MissingSpace&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;MissingSpace&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;listForCheckLeft&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="nt">&quot;listForCheckRight&quot;</span><span class="p">:</span> <span class="s2">&quot;, ;&quot;</span><span class="p">,</span>
     <span class="nt">&quot;listForCheckLeftAndRight&quot;</span><span class="p">:</span> <span class="s2">&quot;+ - * / = % &lt; &gt; &lt;&gt; &lt;= &gt;=&quot;</span><span class="p">,</span>

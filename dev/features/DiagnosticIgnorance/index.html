@@ -892,7 +892,7 @@
 <p>Для отключения конкретных диагностик в модуле (возьмем для примера когнитивную сложность <code>CognitiveComplexity</code> и ограничение на размер метода <code>MethodSize</code>), необходимо в начале модуля вставить комментарий <code>// BSLLS:CognitiveComplexity-off</code> и <code>// BSLLS:MethodSize-off</code> (или <code>// BSLLS:CognitiveComplexity-выкл</code> и <code>// BSLLS:MethodSize-выкл</code>)</p>
 <h3 id="Отключить-все-диагностики-для-участка-кода">Отключить все диагностики для участка кода<a class="headerlink" href="#Отключить-все-диагностики-для-участка-кода" title="Permanent link">&para;</a></h3>
 <p>Если необходимо отключить диагностики для участка кода, оставив возможность BSL LS анализировать оставшие, необходимо <code>обернуть</code> скрываемый участок кода по примеру</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS-off</span>
 <span class="k">Процедура</span> <span class="nv">СкрываемаяОтBSLLSПроцедура</span><span class="p">()</span>
     <span class="c c-Singleline">// Невидимое содержимое процедуры</span>
 <span class="k">КонецПроцедуры</span>
@@ -902,10 +902,9 @@
     <span class="c c-Singleline">// Видимое содержимое процедуры</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <h3 id="Отключить-конкретные-диагностики-для-участка-кода">Отключить конкретные диагностики для участка кода<a class="headerlink" href="#Отключить-конкретные-диагностики-для-участка-кода" title="Permanent link">&para;</a></h3>
 <p>Если необходимо отключить конкретные диагностики (возьмем для примера когнитивную сложность <code>CognitiveComplexity</code> и ограничение на размер метода <code>MethodSize</code>) для участка кода, необходимо <code>обернуть</code> скрываемый участок кода по примеру</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MethodSize-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:MethodSize-off</span>
 <span class="k">Процедура</span> <span class="nv">СкрываемаяОтMethodSizeПроцедура</span><span class="p">()</span>
     <span class="c c-Singleline">// Очень длинное тело метода</span>
 <span class="k">КонецПроцедуры</span>
@@ -917,9 +916,8 @@
 <span class="k">КонецПроцедуры</span>
 <span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
-
 <p>Поддерживается вложение <code>оберток</code>, т.е. возможно экранирование блока кода от нескольких диагностик, пример</p>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:MethodSize-off</span>
 <span class="k">Процедура</span> <span class="nv">СкрываемаяОтMethodSizeCognitiveComplexityПроцедура</span><span class="p">()</span>
     <span class="c c-Singleline">// Очень длинное тело метода, непонятное никому</span>
@@ -931,10 +929,9 @@
 <span class="k">КонецПроцедуры</span>
 <span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
-
 <h3 id="Отключить-диагностику-для-одной-строки">Отключить диагностику для одной строки<a class="headerlink" href="#Отключить-диагностику-для-одной-строки" title="Permanent link">&para;</a></h3>
 <p>Для экранирование одной строки можно использовать <code>обертку</code> как в примере выше, но удобнее использовать <code>висячий комментарий</code>, т.е. комментарий, расположенный в конце строки, пример</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ВидимаяBSLLS</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ВидимаяBSLLS</span><span class="p">()</span>
     <span class="c c-Singleline">// С помощью висячего комментария скрыта следующая строка от диагностики &quot;Каноническое написание ключевых слов&quot;</span>
     <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">тогда</span> <span class="c c-Singleline">// BSLLS:CanonicalSpellingKeywords-выкл</span>
         <span class="c c-Singleline">// Видимое содержимое</span>

@@ -881,8 +881,8 @@ rewrite to the procedure.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<p>Bad:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">CheckString</span><span class="p">(</span><span class="nv">Val</span> <span class="nv">RowTable</span><span class="p">)</span>
+<p>Bad:
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">CheckString</span><span class="p">(</span><span class="nv">Val</span> <span class="nv">RowTable</span><span class="p">)</span>
 
     <span class="nv">If</span> <span class="nv">ItsGoodString</span><span class="p">(</span><span class="nv">RowTable</span><span class="p">)</span> <span class="k">Then</span>
         <span class="nv">ActionGood</span><span class="p">();</span>
@@ -895,10 +895,9 @@ rewrite to the procedure.</p>
     <span class="nv">EndIf</span><span class="p">;</span>
 
 <span class="k">EndFunction</span>
-</code></pre></div>
-
-<p>Good:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">CheckString</span><span class="p">(</span><span class="nv">Val</span> <span class="nv">RowTable</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Good:
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">CheckString</span><span class="p">(</span><span class="nv">Val</span> <span class="nv">RowTable</span><span class="p">)</span>
 
     <span class="nv">If</span> <span class="nv">ItsGoodString</span><span class="p">(</span><span class="nv">RowTable</span><span class="p">)</span> <span class="k">Then</span>
         <span class="nv">ActionGood</span><span class="p">();</span>
@@ -909,11 +908,10 @@ rewrite to the procedure.</p>
     <span class="nv">EndIf</span><span class="p">;</span>
 
 <span class="k">EndFunction</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <h2 id="Nuances">Nuances<a class="headerlink" href="#Nuances" title="Permanent link">&para;</a></h2>
-<p>Attachable functions excluded from the scan. Example:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Function</span> <span class="nv">Attachable_RandomAction</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
+<p>Attachable functions excluded from the scan. Example:
+<div class="highlight"><pre><span></span><code><span class="k">Function</span> <span class="nv">Attachable_RandomAction</span><span class="p">(</span><span class="nv">Command</span><span class="p">)</span>
 
     <span class="nv">If</span> <span class="nb">ValueIsFilled</span><span class="p">(</span><span class="nb">CurrentDate</span><span class="p">)</span> <span class="k">Then</span>
         <span class="k">Return</span> <span class="kc">Undefined</span><span class="p">;</span>
@@ -922,20 +920,18 @@ rewrite to the procedure.</p>
     <span class="k">Return</span> <span class="kc">Undefined</span><span class="p">;</span>
 
 <span class="k">EndFunction</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FunctionReturnsSamePrimitive-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FunctionReturnsSamePrimitive-off</span>
 <span class="c c-Singleline">// BSLLS:FunctionReturnsSamePrimitive-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;FunctionReturnsSamePrimitive&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;FunctionReturnsSamePrimitive&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;skipAttachable&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nt">&quot;caseSensitiveForString&quot;</span><span class="p">:</span> <span class="kc">false</span>
 <span class="p">}</span>

@@ -855,7 +855,7 @@
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-<div class="codehilite"><pre><span></span><code><span class="k">Перем</span> <span class="nv">КонвертацияФайлов</span> <span class="k">Экспорт</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">Перем</span> <span class="nv">КонвертацияФайлов</span> <span class="k">Экспорт</span><span class="p">;</span>
 
 <span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
 
@@ -864,10 +864,9 @@
 
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <p>Для передачи параметров между обработчиками подписок на события и в обработчики событий модуля объекта из внешнего кода
 рекомендуется использовать свойство объекта ДополнительныеСвойства</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередЗаписью</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
 
   <span class="k">Если</span> <span class="nv">ДополнительныеСвойства</span><span class="o">.</span><span class="nv">Свойство</span><span class="p">(</span><span class="s1">&quot;КонвертацияФайлов&quot;</span><span class="p">)</span> <span class="k">Тогда</span> 
   <span class="o">...</span>
@@ -878,7 +877,6 @@
 <span class="nv">ФайлОбъект</span><span class="o">.</span><span class="nv">ДополнительныеСвойства</span><span class="o">.</span><span class="nv">Вставить</span><span class="p">(</span><span class="s1">&quot;КонвертацияФайлов&quot;</span><span class="p">,</span> <span class="kc">Истина</span><span class="p">);</span>
 <span class="nv">ФайлОбъект</span><span class="o">.</span><span class="nv">Записать</span><span class="p">();</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 <!-- Примеры источников -->
@@ -887,12 +885,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExportVariables-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExportVariables-off</span>
 <span class="c c-Singleline">// BSLLS:ExportVariables-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;ExportVariables&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;ExportVariables&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

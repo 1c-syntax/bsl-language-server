@@ -854,13 +854,11 @@
 <p>Рекомендация обусловлена соображениями унификации прикладного кода и тем, что синтаксис метода РеквизитФормыВЗначение проще, чем у ДанныеФормыВЗначение (а следовательно, меньше вероятность ошибки).</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-<div class="codehilite"><pre><span></span><code>Процедура Тест()
-    Форма=Док.ПолучитьФорму(&quot;ФормаДокумента&quot;);
-    ДФ = Форма.ДанныеФормыВЗначение(Объект, Тип(&quot;ТаблицаЗначений&quot;));
-КонецПроцедуры
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">Тест</span><span class="p">()</span>
+    <span class="nv">Форма</span><span class="o">=</span><span class="nv">Док</span><span class="o">.</span><span class="nb">ПолучитьФорму</span><span class="p">(</span><span class="s1">&quot;ФормаДокумента&quot;</span><span class="p">);</span>
+    <span class="nv">ДФ</span> <span class="o">=</span> <span class="nv">Форма</span><span class="o">.</span><span class="nb">ДанныеФормыВЗначение</span><span class="p">(</span><span class="nv">Объект</span><span class="p">,</span> <span class="nb">Тип</span><span class="p">(</span><span class="s1">&quot;ТаблицаЗначений&quot;</span><span class="p">));</span>
+<span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -868,12 +866,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FormDataToValue-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:FormDataToValue-off</span>
 <span class="c c-Singleline">// BSLLS:FormDataToValue-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;FormDataToValue&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;FormDataToValue&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

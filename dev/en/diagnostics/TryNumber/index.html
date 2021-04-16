@@ -852,18 +852,16 @@
 <p>It is incorrect to use exceptions to cast a value to a type. For such operations, it is necessary to use the capabilities of the TypeDescription object.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Try</span>
+<div class="highlight"><pre><span></span><code><span class="k">Try</span>
  <span class="nv">NumberDaysAllowance</span> <span class="o">=</span> <span class="nb">Number</span><span class="p">(</span><span class="nv">Value</span><span class="p">);</span>
 <span class="k">Raise</span>
  <span class="nv">NumberDaysAllowance</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span> <span class="c c-Singleline">// default value</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
-
 <p>Correct:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">TypeDescription</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">TypeDescription</span><span class="p">(</span><span class="s1">&quot;Number&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">TypeDescription</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">TypeDescription</span><span class="p">(</span><span class="s1">&quot;Number&quot;</span><span class="p">);</span>
 <span class="nv">NumberDaysAllowance</span> <span class="o">=</span> <span class="nv">TypeDescription</span><span class="o">.</span><span class="nv">CastValue</span><span class="p">(</span><span class="nv">Value</span><span class="p">);</span>
 </code></pre></div>
-
 <h2 id="Reference">Reference<a class="headerlink" href="#Reference" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://its.1c.ru/db/v8std#content:499:hdoc">Standard: Catch exceptions in code</a></li>
@@ -871,12 +869,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TryNumber-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:TryNumber-off</span>
 <span class="c c-Singleline">// BSLLS:TryNumber-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;TryNumber&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;TryNumber&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

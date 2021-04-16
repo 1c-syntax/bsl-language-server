@@ -852,18 +852,16 @@
 <p>Использование вложенных тернарных операторов затрудняет читаемость кода.</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <h3 id="Некорректное-использование-тернарных-операторов">Некорректное использование тернарных операторов<a class="headerlink" href="#Некорректное-использование-тернарных-операторов" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nv">Результат</span>  <span class="o">=</span>  <span class="o">?</span><span class="p">(</span><span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">5</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">3</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="nv">x</span><span class="p">,</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">),</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">),</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">);</span> 
+<div class="highlight"><pre><span></span><code><span class="nv">Результат</span>  <span class="o">=</span>  <span class="o">?</span><span class="p">(</span><span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">5</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="o">?</span><span class="p">(</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">3</span> <span class="o">&lt;&gt;</span> <span class="m">0</span><span class="p">,</span> <span class="nv">x</span><span class="p">,</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">),</span> <span class="s1">&quot;Buzz&quot;</span><span class="p">),</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">);</span> 
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="o">?</span><span class="p">(</span><span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="o">?</span><span class="p">(</span><span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span><span class="p">)</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
 
       <span class="nv">Статус</span> <span class="o">=</span> <span class="s1">&quot;Готово&quot;</span><span class="p">;</span>
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <h3 id="Возможные-вариант-реализации">Возможные вариант реализации<a class="headerlink" href="#Возможные-вариант-реализации" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">15</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
     <span class="nv">Результат</span> <span class="o">=</span> <span class="s1">&quot;FizzBuzz&quot;</span><span class="p">;</span>
 <span class="k">ИначеЕсли</span> <span class="nv">x</span> <span class="o">%</span> <span class="m">3</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
     <span class="nv">Результат</span> <span class="o">=</span> <span class="s1">&quot;Fizz&quot;</span><span class="p">;</span>
@@ -873,23 +871,20 @@
     <span class="nv">Результат</span> <span class="o">=</span> <span class="nv">x</span><span class="p">;</span>
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Если</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span> <span class="k">ИЛИ</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="kc">Null</span> <span class="k">ИЛИ</span> <span class="nv">Стр</span><span class="o">.</span><span class="nv">Emp_emptype</span> <span class="o">=</span> <span class="m">0</span> <span class="k">Тогда</span>
 
       <span class="nv">Статус</span> <span class="o">=</span> <span class="s1">&quot;Готово&quot;</span><span class="p">;</span>
 
 <span class="k">КонецЕсли</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedTernaryOperator-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:NestedTernaryOperator-off</span>
 <span class="c c-Singleline">// BSLLS:NestedTernaryOperator-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;NestedTernaryOperator&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;NestedTernaryOperator&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -851,17 +851,15 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Standard 772, Interaction with Automated Testing Tools, has been canceled. In this regard, verification of the "АвтоТест" parameter in the form code is no longer necessary.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">Parameters</span><span class="o">.</span><span class="nv">Property</span><span class="p">(</span><span class="s1">&quot;АвтоТест&quot;</span><span class="p">)</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">Parameters</span><span class="o">.</span><span class="nv">Property</span><span class="p">(</span><span class="s1">&quot;АвтоТест&quot;</span><span class="p">)</span> <span class="k">Then</span>
     <span class="k">Return</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <p>and in handler Filling in object module:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">If</span> <span class="nv">FillData</span> <span class="o">=</span> <span class="s1">&quot;АвтоТест&quot;</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="nv">If</span> <span class="nv">FillData</span> <span class="o">=</span> <span class="s1">&quot;АвтоТест&quot;</span> <span class="k">Then</span>
     <span class="k">Return</span><span class="p">;</span>
 <span class="nv">EndIf</span><span class="p">;</span>
 </code></pre></div>
-
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Источник: <a href="https://its.1c.ru/db/v8std#content:456:hdoc:3">Standard: Modules. Part 3 (RU)</a></li>
@@ -869,12 +867,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExcessiveAutoTestCheck-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:ExcessiveAutoTestCheck-off</span>
 <span class="c c-Singleline">// BSLLS:ExcessiveAutoTestCheck-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;ExcessiveAutoTestCheck&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;ExcessiveAutoTestCheck&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -872,21 +872,19 @@
 которые каким-либо образом связаны с процессом разработки (отладочный код, служебные отметки, например, !!!_, MRG и т.п.)
 и с конкретными разработчиками этого кода.</p>
 <p>Например, недопустимо оставлять подобные фрагменты в коде после завершения отладки или рефакторинга:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередУдалением</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+<p><div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередУдалением</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
 <span class="c c-Singleline">//    Если Истина Тогда</span>
 <span class="c c-Singleline">//        Сообщение(&quot;Для отладки&quot;);</span>
 <span class="c c-Singleline">//    КонецЕсли;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
-<p>также неправильно:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередУдалением</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
+также неправильно:
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">ПередУдалением</span><span class="p">(</span><span class="nv">Отказ</span><span class="p">)</span>
     <span class="k">Если</span> <span class="kc">Истина</span> <span class="k">Тогда</span>
         <span class="c c-Singleline">// Иванов: доделать </span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
-</code></pre></div>
-
+</code></pre></div></p>
 <p>Правильно: после завершения отладки или рефакторинга удалить обработчик ПередУдалением из кода.</p>
 <p><strong>ВНИМАНИЕ</strong>:<br />
 Блок комментарием считается кодом, если хотя бы одна строка внутри блока определяется как код. </p>
@@ -897,12 +895,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommentedCode-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommentedCode-off</span>
 <span class="c c-Singleline">// BSLLS:CommentedCode-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CommentedCode&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CommentedCode&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.9</span>
 <span class="p">}</span>
 </code></pre></div>

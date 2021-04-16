@@ -1263,7 +1263,7 @@
 <p><a id="cli"></a></p>
 <h2 id="Запуск-из-командной-строки">Запуск из командной строки<a class="headerlink" href="#Запуск-из-командной-строки" title="Permanent link">&para;</a></h2>
 <p>Запуск jar-файлов осуществляется через <code>java -jar path/to/file.jar</code>.</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --help
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --help
 
 BSL language server
 Usage: bsl-language-server <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>COMMAND <span class="o">[</span>ARGS<span class="o">]]</span>
@@ -1276,13 +1276,12 @@ Commands:
   version, -v, --version  Print version
   lsp, --lsp              LSP server mode <span class="o">(</span>default<span class="o">)</span>
 </code></pre></div>
-
 <p>При запуске BSL Language Server в обычном режиме будет запущен сам Language Server, взаимодействующий по протоколу <a href="[language server protocol](https://microsoft.github.io/language-server-protocol/)">LSP</a>. Для взаимодействия используются stdin и stdout.</p>
 <p>По умолчанию тексты диагностик выдаются на русском языке. Для переключения языка сообщений от движка диагностик необходимо настроить параметр <code>language</code> в конфигурационном файле или вызвав событие <code>workspace/didChangeConfiguration</code>:</p>
 <p><a id="analyze"></a></p>
 <h2 id="Запуск-в-режиме-анализатора">Запуск в режиме анализатора<a class="headerlink" href="#Запуск-в-режиме-анализатора" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме анализа используется параметр <code>--analyze</code> (сокращенно <code>-a</code>). </p>
-<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server analyze <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-c<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-o<span class="o">=</span>&lt;path&gt;<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
                                    <span class="o">[</span>-r<span class="o">=</span>&lt;keys&gt;<span class="o">]</span>...
 Run analysis and get diagnostic info
   -c, --configuration<span class="o">=</span>&lt;path&gt;
@@ -1295,34 +1294,29 @@ Run analysis and get diagnostic info
   -w, --workspaceDir<span class="o">=</span>&lt;path&gt; 
                            Workspace directory
 </code></pre></div>
-
 <p>Для указания каталога расположения анализируемых исходников используется параметр <code>--srcDir</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников. 
 Для формирования отчета об анализе требуется указать один или "репортеров". Для указания репортера используется параметр <code>--reporter</code> (сокращенно <code>-r</code>), за которым следует ключ репортера. Допустимо указывать несколько репортеров. Список репортетов см. в разделе <strong>Репортеры</strong>.</p>
 <p>Пример строки запуска анализа:</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --analyze --srcDir ./src/cf --reporter json
 </code></pre></div>
-
 <blockquote>
 <p>При анализе больших исходников рекомендуется дополнительно указывать параметр -Xmx, отвечающий за предел оперативной памяти для java процесса. Размер выделяемой памяти зависит от размера анализируемой кодовой базы.</p>
 </blockquote>
-<div class="codehilite"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
+<div class="highlight"><pre><span></span><code>java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 </code></pre></div>
-
 <p><a id="format"></a></p>
 <h2 id="Запуск-в-режиме-форматтера">Запуск в режиме форматтера<a class="headerlink" href="#Запуск-в-режиме-форматтера" title="Permanent link">&para;</a></h2>
 <p>Для запуска в режиме форматтера используется параметр <code>--format</code> (сокращенно <code>-f</code>).</p>
-<div class="codehilite"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>Usage: bsl-language-server format <span class="o">[</span>-hq<span class="o">]</span> <span class="o">[</span>-s<span class="o">=</span>&lt;path&gt;<span class="o">]</span>
 Format files <span class="k">in</span> <span class="nb">source</span> directory
   -h, --help            Show this <span class="nb">help</span> message and <span class="nb">exit</span>
   -q, --silent          Silent mode
   -s, --src<span class="o">=</span>&lt;path&gt;      Source directory or file
 </code></pre></div>
-
 <p>Для указания каталога расположения форматируемых исходников (или файла) используется параметр <code>--src</code> (сокращенно <code>-s</code>), за которым следует путь (относительный или абсолютный) к каталогу исходников (или файлу).</p>
 <p>Пример строки запуска форматирования:</p>
-<div class="codehilite"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
+<div class="highlight"><pre><span></span><code>java -jar bsl-language-server.jar --format --src ./src/cf
 </code></pre></div>
-
 <p><a id="configuration"></a></p>
 <h2 id="Конфигурационный-файл">Конфигурационный файл<a class="headerlink" href="#Конфигурационный-файл" title="Permanent link">&para;</a></h2>
 <p>Подробное описание конфигурационного файла приведено на <a href="features/ConfigurationFile/">этой странице</a></p>

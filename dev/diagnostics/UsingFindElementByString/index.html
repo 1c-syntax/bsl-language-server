@@ -851,29 +851,24 @@
 <h2 id="Описание-диагностики">Описание диагностики<a class="headerlink" href="#Описание-диагностики" title="Permanent link">&para;</a></h2>
 <p>Запрещено использовать методы поиска элементов "НайтиПоНаименованию" или "НайтиПоКоду".</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nb">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nv">НайтиПоНаименованию</span><span class="p">(</span><span class="s1">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nb">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nv">НайтиПоНаименованию</span><span class="p">(</span><span class="s1">&quot;Ведущий бухгалтер&quot;</span><span class="p">);</span>
 </code></pre></div>
-
 <p>или</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nb">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="s1">&quot;00-0000001&quot;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Должность</span> <span class="o">=</span> <span class="nb">Справочники</span><span class="o">.</span><span class="nv">Должности</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="s1">&quot;00-0000001&quot;</span><span class="p">);</span>
 </code></pre></div>
-
-<p>Допустимо использование:</p>
-<div class="codehilite"><pre><span></span><code><span class="nb">Справочники</span><span class="o">.</span><span class="nv">Валюты</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
+<p>Допустимо использование:
+<div class="highlight"><pre><span></span><code><span class="nb">Справочники</span><span class="o">.</span><span class="nv">Валюты</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="nv">ТекущиеДанные</span><span class="o">.</span><span class="nv">КодВалютыЦифровой</span><span class="p">);</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="nb">Справочники</span><span class="o">.</span><span class="nv">КлассификаторБанков</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="nv">СведенияОБанке</span><span class="o">.</span><span class="nv">БИК</span><span class="p">);</span>
-</code></pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="nb">Справочники</span><span class="o">.</span><span class="nv">КлассификаторБанков</span><span class="o">.</span><span class="nv">НайтиПоКоду</span><span class="p">(</span><span class="nv">СведенияОБанке</span><span class="o">.</span><span class="nv">БИК</span><span class="p">);</span>
+</code></pre></div></p>
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingFindElementByString-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UsingFindElementByString-off</span>
 <span class="c c-Singleline">// BSLLS:UsingFindElementByString-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UsingFindElementByString&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UsingFindElementByString&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -870,21 +870,19 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Software modules should not have commented out code fragments, as well as fragments, which are in any way connected with the development process (debugging code, service marks, i.e. !!! _, MRG, etc.) and with specific developers of this code.</p>
 <p>For example, it is unacceptable to leave such fragments in the code after debugging or refactoring is completed:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
     <span class="c c-Singleline">//If True Then</span>
     <span class="c c-Singleline">//  Message(&quot;For debugging&quot;);</span>
     <span class="c c-Singleline">//EndIf;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
-
 <p>also wrong:</p>
-<div class="codehilite"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="nv">Procedure</span> <span class="nv">BeforeDelete</span><span class="p">(</span><span class="nv">Failure</span><span class="p">)</span>
     <span class="nv">If</span> <span class="kc">True</span> <span class="k">Then</span>
         <span class="c c-Singleline">// Ivanov: need fix</span>
     <span class="nv">EndIf</span><span class="p">;</span>
 <span class="k">EndProcedure</span>
 </code></pre></div>
-
 <p>Correct: after debugging or refactoring is completed, remove the handler BeforeDelete from the code.</p>
 <p><strong>ATTENTION</strong> :
  A code block is considered commented , if at least one line inside the block is defined as code.</p>
@@ -895,12 +893,11 @@
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Diagnostic-ignorance-in-code">Diagnostic ignorance in code<a class="headerlink" href="#Diagnostic-ignorance-in-code" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommentedCode-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CommentedCode-off</span>
 <span class="c c-Singleline">// BSLLS:CommentedCode-on</span>
 </code></pre></div>
-
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CommentedCode&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CommentedCode&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.9</span>
 <span class="p">}</span>
 </code></pre></div>

@@ -858,25 +858,20 @@
 Если в конфигурации не используется БСП, следует обязательно совмещать вызов РольДоступна() с проверкой на ПривилегированныйРежим().</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-
-<div class="codehilite"><pre><span></span><code><span class="err">Неправильно</span><span class="o">:</span>
-<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;ДобавлениеИзменениеСтранМира&quot;</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
-<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;ПросмотрОтчетаПопулярныеСтраны&quot;</span><span class="o">)</span> <span class="err">Тогда</span>
+<p>Неправильно:
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s1">&quot;ДобавлениеИзменениеСтранМира&quot;</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s1">&quot;ПросмотрОтчетаПопулярныеСтраны&quot;</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="err">Правильно</span><span class="o">:</span>
-<span class="err">Если</span> <span class="err">ПравоДоступа</span><span class="o">(</span><span class="s2">&quot;Редактирование&quot;</span><span class="o">,</span> <span class="err">Метаданные</span><span class="o">.</span><span class="err">Справочники</span><span class="o">.</span><span class="err">СтраныМира</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
-<span class="err">Если</span> <span class="err">ПравоДоступа</span><span class="o">(</span><span class="s2">&quot;Просмотр&quot;</span><span class="o">,</span> <span class="err">Метаданные</span><span class="o">.</span><span class="err">Отчеты</span><span class="o">.</span><span class="err">ПопулярныеСтраны</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
+Правильно:
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">ПравоДоступа</span><span class="p">(</span><span class="s1">&quot;Редактирование&quot;</span><span class="p">,</span> <span class="nb">Метаданные</span><span class="o">.</span><span class="nb">Справочники</span><span class="o">.</span><span class="nv">СтраныМира</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
+<span class="k">Если</span> <span class="nb">ПравоДоступа</span><span class="p">(</span><span class="s1">&quot;Просмотр&quot;</span><span class="p">,</span> <span class="nb">Метаданные</span><span class="o">.</span><span class="nb">Отчеты</span><span class="o">.</span><span class="nv">ПопулярныеСтраны</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="err">Неправильно</span><span class="o">:</span>
-<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;Казначей&quot;</span><span class="o">)</span> <span class="err">Тогда</span> <span class="o">...</span>
+Неправильно:
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s1">&quot;Казначей&quot;</span><span class="p">)</span> <span class="k">Тогда</span> <span class="o">...</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="err">Правильно</span><span class="o">:</span>
-<span class="err">Если</span> <span class="err">РольДоступна</span><span class="o">(</span><span class="s2">&quot;Казначей&quot;</span><span class="o">)</span> <span class="err">ИЛИ</span> <span class="err">ПривилегированныйРежим</span><span class="o">()</span> <span class="err">Тогда</span> <span class="o">...</span>
-</code></pre></div>
-
+Правильно:
+<div class="highlight"><pre><span></span><code><span class="k">Если</span> <span class="nb">РольДоступна</span><span class="p">(</span><span class="s1">&quot;Казначей&quot;</span><span class="p">)</span> <span class="k">ИЛИ</span> <span class="nb">ПривилегированныйРежим</span><span class="p">()</span> <span class="k">Тогда</span> <span class="o">...</span>
+</code></pre></div></p>
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
@@ -886,12 +881,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:IsInRoleMethod-off</span>
 <span class="c c-Singleline">// BSLLS:IsInRoleMethod-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;IsInRoleMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;IsInRoleMethod&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

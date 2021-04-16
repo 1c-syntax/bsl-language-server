@@ -852,7 +852,7 @@
 <p>Код, расположенный после операторов "Возврат", "Перейти", "ВызватьИсключение", "Прервать", "Продолжить", никогда не будет исполнен.</p>
 <p>Ошибки недостижимого кода могут возникать в результате невнимательности разработчика, при редактировании "чужого кода".</p>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">Пример</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="k">Процедура</span> <span class="nv">Пример</span><span class="p">()</span>
     <span class="k">Возврат</span><span class="p">;</span>
     <span class="c c-Singleline">// Код ниже оператора Возврат никогда не будет исполнен</span>
     <span class="k">Для</span> <span class="k">каждого</span> <span class="nb">Строка</span> <span class="k">Из</span> <span class="nv">Строки</span> <span class="k">Цикл</span>
@@ -862,8 +862,7 @@
     <span class="k">КонецЦикла</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span> <span class="nv">Параметр2</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример</span><span class="p">(</span><span class="nv">Параметр1</span><span class="p">,</span> <span class="nv">Параметр2</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">Ошибка</span> <span class="k">Тогда</span>
         <span class="nv">ВызватьИсключение</span> <span class="s1">&quot;Возникла ошибка&quot;</span><span class="p">;</span>
         <span class="c c-Singleline">// После вызова исключения код будет проигнорирован</span>
@@ -872,16 +871,14 @@
     <span class="k">Возврат</span> <span class="nv">Параметр1</span><span class="p">;</span>
 <span class="k">КонецПроцедуры</span>
 </code></pre></div>
-
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnreachableCode-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:UnreachableCode-off</span>
 <span class="c c-Singleline">// BSLLS:UnreachableCode-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;UnreachableCode&quot;</span><span class="p">:</span> <span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;UnreachableCode&quot;</span><span class="p">:</span> <span class="kc">false</span>
 </code></pre></div>
                 
               

@@ -880,7 +880,7 @@
 <h3 id="Подсчет-Когнитивной-сложности">Подсчет Когнитивной сложности<a class="headerlink" href="#Подсчет-Когнитивной-сложности" title="Permanent link">&para;</a></h3>
 <p>Ниже приведены правила анализа кода, условия повышения когнитивной сложности.</p>
 <h4 id="Каждый-следующий-блок-увеличивает-сложность-на-1">Каждый следующий блок увеличивает сложность на 1<a class="headerlink" href="#Каждый-следующий-блок-увеличивает-сложность-на-1" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Цикл `Для каждого`</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>                <span class="c c-Singleline">// +1</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 
@@ -933,9 +933,8 @@
 
 <span class="nv">Значение</span> <span class="o">=</span> <span class="nv">А</span> <span class="o">&lt;&gt;</span> <span class="nv">B</span><span class="p">;</span>                                   <span class="c c-Singleline">// +1</span>
 </code></pre></div>
-
 <h4 id="За-каждый-уровень-вложенности-следующие-блоки-получают-дополнительную-единицу-сложности">За каждый уровень вложенности, следующие блоки получают дополнительную единицу сложности<a class="headerlink" href="#За-каждый-уровень-вложенности-следующие-блоки-получают-дополнительную-единицу-сложности" title="Permanent link">&para;</a></h4>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// Цикл `Для каждого`</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// Цикл `Для каждого`</span>
 <span class="k">Для</span> <span class="k">каждого</span> <span class="nv">Элемент</span> <span class="k">Из</span> <span class="nv">Коллекция</span> <span class="k">Цикл</span>
 <span class="k">КонецЦикла</span><span class="p">;</span>
 
@@ -962,11 +961,10 @@
 
 <span class="err">~</span><span class="nv">Метка</span><span class="p">:</span>
 </code></pre></div>
-
 <h4 id="Альтернативные-ветки-бинарные-операции-и-переход-на-метку-не-увеличивают-когнитивную-сложность-при-вложении">Альтернативные ветки, бинарные операции и переход на метку не увеличивают когнитивную сложность при вложении<a class="headerlink" href="#Альтернативные-ветки-бинарные-операции-и-переход-на-метку-не-увеличивают-когнитивную-сложность-при-вложении" title="Permanent link">&para;</a></h4>
 <h2 id="Примеры">Примеры<a class="headerlink" href="#Примеры" title="Permanent link">&para;</a></h2>
 <p>Ниже на примерах кода произведен рассчет когнитивной сложности методов.</p>
-<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример1</span><span class="p">(</span><span class="nv">ТипКласса</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример1</span><span class="p">(</span><span class="nv">ТипКласса</span><span class="p">)</span>
     <span class="k">Если</span> <span class="nv">ТипКласса</span><span class="o">.</span><span class="nv">Неизвестен</span><span class="p">()</span> <span class="k">Тогда</span>                                                  <span class="c c-Singleline">// +1, условие, вложенности нет</span>
         <span class="k">Возврат</span> <span class="nv">Символы</span><span class="o">.</span><span class="nv">НеизвестныйСимвол</span><span class="p">;</span>
     <span class="k">КонецЕсли</span><span class="p">;</span>
@@ -999,8 +997,7 @@
     <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецФункции</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример2</span><span class="p">(</span><span class="nv">Документ</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">Функция</span> <span class="nv">Пример2</span><span class="p">(</span><span class="nv">Документ</span><span class="p">)</span>
     <span class="nb">НачатьТранзакцию</span><span class="p">();</span>
     <span class="nv">НадоПровести</span> <span class="o">=</span> <span class="o">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">Проведен</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span>                                                        <span class="c c-Singleline">// +1, тернарный оператор</span>
                                         <span class="o">?</span><span class="p">(</span><span class="nv">Документ</span><span class="o">.</span><span class="nv">ПометкаУдаления</span><span class="p">,</span> <span class="kc">ЛОЖЬ</span><span class="p">,</span> <span class="kc">ИСТИНА</span><span class="p">));</span>                  <span class="c c-Singleline">// +2, вложенный тернарный оператор, вложенность 1</span>
@@ -1053,7 +1050,6 @@
     <span class="k">Возврат</span> <span class="kc">Неопределено</span><span class="p">;</span>
 <span class="k">КонецФункции</span>
 </code></pre></div>
-
 <h2 id="Источники">Источники<a class="headerlink" href="#Источники" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf">Cognitive complexity, ver. 1.4</a></li>
@@ -1061,12 +1057,11 @@
 <h2 id="Сниппеты">Сниппеты<a class="headerlink" href="#Сниппеты" title="Permanent link">&para;</a></h2>
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 <h3 id="Экранирование-кода">Экранирование кода<a class="headerlink" href="#Экранирование-кода" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
+<div class="highlight"><pre><span></span><code><span class="c c-Singleline">// BSLLS:CognitiveComplexity-off</span>
 <span class="c c-Singleline">// BSLLS:CognitiveComplexity-on</span>
 </code></pre></div>
-
 <h3 id="Параметр-конфигурационного-файла">Параметр конфигурационного файла<a class="headerlink" href="#Параметр-конфигурационного-файла" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="nt">&quot;CognitiveComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;CognitiveComplexity&quot;</span><span class="p">:</span> <span class="p">{</span>
     <span class="nt">&quot;complexityThreshold&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
     <span class="nt">&quot;checkModuleBody&quot;</span><span class="p">:</span> <span class="kc">true</span>
 <span class="p">}</span>
