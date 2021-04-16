@@ -50,7 +50,9 @@ Then the method of setting the parameter values will look:
 ### Test change
 
 It is necessary to add a test to change the diagnostic settings.  
-The test is added to the diagnostic test class _(a separate method for each combination of diagnostic setting options)_. At the beginning of the test, you need to set the value of the diagnostic parameter, the subsequent steps are similar to the general rules for writing tests. Для установки параметра диагностики из теста необходимо получить конфигурацию диагностики по умолчанию, используя метод `getDefaultConfiguration()` from the metadata of the current diagnostic `diagnosticInstance.getInfo()`. The next step is to change the parameter value by adding to the configuration collection, and then reconfigure using the method `configure`. Example
+The test is added to the diagnostic test class _(a separate method for each combination of diagnostic setting options)_. At the beginning of the test, you need to set the value of the diagnostic parameter, the subsequent steps are similar to the general rules for writing tests.  
+To set a diagnostic parameter from a test, you need to get the default diagnostic configuration using the method `getDefaultConfiguration()` from the metadata of the current diagnostic `diagnosticInstance.getInfo()`. The next step is to change the parameter value by adding to the configuration collection, and then reconfigure using the method `configure`.  
+Example
 
 ```java
 // get current configuration
@@ -66,7 +68,9 @@ diagnosticInstance.configure(configuration);
 
 ### Adding a Parameter Description
 
-For correct operation, it is necessary to add a parameter description for each language in the diagnostic resource files. Diagnostic resources are located in files`resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_en.properties` and `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_ru.properties`.
+For correct operation, it is necessary to add a parameter description for each language in the diagnostic resource files.  
+Diagnostic resources are located in files`resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_en.properties` and `resources/com/github/_1c_syntax/bsl/languageserver/diagnostics/<DIAGNOSTIC_KEY>_ru.properties`.  
+In each file, add a new line with the parameter name and description
 
 ```ini
 commentsAnnotation=Skip annotation comments starting with the specified substrings. A comma separated list. For example: //@,//(c)
