@@ -1,6 +1,6 @@
 # Quick start
 
-The following describes the steps to get started quickly.
+The following describes the steps to get started quickly
 
 ## Create new diagnostics
 
@@ -13,7 +13,7 @@ The following describes the steps to get started quickly.
    3. `git update-index --assume-unchanged ./.idea/misc.xml`
 5. Open the `build.gradle.kts` file from the project directory, agree to import the dependencies, wait for them to download
 6. Run (from context menu or ide console) command `gradlew test`, if passed then all settings are correct
-7. Make yourself familiar with  [diagnostics development example](DiagnosticExample.md) , [structure and files purpose description,](DiagnosticStructure.md) and other articles in the [section for developers](index.md)
+7. Make yourself familiar with [diagnostics development example](DiagnosticExample.md), [structure and files purpose description,](DiagnosticStructure.md) and other articles in the [section for developers](index.md)
 
 ## Using the AST Debugger
 
