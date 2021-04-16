@@ -10,7 +10,7 @@
 You should call at first RollbackTransaction method in Exception block, and then execute other actions if required.
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
-```
+```bsl
 BeginTransaction();
 Attempt
     CommitTransaction();
