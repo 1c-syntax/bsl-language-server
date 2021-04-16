@@ -13,7 +13,7 @@ Execution query in cycle.
 
 Bad
 
-```Bsl
+```bsl
 
 // BanksToProcessing - contains an array of banks
 
@@ -38,7 +38,7 @@ EndDo;
 
 Good
 
-```Bsl
+```bsl
 // BanksToProcess - contains an array of banks
 
 MergedQuery = New Query("
