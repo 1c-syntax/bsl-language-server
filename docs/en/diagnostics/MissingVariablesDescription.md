@@ -29,9 +29,9 @@ Var Context; // Detailed description that explains the purpose of the variable  
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
 
-* Источник: [Соглашения при написания кода. Структура модуля](https://its.1c.ru/db/v8std#content:455:hdoc)
+* Reference: [Code conventions. Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
