@@ -8,7 +8,7 @@ Output the analize result in stdout and/or attached logger. Output result, retur
 
 ## Sample output
 
-```
+```log
 Analysis date: 2019-01-28T15:32:06.856
 [FileInfo(path=C:\src\cf\Catalogs\MyCatalog\Ext\ManagerModule.bsl, diagnostics=[]), FileInfo(path=C:\src\cf\Catalogs\Goods\Ext\ObjectModule.bsl, diagnostics=[Diagnostic [
   range = Range [
