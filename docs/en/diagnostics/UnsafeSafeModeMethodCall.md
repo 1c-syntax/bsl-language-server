@@ -13,7 +13,7 @@ Using the Safe Mode () method, in which the result is implicitly converted to a 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 Wrong:
-```
+```bsl
 If SafeMode() Then
      // some logic in safe mode...
 EndIf;
@@ -23,7 +23,7 @@ If No SafeMode() Then
 EndIf;
 ```
 Correct:
-```
+```bsl
 If SafeMode() <> False Then
    // some code
 EndIf;
