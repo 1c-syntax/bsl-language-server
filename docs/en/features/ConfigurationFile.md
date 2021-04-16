@@ -25,18 +25,17 @@ The created file must be specified using the key `--configuration` *(or `-c`)* w
 
 You can use the following JSON schema to make it easier to compile and edit a configuration file:
 
+log https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 ```
-https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
-```
 
-## Example
+## Пример
 
-The following is an example of a settings:
+Ниже приведен пример настройки:
 
-* Language of diagnostics messages - English;
-* Changes the diagnostic setting for [LineLength - Line Length limit](../diagnostics/LineLength.md), set the limit for the length of a string to 140 characters;
-* Disable [MethodSize - Method size restriction diagnostic](../diagnostics/MethodSize.md).
-* Enables the calculation of diagnostics in continuous mode (`computeTrigger = onType`)
+* Устанавливает язык сообщений диагностик - английский;
+* Изменяет настройку диагностики [LineLength - Ограничение на длину строки](../diagnostics/LineLength.md), устанавливая предел длины строки в 140 символов;
+* Отключает диагностику [MethodSize - Ограничение на размер метода](../diagnostics/MethodSize.md).
+* Включает расчет диагностик в непрерывном режиме (`computeTrigger = onType`)
 
 ```json
 {
