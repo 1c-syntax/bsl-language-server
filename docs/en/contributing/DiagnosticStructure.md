@@ -19,19 +19,19 @@ This article contains rules of diagnostics usage, creation and information about
 
 ## Diagnostics structure
 
-Диагностика состоит из набора файлов, подробное описание которых приведено в разделах ниже.  
-Необходимый набор файлов в составе диагностики на момент написания статьи и правила их именования
+Diagnostics consists of a set of files, which are described in detail in the sections below.   
+The required set of files as part of the diagnostics at the time of this writing and the rules for their naming
 
-- Класс реализации диагностики.                 Имя файла образуется по принципу `%КлючДиагностики%` + `Diagnosctic.java`
-- Класс теста диагностики.                      Имя файла образуется по принципу `%КлючДиагностики%` + `DiagnoscticTest.java`
-- Файл ресурса диагностики на русском языке.    Имя файла образуется по принципу `%КлючДиагностики%` + `Diagnosctic_ru.properties`
-- Файл ресурса диагностики на английском языке. Имя файла образуется по принципу `%КлючДиагностики%` + `Diagnosctic_en.properties`
-- Файл ресурса (фикстура) теста.                Имя файла образуется по принципу `%КлючДиагностики%` + `Diagnosctic.bsl`
-- Файл описания диагностики на русском языке.   Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
-- Файл ресурса диагностики на английском языке. Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
+- Diagnostic implementation class.                 The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic.java `
+- Diagnostics test class.                      The file name is generated according to the principle `% Diagnostic Key% ` + ` DiagnoscticTest.java `
+- Diagnostic resource file in Russian.    The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
+- Diagnostic resource file in English. The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
+- Resource file (fixture) test.                Имя файла образуется по принципу `%КлючДиагностики%` + `Diagnosctic.bsl`
+- Diagnostic description file in Russian.   Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
+- Diagnostic resource file in English. Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
 
 **Note:**  
-To create necessary files in right places, should run command `gradlew newDiagnostic --key="KeyDiagnostic"`, where `KeyDiagnostic` should be replaced with your own diagnostics key. Подробная информация в справке `gradlew -q help --task newDiagnostic`.
+To create necessary files in right places, should run command `gradlew newDiagnostic --key="KeyDiagnostic"`, where `KeyDiagnostic` should be replaced with your own diagnostics key. Details in help `gradlew -q help --task newDiagnostic`.
 
 ## Diagnostics implementation class
 
@@ -43,16 +43,16 @@ To create necessary files in right places, should run command `gradlew newDiagno
 
 На момент написания статьи имеются следующие свойства:
 
-- Тип диагностики `type` и ее важность `severity`, для каждой диагностики обязательно их определение. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к [статье](DiagnosticTypeAndSeverity.md).
+- The type of diagnostics is `type` and its importance is `severity`, for each diagnostics it is necessary to define them. Для того, чтобы правильно выбрать тип и важность диагностики, можно обратиться к [статье](DiagnosticTypeAndSeverity.md).
 - Время на исправление замечания `minutesToFix` (по умолчанию 0). Данное значение используется при расчете общего техдолга проекта в трудозатрах на исправление всех замечаний (сумма времени на исправление по всем обнаруженным замечаниям). Стоит указывать время, максимально реалистичное, которое разработчик должен потратить на исправление.
 - Набор тэгов `tag` диагностики, указывающих группы, к котором она относится. Подробнее о тэга в [статье](DiagnosticTag.md).
 - Границы применимости `scope` (по умолчанию `ALL`, т.е. без ограничения). BSL LS поддерживает несколько языков (oscript и bsl) и диагностики могут применяться как к одному конкретному языку, так и ко всем сразу.
 - Активность правила по-умолчанию `activatedByDefault` (по умолчанию `Истина`). При разработке экспериментальных, спорных либо не применимых в большинстве проектов, стоит по умолчанию отключать диагностику, активацию выполнит конечный пользователь решения.
-- Режим совместимости `compatibilityMode`, по которому фильтруются диагностики при использовании метаданных. По умолчанию `UNDEFINED`.
+- Режим совместимости `compatibilityMode`, по которому фильтруются диагностики при использовании метаданных. The default is `UNDEFINED`.
 
 Последние два могут быть опущены.
 
-Пример аннотации
+Annotation example
 
 ```java
 @DiagnosticMetadata(
