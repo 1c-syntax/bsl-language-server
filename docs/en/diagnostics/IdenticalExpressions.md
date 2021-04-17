@@ -29,7 +29,7 @@ If Summ <> 0 AND SummNDS <> 0 Then
 EndIf;
 ```
 
-ИЛИ
+OR
 
 ```bsl
 If Summ <> 0 Then
@@ -39,7 +39,7 @@ If Summ <> 0 Then
 EndIf;
 ```
 
-## Сниппеты
+## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
 ### Diagnostic ignorance in code
