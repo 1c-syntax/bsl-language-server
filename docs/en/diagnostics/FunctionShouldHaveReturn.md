@@ -27,5 +27,5 @@ Based on the above-mentioned, a `function` which does not contain a return is it
 ### Parameter for config
 
 ```json
-"FunctionShouldHaveReturn": false
+Параметр конфигурационного файла
 ```
