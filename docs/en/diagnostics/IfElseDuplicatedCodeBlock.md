@@ -1,4 +1,4 @@
-# Duplicated code blocks in If...Then...ElseIf... statements (IfElseDuplicatedCodeBlock) (IfElseDuplicatedCodeBlock)
+# Duplicated code blocks in If...Then...ElseIf... statements (IfElseDuplicatedCodeBlock)
 
  |     Type     |        Scope        | Severity | Activated<br>by default | Minutes<br>to fix |     Tags     |
  |:------------:|:-------------------:|:--------:|:-----------------------------:|:-----------------------:|:------------:|
