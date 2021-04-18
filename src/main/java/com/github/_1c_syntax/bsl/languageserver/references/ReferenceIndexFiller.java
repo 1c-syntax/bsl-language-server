@@ -137,7 +137,8 @@ public class ReferenceIndexFiller {
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
-      index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+      var referenceKey = ReferenceDTO.of(mdoRef, moduleType, methodName);
+      index.addReference(documentContext.getUri(), range, referenceKey);
     }
 
     private Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
@@ -270,15 +271,15 @@ public class ReferenceIndexFiller {
         methodName = methodSymbol.get().getName();
       }
 
-      index.addVariableUsage(
-        documentContext.getUri(),
+      var referenceKey = ReferenceDTO.of(
         MdoRefBuilder.getMdoRef(documentContext),
         documentContext.getModuleType(),
         methodName,
         variableName,
-        range,
         !usage
       );
+
+      index.addReference(documentContext.getUri(), range, referenceKey);
     }
 
   }

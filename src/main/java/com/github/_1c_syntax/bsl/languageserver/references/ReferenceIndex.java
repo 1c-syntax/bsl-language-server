@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -33,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
 import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.keyvalue.MultiKey;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -42,11 +42,11 @@ import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -59,28 +59,22 @@ public class ReferenceIndex {
   private final ServerContext serverContext;
 
   /**
-   * Хранит информацию о том, какие symbolName (ключ MultiValuedMap) каких mdoRef каких moduleType (ключ MultiKey)
+   * Хранит информацию о том, какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind)
    * были вызваны из списка Location (URI + Range).
    */
-  private final Map<MultiKey<String>, MultiValuedMap<String, Location>> referencesTo = new HashMap<>();
+  private final Map<ReferenceDTO, List <Location>> referencesTo = new HashMap<>();
 
   /**
-   * Хранит информацию о том, какие symbolName с mdoRef с moduleType (ключ MultiKey) в каких URI были вызваны
-   * и в каких Range, расположены вызовы
+   * Хранит информацию о том, какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind) в каких URI были
+   *  вызваны и в каких Range, расположены вызовы
    */
-  private final Map<URI, MultiValuedMap<MultiKey<String>, Range>> referencesFrom = new HashMap<>();
+  private final Map<URI, MultiValuedMap<ReferenceDTO, Range>> referencesFrom = new HashMap<>();
 
   /**
    * Хранит информацию о том, в каких Range каких URI были вызваны
-   * какие symbolName каких mdoRef с каким moduleType (ключ MultiKey)
+   * какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind)
    */
-  private final Map<URI, Map<Range, MultiKey<String>>> referencesRanges = new HashMap<>();
-
-  /**
-   * Хранит информацию о том, в каких Range каких URI были использованы значения
-   * каких symbolName каких mdoRef с каким moduleType (ключ MultiKey)
-   */
-  private final Map<URI, Map<Range, MultiKey<String>>> variableWriteRanges = new HashMap<>();
+  private final Map<URI, Map<Range, ReferenceDTO>> referencesRanges = new HashMap<>();
 
   /**
    * Получить ссылки на символ.
@@ -91,20 +85,24 @@ public class ReferenceIndex {
   public List<Reference> getReferencesTo(SourceDefinedSymbol symbol) {
     var mdoRef = MdoRefBuilder.getMdoRef(symbol.getOwner());
     var moduleType = symbol.getOwner().getModuleType();
-    var key = getKey(mdoRef, moduleType);
+    var scopeName = symbol.getRootParent(SymbolKind.Method)
+      .map(Symbol::getName)
+      .orElse("");
 
-    // FIXME: Не нравится проверка на тип
+    // TODO: Можно уйти от двойного ключа для referencesTo, но тогда в referencesFrom будет храниться только
+    //       один вид ключа, что приведет к неправильному формированию Reference при выполнении getReferencesFrom
+    List<ReferenceDTO> keys = new ArrayList<>();
+    keys.add(ReferenceDTO.of(mdoRef, moduleType, scopeName, symbol.getSymbolKind(), symbol.getName(), false));
+
     if (symbol.getSymbolKind() == SymbolKind.Variable) {
-      key = symbol.getRootParent(SymbolKind.Method)
-        .map(sourceDefinedSymbol -> getVariableKey(mdoRef, moduleType, sourceDefinedSymbol.getName().toLowerCase(Locale.ENGLISH)))
-        .orElseGet(() -> getVariableKey(mdoRef, moduleType, ""));
+      keys.add(ReferenceDTO.of(mdoRef, moduleType, scopeName, symbol.getSymbolKind(), symbol.getName(), true));
     }
 
-    var symbolName = symbol.getName().toLowerCase(Locale.ENGLISH);
-
-    return referencesTo.getOrDefault(key, MultiMapUtils.emptyMultiValuedMap()).get(symbolName)
-      .stream()
-      .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
+    return keys.stream()
+      .map(key -> referencesTo.getOrDefault(key, Collections.emptyList()))
+      .flatMap(locations -> locations.stream()
+        .map(location -> referenceResolver.findReference(URI.create(location.getUri()), location.getRange().getStart()))
+      )
       .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
@@ -157,71 +155,26 @@ public class ReferenceIndex {
   public void clearReferences(URI uri) {
     String stringUri = uri.toString();
 
-    referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
-      Collection<Location> locations = referencesTo.get(convertRangesKeyToKey(multikey)).values();
-      locations.removeIf(location -> location.getUri().equals(stringUri));
-    });
-
-    variableWriteRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach((MultiKey<String> multikey) -> {
-      Collection<Location> locations = referencesTo.get(convertRangesKeyToKey(multikey)).values();
-      locations.removeIf(location -> location.getUri().equals(stringUri));
-    });
+    referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach(
+      referenceKey -> referencesTo
+        .get(referenceKey)
+        .removeIf(location -> location.getUri().equals(stringUri))
+    );
 
     referencesFrom.remove(uri);
     referencesRanges.remove(uri);
   }
 
-  /**
-   * Добавить вызов метода в индекс.
-   *
-   * @param uri URI документа, откуда произошел вызов.
-   * @param mdoRef Ссылка на объект-метаданных, к которому происходит обращение (например, CommonModule.ОбщийМодуль1).
-   * @param moduleType Тип модуля, к которому происходит обращение (например, {@link ModuleType#CommonModule}).
-   * @param symbolName Имя символа, к которому происходит обращение.
-   * @param range Диапазон, в котором происходит обращение к символу.
-   */
   @Synchronized
-  public void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
-    String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
-
+  public void addReference(URI uri, Range range, ReferenceDTO referenceKey) {
     Location location = new Location(uri.toString(), range);
-
-    MultiKey<String> key = getKey(mdoRef, moduleType);
-    MultiKey<String> rangesKey = getRangesKey(mdoRef, moduleType, symbolNameCanonical);
-    addReferenceToStorage(uri, range, symbolNameCanonical, location, key, rangesKey);
+    referencesTo.computeIfAbsent(referenceKey, k -> new ArrayList<>()).add(location);
+    referencesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(referenceKey, range);
+    referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, referenceKey);
   }
 
-  @Synchronized
-  public void addVariableUsage(URI uri,
-                               String mdoRef,
-                               ModuleType moduleType,
-                               String scopeName,
-                               String symbolName,
-                               Range range,
-                               boolean isWrite)
-  {
-    String scopeNameCanonical = scopeName.toLowerCase(Locale.ENGLISH);
-    String symbolNameCanonical = symbolName.toLowerCase(Locale.ENGLISH);
-
-    Location location = new Location(uri.toString(), range);
-
-    MultiKey<String> key = getVariableKey(mdoRef, moduleType, scopeNameCanonical);
-    MultiKey<String> rangesKey = getVariableRangesKey(mdoRef, moduleType, scopeNameCanonical, symbolNameCanonical);
-    addReferenceToStorage(uri, range, symbolNameCanonical, location, key, rangesKey);
-
-    if (isWrite) {
-      variableWriteRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
-    }
-
-  }
-
-  private Optional<Reference> buildReference(
-    URI uri,
-    Position position,
-    MultiKey<String> multikey,
-    Range selectionRange
-  ) {
-    return getSourceDefinedSymbol(multikey)
+  private Optional<Reference> buildReference(URI uri, Position position, ReferenceDTO referenceKey, Range selectionRange) {
+    return getSourceDefinedSymbol(referenceKey)
       .map((SourceDefinedSymbol symbol) -> {
         SourceDefinedSymbol from = getFromSymbol(uri, position);
         return Reference.builder()
@@ -229,21 +182,21 @@ public class ReferenceIndex {
           .symbol(symbol)
           .uri(uri)
           .selectionRange(selectionRange)
-          .isWrite(isReferenceWrite(uri, position))
+          .isWrite(referenceKey.isWrite())
           .build();
       })
       .filter(ReferenceIndex::isReferenceAccessible);
   }
 
-  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(MultiKey<String> multikey) {
-    String mdoRef = multikey.getKey(0);
-    ModuleType moduleType = getModuleType(multikey.getKey(1));
-    String symbolName = multikey.getKey(multikey.size() - 1);
+  private Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ReferenceDTO referenceKey) {
+    String mdoRef = referenceKey.getMdoRef();
+    ModuleType moduleType = referenceKey.getModuleType();
+    String symbolName = referenceKey.getSymbolName();
 
-    if (multikey.size() == 4) { // FIXME: Не нравится проверка на волшебное число, хотелось бы заменить на "интерфейс"
+    if (referenceKey.getSymbolKind() == SymbolKind.Variable) {
       return serverContext.getDocument(mdoRef, moduleType)
         .map(DocumentContext::getSymbolTree)
-        .flatMap(symbolTree -> symbolTree.getMethodSymbol(multikey.getKey(2))
+        .flatMap(symbolTree -> symbolTree.getMethodSymbol(referenceKey.getScopeName())
           .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
           .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
@@ -264,62 +217,6 @@ public class ReferenceIndex {
       .filter(symbol -> Ranges.containsPosition(symbol.getRange(), position))
       .findFirst()
       .or(() -> symbolTree.map(SymbolTree::getModule))
-      .orElseThrow();
-  }
-
-  private boolean isReferenceWrite(URI uri, Position position) {
-    return variableWriteRanges.getOrDefault(uri, Collections.emptyMap())
-      .entrySet()
-      .stream()
-      .anyMatch(entry -> Ranges.containsPosition(entry.getKey(), position));
-  }
-
-  private void addReferenceToStorage(
-    URI uri,
-    Range range,
-    String symbolNameCanonical,
-    Location location,
-    MultiKey<String> key,
-    MultiKey<String> rangesKey
-  ) {
-    referencesTo.computeIfAbsent(key, k -> new ArrayListValuedHashMap<>()).put(symbolNameCanonical, location);
-    referencesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(rangesKey, range);
-    referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, rangesKey);
-  }
-
-  private static MultiKey<String> getKey(String mdoRef, ModuleType moduleType) {
-    return new MultiKey<>(mdoRef, moduleType.toString());
-  }
-
-  private static MultiKey<String> getRangesKey(String mdoRef, ModuleType moduleType, String symbolName) {
-    return new MultiKey<>(mdoRef, moduleType.getFileName(), symbolName);
-  }
-
-  private static MultiKey<String> getVariableKey(String mdoRef, ModuleType moduleType, String scopeName) {
-    return new MultiKey<>(mdoRef, moduleType.getFileName(), scopeName);
-  }
-
-  private static MultiKey<String> getVariableRangesKey(
-    String mdoRef,
-    ModuleType moduleType,
-    String scopeName,
-    String symbolName
-  ) {
-    return new MultiKey<>(mdoRef, moduleType.getFileName(), scopeName, symbolName);
-  }
-
-  private static MultiKey<String> convertRangesKeyToKey(MultiKey<String> rangesKey) {
-    if (rangesKey.size() == 3) {
-      return new MultiKey<>(rangesKey.getKey(0), rangesKey.getKey(1));
-    }
-
-    return new MultiKey<>(rangesKey.getKey(0), rangesKey.getKey(1), rangesKey.getKey(2));
-  }
-
-  private static ModuleType getModuleType(String filename) {
-    return Arrays.stream(ModuleType.values())
-      .filter(type -> type.getFileName().equals(filename))
-      .findFirst()
       .orElseThrow();
   }
 
