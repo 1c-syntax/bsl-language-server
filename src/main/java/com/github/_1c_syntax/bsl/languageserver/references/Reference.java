@@ -23,11 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
-import com.sun.istack.NotNull;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;
 import java.util.Optional;
@@ -42,25 +43,25 @@ public class Reference {
   /**
    * Символ, в котором располагается данная ссылка.
    */
-  @NotNull
+  @NonNull
   SourceDefinedSymbol from;
 
   /**
    * Символ, на который указывает ссылка.
    */
-  @NotNull
+  @NonNull
   Symbol symbol;
 
   /**
    * URI, в котором находится ссылка.
    */
-  @NotNull
+  @NonNull
   URI uri;
 
   /**
    * Диапазон, в котором располагается ссылка.
    */
-  @NotNull
+  @NonNull
   Range selectionRange;
 
   /**
