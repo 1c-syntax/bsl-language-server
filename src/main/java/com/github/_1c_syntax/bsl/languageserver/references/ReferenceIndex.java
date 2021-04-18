@@ -49,6 +49,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 @Component
@@ -62,7 +64,7 @@ public class ReferenceIndex {
    * Хранит информацию о том, какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind)
    * были вызваны из списка Location (URI + Range).
    */
-  private final Map<ReferenceDTO, List <Location>> referencesTo = new HashMap<>();
+  private final ConcurrentMap<ReferenceDTO, List <Location>> referencesTo = new ConcurrentHashMap<>();
 
   /**
    * Хранит информацию о том, какие ReferenceDTO (symbolName + mdoRef + moduleType + symbolKind) в каких URI были
@@ -89,14 +91,8 @@ public class ReferenceIndex {
       .map(Symbol::getName)
       .orElse("");
 
-    // TODO: Можно уйти от двойного ключа для referencesTo, но тогда в referencesFrom будет храниться только
-    //       один вид ключа, что приведет к неправильному формированию Reference при выполнении getReferencesFrom
     List<ReferenceDTO> keys = new ArrayList<>();
     keys.add(ReferenceDTO.of(mdoRef, moduleType, scopeName, symbol.getSymbolKind(), symbol.getName(), false));
-
-    if (symbol.getSymbolKind() == SymbolKind.Variable) {
-      keys.add(ReferenceDTO.of(mdoRef, moduleType, scopeName, symbol.getSymbolKind(), symbol.getName(), true));
-    }
 
     return keys.stream()
       .map(key -> referencesTo.getOrDefault(key, Collections.emptyList()))
@@ -157,7 +153,7 @@ public class ReferenceIndex {
 
     referencesRanges.getOrDefault(uri, Collections.emptyMap()).values().forEach(
       referenceKey -> referencesTo
-        .get(referenceKey)
+        .get(ReferenceDTO.of(referenceKey))
         .removeIf(location -> location.getUri().equals(stringUri))
     );
 
@@ -168,7 +164,7 @@ public class ReferenceIndex {
   @Synchronized
   public void addReference(URI uri, Range range, ReferenceDTO referenceKey) {
     Location location = new Location(uri.toString(), range);
-    referencesTo.computeIfAbsent(referenceKey, k -> new ArrayList<>()).add(location);
+    referencesTo.computeIfAbsent(ReferenceDTO.of(referenceKey), k -> new ArrayList<>()).add(location);
     referencesFrom.computeIfAbsent(uri, k -> new ArrayListValuedHashMap<>()).put(referenceKey, range);
     referencesRanges.computeIfAbsent(uri, k -> new HashMap<>()).put(range, referenceKey);
   }

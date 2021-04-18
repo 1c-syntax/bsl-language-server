@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.mdclasses.metadata.additional.ModuleType;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -40,7 +39,6 @@ public class ReferenceDTO {
 
   String symbolName;
 
-  //@EqualsAndHashCode.Exclude
   boolean isWrite;
 
   public static ReferenceDTO of(String mdoRef, ModuleType moduleType, String symbolName) {
@@ -66,6 +64,17 @@ public class ReferenceDTO {
       symbolKind,
       symbolName.toLowerCase(Locale.ENGLISH),
       isWrite
+    );
+  }
+
+  public static ReferenceDTO of(ReferenceDTO referenceKey) {
+    return new ReferenceDTO(
+      referenceKey.getMdoRef(),
+      referenceKey.getModuleType(),
+      referenceKey.getScopeName(),
+      referenceKey.getSymbolKind(),
+      referenceKey.getSymbolName(),
+      false
     );
   }
 }
