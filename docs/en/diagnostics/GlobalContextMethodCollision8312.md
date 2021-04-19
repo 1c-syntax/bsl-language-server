@@ -8,7 +8,7 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-Начиная с версии платформы `8.3.12`, реализованы новые методы глобального контекста, которые могут совпаcть по имени с существующими функциями в коде конфигурации прикладного решений.
+The platform version `8.3.12` implements new methods of the global context, which may coincide with the configuration functions of the application solution.
 
 |      Russian variant       |  English variant  |
 |:--------------------------:|:-----------------:|
@@ -23,7 +23,7 @@
 |    ПобитовыйСдвигВлево     | BitwiseShiftLeft  |
 |    ПобитовыйСдвигВправо    | BitwiseShiftRight |
 
-Необходимо существующие функции конфигурации прикладного решения необходимо либо переименовать, либо удалить, заменив обращение к ним на методы глобального контекста.
+The configuration functions must either be renamed or deleted, replacing the call to them with the methods of the global context.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
