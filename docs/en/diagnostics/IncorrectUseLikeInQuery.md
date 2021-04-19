@@ -11,13 +11,13 @@
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-При использовании в тексте запроса оператора `ПОДОБНО` допустимо использовать только
-- константные строковые литералы
-- параметры запроса
+When using the operator `LIKE` in the query text, it is allowed to use only
+- constant string literals
+- query parameters
 
-Запрещается формировать строку шаблона при помощи вычислений, использовать конкатенацию строк средствами языка запросов.
+It is forbidden to form a template string using calculations, use string concatenation using the query language.
 
-Запросы, в которых управляющие символы шаблона оператора `ПОДОБНО` находятся в полях запроса или в вычисляемых выражениях, по-разному интерпретируются на различных СУБД.
+Queries in which the control characters of the operator template `LIKE` are in query fields or in calculated expressions are interpreted differently on different DBMSs.
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
