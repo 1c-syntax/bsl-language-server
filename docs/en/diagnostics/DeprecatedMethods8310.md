@@ -14,7 +14,7 @@ GetShortApplicationCaption();
 SetClientApplicationCaption();
 GetClientApplicationCaption();
 ClientApplicationBaseFontCurrentVariant();
-ClientApplicationInterfaceCurrentVariant();
+ClientApplicationInterfaceCurrentVariant().
 ```
 
 ## Sources
