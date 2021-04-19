@@ -9,14 +9,14 @@ plugins {
     jacoco
     id("net.kyori.indra.license-header") version "1.3.1"
     id("org.sonarqube") version "3.1.1"
-    id("io.franzbecker.gradle-lombok") version "4.0.0"
+    id("io.freefair.lombok") version "6.0.0-m2"
     id("me.qoomon.git-versioning") version "4.2.0"
     id("com.github.ben-manes.versions") version "0.38.0"
-    id("io.freefair.javadoc-links") version "5.3.3.3"
+    id("io.freefair.javadoc-links") version "6.0.0-m2"
     id("org.springframework.boot") version "2.4.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "5.3.3.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.0.0-m2"
     id("ru.vyarus.pom") version "2.1.0"
 }
 
@@ -42,7 +42,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val languageToolVersion = "5.2"
+val languageToolVersion = "5.3"
 
 dependencies {
 
@@ -53,7 +53,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.11.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "0.18.0") {
@@ -77,22 +77,18 @@ dependencies {
 
     // commons utils
     implementation("commons-io", "commons-io", "2.8.0")
-    implementation("org.apache.commons", "commons-lang3", "3.11")
+    implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.0")
+    implementation("me.tongfei", "progressbar", "0.9.1")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // COMPILE
-
-    // lombok
-    compileOnly("org.projectlombok", "lombok", lombok.version)
-    annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
     // stat analysis
     compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
@@ -105,7 +101,7 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
 
@@ -120,6 +116,10 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xlint:unchecked")
     options.compilerArgs.add("-Xlint:deprecation")
+}
+
+tasks.withType<Javadoc> {
+    options.encoding = "UTF-8"
 }
 
 tasks.jar {
@@ -205,40 +205,6 @@ sonarqube {
         property("sonar.projectName", "BSL Language Server")
         property("sonar.exclusions", "**/gen/**/*.*")
         property("sonar.coverage.jacoco.xmlReportPaths", "$buildDir/reports/jacoco/test/jacoco.xml")
-    }
-}
-
-lombok {
-    version = "1.18.18"
-    sha256 = "601ec46206e0f9cac2c0583b3350e79f095419c395e991c761640f929038e9cc"
-}
-
-tasks {
-    val delombok by registering(JavaExec::class) {
-        dependsOn(compileJava)
-
-        main = project.extensions.findByType(io.franzbecker.gradle.lombok.LombokPluginExtension::class)!!.main
-        args = listOf("delombok")
-        classpath = project.configurations.getByName("compileClasspath")
-
-        jvmArgs = listOf("-Dfile.encoding=UTF-8")
-        val outputDir by extra { file("$buildDir/delombok") }
-        outputs.dir(outputDir)
-        sourceSets["main"].java.srcDirs.forEach {
-            inputs.dir(it)
-            args(it, "-d", outputDir)
-        }
-        doFirst {
-            outputDir.delete()
-        }
-    }
-
-    javadoc {
-        dependsOn(delombok)
-        val outputDir: File by delombok.get().extra
-        source = fileTree(outputDir)
-        isFailOnError = false
-        options.encoding = "UTF-8"
     }
 }
 
