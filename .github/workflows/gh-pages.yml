@@ -22,7 +22,7 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v2
       with:
-        java-version: 15
+        java-version: 16
         distribution: 'adopt'
 
     - name: Build javadoc
