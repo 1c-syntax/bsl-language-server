@@ -7,7 +7,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Функция "ТекущаяДата" является устаревшей. Рекомендуется использовать функцию "ТекущаяДатаСеанса".
+The "CurrentDate" function has been deprecated. It is recommended to use the "CurrentSessionDate" function.
 
 ## Examples
 Incorrect:
