@@ -8,7 +8,8 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-When you develop applications, note that not only execution of a code written in the Enterprise mode is unsafe, but also places, where the `Execute` or `Eval` methods are used to execute the code created based on parameters passed to server functions and procedures.<br>If the execution of arbitrary code Is necessary then it has to be preliminarily checked
+When you develop applications, note that not only execution of a code written in the Enterprise mode is unsafe, but also places, where the `Execute` or `Eval` methods are used to execute the code created based on parameters passed to server functions and procedures.  
+If the execution of arbitrary code Is necessary then it has to be preliminarily checked.
 
 **This restriction is not applicable to the code being executed on the client.**
 
