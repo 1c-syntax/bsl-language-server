@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1618824834876,
+  "lastUpdate": 1618825958544,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -10106,6 +10106,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8868126709956552",
             "extra": "mean: 82.46441539128621 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Gryzlov",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a5a88ba963fe3cf6120a882c190f4675397ea639",
+          "message": "Merge pull request #1629 from 1c-syntax/feature/deps-bump\n\nОбновление зависимостей. Смена ломбок-плагина на более современный и простой",
+          "timestamp": "2021-04-19T12:37:23+03:00",
+          "tree_id": "366ccf807f5351e7b97c5e47ad1530cb40206c42",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/a5a88ba963fe3cf6120a882c190f4675397ea639"
+        },
+        "date": 1618825954442,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 82.7428765296936,
+            "unit": "sec",
+            "range": "stddev: 1.2786302180195377",
+            "extra": "mean: 82.7428765296936 sec\nrounds: 3"
           }
         ]
       }
