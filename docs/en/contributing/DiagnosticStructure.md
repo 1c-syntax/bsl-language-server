@@ -26,9 +26,9 @@ The required set of files as part of the diagnostics at the time of this writing
 - Diagnostics test class.                      The file name is generated according to the principle `% Diagnostic Key% ` + ` DiagnoscticTest.java `
 - Diagnostic resource file in Russian.    The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
 - Diagnostic resource file in English. The file name is formed according to the principle `% Diagnostic Key% ` + ` Diagnosctic_en.properties `
-- Resource file (fixture) test.                Имя файла образуется по принципу `%КлючДиагностики%` + `Diagnosctic.bsl`
-- Diagnostic description file in Russian.   Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
-- Diagnostic resource file in English. Имя файла образуется по принципу `%КлючДиагностики%` + `.md`
+- Resource file (fixture) test.                The file name is formed according to the principle `%DiagnosticKey%` + `Diagnosctic.bsl`
+- Diagnostic description file in Russian.   The file name is formed according to the principle `%DiagnosticKey%` + `.md`
+- Diagnostic resource file in English. The file name is formed according to the principle `%DiagnosticKey%` + `.md`
 
 **Note:**  
 To create necessary files in right places, should run command `gradlew newDiagnostic --key="KeyDiagnostic"`, where `KeyDiagnostic` should be replaced with your own diagnostics key. Details in help `gradlew -q help --task newDiagnostic`.
@@ -73,8 +73,8 @@ Annotation example
 - для простых диагностик (проверка контекста модуля) стоит использовать наследование `AbstractVisitor` с реализацией единственного метода `check`
 - при необходимости анализа посещения узла / последовательности узлов, использовать стратегию `слушателя` нужно наследовать класс от `AbstractListenerDiagnostic`
 - в остальных случаях нужно использовать стратегию `визитера` и
-  - `AbstractVisitorDiagnostic` для диагностик кода 1С
-  - `AbstractSDBLVisitorDiagnostic` для диагностик запросов 1С
+  - `AbstractVisitorDiagnostic` for diagnostics of 1C code
+  - `AbstractSDBLVisitorDiagnostic` for diagnostics of 1C query
 
 Examples
 
