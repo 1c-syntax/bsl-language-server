@@ -38,10 +38,10 @@ Raise
     // Explanation why catching all exceptions untraceable for enduser.
     // ....
     // Write to log for system administrator.
-    ЗаписьЖурналаРегистрации(НСтр("ru = 'Выполнение операции'"),
-       УровеньЖурналаРегистрации.Ошибка,,,
-       ПодробноеПредставлениеОшибки(ИнформацияОбОшибке()));
-КонецПопытки;
+    WriteLogEvent(NStr("en = 'Action'"),
+       EventLogLevel.Error,,,
+       DetailErrorDescription(ErrorInfo()));
+EndTry;
 ```
 
 ## Sources
