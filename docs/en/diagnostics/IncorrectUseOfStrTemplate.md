@@ -41,7 +41,7 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Требования по локализации - Стандарт](https://its.1c.ru/db/v8std/content/763/hdoc)
+- [Standard: Localization Requirements](https://its.1c.ru/db/v8std/content/763/hdoc)
 
 ## Snippets
 
