@@ -15,21 +15,37 @@
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 All actions in the event-handler procedures BeforeWrite, OnWrite, BeforeDelete should be performed after checking for DataExchange.Load.
 
-This is necessary so that no business logic of the object is executed when writing the object through the data exchange mechanism, since it has already been executed for the object in the node where it was created. В этом случае все данные загружаются в ИБ "как есть", без искажений (изменений), проверок или каких-либо других дополнительных действий, препятствующих загрузке данных.
+This is necessary so that no business logic of the object is executed when writing the object through the data exchange mechanism, since it has already been executed for the object in the node where it was created. In this case, all data is loaded into the Information Base "as is", without distortion (changes), checks or any other actions that prevent data loading.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
 Bad:
 ```bsl
-Procedure BeforeWrite(Cancel)     If DataExchange.Load Then          Return;     EndIf;      // code handler     // ...
+Procedure BeforeWrite(Cancel) 
+
+     If Not Cancel Then
+        RumMyFunction();
+    EndIf;
+
+    // other code
+    //
+    // ...
 
 EndProcedure
 ```
 Good:
 ```bsl
-Procedure BeforeWrite(Cancel)      If Not Cancel Then         RandomAlgorithm();     EndIf;      // code handler     //     // ...      EndProcedure
-КонецПроцедуры
+Procedure BeforeWrite(Cancel) 
+
+     If DataExchange.Load Then
+        Return;
+    EndIf;
+
+    // other code
+    //
+    // ...
+EndProcedure
 ```
 
 ## Sources
