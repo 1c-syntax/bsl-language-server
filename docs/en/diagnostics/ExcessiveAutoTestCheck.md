@@ -18,7 +18,7 @@ EndIf;
 and in handler Filling in object module:
 
 ```bsl
-// Пропускаем обработку, чтобы гарантировать получение формы при передаче параметра "АвтоТест".
+// Skip processing to get the form when sending the "АвтоТест" program.
 If FillData = "АвтоТест" Then
     Return;
 EndIf;
