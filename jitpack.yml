@@ -1,2 +1,3 @@
-jdk:
-  - openjdk12
+before_install:
+   - sdk install java 16.0.0.hs-adpt
+   - sdk use java 16.0.0.hs-adpt
