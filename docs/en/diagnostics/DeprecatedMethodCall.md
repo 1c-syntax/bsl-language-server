@@ -7,7 +7,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-В случаях когда возникает необходимость отметить процедуру (функцию) как устаревшую, в первой строке ее описания размещается слово "Устарела." (англ. "Deprecated.").
+In cases where it becomes necessary to mark a procedure (function) as deprecated, the word "Deprecated." Is placed in the first line of its description (rus. "Устарела.").
 
 Use or extension of deprecated methods should be avoided. Marking method as deprecated is a warning that means the method will be removed in future versions and left for temporary backward compatibility.
 
