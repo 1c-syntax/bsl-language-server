@@ -36,7 +36,7 @@ The configuration functions must either be renamed or deleted, replacing the cal
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-* Источник: [Перевод конфигураций на платформу "1С:Предприятие 8.3" без режима совместимости с версией 8.2](https://its.1c.ru/db/metod8dev#content:5293:hdoc:pereimenovaniya_metodov_i_svojstv)
+* Source: [Migration configuration to the "1C: Enterprise 8.3" platform without the compatibility mode with version 8.2 ](https://its.1c.ru/db/metod8dev#content:5293:hdoc:pereimenovaniya_metodov_i_svojstv)
 
 ## Snippets
 
