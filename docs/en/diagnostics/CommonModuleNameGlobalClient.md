@@ -8,7 +8,7 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-For global modules, the "Global" postfix is added, "Client" postfix should not be added. "Global"), в этом случае постфикс "Клиент" добавлять не следует.
+For global modules, the "Global" (rus. "Глобальный") postfix is added , "Client" postfix should not be added.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
