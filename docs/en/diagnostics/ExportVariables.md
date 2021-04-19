@@ -23,7 +23,7 @@ EndProcedure
 
 ```
 
-We recommend that you use the AdditionalProperties object property for passing parameters between event subscription handlers and for passing parameters from external script to object module event handlers.
+We recommend that you use the AdditionalProperties object property for passing parameters between event subscription handlers and for passing parameters from external script to object module event handlers
 
 ```bsl
 Procedure BeforeWrite(Cancel)
