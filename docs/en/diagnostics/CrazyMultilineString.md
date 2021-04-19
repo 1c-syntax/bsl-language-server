@@ -8,11 +8,11 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-В исходном тексте многострочные константы могут задаваться двумя способами:
-- 'классический', в котором используется символ переноса строки и конкатенация строк
-- 'странный', при котором строки разделяются пробельными символами
+In source text, multi-line constants can be initialized in two ways:
+- 'classic', which uses line feed and string concatenation
+- 'crazy' where lines are separated by whitespace
 
-Второй способ усложняет восприятие, при его использовании проще допустить и пропустить ошибку.
+The second method complicates the perception; when using it, it is easy to make and miss a mistake.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
