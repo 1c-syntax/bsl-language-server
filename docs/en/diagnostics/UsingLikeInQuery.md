@@ -16,13 +16,13 @@
 ### Diagnostic ignorance in code
 
 ```bsl
-Реквизит ПОДОБНО "123%"
+Property LIKE "123%"
 ```
 
 ### Parameter for config
 
 ```bsl
-Реквизит ПОДОБНО Таблица.Шаблон
+Property LIKE Table.Template
 ```
 
 ## Sources
