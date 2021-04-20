@@ -19,7 +19,7 @@ Spell checking is done with [LanguageTool](https://languagetool.org/ru/). The st
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-* Полезная информация: [Русский язык для всех](http://gramota.ru/)
+* Useful information: [Russian for all](http://gramota.ru/)
 * [LanguageTool page](https://languagetool.org/ru/)
 
 ## Snippets
