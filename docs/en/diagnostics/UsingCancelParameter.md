@@ -19,7 +19,7 @@ In event handlers of object's modules, record sets, forms and etc. using paramet
   ...
   Cancel = ЕстьОшибкиЗаполнения();
   ...
-КонецПроцедуры
+EndProcedure
 ```
 
 ### Correct
