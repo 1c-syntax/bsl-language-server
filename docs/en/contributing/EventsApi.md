@@ -27,9 +27,9 @@
 
 ```java
 /**
- * Описание события изменения конфигурации.
+ * Configuration change event.
  * <p>
- * В качестве источника события содержит ссылку на конфигурацию.
+ * Contains a link to the configuration as an event source.
  */
 public class LanguageServerConfigurationChangedEvent extends ApplicationEvent {
   public LanguageServerConfigurationChangedEvent(LanguageServerConfiguration configuration) {
