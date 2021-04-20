@@ -13,6 +13,7 @@ plugins {
     id("me.qoomon.git-versioning") version "4.2.0"
     id("com.github.ben-manes.versions") version "0.38.0"
     id("io.freefair.javadoc-links") version "6.0.0-m2"
+    id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
     id("org.springframework.boot") version "2.4.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
@@ -116,10 +117,6 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xlint:unchecked")
     options.compilerArgs.add("-Xlint:deprecation")
-}
-
-tasks.withType<Javadoc> {
-    options.encoding = "UTF-8"
 }
 
 tasks.jar {
