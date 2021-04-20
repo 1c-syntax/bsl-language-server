@@ -18,6 +18,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
     id("io.freefair.aspectj.post-compile-weaving") version "6.0.0-m2"
+    id("io.freefair.maven-central.validate-poms") version "6.0.0-m2"
     id("ru.vyarus.pom") version "2.1.0"
 }
 
@@ -217,6 +218,57 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifact(tasks["bootJar"])
+
+            pom {
+                description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
+                url.set("https://1c-syntax.github.io/bsl-language-server")
+                licenses {
+                    license {
+                        name.set("GNU LGPL 3")
+                        url.set("https://www.gnu.org/licenses/lgpl-3.0.txt")
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("asosnoviy")
+                        name.set("Alexey Sosnoviy")
+                        email.set("labotamy@gmail.com")
+                        url.set("https://github.com/asosnoviy")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("nixel2007")
+                        name.set("Nikita Gryzlov")
+                        email.set("nixel2007@gmail.com")
+                        url.set("https://github.com/nixel2007")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("theshadowco")
+                        name.set("Valery Maximov")
+                        email.set("maximovvalery@gmail.com")
+                        url.set("https://github.com/theshadowco")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("otymko")
+                        name.set("Oleg Tymko")
+                        email.set("olegtymko@yandex.ru")
+                        url.set("https://github.com/otymko")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/1c-syntax/bsl-language-server.git")
+                    developerConnection.set("scm:git:git@github.com:1c-syntax/bsl-language-server.git")
+                    url.set("https://github.com/1c-syntax/bsl-language-server")
+                }
+            }
         }
     }
 }
