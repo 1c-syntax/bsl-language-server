@@ -50,14 +50,14 @@ End If;
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Экранирование кода
+### Diagnostic ignorance in code
 
 ```bsl
 // BSLLS:NestedTernaryOperator-off
 // BSLLS:NestedTernaryOperator-on
 ```
 
-### Параметр конфигурационного файла
+### Parameter for config
 
 ```json
 "NestedTernaryOperator": false
