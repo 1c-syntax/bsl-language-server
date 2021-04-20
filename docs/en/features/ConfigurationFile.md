@@ -35,7 +35,7 @@ Settings:
 * Sets the language of diagnostic messages - English;
 * Changes the diagnostic setting [LineLength - Line length limit] (../diagnostics/LineLength.md), setting the line length limit to 140 characters;
 * Disables diagnostics [MethodSize - Method size limit] (../diagnostics/MethodSize.md).
-* Включает расчет диагностик в непрерывном режиме (`computeTrigger = onType`)
+* Includes online diagnostics calculation (`computeTrigger = onType`)
 
 ```json
 {
