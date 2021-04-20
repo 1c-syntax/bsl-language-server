@@ -6,7 +6,7 @@
 
 Подсистема состоит из трех компонентов:
 
-* события;
+* events;
 * публикация событий;
 * подпись на событие.
 
@@ -14,7 +14,7 @@
 
 > Краткую информацию о Spring Events можно почерпнуть в статье https://www.baeldung.com/spring-events.
 
-## События
+## Events
 
 Все события являются наследником [`ApplicationEvent`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/ApplicationEvent.html). Класс события необходимо размещать в подпакете `events` того пакета, объект которого может сгенерировать это событие.
 
