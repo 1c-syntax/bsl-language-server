@@ -14,7 +14,7 @@ The output of the performance measurement occurs after the `analyze` command fin
 
 Основная логика замеров реализована в аспекте `com.github._1c_syntax.bsl.languageserver.aop.MeasuresAspect` и пакете `com.github._1c_syntax.bsl.languageserver.aop.measures`.
 
-Аспект `MeasuresAspect` перехватывает и замеряет вызовы `ServerContext`, различных компьютеров и вызова расчета диагностик.
+Aspect `MeasuresAspect` intercepts and measures calls to `ServerContext`, various computers, and calls to calculate diagnostics.
 
 `com.github._1c_syntax.bsl.languageserver.aop.measures.DocumentContextLazyDataMeasurer` handles the `DocumentContext` rebuild event and pre-calculates the cached data (parse tree, metrics, symbol tree, etc.) with measurement of each component.
 
