@@ -22,7 +22,10 @@ Var Context;
 Correct:
 
 ```bsl
-Var Context; // Detailed description that explains the purpose of the variable  // Detailed description that explains the purpose of the variable Var Context;
+Var Context; // Detailed description that explains the purpose of the variable 
+
+// Detailed description that explains the purpose of the variable 
+Var Context;
 ```
 
 ## Snippets
