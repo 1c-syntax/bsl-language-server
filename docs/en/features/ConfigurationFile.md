@@ -28,13 +28,13 @@ You can use the following JSON schema to make it easier to compile and edit a co
 log https://1c-syntax.github.io/bsl-language-server/configuration/schema.json
 ```
 
-## Пример
+## Example
 
-Ниже приведен пример настройки:
+Settings:
 
-* Устанавливает язык сообщений диагностик - английский;
-* Изменяет настройку диагностики [LineLength - Ограничение на длину строки](../diagnostics/LineLength.md), устанавливая предел длины строки в 140 символов;
-* Отключает диагностику [MethodSize - Ограничение на размер метода](../diagnostics/MethodSize.md).
+* Sets the language of diagnostic messages - English;
+* Changes the diagnostic setting [LineLength - Line length limit] (../diagnostics/LineLength.md), setting the line length limit to 140 characters;
+* Disables diagnostics [MethodSize - Method size limit] (../diagnostics/MethodSize.md).
 * Включает расчет диагностик в непрерывном режиме (`computeTrigger = onType`)
 
 ```json
