@@ -25,9 +25,9 @@ Incorrect:
 
 Если Чтото Тогда                  // Допустимо - уровень = 1
   /* ... */
-  Если ЧтоТоЕще Тогда             // Допустимо - уровень = 2
+  If Some Then             // Allowed - level = 2
     /* ... */
-    Для Ном = 0 По 10 Цикл          // Допустимо - уровень = 3
+    For Num = 0 To 10 Do          // Allowed - level = 3
       /* ... If Something Then                  // Acceptable - level = 1
   /* ... */
   If SomethingElse Then             // Acceptable - level = 2
@@ -43,12 +43,12 @@ Incorrect:
     EndLoop;
   EndIf;
 EndIf; */
-        КонецЕсли;
-        Возврат;
-      КонецЕсли;
-    КонецЦикла;
-  КонецЕсли;
-КонецЕсли;
+        EndIf;
+        Return;
+      EndIf;
+    EndDo;
+  EndIf;
+EndIf;
 
 ```
 
