@@ -33,20 +33,20 @@
 * Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
-- [Стандарт. Особенности использования в запросах оператора ПОДОБНО](https://its.1c.ru/db/v8std#content:726:hdoc)
+- [Standard. Особенности использования в запросах оператора ПОДОБНО](https://its.1c.ru/db/v8std#content:726:hdoc)
 - [Руководство разработчика. Оператор проверки строки на подобие шаблону](https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506)
 
 ## Snippets
 
 <!-- Блоки ниже заполняются автоматически, не трогать -->
-### Экранирование кода
+### Diagnostic ignorance in code
 
 ```bsl
 // BSLLS:UsingLikeInQuery-off
 // BSLLS:UsingLikeInQuery-on
 ```
 
-### Параметр конфигурационного файла
+### Parameter for config
 
 ```json
 "UsingLikeInQuery": false
