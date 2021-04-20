@@ -27,7 +27,7 @@ repositories {
     maven(url = "https://jitpack.io")
 }
 
-group = "com.github.1c-syntax"
+group = "io.github.1c-syntax"
 
 gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     preferTags = true
