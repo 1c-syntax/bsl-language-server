@@ -13,32 +13,32 @@
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 
-Неправильно
+Incorrect
 
 ```Bsl
-// начало модуля
-Процедура Тест(А)
-    А = А + 1;
-КонецПроцедуры
-// конец модуля
+// Start module
+Procedure Test(A)
+    A = A + 1;
+EndProcedure
+// End module
 ```
 
-Правильно
+Correct
 
 ```Bsl
-// начало модуля
-#Область СлужебныйПрограммныйИнтерфейс
-Процедура Тест(А) Экспорт
-    А = А + 1;
-КонецПроцедуры
-#КонецОбласти
-// конец модуля
+// Start module
+#Region Private
+Procedure Test(A) Export
+    A = A + 1;
+EndProcedure
+#EndRegion
+// End module
 ```
 
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Источник: [Стандарт: Структура модулей](https://its.1c.ru/db/v8std#content:455:hdoc)
+Source: [Standard: Module structure](https://its.1c.ru/db/v8std#content:455:hdoc)
 
 ## Snippets
 
