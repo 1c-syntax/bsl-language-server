@@ -34,7 +34,7 @@
 * Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
 
 - [Standard. Особенности использования в запросах оператора ПОДОБНО](https://its.1c.ru/db/v8std#content:726:hdoc)
-- [Руководство разработчика. Оператор проверки строки на подобие шаблону](https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506)
+- [Developers guide. Оператор проверки строки на подобие шаблону](https://its.1c.ru/db/v8318doc#bookmark:dev:TI000000506)
 
 ## Snippets
 
