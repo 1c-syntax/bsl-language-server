@@ -6,9 +6,9 @@
 
 ## Parameters
 
- |         Name         |   Type   | Description                                                                                            |  Default value  |
- |:--------------------:|:--------:|:------------------------------------------------------------------------------------------------------ |:---------------:|
- | `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. Например: //@,//(c)` | `//@,//(c),//©` | 
+ |         Name         |   Type   | Description                                                                                               |  Default value  |
+ |:--------------------:|:--------:|:--------------------------------------------------------------------------------------------------------- |:---------------:|
+ | `commentsAnnotation` | `String` | `Skip comments-annotations staring with given substrings. A comma separated list. For example: //@,//(c)` | `//@,//(c),//©` | 
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
