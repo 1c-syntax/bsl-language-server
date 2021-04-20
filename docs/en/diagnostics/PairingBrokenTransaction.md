@@ -24,10 +24,10 @@ Beginning of transaction and it's committing (rollback) have to be executed with
         ЗафиксироватьТранзакцию();
     Исключение
         ОтменитьТранзакцию();
-        ... // дополнительные действия по обработке исключения
-    КонецПопытки;
+        ... // additional steps to handle the exception
+    EndTry;
 
-КонецПроцедуры
+EndProcedure
 ```
 
 *Incorrect*
@@ -56,10 +56,10 @@ EndProcedure // чтение или запись данных
         ЗафиксироватьТранзакцию();
     Исключение
         ОтменитьТранзакцию();
-    ... // дополнительные действия по обработке исключения
-    КонецПопытки;
+    ... // additional steps to handle the exception
+    EndTry;
 
-КонецПроцедуры
+EndProcedure
 
 ```
 
