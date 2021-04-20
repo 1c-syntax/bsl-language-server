@@ -36,7 +36,7 @@ The following items are deprecated and their use is not recommended since platfo
 ## Sources
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
 
-Источник: [Описание изменений платформы 8.3.12](https://dl04.1c.ru/content/Platform/8_3_12_1714/1cv8upd_8_3_12_1714.htm)
+Source: [Platform 8.3.12 changelog](https://dl04.1c.ru/content/Platform/8_3_12_1714/1cv8upd_8_3_12_1714.htm)
 
 ## Snippets
 
