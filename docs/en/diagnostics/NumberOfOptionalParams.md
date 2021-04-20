@@ -28,14 +28,14 @@ Procedure CreateSKU(Name, Goods, Units, Weight, Check = True)
 Correct: Group parameters, having goods item properties into Structure ЗначенияРеквизитов.
 
 ```bsl
-// Создает элемент справочника "Номенклатура"
-Процедура СоздатьЭлементНоменклатуры(ЗначенияРеквизитов, ПроверятьУникальность = Истина)
-КонецПроцедуры
+// Create item in catalog "Goods"
+Procedure CreateNewGoods(Values, Check = True)
+EndProcedure
 ```
 
 ## Sources
 
-* [Стандарт: Параметры процедур и функций](https://its.1c.ru/db/v8std#content:640:hdoc)
+* [Standard: Parameters of procedures and functions (RU)](https://its.1c.ru/db/v8std#content:640:hdoc)
 
 ## Snippets
 
