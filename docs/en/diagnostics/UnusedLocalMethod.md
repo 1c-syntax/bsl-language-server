@@ -13,7 +13,7 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 
-Modules should not have unused procedures and functions. Диагностика умеет пропускать `подключаемые методы`, имеющие префиксы, указанные в параметре диагностики.
+Modules should not have unused procedures and functions. Diagnostics can skip `attachable methods` that have prefixes specified in the diagnostic parameter.
 
 ## Sources
 
