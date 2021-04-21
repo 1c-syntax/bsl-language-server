@@ -15,7 +15,7 @@
 
 Between comment symbols "//" and comment text has to be a space.
 
-Exception from the rule is ***comments-annotations***, comments starting with special symbols sequence.
+Exception from the rule is _**comments-annotations**_, comments starting with special symbols sequence.
 
 ## Sources
 
