@@ -8,7 +8,8 @@
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
 
-All module code should be structured and divided into sections (regions). The set of sections for each type of module (form module, object module, common module, etc.) is uniquely determined, the presence of extraneous sections is unacceptable.
+All module code should be structured and divided into sections (regions).   
+The set of sections for each type of module (form module, object module, common module, etc.) is uniquely determined, the presence of extraneous sections is unacceptable.
 
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
