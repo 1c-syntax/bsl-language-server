@@ -11,7 +11,7 @@ Use of nested ternary operators decrease code readability.
 
 ## Examples
 
-### Diagnostic ignorance in code
+### Incorrect use of ternary operators
 
 ```bsl
 Result = ?(X%15 <> 0, ?(X%5 <> 0, ?(X%3 <> 0, x, "Fizz"), "Buzz"), "FizzBuzz"); 
@@ -25,7 +25,7 @@ If ?(P.Emp_emptype = Null, 0, PageEmp_emptype) = 0 Then
 EndIf;
 ```
 
-### Parameter for config
+### Possible implementation
 
 ```bsl
 If x % 15 = 0 Then
